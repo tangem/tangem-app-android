@@ -26,6 +26,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStore
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStores
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithAmounts
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithDemoAmounts
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithError
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithFiatRates
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithMissedDerivation
@@ -33,6 +34,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithUnreachable
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
@@ -208,6 +210,8 @@ internal class DefaultWalletAmountsRepository(
                         updateWalletStoreWithAmounts(
                             walletStore = walletStore,
                             updatedWallet = walletManager.wallet,
+                            // FIXME: move DemoHelper to Demo core module maybe
+                            isDemo = DemoHelper.isDemoCardId(scanResponse.card.cardId),
                         )
                     }
                     .flatMap { fetchWalletStoreRentIfNeeded(walletStore, walletManager) }
@@ -297,6 +301,7 @@ internal class DefaultWalletAmountsRepository(
     private suspend fun updateWalletStoreWithAmounts(
         walletStore: WalletStoreModel,
         updatedWallet: Wallet,
+        isDemo: Boolean,
     ) = withContext(Dispatchers.Default) {
         Timber.d(
             """
@@ -310,7 +315,11 @@ internal class DefaultWalletAmountsRepository(
             prevState.replaceWalletStore(
                 walletStoreToUpdate = walletStore,
                 update = {
-                    it.updateWithAmounts(wallet = updatedWallet)
+                    if (isDemo) {
+                        it.updateWithDemoAmounts(wallet = updatedWallet)
+                    } else {
+                        it.updateWithAmounts(wallet = updatedWallet)
+                    }
                 },
             )
         }
