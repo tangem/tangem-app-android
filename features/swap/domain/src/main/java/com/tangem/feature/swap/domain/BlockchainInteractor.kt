@@ -13,4 +13,6 @@ interface BlockchainInteractor {
      * workaround till not use backend only and not integrated server vs sdk
      */
     fun getBlockchainInfo(networkId: String): NetworkInfo
+
+    fun getExplorerTransactionLink(networkId: String, txAddress: String): String
 }
