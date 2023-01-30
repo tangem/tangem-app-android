@@ -111,6 +111,11 @@ class TransactionManagerImpl(
         return handleSendResult(sendResult)
     }
 
+    override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: error("blockchain not found")
+        return blockchain.getExploreTxUrl(txAddress)
+    }
+
     override fun getNativeTokenDecimals(networkId: String): Int {
         return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
