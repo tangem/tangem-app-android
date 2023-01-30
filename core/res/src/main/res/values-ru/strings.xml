@@ -18,7 +18,7 @@
     <string name="app_settings_enable_biometrics_description">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem App</string>
     <string name="app_settings_enable_biometrics_title">Включите биометрическую аутентификацию</string>
     <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
-    <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены.</string>
+    <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены из приложения.</string>
     <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
     <string name="app_settings_saved_access_codes_footer">Подключите функцию хранения кодов доступа от карт на телефоне в зашифрованном виде, и при работе с картой вместо кода доступа будет запрашиваться биометрическая аутентификация.</string>
     <string name="app_settings_saved_wallet">Cохранение кошелька</string>
