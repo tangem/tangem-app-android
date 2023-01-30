@@ -202,8 +202,8 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     suspend fun waitForCheckout(productType: ProductType) {
         val result = shopifyService.checkout(true, checkouts[productType]!!.id)
         result.onSuccess { checkout ->
-            checkout.order?.let {
-                val event = ShopOrderToEventConverter().convert(it to productType)
+            if (checkout.order != null && checkout.lineItems != null) {
+                val event = ShopOrderToEventConverter().convert(checkout to productType)
                 Analytics.send(event)
             }
         }
