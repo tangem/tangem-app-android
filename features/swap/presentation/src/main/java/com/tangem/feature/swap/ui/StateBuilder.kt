@@ -259,12 +259,16 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun createSuccessState(uiState: SwapStateHolder, txState: TxState.TxSent): SwapStateHolder {
+    fun createSuccessState(
+        uiState: SwapStateHolder,
+        txState: TxState.TxSent,
+        onSecondaryBtnClick: () -> Unit,
+    ): SwapStateHolder {
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 fromTokenAmount = txState.fromAmount ?: "",
                 toTokenAmount = txState.toAmount ?: "",
-                onSecondaryButtonClick = {},
+                onSecondaryButtonClick = onSecondaryBtnClick,
             ),
         )
     }
