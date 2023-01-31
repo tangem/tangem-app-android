@@ -46,14 +46,14 @@ sealed class Token(
         params = mapOf("Token" to type.value),
     )
 
-    sealed class Recieve(
+    sealed class Receive(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Token("Token / Recieve", event, params) {
+    ) : Token("Token / Receive", event, params) {
 
-        class ScreenOpened : Recieve("Recieve Screen Opened")
-        class ButtonCopyAddress : Recieve("Button - Copy Address")
-        class ButtonShareAddress : Recieve("Button - Share Address")
+        class ScreenOpened : Receive("Receive Screen Opened")
+        class ButtonCopyAddress : Receive("Button - Copy Address")
+        class ButtonShareAddress : Receive("Button - Share Address")
     }
 
     sealed class Send(

@@ -41,8 +41,6 @@ class RussianCardholdersWarningBottomSheetDialog(
 
         binding?.btnYes?.setOnClickListener {
             if (dialogData != null) {
-                val currencyType = AnalyticsParam.CurrencyType.Blockchain(dialogData.blockchain)
-                Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
                 store.dispatchOpenUrl(dialogData.topUpUrl)
             } else {
                 store.dispatch(WalletAction.TradeCryptoAction.Buy(checkUserLocation = false))

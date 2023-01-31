@@ -18,6 +18,7 @@ class ParamCardCurrencyConverter : Converter<CardTypesResolver, AnalyticsParam.C
             value.isTangemNote() -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
             value.isTangemTwins() -> AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
             value.isSaltPay() -> AnalyticsParam.CurrencyType.Token(SaltPayWorkaround.tokenFrom(Blockchain.SaltPay))
+            value.getBlockchain() != Blockchain.Unknown -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
             value.getPrimaryToken() != null -> AnalyticsParam.CurrencyType.Token(value.getPrimaryToken()!!)
             else -> null
         } ?: return null
