@@ -21,7 +21,6 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
-import com.tangem.tap.common.analytics.filters.ShopPurchasedEventFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -182,7 +181,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
 
-        factory.addFilter(ShopPurchasedEventFilter())
         factory.addFilter(BasicSignInFilter())
         factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
 
