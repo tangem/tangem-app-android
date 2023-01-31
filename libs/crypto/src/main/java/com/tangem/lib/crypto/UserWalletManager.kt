@@ -33,6 +33,7 @@ interface UserWalletManager {
      *
      * @param currency to add to wallet
      */
+    @Throws(IllegalStateException::class)
     fun addToken(currency: Currency)
 
     /**
@@ -40,6 +41,7 @@ interface UserWalletManager {
      *
      * @param networkId for currency
      */
+    @Throws(IllegalStateException::class)
     fun getWalletAddress(networkId: String): String
 
     /**
@@ -63,4 +65,7 @@ interface UserWalletManager {
      * Returns selected app currency
      */
     fun getUserAppCurrency(): ProxyFiatCurrency
+
+    @Throws(IllegalStateException::class)
+    fun getLastTransactionHash(networkId: String): String?
 }
