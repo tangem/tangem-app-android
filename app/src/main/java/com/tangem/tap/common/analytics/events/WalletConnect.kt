@@ -11,6 +11,7 @@ sealed class WalletConnect(
     error: Throwable? = null,
 ) : AnalyticsEvent("Wallet Connect", event, params, error) {
 
+    class ScreenOpened : WalletConnect(event = "WC Screen Opened")
     class NewSessionEstablished : WalletConnect("New Session Established")
     class SessionDisconnected : WalletConnect("Session Disconnected")
     class RequestSigned : WalletConnect("Request Signed")
