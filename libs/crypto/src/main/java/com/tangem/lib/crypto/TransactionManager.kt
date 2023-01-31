@@ -53,4 +53,7 @@ interface TransactionManager {
      */
     @Throws(IllegalStateException::class)
     fun getBlockchainInfo(networkId: String): ProxyNetworkInfo
+
+    @Throws(IllegalStateException::class)
+    fun getExplorerTransactionLink(networkId: String, txAddress: String): String
 }
