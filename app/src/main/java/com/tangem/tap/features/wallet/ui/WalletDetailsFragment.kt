@@ -396,7 +396,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
                 lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
@@ -407,7 +407,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
                 lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
                 when (data.status) {
                     BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
