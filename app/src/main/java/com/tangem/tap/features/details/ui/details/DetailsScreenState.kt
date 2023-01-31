@@ -12,7 +12,7 @@ data class DetailsScreenState(
     val onItemsClick: (SettingsElement) -> Unit,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
 ) {
-    val appNameRes: Int = R.string.app_name
+    val appNameRes: Int = R.string.tangem_app_name
 }
 
 @Immutable
@@ -44,7 +44,7 @@ sealed class SocialNetwork(val id: String, val iconRes: Int) {
     object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook)
     object Instagram : SocialNetwork("Instagram", R.drawable.ic_instagram)
     object GitHub : SocialNetwork("GitHub", R.drawable.ic_github)
-    object Youtube : SocialNetwork("Youtube", R.drawable.ic_youtube)
+    object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube)
     object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin)
 }
 
@@ -55,7 +55,7 @@ object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
     )
     val accountsRu: List<SocialNetworkLink> = listOf(
@@ -64,7 +64,7 @@ object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
     )
 }
