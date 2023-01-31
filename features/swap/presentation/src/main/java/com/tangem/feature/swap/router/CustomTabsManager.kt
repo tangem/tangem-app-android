@@ -10,8 +10,7 @@ class CustomTabsManager(private val context: WeakReference<Context>) {
     fun openUrl(url: String) {
         val customTabsIntent = CustomTabsIntent.Builder()
             .setDefaultColorSchemeParams(
-                CustomTabColorSchemeParams.Builder()
-                    .build(),
+                CustomTabColorSchemeParams.Builder().build(),
             )
             .build()
         context.get()?.let { customTabsIntent.launchUrl(it, Uri.parse(url)) }
