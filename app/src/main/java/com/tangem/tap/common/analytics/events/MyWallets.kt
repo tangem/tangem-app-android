@@ -7,14 +7,14 @@ sealed class MyWallets(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("My Wallets", event, params) {
 
-    object MyWalletsScreenOpened : MyWallets(event = "My Wallets Screen Opened")
-    object CardWasScanned : MyWallets(event = "Card Was Scanned")
-    object WalletUnlockTapped : MyWallets(event = "Wallet Unlock Tapped")
+    class MyWalletsScreenOpened : MyWallets(event = "My Wallets Screen Opened")
+    class CardWasScanned : MyWallets(event = "Card Was Scanned")
 
-    object Button {
-        object ScanNewCard : MyWallets(event = "Button - Scan New Card")
-        object UnlockWithBiometrics : MyWallets(event = "Button - Unlock all with Face ID")
-        object EditWalletTapped : MyWallets(event = "Button - Edit Wallet Tapped")
-        object DeleteWalletTapped : MyWallets(event = "Button - Delete Wallet Tapped")
+    sealed class Button {
+        class ScanNewCard : MyWallets(event = "Button - Scan New Card")
+        class UnlockWithBiometrics : MyWallets(event = "Button - Unlock all with Face ID")
+        class EditWalletTapped : MyWallets(event = "Button - Edit Wallet Tapped")
+        class DeleteWalletTapped : MyWallets(event = "Button - Delete Wallet Tapped")
+        class WalletUnlockTapped : MyWallets(event = "Button - Wallet Unlock Tapped")
     }
 }
