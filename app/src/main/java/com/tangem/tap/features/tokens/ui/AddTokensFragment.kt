@@ -49,7 +49,6 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        Analytics.send(ManageTokens.ScreenOpened())
         addBackPressHandler(this)
     }
 
