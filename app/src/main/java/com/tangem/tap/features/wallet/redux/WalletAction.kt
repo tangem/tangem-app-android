@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
@@ -102,6 +103,7 @@ sealed class WalletAction : Action {
         data class SetPrimaryToken(val token: Token) : MultiWallet()
         data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
         object BackupWallet : MultiWallet()
+        object ScheduleCheckForMissingDerivation : MultiWallet()
         data class AddMissingDerivations(val blockchains: List<BlockchainNetwork>) : MultiWallet()
         object ScanToGetDerivations : MultiWallet()
     }
@@ -144,7 +146,7 @@ sealed class WalletAction : Action {
         object Failure : WalletAction()
     }
 
-    object Scan : WalletAction()
+    data class Scan(val onScanSuccessEvent: AnalyticsEvent?) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction()
 
