@@ -35,7 +35,7 @@ class WalletWarningConverter(
             is WalletWarning.TransactionInProgress -> {
                 context.getString(
                     R.string.token_details_send_blocked_tx_format,
-                    message.currencyName
+                    message.currencyName,
                 )
             }
             is WalletWarning.Rent -> {

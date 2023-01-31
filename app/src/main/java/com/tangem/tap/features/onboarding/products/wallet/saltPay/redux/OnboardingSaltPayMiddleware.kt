@@ -285,7 +285,7 @@ suspend fun SaltPayActivationManager.update(
         return Result.Failure(ex)
     }
 
-    // checkGasIfNeeded(this, newStep).successOr { return it }
+    checkGasIfNeeded(this, newStep).successOr { return it }
 
     Timber.d("update: success: %s", newStep)
     return Result.Success(newStep)
