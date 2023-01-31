@@ -62,6 +62,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
     private fun handleClickingSettingsItem(item: SettingsElement) {
         when (item) {
             SettingsElement.WalletConnect -> {
+                Analytics.send(Settings.ButtonWalletConnect())
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
             }
             SettingsElement.Chat -> {
