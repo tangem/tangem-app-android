@@ -19,6 +19,10 @@ internal class BlockchainInteractorImpl @Inject constructor(
         }
     }
 
+    override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
+        return transactionManager.getExplorerTransactionLink(networkId, txAddress)
+    }
+
     override fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
