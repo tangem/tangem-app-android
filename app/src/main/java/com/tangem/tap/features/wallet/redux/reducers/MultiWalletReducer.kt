@@ -187,7 +187,13 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.SetPrimaryToken -> state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(showBackupWarning = action.show)
-            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(missingDerivations = action.blockchains)
+            is WalletAction.MultiWallet.ScheduleCheckForMissingDerivation -> state.copy(
+                derivationsCheckIsScheduled = true,
+            )
+            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(
+                missingDerivations = action.blockchains,
+                derivationsCheckIsScheduled = false
+            )
             is WalletAction.MultiWallet.BackupWallet -> state
             is WalletAction.MultiWallet.ScanToGetDerivations -> state.copy(state = ProgressState.Loading)
         }
