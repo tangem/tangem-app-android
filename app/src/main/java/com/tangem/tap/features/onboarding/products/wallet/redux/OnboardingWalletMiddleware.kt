@@ -154,7 +154,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(HomeAction.ReadCard)
+                store.dispatch(HomeAction.ReadCard())
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
