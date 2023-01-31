@@ -97,6 +97,7 @@ fun RowScope.ProgressButton(
             .weight(1f)
             .height(48.dp),
         onClick = onClick,
+        enabled = !inProgress,
         colors = ButtonDefaults.textButtonColors(
             backgroundColor = backgroundColor,
             contentColor = contentColor,
