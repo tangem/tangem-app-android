@@ -17,6 +17,10 @@ internal class DummyWalletStoresManager : WalletStoresManager {
         return emptyFlow()
     }
 
+    override suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel> {
+        return emptyList()
+    }
+
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
