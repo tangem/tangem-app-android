@@ -42,7 +42,7 @@ class AddressInfoBottomSheetDialog(
 
     override fun show() {
         super.show()
-        Analytics.send(Token.Recieve.ScreenOpened())
+        Analytics.send(Token.Receive.ScreenOpened())
         showData(data = stateDialog.addressData)
     }
 
@@ -54,12 +54,12 @@ class AddressInfoBottomSheetDialog(
         imvQrCode.setImageBitmap(data.qrCode)
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
-            Analytics.send(Token.Recieve.ButtonCopyAddress())
+            Analytics.send(Token.Receive.ButtonCopyAddress())
             context.copyToClipboard(data.address)
             store.dispatchToastNotification(R.string.copy_toast_msg)
         }
         btnFlShare.setOnClickListener {
-            Analytics.send(Token.Recieve.ButtonShareAddress())
+            Analytics.send(Token.Receive.ButtonShareAddress())
             store.dispatchShare(data.shareUrl)
         }
         val blockchain = stateDialog.currency.blockchain
