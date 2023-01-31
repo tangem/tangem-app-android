@@ -7,6 +7,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import java.math.BigDecimal
@@ -74,9 +75,22 @@ internal fun WalletDataModel.updateWithAmount(wallet: Wallet): WalletDataModel {
     )
 }
 
+internal fun WalletDataModel.updateWithDemoAmount(wallet: Wallet): WalletDataModel {
+    val amount = DemoHelper.config.getBalance(wallet.blockchain)
+    return this.copy(
+        status = WalletDataModel.VerifiedOnline(amount = amount.value ?: BigDecimal.ZERO),
+    )
+}
+
 internal fun List<WalletDataModel>.updateWithAmounts(wallet: Wallet): List<WalletDataModel> {
     return this.map { walletData ->
         walletData.updateWithAmount(wallet)
+    }
+}
+
+internal fun List<WalletDataModel>.updateWithDemoAmounts(wallet: Wallet): List<WalletDataModel> {
+    return this.map { walletData ->
+        walletData.updateWithDemoAmount(wallet)
     }
 }
 
@@ -164,7 +178,7 @@ internal fun List<WalletDataModel>.updateWithSelf(
     val updatedWalletsData = arrayListOf<WalletDataModel>()
 
     newWalletsData.forEach { newWalletData ->
-        val walletDataToUpdate = oldWalletsData.find(newWalletData::isSameWalletData)
+        val walletDataToUpdate = oldWalletsData.firstOrNull(newWalletData::isSameWalletData)
         if (walletDataToUpdate != null) {
             updatedWalletsData.add(walletDataToUpdate.updateWithSelf(newWalletData))
         } else {
@@ -176,5 +190,5 @@ internal fun List<WalletDataModel>.updateWithSelf(
 }
 
 internal fun WalletDataModel.isSameWalletData(other: WalletDataModel): Boolean {
-    return currency == other.currency
+    return this.currency == other.currency
 }
