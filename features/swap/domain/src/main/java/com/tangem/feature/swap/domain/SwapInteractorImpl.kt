@@ -125,9 +125,9 @@ internal class SwapInteractorImpl @Inject constructor(
             dataToSign = transactionData.data,
         )
         return when (result) {
-            SendTxResult.Success -> {
+            is SendTxResult.Success -> {
                 allowPermissionsHandler.addAddressToInProgress(forTokenContractAddress)
-                TxState.TxSent()
+                TxState.TxSent(txAddress = userWalletManager.getLastTransactionHash(networkId) ?: "")
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
             is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
@@ -211,11 +211,12 @@ internal class SwapInteractorImpl @Inject constructor(
             isSwap = true,
         )
         return when (result) {
-            SendTxResult.Success -> {
+            is SendTxResult.Success -> {
                 userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet))
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(swapData.fromTokenAmount, currencyToSend.symbol),
                     toAmount = amountFormatter.formatSwapAmountToUI(swapData.toTokenAmount, currencyToGet.symbol),
+                    txAddress = userWalletManager.getLastTransactionHash(networkId) ?: "",
                 )
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
