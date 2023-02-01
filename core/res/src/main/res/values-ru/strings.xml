@@ -371,6 +371,7 @@
     <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
     <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
+    <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
     <string name="user_wallet_list_editing_count">%d выбрано</string>
     <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
     <string name="user_wallet_list_multi_header">Мультивалютные</string>
