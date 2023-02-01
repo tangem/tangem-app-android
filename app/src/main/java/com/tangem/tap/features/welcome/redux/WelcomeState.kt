@@ -7,6 +7,6 @@ import org.rekotlin.StateType
 data class WelcomeState(
     val isUnlockWithBiometricsInProgress: Boolean = false,
     val isUnlockWithCardInProgress: Boolean = false,
-    val deepLinkIntent: Intent? = null,
+    val intent: Intent? = null,
     val error: TangemError? = null,
 ) : StateType
