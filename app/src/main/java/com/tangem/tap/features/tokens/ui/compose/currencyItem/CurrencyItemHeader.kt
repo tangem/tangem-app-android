@@ -34,7 +34,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
