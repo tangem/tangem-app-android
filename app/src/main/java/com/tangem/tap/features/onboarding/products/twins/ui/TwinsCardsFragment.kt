@@ -408,7 +408,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun handleOnBackPressed() {
         store.dispatch(
-            TwinCardsAction.Wallet.HandleOnBackPressed { should, popAction ->
+            TwinCardsAction.OnBackPressed { should, popAction ->
                 store.dispatch(TwinCardsAction.Confetti.Hide)
                 showConfetti(false)
                 if (should) switchToCard(TwinCardNumber.First, true, popAction) else popAction()
