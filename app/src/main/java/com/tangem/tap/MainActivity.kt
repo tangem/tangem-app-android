@@ -116,17 +116,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onResume()
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
-        navigateToInitialScreenIfNeeded()
-
-        intentHandler.handleBackgroundScan(intent)
-        intentHandler.handleSellCurrencyCallback(intent)
+        navigateToInitialScreenIfNeeded(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intentHandler.handleBackgroundScan(intent)
-        intentHandler.handleSellCurrencyCallback(intent)
-        intentHandler.handleWalletConnectLink(intent)
+        intentHandler.handleIntent(intent, userWalletsListManager.hasSavedUserWallets)
     }
 
     override fun onStart() {
@@ -192,29 +187,28 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lockUserWalletsTimer?.restart()
     }
 
-    private fun navigateToInitialScreenIfNeeded() {
+    private fun navigateToInitialScreenIfNeeded(intent: Intent?) {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = store.state.globalState.onboardingState.onboardingStarted
         val isShopNotOpened = store.state.shopState.total != null
         when {
             !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive && isShopNotOpened -> {
-                navigateToInitialScreen()
+                navigateToInitialScreen(intent)
             }
             backStackIsEmpty -> {
-                navigateToInitialScreen()
+                navigateToInitialScreen(intent)
             }
         }
     }
 
-    private fun navigateToInitialScreen() {
+    private fun navigateToInitialScreen(intent: Intent?) {
         if (userWalletsListManager.hasSavedUserWallets) {
-            store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
-            store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
+            store.dispatchOnMain(WelcomeAction.HandleIntentIfNeeded(intent))
         } else {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
-            intentHandler.handleWalletConnectLink(intent)
+            intentHandler.handleIntent(intent, hasSavedUserWallets = false)
         }
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
