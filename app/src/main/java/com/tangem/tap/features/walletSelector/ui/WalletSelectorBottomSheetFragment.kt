@@ -25,9 +25,10 @@ import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.tap.features.walletSelector.ui.components.RemoveWalletDialogContent
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
 import com.tangem.tap.features.walletSelector.ui.components.WalletSelectorScreenContent
-import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
+import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 
 internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<WalletSelectorScreenState>() {
     private val viewModel by viewModels<WalletSelectorViewModel>()
@@ -48,7 +49,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     override fun ScreenContent(state: WalletSelectorScreenState, modifier: Modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
-        val renameWalletDialog by rememberUpdatedState(newValue = state.renameWalletDialog)
+        val dialog by rememberUpdatedState(newValue = state.dialog)
 
         Box(modifier = modifier.nestedScroll(rememberNestedScrollInteropConnection())) {
             WalletSelectorScreenContent(
@@ -71,7 +72,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
             )
         }
 
-        RenameWalletDialog(dialog = renameWalletDialog)
+        Dialog(dialog = dialog)
 
         LaunchedEffect(key1 = errorMessage) {
             errorMessage?.let {
@@ -83,8 +84,11 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    private fun RenameWalletDialog(dialog: RenameWalletDialog?) {
+    private fun Dialog(dialog: DialogModel?) {
         if (dialog == null) return
-        RenameWalletDialogContent(dialog)
+        when (dialog) {
+            is DialogModel.RemoveWalletDialog -> RemoveWalletDialogContent(dialog)
+            is DialogModel.RenameWalletDialog -> RenameWalletDialogContent(dialog)
+        }
     }
 }
