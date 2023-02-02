@@ -10,10 +10,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
-import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
