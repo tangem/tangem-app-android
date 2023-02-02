@@ -21,6 +21,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
@@ -47,15 +48,21 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
+
+    @Inject
+    lateinit var swapInteractor: SwapInteractor
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
 
     private val binding: FragmentWalletBinding by viewBinding(FragmentWalletBinding::bind)
 
-    private var walletView: WalletView = SingleWalletView()
+    private var walletView: WalletView = MultiWalletView()
 
     private val viewModel by viewModels<WalletViewModel>()
 
@@ -166,6 +173,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }
             else -> {} // we keep the same view unless we scan a card that requires a different view
         }
+
+        walletView.swapInteractor = swapInteractor
 
         walletView.onNewState(state)
 

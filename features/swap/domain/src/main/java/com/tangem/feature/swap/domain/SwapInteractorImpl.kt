@@ -232,6 +232,10 @@ internal class SwapInteractorImpl @Inject constructor(
         } ?: SwapAmount(BigDecimal.ZERO, getTokenDecimals(token))
     }
 
+    override fun isAvailableToSwap(networkId: String): Boolean {
+        return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
+    }
+
     fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
@@ -593,5 +597,10 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val USDT_SYMBOL = "USDT"
         private const val USDC_SYMBOL = "USDC"
         private const val INFINITY_SYMBOL = "∞"
+
+        private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
+            "ethereum", "binance-smart-chain", "polygon-pos",
+            "optimistic-ethereum", "arbitrum-one", "xdai", "avalanche", "fantom",
+        )
     }
 }
