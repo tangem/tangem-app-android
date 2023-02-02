@@ -1,8 +1,5 @@
 package com.tangem.feature.referral.ui
 
-import android.view.ViewGroup.LayoutParams
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +12,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
@@ -44,20 +42,16 @@ internal fun AgreementBottomSheetContent(url: String) {
 
 @Composable
 private fun AgreementHtmlView(url: String) {
-    AndroidView(
+    val state = rememberWebViewState(url)
+    WebView(
+        state = state,
         modifier = Modifier.background(TangemTheme.colors.background.secondary),
-        factory = {
-            WebView(it).apply {
-                layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-                webViewClient = WebViewClient()
-                settings.apply {
-                    javaScriptEnabled = false
-                    allowFileAccess = false
-                }
-                loadUrl(url)
+        onCreated = {
+            it.settings.apply {
+                javaScriptEnabled = false
+                allowFileAccess = false
             }
         },
-        update = { it.loadUrl(url) },
     )
 }
 
