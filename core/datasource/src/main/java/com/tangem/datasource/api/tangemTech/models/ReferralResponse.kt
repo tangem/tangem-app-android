@@ -12,7 +12,6 @@ data class ReferralResponse(
 ) {
 
     data class Conditions(
-        @Json(name = "award") val award: Int,
         @Json(name = "discount") val discount: Discount,
         @Json(name = "awards") val awards: List<Award>,
         @Json(name = "tosLink") val tosLink: String,
