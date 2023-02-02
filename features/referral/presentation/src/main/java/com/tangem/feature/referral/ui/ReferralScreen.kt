@@ -67,6 +67,8 @@ import com.tangem.feature.referral.presentation.R
 import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.launch
 
+private const val GOOGLE_DOC_LINK_WRAPPER = "https://docs.google.com/viewer?url=%s&embedded=false"
+
 /**
  * Referral program screen for participant and non-participant
  *
@@ -85,8 +87,8 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             sheetContent = {
                 AgreementBottomSheetContent(
                     url = when (val state = stateHolder.referralInfoState) {
-                        is ReferralInfoState.NonParticipantContent -> state.url
-                        is ReferralInfoState.ParticipantContent -> state.url
+                        is ReferralInfoState.NonParticipantContent -> String.format(GOOGLE_DOC_LINK_WRAPPER, state.url)
+                        is ReferralInfoState.ParticipantContent -> String.format(GOOGLE_DOC_LINK_WRAPPER, state.url)
                         is ReferralInfoState.Loading -> ""
                     },
                 )
