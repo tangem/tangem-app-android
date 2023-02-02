@@ -6,12 +6,10 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
-import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInformationRepository
@@ -48,9 +46,6 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                 .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
                 .let { saveInternal(it) }
         }
-            .mapFailure { error ->
-                UserWalletListError.SaveSensitiveInformationError(error.cause ?: error)
-            }
     }
 
     override suspend fun getAll(
@@ -72,9 +67,6 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                 }
                 .filterNotNull()
         }
-            .mapFailure { error ->
-                UserWalletListError.ReceiveSensitiveInformationError(error.cause ?: error)
-            }
     }
 
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
