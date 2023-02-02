@@ -80,6 +80,12 @@
         <item name="iconGravity">end</item>
     </style>
 
+    <style name="TapPrimaryIconButtonFullLength" parent="TapPrimaryButton">
+        <item name="android:gravity">center</item>
+        <item name="iconTint">@color/selector_btn_text_primary</item>
+        <item name="iconGravity">textEnd</item>
+    </style>
+
     <style name="TapChip" parent="@style/Widget.MaterialComponents.Chip.Choice">
         <item name="chipBackgroundColor">@color/selector_chip_background</item>
         <item name="chipStrokeColor">@color/selector_chip_stroke</item>
