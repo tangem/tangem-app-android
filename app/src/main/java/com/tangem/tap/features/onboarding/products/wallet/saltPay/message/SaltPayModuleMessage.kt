@@ -48,8 +48,7 @@ sealed class SaltPayActivationError(
     object FailedToGetFundsToClaim : SaltPayActivationError(subCode = 14)
     object NoFundsToClaim : SaltPayActivationError(subCode = 15)
     object ClaimTransactionFailed : SaltPayActivationError(subCode = 16)
-
-    object PutVisaCard : SaltPayActivationError(18)
+    object PutVisaCard : SaltPayActivationError(subCode = 18)
 
     companion object {
         const val EMPTY_MESSAGE = ""
