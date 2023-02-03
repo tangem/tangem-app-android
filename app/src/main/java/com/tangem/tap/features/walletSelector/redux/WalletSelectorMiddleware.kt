@@ -104,10 +104,12 @@ internal class WalletSelectorMiddleware {
         updatedWalletStores: Map<UserWalletId, List<WalletStoreModel>>,
         state: WalletSelectorState,
     ) {
-        if (updatedWalletStores.isNotEmpty()) scope.launch(Dispatchers.Default) {
-            val updatedWallets = state.wallets.updateWalletStoresAndCalculateFiatBalance(updatedWalletStores)
-            if (updatedWallets != state.wallets) {
-                store.dispatchOnMain(WalletSelectorAction.BalancesLoaded(updatedWallets))
+        if (updatedWalletStores.isNotEmpty()) {
+            scope.launch(Dispatchers.Default) {
+                val updatedWallets = state.wallets.updateWalletStoresAndCalculateFiatBalance(updatedWalletStores)
+                if (updatedWallets != state.wallets) {
+                    store.dispatchOnMain(WalletSelectorAction.BalancesLoaded(updatedWallets))
+                }
             }
         }
     }
