@@ -148,27 +148,29 @@ object ScanCardProcessor {
         store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         if (disclaimer.isAccepted()) {
-            nextHandler((scanResponse))
-        } else scope.launch {
-            delay(DELAY_SDK_DIALOG_CLOSE)
-            disclaimerWillShow()
-            dispatchOnMain(
-                DisclaimerAction.Show(
-                    fromScreen = AppScreen.Home,
-                    callback = DisclaimerCallback(
-                        onAccept = {
-                            scope.launch(Dispatchers.Main) {
-                                nextHandler(scanResponse)
-                            }
-                        },
-                        onDismiss = {
-                            scope.launch(Dispatchers.Main) {
-                                onFailure(TangemSdkError.UserCancelled())
-                            }
-                        },
+            nextHandler(scanResponse)
+        } else {
+            scope.launch {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                disclaimerWillShow()
+                dispatchOnMain(
+                    DisclaimerAction.Show(
+                        fromScreen = AppScreen.Home,
+                        callback = DisclaimerCallback(
+                            onAccept = {
+                                scope.launch(Dispatchers.Main) {
+                                    nextHandler(scanResponse)
+                                }
+                            },
+                            onDismiss = {
+                                scope.launch(Dispatchers.Main) {
+                                    onFailure(TangemSdkError.UserCancelled())
+                                }
+                            },
+                        ),
                     ),
-                ),
-            )
+                )
+            }
         }
     }
 
