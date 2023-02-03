@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
@@ -28,13 +27,6 @@ sealed class TwinCardsAction : Action {
     }
 
     sealed class Wallet : TwinCardsAction() {
-        data class HandleOnBackPressed(
-            // this is necessary for the correct animation of the return of cards to the Home screen
-            val shouldResetTwinCardsWidget: (should: Boolean, popAction: VoidCallback) -> Unit
-        ) : TwinCardsAction()
-
-        data class ShowInterruptDialog(val onOk: VoidCallback) : TwinCardsAction(), StateDialog
-
         data class LaunchFirstStep(val initialMessage: Message, val reader: AssetReader) : TwinCardsAction()
         data class LaunchSecondStep(
             val initialMessage: Message,
@@ -51,6 +43,11 @@ sealed class TwinCardsAction : Action {
     object ShowAddressInfoDialog : TwinCardsAction()
     data class SetWalletManager(val walletManager: WalletManager) : TwinCardsAction()
     object Done : TwinCardsAction()
+
+    data class OnBackPressed(
+        // this is necessary for the correct animation of the return of cards to the Home screen
+        val shouldResetTwinCardsWidget: (should: Boolean, popAction: VoidCallback) -> Unit,
+    ) : TwinCardsAction()
 
     data class SaveScannedTwinCardAndNavigateToWallet(
         val scanResponse: ScanResponse,
