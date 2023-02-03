@@ -24,8 +24,6 @@
     <string name="app_settings_saved_wallet">Cохранение кошелька</string>
     <string name="app_settings_saved_wallet_footer">Подключите функцию привязки карты в приложении, а также возможность биометрической аутентификации. Подпись транзакции все так же потребует карту.</string>
     <string name="app_settings_title">Настройки приложения</string>
-    <string name="card_settings_action_sheet_reset">Сбросить</string>
-    <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
     <string name="card_settings_change_access_code">Смена кода доступа</string>
     <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
@@ -348,7 +346,7 @@
     <string name="swapping_swap">Обмен</string>
     <string name="swapping_swap_of_to">Обмен %1$s на %2$s</string>
     <string name="swapping_token_list_other_tokens">Другие токены</string>
-    <string name="swapping_token_list_your_title">Выберите токен</string>
+    <string name="swapping_token_list_title">Выберите токен</string>
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
     <string name="swapping_token_not_available">не доступен</string>
     <string name="tangem_app_name">Tangem</string>
