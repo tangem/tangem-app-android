@@ -52,7 +52,7 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
             },
             topBar = {
                 ExpandableSearchView(
-                    title = stringResource(R.string.swapping_token_list_your_title),
+                    title = stringResource(R.string.swapping_token_list_title),
                     onBackClick = onBack,
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
                     onSearchChange = state.onSearchEntered,
