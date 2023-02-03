@@ -4,6 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.Filter
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
@@ -200,7 +201,11 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
                 state.saltPayManager.claim(amountToClaim.value!!, signer).successOr {
                     dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Claim))
-                    onException(it.error)
+                    if (it.error is TangemSdkError.UserCancelled) {
+                        handleInProgress = false
+                    } else {
+                        onException(it.error)
+                    }
                     return@launch
                 }
 
@@ -279,6 +284,7 @@ suspend fun SaltPayActivationManager.update(
 
     val registrationResponse = checkRegistration().successOr { return it }
     val amountToClaim = getAmountToClaimIfNeeded(this, currentAmountToClaim)
+    dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(amountToClaim))
 
     val newStep = try {
         determineStep(currentStep, amountToClaim, registrationResponse)
