@@ -27,6 +27,7 @@ class BasicEventsPreChecker {
         BasicTopUpEventConverter().convert(converterData)?.let { Analytics.send(it) }
     }
 
+    @Suppress("ComplexMethod")
     private fun isReadyToSend(data: BasicEventsSourceData): Boolean {
         val (scanResponse, walletState, biometricsWalletDataModels) = data
         if (walletState.derivationsCheckIsScheduled) {
@@ -69,13 +70,14 @@ class BasicEventsPreChecker {
                 return false
             }
 
-            if (biometricsWalletDataModels.any {
+            val isCorrectStatus = biometricsWalletDataModels.any {
                 it.status is WalletDataModel.Loading ||
                     it.status is WalletDataModel.NoAccount ||
                     it.status is WalletDataModel.Unreachable ||
                     it.status is WalletDataModel.MissedDerivation ||
                     it.status.isErrorStatus
-            }) {
+            }
+            if (isCorrectStatus) {
                 Timber.d("FAILED: by status")
                 return false
             }
