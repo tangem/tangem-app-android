@@ -24,8 +24,6 @@
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
     <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
     <string name="app_settings_title">App Settings</string>
-    <string name="card_settings_action_sheet_reset">Reset</string>
-    <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
@@ -348,7 +346,7 @@
     <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_of_to">Swap of %1$s to %2$s</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
-    <string name="swapping_token_list_your_title">Choose token</string>
+    <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_not_available">not available</string>
     <string name="tangem_app_name">Tangem</string>
@@ -465,6 +463,7 @@
     <string name="welcome_unlock_card">Scan card</string>
     <string name="welcome_unlock_description">Use %s or scan a card to access the app</string>
     <string name="welcome_unlock_title">Welcome back!</string>
+
     <!-- Special string -->
     <string name="common_custom_string">%s</string>
 </resources>

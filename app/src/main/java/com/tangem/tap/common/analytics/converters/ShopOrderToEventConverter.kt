@@ -20,7 +20,8 @@ class ShopOrderToEventConverter : Converter<Pair<Storefront.Checkout, ProductTyp
             ProductType.WALLET_3_CARDS -> "3"
         }
         val amount = "${checkout.totalPriceV2.amount} ${checkout.totalPriceV2.currencyCode.name}"
-        val code = (checkout.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
+        val code = (checkout.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)
+            ?.code
 
         return Shop.Purchased(sku, count, amount, code)
     }
