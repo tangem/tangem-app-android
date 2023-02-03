@@ -110,18 +110,18 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
         val currentWalletStore = mutableStores[index]
         val updatedWalletStore = update(currentWalletStore)
 
-            if (currentWalletStore != updatedWalletStore) {
-                Timber.d(
-                    """
+        if (currentWalletStore != updatedWalletStore) {
+            Timber.d(
+                """
                         Update wallet store in storage
                         |- User wallet ID: ${updatedWalletStore.userWalletId}
                         |- Blockchain: ${updatedWalletStore.blockchain}
-                    """.trimIndent(),
-                )
+                """.trimIndent(),
+            )
 
-                mutableStores[index] = updatedWalletStore
-            }
+            mutableStores[index] = updatedWalletStore
         }
+    }
 
     return mutableStores
 }
