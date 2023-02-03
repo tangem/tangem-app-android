@@ -66,7 +66,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
 import java.math.BigDecimal
@@ -87,17 +86,17 @@ class WalletMiddleware {
         )
     }
 
-    val walletMiddleware: Middleware<AppState> = { dispatch, state ->
+    val walletMiddleware: Middleware<AppState> = { _, state ->
         { next ->
             { action ->
-                handleAction(state, action, dispatch)
+                handleAction(state, action)
                 next(action)
             }
         }
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    private fun handleAction(state: () -> AppState?, action: Action, dispatch: DispatchFunction) {
+    private fun handleAction(state: () -> AppState?, action: Action) {
         if (DemoHelper.tryHandle(state, action)) return
 
         val globalState = store.state.globalState
@@ -203,7 +202,7 @@ class WalletMiddleware {
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                 scope.launch {
-                    delay(700)
+                    delay(timeMillis = 700)
                     store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
                 }
             }
@@ -344,7 +343,7 @@ class WalletMiddleware {
                 .filter { store ->
                     store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
                 }
-                .map { it.blockchainNetwork }
+                .map(WalletStoreModel::blockchainNetwork)
 
             store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(missedDerivations))
         }
