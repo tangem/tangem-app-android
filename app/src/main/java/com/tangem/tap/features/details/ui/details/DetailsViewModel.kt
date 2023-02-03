@@ -39,7 +39,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 }
                 SettingsElement.AppSettings -> if (state.appSettingsState.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (cardTypesResolver?.isMultiwalletAllowed() != true) it else null
-                // SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
+                SettingsElement.ReferralProgram -> if (cardTypesResolver?.isTangemWallet() == true) it else null
                 else -> it
             }
         }
@@ -94,9 +94,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
             SettingsElement.PrivacyPolicy -> {
                 // TODO: To be available later
             }
-            // SettingsElement.ReferralProgram -> {
-            //     store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
-            // }
+            SettingsElement.ReferralProgram -> {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+            }
         }
     }
 
