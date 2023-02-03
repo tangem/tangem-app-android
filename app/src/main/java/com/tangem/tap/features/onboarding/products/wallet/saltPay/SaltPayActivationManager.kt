@@ -31,11 +31,12 @@ import java.math.BigDecimal
 class SaltPayActivationManager(
     val cardId: String,
     val cardPublicKey: ByteArray,
-    val walletPublicKey: ByteArray,
     private val kycProvider: KYCProvider,
     private val paymentologyService: PaymentologyApiService,
     private val gnosisRegistrator: GnosisRegistrator,
 ) {
+
+    val walletPublicKey = gnosisRegistrator.walletManager.wallet.publicKey.seedKey
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
     private val approvalValue: BigDecimal = BigDecimal(2).pow(256).minus(BigDecimal.ONE)
@@ -167,7 +168,6 @@ class SaltPayActivationManager(
             gnosisRegistrator = GnosisRegistrator.stub(),
             cardId = "",
             cardPublicKey = byteArrayOf(),
-            walletPublicKey = byteArrayOf(),
         )
     }
 }
