@@ -28,7 +28,6 @@ import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
