@@ -29,7 +29,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
     private var cardTranslationY = 70f
 
-    lateinit var keyboardObserver: KeyboardObserver
+    private lateinit var keyboardObserver: KeyboardObserver
 
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
