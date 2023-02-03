@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.successOr
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
@@ -125,7 +126,13 @@ class SaltPayActivationManager(
 
     suspend fun claim(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
         gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
-            return Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
+            val userCancelledError = (it.error as? BlockchainSdkError.WrappedTangemError)
+                ?.tangemError as? TangemSdkError.UserCancelled
+
+            return when (userCancelledError) {
+                null -> Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
+                else -> Result.Failure(userCancelledError)
+            }
         }
         return Result.Success(Unit)
     }
