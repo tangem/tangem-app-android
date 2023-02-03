@@ -70,12 +70,12 @@ class BasicEventsPreChecker {
             }
 
             if (biometricsWalletDataModels.any {
-                    it.status is WalletDataModel.Loading ||
-                        it.status is WalletDataModel.NoAccount ||
-                        it.status is WalletDataModel.Unreachable ||
-                        it.status is WalletDataModel.MissedDerivation ||
-                        it.status.isErrorStatus
-                }) {
+                it.status is WalletDataModel.Loading ||
+                    it.status is WalletDataModel.NoAccount ||
+                    it.status is WalletDataModel.Unreachable ||
+                    it.status is WalletDataModel.MissedDerivation ||
+                    it.status.isErrorStatus
+            }) {
                 Timber.d("FAILED: by status")
                 return false
             }
