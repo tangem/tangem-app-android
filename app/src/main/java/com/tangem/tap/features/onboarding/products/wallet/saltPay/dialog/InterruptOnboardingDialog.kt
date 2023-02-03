@@ -4,7 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.common.extensions.dispatchDialogHide
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingDialog
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
