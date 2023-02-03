@@ -228,10 +228,10 @@ private fun LoadingTokensInfo(isMultiCurrencyWallet: Boolean) {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun LoadedTokensInfo(
-    modifier: Modifier = Modifier,
     balanceAmount: String,
     tokensCount: Int?,
     showWarning: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
