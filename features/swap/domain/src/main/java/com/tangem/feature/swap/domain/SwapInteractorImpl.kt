@@ -599,8 +599,14 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val INFINITY_SYMBOL = "∞"
 
         private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
-            "ethereum", "binance-smart-chain", "polygon-pos",
-            "optimistic-ethereum", "arbitrum-one", "xdai", "avalanche", "fantom",
+            "ethereum",
+            "binance-smart-chain",
+            "polygon-pos",
+            "optimistic-ethereum",
+            "arbitrum-one",
+            "xdai",
+            "avalanche",
+            "fantom",
         )
     }
 }
