@@ -27,6 +27,7 @@ import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -117,27 +118,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
                     store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Warning))
-                }
-            }
-        }
-        is TwinCardsAction.Wallet.HandleOnBackPressed -> {
-            val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet &&
-                twinCardsState.currentStep != TwinCardsStep.TopUpWallet &&
-                twinCardsState.currentStep != TwinCardsStep.Done
-
-            if (twinCardsState.showAlert) {
-                val onInterruptPrompt = {
-                    store.dispatch(TwinCardsAction.CardsManager.Release)
-                    action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
-                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                    }
-                }
-                val stateDialog = TwinCardsAction.Wallet.ShowInterruptDialog(onInterruptPrompt)
-                store.dispatchDialogShow(stateDialog)
-            } else {
-                store.dispatch(TwinCardsAction.CardsManager.Release)
-                action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
-                    store.dispatch(NavigationAction.PopBackTo())
                 }
             }
         }
@@ -330,6 +310,23 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
                 scanResponse = action.scanResponse,
             )
+        }
+        is TwinCardsAction.OnBackPressed -> {
+            if (twinCardsState.twinningInProgress) {
+                store.dispatchDialogShow(OnboardingDialog.TwinningProcessNotCompleted)
+            } else {
+                val onOkCallback = {
+                    val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet &&
+                        twinCardsState.currentStep != TwinCardsStep.TopUpWallet &&
+                        twinCardsState.currentStep != TwinCardsStep.Done
+
+                    store.dispatch(TwinCardsAction.CardsManager.Release)
+                    action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
+                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                    }
+                }
+                store.dispatchDialogShow(OnboardingDialog.InterruptOnboarding(onOkCallback))
+            }
         }
         else -> Unit
     }

@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.graphics.Bitmap
 import android.net.Uri
 import com.tangem.common.CardFilter
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -106,10 +105,6 @@ sealed class BackupStep {
     object WritePrimaryCard : BackupStep()
     data class WriteBackupCard(val cardNumber: Int) : BackupStep()
     object Finished : BackupStep()
-}
-
-sealed class OnboardingDialog : StateDialog {
-    data class InterruptOnboarding(val onOk: VoidCallback) : BackupDialog()
 }
 
 sealed class BackupDialog : StateDialog {
