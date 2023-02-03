@@ -39,21 +39,21 @@ data class TwinCardsState(
                 TwinCardsStep.CreateSecondWallet,
                 TwinCardsStep.CreateThirdWallet,
                 TwinCardsStep.TopUpWallet,
-                TwinCardsStep.Done
+                TwinCardsStep.Done,
             )
             CreateTwinWalletMode.RecreateWallet -> listOf(
                 TwinCardsStep.None,
                 TwinCardsStep.CreateFirstWallet,
                 TwinCardsStep.CreateSecondWallet,
                 TwinCardsStep.CreateThirdWallet,
-                TwinCardsStep.Done
+                TwinCardsStep.Done,
             )
         }
 
     val progress: Int
         get() = steps.indexOf(currentStep)
 
-    val showAlert: Boolean
+    val twinningInProgress: Boolean
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
