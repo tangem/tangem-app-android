@@ -24,6 +24,8 @@
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
     <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
     <string name="app_settings_title">App Settings</string>
+    <string name="card_settings_action_sheet_reset">Reset</string>
+    <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
@@ -134,13 +136,13 @@
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_tokens">Tokens</string>
-    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets.</string>
+    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
-    <string name="onboarding_access_code_feature_2_description">You can set an individual access code on each card later.</string>
+    <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
     <string name="onboarding_access_code_feature_2_title">Personalize</string>
-    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place.</string>
+    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place</string>
     <string name="onboarding_access_code_feature_3_title">Restore</string>
-    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code.</string>
+    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code</string>
     <string name="onboarding_access_code_intro_title">Create Access Code</string>
     <string name="onboarding_access_code_repeat_code_title">Re-enter your Access Code</string>
     <string name="onboarding_access_code_too_short">Access code must be at least 4 characters long</string>
@@ -178,7 +180,7 @@
     <string name="onboarding_navbar_register_wallet">Connect</string>
     <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
     <string name="onboarding_saltpay_button_backup_origin">Tap the SaltPay card</string>
-    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add Tangem card as your backup</string>
+    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add the Tangem card as your backup</string>
     <string name="onboarding_saltpay_subtitle_one_backup_card">Finalize the backup process by creating an access code</string>
     <string name="onboarding_saltpay_title_backup_card">Tap the Tangem card</string>
     <string name="onboarding_saltpay_title_no_backup_card">No backup card</string>
@@ -219,7 +221,7 @@
     <string name="onboarding_top_up_button_show_wallet_address">Show the wallet\'s address</string>
     <string name="onboarding_top_up_header">Top up your wallet</string>
     <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
-    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over</string>
     <string name="onboarding_wallet_info_subtitle_first">You can backup your keys up to two other blank Tangem Wallet cards.</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Access code can be restored with one of backup cards.</string>
     <string name="onboarding_wallet_info_subtitle_second">All the backup cards can be used as full-functional with the identical keys.</string>
@@ -344,7 +346,7 @@
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
     <string name="swapping_swap">Swap</string>
-    <string name="swapping_swap_of_to">Swap of %1$s to %2$s</string>
+    <string name="swapping_swap_of_to">Swap of %s to</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
@@ -401,8 +403,11 @@
     <string name="wallet_connect_create_tx_message">Request to create transaction for %1$s\n%2$s\n\nAmount: %3$s\nFee: %4$s\nTotal: %5$s\nBalance: %6$s</string>
     <string name="wallet_connect_create_tx_not_enough_funds">Can\'t send transaction. Not enough funds.</string>
     <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session. Please, try again later.</string>
+    <string name="wallet_connect_error_missing_blockchains">Not all tokens were added to your list. Please add them first and try again. Missing tokens:\n</string>
     <string name="wallet_connect_error_timeout">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Session request contains unsupported blockchains for WalletConnect connection. Unsupported blockchains:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
+    <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
     <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>

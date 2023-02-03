@@ -24,6 +24,8 @@
     <string name="app_settings_saved_wallet">將錢包保存在應用程序中</string>
     <string name="app_settings_saved_wallet_footer">啟用以將所有錢包鏈接到 Tangem 應用程序。解鎖應用程序需要生物識別身份驗證。交易簽名需要輕觸您的 Tangem 卡片</string>
     <string name="app_settings_title">APP設置</string>
+    <string name="card_settings_action_sheet_reset">重置</string>
+    <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
     <string name="card_settings_reset_card_to_factory">回復至原廠設置</string>
@@ -134,13 +136,13 @@
     <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
     <string name="main_scan_card_warning_view_title">掃描卡片</string>
     <string name="main_tokens">代幣</string>
-    <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包。</string>
+    <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包</string>
     <string name="onboarding_access_code_feature_1_title">保護</string>
     <string name="onboarding_access_code_feature_2_description">您可以稍後在每張卡上設置單獨的訪問密碼</string>
     <string name="onboarding_access_code_feature_2_title">個人化</string>
-    <string name="onboarding_access_code_feature_3_description">門禁密碼可以用聯動卡恢復，不要把所有卡都放在一個地方。</string>
+    <string name="onboarding_access_code_feature_3_description">門禁密碼可以用聯動卡恢復，不要把所有卡都放在一個地方</string>
     <string name="onboarding_access_code_feature_3_title">恢復</string>
-    <string name="onboarding_access_code_hint">選擇您想要的任何單詞、短語或數字作為您的訪問代碼。</string>
+    <string name="onboarding_access_code_hint">選擇您想要的任何單詞、短語或數字作為您的訪問代碼</string>
     <string name="onboarding_access_code_intro_title">建立訪問密碼</string>
     <string name="onboarding_access_code_repeat_code_title">重新輸入訪問密碼</string>
     <string name="onboarding_access_code_too_short">訪問代碼的長度必須至少為 4 個字符</string>
@@ -369,6 +371,7 @@
     <string name="twins_recreate_toolbar">Tangem雙胞胎卡</string>
     <string name="twins_recreate_warning">這個動作是不可逆的。您將無法訪問舊錢包</string>
     <string name="user_wallet_list_add_button">添加新錢包</string>
+    <string name="user_wallet_list_delete_prompt">您確定要刪除此錢包?</string>
     <string name="user_wallet_list_editing_count">已選擇 %d</string>
     <string name="user_wallet_list_error_wallet_already_saved">此錢包已保存，您可以再添加一個</string>
     <string name="user_wallet_list_multi_header">多幣種</string>
@@ -400,8 +403,11 @@
     <string name="wallet_connect_create_tx_message">請求為 %1$s 創建交易\n%2$s\n\n數量： %3$s\n費用： %4$s\n全部的： %5$s\n餘額： %6$s</string>
     <string name="wallet_connect_create_tx_not_enough_funds">無法交易，無足夠資金</string>
     <string name="wallet_connect_error_failed_to_connect">未能建立 WalletConnect 連接。請稍後再試</string>
+    <string name="wallet_connect_error_missing_blockchains">並非所有代幣都已添加到您的列表中。請先添加它們，然後重試。缺少標記:\n</string>
     <string name="wallet_connect_error_timeout">無法建立 WalletConnect 連接:超時錯誤。請稍後再試</string>
+    <string name="wallet_connect_error_unsupported_blockchains">會話請求包含不支持 WalletConnect 連接的區塊鏈。不支持的區塊鏈：\n</string>
     <string name="wallet_connect_error_unsupported_dapp">由於技術問題，無法與此 Dapp 建立連接</string>
+    <string name="wallet_connect_generic_error_with_code">我們遇到了未知錯誤。錯誤代碼：%d。如果問題仍然存在-請隨時聯繫我們的支持人員</string>
     <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
     <string name="wallet_connect_no_sessions_message">沒有打開中的WalletConnect連接</string>
     <string name="wallet_connect_no_sessions_title">Ooops, 沒有連接</string>
