@@ -24,6 +24,8 @@
     <string name="app_settings_saved_wallet">Cохранение кошелька</string>
     <string name="app_settings_saved_wallet_footer">Подключите функцию привязки карты в приложении, а также возможность биометрической аутентификации. Подпись транзакции все так же потребует карту.</string>
     <string name="app_settings_title">Настройки приложения</string>
+    <string name="card_settings_action_sheet_reset">Сбросить</string>
+    <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
     <string name="card_settings_change_access_code">Смена кода доступа</string>
     <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
@@ -134,13 +136,13 @@
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
     <string name="main_tokens">Токены</string>
-    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт.</string>
+    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
-    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты.</string>
+    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
     <string name="onboarding_access_code_feature_2_title">Персонализация</string>
-    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте.</string>
+    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте</string>
     <string name="onboarding_access_code_feature_3_title">Восстановление</string>
-    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа.</string>
+    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа</string>
     <string name="onboarding_access_code_intro_title">Создайте код доступа</string>
     <string name="onboarding_access_code_repeat_code_title">Повторно введите код доступа</string>
     <string name="onboarding_access_code_too_short">Код доступа должен состоять не менее чем из 4 символов.</string>
@@ -219,7 +221,7 @@
     <string name="onboarding_top_up_button_show_wallet_address">Показать адрес кошелька</string>
     <string name="onboarding_top_up_header">Пополните свой кошелек</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
     <string name="onboarding_wallet_info_subtitle_first">Вы можете сделать резервную копию своих ключей на одной или двух других пустых картах Wallet.</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Код доступа можно восстановить с помощью одной из резервных карт.</string>
     <string name="onboarding_wallet_info_subtitle_second">Все резервные карты являются полнофункциональными и содержат одинаковые ключи.</string>
@@ -344,7 +346,7 @@
     <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
     <string name="swapping_success_view_title">В процессе</string>
     <string name="swapping_swap">Обмен</string>
-    <string name="swapping_swap_of_to">Обмен %1$s на %2$s</string>
+    <string name="swapping_swap_of_to">Обмен %s на</string>
     <string name="swapping_token_list_other_tokens">Другие токены</string>
     <string name="swapping_token_list_title">Выберите токен</string>
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
@@ -401,8 +403,11 @@
     <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %1$s\n%2$s\n\nСумма: %3$s\nКомиссия: %4$s\nВсего: %5$s\nБаланс: %6$s</string>
     <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
     <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_missing_blockchains">Не все токены добавлены в ваш список. Пожалуйста, добавьте их в начале, а потом попробуйте снова. Недостающие токены: \n</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
+    <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
     <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
