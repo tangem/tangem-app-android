@@ -113,7 +113,7 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
 
 private suspend fun navigateTo(appScreen: AppScreen) {
     store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
-    delay(200)
+    delay(timeMillis = 200)
     changeButtonState(ButtonState.ENABLED)
 }
 
