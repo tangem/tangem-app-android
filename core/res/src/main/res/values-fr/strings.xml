@@ -371,6 +371,7 @@
     <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
     <string name="user_wallet_list_add_button">Add new wallet</string>
+    <string name="user_wallet_list_delete_prompt">Are you sure you want to delete this wallet?</string>
     <string name="user_wallet_list_editing_count">%d selected</string>
     <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
     <string name="user_wallet_list_multi_header">Multi-currency</string>
