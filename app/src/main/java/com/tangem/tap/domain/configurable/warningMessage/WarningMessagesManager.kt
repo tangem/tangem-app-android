@@ -39,8 +39,8 @@ class WarningMessagesManager {
         val foundWarning = findWarning(warning)
         return when {
             foundWarning == null -> false
-            foundWarning.type == WarningMessage.Type.Temporary
-                || foundWarning.type == WarningMessage.Type.AppRating -> {
+            foundWarning.type == WarningMessage.Type.Temporary ||
+                foundWarning.type == WarningMessage.Type.AppRating -> {
                 if (foundWarning.isHidden) {
                     false
                 } else {
@@ -70,6 +70,8 @@ class WarningMessagesManager {
     }
 
     companion object {
+        const val REMAINING_SIGNATURES_WARNING = 10
+
         fun devCardWarning(): WarningMessage = WarningMessage(
             "",
             "",
@@ -77,7 +79,7 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Critical,
             listOf(WarningMessage.Location.MainScreen),
             null,
-            R.string.alert_title,
+            R.string.common_warning,
             R.string.alert_developer_card,
             WarningMessage.Origin.Local,
         )
@@ -89,7 +91,7 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Info,
             listOf(WarningMessage.Location.MainScreen),
             null,
-            R.string.alert_title,
+            R.string.common_warning,
             R.string.alert_card_signed_transactions,
             WarningMessage.Origin.Local,
         )
@@ -142,7 +144,7 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Critical,
             listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
-            titleResId = R.string.alert_title,
+            titleResId = R.string.common_warning,
             messageResId = R.string.warning_low_signatures_format,
             origin = WarningMessage.Origin.Local,
             messageFormatArg = remainingSignatures.toString(),
@@ -155,7 +157,7 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Critical,
             listOf(WarningMessage.Location.MainScreen, WarningMessage.Location.SendScreen),
             null,
-            R.string.alert_title,
+            R.string.common_warning,
             R.string.warning_testnet_card_message,
             WarningMessage.Origin.Local,
         )
@@ -167,11 +169,9 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Critical,
             listOf(WarningMessage.Location.MainScreen),
             null,
-            R.string.alert_title,
+            R.string.common_warning,
             R.string.alert_demo_message,
             WarningMessage.Origin.Local,
         )
-
-        const val REMAINING_SIGNATURES_WARNING = 10
     }
 }

@@ -6,51 +6,51 @@ enum class ReceiptLayoutType {
 }
 
 data class ReceiptState(
-        val visibleTypeOfReceipt: ReceiptLayoutType? = null,
-        val fiat: ReceiptFiat? = null,
-        val crypto: ReceiptCrypto? = null,
-        val tokenFiat: ReceiptTokenFiat? = null,
-        val tokenCrypto: ReceiptTokenCrypto? = null,
-        val mainCurrency: MainCurrency? = null
+    val visibleTypeOfReceipt: ReceiptLayoutType? = null,
+    val fiat: ReceiptFiat? = null,
+    val crypto: ReceiptCrypto? = null,
+    val tokenFiat: ReceiptTokenFiat? = null,
+    val tokenCrypto: ReceiptTokenCrypto? = null,
+    val mainCurrency: MainCurrency? = null
 ) : SendScreenState {
     override val stateId: StateId = StateId.RECEIPT
 }
 
 data class ReceiptSymbols(
-        val fiat: String,
-        val crypto: String,
-        val token: String? = null
+    val fiat: String,
+    val crypto: String,
+    val token: String? = null
 )
 
 data class ReceiptFiat(
-        val amountFiat: String,
-        val feeFiat: String,
-        val totalFiat: String,
-        val willSentCrypto: String,
-        val symbols: ReceiptSymbols
+    val amountFiat: String,
+    val feeFiat: String,
+    val totalFiat: String,
+    val willSentCrypto: String,
+    val symbols: ReceiptSymbols
 )
 
 data class ReceiptCrypto(
-        val amountCrypto: String,
-        val feeCrypto: String,
-        val totalCrypto: String,
-        val feeFiat: String,
-        val willSentFiat: String,
-        val symbols: ReceiptSymbols
+    val amountCrypto: String,
+    val feeCrypto: String,
+    val totalCrypto: String,
+    val feeFiat: String,
+    val willSentFiat: String,
+    val symbols: ReceiptSymbols
 )
 
 data class ReceiptTokenCrypto(
-        val amountToken: String,
-        val feeCoin: String,
-        val totalFiat: String,
-        val symbols: ReceiptSymbols
+    val amountToken: String,
+    val feeCoin: String,
+    val totalFiat: String,
+    val symbols: ReceiptSymbols
 )
 
 data class ReceiptTokenFiat(
-        val amountFiat: String,
-        val feeFiat: String,
-        val totalFiat: String,
-        val willSentToken: String,
-        val willSentFeeCoin: String,
-        val symbols: ReceiptSymbols
+    val amountFiat: String,
+    val feeFiat: String,
+    val totalFiat: String,
+    val willSentToken: String,
+    val willSentFeeCoin: String,
+    val symbols: ReceiptSymbols
 )

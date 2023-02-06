@@ -24,7 +24,7 @@ class SaltPayBalanceWidget(
     private val binding: LayoutSingleWalletBalanceBinding,
     private val data: SaltPayBalanceWidgetData,
 ) {
-    fun setup(): Unit = with(binding) {
+    fun setup() = with(binding) {
         if (data.state == ProgressState.Loading) {
             veilBalance.veil()
             veilBalanceCrypto.veil()
@@ -39,13 +39,13 @@ class SaltPayBalanceWidget(
             show = data.state != ProgressState.Error,
         )
         if (data.fiatAmount == null) {
-            //TODO: SaltPay: A tricky solution to the problem with displaying rates
+            // TODO: SaltPay: A tricky solution to the problem with displaying rates
             // If the rates are loaded after the walletManager.update() is completely updated,
             // then this problem can be avoided
             actionDebouncer(WalletAction.LoadFiatRate())
         } else {
             veilBalance.unVeil()
-            tvBalance.text = data.fiatAmount?.formatAmountAsSpannedString(
+            tvBalance.text = data.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = data.fiatCurrency?.symbol ?: "",
             )
         }
@@ -61,4 +61,3 @@ class SaltPayBalanceWidget(
 }
 
 private val actionDebouncer = debounce<Action>(500, mainScope) { store.dispatch(it) }
-
