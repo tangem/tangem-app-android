@@ -2,6 +2,8 @@ package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.GetBlockCredentials
+import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
@@ -91,14 +93,16 @@ class ConfigManager {
                     authToken = values.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = values.blockcypherTokens,
-                quickNodeCredentials = QuickNodeCredentials(
+                quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = values.quiknodeApiKey,
                     subdomain = values.quiknodeSubdomain,
                 ),
-                bscQuickNodeCredentials = QuickNodeCredentials(
+                quickNodeBscCredentials = QuickNodeCredentials(
                     apiKey = values.bscQuiknodeApiKey,
                     subdomain = values.bscQuiknodeSubdomain,
                 ),
+                nowNodesCredentials = NowNodeCredentials(values.nowNodesApiKey),
+                getBlockCredentials = GetBlockCredentials(values.getBlockApiKey),
                 infuraProjectId = values.infuraProjectId,
                 tronGridApiKey = values.tronGridApiKey,
                 saltPayAuthToken = values.saltPay.credentials.token,
@@ -121,14 +125,16 @@ class ConfigManager {
                     authToken = values.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = values.blockcypherTokens,
-                quickNodeCredentials = QuickNodeCredentials(
+                quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = values.quiknodeApiKey,
                     subdomain = values.quiknodeSubdomain,
                 ),
-                bscQuickNodeCredentials = QuickNodeCredentials(
+                quickNodeBscCredentials = QuickNodeCredentials(
                     apiKey = values.bscQuiknodeApiKey,
                     subdomain = values.bscQuiknodeSubdomain,
                 ),
+                nowNodesCredentials = NowNodeCredentials(values.nowNodesApiKey),
+                getBlockCredentials = GetBlockCredentials(values.getBlockApiKey),
                 infuraProjectId = values.infuraProjectId,
                 saltPayAuthToken = values.saltPay.credentials.token,
             ),
