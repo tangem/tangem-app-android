@@ -24,7 +24,7 @@ class TransactionExtrasReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         return when (action) {
             is Prepare -> handleInitialization(action, sendState)
-            Release -> handleRelease(action, sendState)
+            Release -> handleRelease(sendState)
             is XlmMemo -> handleXlmMemo(action, sendState, sendState.transactionExtrasState)
             is BinanceMemo -> handleBinanceMemo(action, sendState, sendState.transactionExtrasState)
             is XrpDestinationTag -> handleXrpTag(action, sendState, sendState.transactionExtrasState)
@@ -43,8 +43,11 @@ class TransactionExtrasReducer : SendInternalReducer {
                     if (tag == null) {
                         TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState())
                     } else {
-                        TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState(
-                                InputViewValue("$tag", false), tag)
+                        TransactionExtrasState(
+                            xrpDestinationTag = XrpDestinationTagState(
+                                viewFieldValue = InputViewValue("$tag", false),
+                                tag = tag,
+                            ),
                         )
                     }
                 } else {
@@ -58,7 +61,7 @@ class TransactionExtrasReducer : SendInternalReducer {
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
     }
 
-    private fun handleRelease(action: SendScreenAction, sendState: SendState): SendState {
+    private fun handleRelease(sendState: SendState): SendState {
         val result = TransactionExtrasState()
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
     }
