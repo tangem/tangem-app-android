@@ -21,7 +21,7 @@
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/menu_popular_tokens"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-            app:title="@string/add_tokens_title" />
+            app:title="@string/main_manage_tokens" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -30,7 +30,7 @@
         android:id="@+id/cv_currencies"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

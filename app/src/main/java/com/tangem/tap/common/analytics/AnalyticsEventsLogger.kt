@@ -1,8 +1,8 @@
 package com.tangem.tap.common.analytics
 
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.analytics.api.ErrorEventLogger
-import com.tangem.tap.common.analytics.api.EventLogger
+import com.tangem.core.analytics.api.ErrorEventLogger
+import com.tangem.core.analytics.api.EventLogger
 import timber.log.Timber
 
 class AnalyticsEventsLogger(

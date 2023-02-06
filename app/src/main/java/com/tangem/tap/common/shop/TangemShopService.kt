@@ -4,12 +4,13 @@ import android.app.Application
 import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
-import com.tangem.common.extensions.ifNotNull
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.data.TotalSum
+import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.shopify.ShopifyService
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
@@ -22,7 +23,6 @@ import java.util.*
 class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     private val shopifyService = ShopifyService(application, shopifyShop)
-
 
     private val checkouts = mutableMapOf<ProductType, Storefront.Checkout>()
     private val variants = mutableMapOf<ProductType, Storefront.ProductVariant>()
@@ -41,24 +41,27 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
             variants.putAll(availableVariants)
 
             if (variants.size < SKUS_TO_DISPLAY.size) {
-                return Result.failure(Exception(
-                    "Shopify: products are missing, " +
-                            "\nproducts available: ${variants.keys.map { it.sku }}"))
+                return Result.failure(
+                    Exception(
+                        "Shopify: products are missing, " +
+                            "\nproducts available: ${variants.keys.map { it.sku }}",
+                    ),
+                )
             }
 
             val twoCardsProduct = TangemProduct(
                 type = ProductType.WALLET_2_CARDS,
                 totalSum = TotalSum(
                     finalValue = variants[ProductType.WALLET_2_CARDS]?.priceV2?.format(),
-                    beforeDiscount = variants[ProductType.WALLET_2_CARDS]?.compareAtPriceV2?.format()
-                )
+                    beforeDiscount = variants[ProductType.WALLET_2_CARDS]?.compareAtPriceV2?.format(),
+                ),
             )
             val threeCardsProduct = TangemProduct(
                 type = ProductType.WALLET_3_CARDS,
                 totalSum = TotalSum(
                     finalValue = variants[ProductType.WALLET_3_CARDS]?.priceV2?.format(),
-                    beforeDiscount = variants[ProductType.WALLET_3_CARDS]?.compareAtPriceV2?.format()
-                )
+                    beforeDiscount = variants[ProductType.WALLET_3_CARDS]?.compareAtPriceV2?.format(),
+                ),
             )
             createCheckouts()
             return Result.success(listOf(twoCardsProduct, threeCardsProduct))
@@ -85,8 +88,9 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     fun buyWithGooglePay(productType: ProductType) {
         val totalPrice = checkouts[productType]!!.totalPriceV2.amount
         googlePayService.payWithGooglePay(
-            totalPriceCents = totalPrice, currencyCode = checkouts[productType]!!.currencyCode.name,
-            merchantID = shopifyService.shop.merchantID
+            totalPriceCents = totalPrice,
+            currencyCode = checkouts[productType]!!.currencyCode.name,
+            merchantID = shopifyService.shop.merchantID,
         )
     }
 
@@ -105,7 +109,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     suspend fun handleGooglePayResult(
         resultCode: Int,
         data: Intent?,
-        productType: ProductType
+        productType: ProductType,
     ): Result<Unit> {
         val result = googlePayService.handleResponseFromGooglePay(resultCode, data)
         result.onSuccess {
@@ -120,7 +124,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     private suspend fun completeTokenizedPayment(
         paymentData: PaymentData,
-        productType: ProductType
+        productType: ProductType,
     ): Result<Storefront.Checkout> {
         val checkout = checkouts[productType]!!
         val googlePayResponse =
@@ -141,19 +145,18 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
             phone = addressGPay.phoneNumber
         }
 
-
         val payment = Storefront.TokenizedPaymentInputV3(
             amount,
             idempotencyKey,
             address,
             paymentData.toJson(),
-            Storefront.PaymentTokenType.GOOGLE_PAY
+            Storefront.PaymentTokenType.GOOGLE_PAY,
         )
             .setTest(true)
 
         return shopifyService.completeWithTokenizedPayment(
             payment = payment,
-            checkoutID = checkout.id
+            checkoutID = checkout.id,
         )
     }
 
@@ -182,10 +185,10 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
                     productType,
                     TotalSum(
                         finalValue = it.totalPriceV2.format(),
-                        beforeDiscount = variants[productType]!!.compareAtPriceV2.format()
+                        beforeDiscount = variants[productType]!!.compareAtPriceV2.format(),
                     ),
-                    appliedDiscount = it.getAppliedDiscount()
-                )
+                    appliedDiscount = it.getAppliedDiscount(),
+                ),
 
             )
         }
@@ -196,16 +199,19 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
         return checkouts[productType]!!.webUrl
     }
 
-    suspend fun waitForCheckout(productType: ProductType, analyticsHandler: GlobalAnalyticsEventHandler?) {
+    suspend fun waitForCheckout(productType: ProductType) {
         val result = shopifyService.checkout(true, checkouts[productType]!!.id)
-        result.onSuccess {
-            ifNotNull(analyticsHandler, it.order) { handler, order -> handler.handleShopifyOrderEvent(order) }
+        result.onSuccess { checkout ->
+            if (checkout.order != null && checkout.lineItems != null) {
+                val event = ShopOrderToEventConverter().convert(checkout to productType)
+                Analytics.send(event)
+            }
         }
     }
 
     companion object {
-        const val TANGEM_WALLET_2_CARDS_SKU = "TG115x2"
-        const val TANGEM_WALLET_3_CARDS_SKU = "TG115x3"
+        const val TANGEM_WALLET_2_CARDS_SKU = "TG115X2-S"
+        const val TANGEM_WALLET_3_CARDS_SKU = "TG115X3-S"
         val SKUS_TO_DISPLAY = listOf(TANGEM_WALLET_2_CARDS_SKU, TANGEM_WALLET_3_CARDS_SKU)
     }
 }
