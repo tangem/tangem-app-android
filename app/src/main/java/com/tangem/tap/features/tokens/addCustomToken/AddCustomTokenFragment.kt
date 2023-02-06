@@ -10,9 +10,11 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
@@ -27,6 +29,11 @@ import org.rekotlin.StoreSubscriber
 class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment), StoreSubscriber<AddCustomTokenState> {
 
     private var state: MutableState<AddCustomTokenState> = mutableStateOf(domainStore.state.addCustomTokensState)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Analytics.send(ManageTokens.CustomToken.ScreenOpened())
+    }
 
     override fun subscribeToStore() {
         domainStore.subscribe(this) { state ->
@@ -45,30 +52,28 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-        view.findViewById<Toolbar>(R.id.toolbar)?.let {
-            it.setTitle(R.string.add_custom_token_title)
-        }
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        view.findViewById<Toolbar>(R.id.toolbar)?.setTitle(R.string.add_custom_token_title)
 
         val closePopupTrigger = initClosingPopupTriggerEvent()
         view.findViewById<ComposeView>(R.id.view_compose)?.setContent {
-            AppCompatTheme(requireContext()) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
+            TangemTheme {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
                 ) {
                     AddCustomTokenScreen(state, closePopupTrigger)
                 }
-
             }
         }
-
-
     }
 
     private fun initClosingPopupTriggerEvent(): ClosePopupTrigger = ClosePopupTrigger().apply {
         onCloseComplete = ::handleOnBackPressed
-        addBackPressHandler(object : FragmentOnBackPressedHandler {
-            override fun handleOnBackPressed() = close()
-        })
+        addBackPressHandler(
+            object : FragmentOnBackPressedHandler {
+                override fun handleOnBackPressed() = close()
+            },
+        )
     }
 }

@@ -6,25 +6,20 @@ import com.tangem.Message
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
-import com.tangem.common.card.Card
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
-import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
-    private val card: Card,
+    card: CardDTO,
     assetReader: AssetReader,
-    val analyticsHandler: GlobalAnalyticsEventHandler?
 ) {
-
-    private val currentCardId: String = card.cardId
+    private val firstCardId: String = card.cardId
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
@@ -32,18 +27,14 @@ class TwinCardsManager(
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
-        val response = tangemSdkManager.runTaskAsync(CreateFirstTwinWalletTask(), currentCardId, message)
+        val response = tangemSdkManager.runTaskAsync(
+            runnable = CreateFirstTwinWalletTask(firstCardId),
+            cardId = firstCardId,
+            initialMessage = message,
+        )
         when (response) {
             is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                   analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.CreateWallet,
-                        card = card
-                    )
-                }
-            }
+            is CompletionResult.Failure -> {}
         }
         return response
     }
@@ -55,46 +46,30 @@ class TwinCardsManager(
     ): CompletionResult<CreateWalletResponse> {
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = currentCardPublicKey!!,
-            firstCardId = currentCardId,
+            firstCardId = firstCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
-            creatingWalletMessage = creatingWalletMessage
+            creatingWalletMessage = creatingWalletMessage,
         )
         val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
             }
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.CreateWallet,
-                        card = card
-                    )
-                }
-            }
+            is CompletionResult.Failure -> {}
         }
         return response
     }
 
     suspend fun complete(message: Message): Result<ScanResponse> {
         val response = tangemSdkManager.runTaskAsync(
-            FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
-            currentCardId, message
+            runnable = FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
+            cardId = firstCardId,
+            initialMessage = message,
         )
         return when (response) {
             is CompletionResult.Success -> Result.Success(response.data)
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.WriteIssuerData,
-                        card = card
-                    )
-                }
-                Result.fromTangemSdkError(response.error)
-            }
+            is CompletionResult.Failure -> Result.fromTangemSdkError(response.error)
         }
     }
 
@@ -103,13 +78,13 @@ class TwinCardsManager(
             val issuer = getIssuers(reader).first { it.publicKey == publicKey }
             return KeyPair(
                 publicKey = issuer.publicKey.hexToBytes(),
-                privateKey = issuer.privateKey.hexToBytes()
+                privateKey = issuer.privateKey.hexToBytes(),
             )
         }
 
         private fun getAdapter(): JsonAdapter<List<Issuer>> {
-            return MoshiConverter.defaultMoshi().adapter(
-                Types.newParameterizedType(List::class.java, Issuer::class.java)
+            return MoshiConverter.sdkMoshi.adapter(
+                Types.newParameterizedType(List::class.java, Issuer::class.java),
             )
         }
 
@@ -121,7 +96,6 @@ class TwinCardsManager(
 }
 
 private class Issuer(
-    val id: String,
     val privateKey: String,
     val publicKey: String,
 )
