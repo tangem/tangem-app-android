@@ -6,7 +6,9 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.stringResource
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
+import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import com.tangem.wallet.R
+import com.tangem.tap.features.details.redux.CardInfo as ReduxCardInfo
 
 data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
@@ -15,18 +17,18 @@ data class CardSettingsScreenState(
 )
 
 sealed class CardInfo(
-    val titleRes: TextReference, val subtitle: TextReference, val clickable: Boolean = false,
+    val titleRes: TextReference,
+    val subtitle: TextReference,
+    val clickable: Boolean = false,
 ) {
     class CardId(subtitle: String) : CardInfo(
         titleRes = TextReference.Res(R.string.details_row_title_cid),
-        subtitle = TextReference
-            .Str(subtitle),
+        subtitle = TextReference.Str(subtitle),
     )
 
     class Issuer(subtitle: String) : CardInfo(
         titleRes = TextReference.Res(R.string.details_row_title_issuer),
-        subtitle = TextReference
-            .Str(subtitle),
+        subtitle = TextReference.Str(subtitle),
     )
 
     class SignedHashes(hashes: String) : CardInfo(
@@ -34,10 +36,7 @@ sealed class CardInfo(
         subtitle = TextReference.Res(R.string.details_row_subtitle_signed_hashes_format, hashes),
     )
 
-    class SecurityMode(
-        securityOption: SecurityOption,
-        clickable: Boolean,
-    ) : CardInfo(
+    class SecurityMode(securityOption: SecurityOption, clickable: Boolean) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_security_mode),
         subtitle = TextReference.Res(securityOption.toTitleRes()),
         clickable = clickable,
@@ -49,9 +48,9 @@ sealed class CardInfo(
         clickable = true,
     )
 
-    object ResetToFactorySettings : CardInfo(
+    class ResetToFactorySettings(cardInfo: ReduxCardInfo) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_reset_card_to_factory),
-        subtitle = TextReference.Res(R.string.card_settings_reset_card_to_factory_footer),
+        subtitle = cardInfo.toResetCardDescriptionText(),
         clickable = true,
     )
 }
