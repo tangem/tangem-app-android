@@ -319,6 +319,7 @@ internal class SwapInteractorImpl @Inject constructor(
         toToken: Currency,
     ): SwapState {
         val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId)
+        val appCurrency = userWalletManager.getUserAppCurrency()
         val fromTokenBalance = tokensBalance[fromToken.symbol]?.let {
             SwapAmount(it.value, it.decimals)
         }
@@ -328,6 +329,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return SwapState.EmptyAmountState(
             fromTokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
             toTokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
+            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(BigDecimal.ONE, appCurrency.symbol),
         )
     }
 
