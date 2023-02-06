@@ -1,17 +1,21 @@
 package com.tangem.tap.features.disclaimer.redux
 
-import com.tangem.common.extensions.VoidCallback
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.features.disclaimer.Disclaimer
+import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.Action
 
 sealed class DisclaimerAction : Action {
 
-    data class SetDisclaimerType(
-        val type: DisclaimerType,
+    data class SetDisclaimer(val disclaimer: Disclaimer) : DisclaimerAction()
+
+    data class Show(
+        val fromScreen: AppScreen,
+        val callback: DisclaimerCallback? = null,
     ) : DisclaimerAction()
 
-    data class Show(val onAcceptCallback: VoidCallback? = null) : DisclaimerAction()
-    data class AcceptDisclaimer(val type: DisclaimerType) : DisclaimerAction()
+    object AcceptDisclaimer : DisclaimerAction()
+    object OnBackPressed : DisclaimerAction()
 
-    internal data class UpdateState(val type: DisclaimerType, val accepted: Boolean) : DisclaimerAction()
-    internal data class SetOnAcceptCallback(val onAcceptCallback: VoidCallback? = null) : DisclaimerAction()
+    data class OnProgressStateChanged(val state: ProgressState?) : DisclaimerAction()
 }
