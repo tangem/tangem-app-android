@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.ui
 
+import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
@@ -14,6 +15,8 @@ import coil.size.Scale
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.compose.PinCodeWidget
 import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -60,7 +63,9 @@ internal class OnboardingSaltPayView(
     private val toolbar: MaterialToolbar by lazy { walletFragment.binding.toolbar }
     private val claimBinding: LayoutOnboardingMainBinding by lazy { walletFragment.bindingSaltPay.claim }
     private val topContainer: LayoutOnboardingContainerTopBinding by lazy { claimBinding.onboardingTopContainer }
-    private val actionContainer: LayoutOnboardingContainerBottomBinding by lazy { claimBinding.onboardingActionContainer }
+    private val actionContainer: LayoutOnboardingContainerBottomBinding by lazy {
+        claimBinding.onboardingActionContainer
+    }
 
     private val btnRefreshBalanceWidget by lazy {
         RefreshBalanceWidget(claimBinding.onboardingTopContainer.onboardingWalletContainer)
@@ -88,14 +93,15 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleCardArtworks(state: OnboardingWalletState) = with(walletFragment.binding) {
-        //TODO: SaltPay: remove hardCode
+        // TODO: SaltPay: remove hardCode
         if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
             imvFrontCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FILL)
                 crossfade(enable = true)
             }
         } else {
-            walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
+            val uri = Uri.parse(state.onboardingSaltPayState.saltPayCardArtworkUrl)
+            walletFragment.loadImageIntoImageView(uri, imvFrontCard)
         }
         imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
 
@@ -143,7 +149,8 @@ internal class OnboardingSaltPayView(
             SaltPayActivationStep.Claim -> handleClaim(state)
             SaltPayActivationStep.ClaimInProgress -> handleClaim(state)
             SaltPayActivationStep.ClaimSuccess -> handleClaim(state)
-            SaltPayActivationStep.Success -> handleSuccess(state)
+            SaltPayActivationStep.Success -> handleSuccess()
+            else -> Unit
         }
         progressButton?.changeState(state.mainButtonState)
     }
@@ -178,6 +185,7 @@ internal class OnboardingSaltPayView(
         showOnlyView(connectCard.root) {
             progressButton = SaltPayProgressButton(connectCard.root)
             connectCard.btnConnect.setOnClickListener {
+                Analytics.send(Onboarding.ButtonConnect())
                 store.dispatch(OnboardingSaltPayAction.RegisterCard)
             }
         }
@@ -246,8 +254,9 @@ internal class OnboardingSaltPayView(
         progressButton = SaltPayProgressButton(root)
     }
 
+    @Suppress("LongMethod")
     private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getText(R.string.onboarding_navbar_claim)
+        toolbar.title = getText(R.string.onboarding_getting_started)
         val btnMain = actionContainer.btnContainer.findViewById<MaterialButton>(R.id.btn_main_action)
         val tvHeader = actionContainer.tvHeader
         val tvBody = actionContainer.tvBody
@@ -286,6 +295,7 @@ internal class OnboardingSaltPayView(
                 btnMain.text = getText(R.string.onboarding_button_claim)
                 btnMain.isEnabled
                 btnMain.setOnClickListener {
+                    Analytics.send(Onboarding.ButtonClaim())
                     store.dispatch(OnboardingSaltPayAction.Claim)
                 }
                 progressButton = SaltPayProgressButton(actionContainer.root)
@@ -318,7 +328,7 @@ internal class OnboardingSaltPayView(
         }
     }
 
-    private fun handleSuccess(state: OnboardingSaltPayState) = with(walletFragment.binding) {
+    private fun handleSuccess() = with(walletFragment.binding) {
         walletFragment.bindingSaltPay.onboardingSaltpayContainer.hide()
         onboardingWalletContainer.show()
         walletFragment.showSuccess()
