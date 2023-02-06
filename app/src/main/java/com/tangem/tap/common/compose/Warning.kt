@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.common.module.ModuleMessage
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.wallet.R
 
@@ -21,9 +22,9 @@ import com.tangem.wallet.R
  */
 @Composable
 fun AddCustomTokenWarning(
-    modifier: Modifier = Modifier,
     warning: ModuleMessage,
-    converter: ModuleMessageConverter
+    converter: ModuleMessageConverter,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier,
@@ -48,6 +49,5 @@ fun AddCustomTokenWarning(
                 lineHeight = 18.sp
             )
         }
-
     }
 }
