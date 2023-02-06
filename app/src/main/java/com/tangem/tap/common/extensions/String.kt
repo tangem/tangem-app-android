@@ -29,7 +29,7 @@ fun String.colorSegment(
     context: Context,
     color: Int,
     startIndex: Int = 0,
-    endIndex: Int = this.length
+    endIndex: Int = this.length,
 ): Spannable {
     return this.toSpannable()
         .also { spannable ->
@@ -37,11 +37,12 @@ fun String.colorSegment(
                 ForegroundColorSpan(ContextCompat.getColor(context, color)),
                 startIndex,
                 endIndex,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
 }
 
+@Suppress("MagicNumber")
 fun String.toQrCode(): Bitmap {
     val hintMap = Hashtable<EncodeHintType, Any>()
     hintMap[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.M // H = 30% damage
@@ -63,3 +64,8 @@ fun String.toQrCode(): Bitmap {
 }
 
 fun String.urlEncode(): String = Uri.encode(this)
+
+fun String.removePrefixOrNull(prefix: String): String? = when {
+    startsWith(prefix) -> substring(prefix.length)
+    else -> null
+}

@@ -6,7 +6,7 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.network.common.createRetrofitInstance
+import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -33,11 +33,12 @@ class MercuryoService(
 
     override fun featureIsSwitchedOn(): Boolean = true
 
+    @Suppress("NestedBlockDepth")
     override suspend fun update() {
         when (val result = performRequest { api.currencies(apiVersion) }) {
             is Result.Success -> {
                 val response = result.data
-                if (response.status == 200) {
+                if (response.status == RESPONSE_SUCCESS_STATUS_CODE) {
                     // all currencies which can be bought
                     val currenciesAvailableToBy = response.data.crypto
                     // tokens which can be bought only from specific blockchain network
@@ -108,7 +109,7 @@ class MercuryoService(
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
-        walletAddress: String
+        walletAddress: String,
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
@@ -131,10 +132,9 @@ class MercuryoService(
         return (address + secret).calculateSha512().toHexString().lowercase()
     }
 
-
     override fun getSellCryptoReceiptUrl(
         action: CurrencyExchangeManager.Action,
-        transactionId: String
+        transactionId: String,
     ): String? = null
 
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
@@ -142,5 +142,9 @@ class MercuryoService(
         "ETH" -> Blockchain.Ethereum
         "ADA" -> Blockchain.CardanoShelley
         else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
+    }
+
+    companion object {
+        private const val RESPONSE_SUCCESS_STATUS_CODE = 200
     }
 }
