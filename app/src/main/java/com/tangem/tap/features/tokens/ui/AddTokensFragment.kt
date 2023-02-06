@@ -5,21 +5,23 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.BaseFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensAction
@@ -38,8 +40,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.StoreSubscriber
 
-class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
-    StoreSubscriber<TokensState> {
+class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubscriber<TokensState> {
 
     private val binding: FragmentAddTokensBinding by viewBinding(FragmentAddTokensBinding::bind)
     private var tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState)
@@ -48,38 +49,17 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(TokensAction.ResetState)
-            }
-        })
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.tokensState == newState.tokensState
-            }.select { it.tokensState }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
+        addBackPressHandler(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
+        toolbar.setNavigationOnClickListener { handleOnBackPressed() }
 
         val onSaveChanges = { tokens: List<TokenWithBlockchain>, blockchains: List<Blockchain> ->
+            Analytics.send(ManageTokens.ButtonSaveChanges())
             store.dispatch(TokensAction.SaveChanges(tokens, blockchains))
         }
         val onNetworkItemClicked = { contractAddress: ContractAddress ->
@@ -88,44 +68,41 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
 
         val onLoadMore = {
-                store.dispatch(
-                    TokensAction.LoadMore(
-                        scanResponse = store.state.globalState.scanResponse
-                    )
-                )
+            store.dispatch(TokensAction.LoadMore(scanResponse = store.state.globalState.scanResponse))
         }
 
         cvCurrencies.setContent {
-            AppCompatTheme {
+            TangemTheme {
                 CurrenciesScreen(
                     tokensState = tokensState,
                     onSaveChanges = onSaveChanges,
-                    onNetworkItemClicked = onNetworkItemClicked,
-                    onLoadMore = onLoadMore
+                    onNetworkItemClick = onNetworkItemClicked,
+                    onLoadMore = onLoadMore,
                 )
             }
         }
     }
 
-    override fun newState(state: TokensState) {
-        if (activity == null || view == null) return
-        val toolbarTitle =
-            if (state.allowToAdd) R.string.add_tokens_title else R.string.search_tokens_title
-        tokensState.value = state
-        binding.toolbar.title = getString(toolbarTitle)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menu_search -> true
-            R.id.menu_navigate_add_custom_token -> {
-                store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    override fun onStart() {
+        super.onStart()
+        store.subscribe(this) { state ->
+            state
+                .skipRepeats { oldState, newState -> oldState.tokensState == newState.tokensState }
+                .select { it.tokensState }
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        store.unsubscribe(this)
+    }
+
+    override fun onDestroy() {
+        store.dispatch(TokensAction.ResetState)
+        super.onDestroy()
+    }
+
+    @Suppress("MagicNumber")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_popular_tokens, menu)
 
@@ -134,7 +111,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
         val menuItem = menu.findItem(R.id.menu_search)
         val searchView: SearchView = menuItem.actionView as SearchView
-        searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
+        searchView.queryHint = searchView.getString(R.string.common_search)
         searchView.maxWidth = android.R.attr.width
         searchView.inputtedTextAsFlow()
             .debounce(800)
@@ -147,22 +124,49 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         return super.onCreateOptionsMenu(menu, inflater)
     }
 
-    override fun onDestroy() {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_search -> true
+            R.id.menu_navigate_add_custom_token -> {
+                Analytics.send(ManageTokens.ButtonCustomToken())
+                store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun configureTransitions() {
+        super.configureTransitions()
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(NavigationAction.PopBackTo())
         store.dispatch(TokensAction.ResetState)
-        super.onDestroy()
+    }
+
+    override fun newState(state: TokensState) {
+        if (activity == null || view == null) return
+        val toolbarTitle =
+            if (state.allowToAdd) R.string.main_manage_tokens else R.string.search_tokens_title
+        tokensState.value = state
+        binding.toolbar.title = getString(toolbarTitle)
     }
 }
 
 fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher = setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-        override fun onQueryTextSubmit(query: String?): Boolean {
-            return false
-        }
+    val watcher = setOnQueryTextListener(
+        object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
 
-        override fun onQueryTextChange(newText: String?): Boolean {
-            trySend(newText ?: "")
-            return false
-        }
-    })
-    awaitClose { (watcher) }
+            override fun onQueryTextChange(newText: String?): Boolean {
+                trySend(newText ?: "")
+                return false
+            }
+        },
+    )
+    awaitClose { watcher }
 }
