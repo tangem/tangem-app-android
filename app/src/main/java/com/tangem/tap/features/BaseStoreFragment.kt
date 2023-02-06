@@ -8,8 +8,9 @@ import org.rekotlin.StoreSubscriber
  */
 abstract class BaseStoreFragment(layoutId: Int) : BaseFragment(layoutId) {
 
-    abstract fun subscribeToStore()
     protected val storeSubscribersList = mutableListOf<StoreSubscriber<*>>()
+
+    abstract fun subscribeToStore()
 
     override fun onStart() {
         super.onStart()
