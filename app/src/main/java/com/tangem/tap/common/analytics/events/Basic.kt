@@ -1,15 +1,18 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.core.analytics.AnalyticsEvent
+
 /**
 * [REDACTED_AUTHOR]
  */
 sealed class Basic(
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent("Basic", event, params) {
+    error: Throwable? = null,
+) : AnalyticsEvent("Basic", event, params, error) {
 
-    sealed class SignedIn(
-        state: AnalyticsParam.CardState,
+    class SignedIn(
+        state: AnalyticsParam.CardBalanceState,
         currency: AnalyticsParam.CardCurrency,
         batch: String,
     ) : Basic(
@@ -17,7 +20,7 @@ sealed class Basic(
         params = mapOf(
             "State" to state.value,
             "Currency" to currency.value,
-            "Batch" to batch,
+            AnalyticsParam.BatchId to batch,
         ),
     )
 
@@ -25,5 +28,9 @@ sealed class Basic(
         event = "Topped up",
         params = mapOf("Currency" to currency.value),
     )
-}
 
+    class ScanError(error: Throwable) : Basic(
+        event = "Scan",
+        error = error,
+    )
+}

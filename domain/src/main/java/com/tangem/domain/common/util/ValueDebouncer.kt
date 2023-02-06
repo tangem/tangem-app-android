@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.onEach
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("MagicNumber")
 class ValueDebouncer<T>(
     private val initialValue: T,
     private val debounceDuration: Long = 400,

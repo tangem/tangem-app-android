@@ -7,7 +7,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.getActivity
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -26,7 +28,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
         val binding = LayoutWarningCardActionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return WarningMessageVH(binding)
     }
@@ -60,7 +64,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         tvMessage.text = getString(
             resId = warning.messageResId,
             default = warning.message,
-            formatArgs = warning.messageFormatArg
+            formatArgs = warning.messageFormatArg,
         )
     }
 
@@ -73,6 +77,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         binding.warningCardAction.setCardBackgroundColor(binding.root.getColor(color))
     }
 
+    @Suppress("LongMethod")
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
         WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             binding.groupControlsTemporary.hide()
@@ -98,7 +103,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                     }
                 }
             val buttonTitle = binding.root.getString(
-                warning.buttonTextId ?: R.string.how_to_got_it_button
+                warning.buttonTextId ?: R.string.how_to_got_it_button,
             )
             binding.btnGotIt.setOnClickListener(buttonAction)
             binding.btnGotIt.text = buttonTitle
@@ -107,14 +112,13 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.groupControlsTemporary.hide()
             binding.groupControlsRating.show()
             binding.btnClose.show()
-            val analyticsHandler = store.state.globalState.analyticsHandler
             binding.btnClose.setOnClickListener {
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISMISS)
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             binding.btnCanBeBetter.setOnClickListener {
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_NEGATIVE)
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
@@ -122,7 +126,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_POSITIVE)
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()

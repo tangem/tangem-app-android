@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -59,7 +59,7 @@ class CurrencyExchangeManager(
             blockchain,
             cryptoCurrencyName,
             fiatCurrencyName,
-            walletAddress
+            walletAddress,
         )
     }
 
@@ -87,7 +87,7 @@ class CurrencyExchangeManager(
 }
 
 suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
-    card: Card,
+    card: CardDTO,
     walletManager: EthereumWalletManager,
     token: Token,
 ) {
@@ -96,13 +96,15 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(amountToSend,
-        destinationAddress) as? Result.Success ?: return
+    val feeResult =
+        walletManager.getFee(
+            amountToSend,
+            destinationAddress,
+        ) as? Result.Success ?: return
     val fee = feeResult.data[0]
 
-    if ((walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO) < fee.value) {
-        return
-    }
+    val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
+    if (coinValue < fee.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
@@ -115,8 +117,8 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
             GlobalAction.UpdateWalletSignedHashes(
                 walletSignedHashes = signResponse.totalSignedHashes,
                 walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                remainingSignatures = signResponse.remainingSignatures
-            )
+                remainingSignatures = signResponse.remainingSignatures,
+            ),
         )
     }
     walletManager.send(transaction, signer)

@@ -30,12 +30,10 @@ fun createCoilImageLoader(
                             }
                     )
                     .build()
-
             }
         }
         .build()
 }
-
 
 private class CoilTimberLogger : Logger {
 

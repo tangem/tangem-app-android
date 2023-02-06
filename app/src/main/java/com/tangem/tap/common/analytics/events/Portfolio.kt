@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.core.analytics.AnalyticsEvent
+
 /**
 * [REDACTED_AUTHOR]
  */

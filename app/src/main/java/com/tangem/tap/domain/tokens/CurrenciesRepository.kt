@@ -2,10 +2,11 @@ package com.tangem.tap.domain.tokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.CardDTO
 
 object CurrenciesRepository {
     fun getBlockchains(
-        cardFirmware: FirmwareVersion,
+        cardFirmware: CardDTO.FirmwareVersion,
         isTestNet: Boolean = false,
     ): List<Blockchain> {
         val blockchains = if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
@@ -27,6 +28,3 @@ object CurrenciesRepository {
         }
     }
 }
-
-
-

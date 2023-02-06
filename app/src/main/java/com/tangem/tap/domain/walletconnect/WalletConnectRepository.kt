@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.network.common.MoshiConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
 import com.trustwallet.walletconnect.models.WCPeerMeta
@@ -16,9 +16,8 @@ import timber.log.Timber
 import java.nio.charset.Charset
 
 class WalletConnectRepository(val context: Application) {
-    private val moshi = MoshiConverter.defaultMoshi()
-    private val walletConnectAdapter: JsonAdapter<List<SessionDao>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, SessionDao::class.java)
+    private val walletConnectAdapter: JsonAdapter<List<SessionDao>> = MoshiConverter.sdkMoshi.adapter(
+        Types.newParameterizedType(List::class.java, SessionDao::class.java),
     )
 
     fun saveSession(session: WalletConnectSession) {
@@ -76,7 +75,6 @@ class WalletConnectRepository(val context: Application) {
     }
 }
 
-
 @JsonClass(generateAdapter = true)
 data class SessionDao(
     val peerId: String,
@@ -91,7 +89,7 @@ data class SessionDao(
             remotePeerId = remotePeerId,
             wallet = wallet,
             session = session,
-            peerMeta = peerMeta
+            peerMeta = peerMeta,
         )
     }
 
@@ -102,7 +100,7 @@ data class SessionDao(
                 remotePeerId = session.remotePeerId,
                 wallet = session.wallet,
                 session = session.session,
-                peerMeta = session.peerMeta
+                peerMeta = session.peerMeta,
             )
         }
     }

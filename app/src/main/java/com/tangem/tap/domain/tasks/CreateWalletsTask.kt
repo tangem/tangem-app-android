@@ -13,9 +13,9 @@ import com.tangem.operations.wallet.CreateWalletTask
 class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
     private val curves = curves ?: listOf(
-            EllipticCurve.Secp256k1,
-            EllipticCurve.Ed25519,
-            EllipticCurve.Secp256r1,
+        EllipticCurve.Secp256k1,
+        EllipticCurve.Ed25519,
+        EllipticCurve.Secp256r1,
     )
 
     private var index = 0
@@ -26,10 +26,10 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
     }
 
     private fun createWallet(
-        curve: EllipticCurve, session: CardSession,
+        curve: EllipticCurve,
+        session: CardSession,
         callback: (result: CompletionResult<Card>) -> Unit
     ) {
-
         CreateWalletTask(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {

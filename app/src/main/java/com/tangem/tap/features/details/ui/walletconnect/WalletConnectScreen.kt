@@ -30,34 +30,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun WalletConnectScreen(
-    state: WalletConnectScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit) {
     val context = LocalContext.current
 
     SettingsScreensScaffold(
         content = {
             if (state.sessions.isEmpty()) {
-                EmptyScreen(state, modifier)
+                EmptyScreen(state)
             } else {
-                WalletConnectSessions(state, modifier)
+                WalletConnectSessions(state)
             }
         },
         fab = {
             if (!state.isLoading) {
-                AddSessionFab(onAddSession = { state.onAddSession(context.getFromClipboard()?.toString()) })
+                AddSessionFab(
+                    onAddSession = {
+                        Analytics.send(Settings.ButtonStartWalletConnectSession())
+                        state.onAddSession(context.getFromClipboard()?.toString())
+                    },
+                )
             }
         },
         titleRes = R.string.wallet_connect_title,
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
     )
 }
 
@@ -74,22 +77,22 @@ private fun AddSessionFab(
         modifier = modifier,
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_plus),
+            painter = painterResource(id = R.drawable.ic_plus_24),
             contentDescription = "",
         )
     }
 }
 
 @Composable
-private fun EmptyScreen(state: WalletConnectScreenState, modifier: Modifier = Modifier) {
+private fun EmptyScreen(state: WalletConnectScreenState) {
     if (state.isLoading) {
         LinearProgressIndicator(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             color = colorResource(id = R.color.icon_accent),
         )
     }
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(bottom = 64.dp),
         verticalArrangement = Arrangement.Center,
@@ -100,10 +103,9 @@ private fun EmptyScreen(state: WalletConnectScreenState, modifier: Modifier = Mo
             contentDescription = "",
             colorFilter = ColorFilter.tint(colorResource(id = R.color.icon_inactive)),
             contentScale = ContentScale.FillWidth,
-            modifier = modifier
-                .width(width = 100.dp),
+            modifier = Modifier.width(width = 100.dp),
         )
-        Spacer(modifier = modifier.size(24.dp))
+        Spacer(modifier = Modifier.size(24.dp))
         Text(
             text = stringResource(id = R.string.wallet_connect_subtitle),
             style = TangemTypography.body2,
@@ -113,28 +115,25 @@ private fun EmptyScreen(state: WalletConnectScreenState, modifier: Modifier = Mo
 }
 
 @Composable
-private fun WalletConnectSessions(
-    state: WalletConnectScreenState,
-    modifier: Modifier = Modifier,
-) {
+private fun WalletConnectSessions(state: WalletConnectScreenState) {
     if (state.isLoading) {
         LinearProgressIndicator(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(2.dp),
             color = colorResource(id = R.color.icon_accent),
         )
     } else {
-        Spacer(modifier = modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(2.dp))
     }
 
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items(state.sessions) { session ->
             Row(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -144,10 +143,13 @@ private fun WalletConnectSessions(
                     text = session.description,
                     style = TangemTypography.subtitle1,
                     color = colorResource(id = R.color.text_primary_1),
-                    modifier = modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                 )
                 IconButton(
-                    onClick = { state.onRemoveSession(session.sessionId) },
+                    onClick = {
+                        Analytics.send(Settings.ButtonStopWalletConnectSession())
+                        state.onRemoveSession(session.sessionId)
+                    },
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cross_rounded_24),
@@ -162,7 +164,7 @@ private fun WalletConnectSessions(
 
 @Composable
 @Preview
-fun WalletConnectScreenPreview() {
+private fun WalletConnectScreenPreview() {
     WalletConnectScreen(
         state = WalletConnectScreenState(
             sessions = listOf(
@@ -176,4 +178,3 @@ fun WalletConnectScreenPreview() {
         {},
     )
 }
-

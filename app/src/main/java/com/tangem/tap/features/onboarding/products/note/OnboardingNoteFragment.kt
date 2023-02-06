@@ -9,6 +9,8 @@ import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -41,6 +43,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         binding.toolbar.setTitle(R.string.onboarding_title)
         btnRefreshBalanceWidget = RefreshBalanceWidget(mainBinding.onboardingTopContainer.onboardingWalletContainer)
 
+        store.dispatch(OnboardingNoteAction.Init)
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
     }
@@ -108,7 +111,10 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setupCreateWalletState(state: OnboardingNoteState) =
         with(mainBinding.onboardingActionContainer) {
             btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener { store.dispatch(OnboardingNoteAction.CreateWallet) }
+            btnMainAction.setOnClickListener {
+                Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+                store.dispatch(OnboardingNoteAction.CreateWallet)
+            }
             btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
             btnAlternativeAction.setOnClickListener { }
 
@@ -153,7 +159,8 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             state.walletBalance.amountToCreateAccount?.let { amount ->
                 val tvBodyMessage = getString(
                     R.string.onboarding_top_up_body_no_account_error,
-                    amount, state.walletBalance.currency.currencySymbol,
+                    amount,
+                    state.walletBalance.currency.currencySymbol,
                 )
                 tvBody.text = tvBodyMessage
             }
@@ -172,7 +179,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupDoneState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingNoteAction.Done)
@@ -203,5 +210,9 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             transition.interpolator = OvershootInterpolator()
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingNoteAction.OnBackPressed)
     }
 }

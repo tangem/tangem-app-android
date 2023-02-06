@@ -4,11 +4,16 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogWalletTradeBinding
 
-class ChooseTradeActionBottomSheetDialog(context: Context) : BottomSheetDialog(context) {
+class ChooseTradeActionBottomSheetDialog(
+    context: Context,
+    private val dialogData: WalletDialog.ChooseTradeActionDialog,
+) : BottomSheetDialog(context) {
 
     var binding: DialogWalletTradeBinding? = null
 
@@ -26,13 +31,25 @@ class ChooseTradeActionBottomSheetDialog(context: Context) : BottomSheetDialog(c
             store.dispatch(WalletAction.DialogAction.Hide)
         }
 
-        binding!!.dialogBtnBuy.setOnClickListener {
-            dismiss()
-            store.dispatch(WalletAction.TradeCryptoAction.Buy())
-        }
-        binding!!.dialogBtnSell.setOnClickListener {
-            dismiss()
-            store.dispatch(WalletAction.TradeCryptoAction.Sell)
+        binding?.let {
+            with(it) {
+                dialogBtnBuy.show(dialogData.buyAllowed)
+                dialogBtnSell.show(dialogData.sellAllowed)
+                dialogBtnSwap.show(dialogData.swapAllowed)
+
+                dialogBtnBuy.setOnClickListener {
+                    dismiss()
+                    store.dispatch(WalletAction.TradeCryptoAction.Buy())
+                }
+                dialogBtnSell.setOnClickListener {
+                    dismiss()
+                    store.dispatch(WalletAction.TradeCryptoAction.Sell)
+                }
+                dialogBtnSwap.setOnClickListener {
+                    dismiss()
+                    store.dispatch(WalletAction.TradeCryptoAction.Swap)
+                }
+            }
         }
     }
 }

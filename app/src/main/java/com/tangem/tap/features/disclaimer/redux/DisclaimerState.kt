@@ -1,30 +1,20 @@
 package com.tangem.tap.features.disclaimer.redux
 
-import android.net.Uri
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.features.disclaimer.Disclaimer
+import com.tangem.tap.features.disclaimer.DummyDisclaimer
+import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.StateType
 
 data class DisclaimerState(
-    val accepted: Boolean = false,
-    val type: DisclaimerType = DisclaimerType.Tangem,
-    val onAcceptCallback: VoidCallback? = null,
+    val disclaimer: Disclaimer = DummyDisclaimer(),
+    val showedFromScreen: AppScreen = AppScreen.Home,
+    val callback: DisclaimerCallback? = null,
+    val progressState: ProgressState? = null,
 ) : StateType
 
-sealed class DisclaimerType(
-    val uri: Uri,
-) {
-    object Tangem : DisclaimerType(Uri.parse("https://tangem.com/tangem_tos.html"))
-    object SaltPay : DisclaimerType(Uri.parse("https://tangem.com/soltpay_tos.html"))
-
-    companion object {
-        fun get(scanResponse: ScanResponse): DisclaimerType = get(scanResponse.card)
-
-        fun get(card: Card): DisclaimerType = when {
-            card.isSaltPay -> SaltPay
-            else -> Tangem
-        }
-    }
-}
+data class DisclaimerCallback(
+    val onAccept: VoidCallback? = null,
+    val onDismiss: VoidCallback? = null,
+)

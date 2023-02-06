@@ -10,12 +10,12 @@ import java.math.BigDecimal
 * [REDACTED_AUTHOR]
  */
 sealed class OnboardingSaltPayAction : Action {
-    sealed class Init : OnboardingSaltPayAction() {
-        data class SetDependencies(
-            val registrationManager: SaltPayActivationManager,
-            val saltPayConfig: SaltPayConfig,
-        ) : Init()
-    }
+    object Init : OnboardingSaltPayAction()
+
+    data class SetDependencies(
+        val registrationManager: SaltPayActivationManager,
+        val saltPayConfig: SaltPayConfig,
+    ) : OnboardingSaltPayAction()
 
     data class SetInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()
     data class SetClaimRefreshInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()
@@ -37,4 +37,3 @@ sealed class OnboardingSaltPayAction : Action {
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
-

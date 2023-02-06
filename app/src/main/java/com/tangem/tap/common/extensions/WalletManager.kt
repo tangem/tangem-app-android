@@ -21,6 +21,7 @@ import timber.log.Timber
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("MagicNumber")
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
 
@@ -55,11 +56,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     }
 }
 
-fun WalletManager?.getToUpUrl(): String? {
+fun WalletManager.getTopUpUrl(): String? {
     val globalState = store.state.globalState
-    val wallet = this?.wallet ?: return null
-
     val defaultAddress = wallet.address
+
     return globalState.exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,
@@ -73,8 +73,7 @@ fun WalletManager?.getAddressData(): AddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
-    return if (addressDataList.isEmpty()) null
-    else addressDataList[0]
+    return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
 
 fun <T> WalletManager.Companion.stub(): T {

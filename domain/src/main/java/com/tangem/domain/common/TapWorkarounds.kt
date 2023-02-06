@@ -13,37 +13,47 @@ object TapWorkarounds {
     private const val TEST_CARD_BATCH = "99FF"
     private const val TEST_CARD_ID_STARTS_WITH = "FF99"
 
-    fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
-        return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
-    }
+    val CardDTO.isTangemTwins: Boolean
+        get() = TwinsHelper.getTwinCardNumber(cardId) != null
+// [REDACTED_TODO_COMMENT]
+    val CardDTO.isTangemNote: Boolean
+        get() = tangemNoteBatches.contains(batchId)
 
-    val Card.isStart2Coin: Boolean
+    val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
 
-    val Card.isTestCard: Boolean
+    val CardDTO.isSaltPay: Boolean
+        get() = isSaltPayVisa || isSaltPayWallet
+
+    val CardDTO.isSaltPayVisa: Boolean
+        get() = SaltPayWorkaround.isVisaBatchId(batchId)
+
+    val CardDTO.isSaltPayWallet: Boolean
+        get() = SaltPayWorkaround.isWalletCardId(cardId)
+
+    val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
 
-    val Card.useOldStyleDerivation: Boolean
+    val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
-    val Card.derivationStyle: DerivationStyle?
+    val CardDTO.derivationStyle: DerivationStyle?
         get() = if (!settings.isHDWalletAllowed) {
-            Int.MAX_VALUE
             null
         } else if (useOldStyleDerivation) {
             DerivationStyle.LEGACY
         } else {
             DerivationStyle.NEW
         }
+    val CardDTO.isExcluded: Boolean
+        get() {
+            val excludedBatch = excludedBatches.contains(batchId)
+            val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
+            return excludedBatch || excludedIssuerName
+        }
 
-    val Card.isNotSupportedInThatRelease: Boolean
+    val CardDTO.isNotSupportedInThatRelease: Boolean
         get() = false
-
-    val Card.isTangemTwins: Boolean
-        get() = TwinsHelper.getTwinCardNumber(cardId) != null
-// [REDACTED_TODO_COMMENT]
-    val Card.isTangemNote: Boolean
-        get() = tangemNoteBatches.contains(batchId)
 
     private val tangemNoteBatches = mapOf(
         "AB01" to Blockchain.Bitcoin,
@@ -54,40 +64,26 @@ object TapWorkarounds {
         "AB06" to Blockchain.XRP,
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
-        "AB09" to Blockchain.Bitcoin,       // new batches for 3.34
+        "AB09" to Blockchain.Bitcoin, // new batches for 3.34
         "AB10" to Blockchain.Ethereum,
         "AB11" to Blockchain.Bitcoin,
         "AB12" to Blockchain.Ethereum,
     )
 
+    private val excludedBatches = listOf("0027", "0030", "0031", "0035")
+
+    private val excludedIssuers = listOf("TTM BANK")
+
+    @Deprecated(
+        "Now blockchain is read form files (CardTypesResolver.getBlockchain), " +
+            "but for previously saved cards this method is still used",
+    )
+    fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
+        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
+
+    fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
+        return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
+    }
+
     fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId] ?: null
-
-
-    val Card.isSaltPay: Boolean
-        get() = isSaltPayVisa || isSaltPayWallet
-
-    val Card.isSaltPayVisa: Boolean
-        get() = SaltPayWorkaround.isVisaBatchId(batchId)
-
-    val Card.isSaltPayWallet: Boolean
-        get() = SaltPayWorkaround.isWalletCardId(cardId)
-
-
-    val Card.isExcluded: Boolean
-        get() {
-            val excludedBatch = excludedBatches.contains(batchId)
-            val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
-            return excludedBatch || excludedIssuerName
-        }
-
-    private val excludedBatches = listOf(
-        "0027",
-        "0030",
-        "0031",
-        "0035",
-    )
-
-    private val excludedIssuers = listOf(
-        "TTM BANK",
-    )
 }
