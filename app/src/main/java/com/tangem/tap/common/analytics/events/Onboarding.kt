@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.core.analytics.AnalyticsEvent
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -34,9 +36,9 @@ sealed class Onboarding(
         class AccessCodeEntered : Backup("Access Code Entered")
         class AccessCodeReEntered : Backup("Access Code Re-entered")
 
-        class Finished(cardsCount: String) : Backup(
+        class Finished(cardsCount: Int) : Backup(
             event = "Backup Finished",
-            params = mapOf("Cards count" to cardsCount),
+            params = mapOf("Cards count" to "$cardsCount"),
         )
     }
 
@@ -65,12 +67,19 @@ sealed class Onboarding(
         class SetupFinished : Twins("Twin Setup Finished")
     }
 
-    class PinCodeSet: Onboarding("Onboarding", "PIN code set")
-    class ButtonConnect: Onboarding("Onboarding", "Button - Connect")
-    class KYCStarted: Onboarding("Onboarding", "KYC started")
-    class KYCInProgress: Onboarding("Onboarding", "KYC in progress")
-    class KYCRejected: Onboarding("Onboarding", "KYC rejected")
-    class ClaimScreenOpened: Onboarding("Onboarding", "Claim screen opened")
-    class ButtonClaim: Onboarding("Onboarding", "Button - Claim")
-    class ClaimWasSuccessfully: Onboarding("Onboarding", "Claim was successfully")
+    class PinCodeSet : Onboarding("Onboarding", "PIN code set")
+    class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
+    class KYCStarted : Onboarding("Onboarding", "KYC started")
+    class KYCInProgress : Onboarding("Onboarding", "KYC in progress")
+    class KYCRejected : Onboarding("Onboarding", "KYC rejected")
+    class ClaimScreenOpened : Onboarding("Onboarding", "Claim screen opened")
+    class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
+    class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim was successfully")
+    class ButtonChat : Onboarding("Onboarding", "Button - Chat")
+
+    class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
+        category = "Onboarding / Biometric",
+        event = "Enable Biometric",
+        params = mapOf("State" to state.value),
+    )
 }
