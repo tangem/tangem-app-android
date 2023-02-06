@@ -5,38 +5,71 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.BigDecimalAdapter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
-
-    private val preferences: SharedPreferences =
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
+    val toppedUpWalletStorage: ToppedUpWalletStorage
+
+    private val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    private val moshiConverter = MoshiJsonConverter(
+        adapters = listOf(BigDecimalAdapter(), CardBalanceStateAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
+        typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
+    )
 
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, moshiConverter)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, moshiConverter)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, moshiConverter)
     }
 
     var chatFirstLaunchTime: Long?
         get() = preferences.getLong(CHAT_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
         set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
 
-    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
+    var shouldShowSaveUserWalletScreen: Boolean
+        get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
+        }
 
-    @Deprecated("Use UsedCardsPrefStorage instead")
-    fun wasCardScannedBefore(cardId: String): Boolean {
-        return usedCardsPrefStorage.wasScanned(cardId)
-    }
+    var shouldSaveUserWallets: Boolean
+        get() = preferences.getBoolean(SAVE_USER_WALLETS_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_USER_WALLETS_KEY, value)
+        }
+
+    var shouldSaveAccessCodes: Boolean
+        get() = preferences.getBoolean(SAVE_ACCESS_CODES_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_ACCESS_CODES_KEY, value)
+        }
+
+    var wasApplicationStopped: Boolean
+        get() = preferences.getBoolean(APPLICATION_STOPPED_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(APPLICATION_STOPPED_KEY, value)
+        }
+
+    var shouldOpenWelcomeScreenOnResume: Boolean
+        get() = preferences.getBoolean(OPEN_WELCOME_ON_RESUME_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(OPEN_WELCOME_ON_RESUME_KEY, value)
+        }
+
+    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
@@ -56,6 +89,11 @@ class PreferencesStorage(applicationContext: Application) {
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
+        private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
+        private const val SAVE_USER_WALLETS_KEY = "saveUserWallets"
+        private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
+        private const val APPLICATION_STOPPED_KEY = "applicationStopped"
+        private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"
     }
 }
 
@@ -63,11 +101,7 @@ class AppRatingLaunchObserver(
     private val preferences: SharedPreferences,
     private val launchCounts: Int,
 ) {
-    private val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
-    private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
-    private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
 
-    private val FUNDS_FOUND_DATE_UNDEFINED = -1L
     private val deferShowing = 20
     private val firstShowing = 3
     private var fundsFoundDate: Calendar? = null
@@ -89,6 +123,7 @@ class AppRatingLaunchObserver(
         }
     }
 
+    @Suppress("MagicNumber")
     fun isReadyToShow(): Boolean {
         val fundsDate = fundsFoundDate ?: return false
 
@@ -106,6 +141,7 @@ class AppRatingLaunchObserver(
         updateNextShowing(launchCounts + deferShowing)
     }
 
+    @Suppress("MagicNumber")
     fun setNeverToShow() {
         updateNextShowing(999999999)
     }
@@ -117,6 +153,16 @@ class AppRatingLaunchObserver(
         editor.apply()
     }
 
-    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
-    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+    private fun userWasInteractWithRating(): Boolean =
+        preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
+
+    private fun getCounterOfNextShowing(): Int =
+        preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+
+    companion object {
+        private const val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
+        private const val K_FUNDS_FOUND_DATE = "fundsFoundDate"
+        private const val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
+        private const val FUNDS_FOUND_DATE_UNDEFINED = -1L
+    }
 }
