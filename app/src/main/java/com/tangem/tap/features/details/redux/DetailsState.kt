@@ -1,8 +1,7 @@
 package com.tangem.tap.features.details.redux
 
-import android.net.Uri
 import com.tangem.blockchain.common.Wallet
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
@@ -16,33 +15,30 @@ data class DetailsState(
     val scanResponse: ScanResponse? = null,
     val wallets: List<Wallet> = emptyList(),
     val cardSettingsState: CardSettingsState? = null,
-    val cardTermsOfUseUrl: Uri? = null,
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
     val appCurrency: FiatCurrency = FiatCurrency.Default,
-    val saveWallets: Boolean = true,
-    val saveAccessCodes: Boolean = true,
+    val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
     // because twinCardsState has not been created yet
-    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
-
-    val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 }
 
 data class CardInfo(
     val cardId: String,
     val issuer: String,
     val signedHashes: Int,
+    val isTwin: Boolean,
+    val hasBackup: Boolean,
 )
 
 data class CardSettingsState(
     val cardInfo: CardInfo,
-    val card: Card,
+    val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetConfirmed: Boolean = false,
@@ -55,8 +51,16 @@ data class ManageSecurityState(
     val buttonProceed: Button = Button(true),
 )
 
+data class AppSettingsState(
+    val saveWallets: Boolean = false,
+    val saveAccessCodes: Boolean = false,
+    val isBiometricsAvailable: Boolean = false,
+    val needEnrollBiometrics: Boolean = false,
+    val isInProgress: Boolean = false,
+)
+
 enum class SecurityOption { LongTap, PassCode, AccessCode }
 
-enum class PrivacySetting {
+enum class AppSetting {
     SaveWallets, SaveAccessCode
 }

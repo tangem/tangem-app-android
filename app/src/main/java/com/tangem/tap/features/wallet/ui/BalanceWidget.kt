@@ -16,7 +16,8 @@ enum class BalanceStatus {
     Refreshing,
     NoAccount,
     EmptyCard,
-    UnknownBlockchain
+    UnknownBlockchain,
+    MissedDerivation,
 }
 
 data class BalanceWidgetData(
@@ -30,11 +31,11 @@ data class BalanceWidgetData(
     val fiatAmountFormatted: String? = null,
     val token: TokenData? = null,
     val amountToCreateAccount: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 data class TokenData(
-    val amountFormatted: String,
+    val amountFormatted: String?,
     val amount: BigDecimal? = null,
     val tokenSymbol: String,
     val fiatAmountFormatted: String? = null,
@@ -43,7 +44,6 @@ data class TokenData(
     val fiatRate: BigDecimal? = null,
 )
 
-
 class BalanceWidget(
     private val binding: CardBalanceBinding,
     private val fragment: WalletFragment,
@@ -51,8 +51,8 @@ class BalanceWidget(
     private val isTwinCard: Boolean,
 ) {
 
+    @Suppress("LongMethod", "ComplexMethod")
     fun setup() {
-
         when (data.status) {
             BalanceStatus.Loading -> {
                 with(binding) {
@@ -63,7 +63,6 @@ class BalanceWidget(
                     lBalance.tvCurrency.text = data.currency
                     lBalance.tvAmount.text = ""
                 }
-
 
                 showStatus(R.id.tv_status_loading)
 
@@ -128,8 +127,9 @@ class BalanceWidget(
                 tvErrorTitle.text = fragment.getText(R.string.wallet_error_no_account)
                 tvErrorDescriptions.text =
                     fragment.getString(
-                        R.string.wallet_error_no_account_subtitle_format,
-                        data.amountToCreateAccount, data.currencySymbol
+                        R.string.no_account_generic,
+                        data.amountToCreateAccount,
+                        data.currencySymbol,
                     )
             }
             BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {
@@ -140,6 +140,7 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
             }
+            else -> {}
         }
     }
 

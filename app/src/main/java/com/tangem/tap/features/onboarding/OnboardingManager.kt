@@ -55,7 +55,7 @@ class OnboardingManager(
                 }
             }
             is Result.Failure -> {
-                val error = (result.error as? TapError) ?: TapError.UnknownError
+                val error = result.error as? TapError ?: TapError.UnknownError
                 when (error) {
                     is TapError.WalletManager.NoAccountError -> OnboardingWalletBalance.error(error)
                     // NoInternetConnection, WalletManager.InternalError
@@ -67,8 +67,11 @@ class OnboardingManager(
             }
         }
 
-        return balance.copy(currency = Currency.Blockchain(
-            walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath)
+        return balance.copy(
+            currency = Currency.Blockchain(
+                blockchain = walletManager.wallet.blockchain,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath,
+            ),
         )
     }
 
@@ -78,6 +81,14 @@ class OnboardingManager(
 
     fun activationFinished(cardId: String) {
         usedCardsPrefStorage.activationFinished(cardId)
+    }
+
+    fun isActivationFinished(cardId: String): Boolean {
+        return usedCardsPrefStorage.isActivationFinished(cardId)
+    }
+
+    fun isActivationStarted(cardId: String): Boolean {
+        return usedCardsPrefStorage.isActivationStarted(cardId)
     }
 }
 
@@ -90,31 +101,31 @@ data class OnboardingWalletBalance(
     val criticalError: TapError? = null,
 ) {
 
-    fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
-
     val amountToCreateAccount: String?
         get() = if (error is TapError.WalletManager.NoAccountError) error.customMessage else null
+
+    fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
 
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            error = error
+            error = error,
         )
 
         fun criticalError(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            criticalError = error
+            criticalError = error,
         )
 
         fun loading(value: BigDecimal = BigDecimal.ZERO): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
-            state = ProgressState.Loading
+            state = ProgressState.Loading,
         )
 
         fun done(value: BigDecimal, hasTransactions: Boolean): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
             hasIncomingTransaction = hasTransactions,
-            state = ProgressState.Done
+            state = ProgressState.Done,
         )
     }
 }

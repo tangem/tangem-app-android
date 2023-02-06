@@ -15,22 +15,32 @@ class FeatureModel(
     val isCreatingTwinCardsAllowed: Boolean,
 )
 
+@Suppress("LongParameterList")
 class ConfigValueModel(
     val coinMarketCapKey: String,
     val mercuryoWidgetId: String,
     val mercuryoSecret: String,
     val moonPayApiKey: String,
     val moonPayApiSecretKey: String,
-    val blockchairApiKey: String?,
+    val blockchairApiKeys: List<String>,
     val blockchairAuthorizationToken: String?,
+    val quiknodeSubdomain: String,
+    val quiknodeApiKey: String,
+    val bscQuiknodeSubdomain: String,
+    val bscQuiknodeApiKey: String,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
-    val appsFlyerDevKey: String,
+    val appsFlyer: AppsFlyer,
     val shopifyShop: ShopifyShop?,
     val zendesk: ZendeskConfig?,
     val saltPay: SaltPayConfig,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
+)
+
+data class AppsFlyer(
+    val appsFlyerDevKey: String,
+    val appsFlyerAppID: String,
 )
 
 class ConfigModel(
