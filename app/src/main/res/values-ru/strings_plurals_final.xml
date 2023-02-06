@@ -1,8 +1,0 @@
-<resources>
-    <plurals name="card_label_card_count">
-        <item quantity="one">%d карта</item>
-        <item quantity="few">%d карты</item>
-        <item quantity="many">%d карт</item>
-        <item quantity="other">%d карт</item>
-    </plurals>
-</resources>
