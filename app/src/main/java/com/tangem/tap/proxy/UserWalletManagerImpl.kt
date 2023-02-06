@@ -17,6 +17,7 @@ import com.tangem.lib.crypto.models.Currency.NativeToken
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -100,7 +101,8 @@ class UserWalletManagerImpl(
             addNonNativeTokenToWalletAction(currency as NonNativeToken, card, blockchain)
         }
         val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
-        mainStore.dispatch(action)
+        mainStore.dispatchOnMain(action)
+        mainStore.dispatchOnMain(WalletAction.LoadData.Refresh)
     }
 
     override fun getWalletAddress(networkId: String): String {
