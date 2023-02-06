@@ -33,6 +33,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.core.widget.NestedScrollView
+            android:id="@+id/nested_scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="16dp"
@@ -53,35 +54,83 @@
 
         </androidx.core.widget.NestedScrollView>
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintGuide_percent="0.37" />
-
         <View
             android:id="@+id/half_transparent_overlay"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="140dp"
             android:background="@drawable/bg_half_transparent_overlay"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:lineSpacingExtra="5sp"
+            android:text="@string/disclaimer_error_loading"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/btn_repeat"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <Button
+            android:id="@+id/btn_repeat"
+            style="@style/TapSecondaryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/common_retry"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_error" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_accept"
-            style="@style/TapButtonWithIcon"
+            style="@style/TapPrimaryButton"
             android:layout_width="0dp"
-            android:layout_marginStart="7dp"
+            android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="24dp"
             android:text="@string/common_accept"
-            app:icon="@drawable/ic_send"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guideline" />
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="btn_repeat, tv_error" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="progress" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_accept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="btn_accept, half_transparent_overlay" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
