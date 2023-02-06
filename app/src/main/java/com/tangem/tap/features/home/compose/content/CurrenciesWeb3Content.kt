@@ -16,7 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.tangem.tap.common.compose.SpacerH
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.tap.common.compose.extensions.dpSize
 import com.tangem.tap.common.compose.extensions.halfHeight
 import com.tangem.tap.common.compose.extensions.toPx
@@ -53,7 +53,7 @@ fun StoriesCurrenciesContent(
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.halfHeight()
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 50.dp - (50.dp * index * decreaseRate)
+                val animateTo = 50.dp - 50.dp * index * decreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -64,12 +64,13 @@ fun StoriesCurrenciesContent(
                     targetOffset = animateTo.toPx(),
                     contentDescription = "Currency row",
                 )
-                SpacerH(12.dp)
+                SpacerH12()
             }
         }
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun StoriesWeb3Content(
     paused: Boolean,
@@ -99,7 +100,7 @@ fun StoriesWeb3Content(
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.width / 3
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 70.dp - (70.dp * index * decreaseRate)
+                val animateTo = 70.dp - 70.dp * index * decreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -112,13 +113,12 @@ fun StoriesWeb3Content(
                 )
             }
         }
-
     }
 }
 
 @Composable
 private fun LightenBox(content: @Composable () -> Unit) {
-    Box() {
+    Box {
         content()
         Box(
             modifier = Modifier
@@ -130,10 +130,10 @@ private fun LightenBox(content: @Composable () -> Unit) {
                             Color.White.copy(alpha = 0f),
                             Color.White.copy(alpha = 0.75f),
                             Color.White.copy(alpha = 0.95f),
-                            Color.White
-                        )
-                    )
-                )
+                            Color.White,
+                        ),
+                    ),
+                ),
         ) {}
     }
 }
