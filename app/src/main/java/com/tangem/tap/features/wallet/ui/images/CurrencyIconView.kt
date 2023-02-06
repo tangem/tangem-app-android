@@ -13,6 +13,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.databinding.ViewCurrencyIconBinding
 import kotlin.math.roundToInt
 
+@Suppress("MagicNumber")
 class CurrencyIconView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -70,5 +71,7 @@ fun CurrencyIconView.load(
             blockchain = currency.blockchain,
             getLocalImage = true,
         ).load()
+    } else {
+        isBlockchainBadgeVisible = false
     }
 }
