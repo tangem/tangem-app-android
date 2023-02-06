@@ -12,7 +12,7 @@ object DomainLayer {
 
     var onInitComplete: ((DomainModuleError?) -> Unit)? = null
 
-    fun init(data: Map<String, Any?>? = null) {
+    fun init() {
         initActionStateLogger()
 
         onInitComplete?.invoke(null)
