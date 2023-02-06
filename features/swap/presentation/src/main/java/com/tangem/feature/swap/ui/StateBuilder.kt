@@ -167,7 +167,7 @@ internal class StateBuilder(val actions: UiActions) {
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amount = uiStateHolder.sendCardData.amount,
-                amountEquivalent = "",
+                amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = uiStateHolder.sendCardData.coinId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
@@ -178,7 +178,7 @@ internal class StateBuilder(val actions: UiActions) {
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amount = "0",
-                amountEquivalent = "",
+                amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = uiStateHolder.receiveCardData.coinId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,

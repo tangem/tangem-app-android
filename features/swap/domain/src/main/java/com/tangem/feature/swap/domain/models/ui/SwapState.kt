@@ -21,6 +21,7 @@ sealed interface SwapState {
     data class EmptyAmountState(
         val fromTokenWalletBalance: String,
         val toTokenWalletBalance: String,
+        val zeroAmountEquivalent: String
     ) : SwapState
 
     data class SwapError(val error: DataError) : SwapState
