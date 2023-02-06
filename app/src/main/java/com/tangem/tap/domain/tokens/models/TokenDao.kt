@@ -26,5 +26,4 @@ data class TokenDao(
             customIconUrl?.let { this.setCustomIconUrl(it) }
         }
     }
-
 }
