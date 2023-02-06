@@ -15,8 +15,9 @@ internal class AddCustomTokenErrorConverter(
     private val context: Context,
 ) : ModuleMessageConverter<DomainModuleError, ConvertedMessage?> {
 
+    @Suppress("MagicNumber")
     override fun convert(message: DomainModuleError): ConvertedMessage? {
-        val customTokenError = (message as? AddCustomTokenError) ?: throw UnsupportedOperationException()
+        val customTokenError = message as? AddCustomTokenError ?: throw UnsupportedOperationException()
 
         val rawMessage = when (customTokenError) {
             AddCustomTokenError.Warning.PotentialScamToken -> R.string.custom_token_validation_error_not_found

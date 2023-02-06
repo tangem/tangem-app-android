@@ -2,7 +2,9 @@ package com.tangem.tap.features.home.compose.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -16,16 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.SpacerS8
+import com.tangem.core.ui.components.SpacerS8
 import com.tangem.wallet.R
 
+@Suppress("MagicNumber")
 @Composable
 fun HomeButtons(
-    modifier: Modifier = Modifier,
     isDarkBackground: Boolean,
     btnScanStateInProgress: Boolean,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val darkColorBackground = Color(0xFF26292E)
     val darkColorButton = Color(0xFF080C10)
@@ -35,9 +38,6 @@ fun HomeButtons(
         modifier = modifier,
     ) {
         ProgressButton(
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp),
             inProgress = btnScanStateInProgress,
             backgroundColor = if (isDarkBackground) darkColorBackground else Color.White,
             contentColor = if (isDarkBackground) Color.White else darkColorButton,
@@ -51,7 +51,7 @@ fun HomeButtons(
             },
             content = {
                 Text(
-                    text = stringResource(id = R.string.home_button_scan),
+                    text = stringResource(id = R.string.welcome_unlock_card),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
@@ -63,7 +63,7 @@ fun HomeButtons(
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp),
+                .heightIn(48.dp),
             onClick = onShopButtonClick,
             enabled = !btnScanStateInProgress,
             colors = ButtonDefaults.textButtonColors(
@@ -82,9 +82,9 @@ fun HomeButtons(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
-fun ProgressButton(
-    modifier: Modifier,
+fun RowScope.ProgressButton(
     backgroundColor: Color,
     contentColor: Color,
     onClick: () -> Unit,
@@ -93,8 +93,11 @@ fun ProgressButton(
     content: @Composable () -> Unit,
 ) {
     Button(
-        modifier = modifier,
+        modifier = Modifier
+            .weight(1f)
+            .height(48.dp),
         onClick = onClick,
+        enabled = !inProgress,
         colors = ButtonDefaults.textButtonColors(
             backgroundColor = backgroundColor,
             contentColor = contentColor,
