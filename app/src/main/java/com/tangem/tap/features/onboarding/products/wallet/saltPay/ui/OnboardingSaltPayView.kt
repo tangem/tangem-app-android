@@ -103,7 +103,7 @@ internal class OnboardingSaltPayView(
             val uri = Uri.parse(state.onboardingSaltPayState.saltPayCardArtworkUrl)
             walletFragment.loadImageIntoImageView(uri, imvFrontCard)
         }
-        imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
+        imvFirstBackupCard.load(R.drawable.img_salt_pay_visa)
 
         // if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
         //     //if saltPay url not loaded -> load from resource
