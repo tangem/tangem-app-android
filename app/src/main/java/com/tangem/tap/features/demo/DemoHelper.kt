@@ -1,6 +1,5 @@
 package com.tangem.tap.features.demo
 
-import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
@@ -83,6 +82,7 @@ object DemoHelper {
     }
 }
 
+@Suppress("LargeClass")
 class DemoConfig {
 
     val demoBlockchains = listOf(
@@ -115,6 +115,7 @@ class DemoConfig {
         return (releaseDemoCardIds + testDemoCardIds).distinct()
     }
 
+    @Suppress("ClassOrdering")
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
         "FB10000000000196", // Note BTC
@@ -477,38 +478,36 @@ class DemoConfig {
         "AB02000000058187",
     )
 
+    @Suppress("ClassOrdering")
     private val testDemoCardIds = listOf(
         "FB20000000000186", // Note ETH
         "FB10000000000196", // Note BTC
         "FB30000000000176", // Wallet
     )
 
-    private val debugTestDemoCardIds = listOf<String>(
-    )
+    @Suppress("ClassOrdering")
+    private val debugTestDemoCardIds = listOf<String>()
 }
 
-class DemoTransactionSender(
-    private val walletManager: WalletManager,
-    private val sender: TransactionSender = walletManager as TransactionSender
-) : TransactionSender {
+class DemoTransactionSender(private val walletManager: WalletManager) : TransactionSender {
 
     override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val blockchain = walletManager.wallet.blockchain
-        return when (walletManager) {
-            is BitcoinWalletManager -> Result.Success(listOf(
+        return Result.Success(
+            listOf(
                 Amount(0.0001.toBigDecimal(), blockchain),
+                Amount(0.0002.toBigDecimal(), blockchain),
                 Amount(0.0003.toBigDecimal(), blockchain),
-                Amount(0.00055.toBigDecimal(), blockchain),
-            ))
-            else -> sender.getFee(amount, destination)
-        }
+            ),
+        )
     }
 
+    @Suppress("MagicNumber")
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
         val signerResponse = signer.sign(
             hash = dataToSign,
-            publicKey = walletManager.wallet.publicKey
+            publicKey = walletManager.wallet.publicKey,
         )
         return when (signerResponse) {
             is CompletionResult.Success -> SimpleResult.Failure(Exception(ID).toBlockchainSdkError())
@@ -529,5 +528,4 @@ class DemoTransactionSender(
     companion object {
         val ID = DemoTransactionSender::class.java.simpleName
     }
-
 }
