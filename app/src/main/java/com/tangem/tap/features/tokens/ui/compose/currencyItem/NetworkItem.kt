@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,16 +31,17 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
 
+@Suppress("LongParameterList", "LongMethod", "MagicNumber")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NetworkItem(
@@ -51,19 +52,19 @@ fun NetworkItem(
     added: Boolean,
     index: Int,
     size: Int,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onAddCurrencyToggle: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
 ) {
     val rowHeight = 53.dp
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(rowHeight)
+            .heightIn(rowHeight)
             .combinedClickable(
                 enabled = allowToAdd,
                 onLongClick = {
-                    contract.address?.let { onNetworkItemClicked(it) }
+                    contract.address?.let { onNetworkItemClick(it) }
                 },
                 onClick = {},
                 indication = null,
@@ -85,7 +86,7 @@ fun NetworkItem(
                 .align(Alignment.CenterVertically),
         ) {
             SubcomposeAsyncImage(
-                model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
+                model = if (added) getActiveIconRes(blockchain.id) else blockchain.getGreyedOutIconRes(),
                 contentDescription = blockchain.fullName,
                 loading = { CurrencyPlaceholderIcon(blockchain.id) },
                 error = { CurrencyPlaceholderIcon(blockchain.id) },
@@ -149,7 +150,7 @@ fun NetworkItem(
                     .fillMaxHeight()
                     .padding(start = 16.dp, end = 16.dp),
                 checked = added,
-                onCheckedChange = { onAddCurrencyToggled(currencyToSave, tokenWithBlockchain) },
+                onCheckedChange = { onAddCurrencyToggle(currencyToSave, tokenWithBlockchain) },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color(0xFF1ACE80),
                 ),
@@ -158,12 +159,12 @@ fun NetworkItem(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun prepareNetworkNameSpannableText(
     blockchain: Blockchain,
     contractAddress: String?,
 ): AnnotatedString {
-
     val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
     val additionalText =
         if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
