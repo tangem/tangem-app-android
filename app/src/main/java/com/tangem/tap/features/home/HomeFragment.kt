@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -11,12 +12,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.store
 import org.rekotlin.StoreSubscriber
@@ -24,10 +26,10 @@ import org.rekotlin.StoreSubscriber
 class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
-    private var composeView: ComposeView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Analytics.send(IntroductionProcess.ScreenOpened())
         store.dispatch(HomeAction.Init)
     }
 
@@ -35,20 +37,18 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
-        val context = container?.context ?: return null
-
-        store.dispatch(BackupAction.CheckForUnfinishedBackup)
-
-        composeView = ComposeView(context).apply {
+    ): View {
+        return ComposeView(inflater.context).apply {
             setContent {
+                BackHandler {
+                    requireActivity().finish()
+                }
+
                 AppCompatTheme {
                     ScreenContent()
                 }
             }
         }
-
-        return composeView
     }
 
     override fun onStart() {
@@ -68,7 +68,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     override fun onDestroyView() {
         super.onDestroyView()
         rollbackStatusBarIconsColor()
-        composeView = null
     }
 
     override fun newState(state: HomeState) {
@@ -77,13 +76,21 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         homeState.value = state
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent() {
         StoriesScreen(
             homeState,
-            onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
-            onShopButtonClick = { store.dispatch(HomeAction.GoToShop(store.state.globalState.userCountryCode)) },
+            onScanButtonClick = {
+                Analytics.send(IntroductionProcess.ButtonScanCard())
+                store.dispatch(HomeAction.ReadCard())
+            },
+            onShopButtonClick = {
+                Analytics.send(IntroductionProcess.ButtonBuyCards())
+                store.dispatch(HomeAction.GoToShop(store.state.globalState.userCountryCode))
+            },
             onSearchTokensClick = {
+                Analytics.send(IntroductionProcess.ButtonTokensList())
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                 store.dispatch(TokensAction.AllowToAddTokens(false))
                 store.dispatch(TokensAction.LoadCurrencies())
@@ -92,9 +99,9 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     }
 
     /*
-    * !!! Workaround !!!
-    * Used to roll back the color of icons in the system bars after the stories screen
-    * */
+     * !!! Workaround !!!
+     * Used to roll back the color of icons in the system bars after the stories screen
+     */
     private fun rollbackStatusBarIconsColor() {
         val windowInsetsController = WindowInsetsControllerCompat(
             activity?.window ?: return,

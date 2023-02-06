@@ -10,10 +10,12 @@ import org.rekotlin.Action
  */
 sealed class OnboardingNoteAction : Action {
     // from user, ui
+    object Init : OnboardingNoteAction()
     object LoadCardArtwork : OnboardingNoteAction()
     object CreateWallet : OnboardingNoteAction()
     object TopUp : OnboardingNoteAction()
     object ShowAddressInfoDialog : OnboardingNoteAction()
+    object OnBackPressed : OnboardingNoteAction()
 
     // from redux
     class SetArtworkUrl(val artworkUrl: String) : OnboardingNoteAction()

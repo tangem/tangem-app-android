@@ -10,8 +10,11 @@ import com.tangem.operations.PreflightReadTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 
 class FinalizeTwinTask(
-    private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
+    private val twinPublicKey: ByteArray,
+    private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<ScanResponse> {
+
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
 
     override fun run(
         session: CardSession,
