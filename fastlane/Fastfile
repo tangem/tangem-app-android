@@ -17,6 +17,10 @@ default_platform(:android)
 
 platform :android do
 
+  before_all do |lane, options|
+    FileUtils.mv("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
+  end
+	
   desc "Runs all the tests"
   lane :test do
     gradle(
