@@ -6,7 +6,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 open class Button(val enabled: Boolean)
 
 open class IndeterminateProgressButton(
-        val state: ButtonState
+    val state: ButtonState
 ) : Button(state != ButtonState.DISABLED) {
 
     val progressState: ProgressState

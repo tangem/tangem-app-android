@@ -81,7 +81,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_yes"
-        style="@style/OnboardingButton"
+        style="@style/TapPrimaryButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -97,7 +97,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_no"
-        style="@style/OnboardingButton"
+        style="@style/TapPrimaryButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
