@@ -7,13 +7,12 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.common.card.Card
-import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -38,7 +37,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 
     val seedKey = wallet.extendedPublicKey
     return when {
-        scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
+        scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 walletPublicKey = wallet.publicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
@@ -46,7 +45,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 curve = wallet.curve,
             )
         }
-        scanResponse.card.isHdWalletAllowedByApp && (seedKey != null && derivationParams != null) -> {
+        scanResponse.card.isHdWalletAllowedByApp && seedKey != null && derivationParams != null -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
             val derivationPath = when (derivationParams) {
                 is DerivationParams.Default -> blockchain.derivationPath(derivationParams.style)
@@ -73,7 +72,8 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 }
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchainNetwork: BlockchainNetwork,
+    scanResponse: ScanResponse,
+    blockchainNetwork: BlockchainNetwork,
 ): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
@@ -82,7 +82,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     )
 }
 
-private fun getDerivationParams(derivationPath: String?, card: Card): DerivationParams? {
+private fun getDerivationParams(derivationPath: String?, card: CardDTO): DerivationParams? {
     return derivationPath?.let {
         DerivationParams.Custom(
             DerivationPath(it),
@@ -120,9 +120,9 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     scanResponse: ScanResponse,
 ): WalletManager? {
     val blockchain = if (scanResponse.card.isTestCard) {
-        scanResponse.getBlockchain().getTestnetVersion() ?: return null
+        scanResponse.cardTypesResolver.getBlockchain().getTestnetVersion() ?: return null
     } else {
-        scanResponse.getBlockchain()
+        scanResponse.cardTypesResolver.getBlockchain()
     }
     val derivationParams = getDerivationParams(null, scanResponse.card)
     return makeWalletManagerForApp(
@@ -132,7 +132,7 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     )
 }
 
-private fun selectWallet(wallets: List<CardWallet>): CardWallet? {
+private fun selectWallet(wallets: List<CardDTO.Wallet>): CardDTO.Wallet? {
     return when (wallets.size) {
         0 -> null
         1 -> wallets[0]
@@ -143,13 +143,14 @@ private fun selectWallet(wallets: List<CardWallet>): CardWallet? {
 fun WalletManagerFactory.makeSaltPayWalletManager(
     scanResponse: ScanResponse,
 ): EthereumWalletManager {
-    val blockchain = scanResponse.getBlockchain()
-    if (blockchain != Blockchain.SaltPay && blockchain != Blockchain.SaltPayTestnet)
-        throw IllegalArgumentException()
+    val blockchain = scanResponse.cardTypesResolver.getBlockchain()
+    if (blockchain != Blockchain.SaltPay) {
+        error("WalletManager for the SaltPay can be created based only on Blockchain.SaltPay")
+    }
 
     val token = SaltPayWorkaround.tokenFrom(blockchain)
     val cardWallet = scanResponse.card.wallets.firstOrNull().guard {
-        throw NullPointerException("SaltPay card must have one wallet at least")
+        error("SaltPay card must have one wallet at least")
     }
 
     return makeWalletManager(

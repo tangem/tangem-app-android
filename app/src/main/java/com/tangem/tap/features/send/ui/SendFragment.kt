@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.tangem.tap.features.send.ui
 
 import android.content.Context
@@ -14,8 +16,10 @@ import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
+import com.tangem.core.analytics.Analytics
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
@@ -28,10 +32,25 @@ import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.common.toggleWidget.ViewStateWidget
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.send.redux.*
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
-import com.tangem.tap.features.send.redux.AmountActionUi.*
-import com.tangem.tap.features.send.redux.FeeActionUi.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.CheckClipboard
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.PasteAddressPayId
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetTruncateHandler
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.TruncateOrRestore
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.AmountActionUi.CheckAmountToSend
+import com.tangem.tap.features.send.redux.AmountActionUi.SetMainCurrency
+import com.tangem.tap.features.send.redux.AmountActionUi.SetMaxAmount
+import com.tangem.tap.features.send.redux.AmountActionUi.ToggleMainCurrency
+import com.tangem.tap.features.send.redux.FeeActionUi.ChangeIncludeFee
+import com.tangem.tap.features.send.redux.FeeActionUi.ChangeSelectedFee
+import com.tangem.tap.features.send.redux.FeeActionUi.ToggleControlsVisibility
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendActionUi
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -43,7 +62,12 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.text.DecimalFormatSymbols
 
 /**
@@ -60,6 +84,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private lateinit var keyboardObserver: KeyboardObserver
 
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Analytics.send(Token.Send.ScreenOpened())
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -78,13 +107,16 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun initSendButtonStates() = with(binding) {
         btnSend.setOnClickListener {
-            store.dispatch(SendActionUi.SendAmountToRecipient(
-                Message(getString(R.string.initial_message_sign_header))
-            ))
+            store.dispatch(
+                SendActionUi.SendAmountToRecipient(
+                    Message(getString(R.string.initial_message_sign_header)),
+                ),
+            )
         }
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
     }
 
+    @Suppress("MagicNumber")
     private fun setupAddressOrPayIdLayout() = with(binding.lSendAddressPayid) {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
         store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
@@ -93,43 +125,45 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             store.dispatch(TruncateOrRestore(!hasFocus))
         }
         etAddressOrPayId.inputtedTextAsFlow()
-                .debounce(400)
-                .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
-                .onEach {
-                    store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
-                }
-                .launchIn(mainScope)
+            .debounce(400)
+            .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
+            .onEach {
+                store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
+            }
+            .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
+            Analytics.send(Token.Send.ButtonPaste())
             store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         }
         imvQrCode.setOnClickListener {
+            Analytics.send(Token.Send.ButtonQRCode())
             startActivityForResult(
                 Intent(requireContext(), ScanQrCodeActivity::class.java),
-                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
+                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE,
             )
         }
     }
 
     private fun setupTransactionExtrasLayout() = with(binding.lSendAddressPayid) {
         etXlmMemo.inputtedTextAsFlow()
-                .debounce(400)
-                .filter {
-                    val info = store.state.sendState.transactionExtrasState
-                    info.xlmMemo?.viewFieldValue?.value != it
-                }
-                .onEach { store.dispatch(TransactionExtrasAction.XlmMemo.HandleUserInput(it)) }
-                .launchIn(mainScope)
+            .debounce(400)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.xlmMemo?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.XlmMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
 
         etDestinationTag.inputtedTextAsFlow()
-                .debounce(400)
-                .filter {
-                    val info = store.state.sendState.transactionExtrasState
-                    info.xrpDestinationTag?.viewFieldValue?.value != it
-                }
-                .onEach { store.dispatch(TransactionExtrasAction.XrpDestinationTag.HandleUserInput(it)) }
-                .launchIn(mainScope)
+            .debounce(400)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.xrpDestinationTag?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.XrpDestinationTag.HandleUserInput(it)) }
+            .launchIn(mainScope)
 
         etBinanceMemo.inputtedTextAsFlow()
             .debounce(400)
@@ -150,10 +184,13 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
         // If do not use the delay, then etAmount error field is not displayed when
         // inserting an incorrect amount by shareUri
-        binding.lSendAddressPayid.imvQrCode.postDelayed({
-            store.dispatch(PasteAddressPayId(scannedCode))
-            store.dispatch(TruncateOrRestore(!binding.lSendAddressPayid.etAddressOrPayId.isFocused))
-        }, 200)
+        binding.lSendAddressPayid.imvQrCode.postDelayed(
+            {
+                store.dispatch(PasteAddressPayId(scannedCode))
+                store.dispatch(TruncateOrRestore(!binding.lSendAddressPayid.etAddressOrPayId.isFocused))
+            },
+            200,
+        )
     }
 
     private fun setupAmountLayout() {
@@ -165,6 +202,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(AmountAction.SetDecimalSeparator(decimalSeparator))
 
         binding.lSendAmount.tvAmountCurrency.setOnClickListener {
+            Analytics.send(Token.Send.ButtonSwapCurrency())
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
             store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
@@ -211,10 +249,10 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
 
         etAmountToSend.inputtedTextAsFlow()
-                .debounce(400)
-                .filter { store.state.sendState.amountState.viewAmountValue.value != it && it.isNotEmpty() }
-                .onEach { store.dispatch(AmountActionUi.HandleUserInput(it)) }
-                .launchIn(mainScope)
+            .debounce(400)
+            .filter { store.state.sendState.amountState.viewAmountValue.value != it && it.isNotEmpty() }
+            .onEach { store.dispatch(AmountActionUi.HandleUserInput(it)) }
+            .launchIn(mainScope)
 
         etAmountToSend.setOnImeActionListener(EditorInfo.IME_ACTION_DONE) {
             it.hideSoftKeyboard()
@@ -277,7 +315,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             store.dispatch(NavigationAction.PopBackTo())
         } else {
             store.dispatch(
-                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
+                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId),
             )
         }
     }
@@ -299,24 +337,22 @@ fun EditText.inputtedTextAsFlow(): Flow<String> = callbackFlow {
     awaitClose { removeTextChangedListener(watcher) }
 }
 
-class FeeUiHelper {
-    companion object {
-        fun toId(fee: FeeType): Int {
-            return when (fee) {
-                FeeType.SINGLE -> View.NO_ID
-                FeeType.LOW -> R.id.chipLow
-                FeeType.NORMAL -> R.id.chipNormal
-                FeeType.PRIORITY -> R.id.chipPriority
-            }
+object FeeUiHelper {
+    fun toId(fee: FeeType): Int {
+        return when (fee) {
+            FeeType.SINGLE -> View.NO_ID
+            FeeType.LOW -> R.id.chipLow
+            FeeType.NORMAL -> R.id.chipNormal
+            FeeType.PRIORITY -> R.id.chipPriority
         }
+    }
 
-        fun toType(id: Int): FeeType {
-            return when (id) {
-                R.id.chipLow -> FeeType.LOW
-                R.id.chipNormal -> FeeType.NORMAL
-                R.id.chipPriority -> FeeType.PRIORITY
-                else -> FeeType.NORMAL
-            }
+    fun toType(id: Int): FeeType {
+        return when (id) {
+            R.id.chipLow -> FeeType.LOW
+            R.id.chipNormal -> FeeType.NORMAL
+            R.id.chipPriority -> FeeType.PRIORITY
+            else -> FeeType.NORMAL
         }
     }
 }
