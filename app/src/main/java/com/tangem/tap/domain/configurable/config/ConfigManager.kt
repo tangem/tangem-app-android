@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.QuickNodeCredentials
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
@@ -37,7 +39,7 @@ class ConfigManager {
     fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null) {
         configLoader.load { configModel ->
             setupFeature(configModel.features)
-            setupKey(configModel.configValues)
+            setupConfigValues(configModel.configValues)
             onComplete?.invoke(config)
         }
     }
@@ -66,53 +68,52 @@ class ConfigManager {
         config = config.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
         defaultConfig = defaultConfig.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
     }
 
-    private fun setupKey(configValues: ConfigValueModel?) {
+    private fun setupConfigValues(configValues: ConfigValueModel?) {
         val values = configValues ?: return
-        config = config.copy(
-            coinMarketCapKey = values.coinMarketCapKey,
-            moonPayApiKey = values.moonPayApiKey,
-            moonPayApiSecretKey = values.moonPayApiSecretKey,
-            mercuryoWidgetId = values.mercuryoWidgetId,
-            mercuryoSecret = values.mercuryoSecret,
+
+        config = createConfig(config, values)
+        defaultConfig = config.copy()
+    }
+
+    private fun createConfig(config: Config, configValues: ConfigValueModel): Config {
+        return config.copy(
+            coinMarketCapKey = configValues.coinMarketCapKey,
+            moonPayApiKey = configValues.moonPayApiKey,
+            moonPayApiSecretKey = configValues.moonPayApiSecretKey,
+            mercuryoWidgetId = configValues.mercuryoWidgetId,
+            mercuryoSecret = configValues.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
-                blockchairApiKey = values.blockchairApiKey,
-                blockchairAuthorizationToken = values.blockchairAuthorizationToken,
-                blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId,
-                tronGridApiKey = values.tronGridApiKey
+                blockchairCredentials = BlockchairCredentials(
+                    apiKey = configValues.blockchairApiKeys,
+                    authToken = configValues.blockchairAuthorizationToken,
+                ),
+                blockcypherTokens = configValues.blockcypherTokens,
+                quickNodeCredentials = QuickNodeCredentials(
+                    apiKey = configValues.quiknodeApiKey,
+                    subdomain = configValues.quiknodeSubdomain,
+                ),
+                bscQuickNodeCredentials = QuickNodeCredentials(
+                    apiKey = configValues.bscQuiknodeApiKey,
+                    subdomain = configValues.bscQuiknodeSubdomain,
+                ),
+                infuraProjectId = configValues.infuraProjectId,
+                tronGridApiKey = configValues.tronGridApiKey,
+                saltPayAuthToken = configValues.saltPay.credentials.token,
             ),
-            appsFlyerDevKey = values.appsFlyerDevKey,
-            amplitudeApiKey = values.amplitudeApiKey,
-            shopify = values.shopifyShop,
-            zendesk = values.zendesk,
-            saltPayConfig = values.saltPay,
-        )
-        defaultConfig = defaultConfig.copy(
-            coinMarketCapKey = values.coinMarketCapKey,
-            moonPayApiKey = values.moonPayApiKey,
-            moonPayApiSecretKey = values.moonPayApiSecretKey,
-            mercuryoWidgetId = values.mercuryoWidgetId,
-            mercuryoSecret = values.mercuryoSecret,
-            blockchainSdkConfig = BlockchainSdkConfig(
-                blockchairApiKey = values.blockchairApiKey,
-                blockchairAuthorizationToken = values.blockchairAuthorizationToken,
-                blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId
-            ),
-            appsFlyerDevKey = values.appsFlyerDevKey,
-            amplitudeApiKey = values.amplitudeApiKey,
-            shopify = values.shopifyShop,
-            zendesk = values.zendesk,
-            saltPayConfig = values.saltPay,
+            appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
+            amplitudeApiKey = configValues.amplitudeApiKey,
+            shopify = configValues.shopifyShop,
+            zendesk = configValues.zendesk,
+            saltPayConfig = configValues.saltPay,
         )
     }
 
