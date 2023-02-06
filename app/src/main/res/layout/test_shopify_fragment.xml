@@ -7,7 +7,7 @@
 
     <Button
         android:id="@+id/btn_2_cards"
-        style="@style/TapButton"
+        style="@style/TapPrimaryButton"
         android:text="2 cards"
         app:layout_constraintEnd_toStartOf="@+id/btn_3_cards"
         app:layout_constraintHorizontal_bias="0.5"
@@ -19,7 +19,7 @@
 
     <Button
         android:id="@+id/btn_3_cards"
-        style="@style/TapButton"
+        style="@style/TapPrimaryButton"
         android:text="3 cards"
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -62,7 +62,7 @@
 
     <Button
         android:id="@+id/pay_gpay"
-        style="@style/TapButton"
+        style="@style/TapPrimaryButton"
         android:text="GPay"
         app:layout_constraintEnd_toStartOf="@+id/pay_web"
         app:layout_constraintHorizontal_bias="0.5"
@@ -74,7 +74,7 @@
 
     <Button
         android:id="@+id/pay_web"
-        style="@style/TapButton"
+        style="@style/TapPrimaryButton"
         android:text="Pay online"
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="parent"
