@@ -9,7 +9,7 @@ package com.tangem.core.ui.utils
  * result string 123.46377372
  */
 fun getValidatedNumberWithFixedDecimals(text: String, decimals: Int): String {
-    val filteredChars = text.filterIndexed { index, c ->
+    val filteredChars = text.replace(",", ".").filterIndexed { index, c ->
         val isOneOrZeroPoint = c == '.' && index != 0 && text.count { it == '.' } <= 1
         val isIndexPointIndex = c == '.' && index != 0 && text.indexOf('.') == index
         c.isDigit() || isIndexPointIndex || isOneOrZeroPoint
