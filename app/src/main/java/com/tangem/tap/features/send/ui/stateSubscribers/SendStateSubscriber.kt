@@ -69,9 +69,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
         with(fg.binding.lSendAddressPayid) {
-
             fun showView(view: View, info: Any?) {
                 view.show(info != null)
             }
@@ -220,7 +220,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             tilAmountToSend.enableError(false)
         }
 
-        val filter = DecimalDigitsInputFilter(12, state.maxLengthOfAmount, state.decimalSeparator)
+        val filter = DecimalDigitsInputFilter(
+            digitsBeforeDecimal = 12,
+            digitsAfterDecimal = state.maxLengthOfAmount,
+            decimalSeparator = state.decimalSeparator,
+        )
         etAmountToSend.filters = arrayOf(filter)
         val amountToSend = state.viewAmountValue
         if (!amountToSend.isFromUserInput) etAmountToSend.update(amountToSend.value)
@@ -230,12 +234,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
         val balanceText = when (state.mainCurrency.type) {
             MainCurrencyType.FIAT -> fg.getString(
-                R.string.send_balance_subtitle_format,
-                state.viewBalanceValue, state.mainCurrency.currencySymbol,
+                R.string.common_balance,
+                "${state.viewBalanceValue} ${state.mainCurrency.currencySymbol}",
             ).remove(":")
             MainCurrencyType.CRYPTO -> fg.getString(
-                R.string.send_balance_subtitle_format,
-                state.mainCurrency.currencySymbol, state.viewBalanceValue,
+                R.string.common_balance,
+                "${state.mainCurrency.currencySymbol} ${state.viewBalanceValue}",
             )
         }
 
@@ -249,8 +253,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         tvAmountCurrency.setTextColor(fg.getColor(textColor))
     }
 
+    @Suppress("MagicNumber")
     private fun handleFeeState(fg: SendFragment, state: FeeState) = with(fg.binding.clNetworkFee) {
-//        chipGroup.fitChipsByGroupWidth()
         fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
         flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
         llFeeControlsContainer.show(state.controlsLayoutIsVisible)
@@ -265,6 +269,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     private fun handleReceiptState(
         fg: SendFragment,
         state: ReceiptState,
@@ -289,8 +294,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 pbReceiptFee.hide()
                 tvReceiptFeeValue.show()
             }
+            else -> {}
         }
-
 
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
@@ -304,7 +309,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
                 val willSent = getString(
                     R.string.send_total_subtitle_format,
-                    receipt.willSentCrypto, receipt.symbols.crypto,
+                    "${receipt.willSentCrypto} ${receipt.symbols.crypto}",
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
             }
@@ -317,14 +322,18 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
                 llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
 
-                val willSent = SpannableStringBuilder()
-                    .bold {
-                        append(roughOrEmpty(receipt.willSentFiat)).append(" ")
-                        append(receipt.symbols.fiat)
-                        append(" (fee: ${receipt.feeFiat} ")
-                        append(receipt.symbols.fiat).append(")")
-                    }
-                llTotalContainer.tvWillBeSentValue.update(willSent.toString())
+                if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
+                    llTotalContainer.tvWillBeSentValue.hide()
+                } else {
+                    llTotalContainer.tvWillBeSentValue.show()
+                    llTotalContainer.tvWillBeSentValue.update(
+                        getString(
+                            R.string.send_total_subtitle_fiat_format,
+                            "${receipt.willSentFiat} ${receipt.symbols.fiat}",
+                            "${receipt.feeFiat} ${receipt.symbols.fiat}",
+                        ),
+                    )
+                }
             }
             ReceiptLayoutType.TOKEN_FIAT -> {
                 val receipt = state.tokenFiat ?: return
@@ -337,8 +346,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
                 val willSent = getString(
                     R.string.send_total_subtitle_asset_format,
-                    receipt.symbols.token ?: "", receipt.willSentToken,
-                    receipt.symbols.crypto, receipt.willSentFeeCoin,
+                    "${receipt.symbols.token ?: ""} ${receipt.willSentToken}",
+                    "${receipt.symbols.crypto} ${receipt.willSentFeeCoin}",
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
             }
@@ -358,6 +367,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     }
                 llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
             }
+            else -> {}
         }
     }
 }
