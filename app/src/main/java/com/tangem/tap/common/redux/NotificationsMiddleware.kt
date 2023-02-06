@@ -88,6 +88,7 @@ val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
     }
 }
 
+@Suppress("ComplexMethod")
 private fun handleNotificationAction(action: Action) {
     if (action is Debug && !BuildConfig.DEBUG) return
 

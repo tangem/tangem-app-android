@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -25,18 +25,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
 @Composable
 fun SettingsScreensScaffold(
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
     background: @Composable (() -> Unit)? = null,
     fab: @Composable (() -> Unit)? = null,
-    backgroundColor: Color = colorResource(id = R.color.background_primary),
+    backgroundColor: Color = TangemTheme.colors.background.secondary,
     titleRes: Int? = null,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     BackHandler(true, onBackClick)
 
@@ -58,9 +58,13 @@ fun SettingsScreensScaffold(
                 Column(modifier = modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(id = titleRes),
-                        modifier = modifier.padding(start = 20.dp, end = 20.dp, bottom = 52.dp),
-                        style = TangemTypography.headline1,
-                        color = colorResource(id = R.color.text_primary_1),
+                        modifier = modifier.padding(
+                            start = TangemTheme.dimens.spacing20,
+                            end = TangemTheme.dimens.spacing20,
+                            bottom = TangemTheme.dimens.spacing54,
+                        ),
+                        style = TangemTheme.typography.h1,
+                        color = TangemTheme.colors.text.primary1,
                     )
                     content()
                 }
@@ -79,16 +83,15 @@ fun ScreenTitle(
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
-        style = TangemTypography.headline1,
-        color = colorResource(id = R.color.text_primary_1),
+        style = TangemTheme.typography.h1,
+        color = TangemTheme.colors.text.primary1,
     )
 }
 
 @Composable
 fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
-    backgroundColor: Color = colorResource(id = R.color.background_primary),
-    modifier: Modifier = Modifier,
+    backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
     TopAppBar(
         title = { },
@@ -96,8 +99,9 @@ fun EmptyTopBarWithNavigation(
         {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painterResource(id = R.drawable.ic_back), "",
-                    tint = colorResource(id = R.color.icon_primary_1),
+                    painter = painterResource(id = R.drawable.ic_back_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.primary1,
                 )
             }
         },
@@ -109,15 +113,15 @@ fun EmptyTopBarWithNavigation(
 @Composable
 fun DetailsMainButton(
     title: String,
-    enabled: Boolean = true,
-    onClick: (() -> Unit),
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .heightIn(48.dp),
         shape = RoundedCornerShape(12.dp),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -128,7 +132,11 @@ fun DetailsMainButton(
         ),
     ) {
         Text(text = title)
-        Spacer(modifier = modifier.size(8.dp))
-        Icon(painter = painterResource(id = R.drawable.ic_tangem), contentDescription = "")
+        Spacer(
+            modifier = Modifier
+                .padding(start = 20.dp, end = 20.dp)
+                .size(8.dp),
+        )
+        Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
     }
 }
