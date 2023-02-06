@@ -17,6 +17,7 @@ import com.tangem.wallet.R
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("MagicNumber")
 class RefreshBalanceWidget(
     private val root: ViewGroup,
 ) : ViewStateWidget {
@@ -57,6 +58,7 @@ class RefreshBalanceWidget(
         viewSwitcher.showNext()
     }
 
+    @Suppress("MagicNumber")
     private fun animateState(state: ProgressState) {
         when (state) {
             ProgressState.Done, ProgressState.Error -> {
@@ -65,15 +67,25 @@ class RefreshBalanceWidget(
             }
             ProgressState.Loading -> {
                 progressViewAnimation = RotateAnimation(
-                    0f, 360f,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    /* fromDegrees = */
+                    0f,
+                    /* toDegrees = */
+                    360f,
+                    /* pivotXType = */
+                    Animation.RELATIVE_TO_SELF,
+                    /* pivotXValue = */
+                    0.5f,
+                    /* pivotYType = */
+                    Animation.RELATIVE_TO_SELF,
+                    /* pivotYValue = */
+                    0.5f,
                 )
                 progressViewAnimation?.duration = 700
                 progressViewAnimation?.interpolator = AccelerateInterpolator()
                 progressViewAnimation?.repeatCount = -1
                 progressViewAnimation?.let { arrowView.startAnimation(it) }
             }
+            else -> {}
         }
     }
 
@@ -93,14 +105,19 @@ class RefreshBalanceWidget(
     private fun getState(): ProgressState = if (isArrowRefreshActive()) ProgressState.Done else ProgressState.Loading
 }
 
+@Suppress("MagicNumber")
 class ShowAnimation : AnimationSet(true) {
     init {
         addAnimation(
             ScaleAnimation(
-                0f, 1f,
-                0f, 1f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
+                0f,
+                1f,
+                0f,
+                1f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
             ),
         )
         addAnimation(AlphaAnimation(0f, 1f))
