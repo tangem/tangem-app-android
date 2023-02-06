@@ -25,6 +25,8 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayMiddleware
+import com.tangem.tap.features.saveWallet.redux.SaveWalletMiddleware
+import com.tangem.tap.features.saveWallet.redux.SaveWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.shop.redux.ShopMiddleware
@@ -33,6 +35,11 @@ import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
+import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
+import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
+import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
+import com.tangem.tap.features.welcome.redux.WelcomeState
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
@@ -51,6 +58,9 @@ data class AppState(
     val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
     val shopState: ShopState = ShopState(),
+    val welcomeState: WelcomeState = WelcomeState(),
+    val saveWalletState: SaveWalletState = SaveWalletState(),
+    val walletSelectorState: WalletSelectorState = WalletSelectorState(),
 ) : StateType {
 
     val domainState: DomainState
@@ -59,10 +69,18 @@ data class AppState(
     val domainNetworks: NetworkServices
         get() = domainState.globalState.networkServices
 
+    val featureRepositoryProvider: FeatureRepositoryProvider
+        get() = FeatureRepositoryProvider(
+            tangemTechApi = domainNetworks.tangemTechService.api,
+            dispatchers = AppCoroutineDispatcherProvider(),
+        )
+
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
-                logMiddleware, navigationMiddleware, notificationsMiddleware,
+                logMiddleware,
+                navigationMiddleware,
+                notificationsMiddleware,
                 GlobalMiddleware.handler,
                 HomeMiddleware.handler,
                 OnboardingNoteMiddleware.handler,
@@ -78,8 +96,12 @@ data class AppState(
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 ShopMiddleware().shopMiddleware,
+                WelcomeMiddleware().middleware,
+                SaveWalletMiddleware().middleware,
+                WalletSelectorMiddleware().middleware,
+                LockUserWalletsTimerMiddleware().middleware,
+                AccessCodeRequestPolicyMiddleware().middleware,
             )
         }
     }
 }
-
