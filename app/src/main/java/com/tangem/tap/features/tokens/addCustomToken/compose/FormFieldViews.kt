@@ -2,19 +2,25 @@ package com.tangem.tap.features.tokens.addCustomToken.compose
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.features.addCustomToken.TokenBlockchainField
 import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenContractAddressChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDecimalsChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDerivationPathChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNameChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNetworkChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenSymbolChanged
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.*
-import com.tangem.tap.common.extensions.getFromClipboard
+import com.tangem.tap.common.compose.BlockchainSpinner
+import com.tangem.tap.common.compose.ClosePopupTrigger
+import com.tangem.tap.common.compose.OutlinedTextFieldWidget
+import com.tangem.tap.common.compose.TitleSubtitle
 import com.tangem.wallet.R
 
 /**
@@ -39,31 +45,6 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
         domainStore.dispatch(OnTokenContractAddressChanged(Field.Data(it, true)))
     }
     SpacerH8()
-}
-
-@Composable
-private fun PasteClearButton(
-    showFirst: Boolean,
-) {
-    if (showFirst) {
-        val context = LocalContext.current
-        PasteButton(
-            onClick = {
-                context.getFromClipboard()?.let {
-                    val fieldData = Field.Data(it.toString(), false)
-                    domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
-                }
-
-            }
-        )
-    } else {
-        ClearButton(
-            onClick = {
-                val fieldData = Field.Data("", false)
-                domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
-            }
-        )
-    }
 }
 
 @Composable
@@ -167,10 +148,4 @@ fun TokenDerivationPathView(
         closePopupTrigger = closePopupTrigger,
     ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it, true))) }
     SpacerH8()
-}
-
-@Preview
-@Composable
-fun TestTokenContractAddressView() {
-
 }

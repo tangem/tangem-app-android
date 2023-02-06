@@ -1,21 +1,19 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.TapWorkarounds.isTangemNote
-import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
 import java.util.*
 
-class DetailsReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
-    }
+object DetailsReducer {
+    fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): DetailsState {
@@ -26,7 +24,11 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
             handlePrepareScreen(action)
         }
         is DetailsAction.PrepareCardSettingsData -> {
-            handlePrepareCardSettingsScreen(action.card, detailsState)
+            handlePrepareCardSettingsScreen(
+                card = action.card,
+                cardTypesResolver = action.cardTypesResolver,
+                state = detailsState,
+            )
         }
         is DetailsAction.ResetCardSettingsData -> detailsState.copy(cardSettingsState = null)
         is DetailsAction.ResetToFactory -> {
@@ -50,42 +52,54 @@ private fun handlePrepareScreen(
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
-        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
-        createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
+        createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
+        appSettingsState = AppSettingsState(
+            isBiometricsAvailable = tangemSdkManager.canUseBiometry,
+            saveWallets = preferencesStorage.shouldSaveUserWallets,
+            saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+        ),
     )
 }
 
-private fun handlePrepareCardSettingsScreen(card: Card, state: DetailsState): DetailsState {
+private fun handlePrepareCardSettingsScreen(
+    card: CardDTO,
+    cardTypesResolver: CardTypesResolver,
+    state: DetailsState,
+):
+    DetailsState {
     val cardSettingsState = CardSettingsState(
-        cardInfo = card.toCardInfo(),
-        manageSecurityState = prepareSecurityOptions(card),
+        cardInfo = card.toCardInfo(cardTypesResolver),
+        manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
         card = card,
-        resetCardAllowed = isResetToFactoryAllowedByCard(card),
+        resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
     )
     return state.copy(cardSettingsState = cardSettingsState)
 }
 
-private fun prepareSecurityOptions(card: Card): ManageSecurityState {
+private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesResolver): ManageSecurityState {
     val securityOption = when {
         card.isAccessCodeSet -> {
             SecurityOption.AccessCode
         }
+
         card.isPasscodeSet == true -> {
             SecurityOption.PassCode
         }
+
         else -> {
             SecurityOption.LongTap
         }
     }
     val allowedSecurityOptions = when {
-        card.isStart2Coin || card.isTangemNote || card.isSaltPay -> {
+        cardTypesResolver.isStart2Coin() || cardTypesResolver.isTangemNote() || cardTypesResolver.isSaltPay() -> {
             EnumSet.of(SecurityOption.LongTap)
         }
         card.settings.isBackupAllowed -> {
             EnumSet.of(securityOption)
         }
-        else -> prepareAllowedSecurityOptions(card, securityOption)
+        else ->
+            prepareAllowedSecurityOptions(cardTypesResolver = cardTypesResolver, currentSecurityOption = securityOption)
     }
     return ManageSecurityState(
         currentOption = securityOption,
@@ -94,10 +108,10 @@ private fun prepareSecurityOptions(card: Card): ManageSecurityState {
     )
 }
 
-private fun isResetToFactoryAllowedByCard(card: Card): Boolean {
+private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
     val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
     val notAllowedByCard = notAllowedByAnyWallet ||
-        (card.isWalletDataSupported && (!card.isTangemNote && !card.settings.isBackupAllowed)) ||
+        card.isWalletDataSupported && !cardTypesResolver.isTangemNote() && !card.settings.isBackupAllowed ||
         card.isSaltPay
     return !notAllowedByCard
 }
@@ -114,7 +128,8 @@ private fun handleEraseWallet(
 }
 
 private fun handleSecurityAction(
-    action: DetailsAction.ManageSecurity, state: DetailsState,
+    action: DetailsAction.ManageSecurity,
+    state: DetailsState,
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SelectOption -> {
@@ -127,9 +142,10 @@ private fun handleSecurityAction(
             // Setting options to show only LongTap from now on for non-twins
             val manageSecurityState = state.cardSettingsState?.manageSecurityState?.copy(
                 currentOption = state.cardSettingsState.manageSecurityState.selectedOption,
-                allowedOptions = state.scanResponse?.card?.let {
+                allowedOptions = state.scanResponse?.cardTypesResolver?.let {
                     prepareAllowedSecurityOptions(
-                        it, state.cardSettingsState.manageSecurityState.selectedOption,
+                        cardTypesResolver = it,
+                        currentSecurityOption = state.cardSettingsState.manageSecurityState.selectedOption,
                     )
                 } ?: EnumSet.of(SecurityOption.LongTap),
             )
@@ -144,24 +160,58 @@ private fun handleSecurityAction(
 }
 
 private fun handlePrivacyAction(
-    action: DetailsAction.AppSettings, state: DetailsState,
+    action: DetailsAction.AppSettings,
+    state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-            when (action.setting) {
-                PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
-                PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
-            }
-        }
+        is DetailsAction.AppSettings.SwitchPrivacySetting -> state.copy(
+            appSettingsState = when (action.setting) {
+                AppSetting.SaveWallets -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    saveWallets = action.enable,
+                )
+                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    saveWallets = true, // User can't enable access codes saving without wallets saving
+                    saveAccessCodes = action.enable,
+                )
+            },
+        )
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                isInProgress = false,
+            ),
+        )
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Failure -> state.copy(
+            appSettingsState = when (action.setting) {
+                AppSetting.SaveWallets -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    saveWallets = action.prevState,
+                )
+                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    saveAccessCodes = action.prevState,
+                )
+            },
+        )
+        is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                needEnrollBiometrics = action.needEnrollBiometrics,
+            ),
+        )
+        is DetailsAction.AppSettings.EnrollBiometrics,
+        is DetailsAction.AppSettings.CheckBiometricsStatus,
+        -> state
     }
 }
 
 private fun prepareAllowedSecurityOptions(
-    card: Card?, currentSecurityOption: SecurityOption?,
+    cardTypesResolver: CardTypesResolver,
+    currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
     val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
-    if (card?.isTangemTwin() == true) {
+    if (cardTypesResolver.isTangemTwins()) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
     }
     if (currentSecurityOption == SecurityOption.AccessCode) {
@@ -173,9 +223,17 @@ private fun prepareAllowedSecurityOptions(
     return allowedSecurityOptions
 }
 
-private fun Card.toCardInfo(): CardInfo {
+@Suppress("MagicNumber")
+private fun CardDTO.toCardInfo(cardTypesResolver: CardTypesResolver): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
-    return CardInfo(cardId, issuer, signedHashes)
+
+    return CardInfo(
+        cardId = cardId,
+        issuer = issuer,
+        signedHashes = signedHashes,
+        isTwin = cardTypesResolver.isTangemTwins(),
+        hasBackup = backupStatus?.isActive == true,
+    )
 }

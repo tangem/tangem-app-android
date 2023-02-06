@@ -1,5 +1,7 @@
 package com.tangem.tap.features.shop.redux
 
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
@@ -25,8 +27,8 @@ class ShopMiddleware {
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handle(action: Action) {
-
     val shopState = store.state.shopState
 
     if (action is NavigationAction.NavigateTo && action.screen == AppScreen.Shop) {
@@ -49,8 +51,8 @@ private fun handle(action: Action) {
                     store.dispatchOnMain(
                         ShopAction.ApplyPromoCode.Success(
                             promoCode = products.first { it.type == shopState.selectedProduct }.appliedDiscount,
-                            products = products
-                        )
+                            products = products,
+                        ),
                     )
                 }
                 result.onFailure { store.dispatchOnMain(ShopAction.ApplyPromoCode.InvalidPromoCode) }
@@ -76,7 +78,7 @@ private fun handle(action: Action) {
                 val result = shopService.handleGooglePayResult(
                     action.resultCode,
                     action.data,
-                    shopState.selectedProduct
+                    shopState.selectedProduct,
                 )
                 result.onSuccess {
                     store.dispatchOnMain(ShopAction.BuyWithGooglePay.Success)
@@ -85,7 +87,6 @@ private fun handle(action: Action) {
                     store.dispatchOnMain(ShopAction.BuyWithGooglePay.Failure(it))
                 }
             }
-
         }
         ShopAction.LoadProducts -> {
             scope.launch {
@@ -94,7 +95,7 @@ private fun handle(action: Action) {
                     onFailure = {
                         Timber.e(it)
                         store.dispatchOnMain(ShopAction.LoadProducts.Failure)
-                    }
+                    },
                 )
             }
         }
@@ -109,23 +110,19 @@ private fun handle(action: Action) {
                     ShopAction.CheckIfGooglePayAvailable.Failure
                 }
                 store.dispatchOnMain(newAction)
-
             }
         }
         ShopAction.StartWebCheckout -> {
+            Analytics.send(Shop.Redirected(null))
             store.dispatchOpenUrl(shopService.getCheckoutUrl(shopState.selectedProduct))
             store.dispatch(ShopAction.FinishSuccessfulOrder)
         }
 
         is ShopAction.FinishSuccessfulOrder -> {
             scope.launch {
-                shopService.waitForCheckout(
-                    productType = shopState.selectedProduct,
-                    analyticsHandler = store.state.globalState.analyticsHandler
-                )
+                shopService.waitForCheckout(shopState.selectedProduct)
             }
         }
-
+        else -> {}
     }
-
 }
