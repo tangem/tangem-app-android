@@ -10,7 +10,7 @@ package com.tangem.core.ui.utils
  */
 fun getValidatedNumberWithFixedDecimals(text: String, decimals: Int): String {
     val comma = ','
-    val dot = ','
+    val dot = '.'
     val filteredChars = text.replace(comma, dot).filterIndexed { index, c ->
         val isOneOrZeroPoint = c == dot && index != 0 && text.count { it == dot } <= 1
         val isIndexPointIndex = c == dot && index != 0 && text.indexOf(dot) == index
