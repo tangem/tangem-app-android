@@ -54,8 +54,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         networkId: String,
         fromTokenAddress: String,
         toTokenAddress: String,
-        amount:
-        String,
+        amount: String,
     ): AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
