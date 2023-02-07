@@ -48,7 +48,8 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
 
 @Composable
 private fun makeSuccessMessage(fromTokenAmount: String, toTokenAmount: String): AnnotatedString {
-    val message = stringResource(id = R.string.swapping_swap_of_to, fromTokenAmount, toTokenAmount)
+    val swapToString = stringResource(id = R.string.swapping_swap_of_to, fromTokenAmount)
+    val message = "$swapToString\n$toTokenAmount"
     return buildAnnotatedString {
         append(message)
         addStyle(
