@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.cache
 
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
 import java.math.BigDecimal
 
@@ -7,6 +8,7 @@ class SwapDataCacheImpl : SwapDataCache {
 
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
     private val feesForNetworks: MutableMap<String, BigDecimal> = mutableMapOf()
+    private val tokensBalances: MutableMap<String, SwapAmount> = mutableMapOf()
     private val lastInWalletTokens = mutableListOf<Currency>()
     private val lastLoadedTokens = mutableListOf<Currency>()
 
@@ -30,6 +32,14 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun getLoadedTokens(): List<Currency> {
         return lastLoadedTokens
+    }
+
+    override fun getBalanceForToken(symbol: String): SwapAmount? {
+        return tokensBalances[symbol]
+    }
+
+    override fun cacheBalances(balances: Map<String, SwapAmount>) {
+        tokensBalances.putAll(balances)
     }
 
     override fun cacheAvailableToSwapTokens(networkId: String, tokens: List<Currency>) {

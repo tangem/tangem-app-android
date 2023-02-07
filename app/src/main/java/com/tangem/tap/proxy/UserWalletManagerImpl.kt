@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.domain.common.CardDTO
@@ -124,10 +125,29 @@ class UserWalletManagerImpl(
         return walletManager?.wallet?.recentTransactions?.lastOrNull()?.hash?.let { HEX_PREFIX + it }
     }
 
-    override fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount> {
+    override suspend fun getCurrentWalletTokensBalance(
+        networkId: String,
+        extraTokens: List<Currency>,
+    ): Map<String, ProxyAmount> {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain)
-        return walletManager.wallet.amounts.map { entry ->
+
+        // workaround for get balance for tokens that doesn't exist in wallet
+        val extraTokensToLoadBalance = extraTokens
+            .filterIsInstance<NonNativeToken>()
+            .map {
+                Token(
+                    symbol = it.symbol,
+                    contractAddress = it.contractAddress,
+                    decimals = it.decimalCount,
+                )
+            }
+            .filter {
+                !walletManager.cardTokens.contains(it)
+            }
+        walletManager.addTokens(extraTokensToLoadBalance)
+        walletManager.update()
+        val balances = walletManager.wallet.amounts.map { entry ->
             val amount = entry.value
             amount.currencySymbol to ProxyAmount(
                 amount.currencySymbol,
@@ -135,6 +155,8 @@ class UserWalletManagerImpl(
                 amount.decimals,
             )
         }.toMap()
+        extraTokensToLoadBalance.forEach { walletManager.removeToken(it) }
+        return balances
     }
 
     override fun getNativeTokenBalance(networkId: String): ProxyAmount? {
@@ -185,7 +207,7 @@ class UserWalletManagerImpl(
 
     private fun addNonNativeTokenToWalletAction(token: NonNativeToken, card: CardDTO, blockchain: Blockchain): Action {
         return WalletAction.MultiWallet.AddToken(
-            token = com.tangem.blockchain.common.Token(
+            token = Token(
                 id = token.id,
                 name = token.name,
                 symbol = token.symbol,
