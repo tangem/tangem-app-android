@@ -144,7 +144,7 @@ class SingleWalletView : WalletView() {
                     WalletAction.DialogAction.ChooseTradeActionDialog(
                         buyAllowed = walletData.isAvailableToBuy(exchangeManager),
                         sellAllowed = walletData.isAvailableToSell(exchangeManager),
-                        swapAllowed = false, //always disable for single wallet
+                        swapAllowed = false, // always disable for single wallet
                     ),
                 )
             }
