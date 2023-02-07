@@ -110,7 +110,10 @@ internal class StateBuilder(val actions: UiActions) {
         fromToken: Currency,
     ): SwapStateHolder {
         val warnings = mutableListOf<SwapWarning>()
-        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend && quoteModel.preparedSwapConfigState.isFeeEnough) {
+        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
+        ) {
             warnings.add(SwapWarning.PermissionNeeded(fromToken.symbol))
         }
         if (!quoteModel.preparedSwapConfigState.isBalanceEnough) {
