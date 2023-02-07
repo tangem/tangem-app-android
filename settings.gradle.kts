@@ -13,6 +13,8 @@ include(":core:ui")
 // region Libs modules
 include(":libs:crypto")
 include(":libs:auth")
+include(":libs:wallet:walletApi")
+include(":libs:wallet:walletImpl")
 // endregion Libs modules
 
 // region Feature modules
