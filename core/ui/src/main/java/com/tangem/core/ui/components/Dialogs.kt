@@ -104,9 +104,9 @@ fun TextInputDialog(
     confirmButton: DialogButton,
     onDismissDialog: () -> Unit,
     onValueChange: (TextFieldValue) -> Unit,
+    textFieldParams: AdditionalTextInputDialogParams,
     title: String? = null,
     dismissButton: DialogButton? = null,
-    textFieldParams: AdditionalTextInputDialogParams,
 ) {
     TangemDialog(
         type = DialogType.TextInput(
@@ -160,8 +160,8 @@ private fun TangemDialog(
 
 @Composable
 private fun DialogContent(
-    modifier: Modifier = Modifier,
     type: DialogType,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
@@ -197,9 +197,9 @@ private fun DialogContent(
 
 @Composable
 private fun DialogButtons(
-    modifier: Modifier = Modifier,
     confirmButton: DialogButton,
     dismissButton: DialogButton?,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -227,11 +227,11 @@ private fun DialogButtons(
 
 @Composable
 private fun DialogButton(
-    modifier: Modifier = Modifier,
     text: String,
     warning: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         if (warning) {
