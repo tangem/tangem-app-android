@@ -9,16 +9,18 @@ package com.tangem.core.ui.utils
  * result string 123.46377372
  */
 fun getValidatedNumberWithFixedDecimals(text: String, decimals: Int): String {
-    val filteredChars = text.replace(",", ".").filterIndexed { index, c ->
-        val isOneOrZeroPoint = c == '.' && index != 0 && text.count { it == '.' } <= 1
-        val isIndexPointIndex = c == '.' && index != 0 && text.indexOf('.') == index
+    val comma = ','
+    val dot = ','
+    val filteredChars = text.replace(comma, dot).filterIndexed { index, c ->
+        val isOneOrZeroPoint = c == dot && index != 0 && text.count { it == dot } <= 1
+        val isIndexPointIndex = c == dot && index != 0 && text.indexOf(dot) == index
         c.isDigit() || isIndexPointIndex || isOneOrZeroPoint
     }
     // If dot is present, take first 3 digits before decimal and first decimals digits after decimal
-    return if (filteredChars.count { it == '.' } == 1) {
-        val beforeDecimal = filteredChars.substringBefore('.')
-        val afterDecimal = filteredChars.substringAfter('.')
-        beforeDecimal + "." + afterDecimal.take(decimals)
+    return if (filteredChars.count { it == dot } == 1) {
+        val beforeDecimal = filteredChars.substringBefore(dot)
+        val afterDecimal = filteredChars.substringAfter(dot)
+        beforeDecimal + dot + afterDecimal.take(decimals)
     }
     // If there is no dot, just take all digits
     else {
