@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -131,6 +132,16 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 onDismissDialog = state.alert.onClick,
             )
         }
+
+        Image(
+            modifier = Modifier
+                .size(width = TangemTheme.dimens.size164, height = TangemTheme.dimens.size80)
+                .align(Alignment.BottomCenter)
+                .padding(bottom = TangemTheme.dimens.spacing28),
+            painter = painterResource(id = R.drawable.ill_one_inch_powered),
+            contentDescription = null,
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
