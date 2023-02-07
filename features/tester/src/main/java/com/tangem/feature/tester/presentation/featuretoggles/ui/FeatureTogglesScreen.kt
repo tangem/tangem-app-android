@@ -15,9 +15,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.tester.R
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesStateHolder
 
@@ -44,7 +46,7 @@ private fun FeatureTogglesContent(content: FeatureTogglesStateHolder.Content) {
         stickyHeader {
             AppBarWithBackButton(
                 onBackClick = content.onBackClicked,
-                text = "Feature toggles",
+                text = stringResource(id = R.string.feature_toggles),
             )
         }
         items(content.featureToggles) { featureToggle ->
