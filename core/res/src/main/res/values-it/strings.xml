@@ -151,7 +151,7 @@
     <string name="onboarding_subtitle_pin">Set PIN code for your SaltPay card</string>
     <string name="onboarding_supplement_button_kyc_waiting">Chat with support</string>
     <string name="registration_task_alert_message">Please hold the card until the operation complete</string>
-    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add Tangem card as your backup</string>
+    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add the Tangem card as your backup</string>
     <string name="onboarding_saltpay_title_no_backup_card">No backup card</string>
     <string name="onboarding_saltpay_title_one_backup_card">Backup card ready</string>
     <string name="onboarding_saltpay_subtitle_one_backup_card">Finalize the backup process by creating an access code</string>
@@ -351,7 +351,7 @@
     <string name="onboarding_done_body">Your card is activated and ready to be used</string>
     <string name="onboarding_balance_title">Balance</string>
     <string name="address_qr_code_message_format">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>
-    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over</string>
     <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
     <string name="warning_button_ok">Ok, ho capito!</string>
     <string name="onboarding_getting_started">Getting started</string>
@@ -376,10 +376,10 @@
     <string name="onboarding_access_code_feature_1_title">Protect</string>
     <string name="onboarding_access_code_feature_2_title">Personalize</string>
     <string name="onboarding_access_code_feature_3_title">Restore</string>
-    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets.</string>
-    <string name="onboarding_access_code_feature_2_description">You can set an individual access code on each card later.</string>
-    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place.</string>
-    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code.</string>
+    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
+    <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
+    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place</string>
+    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code</string>
     <string name="onboarding_access_code_too_short">Access code must be at least 4 characters long</string>
     <string name="onboarding_access_codes_doesnt_match">Entered access code didn\'t match the initial access code</string>
     <string name="common_create">Create</string>
