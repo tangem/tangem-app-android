@@ -344,7 +344,7 @@
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
     <string name="swapping_swap">Swap</string>
-    <string name="swapping_swap_of_to">Swap of %1$s to %2$s</string>
+    <string name="swapping_swap_of_to">Swap of %s to</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
