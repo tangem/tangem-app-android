@@ -11,8 +11,6 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.successOr
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.datasource.api.paymentology.AttestationResponse
 import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.datasource.api.paymentology.RegisterKYCRequest
@@ -20,9 +18,11 @@ import com.tangem.datasource.api.paymentology.RegisterWalletRequest
 import com.tangem.datasource.api.paymentology.RegisterWalletResponse
 import com.tangem.datasource.api.paymentology.RegistrationResponse
 import com.tangem.datasource.api.paymentology.tryExtractError
+import com.tangem.domain.common.extensions.successOr
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import java.math.BigDecimal
 
@@ -184,7 +184,7 @@ class KYCUrlProvider(
     kycProvider: KYCProvider,
 ) {
 
-    val kycRefId = UserWalletId(walletPublicKey).stringValue
+    val kycRefId = UserWalletIdBuilder.walletPublicKey(walletPublicKey).stringValue
 
     val requestUrl: String = makeWebRequestUrl(kycProvider)
 
