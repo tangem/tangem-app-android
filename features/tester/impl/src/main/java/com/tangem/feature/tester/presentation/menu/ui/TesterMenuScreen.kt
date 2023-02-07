@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tester.R
+import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.menu.state.TesterMenuStateHolder
 
 /**
@@ -45,10 +45,10 @@ private fun TesterMenuContent(content: TesterMenuStateHolder.Content) {
             modifier = Modifier
                 .padding(
                     horizontal = TangemTheme.dimens.spacing18,
-                    vertical = TangemTheme.dimens.spacing8
+                    vertical = TangemTheme.dimens.spacing8,
                 )
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16)
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         ) {
             PrimaryButton(
                 text = stringResource(R.string.feature_toggles),

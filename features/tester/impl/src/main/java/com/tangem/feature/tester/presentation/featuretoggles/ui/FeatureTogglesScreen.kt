@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tester.R
+import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesStateHolder
 
