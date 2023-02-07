@@ -21,7 +21,6 @@ import com.tangem.tap.domain.getFirstToken
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -150,7 +149,6 @@ class GnosisRegistrator(
     }
 
     suspend fun transferFrom(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
-        Timber.e(Throwable("transferFrom"))
         if (walletManager.txCount == -1L) {
             walletManager.safeUpdate().successOr {
                 return Result.Failure(BlockchainSdkError.WrappedThrowable(it.error))
