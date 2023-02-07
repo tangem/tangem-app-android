@@ -12,8 +12,10 @@ interface UserWalletManager {
     /**
      * Returns all user tokens (merged from local and backend)
      */
+    @Throws(IllegalStateException::class)
     suspend fun getUserTokens(networkId: String): List<Currency>
 
+    @Throws(IllegalStateException::class)
     fun getNativeTokenForNetwork(networkId: String): Currency
 
     /**
@@ -26,6 +28,7 @@ interface UserWalletManager {
      *
      * @param currency to receive referral payments
      */
+    @Throws(IllegalStateException::class)
     suspend fun isTokenAdded(currency: Currency): Boolean
 
     /**
@@ -51,14 +54,16 @@ interface UserWalletManager {
      * @return map of <Symbol, [ProxyAmount]>
      */
     @Throws(IllegalStateException::class)
-    fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount>
+    suspend fun getCurrentWalletTokensBalance(networkId: String, extraTokens: List<Currency>): Map<String, ProxyAmount>
 
+    @Throws(IllegalStateException::class)
     fun getNativeTokenBalance(networkId: String): ProxyAmount?
 
     /**
      * @param networkId
      * @return currency name
      */
+    @Throws(IllegalStateException::class)
     fun getNetworkCurrency(networkId: String): String
 
     /**
