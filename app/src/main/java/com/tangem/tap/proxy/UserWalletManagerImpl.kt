@@ -101,7 +101,6 @@ class UserWalletManagerImpl(
         }
         val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
         mainStore.dispatchOnMain(action)
-        mainStore.dispatchOnMain(WalletAction.LoadData.Refresh)
     }
 
     override fun getWalletAddress(networkId: String): String {
