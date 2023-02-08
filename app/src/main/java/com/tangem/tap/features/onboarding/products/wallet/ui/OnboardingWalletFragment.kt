@@ -98,7 +98,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         cardsWidget.toFolded(false)
 
         if (viewBackupCount > backupCardsCounts) {
-            flCardsContainer.removeViewAt(viewBackupCount - 1)
+            flCardsContainer.removeViews(0, viewBackupCount - backupCardsCounts)
         } else {
             flCardsContainer.inflate(R.layout.view_onboarding_card, true)
         }
@@ -108,7 +108,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     }
 
     private fun createLeapfrogWidget(container: FrameLayout, deviceScaleFactor: Float): LeapfrogWidget {
-        val leapfrogCalculator = PropertyCalculator(yTranslationFactor = 25f * deviceScaleFactor)
+        val leapfrogCalculator = PropertyCalculator(
+            yTranslationFactor = when (container.childCount) {
+                3 -> 25f
+                else -> 35f
+            } * deviceScaleFactor,
+        )
         return LeapfrogWidget(container, leapfrogCalculator)
     }
 
