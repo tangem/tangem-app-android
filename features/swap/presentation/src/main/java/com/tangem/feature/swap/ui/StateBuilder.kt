@@ -241,7 +241,6 @@ internal class StateBuilder(val actions: UiActions) {
                 ),
                 cancelButton = CancelPermissionButton(
                     enabled = true,
-                    onClick = {},
                 ),
             )
         }
