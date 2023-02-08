@@ -160,7 +160,7 @@
     <string name="onboarding_saltpay_title_backup_card">Приложите Tangem карту</string>
     <string name="onboarding_chat_button_title">Чат</string>
     <string name="onboarding_title_claim">Запросить %s</string>
-    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDai на свой кошелек</string>
+    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDAI на свой кошелек</string>
     <string name="onboarding_button_claim">Запросить</string>
     <string name="onboarding_subtitle_success_claim">Поздравляем! Ваша платежная крипто карта теперь активирована!</string>
     <string name="onboarding_title_claim_progress">Запрашивается</string>
@@ -351,7 +351,7 @@
     <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
     <string name="onboarding_balance_title">Баланс</string>
     <string name="address_qr_code_message_format">Отправляйте только %s (%s) в сети %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="warning_button_ok">Понятно!</string>
     <string name="onboarding_getting_started">Подготовка</string>
@@ -376,10 +376,10 @@
     <string name="onboarding_access_code_feature_1_title">Защита</string>
     <string name="onboarding_access_code_feature_2_title">Персонализация</string>
     <string name="onboarding_access_code_feature_3_title">Восстановление</string>
-    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт.</string>
-    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты.</string>
-    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте.</string>
-    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа.</string>
+    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
+    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
+    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте</string>
+    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа</string>
     <string name="onboarding_access_code_too_short">Код доступа должен состоять не менее чем из 4 символов.</string>
     <string name="onboarding_access_codes_doesnt_match">Введенные коды доступа не совпадают</string>
     <string name="common_create">Создать</string>
