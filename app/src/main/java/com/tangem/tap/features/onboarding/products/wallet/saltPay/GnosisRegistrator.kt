@@ -149,6 +149,11 @@ class GnosisRegistrator(
     }
 
     suspend fun transferFrom(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
+        if (walletManager.txCount == -1L) {
+            walletManager.safeUpdate().successOr {
+                return Result.Failure(BlockchainSdkError.WrappedThrowable(it.error))
+            }
+        }
         val amount = Amount(token, amountToClaim)
         val feeAmount = walletManager.getFeeToTransferFrom(amount, addressTreasureSafe)
             .extractFeeAmount().successOr { return it }

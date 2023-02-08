@@ -63,6 +63,12 @@ class UserWalletIdBuilder private constructor(
             )
         }
 
+        fun walletPublicKey(publicKey: ByteArray): UserWalletId {
+            return UserWalletIdBuilder(
+                publicKey = publicKey,
+            ).build()!!
+        }
+
         private fun findPublicKey(wallets: List<CardDTO.Wallet>): ByteArray? {
             return wallets.firstOrNull()
                 ?.publicKey
