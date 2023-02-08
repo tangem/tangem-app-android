@@ -34,7 +34,9 @@ data class WalletData(
     }
 
     fun isAvailableToSwap(swapInteractor: SwapInteractor, isExchangeFeatureOn: Boolean): Boolean {
-        return swapInteractor.isAvailableToSwap(currency.blockchain.toNetworkId()) && isExchangeFeatureOn
+        return swapInteractor.isAvailableToSwap(currency.blockchain.toNetworkId()) &&
+            isExchangeFeatureOn &&
+            !currency.isCustomCurrency(null)
     }
 
     fun getAvailableActions(
