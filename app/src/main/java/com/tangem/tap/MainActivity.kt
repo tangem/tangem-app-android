@@ -12,7 +12,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
 import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tangem_sdk_new.extensions.initWithBiometrics
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
@@ -78,7 +77,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = TangemSdk.initWithBiometrics(this, TangemSdkManager.config)
+        tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(tangemSdk, this)
