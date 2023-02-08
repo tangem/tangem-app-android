@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "PACKAGED_MANIFESTS",
+    "kind": "Directory"
+  },
+  "applicationId": "com.tangem.lib.auth",
+  "variantName": "debug_beta",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "outputFile": "../../merged_manifest/debug_beta/AndroidManifest.xml"
+    }
+  ],
+  "elementType": "File"
+}
