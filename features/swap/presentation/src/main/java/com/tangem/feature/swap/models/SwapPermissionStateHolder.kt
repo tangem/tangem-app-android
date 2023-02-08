@@ -25,5 +25,4 @@ data class ApprovePermissionButton(
 
 data class CancelPermissionButton(
     val enabled: Boolean,
-    val onClick: () -> Unit,
 )
