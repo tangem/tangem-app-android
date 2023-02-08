@@ -76,7 +76,7 @@ private val walletStoresRepository by lazy { WalletStoresRepository.provideDefau
 private val walletManagersRepository by lazy {
     WalletManagersRepository.provideDefaultImplementation(
         walletManagerFactory = WalletManagerFactory(
-            blockchainSdkConfig = store.state.globalState.configManager
+            config = store.state.globalState.configManager
                 ?.config
                 ?.blockchainSdkConfig
                 ?: BlockchainSdkConfig(),
