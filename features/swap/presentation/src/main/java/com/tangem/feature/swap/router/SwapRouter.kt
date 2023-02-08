@@ -11,16 +11,16 @@ internal class SwapRouter(
     private val customTabsManager: CustomTabsManager,
 ) {
 
-    var currentScreen by mutableStateOf(SwapScreen.Main)
+    var currentScreen by mutableStateOf(SwapNavScreen.Main)
         private set
 
-    fun openScreen(screen: SwapScreen) {
+    fun openScreen(screen: SwapNavScreen) {
         currentScreen = screen
     }
 
     fun back() {
-        if (currentScreen == SwapScreen.SelectToken) {
-            currentScreen = SwapScreen.Main
+        if (currentScreen == SwapNavScreen.SelectToken) {
+            currentScreen = SwapNavScreen.Main
         } else {
             fragmentManager.get()?.popBackStack()
         }
@@ -31,6 +31,6 @@ internal class SwapRouter(
     }
 }
 
-enum class SwapScreen {
+enum class SwapNavScreen {
     Main, Success, SelectToken
 }
