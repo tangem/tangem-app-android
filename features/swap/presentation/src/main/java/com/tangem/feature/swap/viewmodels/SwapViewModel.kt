@@ -23,7 +23,7 @@ import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapRouter
-import com.tangem.feature.swap.router.SwapScreen
+import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -69,7 +69,7 @@ internal class SwapViewModel @Inject constructor(
     private var isOrderReversed = false
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()
-    var currentScreen = SwapScreen.Main
+    var currentScreen = SwapNavScreen.Main
         get() = swapRouter.currentScreen
 
     init {
@@ -90,11 +90,11 @@ internal class SwapViewModel @Inject constructor(
         uiState = uiState.copy(
             onBackClicked = router::back,
             onSelectTokenClick = {
-                router.openScreen(SwapScreen.SelectToken)
+                router.openScreen(SwapNavScreen.SelectToken)
                 analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened)
             },
             onSuccess = {
-                router.openScreen(SwapScreen.Success)
+                router.openScreen(SwapNavScreen.Success)
             },
         )
     }
@@ -235,7 +235,7 @@ internal class SwapViewModel @Inject constructor(
                                 }
                             }
                             analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
-                            swapRouter.openScreen(SwapScreen.Success)
+                            swapRouter.openScreen(SwapNavScreen.Success)
                         }
                         else -> {
                             uiState = stateBuilder.createSwapErrorTransaction(uiState) {
@@ -304,7 +304,7 @@ internal class SwapViewModel @Inject constructor(
                 toCurrency = toToken,
             )
             startLoadingQuotes(fromToken, toToken, lastAmount.value)
-            swapRouter.openScreen(SwapScreen.Main)
+            swapRouter.openScreen(SwapNavScreen.Main)
         }
     }
 
