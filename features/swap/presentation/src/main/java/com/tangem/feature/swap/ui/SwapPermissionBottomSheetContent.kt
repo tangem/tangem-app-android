@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,8 +31,6 @@ import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
-    BackHandler(onBack = onCancel)
-
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -83,7 +80,6 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
             text = stringResource(id = R.string.common_cancel),
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                data.cancelButton.onClick()
                 onCancel()
             },
         )
@@ -142,7 +138,7 @@ private fun InformationItem(subtitle: String, value: String) {
             text = value,
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16)
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
         )
     }
 }
@@ -204,7 +200,7 @@ private val previewData = SwapPermissionState.ReadyForRequest(
     spenderAddress = "",
     fee = "2,14$",
     approveButton = ApprovePermissionButton(true) {},
-    cancelButton = CancelPermissionButton(true) {},
+    cancelButton = CancelPermissionButton(true),
 )
 
 //endregion preview
