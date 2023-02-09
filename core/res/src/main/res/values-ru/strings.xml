@@ -328,6 +328,7 @@
     <string name="story_meet_title">Встречайте\nTangem</string>
     <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
     <string name="story_web3_title">Поддержка DeFi</string>
+    <string name="swapping_error_wrapper">Ошибка: %s</string>
     <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
