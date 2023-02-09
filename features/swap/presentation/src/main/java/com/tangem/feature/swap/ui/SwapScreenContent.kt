@@ -63,6 +63,16 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
+        Image(
+            modifier = Modifier
+                .size(width = TangemTheme.dimens.size164, height = TangemTheme.dimens.size80)
+                .align(Alignment.BottomCenter)
+                .padding(bottom = TangemTheme.dimens.spacing28),
+            painter = painterResource(id = R.drawable.ill_one_inch_powered),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+        )
+
         Column {
             AppBarWithBackButton(
                 text = stringResource(R.string.swapping_swap),
@@ -132,16 +142,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 onDismissDialog = state.alert.onClick,
             )
         }
-
-        Image(
-            modifier = Modifier
-                .size(width = TangemTheme.dimens.size164, height = TangemTheme.dimens.size80)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing28),
-            painter = painterResource(id = R.drawable.ill_one_inch_powered),
-            contentDescription = null,
-            contentScale = ContentScale.Fit
-        )
     }
 }
 
@@ -290,9 +290,16 @@ private fun SwapWarnings(
                     )
                 }
                 is SwapWarning.GenericWarning -> {
+                    val message = warning.message?.let {
+                        if (warning.shouldWrapMessage) {
+                            String.format(stringResource(id = R.string.swapping_error_wrapper), it)
+                        } else {
+                            it
+                        }
+                    } ?: stringResource(id = R.string.swapping_generic_error)
                     RefreshableWaringCard(
                         title = stringResource(id = R.string.common_warning),
-                        description = warning.message ?: stringResource(id = R.string.swapping_generic_error),
+                        description = message,
                         onClick = warning.onClick,
                     )
                 }
