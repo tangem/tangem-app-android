@@ -289,10 +289,10 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun addWarning(uiState: SwapStateHolder, message: String?): SwapStateHolder {
+    fun addWarning(uiState: SwapStateHolder, message: String?, shouldWrapMessage: Boolean = false): SwapStateHolder {
         return if (message != null) {
             val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
-            renewWarnings.add(SwapWarning.GenericWarning(message) {})
+            renewWarnings.add(SwapWarning.GenericWarning(message, shouldWrapMessage = shouldWrapMessage) {})
             uiState.copy(
                 warnings = renewWarnings,
             )
@@ -306,7 +306,7 @@ internal class StateBuilder(val actions: UiActions) {
             // todo use if needed later
             // DataError.InsufficientLiquidity -> TODO()
             // DataError.NoError -> TODO()
-            is DataError.UnknownError -> addWarning(uiState, error.message)
+            is DataError.UnknownError -> addWarning(uiState, error.message, true)
             else -> addWarning(uiState, null)
         }
     }
