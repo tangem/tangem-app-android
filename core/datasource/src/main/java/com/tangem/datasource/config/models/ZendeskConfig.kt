@@ -1,4 +1,4 @@
-package com.tangem.tap.common.zendesk
+package com.tangem.datasource.config.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
