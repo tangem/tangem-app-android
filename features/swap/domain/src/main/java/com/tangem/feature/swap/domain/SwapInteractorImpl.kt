@@ -51,7 +51,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet = userWalletManager.getUserTokens(networkId)
+        val tokensInWallet = userWalletManager.getUserTokens(networkId, false)
             .filter { it.symbol != initialCurrency.symbol }
             .map { token ->
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
