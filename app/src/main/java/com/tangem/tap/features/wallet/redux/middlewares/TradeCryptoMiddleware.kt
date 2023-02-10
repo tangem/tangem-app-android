@@ -161,7 +161,9 @@ class TradeCryptoMiddleware {
                     name = this.currencyName,
                     symbol = this.currencySymbol,
                     networkId = this.blockchain.toNetworkId(),
-                    logoUrl = getIconUrl(this.blockchain.toCoinId()),
+                    // no need to set logoUrl for blockchain cause
+                    // error when form url with coinId, coinId of eth and arbitrum the same
+                    logoUrl = "",
                 )
             }
             is Currency.Token -> SwapCurrency.NonNativeToken(
