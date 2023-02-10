@@ -134,6 +134,7 @@ internal class SwapInteractorImpl @Inject constructor(
             SendTxResult.UserCancelledError -> TxState.UserCancelled
             is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
             is SendTxResult.TangemSdkError -> TxState.TangemSdkError
+            is SendTxResult.NetworkError -> TxState.NetworkError
             is SendTxResult.UnknownError -> TxState.UnknownError
         }
     }
@@ -225,6 +226,7 @@ internal class SwapInteractorImpl @Inject constructor(
             SendTxResult.UserCancelledError -> TxState.UserCancelled
             is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
             is SendTxResult.TangemSdkError -> TxState.TangemSdkError
+            is SendTxResult.NetworkError -> TxState.NetworkError
             is SendTxResult.UnknownError -> TxState.UnknownError
         }
     }
