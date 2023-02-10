@@ -1,42 +1,25 @@
-package com.tangem.tap.domain.configurable.config
+package com.tangem.datasource.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
-import com.tangem.tap.common.shop.shopify.ShopifyShop
-import com.tangem.tap.common.zendesk.ZendeskConfig
-import com.tangem.tap.domain.configurable.Loader
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
+import com.tangem.datasource.config.ConfigManager.Companion.IS_CREATING_TWIN_CARDS_ALLOWED
+import com.tangem.datasource.config.ConfigManager.Companion.IS_SENDING_TO_PAY_ID_ENABLED
+import com.tangem.datasource.config.ConfigManager.Companion.IS_TOP_UP_ENABLED
+import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.config.models.ConfigModel
+import com.tangem.datasource.config.models.ConfigValueModel
+import com.tangem.datasource.config.models.FeatureModel
+import javax.inject.Inject
 
-/**
-[REDACTED_AUTHOR]
- */
-data class Config(
-    val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
-    val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
-    val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
-    val mercuryoWidgetId: String = "",
-    val mercuryoSecret: String = "",
-    val appsFlyerDevKey: String = "",
-    val amplitudeApiKey: String = "",
-    val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
-    val isSendingToPayIdEnabled: Boolean = true,
-    val isTopUpEnabled: Boolean = false,
-    @Deprecated("Not relevant since version 3.23")
-    val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null,
-    val zendesk: ZendeskConfig? = null,
-    val saltPayConfig: SaltPayConfig? = null,
-)
+internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
-class ConfigManager {
-
-    var config: Config = Config()
+    override var config: Config = Config()
         private set
 
     private var defaultConfig = Config()
 
-    fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null) {
+    override fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) {
         configLoader.load { configModel ->
             setupFeature(configModel.features)
             setupConfigValues(configModel.configValues)
@@ -44,20 +27,20 @@ class ConfigManager {
         }
     }
 
-    fun turnOff(name: String) {
+    override fun turnOff(name: String) {
         when (name) {
-            isSendingToPayIdEnabled -> config = config.copy(isSendingToPayIdEnabled = false)
-            isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
-            isCreatingTwinCardsAllowed -> config = config.copy(isCreatingTwinCardsAllowed = false)
+            IS_SENDING_TO_PAY_ID_ENABLED -> config = config.copy(isSendingToPayIdEnabled = false)
+            IS_TOP_UP_ENABLED -> config = config.copy(isTopUpEnabled = false)
+            IS_CREATING_TWIN_CARDS_ALLOWED -> config = config.copy(isCreatingTwinCardsAllowed = false)
         }
     }
 
-    fun resetToDefault(name: String) {
+    override fun resetToDefault(name: String) {
         when (name) {
-            isSendingToPayIdEnabled -> config =
+            IS_SENDING_TO_PAY_ID_ENABLED -> config =
                 config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
-            isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
-            isCreatingTwinCardsAllowed -> config =
+            IS_TOP_UP_ENABLED -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
+            IS_CREATING_TWIN_CARDS_ALLOWED -> config =
                 config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
@@ -115,11 +98,5 @@ class ConfigManager {
             zendesk = configValues.zendesk,
             saltPayConfig = configValues.saltPay,
         )
-    }
-
-    companion object {
-        const val isSendingToPayIdEnabled = "isSendingToPayIdEnabled"
-        const val isCreatingTwinCardsAllowed = "isCreatingTwinCardsAllowed"
-        const val isTopUpEnabled = "isTopUpEnabled"
     }
 }

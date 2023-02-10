@@ -4,7 +4,7 @@ import android.app.Application
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.domain.common.AnalyticsHandlersLogConfig
-import com.tangem.tap.domain.configurable.config.Config
+import com.tangem.datasource.config.models.Config
 
 interface AnalyticsHandlerBuilder {
     fun build(data: Data): AnalyticsHandler?
