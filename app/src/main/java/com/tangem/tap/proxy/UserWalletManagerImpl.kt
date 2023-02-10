@@ -98,17 +98,32 @@ class UserWalletManagerImpl(
         }
         return false
     }
-// [REDACTED_TODO_COMMENT]
+
     override fun addToken(currency: Currency) {
         val card = requireNotNull(appStateHolder.getActualCard()) { "card not found" }
         val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
-        val action = if (currency is NativeToken) {
-            addNativeTokenToWalletAction(card, blockchain)
-        } else {
-            addNonNativeTokenToWalletAction(currency as NonNativeToken, card, blockchain)
+        val blockchainNetwork = BlockchainNetwork(blockchain, card)
+        val walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
+        val action = when (currency) {
+            is NativeToken -> {
+                if (walletManager == null) {
+                    addNativeTokenToWalletAction(card, blockchain, blockchainNetwork)
+                } else {
+                    null
+                }
+            }
+            is NonNativeToken -> {
+                if (walletManager?.cardTokens?.contains(currency.toSdkToken()) == false) {
+                    addNonNativeTokenToWalletAction(currency, card, blockchain)
+                } else {
+                    null
+                }
+            }
         }
-        val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
-        mainStore.dispatchOnMain(action)
+        action?.let {
+            val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
+            mainStore.dispatchOnMain(action)
+        }
     }
 
     override fun getWalletAddress(networkId: String): String {
@@ -142,11 +157,7 @@ class UserWalletManagerImpl(
         val extraTokensToLoadBalance = extraTokens
             .filterIsInstance<NonNativeToken>()
             .map {
-                Token(
-                    symbol = it.symbol,
-                    contractAddress = it.contractAddress,
-                    decimals = it.decimalCount,
-                )
+                it.toSdkToken()
             }
             .filter {
                 !walletManager.cardTokens.contains(it)
@@ -193,9 +204,12 @@ class UserWalletManagerImpl(
         )
     }
 
-    private fun addNativeTokenToWalletAction(card: CardDTO, blockchain: Blockchain): Action {
+    private fun addNativeTokenToWalletAction(
+        card: CardDTO,
+        blockchain: Blockchain,
+        blockchainNetwork: BlockchainNetwork,
+    ): Action {
         val scanResponse = requireNotNull(appStateHolder.scanResponse) { "scanResponse not found" }
-        val blockchainNetwork = BlockchainNetwork(blockchain, card)
         var walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
         if (walletManager == null) {
             walletManager = walletManagerFactory.makeWalletManagerForApp(
@@ -244,4 +258,14 @@ class UserWalletManagerImpl(
     companion object {
         private const val HEX_PREFIX = "0x"
     }
+}
+
+private fun NonNativeToken.toSdkToken(): Token {
+    return Token(
+        id = this.id,
+        name = this.name,
+        symbol = this.symbol,
+        contractAddress = this.contractAddress,
+        decimals = this.decimalCount,
+    )
 }
