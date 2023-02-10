@@ -75,9 +75,14 @@ sealed interface SwapWarning {
     object InsufficientFunds : SwapWarning
     data class GenericWarning(
         val message: String? = null,
+        val type: GenericWarningType = GenericWarningType.OTHER,
         val shouldWrapMessage: Boolean = false,
         val onClick: () -> Unit,
     ) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
     // object HighPriceImpact : SwapWarning
+}
+
+enum class GenericWarningType {
+    NETWORK, OTHER
 }
