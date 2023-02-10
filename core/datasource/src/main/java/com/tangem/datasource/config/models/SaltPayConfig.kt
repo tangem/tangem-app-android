@@ -1,6 +1,5 @@
-package com.tangem.tap.features.onboarding.products.wallet.saltPay
+package com.tangem.datasource.config.models
 
-import com.tangem.tap.common.zendesk.ZendeskConfig
 import org.spongycastle.util.encoders.Base64.toBase64String
 
 /**
