@@ -12,7 +12,7 @@ import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.common.AssetReader
+import com.tangem.datasource.utils.AssetReader
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
