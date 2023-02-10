@@ -18,7 +18,7 @@ import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.AndroidAssetReader
+import com.tangem.datasource.utils.AndroidAssetReader
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat

@@ -20,6 +20,8 @@ import com.tangem.datasource.api.paymentology.models.response.AttestationRespons
 import com.tangem.datasource.api.paymentology.models.response.RegisterWalletResponse
 import com.tangem.datasource.api.paymentology.models.response.RegistrationResponse
 import com.tangem.datasource.api.paymentology.models.response.tryExtractError
+import com.tangem.datasource.config.models.KYCProvider
+import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.operations.attestation.AttestWalletKeyResponse
