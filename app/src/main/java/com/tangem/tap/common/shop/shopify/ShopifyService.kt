@@ -7,6 +7,7 @@ import com.shopify.buy3.RetryHandler
 import com.shopify.buy3.Storefront.*
 import com.shopify.graphql.support.ID
 import com.shopify.graphql.support.Input
+import com.tangem.datasource.config.models.ShopifyShop
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
 import com.tangem.tap.common.shop.shopify.data.checkoutFieldsFragment
 import com.tangem.tap.common.shop.shopify.data.collectionFieldsFragment
