@@ -22,8 +22,8 @@ import com.tangem.feature.swap.domain.models.ui.TxState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.presentation.SwapFragment
-import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.router.SwapNavScreen
+import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -143,6 +143,15 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
+    private fun startLoadingQuotesFromLastState() {
+        val fromCurrency = dataState.fromCurrency
+        val toCurrency = dataState.toCurrency
+        val amount = dataState.amount
+        if (fromCurrency != null && toCurrency != null && amount != null) {
+            startLoadingQuotes(fromCurrency, toCurrency, amount)
+        }
+    }
+
     private fun loadQuotesTask(
         fromToken: Currency,
         toToken: Currency,
@@ -184,12 +193,12 @@ internal class SwapViewModel @Inject constructor(
                         )
                     }
                     is SwapState.SwapError -> {
-                        uiState = stateBuilder.mapError(uiState, swapState.error)
+                        uiState = stateBuilder.mapError(uiState, swapState.error) { startLoadingQuotesFromLastState() }
                     }
                 }
             },
             onError = {
-                uiState = stateBuilder.addWarning(uiState, it.message)
+                uiState = stateBuilder.addWarning(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
     }
@@ -238,13 +247,17 @@ internal class SwapViewModel @Inject constructor(
                             swapRouter.openScreen(SwapNavScreen.Success)
                         }
                         else -> {
-                            uiState = stateBuilder.createSwapErrorTransaction(uiState) {
+                            startLoadingQuotesFromLastState()
+                            uiState = stateBuilder.createErrorTransaction(uiState, it) {
                                 uiState = stateBuilder.clearAlert(uiState)
                             }
                         }
                     }
                 }
-                .onFailure { makeDefaultAlert() }
+                .onFailure {
+                    startLoadingQuotesFromLastState()
+                    makeDefaultAlert()
+                }
         }
     }
 
@@ -265,7 +278,9 @@ internal class SwapViewModel @Inject constructor(
                             uiState = stateBuilder.loadingPermissionState(uiState)
                         }
                         else -> {
-                            makeDefaultAlert()
+                            uiState = stateBuilder.createErrorTransaction(uiState, it) {
+                                uiState = stateBuilder.clearAlert(uiState)
+                            }
                         }
                     }
                 }
