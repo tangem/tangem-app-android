@@ -13,7 +13,7 @@ interface UserWalletManager {
      * Returns all user tokens (merged from local and backend)
      */
     @Throws(IllegalStateException::class)
-    suspend fun getUserTokens(networkId: String): List<Currency>
+    suspend fun getUserTokens(networkId: String, isExcludeCustom: Boolean): List<Currency>
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenForNetwork(networkId: String): Currency
