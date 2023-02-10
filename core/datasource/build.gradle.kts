@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":libs:auth"))
 
     /** Tangem libraries */
+    implementation(Tangem.blockchain)
     implementation(Tangem.cardCore)
 
     /** DI */
@@ -65,4 +66,7 @@ dependencies {
 
     /** Time */
     implementation(Library.jodatime)
+
+    /** Security */
+    implementation(Library.spongecastleCryptoCore)
 }
