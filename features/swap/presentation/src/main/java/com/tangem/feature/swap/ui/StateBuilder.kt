@@ -13,6 +13,7 @@ import com.tangem.feature.swap.domain.models.ui.TxState
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.FeeState
+import com.tangem.feature.swap.models.GenericWarningType
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
 import com.tangem.feature.swap.models.SwapPermissionState
@@ -275,39 +276,28 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun createSwapErrorTransaction(uiState: SwapStateHolder, onAlertClick: () -> Unit): SwapStateHolder {
+    fun createErrorTransaction(
+        uiState: SwapStateHolder,
+        txState: TxState,
+        onAlertClick: () -> Unit,
+    ): SwapStateHolder {
         return uiState.copy(
-            swapButton = uiState.swapButton.copy(
-                enabled = true,
-                loading = false,
-            ),
             alert = SwapWarning.GenericWarning(
                 message = null,
                 onClick = onAlertClick,
+                type = if (txState is TxState.NetworkError) GenericWarningType.NETWORK else GenericWarningType.OTHER,
             ),
             updateInProgress = false,
         )
     }
 
-    fun addWarning(uiState: SwapStateHolder, message: String?, shouldWrapMessage: Boolean = false): SwapStateHolder {
-        return if (message != null) {
-            val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
-            renewWarnings.add(SwapWarning.GenericWarning(message, shouldWrapMessage = shouldWrapMessage) {})
-            uiState.copy(
-                warnings = renewWarnings,
-            )
-        } else {
-            uiState
-        }
-    }
-
-    fun mapError(uiState: SwapStateHolder, error: DataError): SwapStateHolder {
+    fun mapError(uiState: SwapStateHolder, error: DataError, onClick: () -> Unit): SwapStateHolder {
         return when (error) {
 // [REDACTED_TODO_COMMENT]
             // DataError.InsufficientLiquidity -> TODO()
             // DataError.NoError -> TODO()
-            is DataError.UnknownError -> addWarning(uiState, error.message, true)
-            else -> addWarning(uiState, null)
+            is DataError.UnknownError -> addWarning(uiState, error.message, true, onClick)
+            else -> addWarning(uiState, null, false) {}
         }
     }
 
@@ -321,6 +311,19 @@ internal class StateBuilder(val actions: UiActions) {
     }
 
     fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(alert = null)
+
+    fun addWarning(
+        uiState: SwapStateHolder,
+        message: String?,
+        shouldWrapMessage: Boolean = false,
+        onClick: () -> Unit,
+    ): SwapStateHolder {
+        val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
+        renewWarnings.add(SwapWarning.GenericWarning(message, shouldWrapMessage = shouldWrapMessage, onClick = onClick))
+        return uiState.copy(
+            warnings = renewWarnings,
+        )
+    }
 
     private fun getShortAddressValue(fullAddress: String): String {
         check(fullAddress.length > ADDRESS_MIN_LENGTH) { "Invalid address" }
