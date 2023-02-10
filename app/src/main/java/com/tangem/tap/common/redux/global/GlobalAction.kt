@@ -13,9 +13,9 @@ import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
-import com.tangem.tap.common.zendesk.ZendeskConfig
+import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.configurable.config.ConfigManager
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.details.redux.SecurityOption
