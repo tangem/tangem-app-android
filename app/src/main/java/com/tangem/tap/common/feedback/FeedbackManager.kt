@@ -6,7 +6,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
-import com.tangem.tap.common.zendesk.ZendeskConfig
+import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.withForegroundActivity
