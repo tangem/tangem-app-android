@@ -1,8 +1,4 @@
-package com.tangem.tap.domain.configurable.config
-
-import com.tangem.tap.common.shop.shopify.ShopifyShop
-import com.tangem.tap.common.zendesk.ZendeskConfig
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
+package com.tangem.datasource.config.models
 
 /**
 [REDACTED_AUTHOR]
