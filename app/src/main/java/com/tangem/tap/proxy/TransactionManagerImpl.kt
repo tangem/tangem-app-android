@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.extensions.isNetworkError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -167,6 +168,7 @@ class TransactionManagerImpl(
         when (result) {
             is SimpleResult.Success -> return SendTxResult.Success
             is SimpleResult.Failure -> {
+                if (result.isNetworkError()) return SendTxResult.NetworkError(result.error)
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {
                     is BlockchainSdkError.WrappedTangemError -> {
