@@ -7,7 +7,7 @@ import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.tap.common.AssetReader
+import com.tangem.datasource.utils.AssetReader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 

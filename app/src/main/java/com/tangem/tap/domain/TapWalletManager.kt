@@ -18,7 +18,7 @@ import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.configurable.config.ConfigManager
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.model.UserWallet
@@ -181,16 +181,16 @@ class TapWalletManager {
         val configManager = store.state.globalState.configManager
         val blockchain = data.cardTypesResolver.getBlockchain()
         if (data.cardTypesResolver.isStart2Coin()) {
-            configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.turnOff(ConfigManager.isTopUpEnabled)
+            configManager?.turnOff(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
+            configManager?.turnOff(ConfigManager.IS_TOP_UP_ENABLED)
         } else if (blockchain == Blockchain.Bitcoin ||
             data.walletData?.blockchain == Blockchain.Bitcoin.id
         ) {
-            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
+            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
+            configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         } else {
-            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
+            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
+            configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         }
     }
 
