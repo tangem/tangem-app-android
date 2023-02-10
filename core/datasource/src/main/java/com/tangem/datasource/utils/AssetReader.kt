@@ -1,7 +1,6 @@
-package com.tangem.tap.common
+package com.tangem.datasource.utils
 
 import android.content.Context
-import com.tangem.tap.common.extensions.readAssetAsString
 
 /**
 [REDACTED_AUTHOR]
@@ -17,4 +16,8 @@ class AndroidAssetReader(
     override fun readAssetAsString(name: String): String {
         return context.readAssetAsString(name)
     }
+}
+
+fun Context.readAssetAsString(fileName: String): String {
+    return this.assets.open("$fileName.json").bufferedReader().readText()
 }
