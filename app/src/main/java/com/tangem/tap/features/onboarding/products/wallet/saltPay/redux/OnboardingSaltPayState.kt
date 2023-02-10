@@ -10,9 +10,9 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
+import com.tangem.datasource.config.models.KYCProvider
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
+import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
 import java.math.BigDecimal
