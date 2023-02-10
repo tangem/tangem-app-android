@@ -45,6 +45,7 @@ import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.FeeState
+import com.tangem.feature.swap.models.GenericWarningType
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
 import com.tangem.feature.swap.models.SwapPermissionState
@@ -137,8 +138,13 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
         }
 
         if (state.alert != null) {
+            val message = if (state.alert.type == GenericWarningType.NETWORK) {
+                stringResource(id = R.string.disclaimer_error_loading)
+            } else {
+                state.alert.message ?: stringResource(id = R.string.swapping_generic_error)
+            }
             SimpleOkDialog(
-                message = state.alert.message ?: stringResource(id = R.string.swapping_generic_error),
+                message = message,
                 onDismissDialog = state.alert.onClick,
             )
         }
