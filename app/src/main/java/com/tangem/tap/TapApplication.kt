@@ -12,10 +12,13 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.config.FeaturesLocalLoader
+import com.tangem.datasource.utils.AndroidAssetReader
+import com.tangem.datasource.utils.AssetReader
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.tap.common.AndroidAssetReader
-import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -32,9 +35,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
-import com.tangem.tap.domain.configurable.config.Config
-import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
@@ -114,6 +114,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var appStateHolder: AppStateHolder
 
+    @Inject
+    lateinit var configManager: ConfigManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -139,7 +142,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         walletConnectRepository = WalletConnectRepository(this)
 
         assetReader = AndroidAssetReader(this)
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi)
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -162,7 +165,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
-        val configManager = ConfigManager()
         configManager.load(loader) { config ->
             store.dispatch(GlobalAction.SetConfigManager(configManager))
             onComplete(config)
