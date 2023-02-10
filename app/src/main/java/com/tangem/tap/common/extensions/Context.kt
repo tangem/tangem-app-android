@@ -17,10 +17,6 @@ fun Context.rewriteFile(content: String, fileName: String) {
     }
 }
 
-fun Context.readAssetAsString(fileName: String): String {
-    return this.assets.open("$fileName.json").bufferedReader().readText()
-}
-
 fun Context.isPermissionGranted(permission: String): Boolean {
     return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 }
