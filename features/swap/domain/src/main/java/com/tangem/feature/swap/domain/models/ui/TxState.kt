@@ -11,5 +11,6 @@ sealed class TxState {
     object UserCancelled : TxState()
     object BlockchainError : TxState()
     object TangemSdkError : TxState()
+    object NetworkError : TxState()
     object UnknownError : TxState()
 }
