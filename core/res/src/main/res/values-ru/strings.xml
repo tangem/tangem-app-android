@@ -149,7 +149,6 @@
     <string name="onboarding_subtitle_kyc_waiting">Пожалуйста дождитесь завершения процесса подтверждения личности. Вы будете уведомлены через e-mail. Обычно это занимает не более часа. Вы можете закрыть приложение и вернуться позже.</string>
     <string name="onboarding_title_pin">Код доступа</string>
     <string name="onboarding_subtitle_pin">Установите 4-х значный код.\nОн будет использован для платежей.</string>
-    <string name="onboarding_supplement_button_kyc_waiting">Чат поддержки</string>
     <string name="registration_task_alert_message">Пожалуйста, удерживайте карту до завершения операции</string>
     <string name="onboarding_saltpay_subtitle_no_backup_cards">Для начала процесса бэкапа вам необходимо добавить Tangem карту</string>
     <string name="onboarding_saltpay_title_no_backup_card">Бэкап карта не добавлена</string>
@@ -158,7 +157,7 @@
     <string name="onboarding_saltpay_title_prepare_origin">Приготовьте SaltPay карту</string>
     <string name="onboarding_saltpay_button_backup_origin">Приложите SaltPay карту</string>
     <string name="onboarding_saltpay_title_backup_card">Приложите Tangem карту</string>
-    <string name="onboarding_chat_button_title">Чат</string>
+    <string name="chat_button_title">Чат</string>
     <string name="onboarding_title_claim">Запросить %s</string>
     <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDAI на свой кошелек</string>
     <string name="onboarding_button_claim">Запросить</string>
