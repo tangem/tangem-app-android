@@ -148,7 +148,7 @@
     <string name="onboarding_subtitle_kyc_start">Для начала работы с картой вам необходимо завершить процесс подтверждения личности</string>
     <string name="onboarding_subtitle_kyc_waiting">Пожалуйста дождитесь завершения процесса подтверждения личности. Вы будете уведомлены через e-mail. Обычно это занимает не более часа. Вы можете закрыть приложение и вернуться позже.</string>
     <string name="onboarding_title_pin">Код доступа</string>
-    <string name="onboarding_subtitle_pin">Установите Код доступа для вашей SaltPay карты</string>
+    <string name="onboarding_subtitle_pin">Установите 4-х значный код.\nОн будет использован для платежей.</string>
     <string name="onboarding_supplement_button_kyc_waiting">Чат поддержки</string>
     <string name="registration_task_alert_message">Пожалуйста, удерживайте карту до завершения операции</string>
     <string name="onboarding_saltpay_subtitle_no_backup_cards">Для начала процесса бэкапа вам необходимо добавить Tangem карту</string>
