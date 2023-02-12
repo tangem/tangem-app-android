@@ -88,6 +88,7 @@ class MultiWalletView : WalletView() {
 
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
         watcher.clear()
+        lSaltPayWallet.root.hide()
         tvTwinCardNumber.hide()
         rvPendingTransaction.hide()
         lCardBalance.root.hide()
@@ -220,7 +221,7 @@ class MultiWalletView : WalletView() {
         binding: FragmentWalletBinding,
         fragment: WalletFragment,
     ) {
-        when (state.primaryWallet?.currencyData?.status) {
+        when (state.primaryWalletData?.currencyData?.status) {
             BalanceStatus.EmptyCard -> {
                 showErrorState(
                     binding,
