@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.Token
@@ -39,6 +40,7 @@ import com.tangem.tap.userTokensRepository
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.rekotlin.Action
 import timber.log.Timber
 
 class TapWalletManager {
@@ -223,20 +225,20 @@ class TapWalletManager {
         val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
         if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
-            val primaryToken = data.getPrimaryToken()
-
-            dispatchOnMain(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
-            if (primaryToken != null) {
-                primaryWalletManager.addToken(primaryToken)
-                dispatchOnMain(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
-            }
-            dispatchOnMain(
+            val blockchainNetwork = BlockchainNetwork.fromWalletManager(primaryWalletManager)
+            val actionsList = listOfNotNull<Action>(
                 WalletAction.MultiWallet.AddBlockchains(
                     blockchains = listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
                     walletManagers = listOf(primaryWalletManager),
                 ),
+                data.getPrimaryToken()?.let {
+                    primaryWalletManager.addToken(it)
+                    primaryWalletManager.wallet.setAmount(Amount(it))
+                    WalletAction.MultiWallet.AddToken(it, blockchainNetwork, false)
+                },
                 WalletAction.LoadFiatRate(),
             )
+            dispatchOnMain(*actionsList.toTypedArray())
         }
     }
 
