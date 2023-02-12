@@ -148,8 +148,7 @@
     <string name="onboarding_subtitle_kyc_start">To start using your card you have to pass the KYC process</string>
     <string name="onboarding_subtitle_kyc_waiting">Please wait until the verification is completed. You\'ll be notified via email. Usually it takes up to 1 hour. You can close the app and come back later.</string>
     <string name="onboarding_title_pin">PIN Code</string>
-    <string name="onboarding_subtitle_pin">Set PIN code for your SaltPay card</string>
-    <string name="onboarding_supplement_button_kyc_waiting">Chat with support</string>
+    <string name="onboarding_subtitle_pin">Set up a 4-digit code.\nIt will be used for payments.</string>
     <string name="registration_task_alert_message">Please hold the card until the operation complete</string>
     <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add the Tangem card as your backup</string>
     <string name="onboarding_saltpay_title_no_backup_card">No backup card</string>
@@ -158,7 +157,7 @@
     <string name="onboarding_saltpay_title_prepare_origin">Prepare the SaltPay card</string>
     <string name="onboarding_saltpay_button_backup_origin">Tap the SaltPay card</string>
     <string name="onboarding_saltpay_title_backup_card">Tap the Tangem card</string>
-    <string name="onboarding_chat_button_title">Support</string>
+    <string name="chat_button_title">Support</string>
     <string name="onboarding_title_claim">Claim %s</string>
     <string name="onboarding_subtitle_claim">To get started, simply claim wxDAI to your wallet</string>
     <string name="onboarding_button_claim">Claim</string>
