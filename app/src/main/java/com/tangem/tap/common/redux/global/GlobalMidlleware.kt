@@ -3,28 +3,37 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.services.Result
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.configurable.config.Config
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
-import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoApi
+import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.network.exchangeServices.utorg.UtorgAuthProvider
+import com.tangem.tap.network.exchangeServices.utorg.UtorgEnvironment
+import com.tangem.tap.network.exchangeServices.utorg.UtorgExchangeService
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
+import com.tangem.wallet.BuildConfig
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -121,38 +130,23 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
-            val config = appStateSafe.globalState.configManager?.config
-            ifNotNull(
-                config?.mercuryoWidgetId,
-                config?.mercuryoSecret,
-                config?.moonPayApiKey,
-                config?.moonPayApiSecretKey,
-            ) { mercuryoWidgetId, mercuryoSecret, moonPayKey, moonPaySecretKey ->
-                scope.launch {
-                    val buyService = MercuryoService(
-                        apiVersion = MercuryoApi.API_VERSION,
-                        mercuryoWidgetId = mercuryoWidgetId,
-                        secret = mercuryoSecret,
-                        logEnabled = LogConfig.network.mercuryoService,
-                    )
-                    val sellService = MoonPayService(
-                        apiKey = moonPayKey,
-                        secretKey = moonPaySecretKey,
-                        logEnabled = LogConfig.network.moonPayService,
-                    )
-                    val cardProvider = {
-                        store.state.globalState.scanResponse?.card
-                            ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse?.card
-                    }
+            val config = appStateSafe.globalState.configManager?.config ?: return
 
-                    val exchangeManager = CurrencyExchangeManager(
-                        buyService = buyService,
-                        sellService = sellService,
-                        primaryRules = CardExchangeRules(cardProvider),
-                    )
-                    store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
-                    store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
+            scope.launch {
+                val scanResponseProvider: () -> ScanResponse? = {
+                    store.state.globalState.scanResponse
+                        ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
                 }
+                val productTypeProvider: () -> ProductType? = { scanResponseProvider.invoke()?.productType }
+                val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
+
+                val exchangeManager = CurrencyExchangeManager(
+                    buyService = makeBuyExchangeService(config, productTypeProvider),
+                    sellService = makeSellExchangeService(config),
+                    primaryRules = CardExchangeRules(cardProvider),
+                )
+                store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
+                store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
         }
         is GlobalAction.ExchangeManager.Init.Success -> {}
@@ -207,4 +201,38 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
     }
+}
+
+private fun makeSellExchangeService(config: Config): ExchangeService {
+    return MoonPayService(
+        apiKey = config.moonPayApiKey,
+        secretKey = config.moonPayApiSecretKey,
+        logEnabled = LogConfig.network.moonPayService,
+    )
+}
+
+private fun makeBuyExchangeService(config: Config, productTypeProvider: () -> ProductType?): ExchangeService {
+    return BuyExchangeService(
+        productTypeProvider = productTypeProvider,
+        mercuryoService = makeMercuryoExchangeService(config),
+        utorgService = makeUtorgExchangeService(config),
+    )
+}
+
+private fun makeMercuryoExchangeService(config: Config): MercuryoService {
+    val mercuryoEnvironment = MercuryoEnvironment.prod(config.mercuryoWidgetId, config.mercuryoSecret)
+    return MercuryoService(mercuryoEnvironment)
+}
+
+private fun makeUtorgExchangeService(config: Config): UtorgExchangeService {
+    val saltPayConfig = requireNotNull(config.saltPayConfig)
+
+    val utorgAuthProvider = UtorgAuthProvider(saltPayConfig.kycProvider.sidValue)
+    val utorgEnvironment = if (BuildConfig.DEBUG) {
+        UtorgEnvironment.stage(utorgAuthProvider, LogConfig.network.utorgService)
+        // UtorgEnvironment.mock()
+    } else {
+        UtorgEnvironment.prod(utorgAuthProvider)
+    }
+    return UtorgExchangeService(utorgEnvironment)
 }
