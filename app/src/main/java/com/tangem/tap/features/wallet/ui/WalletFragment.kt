@@ -39,7 +39,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
-import com.tangem.tap.features.wallet.ui.wallet.SaltPaySingleWalletView
+import com.tangem.tap.features.wallet.ui.wallet.SaltPayWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
@@ -149,11 +149,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
 
         when {
-            isSaltPay && (walletView !is SaltPaySingleWalletView) -> {
-                walletView = SaltPaySingleWalletView()
+            isSaltPay && (walletView !is SaltPayWalletView) -> {
+                walletView = SaltPayWalletView()
                 walletView.changeWalletView(this, binding)
             }
-            state.isMultiwalletAllowed && state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+            state.isMultiwalletAllowed && state.primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
                 walletView !is MultiWalletView -> {
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
