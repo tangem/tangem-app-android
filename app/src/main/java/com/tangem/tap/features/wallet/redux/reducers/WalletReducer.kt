@@ -9,7 +9,6 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toFiatRateString
-import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
@@ -17,7 +16,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
-import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
@@ -36,7 +34,6 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
-import timber.log.Timber
 import java.math.BigDecimal
 
 class WalletReducer {
@@ -285,8 +282,9 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             newState = newState.copy(cardImage = cardImage)
         }
 
-        is WalletAction.LoadFiatRate.Success ->
+        is WalletAction.LoadFiatRate.Success -> {
             newState = setNewFiatRate(action.fiatRates, state.globalState.appCurrency, newState)
+        }
         is WalletAction.LoadArtwork -> {
             val artworkUrl = action.card.getArtworkUrl(action.artworkId)
                 ?: when (state.twinCardsState.cardNumber) {
@@ -361,24 +359,32 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.LoadData.Success -> {
-            val selectedCurrency = if (newState.isMultiwalletAllowed) {
-                newState.selectedCurrency
-            } else {
-                newState.walletsStores.firstOrNull()
-                    ?.walletsData
-                    ?.firstOrNull()
-                    ?.currency
-            }
-
             newState = newState.copy(
                 state = ProgressState.Done,
-                selectedCurrency = selectedCurrency,
+                selectedCurrency = findSelectedCurrency(
+                    walletsStores = newState.walletsStores,
+                    currentSelectedCurrency = newState.selectedCurrency,
+                    isMultiWalletAllowed = newState.isMultiwalletAllowed,
+                ),
             )
         }
         else -> Unit
     }
     appStateHolder.walletState = newState
     return newState
+}
+
+fun findSelectedCurrency(
+    walletsStores: List<WalletStore>,
+    currentSelectedCurrency: Currency?,
+    isMultiWalletAllowed: Boolean,
+): Currency? = if (isMultiWalletAllowed) {
+    currentSelectedCurrency
+} else {
+    walletsStores.firstOrNull()
+        ?.walletsData
+        ?.firstOrNull()
+        ?.currency
 }
 
 private fun CardDTO.findCardsCount(): Int? {
@@ -439,45 +445,18 @@ private fun setNewFiatRate(
     state: WalletState,
 ): WalletState {
     val rateFormatter: (BigDecimal) -> String = { rate: BigDecimal ->
-        rate.toFiatRateString(
-            fiatCurrencyName = appCurrency.symbol,
-        )
+        rate.toFiatRateString(fiatCurrencyName = appCurrency.symbol)
     }
 
-    return if (state.isMultiwalletAllowed) {
-        setMultiWalletFiatRate(
-            fiatRates = fiatRates.mapNotNullValues { it.value },
-            rateFormatter = rateFormatter,
-            appCurrency = appCurrency,
-            state = state,
-        )
-    } else {
-        setSingleWalletFiatRates(
-            fiatRates = fiatRates.mapNotNullValues { it.value },
-            rateFormatter = rateFormatter,
-            appCurrency = appCurrency,
-            state = state,
-        )
-    }
-}
-
-private fun setMultiWalletFiatRate(
-    fiatRates: Map<Currency, BigDecimal>,
-    rateFormatter: (BigDecimal) -> String,
-    appCurrency: FiatCurrency,
-    state: WalletState,
-): WalletState {
-    val newWalletsData = fiatRates.mapNotNull { (currency, rate) ->
+    val newWalletsData = fiatRates.mapNotNullValues { it.value }.mapNotNull { (currency, rate) ->
         val walletStore = state.getWalletStore(currency) ?: return@mapNotNull null
         val wallet = walletStore.walletManager?.wallet
         val walletData = state.getWalletData(currency) ?: return@mapNotNull null
         val currencyData = walletData.currencyData
 
         var fiatAmount = when (currency) {
-            is Currency.Blockchain ->
-                wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatValue(rate)
-            is Currency.Token ->
-                wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
+            is Currency.Blockchain -> wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatValue(rate)
+            is Currency.Token -> wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
         }
         if (currencyData.status == BalanceStatus.NoAccount && fiatAmount == null) {
             fiatAmount = BigDecimal.ZERO.setScale(2)
@@ -494,96 +473,5 @@ private fun setMultiWalletFiatRate(
         )
     }
 
-    return state
-        .updateWalletsData(newWalletsData)
-}
-
-private fun setSingleWalletFiatRates(
-    fiatRates: Map<Currency, BigDecimal>,
-    appCurrency: FiatCurrency,
-    rateFormatter: (BigDecimal) -> String,
-    state: WalletState,
-): WalletState {
-    val blockchainFiatRate = fiatRates.entries.firstOrNull { it.key.isBlockchain() }
-    val tokenFiatRate = fiatRates.entries.firstOrNull { it.key.isToken() }
-    Timber.e("Token Fiat Rate is ${tokenFiatRate ?: "NULL"}")
-    val updatedState = updateStateWithFiatRate(blockchainFiatRate?.toPair(), appCurrency, rateFormatter, state)
-    return updateStateWithFiatRate(tokenFiatRate?.toPair(), appCurrency, rateFormatter, updatedState)
-}
-
-private fun updateStateWithFiatRate(
-    fiatRate: Pair<Currency, BigDecimal>?,
-    appCurrency: FiatCurrency,
-    rateFormatter: (BigDecimal) -> String,
-    state: WalletState,
-): WalletState {
-    return if (fiatRate != null) {
-        val currency = fiatRate.first
-        val rate = fiatRate.second
-
-        setSingleWalletFiatRate(
-            rate = rate,
-            rateFormatted = rateFormatter(rate),
-            currency = currency,
-            appCurrency = appCurrency,
-            state = state,
-        )
-    } else {
-        state
-    }
-}
-
-private fun setSingleWalletFiatRate(
-    rate: BigDecimal,
-    rateFormatted: String,
-    currency: Currency,
-    appCurrency: FiatCurrency,
-    state: WalletState,
-): WalletState {
-    val wallet = state.primaryWalletManager?.wallet ?: return state
-    val token = wallet.getFirstToken()
-    Timber.e("Working with currency: ${currency.currencyName}")
-
-    if (currency == state.primaryWallet?.currency) {
-        val fiatAmount = wallet.amounts[AmountType.Coin]?.value
-            ?.toFiatString(rate, appCurrency.code)
-        val walletData = state.primaryWallet.copy(
-            currencyData = state.primaryWallet.currencyData.copy(fiatAmountFormatted = fiatAmount),
-            fiatRate = rate,
-            fiatRateString = rateFormatted,
-        )
-        return state.updateWalletData(walletData)
-    } else if (currency is Currency.Token && currency.token == token) {
-        Timber.e("Working with token fiat rate")
-
-        val tokenFiatAmount = wallet.getTokenAmount(token)
-            ?.value
-        val tokenAmountFormatted = tokenFiatAmount?.toFiatString(rate, appCurrency.code)
-
-        val tokenData = state.primaryWallet?.currencyData?.token?.copy(
-            fiatAmountFormatted = tokenAmountFormatted,
-            fiatAmount = tokenFiatAmount,
-            fiatRate = rate,
-            fiatRateString = rateFormatted,
-        )
-        //     ?: TokenData(
-        //     fiatAmountFormatted = tokenAmountFormatted,
-        //     fiatAmount = tokenFiatAmount,
-        //     fiatRate = rate,
-        //     fiatRateString = rateFormatted,
-        //     amount = "",
-        //     tokenSymbol = currency.currencySymbol
-        // )
-
-        Timber.e("Token Data is ${tokenData ?: "NULL"}")
-
-        val walletData = state.primaryWallet?.copy(
-            currencyData = state.primaryWallet.currencyData.copy(
-                token = tokenData,
-            ),
-        )
-        Timber.e("Wallet Data is ${walletData ?: "NULL"}")
-        return state.updateWalletData(walletData)
-    }
-    return state
+    return state.updateWalletsData(newWalletsData)
 }
