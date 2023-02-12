@@ -7,11 +7,11 @@ import com.tangem.tap.features.wallet.models.Currency
 interface Exchanger {
     fun isBuyAllowed(): Boolean
     fun isSellAllowed(): Boolean
-    fun availableForBuy(currency: Currency):Boolean
-    fun availableForSell(currency: Currency):Boolean
+    fun availableForBuy(currency: Currency): Boolean
+    fun availableForSell(currency: Currency): Boolean
 }
 
-interface ExchangeService: Feature, Exchanger {
+interface ExchangeService : Feature, Exchanger, ExchangeUrlBuilder {
     suspend fun update()
 
     companion object {
@@ -22,11 +22,23 @@ interface ExchangeService: Feature, Exchanger {
             override fun isSellAllowed(): Boolean = false
             override fun availableForBuy(currency: Currency): Boolean = false
             override fun availableForSell(currency: Currency): Boolean = false
+            override fun getUrl(
+                action: CurrencyExchangeManager.Action,
+                blockchain: Blockchain,
+                cryptoCurrencyName: String,
+                fiatCurrencyName: String,
+                walletAddress: String,
+            ): String? = null
+
+            override fun getSellCryptoReceiptUrl(
+                action: CurrencyExchangeManager.Action,
+                transactionId: String,
+            ): String? = null
         }
     }
 }
 
-interface ExchangeRules: Feature, Exchanger {
+interface ExchangeRules : Feature, Exchanger {
 
     companion object {
         fun dummy(): ExchangeRules = object : ExchangeRules {
