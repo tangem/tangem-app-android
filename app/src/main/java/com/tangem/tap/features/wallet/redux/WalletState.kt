@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
@@ -43,8 +44,6 @@ data class WalletState(
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
     val selectedCurrency: Currency? = null,
-    val primaryBlockchain: Blockchain? = null,
-    val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
     val totalBalance: TotalBalance? = null,
     val showBackupWarning: Boolean = false,
@@ -81,13 +80,30 @@ data class WalletState(
     val walletManagers: List<WalletManager>
         get() = walletsStores.mapNotNull { it.walletManager }
 
-    val primaryWallet: WalletData? = walletsStores.firstOrNull()?.walletsData?.firstOrNull()
+    private val primaryWalletStore: WalletStore?
+        get() = if (isMultiwalletAllowed || walletsStores.isEmpty() || walletsStores.size > 1) null
+        else walletsStores[0]
 
-    val primaryWalletManager: WalletManager? = if (walletsStores.isNotEmpty()) walletsStores[0].walletManager else null
+    private val primaryWalletManager: WalletManager?
+        get() = primaryWalletStore?.walletManager
+
+    val primaryWalletData: WalletData?
+        get() = primaryWalletStore?.walletsData?.firstOrNull()
+
+    val primaryBlockchain: Blockchain?
+        get() = primaryWalletManager?.wallet?.blockchain
+
+    val primaryToken: Token?
+        get() = primaryWalletManager?.wallet?.getFirstToken()
+
+    val primaryTokenData: WalletData?
+        get() = primaryWalletStore?.walletsData?.toMutableList()
+            ?.apply { remove(primaryWalletData) }
+            ?.firstOrNull()
 
     val shouldShowDetails: Boolean =
-        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+        primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
+            primaryWalletData?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val hasSavedWallets: Boolean
         get() = userWalletsListManager.hasSavedUserWallets
@@ -136,13 +152,6 @@ data class WalletState(
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    private fun isPrimaryCurrency(walletData: WalletData): Boolean {
-        return (walletData.currency is Currency.Blockchain &&
-            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-            || (walletData.currency is Currency.Token &&
-            walletData.currency.token == store.state.walletState.primaryToken)
     }
 
     fun replaceWalletStoreInWalletsStores(wallet: WalletStore?): List<WalletStore> {
