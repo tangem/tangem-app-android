@@ -24,7 +24,7 @@ class CurrencyExchangeManager(
     private val buyService: ExchangeService,
     private val sellService: ExchangeService,
     private val primaryRules: ExchangeRules,
-) : ExchangeService, ExchangeUrlBuilder {
+) : ExchangeService {
 
     override fun featureIsSwitchedOn(): Boolean = primaryRules.featureIsSwitchedOn()
 
@@ -59,7 +59,7 @@ class CurrencyExchangeManager(
             blockchain,
             cryptoCurrencyName,
             fiatCurrencyName,
-            walletAddress
+            walletAddress,
         )
     }
 
@@ -97,8 +97,11 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(amountToSend,
-        destinationAddress) as? Result.Success ?: return
+    val feeResult =
+        walletManager.getFee(
+            amountToSend,
+            destinationAddress,
+        ) as? Result.Success ?: return
     val fee = feeResult.data[0]
 
     if ((walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO) < fee.value) {
@@ -116,8 +119,8 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
             GlobalAction.UpdateWalletSignedHashes(
                 walletSignedHashes = signResponse.totalSignedHashes,
                 walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                remainingSignatures = signResponse.remainingSignatures
-            )
+                remainingSignatures = signResponse.remainingSignatures,
+            ),
         )
     }
     walletManager.send(transaction, signer)
