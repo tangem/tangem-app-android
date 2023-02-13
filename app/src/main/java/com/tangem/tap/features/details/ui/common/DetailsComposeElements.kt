@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -26,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.wallet.R
 
 @Composable
@@ -84,25 +83,23 @@ fun ScreenTitle(
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
-        style = TangemTypography.headline1,
-        color = colorResource(id = R.color.text_primary_1),
+        style = TangemTheme.typography.h1,
+        color = TangemTheme.colors.text.primary1,
     )
 }
 
 @Composable
 fun EmptyTopBarWithNavigation(
-    modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
     backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
     TopAppBar(
-        modifier = modifier,
         title = { },
         navigationIcon =
         {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
+                    painter = painterResource(id = R.drawable.ic_back_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.primary1,
                 )
@@ -115,16 +112,16 @@ fun EmptyTopBarWithNavigation(
 
 @Composable
 fun DetailsMainButton(
-    modifier: Modifier = Modifier,
     title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onClick: (() -> Unit),
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .heightIn(48.dp),
         shape = RoundedCornerShape(12.dp),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -135,7 +132,11 @@ fun DetailsMainButton(
         ),
     ) {
         Text(text = title)
-        Spacer(modifier = modifier.size(8.dp))
-        Icon(painter = painterResource(id = R.drawable.ic_tangem), contentDescription = "")
+        Spacer(
+            modifier = Modifier
+                .padding(start = 20.dp, end = 20.dp)
+                .size(8.dp),
+        )
+        Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
     }
 }

@@ -19,7 +19,7 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
-import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
+import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -32,12 +32,10 @@ import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
 
-class HomeMiddleware {
-    companion object {
-        val handler = homeMiddleware
+object HomeMiddleware {
+    val handler = homeMiddleware
 
-        const val BUY_WALLET_URL = "https://tangem.com/ru/resellers/"
-    }
+    const val BUY_WALLET_URL = "https://tangem.com/ru/resellers/"
 }
 
 private val homeMiddleware: Middleware<AppState> = { _, _ ->
@@ -115,7 +113,7 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
 
 private suspend fun navigateTo(appScreen: AppScreen) {
     store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
-    delay(200)
+    delay(timeMillis = 200)
     changeButtonState(ButtonState.ENABLED)
 }
 
