@@ -59,6 +59,7 @@ data class XlmMemoState(
             else -> XlmMemoType.TEXT
         }
 
+        @Suppress("MagicNumber")
         fun isAssignableValue(value: String): Boolean = when (determineMemoType(value)) {
             XlmMemoType.TEXT -> {
                 // from org.stellar.sdk.MemoText
@@ -67,7 +68,7 @@ data class XlmMemoState(
             XlmMemoType.ID -> {
                 try {
                     // from com.tangem.blockchain.blockchains.stellar.StellarMemo.toStellarSdkMemo
-                    value.toBigInteger() in BigInteger.ZERO..(Long.MAX_VALUE.toBigInteger() * 2.toBigInteger())
+                    value.toBigInteger() in BigInteger.ZERO..Long.MAX_VALUE.toBigInteger() * 2.toBigInteger()
                 } catch (ex: NumberFormatException) {
                     false
                 }
