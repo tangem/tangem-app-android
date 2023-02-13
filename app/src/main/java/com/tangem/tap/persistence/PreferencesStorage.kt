@@ -4,13 +4,11 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.BigDecimalAdapter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
-
-    private val preferences: SharedPreferences =
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
@@ -18,15 +16,23 @@ class PreferencesStorage(applicationContext: Application) {
     val disclaimerPrefStorage: DisclaimerPrefStorage
     val toppedUpWalletStorage: ToppedUpWalletStorage
 
+    private val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    private val moshiConverter = MoshiJsonConverter(
+        adapters = listOf(BigDecimalAdapter(), CardBalanceStateAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
+        typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
+    )
+
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, moshiConverter)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, moshiConverter)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
-        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiConverter.INSTANCE)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, moshiConverter)
     }
 
     var chatFirstLaunchTime: Long?
@@ -95,11 +101,7 @@ class AppRatingLaunchObserver(
     private val preferences: SharedPreferences,
     private val launchCounts: Int,
 ) {
-    private val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
-    private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
-    private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
 
-    private val FUNDS_FOUND_DATE_UNDEFINED = -1L
     private val deferShowing = 20
     private val firstShowing = 3
     private var fundsFoundDate: Calendar? = null
@@ -121,6 +123,7 @@ class AppRatingLaunchObserver(
         }
     }
 
+    @Suppress("MagicNumber")
     fun isReadyToShow(): Boolean {
         val fundsDate = fundsFoundDate ?: return false
 
@@ -138,6 +141,7 @@ class AppRatingLaunchObserver(
         updateNextShowing(launchCounts + deferShowing)
     }
 
+    @Suppress("MagicNumber")
     fun setNeverToShow() {
         updateNextShowing(999999999)
     }
@@ -149,6 +153,16 @@ class AppRatingLaunchObserver(
         editor.apply()
     }
 
-    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
-    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+    private fun userWasInteractWithRating(): Boolean =
+        preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
+
+    private fun getCounterOfNextShowing(): Int =
+        preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+
+    companion object {
+        private const val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
+        private const val K_FUNDS_FOUND_DATE = "fundsFoundDate"
+        private const val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
+        private const val FUNDS_FOUND_DATE_UNDEFINED = -1L
+    }
 }
