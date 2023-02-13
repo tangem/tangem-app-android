@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,19 +32,12 @@ import com.tangem.wallet.R
 
 @Composable
 internal fun SaveWalletScreenContent(
-    modifier: Modifier = Modifier,
     showProgress: Boolean,
     onSaveWalletClick: () -> Unit,
     onCloseClick: () -> Unit,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Header(
-            modifier = Modifier.fillMaxWidth(),
-            onCloseClick = onCloseClick,
-        )
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Header(onCloseClick = onCloseClick)
         SpacerHHalf()
         Title(
             modifier = Modifier
@@ -62,9 +54,6 @@ internal fun SaveWalletScreenContent(
         )
         SpacerHHalf()
         Footer(
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .fillMaxWidth(),
             showProgress = showProgress,
             onSaveWalletClick = onSaveWalletClick,
         )
@@ -73,12 +62,9 @@ internal fun SaveWalletScreenContent(
 }
 
 @Composable
-private fun Header(
-    modifier: Modifier = Modifier,
-    onCloseClick: () -> Unit,
-) {
+private fun Header(onCloseClick: () -> Unit) {
     Column(
-        modifier = modifier,
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         Hand()
@@ -92,7 +78,7 @@ private fun Header(
             ) {
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_close),
+                    painter = painterResource(id = R.drawable.ic_close_24),
                     tint = TangemTheme.colors.icon.secondary,
                     contentDescription = stringResource(id = R.string.common_cancel),
                 )
@@ -150,12 +136,13 @@ private fun Description(
 
 @Composable
 private fun Footer(
-    modifier: Modifier = Modifier,
     showProgress: Boolean,
     onSaveWalletClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier,
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
@@ -177,13 +164,11 @@ private fun Footer(
 
 @Composable
 private fun DescriptionItem(
-    modifier: Modifier = Modifier,
     iconPainter: Painter,
     title: String,
     description: String,
 ) {
     Row(
-        modifier = modifier,
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -220,13 +205,6 @@ private fun SaveWalletScreenContentSample(
             .background(TangemTheme.colors.background.primary),
     ) {
         SaveWalletScreenContent(
-            modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing32)
-                .fillMaxSize()
-                .background(
-                    color = TangemTheme.colors.background.plain,
-                    shape = TangemTheme.shapes.bottomSheet,
-                ),
             showProgress = false,
             onSaveWalletClick = { /* no-op */ },
             onCloseClick = { /* no-op */ },

@@ -3,16 +3,15 @@ package com.tangem.datasource.api.common
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Converter
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
-// TODO: refactoring: make it better through factory
+@Suppress("MagicNumber")
+@Deprecated("Create and provide by DI")
 fun createRetrofitInstance(
     baseUrl: String,
     okHttpBuilder: OkHttpClient.Builder = OkHttpClient.Builder(),
     interceptors: List<Interceptor> = emptyList(),
-    converterFactory: Converter.Factory = MoshiConverter.createFactory(),
     logEnabled: Boolean,
 ): Retrofit {
     okHttpBuilder.apply {
@@ -27,7 +26,7 @@ fun createRetrofitInstance(
 
     return Retrofit.Builder()
         .baseUrl(baseUrl)
-        .addConverterFactory(converterFactory)
+        .addConverterFactory(MoshiConverter.networkMoshiConverter)
         .client(okHttpBuilder.build())
         .build()
 }

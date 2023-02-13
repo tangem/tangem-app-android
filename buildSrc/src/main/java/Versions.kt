@@ -4,7 +4,7 @@ object Versions {
     const val androidMavenGradlePlugin = "2.1"
     const val googleFirebaseCrashlytics = "2.7.1"
     const val googleServices = "4.3.10"
-    const val kotlin = "1.6.10"
+    const val kotlin = "1.7.10"
     // endregion Classpath
 
     // region AndroidX
@@ -18,12 +18,13 @@ object Versions {
     // endregion AndroidX
 
     // region Compose
-    const val compose = "1.1.0"
-    const val composeFoundation = "1.2.0-rc03"
+    const val compose = "1.3.1"
+    const val composeFoundation = "1.3.1"
+    const val composeConstraint = "1.0.1"
     // endregion Compose
 
     // region Other libraries
-    const val accompanist = "0.23.0"
+    const val accompanist = "0.27.1"
     const val amplitude = "2.36.1"
     const val appsflyer = "6.5.1"
     const val armadillo = "0.9.0"
@@ -56,14 +57,21 @@ object Versions {
     const val zxingQrBarcodeScanner = "1.9.8"
     const val zxingQrCode = "3.3.3"
     const val mviCore = "1.3.1"
+    const val kotlinSerialization = "1.4.1"
     // endregion Other libraries
 
     // region Tangem
-    const val tangemBlockchainSdk = "develop-152-hotfix-4.0.1-156"
-    // const val tangemBlockchainSdk = "0.0.1"
+    const val tangemBlockchainSdk = "develop-155"
+    // const val tangemBlockchainSdk = "0.0.1" // Keep it! - used for local builds
 
-    const val tangemCardSdk = "develop-179-hotfix-4.0.1-189"
+    const val tangemCardSdk = "develop-186"
+    // const val tangemCardSgk = "0.0.1" // Keep it! - used for local builds
     // endregion Tangem
+
+    // region Tools
+    const val composeDetektRules = "1.2.2"
+    const val formattingDetektRules = "1.21.0"
+    // endregion Tools
 
     // region Testing
     const val espresso = "3.4.0"
