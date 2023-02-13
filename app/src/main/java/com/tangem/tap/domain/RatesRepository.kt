@@ -1,48 +1,49 @@
 package com.tangem.tap.domain
 
 import com.tangem.common.services.Result
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.ThrottlerWithValues
-import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.store
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
-//TODO: refactoring: move to domain
-class RatesRepository {
-
-    private val tangemTechService: TangemTechService
-        get() = store.state.domainNetworks.tangemTechService
-
+class RatesRepository(
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
+) {
     private val throttler = ThrottlerWithValues<Currency, Result<BigDecimal>?>(60000)
 
-    suspend fun loadFiatRate(currencyId: String, coinsList: List<Currency>): Result<RatesResult> {
-//         get and submit previous result of equivalents.
-        val throttledResult = coinsList.filter { throttler.isStillThrottled(it) }.map {
-            Pair(it, throttler.geValue(it))
-        }
-
-        val currenciesToUpdate = coinsList.filter { !throttler.isStillThrottled(it) }
-        val coinIds = currenciesToUpdate.mapNotNull { it.coinId }.distinct()
-        if (coinIds.isEmpty()) return handleFiatRatesResult(throttledResult.toMap())
-
-        return when (val result = tangemTechService.rates(currencyId, coinIds)) {
-            is Result.Success -> {
-                val ratesResultList: Map<String, Result<BigDecimal>> = result.data.rates.mapValues {
-                    Result.Success(it.value.toBigDecimal())
-                }
-                val updatedCurrencies = throttledResult.toMap().toMutableMap()
-                coinsList.forEach { currency ->
-                    ratesResultList[currency.coinId]?.let {
-                        updatedCurrencies[currency] = it
-                        throttler.updateThrottlingTo(currency)
-                        throttler.setValue(currency, it)
-                    }
-                }
-                handleFiatRatesResult(updatedCurrencies)
+    suspend fun loadFiatRate(currencyId: String, coinsList: List<Currency>): Result<RatesResult> =
+        withContext(dispatchers.io) {
+            // get and submit previous result of equivalents.
+            val throttledResult = coinsList.filter { throttler.isStillThrottled(it) }.map {
+                Pair(it, throttler.geValue(it))
             }
-            is Result.Failure -> Result.Failure(result.error)
+
+            val currenciesToUpdate = coinsList.filter { !throttler.isStillThrottled(it) }
+            val coinIds = currenciesToUpdate.mapNotNull { it.coinId }.distinct()
+            if (coinIds.isEmpty()) return@withContext handleFiatRatesResult(throttledResult.toMap())
+
+            runCatching { tangemTechApi.getRates(currencyId.lowercase(), coinIds.joinToString(",")) }
+                .onSuccess { response ->
+                    val ratesResultList: Map<String, Result<BigDecimal>> = response.rates.mapValues {
+                        Result.Success(it.value.toBigDecimal())
+                    }
+                    val updatedCurrencies = throttledResult.toMap().toMutableMap()
+                    coinsList.forEach { currency ->
+                        ratesResultList[currency.coinId]?.let {
+                            updatedCurrencies[currency] = it
+                            throttler.updateThrottlingTo(currency)
+                            throttler.setValue(currency, it)
+                        }
+                    }
+                    return@withContext handleFiatRatesResult(updatedCurrencies)
+                }
+                .onFailure { Result.Failure(it) }
+
+            error("Unreachable code because runCatching must return result")
         }
-    }
 
     private fun handleFiatRatesResult(rates: Map<Currency, Result<BigDecimal>?>): Result.Success<RatesResult> {
         val success = mutableMapOf<Currency, BigDecimal>()

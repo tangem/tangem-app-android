@@ -1,15 +1,16 @@
 package com.tangem.domain.features.addCustomToken
 
-import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.getTokens
-import com.tangem.datasource.api.tangemTech.CoinsResponse
-import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 /**
 [REDACTED_AUTHOR]
  */
 class AddCustomTokenService(
-    private val tangemTechService: TangemTechService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
     private val supportedTokenNetworkIds: List<String>,
 ) {
 
@@ -17,13 +18,17 @@ class AddCustomTokenService(
         contractAddress: String,
         networkId: String? = null,
         active: Boolean? = null,
-    ): Result<List<CoinsResponse.Coin>> {
-        val networksIds = selectNetworksForSearch(networkId)
-        val result = tangemTechService.getTokens(contractAddress, networksIds, active)
-        return when (result) {
-            is Result.Success -> {
+    ): List<CoinsResponse.Coin> = withContext(dispatchers.io) {
+        runCatching {
+            tangemTechApi.getCoins(
+                contractAddress = contractAddress,
+                networkIds = selectNetworksForSearch(networkId),
+                active = active,
+            )
+        }
+            .onSuccess { response ->
                 var coinsList = mutableListOf<CoinsResponse.Coin>()
-                result.data.coins.forEach { coin ->
+                response.coins.forEach { coin ->
                     val networksWithTheSameAddress = coin.networks
                         .filter { it.contractAddress != null || it.decimalCount != null }
                         .filter { it.contractAddress?.equals(contractAddress, ignoreCase = true) == true }
@@ -37,10 +42,13 @@ class AddCustomTokenService(
                     // https://tangem.slack.com/archives/GMXC6PP71/p1649672562078679
                     coinsList = mutableListOf(coinsList[0])
                 }
-                Result.Success(coinsList)
+                return@withContext coinsList
             }
-            is Result.Failure -> result
-        }
+            .onFailure {
+                return@withContext emptyList()
+            }
+
+        error("Unreachable code because runCatching must return result")
     }
 
     private fun selectNetworksForSearch(networkId: String?): String {
