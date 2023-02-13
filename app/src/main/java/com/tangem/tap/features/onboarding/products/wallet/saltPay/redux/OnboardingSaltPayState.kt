@@ -4,15 +4,15 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.extensions.guard
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
-import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
+import com.tangem.datasource.config.models.KYCProvider
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
+import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
 import java.math.BigDecimal
@@ -36,8 +36,6 @@ data class OnboardingSaltPayState(
 
     val mainButtonState: WidgetState
         get() = if (inProgress) ProgressState.Loading else ProgressState.Done
-
-    fun readyToClaim(): Boolean = amountToClaim != null
 
     val pinLength: Int = 4
 
@@ -66,7 +64,7 @@ data class OnboardingSaltPayState(
             paymentologyService: PaymentologyApiService,
             kycProvider: KYCProvider,
         ): SaltPayActivationManager {
-            if (!scanResponse.isSaltPay()) {
+            if (!scanResponse.cardTypesResolver.isSaltPay()) {
                 throw IllegalArgumentException("Can't initialize the OnboardingSaltPayMiddleware if card is not SalPay")
             }
 

@@ -13,6 +13,7 @@ internal object WalletSelectorReducer {
         } else state.walletSelectorState
     }
 
+    @Suppress("ComplexMethod")
     private fun internalReduce(action: WalletSelectorAction, state: WalletSelectorState): WalletSelectorState {
         return when (action) {
             is WalletSelectorAction.UserWalletsLoaded -> state.copy(
@@ -27,7 +28,6 @@ internal object WalletSelectorReducer {
             is WalletSelectorAction.BalancesLoaded -> state.copy(
                 wallets = action.userWalletModels,
             )
-            is WalletSelectorAction.HandleError -> state.copy(error = action.error)
             is WalletSelectorAction.CloseError -> state.copy(error = null)
             is WalletSelectorAction.UnlockWithBiometry -> state.copy(
                 isUnlockInProgress = true,
@@ -95,7 +95,7 @@ internal object WalletSelectorReducer {
             )
         } else {
             UserWalletModel.Type.SingleCurrency(
-                blockchainName = scanResponse.getBlockchain().fullName,
+                blockchainName = scanResponse.cardTypesResolver.getBlockchain().fullName,
             )
         }
     }
