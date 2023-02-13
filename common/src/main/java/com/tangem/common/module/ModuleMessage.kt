@@ -11,7 +11,7 @@ interface ModuleMessage
  * @property message the error description
  * @property data any data that can help in the part where this error is being handled
  */
-abstract class ModuleError() : Throwable(), ModuleMessage {
+abstract class ModuleError : Throwable(), ModuleMessage {
     abstract val code: Int
     abstract override val message: String
     abstract val data: Any?
