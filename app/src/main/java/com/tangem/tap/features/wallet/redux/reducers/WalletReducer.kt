@@ -36,15 +36,13 @@ import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 import java.math.BigDecimal
 
-class WalletReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState =
-            internalReduce(action, state, appStateHolder)
-    }
+object WalletReducer {
+    fun reduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState =
+        internalReduce(action, state, appStateHolder)
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun internalReduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState {
-
     val multiWalletReducer = MultiWalletReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
     val appCurrencyReducer = AppCurrencyReducer()
@@ -254,7 +252,8 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 .map {
                     it.copy(
                         currencyData = it.currencyData.copy(
-                            status = BalanceStatus.Unreachable, errorMessage = message,
+                            status = BalanceStatus.Unreachable,
+                            errorMessage = message,
                         ),
                     )
                 }
@@ -389,7 +388,6 @@ fun findSelectedCurrency(
 
 private fun CardDTO.findCardsCount(): Int? {
     return (this.backupStatus as? CardDTO.BackupStatus.Active)?.cardCount?.inc()
-        ?.takeIf { this.isMultiwalletAllowed }
 }
 
 fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null): WalletAddresses? {

@@ -37,6 +37,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 enterTransition = inflater.inflateTransition(android.R.transition.fade)
                 exitTransition = inflater.inflateTransition(android.R.transition.fade)
             }
+            else -> {}
         }
     }
 
