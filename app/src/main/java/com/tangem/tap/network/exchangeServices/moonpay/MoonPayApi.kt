@@ -17,14 +17,12 @@ interface MoonPayApi {
         @Query("apiKey") moonPayApiKey: String,
     ): List<MoonPayCurrencies>
 
-
     companion object {
         const val MOOONPAY_BASE_URL = "https://api.moonpay.com/"
         const val MOOONPAY_IP_ADDRESS_REQUEST_URL = "v4/ip_address/"
         const val MOOONPAY_CURRENCIES_REQUEST_URL = "v3/currencies/"
     }
 }
-
 
 @JsonClass(generateAdapter = true)
 data class MoonPayUserStatus(

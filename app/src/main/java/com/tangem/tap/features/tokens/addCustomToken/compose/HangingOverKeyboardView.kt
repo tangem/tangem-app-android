@@ -9,8 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.tangem_sdk_new.extensions.pxToDp
-import com.tangem.tap.common.compose.Keyboard
 
 /**
 [REDACTED_AUTHOR]
@@ -20,9 +20,8 @@ fun HangingOverKeyboardView(
     modifier: Modifier = Modifier,
     keyboardState: State<Keyboard>,
     spaceBetweenKeyboard: Dp = 0.dp,
-    content: @Composable() (BoxScope.() -> Unit)
+    content: @Composable (BoxScope.() -> Unit)
 ) {
-
     val context = LocalContext.current
     val padding = when (keyboardState.value) {
         Keyboard.Closed -> 0.dp
