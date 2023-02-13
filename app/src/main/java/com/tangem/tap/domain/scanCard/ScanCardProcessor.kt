@@ -199,9 +199,9 @@ object ScanCardProcessor {
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 onWalletNotCreated()
-                                store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
-                                store.dispatchOnMain(OnboardingSaltPayAction.Update)
+                                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
+                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
+                                store.dispatch(OnboardingSaltPayAction.Update)
                                 navigateTo(AppScreen.OnboardingWallet) { onProgressStateChange(it) }
                             } else {
                                 delay(DELAY_SDK_DIALOG_CLOSE)
