@@ -44,7 +44,11 @@ import com.tangem.feature.swap.presentation.R
 import com.valentinilk.shimmer.shimmer
 
 @Composable
-fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
+fun SwapSelectTokenScreen(
+    state: SwapSelectTokenStateHolder,
+    onSearchFocusChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+) {
     TangemTheme {
         Scaffold(
             content = { padding ->
@@ -57,6 +61,7 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
                     onSearchChange = state.onSearchEntered,
                     onSearchDisplayClose = { state.onSearchEntered("") },
+                    onFocusChange = onSearchFocusChange,
                     subtitle = state.network.name,
                     icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
                 )
@@ -264,6 +269,7 @@ private fun TokenScreenPreview() {
             onTokenSelected = {},
             network = Network("Ethereum", "ETH"),
         ),
+        onSearchFocusChange = {},
         onBack = {},
     )
 }
