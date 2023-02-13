@@ -1,5 +1,4 @@
 [*.{kt,kts}]
-ktlint_ignore_back_ticked_identifier = true
 
 indent_size = 4
 indent_style = space

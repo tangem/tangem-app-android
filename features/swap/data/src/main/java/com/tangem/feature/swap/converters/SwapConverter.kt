@@ -1,24 +1,33 @@
 package com.tangem.feature.swap.converters
 
 import com.tangem.datasource.api.oneinch.models.SwapResponse
-import com.tangem.feature.swap.domain.models.SwapTransactionModel
+import com.tangem.datasource.api.oneinch.models.TransactionDto
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.TransactionModel
+import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
-class SwapConverter @Inject constructor() : Converter<SwapResponse, SwapTransactionModel> {
+class SwapConverter @Inject constructor() : Converter<SwapResponse, SwapDataModel> {
 
-    override fun convert(value: SwapResponse): SwapTransactionModel {
-        return SwapTransactionModel(
+    override fun convert(value: SwapResponse): SwapDataModel {
+        return SwapDataModel(
             fromTokenAddress = value.fromToken.address,
             toTokenAddress = value.toToken.address,
-            toTokenAmount = value.fromTokenAmount,
-            fromTokenAmount = value.toTokenAmount,
-            fromWalletAddress = value.transaction.fromAddress,
-            toWalletAddress = value.transaction.toAddress,
-            data = value.transaction.data,
-            value = value.transaction.value,
-            gasPrice = value.transaction.gasPrice,
-            gas = value.transaction.gas,
+            fromTokenAmount = createFromAmountWithOffset(value.fromTokenAmount, value.fromToken.decimals),
+            toTokenAmount = createFromAmountWithOffset(value.toTokenAmount, value.toToken.decimals),
+            transaction = convertTransaction(value.transaction),
+        )
+    }
+
+    private fun convertTransaction(transactionDto: TransactionDto): TransactionModel {
+        return TransactionModel(
+            fromWalletAddress = transactionDto.fromAddress,
+            toWalletAddress = transactionDto.toAddress,
+            data = transactionDto.data,
+            value = transactionDto.value,
+            gasPrice = transactionDto.gasPrice,
+            gas = transactionDto.gas,
         )
     }
 }

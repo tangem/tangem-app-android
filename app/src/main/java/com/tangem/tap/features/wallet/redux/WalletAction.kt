@@ -81,7 +81,8 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SaveCurrencies(
-            val blockchainNetworks: List<BlockchainNetwork>, val card: CardDTO? = null,
+            val blockchainNetworks: List<BlockchainNetwork>,
+            val card: CardDTO? = null,
         ) : MultiWallet()
 
         data class TokenLoaded(
@@ -125,7 +126,8 @@ sealed class WalletAction : Action {
     }
 
     data class LoadFiatRate(
-        val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
+        val wallet: Wallet? = null,
+        val coinsList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(
             val fiatRates: Map<Currency, BigDecimal?>,
@@ -160,7 +162,12 @@ sealed class WalletAction : Action {
         ) : DialogAction()
 
         object SignedHashesMultiWalletDialog : DialogAction()
-        object ChooseTradeActionDialog : DialogAction()
+        data class ChooseTradeActionDialog(
+            val buyAllowed: Boolean,
+            val sellAllowed: Boolean,
+            val swapAllowed: Boolean,
+        ) : DialogAction()
+
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
         data class RussianCardholdersWarningDialog(
             val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null,
@@ -189,6 +196,8 @@ sealed class WalletAction : Action {
             val destinationAddress: String,
             val transactionId: String,
         ) : TradeCryptoAction()
+
+        object Swap : TradeCryptoAction()
     }
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
