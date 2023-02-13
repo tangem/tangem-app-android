@@ -134,13 +134,13 @@
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_tokens">Tokens</string>
-    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets.</string>
+    <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
-    <string name="onboarding_access_code_feature_2_description">You can set an individual access code on each card later.</string>
+    <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
     <string name="onboarding_access_code_feature_2_title">Personalize</string>
-    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place.</string>
+    <string name="onboarding_access_code_feature_3_description">The access code can be restored with a linked card, don\'t keep all cards in one place</string>
     <string name="onboarding_access_code_feature_3_title">Restore</string>
-    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code.</string>
+    <string name="onboarding_access_code_hint">Choose any word, phrase, or number you want as your access code</string>
     <string name="onboarding_access_code_intro_title">Create Access Code</string>
     <string name="onboarding_access_code_repeat_code_title">Re-enter your Access Code</string>
     <string name="onboarding_access_code_too_short">Access code must be at least 4 characters long</string>
@@ -178,7 +178,7 @@
     <string name="onboarding_navbar_register_wallet">Connect</string>
     <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
     <string name="onboarding_saltpay_button_backup_origin">Tap the SaltPay card</string>
-    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add Tangem card as your backup</string>
+    <string name="onboarding_saltpay_subtitle_no_backup_cards">To start the backup process you have to add the Tangem card as your backup</string>
     <string name="onboarding_saltpay_subtitle_one_backup_card">Finalize the backup process by creating an access code</string>
     <string name="onboarding_saltpay_title_backup_card">Tap the Tangem card</string>
     <string name="onboarding_saltpay_title_no_backup_card">No backup card</string>
@@ -219,7 +219,7 @@
     <string name="onboarding_top_up_button_show_wallet_address">Show the wallet\'s address</string>
     <string name="onboarding_top_up_header">Top up your wallet</string>
     <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
-    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over</string>
     <string name="onboarding_wallet_info_subtitle_first">You can backup your keys up to two other blank Tangem Wallet cards.</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Access code can be restored with one of backup cards.</string>
     <string name="onboarding_wallet_info_subtitle_second">All the backup cards can be used as full-functional with the identical keys.</string>
