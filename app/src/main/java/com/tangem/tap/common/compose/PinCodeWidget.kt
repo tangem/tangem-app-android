@@ -50,7 +50,7 @@ import androidx.core.text.isDigitsOnly
 @Composable
 fun PinCodeWidget(
     config: PinViewConfig = tangemPinConfig,
-    onPinChanged: (String, Boolean) -> Unit = { pin, isLastSymbolEntered -> },
+    onPinChange: (String, Boolean) -> Unit = { pin, isLastSymbolEntered -> },
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -65,7 +65,7 @@ fun PinCodeWidget(
 
         if (value.text.length <= config.pinsCount) {
             rTextFieldValue.value = value
-            onPinChanged(value.text, isLastSymbolEntered())
+            onPinChange(value.text, isLastSymbolEntered())
         }
     }
 
@@ -125,10 +125,6 @@ private fun PinElement(
     }
 }
 
-@Composable
-private fun HiddenInputField() {
-}
-
 private fun createPinSymbolsList(size: Int, text: String): List<String?> = List(size) {
     try {
         text[it].toString()
@@ -165,7 +161,7 @@ private val tangemPinConfig = PinViewConfig(
 
 @Preview
 @Composable
-fun PinCodeWidgetPreview() {
+private fun PinCodeWidgetPreview() {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         PinCodeWidget(tangemPinConfig)
     }
