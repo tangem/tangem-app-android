@@ -3,23 +3,21 @@ package com.tangem.domain.common
 import com.tangem.domain.features.BuildConfig
 
 object LogConfig {
-    val imageLoader: Boolean = false
+    const val imageLoader: Boolean = false
     val storeAction: Boolean = BuildConfig.DEBUG
-    val zendesk: Boolean = false
+    const val zendesk: Boolean = false
     val network: NetworkLogConfig = NetworkLogConfig
     val analyticsHandlers: AnalyticsHandlersLogConfig = AnalyticsHandlersLogConfig
 }
 
 object NetworkLogConfig {
-    val mercuryoService: Boolean = false
-    val moonPayService: Boolean = false
-    val tangemTechService: Boolean = BuildConfig.DEBUG
-    val paymentologyApiService: Boolean = BuildConfig.DEBUG
+    const val mercuryoService: Boolean = false
+    const val moonPayService: Boolean = false
     val blockchainSdkNetwork: Boolean = BuildConfig.DEBUG
 }
 
 object AnalyticsHandlersLogConfig {
-    val firebase: Boolean = false
-    val appsFlyer: Boolean = false
-    val amplitude: Boolean = false
+    const val firebase: Boolean = false
+    const val appsFlyer: Boolean = false
+    const val amplitude: Boolean = false
 }
