@@ -4,7 +4,7 @@ import android.app.Application
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeClient
 import com.tangem.common.Converter
-import com.tangem.analytics.api.EventLogger
+import com.tangem.core.analytics.api.EventLogger
 import org.json.JSONObject
 
 /**
