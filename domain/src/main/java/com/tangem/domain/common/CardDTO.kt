@@ -48,6 +48,7 @@ data class CardDTO(
         backupStatus = BackupStatus.fromSdkStatus(card.backupStatus),
     )
 
+    @Suppress("ComplexMethod")
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is CardDTO) return false
@@ -120,19 +121,22 @@ data class CardDTO(
         val patch: Int,
         val type: SdkFirmwareVersion.FirmwareType,
     ) : Comparable<SdkFirmwareVersion> {
-        constructor(firmwareVersion: SdkFirmwareVersion) : this(
-            major = firmwareVersion.major,
-            minor = firmwareVersion.minor,
-            patch = firmwareVersion.patch,
-            type = firmwareVersion.type,
-        )
-
         val stringValue: String
             get() = StringBuilder()
                 .append("$major.$minor")
                 .append(if (patch != 0) ".$patch" else "")
                 .append(type.rawValue ?: "")
                 .toString()
+
+        val doubleValue: Double
+            get() = "$major.$minor".toDouble()
+
+        constructor(firmwareVersion: SdkFirmwareVersion) : this(
+            major = firmwareVersion.major,
+            minor = firmwareVersion.minor,
+            patch = firmwareVersion.patch,
+            type = firmwareVersion.type,
+        )
 
         override fun compareTo(other: SdkFirmwareVersion): Int = when {
             major != other.major -> major.compareTo(other.major)

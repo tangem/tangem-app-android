@@ -7,7 +7,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_wallet_main_action"
-        style="@style/OnboardingButton"
+        style="@style/TapPrimaryButton"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
@@ -18,7 +18,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_wallet_alternative_action"
-        style="@style/OnboardingButton.Borderless"
+        style="@style/TapTextButton"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"

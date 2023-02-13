@@ -8,6 +8,7 @@ import com.tangem.datasource.api.oneinch.models.QuoteResponse
 import com.tangem.datasource.api.oneinch.models.StatusResponse
 import com.tangem.datasource.api.oneinch.models.SwapResponse
 import com.tangem.datasource.api.oneinch.models.TokensResponse
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -57,7 +58,7 @@ interface OneInchApi {
     suspend fun approveAllowance(
         @Query("tokenAddress") tokenAddress: String,
         @Query("walletAddress") walletAddress: String,
-    ): AllowanceResponse
+    ): Response<AllowanceResponse>
     //endregion Approve
 
     //region Info
@@ -114,6 +115,7 @@ interface OneInchApi {
      *
      * @return [QuoteResponse]
      */
+    @GET("quote")
     suspend fun quote(
         @Query("fromTokenAddress") fromTokenAddress: String,
         @Query("toTokenAddress") toTokenAddress: String,
@@ -126,7 +128,7 @@ interface OneInchApi {
         @Query("mainRouteParts") mainRouteParts: String? = null,
         @Query("parts") parts: String? = null,
         @Query("gasPrice") gasPrice: String? = null,
-    ): QuoteResponse
+    ): Response<QuoteResponse>
 
     /**
      * Generate data for calling the 1inch router for exchange
@@ -174,6 +176,7 @@ interface OneInchApi {
      *
      * @return [SwapResponse]
      */
+    @GET("swap")
     suspend fun swap(
         @Query("fromTokenAddress") fromTokenAddress: String,
         @Query("toTokenAddress") toTokenAddress: String,
@@ -195,6 +198,6 @@ interface OneInchApi {
         @Query("complexityLevel") complexityLevel: String? = null,
         @Query("gasLimit") gasLimit: String? = null,
         @Query("gasPrice") gasPrice: String? = null,
-    ): SwapResponse
+    ): Response<SwapResponse>
     //endregion Swap
 }
