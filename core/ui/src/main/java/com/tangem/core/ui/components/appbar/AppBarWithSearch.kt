@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
@@ -63,6 +64,7 @@ fun ExpandableSearchView(
     onBackClick: () -> Unit,
     onSearchChange: (String) -> Unit,
     onSearchDisplayClose: () -> Unit,
+    onFocusChange: (Boolean) -> Unit,
     title: String? = null,
     placeholderSearchText: String = "",
     expandedInitially: Boolean = false,
@@ -79,6 +81,7 @@ fun ExpandableSearchView(
                 onSearchChange = onSearchChange,
                 onSearchDisplayClose = onSearchDisplayClose,
                 onExpandedChange = onExpandedChanged,
+                onFocusChange = onFocusChange,
                 tint = tint,
             )
         } else {
@@ -171,12 +174,14 @@ private fun SubtitleView(subtitle: String, icon: Painter?) {
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ExpandedSearchView(
     placeholderSearchText: String,
     onSearchChange: (String) -> Unit,
     onSearchDisplayClose: () -> Unit,
     onExpandedChange: (Boolean) -> Unit,
+    onFocusChange: (Boolean) -> Unit,
     tint: Color,
 ) {
     val focusManager = LocalFocusManager.current
@@ -216,7 +221,8 @@ private fun ExpandedSearchView(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(textFieldFocusRequester),
+                .focusRequester(textFieldFocusRequester)
+                .onFocusChanged { onFocusChange(it.hasFocus) },
             placeholder = {
                 Text(text = placeholderSearchText)
             },
@@ -245,6 +251,7 @@ private fun CollapsedSearchViewPreview() {
             placeholderSearchText = "Search",
             onSearchChange = {},
             onSearchDisplayClose = {},
+            onFocusChange = {},
             subtitle = "Ethereum",
             icon = painterResource(id = R.drawable.img_eth_22),
         )
@@ -262,6 +269,7 @@ private fun ExpandedSearchViewPreview() {
             onSearchChange = {},
             expandedInitially = true,
             onSearchDisplayClose = {},
+            onFocusChange = {},
         )
     }
 }
