@@ -9,8 +9,6 @@ import org.rekotlin.Store
 /**
 [REDACTED_AUTHOR]
  */
-private class DomainStore // for simple search
-
 private val RE_STORE_HUBS: List<ReStoreHub<DomainState, *>> = listOf(
     DomainGlobalHub(),
     AddCustomTokenHub(),
@@ -19,7 +17,7 @@ private val RE_STORE_HUBS: List<ReStoreHub<DomainState, *>> = listOf(
 val domainStore = Store(
     state = DomainState(),
     middleware = RE_STORE_HUBS.map { it.getMiddleware() },
-    reducer = { action, state -> reduce(action, state) }
+    reducer = { action, state -> reduce(action, state) },
 )
 
 private fun reduce(action: Action, domainState: DomainState?): DomainState {

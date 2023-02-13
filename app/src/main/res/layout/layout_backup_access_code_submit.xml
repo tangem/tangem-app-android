@@ -47,7 +47,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_access_code_submit"
-        style="@style/TapButton"
+        style="@style/TapPrimaryButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/access_code_btn_continue_margin_start"
