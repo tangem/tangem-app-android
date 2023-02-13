@@ -159,7 +159,8 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             state.walletBalance.amountToCreateAccount?.let { amount ->
                 val tvBodyMessage = getString(
                     R.string.onboarding_top_up_body_no_account_error,
-                    amount, state.walletBalance.currency.currencySymbol,
+                    amount,
+                    state.walletBalance.currency.currencySymbol,
                 )
                 tvBody.text = tvBodyMessage
             }
@@ -209,5 +210,9 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             transition.interpolator = OvershootInterpolator()
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingNoteAction.OnBackPressed)
     }
 }
