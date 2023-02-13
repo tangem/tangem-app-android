@@ -24,12 +24,18 @@
     <string name="app_settings_saved_wallet">Cохранение кошелька</string>
     <string name="app_settings_saved_wallet_footer">Подключите функцию привязки карты в приложении, а также возможность биометрической аутентификации. Подпись транзакции все так же потребует карту.</string>
     <string name="app_settings_title">Настройки приложения</string>
+    <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту</string>
+    <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту</string>
+    <string name="biometric_lockout_warning_title">Слишком много попыток</string>
+    <string name="card_settings_action_sheet_reset">Сбросить</string>
+    <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
     <string name="card_settings_change_access_code">Смена кода доступа</string>
     <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
     <string name="card_settings_security_mode">Тип безопасности</string>
     <string name="card_settings_title">Настройки карты</string>
     <string name="chat_bot_name">Tangem Bot</string>
+    <string name="chat_button_title">Чат</string>
     <string name="common_accept">Принять</string>
     <string name="common_add">Добавить</string>
     <string name="common_attention">Внимание</string>
@@ -134,13 +140,13 @@
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
     <string name="main_tokens">Токены</string>
-    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт.</string>
+    <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
-    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты.</string>
+    <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
     <string name="onboarding_access_code_feature_2_title">Персонализация</string>
-    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте.</string>
+    <string name="onboarding_access_code_feature_3_description">Код доступа можно восстановить с помощью привязанной карты. Не храните все карты в одном месте</string>
     <string name="onboarding_access_code_feature_3_title">Восстановление</string>
-    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа.</string>
+    <string name="onboarding_access_code_hint">Выберите любое слово, фразу или число в качестве кода доступа</string>
     <string name="onboarding_access_code_intro_title">Создайте код доступа</string>
     <string name="onboarding_access_code_repeat_code_title">Повторно введите код доступа</string>
     <string name="onboarding_access_code_too_short">Код доступа должен состоять не менее чем из 4 символов.</string>
@@ -163,7 +169,6 @@
     <string name="onboarding_button_scan_origin_card">Сканировать основную карту</string>
     <string name="onboarding_button_skip_backup">Пропустить</string>
     <string name="onboarding_button_what_does_it_mean">Как это работает?</string>
-    <string name="onboarding_chat_button_title">Чат</string>
     <string name="onboarding_create_wallet_body">Давайте сгенерируем все ключи на вашей карте и создадим безопасный кошелек</string>
     <string name="onboarding_create_wallet_button_create_wallet">Создать кошелек</string>
     <string name="onboarding_create_wallet_header">Создать кошелек</string>
@@ -184,14 +189,14 @@
     <string name="onboarding_saltpay_title_no_backup_card">Бэкап карта не добавлена</string>
     <string name="onboarding_saltpay_title_one_backup_card">Бэкап карта создана</string>
     <string name="onboarding_saltpay_title_prepare_origin">Приготовьте SaltPay карту</string>
-    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDai на свой кошелек</string>
+    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDAI на свой кошелек</string>
     <string name="onboarding_subtitle_claim_progress">Это займет несколько секунд</string>
     <string name="onboarding_subtitle_kyc_retry">Более подробная информация отправлена на ваш адрес электронной почты.</string>
     <string name="onboarding_subtitle_kyc_start">Для начала работы с картой вам необходимо завершить процесс подтверждения личности</string>
     <string name="onboarding_subtitle_kyc_waiting">Пожалуйста дождитесь завершения процесса подтверждения личности. Вы будете уведомлены через e-mail. Обычно это занимает не более часа. Вы можете закрыть приложение и вернуться позже.</string>
     <string name="onboarding_subtitle_no_backup_cards">Чтобы начать процесс резервного копирования, добавьте одну или две резервные карты.</string>
     <string name="onboarding_subtitle_one_backup_card">Вы можете добавить еще одну карту или завершить процесс резервного копирования</string>
-    <string name="onboarding_subtitle_pin">Установите Код доступа для вашей SaltPay карты</string>
+    <string name="onboarding_subtitle_pin">Установите 4-х значный код.\nОн будет использован для платежей.</string>
     <string name="onboarding_subtitle_register_wallet">Подключите вашу карту к децентрализованной платежной системе</string>
     <string name="onboarding_subtitle_scan_backup_card_format">Подготовьте резервную карту с номером %s</string>
     <string name="onboarding_subtitle_scan_origin_card">Подготовьте основную карту</string>
@@ -199,7 +204,6 @@
     <string name="onboarding_subtitle_success_claim">Поздравляем! Ваша платежная крипто карта теперь активирована!</string>
     <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта настроена и готова к использованию.</string>
     <string name="onboarding_subtitle_two_backup_cards">Добавлено максимальное количество карт. Завершите процесс резервного копирования.</string>
-    <string name="onboarding_supplement_button_kyc_waiting">Чат поддержки</string>
     <string name="onboarding_title">Активация карты</string>
     <string name="onboarding_title_backup_card_format">Резервная карта #%d</string>
     <string name="onboarding_title_claim">Запросить %s</string>
@@ -219,7 +223,7 @@
     <string name="onboarding_top_up_button_show_wallet_address">Показать адрес кошелька</string>
     <string name="onboarding_top_up_header">Пополните свой кошелек</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
     <string name="onboarding_wallet_info_subtitle_first">Вы можете сделать резервную копию своих ключей на одной или двух других пустых картах Wallet.</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Код доступа можно восстановить с помощью одной из резервных карт.</string>
     <string name="onboarding_wallet_info_subtitle_second">Все резервные карты являются полнофункциональными и содержат одинаковые ключи.</string>
@@ -360,6 +364,10 @@
     <string name="token_details_unable_hide_alert_message">Токен %1$s является основной валютой в сети %2$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети.</string>
     <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
     <string name="token_item_no_rate">Нет цены</string>
+    <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
+    <string name="transaction_history_error_failed_to_load">Не удалось загрузить транзакции</string>
+    <string name="transaction_history_title">Транзакции</string>
+    <string name="transaction_history_tx_in_progress">В процессе…</string>
     <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
     <string name="twins_onboarding_description_format">Это карта, которую вы держите в руках. У парной карты номер %s.\n\nОбе карты можно использовать для вывода средств из этого кошелька.</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
@@ -402,8 +410,11 @@
     <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %1$s\n%2$s\n\nСумма: %3$s\nКомиссия: %4$s\nВсего: %5$s\nБаланс: %6$s</string>
     <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
     <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_missing_blockchains">Не все токены добавлены в ваш список. Пожалуйста, добавьте их в начале, а потом попробуйте снова. Недостающие токены: \n</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
+    <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
     <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
@@ -464,7 +475,4 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или код доступа для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
-
-    <!-- Special string -->
-    <string name="common_custom_string">%s</string>
 </resources>
