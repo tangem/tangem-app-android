@@ -3,7 +3,7 @@ package com.tangem.domain.features.addCustomToken.redux
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
-import com.tangem.common.services.Result
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.AddCustomTokenError.Warning.PotentialScamToken
 import com.tangem.domain.AddCustomTokenError.Warning.TokenAlreadyAdded
@@ -56,7 +56,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.extensions.dispatchOnMain
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
-import com.tangem.datasource.api.tangemTech.CoinsResponse
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -66,6 +66,7 @@ import timber.log.Timber
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomTokenHub") {
 
     private val hubState: AddCustomTokenState
@@ -79,10 +80,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return storeState.copy(addCustomTokensState = newHubState)
     }
 
+    @Suppress("ComplexMethod")
     override suspend fun handleAction(
         action: Action,
         storeState: DomainState,
-        cancel: ValueCallback<Action>
+        cancel: ValueCallback<Action>,
     ) {
         if (action !is AddCustomTokenAction) return
 
@@ -225,18 +227,20 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             val derivationField = DerivationPath.getField<TokenDerivationPathField>()
             derivationField.data = derivationField.data.copy(
                 value = Blockchain.Unknown,
-                isUserInput = false
+                isUserInput = false,
             )
             state.setField(derivationField)
             dispatchOnMain(UpdateForm(hubState))
         }
 
         if (state.screenState.derivationPath.isEnabled != derivationIsSupportedByNetwork) {
-            val action = Screen.UpdateTokenFields(listOf(
-                DerivationPath to state.screenState.derivationPath.copy(
-                    isEnabled = derivationIsSupportedByNetwork,
+            val action = Screen.UpdateTokenFields(
+                listOf(
+                    DerivationPath to state.screenState.derivationPath.copy(
+                        isEnabled = derivationIsSupportedByNetwork,
+                    ),
                 ),
-            ))
+            )
             dispatchOnMain(action)
         }
     }
@@ -297,10 +301,12 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
         }
 
-        dispatchOnMain(Warning.Replace(
-            remove = warningsRemove,
-            add = warningsAdd,
-        ))
+        dispatchOnMain(
+            Warning.Replace(
+                remove = warningsRemove,
+                add = warningsAdd,
+            ),
+        )
     }
 
     private suspend fun updateAddButton() {
@@ -340,9 +346,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    private suspend fun requestInfoAboutToken(
-        contractAddress: String,
-    ): List<CoinsResponse.Coin> {
+    @Suppress("MagicNumber")
+    private suspend fun requestInfoAboutToken(contractAddress: String): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
 
@@ -355,15 +360,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         // got the result faster than 500ms and the delay would only be the difference between them.
         delay(500)
 
-        val foundTokensResult = tangemTechServiceManager.findToken(contractAddress, selectedNetworkId)
-        val result = when (foundTokensResult) {
-            is Result.Success -> foundTokensResult.data
-            is Result.Failure -> {
-//                val warning = Warning.Network.CheckAddressRequestError
-//                dispatchOnMain(Warning.Add(setOf(warning)))
-                emptyList()
-            }
-        }
+        val result = tangemTechServiceManager.findToken(contractAddress, selectedNetworkId)
+
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = false))))
         return result
     }
@@ -380,7 +378,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         tokenId: String? = hubState.foundToken?.id,
         tokenContractAddress: String = ContractAddress.getFieldValue(),
         tokenNetworkId: String = Network.getFieldValue<Blockchain>().toNetworkId(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
     ): Boolean {
         val savedCurrencies = hubState.appSavedCurrencies ?: return false
 
@@ -393,6 +391,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     val sameAddress = tokenContractAddress == wrappedCurrency.token.contractAddress
                     val sameBlockchain = Blockchain.fromNetworkId(tokenNetworkId) == wrappedCurrency.blockchain
                     val sameDerivationPath = derivationPath?.rawPath == wrappedCurrency.derivationPath
+                    @Suppress("ComplexCondition")
                     if (sameId && sameAddress && sameBlockchain && sameDerivationPath) {
                         return true
                     }
@@ -404,7 +403,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private fun isBlockchainPersistIntoAppSavedTokensList(
         selectedNetwork: Blockchain = Network.getFieldValue(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
     ): Boolean {
         val state = hubState
         val savedCurrencies = state.appSavedCurrencies ?: return false
@@ -424,17 +423,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private fun getDerivationPathFromSelectedBlockchain(
-        selectedDerivationBlockchain: Blockchain
+        selectedDerivationBlockchain: Blockchain,
     ): com.tangem.common.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
         mainNetwork = Network.getFieldValue(),
         derivationNetwork = selectedDerivationBlockchain,
-        derivationStyle = hubState.cardDerivationStyle
+        derivationStyle = hubState.cardDerivationStyle,
     )
 
-    private suspend fun fillTokenFields(
-        token: CoinsResponse.Coin,
-        coinNetwork: CoinsResponse.Coin.Network,
-    ) {
+    private suspend fun fillTokenFields(token: CoinsResponse.Coin, coinNetwork: CoinsResponse.Coin.Network) {
         val blockchain = Blockchain.fromNetworkId(coinNetwork.networkId) ?: Blockchain.Unknown
         Network.setFieldValue(Field.Data(blockchain, false))
         Name.setFieldValue(Field.Data(token.name, false))
@@ -460,11 +456,13 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun enableDisableTokenDetailFields(isEnabled: Boolean = true) {
         val state = hubState
-        val action = Screen.UpdateTokenFields(listOf(
-            Name to state.screenState.name.copy(isEnabled = isEnabled),
-            Symbol to state.screenState.symbol.copy(isEnabled = isEnabled),
-            Decimals to state.screenState.decimals.copy(isEnabled = isEnabled),
-        ))
+        val action = Screen.UpdateTokenFields(
+            listOf(
+                Name to state.screenState.name.copy(isEnabled = isEnabled),
+                Symbol to state.screenState.symbol.copy(isEnabled = isEnabled),
+                Decimals to state.screenState.decimals.copy(isEnabled = isEnabled),
+            ),
+        )
         dispatchOnMain(action)
     }
 
@@ -488,7 +486,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
         throw AddCustomTokenError.UnAppropriateInitialization(
-            "AddCustomTokenHub", "$objName must be not NULL"
+            "AddCustomTokenHub",
+            "$objName must be not NULL",
         )
     }
 
@@ -573,16 +572,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     private suspend fun AddCustomTokenError.Warning.remove() {
         dispatchOnMain(Warning.Remove(setOf(this)))
     }
-
-    private suspend fun AddCustomTokenError.Warning.replaceBy(to: AddCustomTokenError.Warning) {
-        dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
-    }
 }
 
+@Suppress("ComplexMethod")
 private class AddCustomTokenReducer(
     private val globalState: DomainGlobalState,
 ) : ReStoreReducer<AddCustomTokenState> {
 
+    @Suppress("LongMethod")
     override fun reduceAction(action: Action, state: AddCustomTokenState): AddCustomTokenState {
         return when (action) {
             is Init.SetAddedCurrencies -> {
@@ -597,8 +594,9 @@ private class AddCustomTokenReducer(
                     .filter { it.canHandleTokens() }
                     .map { it.toNetworkId() }
                 val tangemTechServiceManager = AddCustomTokenService(
-                    tangemTechService = globalState.networkServices.tangemTechService,
-                    supportedTokenNetworkIds = supportedTokenNetworkIds
+                    tangemTechApi = globalState.networkServices.tangemTechService.api,
+                    dispatchers = AppCoroutineDispatcherProvider(),
+                    supportedTokenNetworkIds = supportedTokenNetworkIds,
                 )
                 val form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain))
                 state.copy(
@@ -745,5 +743,4 @@ private class AddCustomTokenReducer(
     private fun updateFormState(state: AddCustomTokenState): AddCustomTokenState {
         return state.copy(form = Form(state.form.fieldList))
     }
-
 }

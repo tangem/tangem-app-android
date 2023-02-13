@@ -30,43 +30,36 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun CardSettingsScreen(
-    state: CardSettingsScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun CardSettingsScreen(state: CardSettingsScreenState, onBackClick: () -> Unit) {
     val needReadCard = state.cardDetails == null
 
     SettingsScreensScaffold(
         content = {
             if (needReadCard) {
-                CardSettingsReadCard(state.onScanCardClick, modifier = modifier)
+                CardSettingsReadCard(state.onScanCardClick)
             } else {
-                CardSettings(state = state, modifier = modifier)
+                CardSettings(state = state)
             }
         },
         titleRes = R.string.card_settings_title,
         backgroundColor = TangemTheme.colors.background.secondary,
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
     )
 }
 
+@Suppress("MagicNumber")
 @Composable
-fun CardSettingsReadCard(
-    onScanCardClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
     Column(
-        modifier = modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
     ) {
         Box(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 40.dp),
         ) {
             Image(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 80.dp, end = 80.dp, top = 70.dp)
                     .rotate(-15f),
@@ -75,7 +68,7 @@ fun CardSettingsReadCard(
                 contentScale = ContentScale.FillWidth,
             )
             Image(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 60.dp, end = 60.dp)
                     .rotate(-1f),
@@ -86,7 +79,7 @@ fun CardSettingsReadCard(
         }
         Spacer(modifier = Modifier.weight(1f))
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
         ) {
@@ -95,35 +88,31 @@ fun CardSettingsReadCard(
                 color = colorResource(id = R.color.text_primary_1),
                 style = TangemTypography.headline3,
             )
-            Spacer(modifier = modifier.size(20.dp))
+            Spacer(modifier = Modifier.size(20.dp))
             Text(
                 text = stringResource(id = R.string.scan_card_settings_message),
                 color = colorResource(id = R.color.text_secondary),
                 style = TangemTypography.body1,
-                modifier = modifier
+                modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .weight(weight = 1f, fill = false),
             )
-            Spacer(modifier = modifier.size(29.dp))
+            Spacer(modifier = Modifier.size(29.dp))
             DetailsMainButton(
                 title = stringResource(id = R.string.scan_card_settings_button),
                 onClick = onScanCardClick,
-                modifier = modifier,
             )
         }
     }
 }
 
+@Suppress("ComplexMethod")
 @Composable
-fun CardSettings(
-    state: CardSettingsScreenState,
-    modifier: Modifier = Modifier,
-) {
+fun CardSettings(state: CardSettingsScreenState) {
     if (state.cardDetails == null) return
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         items(state.cardDetails) {
             val paddingBottom = when (it) {
@@ -142,7 +131,7 @@ fun CardSettings(
                 is CardInfo.ResetToFactorySettings -> 16.dp
             }
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .clickable(
                         enabled = it.clickable,
@@ -150,18 +139,26 @@ fun CardSettings(
                     )
                     .padding(start = 20.dp, end = 20.dp, bottom = paddingBottom, top = paddingTop),
             ) {
-                val titleColor = if (it.clickable) R.color.text_primary_1 else R.color.text_tertiary
-                val subtitleColor = if (it.clickable) R.color.text_secondary else R.color.text_tertiary
+                val titleColor = if (it.clickable) {
+                    TangemTheme.colors.text.primary1
+                } else {
+                    TangemTheme.colors.text.tertiary
+                }
+                val subtitleColor = if (it.clickable) {
+                    TangemTheme.colors.text.secondary
+                } else {
+                    TangemTheme.colors.text.tertiary
+                }
                 Text(
                     text = it.titleRes.resolveReference(),
-                    color = colorResource(id = titleColor),
-                    style = TangemTypography.subtitle1,
+                    color = titleColor,
+                    style = TangemTheme.typography.subtitle1,
                 )
-                Spacer(modifier = modifier.size(4.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     text = it.subtitle.resolveReference(),
-                    color = colorResource(id = subtitleColor),
-                    style = TangemTypography.body2,
+                    color = subtitleColor,
+                    style = TangemTheme.typography.body2,
                 )
             }
         }
@@ -170,6 +167,6 @@ fun CardSettings(
 
 @Composable
 @Preview
-fun CardSettingsPreview() {
+private fun CardSettingsPreview() {
     CardSettingsScreen(state = CardSettingsScreenState(onScanCardClick = {}) {}, {})
 }
