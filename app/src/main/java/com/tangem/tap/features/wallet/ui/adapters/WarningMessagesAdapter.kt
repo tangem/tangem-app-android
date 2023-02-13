@@ -28,7 +28,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
         val binding = LayoutWarningCardActionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false,
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return WarningMessageVH(binding)
     }
@@ -75,6 +77,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         binding.warningCardAction.setCardBackgroundColor(binding.root.getColor(color))
     }
 
+    @Suppress("LongMethod")
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
         WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             binding.groupControlsTemporary.hide()

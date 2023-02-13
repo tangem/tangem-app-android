@@ -14,7 +14,7 @@ internal class SaltPayActivationErrorConverter(
 ) : ModuleMessageConverter<SaltPayActivationError, ConvertedDialogMessage?> {
 
     override fun convert(message: SaltPayActivationError): ConvertedDialogMessage? {
-        val saltPayError = (message as? SaltPayActivationError) ?: throw UnsupportedOperationException()
+        val saltPayError = message as? SaltPayActivationError ?: throw UnsupportedOperationException()
 
         val dialogMessage = when (saltPayError) {
             SaltPayActivationError.NoGas -> {
