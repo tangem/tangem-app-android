@@ -26,7 +26,7 @@ internal class ReferralInteractorImpl(
         if (tokensForReferral.isNotEmpty()) {
             val currency = tokensConverter.convert(tokensForReferral.first())
             deriveOrAddTokens(currency)
-            val publicAddress = userWalletManager.getWalletAddress(currency)
+            val publicAddress = userWalletManager.getWalletAddress(currency.networkId)
             return repository.startReferral(
                 walletId = userWalletManager.getWalletId(),
                 networkId = currency.networkId,

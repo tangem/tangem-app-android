@@ -8,7 +8,7 @@
     tools:parentTag="android.widget.LinearLayout">
 
     <FrameLayout
-        android:id="@+id/container_exchange_buttons"
+        android:id="@+id/container_action_buttons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="6dp"
@@ -16,38 +16,39 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_trade"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/wallet_button_trade"
+            style="@style/TapPrimaryIconButton"
+            android:text="@string/wallet_button_actions"
             android:visibility="gone"
             app:icon="@drawable/ic_arrows_up_down"
             tools:visibility="visible" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_buy"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/TapPrimaryIconButton"
             android:text="@string/wallet_button_buy"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_up" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_sell"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/TapPrimaryIconButton"
             android:text="@string/wallet_button_sell"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_down" />
 
-    </FrameLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_swap"
+            style="@style/TapPrimaryIconButton"
+            android:text="@string/swapping_swap"
+            android:visibility="gone"
+            app:icon="@drawable/ic_arrows_up_down"
+            tools:visibility="gone" />
 
+    </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_send"
-        style="@style/TapButtonWithIcon"
+        style="@style/TapPrimaryIconButton"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:text="@string/wallet_button_send"
