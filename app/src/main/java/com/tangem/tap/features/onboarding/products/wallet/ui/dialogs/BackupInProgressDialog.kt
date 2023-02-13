@@ -6,19 +6,17 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
-class BackupInProgressDialog {
-    companion object {
-        fun create(context: Context): AlertDialog {
-            return AlertDialog.Builder(context).apply {
-                setTitle(R.string.common_warning)
-                setMessage(R.string.onboarding_backup_exit_warning)
-                setPositiveButton(R.string.warning_button_ok) { _, _ ->
-                    store.dispatch(GlobalAction.HideDialog)
-                }
-                setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
-                }
-            }.create()
-        }
+object BackupInProgressDialog {
+    fun create(context: Context): AlertDialog {
+        return AlertDialog.Builder(context).apply {
+            setTitle(R.string.common_warning)
+            setMessage(R.string.onboarding_backup_exit_warning)
+            setPositiveButton(R.string.warning_button_ok) { _, _ ->
+                store.dispatch(GlobalAction.HideDialog)
+            }
+            setOnDismissListener {
+                store.dispatch(GlobalAction.HideDialog)
+            }
+        }.create()
     }
 }

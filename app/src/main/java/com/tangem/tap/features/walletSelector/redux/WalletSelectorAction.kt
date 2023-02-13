@@ -55,7 +55,5 @@ internal sealed interface WalletSelectorAction : Action {
         val fiatCurrency: FiatCurrency,
     ) : WalletSelectorAction
 
-    data class HandleError(val error: TangemError) : WalletSelectorAction
-
     object CloseError : WalletSelectorAction
 }
