@@ -61,6 +61,7 @@ class SwapFragment : Fragment() {
                     if (tokenState != null) {
                         SwapSelectTokenScreen(
                             state = tokenState,
+                            onSearchFocusChange = viewModel.uiState.onSearchFocusChange,
                             onBack = viewModel.uiState.onBackClicked,
                         )
                     } else {
