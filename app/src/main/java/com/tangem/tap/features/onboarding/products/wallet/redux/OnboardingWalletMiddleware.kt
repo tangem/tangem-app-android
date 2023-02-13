@@ -1,15 +1,16 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -21,6 +22,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -36,10 +38,8 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class OnboardingWalletMiddleware {
-    companion object {
-        val handler = onboardingWalletMiddleware
-    }
+object OnboardingWalletMiddleware {
+    val handler = onboardingWalletMiddleware
 }
 
 private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -51,6 +51,7 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch: DispatchFunction) {
     if (action !is OnboardingWalletAction) return
 
@@ -80,11 +81,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                 card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
                     when {
                         // check for unfinished backup for saltPay cards. See more
-                        scanResponse.isSaltPay() && backupService.hasIncompletedBackup -> {
+                        scanResponse.cardTypesResolver.isSaltPay() && backupService.hasIncompletedBackup -> {
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
 
-                        scanResponse.isSaltPay() -> {
+                        scanResponse.cardTypesResolver.isSaltPay() -> {
                             store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
                             store.dispatch(BackupAction.FinishBackup)
                         }
@@ -100,11 +101,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
         }
         is OnboardingWalletAction.LoadArtwork -> {
             scope.launch {
-                val artwork = onboardingManager?.loadArtworkUrl()
-                val cardArtwork = if (artwork == Artwork.DEFAULT_IMG_URL) {
-                    null
-                } else {
-                    artwork
+                val cardArtwork = when (onboardingManager) {
+                    null -> action.cardArtworkUriForUnfinishedBackup
+                    else -> onboardingManager.loadArtworkUrl()
+                        .takeIf { it != Artwork.DEFAULT_IMG_URL }
+                        ?.let { Uri.parse(it) }
                 }
                 store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
             }
@@ -117,23 +118,22 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                     when (result) {
                         is CompletionResult.Success -> {
                             Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
-                            //here we must use updated scanResponse after createWallet & derivation
+                            // here we must use updated scanResponse after createWallet & derivation
                             val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
                                 card = result.data.card,
                                 derivedKeys = result.data.derivedKeys,
                                 primaryCard = result.data.primaryCard,
                             )
                             onboardingManager.scanResponse = updatedResponse
-                            val blockchainNetworks = listOf(
-                                BlockchainNetwork(
-                                    blockchain = Blockchain.Bitcoin,
-                                    card = result.data.card,
-                                ),
-                                BlockchainNetwork(
-                                    blockchain = Blockchain.Ethereum,
-                                    card = result.data.card,
-                                ),
-                            )
+
+                            val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
+                                DemoHelper.config.demoBlockchains
+                            } else {
+                                listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                            }.map { blockchain ->
+                                BlockchainNetwork(blockchain, result.data.card)
+                            }
+
                             store.dispatch(
                                 WalletAction.MultiWallet.SaveCurrencies(
                                     blockchainNetworks = blockchainNetworks,
@@ -188,11 +188,13 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
+        else -> {}
     }
 }
 
 private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse, backupState: BackupState,
+    scanResponse: ScanResponse,
+    backupState: BackupState,
 ): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
@@ -217,6 +219,7 @@ class BackupMiddleware {
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) {
     if (DemoHelper.tryHandle(appState, action)) return
     val globalState = appState()?.globalState ?: return
@@ -347,7 +350,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup)
+            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(backupService.addedBackupCardsCount))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
@@ -355,6 +358,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
             store.dispatch(BackupAction.FinishBackup)
         }
+        else -> {}
     }
 }
 
@@ -394,7 +398,7 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
     onboardingWalletState: OnboardingWalletState,
 ) {
     if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
-        if (scanResponse == null) throw IllegalArgumentException()
+        if (scanResponse == null) error("scanning response is null")
 
         val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
         store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
