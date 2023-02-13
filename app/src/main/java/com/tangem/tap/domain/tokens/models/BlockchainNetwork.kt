@@ -12,15 +12,16 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 data class BlockchainNetwork(
     val blockchain: Blockchain,
     val derivationPath: String?,
-    val tokens: List<Token>
+    val tokens: List<Token>,
 ) {
 
-    constructor(
-        blockchain: Blockchain,
-        card: CardDTO,
-    ) : this(
+    constructor(blockchain: Blockchain, card: CardDTO) : this(
         blockchain = blockchain,
-        derivationPath = if (card.settings.isHDWalletAllowed) blockchain.derivationPath(card.derivationStyle)?.rawPath else null,
+        derivationPath = if (card.settings.isHDWalletAllowed) {
+            blockchain.derivationPath(card.derivationStyle)?.rawPath
+        } else {
+            null
+        },
         tokens = emptyList(),
     )
 
@@ -43,7 +44,8 @@ data class BlockchainNetwork(
     }
 
     override fun hashCode(): Int = calculateHashCode(
-        blockchain.hashCode(), derivationPath?.hashCode() ?: 0
+        blockchain.hashCode(),
+        derivationPath?.hashCode() ?: 0,
     )
 
     companion object {
@@ -51,7 +53,7 @@ data class BlockchainNetwork(
             return BlockchainNetwork(
                 walletManager.wallet.blockchain,
                 walletManager.wallet.publicKey.derivationPath?.rawPath,
-                walletManager.cardTokens.toList()
+                walletManager.cardTokens.toList(),
             )
         }
     }
