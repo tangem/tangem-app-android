@@ -59,10 +59,14 @@ class DisclaimerWebViewClient : WebViewClient() {
         super.onReceivedHttpError(view, resourceRequest, errorResponse)
 
         ifNotNull(resourceRequest, errorResponse) { request, response ->
-            if (request.url?.toString() != loadingUrl || response.statusCode < 400) return
+            if (request.url?.toString() != loadingUrl || response.statusCode < RESPONSE_USER_ERROR_STATUS_CODE) return
             if (progressState != ProgressState.Done) return
 
             progressState = ProgressState.Error
         }
+    }
+
+    companion object {
+        private const val RESPONSE_USER_ERROR_STATUS_CODE = 400
     }
 }

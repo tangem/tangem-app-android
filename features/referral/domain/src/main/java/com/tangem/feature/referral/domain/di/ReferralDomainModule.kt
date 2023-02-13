@@ -25,7 +25,10 @@ class ReferralDomainModule {
         tokensConverter: TokensConverter,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
-            referralRepository, derivationManager, userWalletManager, tokensConverter,
+            repository = referralRepository,
+            derivationManager = derivationManager,
+            userWalletManager = userWalletManager,
+            tokensConverter = tokensConverter,
         )
     }
 }
