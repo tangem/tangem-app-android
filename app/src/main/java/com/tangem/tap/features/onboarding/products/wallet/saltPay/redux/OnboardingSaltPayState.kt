@@ -67,14 +67,10 @@ data class OnboardingSaltPayState(
             if (!scanResponse.cardTypesResolver.isSaltPay()) {
                 throw IllegalArgumentException("Can't initialize the OnboardingSaltPayMiddleware if card is not SalPay")
             }
-            val saltPaySingleWallet = scanResponse.card.wallets.firstOrNull().guard {
-                throw NullPointerException("SaltPay card must have one wallet at least")
-            }
 
             return SaltPayActivationManager(
                 cardId = scanResponse.card.cardId,
                 cardPublicKey = scanResponse.card.cardPublicKey,
-                walletPublicKey = saltPaySingleWallet.publicKey,
                 kycProvider = kycProvider,
                 paymentologyService = paymentologyService,
                 gnosisRegistrator = gnosisRegistrator,
