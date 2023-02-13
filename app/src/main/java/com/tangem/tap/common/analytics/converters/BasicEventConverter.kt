@@ -7,7 +7,6 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -28,13 +27,14 @@ class BasicEventsPreChecker {
         BasicTopUpEventConverter().convert(converterData)?.let { Analytics.send(it) }
     }
 
+    @Suppress("ComplexMethod")
     private fun isReadyToSend(data: BasicEventsSourceData): Boolean {
         val (scanResponse, walletState, biometricsWalletDataModels) = data
         if (walletState.derivationsCheckIsScheduled) {
             Timber.d("FAILED: derivationsCheckIsScheduled")
             return false
         }
-        if (scanResponse.card.isMultiwalletAllowed && walletState.missingDerivations.isNotEmpty()) {
+        if (scanResponse.cardTypesResolver.isMultiwalletAllowed() && walletState.missingDerivations.isNotEmpty()) {
             Timber.d("FAILED: isMultiwalletAllowed || missingDerivations.isNotEmpty")
             return false
         }
@@ -70,13 +70,14 @@ class BasicEventsPreChecker {
                 return false
             }
 
-            if (biometricsWalletDataModels.any {
-                    it.status is WalletDataModel.Loading ||
-                        it.status is WalletDataModel.NoAccount ||
-                        it.status is WalletDataModel.Unreachable ||
-                        it.status is WalletDataModel.MissedDerivation ||
-                        it.status.isErrorStatus
-                }) {
+            val isCorrectStatus = biometricsWalletDataModels.any {
+                it.status is WalletDataModel.Loading ||
+                    it.status is WalletDataModel.NoAccount ||
+                    it.status is WalletDataModel.Unreachable ||
+                    it.status is WalletDataModel.MissedDerivation ||
+                    it.status.isErrorStatus
+            }
+            if (isCorrectStatus) {
                 Timber.d("FAILED: by status")
                 return false
             }
@@ -106,7 +107,9 @@ data class BasicEventsSourceData(
             ?.stringValue
     }
 
-    val paramCardCurrency: AnalyticsParam.CardCurrency? by lazy { ParamCardCurrencyConverter().convert(scanResponse) }
+    val paramCardCurrency: AnalyticsParam.CardCurrency? by lazy {
+        ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+    }
 
     val paramCardBalanceState: AnalyticsParam.CardBalanceState by lazy { calculateAmount().toCardBalanceState() }
 

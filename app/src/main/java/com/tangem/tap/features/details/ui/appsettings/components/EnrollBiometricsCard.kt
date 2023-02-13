@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -23,12 +24,11 @@ import com.tangem.wallet.R
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun EnrollBiometricsCard(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
+internal fun EnrollBiometricsCard(onClick: () -> Unit) {
     Surface(
-        modifier = modifier,
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing8)
+            .fillMaxWidth(),
         color = TangemTheme.colors.background.primary,
         shape = TangemTheme.shapes.roundedCornersLarge,
         onClick = onClick,
@@ -67,8 +67,7 @@ private fun EnrollBiometricsCardSample(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.secondary),
+        modifier = modifier.background(TangemTheme.colors.background.secondary),
     ) {
         EnrollBiometricsCard(onClick = {})
     }

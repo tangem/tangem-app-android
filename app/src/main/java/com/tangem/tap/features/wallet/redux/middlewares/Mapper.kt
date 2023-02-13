@@ -49,6 +49,7 @@ internal fun WalletStoreModel.mapToReduxModel(): WalletStore {
         .updateTokenModels(blockchainWalletData.status.amount)
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun List<WalletDataModel>.mapToReduxModels(
     walletRent: WalletStoreModel.WalletRent?,
     appCurrencySymbol: String,
