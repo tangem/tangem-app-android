@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
+    kotlin("plugin.serialization")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("com.google.dagger.hilt.android")
@@ -102,6 +103,7 @@ android {
 }
 
 repositories {
+    mavenCentral()
     maven(url = "https://jitpack.io")
 }
 
@@ -200,6 +202,7 @@ dependencies {
     implementation(Library.googlePlayServicesWallet)
     implementation(Library.composeShimmer)
     implementation(Library.mviCoreWatcher)
+    implementation(Library.kotlinSerialization)
 
     /** Testing libraries */
     testImplementation(Test.junit)
