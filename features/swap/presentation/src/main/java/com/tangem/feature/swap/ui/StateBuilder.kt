@@ -26,6 +26,7 @@ import com.tangem.feature.swap.models.UiActions
 /**
  * State builder creates a specific states for SwapScreen
  */
+@Suppress("LargeClass")
 internal class StateBuilder(val actions: UiActions) {
 
     private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
@@ -60,6 +61,7 @@ internal class StateBuilder(val actions: UiActions) {
             networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
+            onSearchFocusChange = actions.onSearchFocusChange,
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
@@ -319,7 +321,13 @@ internal class StateBuilder(val actions: UiActions) {
         onClick: () -> Unit,
     ): SwapStateHolder {
         val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
-        renewWarnings.add(SwapWarning.GenericWarning(message, shouldWrapMessage = shouldWrapMessage, onClick = onClick))
+        renewWarnings.add(
+            SwapWarning.GenericWarning(
+                message = message,
+                shouldWrapMessage = shouldWrapMessage,
+                onClick = onClick,
+            ),
+        )
         return uiState.copy(
             warnings = renewWarnings,
         )
