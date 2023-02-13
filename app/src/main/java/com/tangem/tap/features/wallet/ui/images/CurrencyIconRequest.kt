@@ -8,9 +8,9 @@ import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.common.extensions.getTextColor
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.tokens.getIconUrl
@@ -85,8 +85,8 @@ class CurrencyIconRequest(
         crossinline onError: (Blockchain) -> Unit = {},
     ) {
         currencyImageView.loadIcon(
-            data = if (getLocalImage) blockchain.getRoundIconRes() else getIconUrl(blockchain.toNetworkId()),
-            placeholderRes = blockchain.getRoundIconRes(),
+            data = if (getLocalImage) getActiveIconRes(blockchain.id) else getIconUrl(blockchain.toNetworkId()),
+            placeholderRes = getActiveIconRes(blockchain.id),
             onStart = { onStart(blockchain) },
             onSuccess = { onSuccess(blockchain) },
             onError = { onError(blockchain) },

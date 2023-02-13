@@ -41,8 +41,11 @@ import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 class MultiWalletMiddleware {
+    @Suppress("LongMethod", "ComplexMethod")
     fun handle(
-        action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
+        action: WalletAction.MultiWallet,
+        walletState: WalletState?,
+        globalState: GlobalState?,
     ) {
         val globalState = globalState ?: return
 
@@ -68,7 +71,6 @@ class MultiWalletMiddleware {
                 val currencies: List<Currency> =
                     (walletState?.currencies ?: emptyList()) + action.blockchain.toCurrencies()
 
-
                 if (action.save && globalState.scanResponse != null) {
                     scope.launch {
                         userTokensRepository.saveUserTokens(
@@ -90,7 +92,8 @@ class MultiWalletMiddleware {
                 )
                 store.dispatch(
                     WalletAction.LoadWallet(
-                        action.blockchain, action.walletManager,
+                        blockchain = action.blockchain,
+                        walletManager = action.walletManager,
                     ),
                 )
             }
@@ -128,11 +131,13 @@ class MultiWalletMiddleware {
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-                if (selectedUserWallet != null) scope.launch {
-                    walletCurrenciesManager.removeCurrency(
-                        userWallet = selectedUserWallet,
-                        currencyToRemove = action.currency,
-                    )
+                if (selectedUserWallet != null) {
+                    scope.launch {
+                        walletCurrenciesManager.removeCurrency(
+                            userWallet = selectedUserWallet,
+                            currencyToRemove = action.currency,
+                        )
+                    }
                 } else {
                     val currency = action.currency
                     val card = globalState.scanResponse?.card.guard {
@@ -143,8 +148,9 @@ class MultiWalletMiddleware {
                     var currencies = walletState?.currencies ?: emptyList()
                     currencies = currencies.filterNot { it == currency }
                     if (currency.isBlockchain()) {
-                        currencies
-                            .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
+                        currencies.filter {
+                            it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath
+                        }
                     }
                     scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
                 }
@@ -178,6 +184,7 @@ class MultiWalletMiddleware {
                     store.dispatch(WalletAction.Scan(onScanSuccessEvent = null))
                 }
             }
+            else -> {}
         }
     }
 
@@ -225,8 +232,10 @@ class MultiWalletMiddleware {
     }
 
     private fun addTokens(
-        tokens: List<Token>, blockchainNetwork: BlockchainNetwork,
-        walletState: WalletState?, globalState: GlobalState?,
+        tokens: List<Token>,
+        blockchainNetwork: BlockchainNetwork,
+        walletState: WalletState?,
+        globalState: GlobalState?,
         save: Boolean,
     ) {
         if (tokens.isEmpty()) return
@@ -247,7 +256,9 @@ class MultiWalletMiddleware {
             WalletAction.LoadFiatRate(
                 coinsList = tokens.map { token ->
                     Currency.Token(
-                        token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath,
+                        token,
+                        blockchainNetwork.blockchain,
+                        blockchainNetwork.derivationPath,
                     )
                 },
             ),

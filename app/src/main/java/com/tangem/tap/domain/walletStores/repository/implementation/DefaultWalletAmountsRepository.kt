@@ -14,8 +14,7 @@ import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.fold
 import com.tangem.common.map
-import com.tangem.common.services.Result
-import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
@@ -36,10 +35,12 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -49,8 +50,10 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 internal class DefaultWalletAmountsRepository(
-    private val tangemTechService: TangemTechService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAmountsRepository {
     private val walletStoresStorage = WalletStoresStorage
     private val walletManagersStorage = WalletManagerStorage
@@ -59,13 +62,16 @@ internal class DefaultWalletAmountsRepository(
         userWallets: List<UserWallet>,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        return if (userWallets.isEmpty()) CompletionResult.Success(Unit)
-        else withContext(Dispatchers.Default) {
-            awaitAll(
-                async { fetchAmountsForUserWallets(userWallets) },
-                async { fetchFiatRates(userWallets, walletStores = null, fiatCurrency) },
-            )
-                .fold()
+        return if (userWallets.isEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            withContext(Dispatchers.Default) {
+                awaitAll(
+                    async { fetchAmountsForUserWallets(userWallets) },
+                    async { fetchFiatRates(userWallets, walletStores = null, fiatCurrency) },
+                )
+                    .fold()
+            }
         }
     }
 
@@ -81,16 +87,19 @@ internal class DefaultWalletAmountsRepository(
         userWallet: UserWallet,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        return if (walletStores.isEmpty()) CompletionResult.Success(Unit)
-        else withContext(Dispatchers.Default) {
-            val userWalletId = userWallet.walletId
-            val scanResponse = userWallet.scanResponse
+        return if (walletStores.isEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            withContext(Dispatchers.Default) {
+                val userWalletId = userWallet.walletId
+                val scanResponse = userWallet.scanResponse
 
-            awaitAll(
-                async { fetchAmountForWalletStores(userWalletId, scanResponse, walletStores) },
-                async { fetchFiatRates(listOf(userWallet), walletStores, fiatCurrency) },
-            )
-                .fold()
+                awaitAll(
+                    async { fetchAmountForWalletStores(userWalletId, scanResponse, walletStores) },
+                    async { fetchFiatRates(listOf(userWallet), walletStores, fiatCurrency) },
+                )
+                    .fold()
+            }
         }
     }
 
@@ -116,38 +125,30 @@ internal class DefaultWalletAmountsRepository(
 
         val coinsIds = currencies.mapNotNull { it.coinId }.distinct().toList()
 
-        val fiatRatesResult = withContext(Dispatchers.IO) {
-            tangemTechService.rates(
-                currency = fiatCurrency.code,
-                ids = coinsIds,
-            )
-        }
+        return withContext(dispatchers.io) {
+            runCatching { tangemTechApi.getRates(fiatCurrency.code.lowercase(), coinsIds.joinToString(",")) }
+                .onSuccess {
+                    updateWalletStoresWithFiatRates(walletStores = walletStoresInternal, fiatRates = it.rates)
+                    return@withContext CompletionResult.Success(Unit)
+                }
+                .onFailure {
+                    val error = WalletStoresError.FetchFiatRatesError(
+                        currencies = currencies.map(Currency::currencySymbol).toList(),
+                        cause = it,
+                    )
 
-        return when (fiatRatesResult) {
-            is Result.Success -> {
-                updateWalletStoresWithFiatRates(
-                    walletStores = walletStoresInternal,
-                    fiatRates = fiatRatesResult.data.rates,
-                )
-
-                CompletionResult.Success(Unit)
-            }
-            is Result.Failure -> {
-                val error = WalletStoresError.FetchFiatRatesError(
-                    currencies = currencies.map { it.currencySymbol }.toList(),
-                    cause = fiatRatesResult.error,
-                )
-
-                Timber.e(
-                    error,
-                    """
+                    Timber.e(
+                        error,
+                        """
                         Unable to fetch fiat rates
                         |- Coins ids: $coinsIds
-                    """.trimIndent(),
-                )
+                        """.trimIndent(),
+                    )
 
-                CompletionResult.Failure(error)
-            }
+                    return@withContext CompletionResult.Failure(error)
+                }
+
+            error("Unreachable code because runCatching must return result")
         }
     }
 
@@ -209,7 +210,7 @@ internal class DefaultWalletAmountsRepository(
                         updateWalletStoreWithAmounts(
                             walletStore = walletStore,
                             updatedWallet = walletManager.wallet,
-                            // fixme move DemoHelper to Demo core module maybe
+                            // FIXME: move DemoHelper to Demo core module maybe
                             isDemo = DemoHelper.isDemoCardId(scanResponse.card.cardId),
                         )
                     }
@@ -423,8 +424,10 @@ internal class DefaultWalletAmountsRepository(
             val error = WalletStoresError.NoInternetConnection
             Timber.e(error)
             CompletionResult.Failure(error)
-        } else withContext(Dispatchers.IO) {
-            catching { block() }
+        } else {
+            withContext(Dispatchers.IO) {
+                catching { block() }
+            }
         }
     }
 
