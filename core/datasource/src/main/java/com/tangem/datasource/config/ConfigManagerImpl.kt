@@ -80,11 +80,11 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     authToken = configValues.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = configValues.blockcypherTokens,
-                quickNodeCredentials = QuickNodeCredentials(
+                quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = configValues.quiknodeApiKey,
                     subdomain = configValues.quiknodeSubdomain,
                 ),
-                bscQuickNodeCredentials = QuickNodeCredentials(
+                quickNodeBscCredentials = QuickNodeCredentials(
                     apiKey = configValues.bscQuiknodeApiKey,
                     subdomain = configValues.bscQuiknodeSubdomain,
                 ),
