@@ -20,6 +20,7 @@ data class SwapStateHolder(
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
+    val onSearchFocusChange: (Boolean) -> Unit,
     val onSelectTokenClick: (() -> Unit)? = null,
     val onSuccess: (() -> Unit)? = null,
     val onMaxAmountSelected: (() -> Unit)? = null,
