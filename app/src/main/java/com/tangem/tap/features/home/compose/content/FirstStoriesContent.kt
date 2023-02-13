@@ -5,8 +5,17 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,10 +34,12 @@ import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
 import com.tangem.tap.features.home.compose.StoriesTextAnimation
 import com.tangem.wallet.R
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 @Composable
 fun FirstStoriesContent(
-    isPaused: Boolean, duration: Int = 8_000,
-    hideContent: (Boolean) -> Unit
+    isPaused: Boolean,
+    duration: Int,
+    onHideContent: (Boolean) -> Unit,
 ) {
     val screenState = remember { mutableStateOf(StartingScreenState.INIT) }
     val progress = remember { Animatable(0f) }
@@ -41,8 +52,8 @@ fun FirstStoriesContent(
                 targetValue = 2f,
                 animationSpec = tween(
                     durationMillis = duration,
-                    easing = LinearEasing
-                )
+                    easing = LinearEasing,
+                ),
             )
         }
     }
@@ -60,8 +71,8 @@ fun FirstStoriesContent(
         in 1.2f..2f -> screenState.value = StartingScreenState.MEET_TANGEM
     }
 
-    if (screenState.value == StartingScreenState.INIT) hideContent(true)
-    if (screenState.value == StartingScreenState.BUY) hideContent(false)
+    if (screenState.value == StartingScreenState.INIT) onHideContent(true)
+    if (screenState.value == StartingScreenState.BUY) onHideContent(false)
 
     val style = TextStyle(
         fontSize = 60.sp,
@@ -72,7 +83,6 @@ fun FirstStoriesContent(
     val textId = screenState.textId()
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         if (screenState.isSplashingTextDisplaying()) {
             TextAutoSize(
                 modifier = Modifier
@@ -80,7 +90,7 @@ fun FirstStoriesContent(
                     .padding(start = 20.dp, end = 20.dp, bottom = 100.dp),
                 text = textId?.let { stringResource(textId) } ?: "",
                 textStyle = style,
-                fontSizeRange = FontSizeRange(20.sp, 60.sp)
+                fontSizeRange = FontSizeRange(20.sp, 60.sp),
             )
         } else {
             Column(
@@ -88,7 +98,7 @@ fun FirstStoriesContent(
             ) {
                 Box(
                     modifier = Modifier
-                        .weight(0.7f)
+                        .weight(0.7f),
                 ) {
                     if (screenState.isMeetTangemDisplaying()) {
                         StoriesTextAnimation(
@@ -100,10 +110,9 @@ fun FirstStoriesContent(
                                     .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),
                                 text = textId?.let { stringResource(textId) } ?: "",
                                 textStyle = style,
-                                fontSizeRange = FontSizeRange(30.sp, 50.sp)
+                                fontSizeRange = FontSizeRange(30.sp, 50.sp),
                             )
                         }
-
                     }
                 }
                 Box(
@@ -155,9 +164,8 @@ private fun MutableState<StartingScreenState>.isMeetTangemDisplaying(): Boolean 
     return this.value == StartingScreenState.MEET_TANGEM
 }
 
-
 @Preview
 @Composable
-fun FirstStoriesPreview() {
+private fun FirstStoriesPreview() {
     FirstStoriesContent(false, 8000) {}
 }

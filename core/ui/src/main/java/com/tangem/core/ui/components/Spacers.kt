@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("TooManyFunctions")
 
 package com.tangem.core.ui.components
 
@@ -47,6 +47,11 @@ fun SpacerH8(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerH10(modifier: Modifier = Modifier) {
+    SpacerH(10.dp, modifier)
+}
+
+@Composable
 fun SpacerH12(modifier: Modifier = Modifier) {
     SpacerH(12.dp, modifier)
 }
@@ -71,6 +76,11 @@ fun SpacerH32(modifier: Modifier = Modifier) {
     SpacerH(32.dp, modifier)
 }
 
+@Composable
+fun SpacerH50(modifier: Modifier = Modifier) {
+    SpacerH(50.dp, modifier)
+}
+
 // TODO: Refactor with context receivers
 @Composable
 fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
@@ -78,6 +88,7 @@ fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
 }
 
 // TODO: Refactor with context receivers
+@Suppress("MagicNumber")
 @Composable
 fun ColumnScope.SpacerHHalf(modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.weight(.5f))
@@ -88,6 +99,11 @@ fun ColumnScope.SpacerHHalf(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerW(width: Dp, modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.width(width))
+}
+
+@Composable
+fun SpacerW2(modifier: Modifier = Modifier) {
+    SpacerW(2.dp, modifier)
 }
 
 @Composable
@@ -103,6 +119,11 @@ fun SpacerW6(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerW8(modifier: Modifier = Modifier) {
     SpacerW(8.dp, modifier)
+}
+
+@Composable
+fun SpacerW12(modifier: Modifier = Modifier) {
+    SpacerW(12.dp, modifier)
 }
 
 @Composable

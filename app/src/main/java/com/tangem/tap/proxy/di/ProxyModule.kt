@@ -2,9 +2,11 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.lib.crypto.DerivationManager
+import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.DerivationManagerImpl
+import com.tangem.tap.proxy.TransactionManagerImpl
 import com.tangem.tap.proxy.UserWalletManagerImpl
 import dagger.Module
 import dagger.Provides
@@ -29,6 +31,12 @@ class ProxyModule {
             appStateHolder = appStateHolder,
             walletManagerFactory = WalletManagerFactory(),
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTransactionManager(appStateHolder: AppStateHolder): TransactionManager {
+        return TransactionManagerImpl(appStateHolder)
     }
 
     @Provides

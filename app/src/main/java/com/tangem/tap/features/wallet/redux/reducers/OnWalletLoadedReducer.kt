@@ -30,6 +30,7 @@ class OnWalletLoadedReducer {
         }
     }
 
+    @Suppress("LongMethod")
     private fun onMultiWalletLoaded(
         wallet: Wallet,
         blockchainNetwork: BlockchainNetwork,
@@ -85,8 +86,8 @@ class OnWalletLoadedReducer {
             val tokenFiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
                 ?: UNKNOWN_AMOUNT_SIGN
 
-            val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                && pendingTransactions.isEmpty()
+            val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                pendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
                     status = tokenBalanceStatus,
