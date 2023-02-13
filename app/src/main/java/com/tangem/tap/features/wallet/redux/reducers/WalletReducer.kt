@@ -15,7 +15,6 @@ import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
