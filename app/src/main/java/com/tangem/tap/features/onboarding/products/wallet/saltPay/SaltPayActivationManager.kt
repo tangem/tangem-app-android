@@ -24,15 +24,6 @@ import com.tangem.datasource.api.paymentology.models.response.tryExtractError
 import com.tangem.datasource.config.models.KYCProvider
 import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.domain.common.extensions.successOr
-import com.tangem.domain.common.util.UserWalletId
-import com.tangem.datasource.api.paymentology.AttestationResponse
-import com.tangem.datasource.api.paymentology.PaymentologyApiService
-import com.tangem.datasource.api.paymentology.RegisterKYCRequest
-import com.tangem.datasource.api.paymentology.RegisterWalletRequest
-import com.tangem.datasource.api.paymentology.RegisterWalletResponse
-import com.tangem.datasource.api.paymentology.RegistrationResponse
-import com.tangem.datasource.api.paymentology.tryExtractError
-import com.tangem.domain.common.extensions.successOr
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
