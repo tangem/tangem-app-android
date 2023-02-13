@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.converters
 
 import com.tangem.datasource.api.oneinch.models.ApproveCalldataResponse
-import com.tangem.feature.swap.domain.models.ApproveModel
+import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
