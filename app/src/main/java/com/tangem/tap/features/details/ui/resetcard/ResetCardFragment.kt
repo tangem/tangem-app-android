@@ -41,7 +41,7 @@ class ResetCardFragment : Fragment(), StoreSubscriber<DetailsState> {
                 TangemTheme {
                     ResetCardScreen(
                         state = screenState.value,
-                        onBackPressed = { store.dispatch(NavigationAction.PopBackTo()) },
+                        onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
                     )
                 }
             }

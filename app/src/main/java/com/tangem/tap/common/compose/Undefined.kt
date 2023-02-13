@@ -16,7 +16,7 @@ fun TitleSubtitle(
     title: String,
     subtitle: String
 ) {
-    Column() {
+    Column {
         Text(text = title)
         Text(
             text = subtitle,

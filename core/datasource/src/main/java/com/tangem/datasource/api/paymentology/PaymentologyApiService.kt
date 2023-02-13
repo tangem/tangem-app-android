@@ -1,63 +1,30 @@
 package com.tangem.datasource.api.paymentology
 
-import com.tangem.common.extensions.toHexString
-import com.tangem.common.services.Result
-import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.MoshiConverter
-import com.tangem.datasource.api.common.createRetrofitInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.tangem.datasource.utils.allowLogging
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
 
 /**
 [REDACTED_AUTHOR]
  */
-class PaymentologyApiService(
-    private val logEnabled: Boolean,
-) {
-    private val api = createRetrofitInstance(
-        baseUrl = PaymentologyApi.baseUrl,
-        converterFactory = MoshiConverter.createFactory(MoshiConverter.sdkMoshi()),
-        logEnabled = logEnabled,
-    ).create(PaymentologyApi::class.java)
+// TODO("Remove after removing Redux")
+@Deprecated("Use PaymentologyApi")
+object PaymentologyApiService {
+    val api = createApi()
 
-    suspend fun checkRegistration(
-        cardId: String,
-        publicKey: ByteArray,
-    ): Result<RegistrationResponse> = withContext(Dispatchers.IO) {
-        val requestItem = CheckRegistrationRequests.Item(cardId, publicKey.toHexString())
-        val request = CheckRegistrationRequests(listOf(requestItem))
-        performRequest {
-            api.checkRegistration(request)
-        }
-    }
+    private const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
 
-    suspend fun requestAttestationChallenge(
-        cardId: String,
-        publicKey: ByteArray,
-    ): Result<AttestationResponse> = withContext(Dispatchers.IO) {
-        val requestItem = CheckRegistrationRequests.Item(cardId, publicKey.toHexString())
-        performRequest {
-            api.requestAttestationChallenge(requestItem)
-        }
-    }
-
-    suspend fun registerWallet(
-        request: RegisterWalletRequest,
-    ): Result<RegisterWalletResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.registerWallet(request)
-        }
-    }
-
-    suspend fun registerKYC(
-        request: RegisterKYCRequest,
-    ): Result<RegisterWalletResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.registerKYC(request)
-        }
-    }
-
-    companion object {
-        fun stub(): PaymentologyApiService = PaymentologyApiService(false)
+    private fun createApi(): PaymentologyApi {
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverter.networkMoshiConverter)
+            .baseUrl(PAYMENTOLOGY_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .allowLogging()
+                    .build(),
+            )
+            .build()
+            .create(PaymentologyApi::class.java)
     }
 }
