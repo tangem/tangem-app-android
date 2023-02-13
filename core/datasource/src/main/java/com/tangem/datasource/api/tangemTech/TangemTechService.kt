@@ -1,89 +1,42 @@
 package com.tangem.datasource.api.tangemTech
 
-import com.tangem.common.services.Result
-import com.tangem.common.services.performRequest
-import com.tangem.datasource.api.common.AddHeaderInterceptor
-import com.tangem.datasource.api.common.CacheControlHttpInterceptor
-import com.tangem.datasource.api.common.createRetrofitInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.utils.RequestHeader
+import com.tangem.datasource.utils.RequestHeader.AuthenticationHeader
+import com.tangem.datasource.utils.RequestHeader.CacheControlHeader
+import com.tangem.datasource.utils.addHeaders
+import com.tangem.datasource.utils.allowLogging
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
 
 /**
 [REDACTED_AUTHOR]
  */
-class TangemTechService(
-    private val logIsEnabled: Boolean = false,
-) {
+// TODO("Remove after removing Redux")
+@Deprecated("Use TangemTechApi")
+object TangemTechService {
 
-    private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
-        CacheControlHttpInterceptor(cacheMaxAge),
-    )
+    var api: TangemTechApi = createApi()
+        private set
 
-    private var api: TangemTechApi = createApi()
+    private const val TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
 
-    suspend fun coins(
-        contractAddress: String? = null,
-        networkIds: String? = null,
-        active: Boolean? = null,
-        searchText: String? = null,
-        offset: Int? = null,
-        limit: Int? = null,
-    ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.coins(
-                contractAddress = contractAddress,
-                networkIds = networkIds,
-                active = active,
-                searchText = searchText,
-                offset = offset,
-                limit = limit,
+    fun addAuthenticationHeader(header: AuthenticationHeader) {
+        api = createApi(header)
+    }
+
+    private fun createApi(header: RequestHeader? = null): TangemTechApi {
+        val headers = mutableListOf<RequestHeader>(CacheControlHeader).apply { header?.let(::add) }
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverter.networkMoshiConverter)
+            .baseUrl(TANGEM_TECH_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .addHeaders(*headers.toTypedArray())
+                    .allowLogging()
+                    .build(),
             )
-        }
-    }
-
-    suspend fun rates(
-        currency: String,
-        ids: List<String>,
-    ): Result<RatesResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.rates(currency.lowercase(), ids.joinToString(","))
-        }
-    }
-
-    suspend fun userCountry(): Result<GeoResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.geo() }
-    }
-
-    suspend fun currencies(): Result<CurrenciesResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.currencies() }
-    }
-
-    suspend fun getUserTokens(userId: String): Result<UserTokensResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.getUserTokens(userId) }
-    }
-
-    suspend fun putUserTokens(userId: String, userTokens: UserTokensResponse): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            performRequest { api.putUserTokens(userId, userTokens) }
-        }
-
-    fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
-        headerInterceptors.removeAll(interceptors)
-        headerInterceptors.addAll(interceptors)
-        api = createApi()
-    }
-
-    private fun createApi(): TangemTechApi {
-        val retrofit = createRetrofitInstance(
-            baseUrl = baseUrl,
-            interceptors = headerInterceptors.toList(),
-            logEnabled = logIsEnabled,
-        )
-        return retrofit.create(TangemTechApi::class.java)
-    }
-
-    companion object {
-        const val baseUrl = "https://api.tangem-tech.com/v1/"
-        const val cacheMaxAge = 600
+            .build()
+            .create(TangemTechApi::class.java)
     }
 }

@@ -1,0 +1,13 @@
+<resources>
+    <plurals name="card_label_card_count">
+        <item quantity="other">%d 卡片</item>
+    </plurals>
+
+    <plurals name="tokens_count">
+        <item quantity="other">%d 代幣</item>
+    </plurals>
+
+    <plurals name="referral_wallets_purchased_count">
+        <item quantity="other">%d 錢包</item>
+    </plurals>
+</resources>
