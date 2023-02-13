@@ -24,6 +24,8 @@ class ConfigValueModel(
     val quiknodeApiKey: String,
     val bscQuiknodeSubdomain: String,
     val bscQuiknodeApiKey: String,
+    val nowNodesApiKey: String,
+    val getBlockApiKey: String,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
