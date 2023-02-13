@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.successOr
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toHexString
@@ -24,9 +25,18 @@ import com.tangem.datasource.config.models.KYCProvider
 import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.datasource.api.paymentology.AttestationResponse
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
+import com.tangem.datasource.api.paymentology.RegisterKYCRequest
+import com.tangem.datasource.api.paymentology.RegisterWalletRequest
+import com.tangem.datasource.api.paymentology.RegisterWalletResponse
+import com.tangem.datasource.api.paymentology.RegistrationResponse
+import com.tangem.datasource.api.paymentology.tryExtractError
+import com.tangem.domain.common.extensions.successOr
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -39,11 +49,12 @@ import com.tangem.blockchain.extensions.Result as BlockchainResult
 class SaltPayActivationManager(
     val cardId: String,
     val cardPublicKey: ByteArray,
-    val walletPublicKey: ByteArray,
     private val kycProvider: KYCProvider,
     private val paymentologyService: PaymentologyApiService,
     private val gnosisRegistrator: GnosisRegistrator,
 ) {
+
+    val walletPublicKey = gnosisRegistrator.walletManager.wallet.publicKey.seedKey
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
     private val approvalValue: BigDecimal = BigDecimal(2).pow(256).minus(BigDecimal.ONE)
@@ -73,18 +84,12 @@ class SaltPayActivationManager(
     }
 
     suspend fun checkRegistration(): Result<RegistrationResponse.Item> {
+        val requestItem = CheckRegistrationRequests.Item(cardId, cardPublicKey.toHexString())
+        val request = CheckRegistrationRequests(listOf(requestItem))
+
         val response: RegistrationResponse = withContext(Dispatchers.IO) {
             performRequest {
-                paymentologyService.api.checkRegistration(
-                    request = CheckRegistrationRequests(
-                        requests = listOf(
-                            CheckRegistrationRequests.Item(
-                                cardId = cardId,
-                                publicKey = cardPublicKey.toHexString(),
-                            ),
-                        ),
-                    ),
-                )
+                paymentologyService.api.checkRegistration(request)
             }
         }
             .successOr { return it }
@@ -104,14 +109,10 @@ class SaltPayActivationManager(
     }
 
     suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
+        val requestItem = CheckRegistrationRequests.Item(cardId, cardPublicKey.toHexString())
         return withContext(Dispatchers.IO) {
             performRequest {
-                paymentologyService.api.requestAttestationChallenge(
-                    request = CheckRegistrationRequests.Item(
-                        cardId = cardId,
-                        publicKey = cardPublicKey.toHexString(),
-                    ),
-                )
+                paymentologyService.api.requestAttestationChallenge(requestItem)
             }
         }
             .successOr { return it }
@@ -139,7 +140,9 @@ class SaltPayActivationManager(
             pin = pinCode,
         )
         return withContext(Dispatchers.IO) {
-            performRequest { paymentologyService.api.registerWallet(request) }
+            performRequest {
+                paymentologyService.api.registerWallet(request)
+            }
         }
             .successOr { return it }
             .tryExtractError()
@@ -159,7 +162,13 @@ class SaltPayActivationManager(
 
     suspend fun claim(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
         gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
-            return Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
+            val userCancelledError = (it.error as? BlockchainSdkError.WrappedTangemError)
+                ?.tangemError as? TangemSdkError.UserCancelled
+
+            return when (userCancelledError) {
+                null -> Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
+                else -> Result.Failure(userCancelledError)
+            }
         }
         return Result.Success(Unit)
     }
@@ -202,7 +211,6 @@ class SaltPayActivationManager(
             gnosisRegistrator = GnosisRegistrator.stub(),
             cardId = "",
             cardPublicKey = byteArrayOf(),
-            walletPublicKey = byteArrayOf(),
         )
     }
 }
@@ -212,7 +220,7 @@ class KYCUrlProvider(
     kycProvider: KYCProvider,
 ) {
 
-    val kycRefId = UserWalletId(walletPublicKey).stringValue
+    val kycRefId = UserWalletIdBuilder.walletPublicKey(walletPublicKey).stringValue
 
     val requestUrl: String = makeWebRequestUrl(kycProvider)
 
