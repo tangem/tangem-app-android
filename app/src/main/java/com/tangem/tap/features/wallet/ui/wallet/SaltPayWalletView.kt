@@ -80,7 +80,7 @@ class SaltPayWalletView : WalletView() {
             store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
 
-        btnBuy.show(tokenData.isAvailableToBuy)
+        btnBuy.show(tokenData.isAvailableToBuy(store.state.globalState.exchangeManager))
         btnBuy.setOnClickListener {
             store.dispatch(WalletAction.TradeCryptoAction.Buy(false))
         }
