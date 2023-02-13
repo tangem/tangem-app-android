@@ -390,9 +390,12 @@ private val state = SwapStateHolder(
     warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
-    onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
+    onRefresh = {},
+    onBackClicked = {},
+    onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
+    onSearchFocusChange = {},
     // alert = SwapWarning.GenericWarning("There was an error. Please try again.") {},
 )
 
