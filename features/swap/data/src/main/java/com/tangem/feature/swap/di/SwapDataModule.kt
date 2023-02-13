@@ -3,11 +3,8 @@ package com.tangem.feature.swap.di
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.feature.swap.SwapRepositoryImpl
-import com.tangem.feature.swap.converters.ApproveConverter
-import com.tangem.feature.swap.converters.QuotesConverter
-import com.tangem.feature.swap.converters.SwapConverter
-import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -25,22 +22,16 @@ class SwapDataModule {
     fun provideSwapRepository(
         tangemTechApi: TangemTechApi,
         oneInchApiFactory: OneInchApiFactory,
-        tokensConverter: TokensConverter,
-        quotesConverter: QuotesConverter,
-        swapConverter: SwapConverter,
-        approveConverter: ApproveConverter,
         oneInchErrorsHandler: OneInchErrorsHandler,
         coroutineDispatcher: CoroutineDispatcherProvider,
+        configManager: ConfigManager,
     ): SwapRepository {
         return SwapRepositoryImpl(
             tangemTechApi = tangemTechApi,
             oneInchApiFactory = oneInchApiFactory,
-            tokensConverter = tokensConverter,
-            quotesConverter = quotesConverter,
-            swapConverter = swapConverter,
-            approveConverter = approveConverter,
             oneInchErrorsHandler = oneInchErrorsHandler,
             coroutineDispatcher = coroutineDispatcher,
+            configManager = configManager,
         )
     }
 }
