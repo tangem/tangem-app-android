@@ -129,7 +129,7 @@ object ScanCardProcessor {
             ?.let { it == scanResponse.card.cardId }
             ?: false
 
-        if (scanResponse.isSaltPayWallet() || !isTheSamePrimaryCard) {
+        if (scanResponse.cardTypesResolver.isSaltPayWallet() || !isTheSamePrimaryCard) {
             val error = SaltPayActivationError.PutVisaCard
             SaltPayExceptionHandler.handle(error)
             onFailure(TangemSdkError.ExceptionError(error))
@@ -148,30 +148,33 @@ object ScanCardProcessor {
         store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         if (disclaimer.isAccepted()) {
-            nextHandler((scanResponse))
-        } else scope.launch {
-            delay(DELAY_SDK_DIALOG_CLOSE)
-            disclaimerWillShow()
-            dispatchOnMain(
-                DisclaimerAction.Show(
-                    fromScreen = AppScreen.Home,
-                    callback = DisclaimerCallback(
-                        onAccept = {
-                            scope.launch(Dispatchers.Main) {
-                                nextHandler(scanResponse)
-                            }
-                        },
-                        onDismiss = {
-                            scope.launch(Dispatchers.Main) {
-                                onFailure(TangemSdkError.UserCancelled())
-                            }
-                        },
+            nextHandler(scanResponse)
+        } else {
+            scope.launch {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                disclaimerWillShow()
+                dispatchOnMain(
+                    DisclaimerAction.Show(
+                        fromScreen = AppScreen.Home,
+                        callback = DisclaimerCallback(
+                            onAccept = {
+                                scope.launch(Dispatchers.Main) {
+                                    nextHandler(scanResponse)
+                                }
+                            },
+                            onDismiss = {
+                                scope.launch(Dispatchers.Main) {
+                                    onFailure(TangemSdkError.UserCancelled())
+                                }
+                            },
+                        ),
                     ),
-                ),
-            )
+                )
+            }
         }
     }
 
+    @Suppress("LongMethod", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
@@ -185,8 +188,8 @@ object ScanCardProcessor {
 
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-        if (scanResponse.isSaltPay()) {
-            if (scanResponse.isSaltPayVisa()) {
+        if (scanResponse.cardTypesResolver.isSaltPay()) {
+            if (scanResponse.cardTypesResolver.isSaltPayVisa()) {
                 val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
                 val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse, manager)
                 delay(500)
