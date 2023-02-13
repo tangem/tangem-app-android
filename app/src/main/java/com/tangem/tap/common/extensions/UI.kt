@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.drawable.Drawable
-import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -91,12 +90,6 @@ fun Context.dpToPixels(dp: Int): Int =
         this.resources.displayMetrics,
     ).toInt()
 
-fun Context.pixelsToDp(pixels: Int): Int {
-    return (pixels.toFloat() /
-        (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
-        .toInt()
-}
-
 tailrec fun Context?.getActivity(): Activity? = this as? Activity
     ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
@@ -118,7 +111,7 @@ fun MaterialCardView.setMargins(
 
 fun View.hideKeyboard() {
     val inputMethodManager =
-        context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     inputMethodManager?.hideSoftInputFromWindow(this.windowToken, 0)
 }
 
