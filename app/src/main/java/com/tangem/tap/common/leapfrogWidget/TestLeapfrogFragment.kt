@@ -17,13 +17,13 @@ class TestLeapfrogFragment : Fragment(R.layout.test_leapfrog_fragment) {
     private lateinit var twinsCardWidget: TwinsCardWidget
     private val binding: TestLeapfrogFragmentBinding by viewBinding(TestLeapfrogFragmentBinding::bind)
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val inflater = TransitionInflater.from(requireContext())
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
+    @Suppress("MagicNumber")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

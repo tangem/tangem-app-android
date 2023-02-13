@@ -226,21 +226,16 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_token"
-                    style="@style/BaseTapButton"
+                    style="@style/TapPrimaryButton"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
-                    android:elevation="4dp"
                     android:text="@string/main_manage_tokens"
-                    android:textSize="16sp"
                     android:visibility="gone"
-                    app:cornerRadius="8dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/barrier_wallets"
-                    app:layout_constraintVertical_bias="0.0"
-                    tools:layout_editor_absoluteX="16dp" />
+                    app:layout_constraintVertical_bias="0.0" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>

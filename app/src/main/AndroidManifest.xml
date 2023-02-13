@@ -3,10 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.tangem.wallet">
 
-    <uses-feature
-        android:name="android.hardware.nfc"
-        android:required="true" />
-
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -19,6 +15,9 @@
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="true" />
 
     <queries>
         <intent>
@@ -51,46 +50,48 @@
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data
+                    android:pathPrefix="/ndef"
                     android:host="www.tangem.com"
                     android:scheme="http" />
                 <data
+                    android:pathPrefix="/ndef"
                     android:host="www.tangem.com"
                     android:scheme="https" />
                 <data
+                    android:pathPrefix="/ndef"
                     android:host="tangem.com"
                     android:scheme="http" />
                 <data
+                    android:pathPrefix="/ndef"
                     android:host="tangem.com"
                     android:scheme="https" />
                 <data
+                    android:pathPrefix="/ndef"
                     android:host="app.tangem.com"
                     android:scheme="https" />
             </intent-filter>
 
             <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data
-                    android:host="ext"
-                    android:pathPrefix="/android.com:pkg"
-                    android:scheme="vnd.android.nfc" />
-            </intent-filter>
-
-            <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <meta-data
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
+
+            <intent-filter>
+                <action android:name="android.nfc.action.TAG_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
