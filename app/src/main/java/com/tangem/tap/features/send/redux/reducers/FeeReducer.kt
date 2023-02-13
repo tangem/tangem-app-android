@@ -21,7 +21,9 @@ class FeeReducer : SendInternalReducer {
 
     private fun handleUiAction(action: FeeActionUi, sendState: SendState, state: FeeState): SendState {
         val result = when (action) {
-            is FeeActionUi.ToggleControlsVisibility -> state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
+            is FeeActionUi.ToggleControlsVisibility -> {
+                state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
+            }
             is FeeActionUi.ChangeSelectedFee -> {
                 val currentFee = createValueOfFeeAmount(action.feeType, state.feeList)
                 state.copy(

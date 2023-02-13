@@ -5,8 +5,8 @@ import android.util.Base64
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.datasource.api.common.createRetrofitInstance
+import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.tap.common.extensions.urlEncode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.Currency
@@ -130,7 +130,6 @@ class MoonPayService(
             .appendPath("transaction_receipt")
             .appendQueryParameter("transactionId", transactionId).build().toString()
         return url
-
     }
 
     private fun createSignature(data: String): String {
