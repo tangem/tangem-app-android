@@ -1,54 +1,47 @@
 package com.tangem.core.ui.components
 
-import android.graphics.Rect
-import android.view.ViewTreeObserver
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
-sealed class Keyboard {
-    data class Opened(val height: Int) : Keyboard()
-    object Closed : Keyboard()
+sealed interface Keyboard {
+    val height: Dp
+
+    data class Opened(override val height: Dp) : Keyboard
+
+    object Closed : Keyboard {
+        override val height: Dp = 0.dp
+    }
 }
 
 /**
  * Allows to subscribe to a soft keyboard to detect when it's open/closed
  */
-@Suppress("MagicNumber")
+@Deprecated("Use Modifier.imePadding() on pure Compose screens (without XML layouts)")
 @Composable
 fun keyboardAsState(): State<Keyboard> {
-    val keyboardState: MutableState<Keyboard> = remember { mutableStateOf(Keyboard.Closed) }
-    val view = LocalView.current
-    val discrepancy = remember {
-        mutableStateOf(0)
-    }
-    DisposableEffect(view) {
-        val onGlobalListener = ViewTreeObserver.OnGlobalLayoutListener {
-            val rect = Rect()
-            view.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = view.rootView.height
-            val keypadHeight: Int = screenHeight - (rect.bottom + rect.top) - discrepancy.value
-            if (discrepancy.value == 0) {
-                discrepancy.value = keypadHeight
-                if (keypadHeight == 0) discrepancy.value = 1
-            }
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+        .exclude(WindowInsets.navigationBars)
+        .getBottom(density)
 
-            keyboardState.value = if (keypadHeight > screenHeight * 0.15) {
-                Keyboard.Opened(keypadHeight)
+    return remember(imeInsets) {
+        derivedStateOf {
+            if (imeInsets > 0) {
+                Keyboard.Opened(
+                    height = with(density) { imeInsets.toDp() },
+                )
             } else {
                 Keyboard.Closed
             }
         }
-        view.viewTreeObserver.addOnGlobalLayoutListener(onGlobalListener)
-
-        onDispose {
-            view.viewTreeObserver.removeOnGlobalLayoutListener(onGlobalListener)
-        }
     }
-
-    return keyboardState
 }
