@@ -8,7 +8,12 @@ import com.tangem.wallet.R
 sealed interface WalletDialog : StateDialog {
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
     object SignedHashesMultiWalletDialog : WalletDialog
-    object ChooseTradeActionDialog : WalletDialog
+    data class ChooseTradeActionDialog(
+        val buyAllowed: Boolean,
+        val sellAllowed: Boolean,
+        val swapAllowed: Boolean,
+    ) : WalletDialog
+
     data class CurrencySelectionDialog(
         val currenciesList: List<FiatCurrency>,
         val currentAppCurrency: FiatCurrency,

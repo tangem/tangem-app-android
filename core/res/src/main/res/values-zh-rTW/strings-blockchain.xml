@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="address_type_default">默認</string>
+    <string name="address_type_legacy">遺留資產</string>
+    <string name="common_fee_error">獲取費用失敗</string>
+    <string name="no_account_generic">加載 %1$s+ %2$s 以創建帳戶</string>
+    <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶。</string>
+    <string name="send_error_blockchain_internal">區塊鏈內部錯誤</string>
+    <string name="send_error_dust_amount_format">最小數量是 %s</string>
+    <string name="send_error_dust_change">更動太小</string>
+    <string name="send_error_insufficient_balance">餘額不足</string>
+    <string name="send_error_invalid_fee_value">無效費用</string>
+    <string name="send_error_minimum_balance_format">最低餘額為 %s</string>
+    <string name="send_error_no_target_account">未創建目標帳戶。發送金額應為 %s + 費用或更多</string>
+    <string name="send_error_unknown">未知錯誤</string>
+    <string name="send_validation_amount_exceeds_balance">金額超出餘額</string>
+    <string name="send_validation_invalid_amount">無效金額</string>
+    <string name="send_validation_invalid_fee">費用超出餘額</string>
+    <string name="send_validation_invalid_total">總金額超出餘額</string>
+    <string name="xtz_withdrawal_message_ignore">不，全部發送</string>
+    <string name="xtz_withdrawal_message_reduce">減少 %s XTZ</string>
+    <string name="xtz_withdrawal_message_warning">為避免下次給錢包充值時支付增加的佣金，請將金額減少 %s XTZ</string>
+</resources>

@@ -44,7 +44,7 @@ class KeyboardObserver(activity: Activity) {
         onKeyboardListener?.invoke(isShow)
     }
 
-    private fun isSoftKeyChanged() = ((lastWindowHeight - getWindowHeight()).absoluteValue) == getSoftKeyButtonHeight()
+    private fun isSoftKeyChanged() = (lastWindowHeight - getWindowHeight()).absoluteValue == getSoftKeyButtonHeight()
 
     private fun getSoftKeyButtonHeight(): Int {
         val applicationDisplayHeight = DisplayMetrics().apply {
@@ -57,5 +57,4 @@ class KeyboardObserver(activity: Activity) {
 
         return realDisplayHeight - applicationDisplayHeight
     }
-
 }
