@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CurrencyPlaceholderIcon(id: String) {
-
     val letterColor: Color = Color.White
     val circleColor: Color = Color.Black
 
@@ -24,8 +23,7 @@ fun CurrencyPlaceholderIcon(id: String) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .background(circleColor, shape = CircleShape)
-    )
-    {
+    ) {
         Text(
             text = id.firstOrNull()?.titlecase() ?: "",
             textAlign = TextAlign.Center,

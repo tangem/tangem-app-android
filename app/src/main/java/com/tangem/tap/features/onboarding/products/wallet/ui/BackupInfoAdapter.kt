@@ -15,7 +15,9 @@ class BackupInfoAdapter : RecyclerView.Adapter<BackupInfoViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BackupInfoViewHolder =
         BackupInfoViewHolder(
             ItemBackupInfoAdapterBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false
+                LayoutInflater.from(parent.context),
+                parent,
+                false
             )
         )
 
@@ -51,7 +53,7 @@ private val backupInfoSnippets = listOf(
         R.string.onboarding_wallet_info_subtitle_fourth
     ),
 
-    )
+)
 
 class BackupInfoViewHolder(val binding: ItemBackupInfoAdapterBinding) :
     RecyclerView.ViewHolder(binding.root)
