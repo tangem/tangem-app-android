@@ -18,10 +18,7 @@ data class DetailsState(
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
     val appCurrency: FiatCurrency = FiatCurrency.Default,
-    val saveWallets: Boolean = false,
-    val saveAccessCodes: Boolean = false,
-    val isBiometricsAvailable: Boolean = false,
-    val needEnrollBiometrics: Boolean = false,
+    val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -29,15 +26,14 @@ data class DetailsState(
     val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
-
-    val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 }
 
 data class CardInfo(
     val cardId: String,
     val issuer: String,
     val signedHashes: Int,
+    val isTwin: Boolean,
+    val hasBackup: Boolean,
 )
 
 data class CardSettingsState(
@@ -55,8 +51,16 @@ data class ManageSecurityState(
     val buttonProceed: Button = Button(true),
 )
 
+data class AppSettingsState(
+    val saveWallets: Boolean = false,
+    val saveAccessCodes: Boolean = false,
+    val isBiometricsAvailable: Boolean = false,
+    val needEnrollBiometrics: Boolean = false,
+    val isInProgress: Boolean = false,
+)
+
 enum class SecurityOption { LongTap, PassCode, AccessCode }
 
-enum class PrivacySetting {
+enum class AppSetting {
     SaveWallets, SaveAccessCode
 }

@@ -57,7 +57,7 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
             userWalletId = userWalletId,
             blockchain = blockchainNetwork.blockchain,
             derivationPath = blockchainNetwork.derivationPath?.let { DerivationPath(it) },
-            walletsData = (listOf(blockchainWalletData) + tokensWalletsData),
+            walletsData = listOf(blockchainWalletData) + tokensWalletsData,
             walletRent = null,
             walletManager = walletManager,
             blockchainNetwork = blockchainNetwork,
@@ -73,13 +73,13 @@ private class WalletMangerWalletStoreBuilderImpl(
     override fun build(): WalletStoreModel {
         val wallet = walletManager.wallet
         val blockchainWalletData = wallet.blockchain.toBlockchainWalletData(walletManager)
-        val tokenWalletsData = walletManager.cardTokens.map { it.toTokenWalletData(walletManager) }
+        val tokenWalletsData = wallet.getTokens().firstOrNull()?.toTokenWalletData(walletManager)
 
         return WalletStoreModel(
             userWalletId = userWalletId,
             blockchain = wallet.blockchain,
             derivationPath = wallet.publicKey.derivationPath,
-            walletsData = (listOf(blockchainWalletData) + tokenWalletsData),
+            walletsData = listOf(blockchainWalletData) + listOfNotNull(tokenWalletsData),
             walletRent = null,
             walletManager = walletManager,
             blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager),
