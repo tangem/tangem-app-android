@@ -107,6 +107,7 @@ class WarningMessagesManager {
             messageResId = R.string.warning_signed_tx_previously,
             origin = WarningMessage.Origin.Local,
             buttonTextId = R.string.warning_button_learn_more,
+            titleFormatArg = "\u26A0"
         )
 
         fun appRatingWarning(): WarningMessage = WarningMessage(
