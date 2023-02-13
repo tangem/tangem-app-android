@@ -14,7 +14,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
@@ -40,6 +39,7 @@ class WalletConnectMiddleware {
         }
     }
 
+    @Suppress("ComplexMethod", "LongMethod")
     private fun handle(state: () -> AppState?, action: Action) {
         if (DemoHelper.tryHandle(state, action)) return
 
@@ -49,10 +49,8 @@ class WalletConnectMiddleware {
                 walletConnectManager.restoreSessions(action.scanResponse)
             }
             is WalletConnectAction.HandleDeepLink -> {
-                if (!action.wcUri.isNullOrBlank()) {
-                    if (WalletConnectManager.isCorrectWcUri(action.wcUri)) {
-                        store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
-                    }
+                if (!action.wcUri.isNullOrBlank() && WalletConnectManager.isCorrectWcUri(action.wcUri)) {
+                    store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
                 }
             }
             is WalletConnectAction.StartWalletConnect -> {
@@ -189,7 +187,9 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.BinanceTransaction.Sign -> {
                 walletConnectManager.signBnb(
-                    action.id, action.data, action.sessionData,
+                    id = action.id,
+                    data = action.data,
+                    sessionData = action.sessionData,
                 )
             }
             is WalletConnectAction.SwitchBlockchain -> {
@@ -291,7 +291,7 @@ class WalletConnectMiddleware {
         blockchain: Blockchain,
     ) {
         val card = scanResponse.card
-        if (!card.isMultiwalletAllowed) {
+        if (!scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
             return
         }
@@ -311,7 +311,9 @@ class WalletConnectMiddleware {
     }
 
     private fun getWalletManager(
-        wallet: WalletForSession, blockchain: Blockchain, walletState: WalletState,
+        wallet: WalletForSession,
+        blockchain: Blockchain,
+        walletState: WalletState,
     ): WalletManager? {
         val blockchainToMake = if (blockchain == Blockchain.Ethereum && wallet.isTestNet) {
             Blockchain.EthereumTestnet

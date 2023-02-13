@@ -25,7 +25,7 @@ internal class SaveWalletViewModel : ViewModel(), StoreSubscriber<SaveWalletStat
         store.dispatch(SaveWalletAction.Save)
     }
 
-    fun cancelOrClose(){
+    fun cancelOrClose() {
         store.dispatch(SaveWalletAction.Dismiss)
     }
 
