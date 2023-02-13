@@ -39,6 +39,7 @@ import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
@@ -67,6 +68,12 @@ data class AppState(
 
     val domainNetworks: NetworkServices
         get() = domainState.globalState.networkServices
+
+    val featureRepositoryProvider: FeatureRepositoryProvider
+        get() = FeatureRepositoryProvider(
+            tangemTechApi = domainNetworks.tangemTechService.api,
+            dispatchers = AppCoroutineDispatcherProvider(),
+        )
 
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
