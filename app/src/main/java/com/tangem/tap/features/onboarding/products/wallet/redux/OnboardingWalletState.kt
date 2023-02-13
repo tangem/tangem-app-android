@@ -1,8 +1,8 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
+import android.net.Uri
 import com.tangem.common.CardFilter
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -17,7 +17,7 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val onboardingSaltPayState: OnboardingSaltPayState? = null,
     val isSaltPay: Boolean = false,
-    val cardArtworkUrl: String? = null,
+    val cardArtworkUri: Uri? = null,
     val showConfetti: Boolean = false,
 ) : StateType {
 
@@ -30,11 +30,13 @@ data class OnboardingWalletState(
             else -> null
         }
 
+    @Suppress("MagicNumber")
     fun getMaxProgress(): Int = when {
         isSaltPay -> 12
         else -> 6
     }
 
+    @Suppress("ComplexMethod", "MagicNumber")
     fun getProgressStep(): Int {
         return when {
             step == OnboardingWalletStep.CreateWallet -> 1
@@ -103,10 +105,6 @@ sealed class BackupStep {
     object WritePrimaryCard : BackupStep()
     data class WriteBackupCard(val cardNumber: Int) : BackupStep()
     object Finished : BackupStep()
-}
-
-sealed class OnboardingDialog : StateDialog {
-    data class InterruptOnboarding(val onOk: VoidCallback) : BackupDialog()
 }
 
 sealed class BackupDialog : StateDialog {
