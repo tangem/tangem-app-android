@@ -5,6 +5,7 @@ import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
@@ -20,17 +21,18 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val oneInchApiFactory: OneInchApiFactory,
-    private val tokensConverter: TokensConverter,
-    private val quotesConverter: QuotesConverter,
-    private val swapConverter: SwapConverter,
-    private val approveConverter: ApproveConverter,
     private val oneInchErrorsHandler: OneInchErrorsHandler,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
+    private val configManager: ConfigManager,
 ) : SwapRepository {
+
+    private val tokensConverter = TokensConverter()
+    private val quotesConverter = QuotesConverter()
+    private val swapConverter = SwapConverter()
+    private val approveConverter = ApproveConverter()
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
         return withContext(coroutineDispatcher.io) {
@@ -115,6 +117,8 @@ internal class SwapRepositoryImpl @Inject constructor(
                         amount = amount,
                         fromAddress = fromWalletAddress,
                         slippage = slippage,
+                        referrerAddress = configManager.config.swapReferrerAccount?.address,
+                        fee = configManager.config.swapReferrerAccount?.fee,
                     ),
                 )
 
@@ -123,6 +127,10 @@ internal class SwapRepositoryImpl @Inject constructor(
                 AggregatedSwapDataModel(null, mapErrors(ex.data.description))
             }
         }
+    }
+
+    override fun getTangemFee(): Double {
+        return configManager.config.swapReferrerAccount?.fee?.toDoubleOrNull() ?: 0.0
     }
 
     private fun getOneInchApi(networkId: String): OneInchApi {
