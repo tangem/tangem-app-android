@@ -65,7 +65,6 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
                 store.dispatch(BackupAction.SaveAccessCodeConfirmation(etAccessCode.text.toString()))
             }
         }
-
     }
 
     fun showError(error: AccessCodeError?) = with(binding!!.layoutBackupAccessCodeSubmit) {

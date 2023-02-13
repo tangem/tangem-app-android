@@ -1,25 +1,30 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.ApproveModel
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.domain.ApproveModel
+import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.QuoteModel
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 
 interface SwapRepository {
+
+    suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
 
     suspend fun findBestQuote(
+        networkId: String,
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-    ): QuoteModel
+    ): AggregatedSwapDataModel<QuoteModel>
 
     /**
      * Returns address of 1inch router that must be trusted
      *
      * @return address
      */
-    suspend fun addressForTrust(): String
+    suspend fun addressForTrust(networkId: String): String
 
     /**
      * Generate "data" for calling contract in order to allow 1inch spend funds
@@ -28,8 +33,9 @@ interface SwapRepository {
      * @param amount number of tokens is allowed. By default infinite
      */
     suspend fun dataToApprove(
+        networkId: String,
         tokenAddress: String,
-        amount: String,
+        amount: String? = null,
     ): ApproveModel
 
     /**
@@ -40,13 +46,19 @@ interface SwapRepository {
      *
      * @return amount of tokens allowed to spend
      */
-    suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String): String
+    suspend fun checkTokensSpendAllowance(
+        networkId: String,
+        tokenAddress: String,
+        walletAddress: String,
+    ): AggregatedSwapDataModel<String>
 
+    @Suppress("LongParameterList")
     suspend fun prepareSwapTransaction(
+        networkId: String,
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-        fromAddress: String,
+        fromWalletAddress: String,
         slippage: Int,
-    )
+    ): AggregatedSwapDataModel<SwapDataModel>
 }

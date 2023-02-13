@@ -51,7 +51,7 @@ fun StoriesRevolutionaryWallet(stepDuration: Int) {
                     isDarkBackground = true,
                 )
             }
-        }
+        },
     )
 }
 
@@ -76,7 +76,7 @@ fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             FloatingCardsContent(isPaused, stepDuration)
-        }
+        },
     )
 }
 
@@ -92,7 +92,7 @@ fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             StoriesCurrenciesContent(paused = isPaused, duration = stepDuration)
-        }
+        },
     )
 }
 
@@ -108,7 +108,7 @@ fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             StoriesWeb3Content(paused = isPaused, duration = stepDuration)
-        }
+        },
     )
 }
 
@@ -133,7 +133,7 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
                     isDarkBackground = true,
                 )
             }
-        }
+        },
     )
 }
 
@@ -146,7 +146,7 @@ private fun SplitContent(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
         topContent()
         bottomContent()
@@ -171,6 +171,7 @@ private fun TopContent(
     SpacerH32()
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun StoriesTitleText(
     text: String,
@@ -187,15 +188,14 @@ private fun StoriesTitleText(
             fontSize = 32.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (isDarkBackground) Color.White else Color(0xFF090E13),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
-private fun StoriesSubtitleText(
-    subtitleText: AnnotatedString,
-) {
+private fun StoriesSubtitleText(subtitleText: AnnotatedString) {
     val color = Color(0xFFA6AAAD)
 
     StoriesTextAnimation(
@@ -209,22 +209,22 @@ private fun StoriesSubtitleText(
             text = subtitleText,
             fontSize = 20.sp,
             color = color,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
 @Composable
 private fun StoriesImage(
-    modifier: Modifier = Modifier,
     @DrawableRes drawableResId: Int,
     isDarkBackground: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     Image(
         painter = painterResource(id = drawableResId),
         contentDescription = null,
         contentScale = if (isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     )
 }
 
@@ -232,7 +232,6 @@ private fun String.annotated(): AnnotatedString {
     val source = this
     return buildAnnotatedString { append(source) }
 }
-
 
 @Preview
 @Composable
@@ -252,13 +251,11 @@ private fun CurrenciesPreview() {
     StoriesCurrencies(false, 6000)
 }
 
-
 @Preview
 @Composable
 private fun Web3Preview() {
     StoriesWeb3(false, 6000)
 }
-
 
 @Preview
 @Composable

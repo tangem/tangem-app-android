@@ -38,7 +38,9 @@ internal class DefaultWalletManagersRepository(
         return findOrMakeInternal(userWallet, blockchainNetwork)
     }
 
-    override suspend fun findOrMakeSingleCurrencyWalletManager(userWallet: UserWallet): CompletionResult<WalletManager> {
+    override suspend fun findOrMakeSingleCurrencyWalletManager(
+        userWallet: UserWallet,
+    ): CompletionResult<WalletManager> {
         return findOrMakeInternal(userWallet, blockchainNetwork = null)
     }
 
@@ -64,7 +66,7 @@ internal class DefaultWalletManagersRepository(
     ): CompletionResult<WalletManager> {
         val scanResponse = userWallet.scanResponse
         val blockchain = blockchainNetwork?.blockchain
-            ?: scanResponse.getBlockchain().let { blockchain ->
+            ?: scanResponse.cardTypesResolver.getBlockchain().let { blockchain ->
                 if (scanResponse.card.isTestCard) blockchain.getTestnetVersion() else blockchain
             }
         val derivationParams = getDerivationParams(
@@ -154,7 +156,7 @@ internal class DefaultWalletManagersRepository(
     ): CompletionResult<WalletManager> {
         val walletManager = this
         return catching {
-            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.getPrimaryToken())
+            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.cardTypesResolver.getPrimaryToken())
 
             if (tokens != cardTokens) {
                 cardTokens.clear()
@@ -180,8 +182,11 @@ internal class DefaultWalletManagersRepository(
         blockchain: Blockchain?,
     ): WalletManager? {
         return walletManagersStorage.getAll().first()[userWalletId]?.let { userWalletManagers ->
-            if (blockchain == null) userWalletManagers.firstOrNull()
-            else userWalletManagers.find { it.wallet.blockchain == blockchain }
+            if (blockchain == null) {
+                userWalletManagers.firstOrNull()
+            } else {
+                userWalletManagers.find { it.wallet.blockchain == blockchain }
+            }
         }
     }
 
