@@ -1,16 +1,14 @@
+@file:Suppress("TooManyFunctions")
+
 package com.tangem.tap.common.extensions
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.drawable.Drawable
-import android.os.Build
-import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.View
@@ -25,11 +23,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
-import com.tangem.common.extensions.VoidCallback
-
-fun Fragment.getDrawable(@DrawableRes drawableResId: Int): Drawable? {
-    return ContextCompat.getDrawable(requireContext(), drawableResId)
-}
 
 fun Context.getDrawableCompat(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(this, drawableResId)
@@ -62,17 +55,8 @@ fun View.getQuantityString(@PluralsRes id: Int, quantity: Int): String {
     return context.resources.getQuantityString(id, quantity, quantity)
 }
 
-fun View.getResourceName(): String {
-    return try {
-        resources.getResourceEntryName(id)
-    } catch (ex: Resources.NotFoundException) {
-        "Not found"
-    }
-}
-
 fun View.show(show: Boolean, invokeBeforeStateChanged: (() -> Unit)? = null) {
-    return if (show) this.show(invokeBeforeStateChanged)
-    else this.hide(invokeBeforeStateChanged)
+    return if (show) this.show(invokeBeforeStateChanged) else this.hide(invokeBeforeStateChanged)
 }
 
 fun View.show(invokeBeforeStateChanged: (() -> Unit)? = null) {
@@ -102,7 +86,9 @@ fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> U
 
 fun Context.dpToPixels(dp: Int): Int =
     TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics,
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp.toFloat(),
+        this.resources.displayMetrics,
     ).toInt()
 
 fun Context.pixelsToDp(pixels: Int): Int {
@@ -110,12 +96,6 @@ fun Context.pixelsToDp(pixels: Int): Int {
         (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
         .toInt()
 }
-
-fun Context.dpToPixels(dp: Float): Float =
-    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.resources.displayMetrics)
-
-fun Context.pixelsToDp(pixels: Float): Float =
-    (pixels / (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
 
 tailrec fun Context?.getActivity(): Activity? = this as? Activity
     ?: (this as? ContextWrapper)?.baseContext?.getActivity()
@@ -134,19 +114,6 @@ fun MaterialCardView.setMargins(
         context.dpToPixels(marginBottomDp),
     )
     this.layoutParams = params
-}
-
-fun Activity.setSystemBarTextColor(setTextDark: Boolean) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val flags = this.window.decorView.systemUiVisibility
-        // Update the SystemUiVisibility dependening on whether we want a Light or Dark theme.
-        this.window.decorView.systemUiVisibility =
-            if (setTextDark) {
-                flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-            } else {
-                flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-            }
-    }
 }
 
 fun View.hideKeyboard() {
@@ -183,21 +150,6 @@ fun Context.shareText(text: String) {
 
 fun Fragment.shareText(text: String) {
     requireContext().shareText(text)
-}
-
-fun Context.safeStartActivity(
-    intent: Intent,
-    options: Bundle? = null,
-    fallback: ((ActivityNotFoundException) -> Unit)? = null,
-    finally: VoidCallback? = null,
-) {
-    try {
-        this.startActivity(intent, options)
-    } catch (ex: ActivityNotFoundException) {
-        fallback?.invoke(ex)
-    } finally {
-        finally?.invoke()
-    }
 }
 
 fun View.getString(resId: Int, vararg formatArgs: Any?): String {

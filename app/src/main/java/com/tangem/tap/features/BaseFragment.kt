@@ -54,7 +54,7 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
         }
     }
 
-    protected open fun loadToolbarMenu():MenuProvider? = null
+    protected open fun loadToolbarMenu(): MenuProvider? = null
 
     fun showRetrySnackbar(message: String, action: VoidCallback) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)

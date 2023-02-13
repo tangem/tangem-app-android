@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.animation.AnimatedVisibility
@@ -7,12 +9,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -26,16 +27,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.components.Keyboard
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.ManageTokens
-import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.extensions.addAndNotify
 import com.tangem.tap.common.compose.extensions.removeAndNotify
-import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.pixelsToDp
 import com.tangem.tap.common.redux.AppDialog
@@ -48,11 +51,12 @@ import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
+@Suppress("LongMethod")
 @Composable
 fun CurrenciesScreen(
-    tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
+    tokensState: MutableState<TokensState>,
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val tokensAddedOnMainScreen = remember { tokensState.value.addedTokens }
@@ -119,15 +123,14 @@ fun CurrenciesScreen(
                     addedTokens = addedTokensState.value,
                     addedBlockchains = addedBlockchainsState.value,
                     allowToAdd = tokensState.value.allowToAdd,
-                    onAddCurrencyToggled = { currency, token ->
+                    onAddCurrencyToggle = { currency, token ->
                         onAddCurrencyToggleClick(currency, token)
                     },
-                    onNetworkItemClicked = onNetworkItemClicked,
+                    onNetworkItemClick = onNetworkItemClick,
                     onLoadMore = onLoadMore,
                 )
             }
         }
-
     }
 }
 
@@ -221,22 +224,18 @@ private fun AnalyticsParam.CurrencyType.sendOff() {
 
 @Composable
 fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
-
     val padding = if (keyboardState is Keyboard.Opened) {
         LocalContext.current.pixelsToDp(keyboardState.height)
     } else {
         0
     }
 
-    ExtendedFloatingActionButton(
-        text = {
-            Text(
-                text = stringResource(id = R.string.common_save_changes),
-            )
-        },
+    PrimaryButton(
+        modifier = Modifier
+            .padding(bottom = padding.dp)
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .fillMaxWidth(),
+        text = stringResource(id = R.string.common_save_changes),
         onClick = onSaveChanges,
-        backgroundColor = colorResource(id = R.color.accent),
-        contentColor = Color.White,
-        modifier = Modifier.padding(bottom = padding.dp),
     )
 }

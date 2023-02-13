@@ -10,13 +10,15 @@ import com.tangem.LogFormat
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
-import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.config.FeaturesLocalLoader
+import com.tangem.datasource.utils.AndroidAssetReader
+import com.tangem.datasource.utils.AssetReader
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.tap.common.AndroidAssetReader
-import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -29,14 +31,10 @@ import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
-import com.tangem.tap.common.moshi.BigDecimalAdapter
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
-import com.tangem.tap.domain.configurable.config.Config
-import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
@@ -51,7 +49,6 @@ import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.persistence.CardBalanceStateAdapter
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
@@ -117,6 +114,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var appStateHolder: AppStateHolder
 
+    @Inject
+    lateinit var configManager: ConfigManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -136,14 +136,13 @@ class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        initMoshiConverter()
         DomainLayer.init()
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
         assetReader = AndroidAssetReader(this)
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.INSTANCE.moshi)
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -157,17 +156,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
     }
-// [REDACTED_TODO_COMMENT]
-    private fun initMoshiConverter() {
-        fun appAdapters(): List<Any> = listOf(
-            BigDecimalAdapter(),
-            CardBalanceStateAdapter(),
-        )
-        MoshiConverter.reInitInstance(
-            adapters = appAdapters() + MoshiJsonConverter.getTangemSdkAdapters(),
-            typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
-        )
-    }
 
     override fun newImageLoader(): ImageLoader {
         return createCoilImageLoader(
@@ -177,7 +165,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
-        val configManager = ConfigManager()
         configManager.load(loader) { config ->
             store.dispatch(GlobalAction.SetConfigManager(configManager))
             onComplete(config)
@@ -187,7 +174,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     private fun initWithConfigDependency(config: Config) {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
-        initFeedbackManager(this, preferencesStorage, config)
+        initFeedbackManager(this, preferencesStorage)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -204,12 +191,12 @@ class TapApplication : Application(), ImageLoaderFactory {
             config = config,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = MoshiConverter.INSTANCE,
+            jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
     }
 
-    private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
+    private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
             appVersion = try {
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)

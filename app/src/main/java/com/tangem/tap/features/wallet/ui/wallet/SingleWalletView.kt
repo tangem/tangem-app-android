@@ -134,16 +134,33 @@ class SingleWalletView : WalletView() {
         rowButtons: WalletDetailsButtonsRow,
         isExchangeServiceFeatureEnabled: Boolean,
     ) {
-        rowButtons.updateButtonsVisibility(
+        val swapInteractor = this.swapInteractor ?: return
+
+        val exchangeManager = store.state.globalState.exchangeManager
+        binding?.rowButtons?.apply {
+            onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
+            onSellClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+            onSwapClick = { store.dispatch(WalletAction.TradeCryptoAction.Swap) }
+            onTradeClick = {
+                store.dispatch(
+                    WalletAction.DialogAction.ChooseTradeActionDialog(
+                        buyAllowed = walletData.isAvailableToBuy(exchangeManager),
+                        sellAllowed = walletData.isAvailableToSell(exchangeManager),
+                        swapAllowed = false, // always disable for single wallet
+                    ),
+                )
+            }
+        }
+        val actions = walletData.getAvailableActions(
+            swapInteractor = swapInteractor,
+            exchangeManager = exchangeManager,
+            isExchangeFeatureOn = isExchangeServiceFeatureEnabled,
+        )
+        binding?.rowButtons?.updateButtonsVisibility(
+            actions = actions,
             exchangeServiceFeatureOn = isExchangeServiceFeatureEnabled,
-            buyAllowed = walletData.isAvailableToBuy,
-            sellAllowed = walletData.isAvailableToSell,
             sendAllowed = walletData.mainButton.enabled,
         )
-
-        rowButtons.onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
-        rowButtons.onSendClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
-        rowButtons.onTradeClick = { store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog) }
 
         rowButtons.onSendClick = {
             when (walletData.mainButton) {

@@ -31,13 +31,14 @@ import com.tangem.wallet.R
 import java.math.BigDecimal
 
 class MultiWalletReducer {
+    @Suppress("LongMethod", "ComplexMethod")
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
                 val walletStores: List<WalletStore> = action.blockchains.map { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
-                            (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
+                            it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath
                     }
                     val wallet = walletManager?.wallet
                     val walletData = WalletData(
@@ -128,15 +129,16 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
-                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                    && pendingTransactions.isEmpty()
+                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                    pendingTransactions.isEmpty()
 
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
                         amount = action.amount.value,
                         amountFormatted = action.amount.value?.toFormattedCurrencyString(
-                            action.amount.decimals, action.amount.currencySymbol,
+                            decimals = action.amount.decimals,
+                            currency = action.amount.currencySymbol,
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)

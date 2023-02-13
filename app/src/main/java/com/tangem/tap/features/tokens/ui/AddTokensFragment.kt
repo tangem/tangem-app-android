@@ -11,9 +11,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchNotification
@@ -72,11 +72,11 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
         }
 
         cvCurrencies.setContent {
-            AppCompatTheme {
+            TangemTheme {
                 CurrenciesScreen(
                     tokensState = tokensState,
                     onSaveChanges = onSaveChanges,
-                    onNetworkItemClicked = onNetworkItemClicked,
+                    onNetworkItemClick = onNetworkItemClicked,
                     onLoadMore = onLoadMore,
                 )
             }
@@ -102,6 +102,7 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
         super.onDestroy()
     }
 
+    @Suppress("MagicNumber")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_popular_tokens, menu)
 
@@ -167,5 +168,5 @@ fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
             }
         },
     )
-    awaitClose { (watcher) }
+    awaitClose { watcher }
 }

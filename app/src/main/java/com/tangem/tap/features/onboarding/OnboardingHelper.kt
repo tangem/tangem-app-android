@@ -17,82 +17,79 @@ import kotlinx.coroutines.launch
 /**
 * [REDACTED_AUTHOR]
  */
-class OnboardingHelper {
-    companion object {
-
-        fun isOnboardingCase(response: ScanResponse): Boolean {
-            val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
-            val cardId = response.card.cardId
-            return when {
-                response.isTangemTwins() -> {
-                    if (!response.twinsIsTwinned()) {
-                        true
-                    } else {
-                        cardInfoStorage.isActivationInProgress(cardId)
-                    }
-                }
-                response.card.wallets.isNotEmpty() -> cardInfoStorage.isActivationInProgress(cardId)
-                else -> true
-            }
-        }
-
-        fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
-            return when (scanResponse.productType) {
-                ProductType.Note -> AppScreen.OnboardingNote
-                ProductType.Wallet -> if (scanResponse.card.settings.isBackupAllowed) {
-                    AppScreen.OnboardingWallet
+object OnboardingHelper {
+    fun isOnboardingCase(response: ScanResponse): Boolean {
+        val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
+        val cardId = response.card.cardId
+        return when {
+            response.cardTypesResolver.isTangemTwins() -> {
+                if (!response.twinsIsTwinned()) {
+                    true
                 } else {
-                    AppScreen.OnboardingOther
+                    cardInfoStorage.isActivationInProgress(cardId)
                 }
-                ProductType.Twins -> AppScreen.OnboardingTwins
-                ProductType.SaltPay -> AppScreen.OnboardingWallet
-                ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
-                    "Onboarding for Start2Coin cards is not supported"
+            }
+            response.card.wallets.isNotEmpty() -> cardInfoStorage.isActivationInProgress(cardId)
+            else -> true
+        }
+    }
+
+    fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
+        return when (scanResponse.productType) {
+            ProductType.Note -> AppScreen.OnboardingNote
+            ProductType.Wallet -> if (scanResponse.card.settings.isBackupAllowed) {
+                AppScreen.OnboardingWallet
+            } else {
+                AppScreen.OnboardingOther
+            }
+            ProductType.Twins -> AppScreen.OnboardingTwins
+            ProductType.SaltPay -> AppScreen.OnboardingWallet
+            ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
+                "Onboarding for Start2Coin cards is not supported",
+            )
+        }
+    }
+
+    fun trySaveWalletAndNavigateToWalletScreen(
+        scanResponse: ScanResponse,
+        accessCode: String? = null,
+        backupCardsIds: List<String>? = null,
+    ) {
+        when {
+            // When should save user wallets, then save card without navigate to save wallet screen
+            preferencesStorage.shouldSaveUserWallets -> scope.launch {
+                store.dispatchOnMain(
+                    SaveWalletAction.ProvideBackupInfo(
+                        scanResponse = scanResponse,
+                        accessCode = accessCode,
+                        backupCardsIds = backupCardsIds?.toSet(),
+                    ),
                 )
+                store.dispatchOnMain(SaveWalletAction.Save)
+            }
+            // When should not save user wallets but device has biometry and save wallet screen has not been shown,
+            // then open save wallet screen
+            tangemSdkManager.canUseBiometry &&
+                preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
+                store.onCardScanned(scanResponse)
+
+                delay(timeMillis = 1_200)
+
+                store.dispatchOnMain(
+                    SaveWalletAction.ProvideBackupInfo(
+                        scanResponse = scanResponse,
+                        accessCode = accessCode,
+                        backupCardsIds = backupCardsIds?.toSet(),
+                    ),
+                )
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
+            }
+            // If device has no biometry and save wallet screen has been shown, then go through old scenario
+            else -> scope.launch {
+                store.onCardScanned(scanResponse)
             }
         }
 
-        fun trySaveWalletAndNavigateToWalletScreen(
-            scanResponse: ScanResponse,
-            accessCode: String? = null,
-            backupCardsIds: List<String>? = null,
-        ) {
-            when {
-                // When should save user wallets, then save card without navigate to save wallet screen
-                preferencesStorage.shouldSaveUserWallets -> scope.launch {
-                    store.dispatchOnMain(
-                        SaveWalletAction.ProvideBackupInfo(
-                            scanResponse = scanResponse,
-                            accessCode = accessCode,
-                            backupCardsIds = backupCardsIds?.toSet(),
-                        ),
-                    )
-                    store.dispatchOnMain(SaveWalletAction.Save)
-                }
-                // When should not save user wallets but device has biometry and save wallet screen has not been shown,
-                // then open save wallet screen
-                tangemSdkManager.canUseBiometry &&
-                    preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
-                    store.onCardScanned(scanResponse)
-
-                    delay(timeMillis = 1_200)
-
-                    store.dispatchOnMain(
-                        SaveWalletAction.ProvideBackupInfo(
-                            scanResponse = scanResponse,
-                            accessCode = accessCode,
-                            backupCardsIds = backupCardsIds?.toSet(),
-                        ),
-                    )
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
-                }
-                // If device has no biometry and save wallet screen has been shown, then go through old scenario
-                else -> scope.launch {
-                    store.onCardScanned(scanResponse)
-                }
-            }
-
-            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
-        }
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
     }
 }

@@ -59,7 +59,7 @@ class CurrencyExchangeManager(
             blockchain,
             cryptoCurrencyName,
             fiatCurrencyName,
-            walletAddress
+            walletAddress,
         )
     }
 
@@ -86,7 +86,6 @@ class CurrencyExchangeManager(
     }
 }
 
-@Suppress("unused")
 suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     card: CardDTO,
     walletManager: EthereumWalletManager,
@@ -97,13 +96,15 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(amountToSend,
-        destinationAddress) as? Result.Success ?: return
+    val feeResult =
+        walletManager.getFee(
+            amountToSend,
+            destinationAddress,
+        ) as? Result.Success ?: return
     val fee = feeResult.data[0]
 
-    if ((walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO) < fee.value) {
-        return
-    }
+    val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
+    if (coinValue < fee.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
@@ -116,8 +117,8 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
             GlobalAction.UpdateWalletSignedHashes(
                 walletSignedHashes = signResponse.totalSignedHashes,
                 walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                remainingSignatures = signResponse.remainingSignatures
-            )
+                remainingSignatures = signResponse.remainingSignatures,
+            ),
         )
     }
     walletManager.send(transaction, signer)

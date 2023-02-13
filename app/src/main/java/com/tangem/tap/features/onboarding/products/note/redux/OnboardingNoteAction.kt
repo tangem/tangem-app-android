@@ -15,6 +15,7 @@ sealed class OnboardingNoteAction : Action {
     object CreateWallet : OnboardingNoteAction()
     object TopUp : OnboardingNoteAction()
     object ShowAddressInfoDialog : OnboardingNoteAction()
+    object OnBackPressed : OnboardingNoteAction()
 
     // from redux
     class SetArtworkUrl(val artworkUrl: String) : OnboardingNoteAction()

@@ -41,7 +41,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
                 TangemTheme {
                     AppSettingsScreen(
                         state = screenState.value,
-                        onBackPressed = {
+                        onBackClick = {
                             store.dispatch(DetailsAction.ResetCardSettingsData)
                             store.dispatch(NavigationAction.PopBackTo())
                         },

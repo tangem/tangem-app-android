@@ -2,9 +2,9 @@ package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -20,10 +20,8 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 
-class OnboardingOtherCardsMiddleware {
-    companion object {
-        val handler = onboardingOtherCardsMiddleware
-    }
+object OnboardingOtherCardsMiddleware {
+    val handler = onboardingOtherCardsMiddleware
 }
 
 private val onboardingOtherCardsMiddleware: Middleware<AppState> = { dispatch, _ ->
@@ -35,6 +33,7 @@ private val onboardingOtherCardsMiddleware: Middleware<AppState> = { dispatch, _
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleOtherCardsAction(action: Action) {
     if (action !is OnboardingOtherCardsAction) return
     val globalState = store.state.globalState
@@ -59,7 +58,7 @@ private fun handleOtherCardsAction(action: Action) {
                 card.wallets.isEmpty() -> OnboardingOtherCardsStep.CreateWallet
                 else -> OnboardingOtherCardsStep.Done
             }
-            store.dispatch((OnboardingOtherCardsAction.SetStepOfScreen(step)))
+            store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(step))
         }
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
             when (action.step) {
@@ -71,6 +70,7 @@ private fun handleOtherCardsAction(action: Action) {
                     onboardingManager.activationFinished(card.cardId)
                     postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
                 }
+                else -> Unit
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
@@ -87,9 +87,9 @@ private fun handleOtherCardsAction(action: Action) {
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedCard.cardId)
 
-                            val primaryBlockchain = updatedResponse.getBlockchain()
+                            val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
-                                val primaryToken = updatedResponse.getPrimaryToken()
+                                val primaryToken = updatedResponse.cardTypesResolver.getPrimaryToken()
                                 val blockchainNetwork =
                                     BlockchainNetwork(
                                         blockchain = primaryBlockchain,

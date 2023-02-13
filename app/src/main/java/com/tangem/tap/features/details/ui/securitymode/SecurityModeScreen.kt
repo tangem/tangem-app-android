@@ -28,36 +28,27 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun SecurityModeScreen(
-    state: SecurityModeScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun SecurityModeScreen(state: SecurityModeScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
-        content = { SecurityModeOptions(state = state, modifier = modifier) },
+        content = { SecurityModeOptions(state = state) },
         // titleRes = R.string.card_settings_security_mode,
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
-fun SecurityModeOptions(
-    state: SecurityModeScreenState,
-    modifier: Modifier = Modifier,
-) {
-
+fun SecurityModeOptions(state: SecurityModeScreenState) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        ScreenTitle(titleRes = R.string.card_settings_security_mode, modifier.padding(bottom = 36.dp))
-
+        ScreenTitle(titleRes = R.string.card_settings_security_mode, Modifier.padding(bottom = 36.dp))
 
         state.availableOptions.map {
-            SecurityOption(option = it, state = state, modifier = modifier)
+            SecurityOption(option = it, state = state)
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -66,17 +57,13 @@ fun SecurityModeOptions(
             title = stringResource(id = R.string.common_save_changes),
             enabled = state.isSaveChangesEnabled,
             onClick = state.onSaveChangesClicked,
-            modifier = modifier
-                .padding(start = 20.dp, end = 20.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
         )
     }
 }
 
 @Composable
-fun SecurityOption(
-    option: SecurityOption, state: SecurityModeScreenState,
-    modifier: Modifier,
-) {
+fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
     val selected = option == state.selectedSecurityMode
 
     val title = option.toTitleRes()
@@ -88,17 +75,18 @@ fun SecurityOption(
     }
 
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .selectable(
-                selected = selected, onClick = { state.onNewModeSelected(option) },
+                selected = selected,
+                onClick = { state.onNewModeSelected(option) },
             )
             .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
-
         RadioButton(
-            selected = selected, onClick = null,
-            modifier = modifier.padding(end = 20.dp),
+            selected = selected,
+            onClick = null,
+            modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
                 unselectedColor = colorResource(id = R.color.icon_secondary),
                 selectedColor = colorResource(id = R.color.icon_accent),
@@ -111,7 +99,7 @@ fun SecurityOption(
                 style = TangemTypography.subtitle1,
                 color = colorResource(id = R.color.text_primary_1),
             )
-            Spacer(modifier = modifier.size(4.dp))
+            Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = stringResource(id = subtitle),
                 style = TangemTypography.body2,
@@ -123,7 +111,7 @@ fun SecurityOption(
 
 @Preview
 @Composable
-fun SecurityModeScreenPreview() {
+private fun SecurityModeScreenPreview() {
     SecurityModeScreen(
         state = SecurityModeScreenState(
             availableOptions = SecurityOption.values().toList(),
@@ -132,6 +120,6 @@ fun SecurityModeScreenPreview() {
             onNewModeSelected = {},
             onSaveChangesClicked = {},
         ),
-        onBackPressed = {},
+        onBackClick = {},
     )
 }

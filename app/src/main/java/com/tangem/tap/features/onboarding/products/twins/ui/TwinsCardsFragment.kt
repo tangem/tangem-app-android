@@ -13,12 +13,12 @@ import coil.load
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.AndroidAssetReader
-import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.utils.AndroidAssetReader
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat
@@ -40,6 +40,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 
+@Suppress("LargeClass")
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private val mainBinding by lazy { binding.vMain }
@@ -64,6 +65,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         }
     }
 
+    @Suppress("MagicNumber")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
@@ -133,13 +135,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         when (state.currentStep) {
             is TwinCardsStep.WelcomeOnly -> setupWelcomeOnlyState(state, state.currentStep.scanResponse)
-            TwinCardsStep.Welcome -> setupWelcomeState(state)
-            TwinCardsStep.Warning -> setupWarningState(state)
-            TwinCardsStep.CreateFirstWallet -> setupCreateFirstWalletState(state)
-            TwinCardsStep.CreateSecondWallet -> setupCreateSecondWalletState(state)
-            TwinCardsStep.CreateThirdWallet -> setupCreateThirdWalletState(state)
-            TwinCardsStep.TopUpWallet -> setupTopUpWalletState(state)
-            TwinCardsStep.Done -> setupDoneState(state)
+            is TwinCardsStep.Welcome -> setupWelcomeState(state)
+            is TwinCardsStep.Warning -> setupWarningState(state)
+            is TwinCardsStep.CreateFirstWallet -> setupCreateFirstWalletState(state)
+            is TwinCardsStep.CreateSecondWallet -> setupCreateSecondWalletState(state)
+            is TwinCardsStep.CreateThirdWallet -> setupCreateThirdWalletState(state)
+            is TwinCardsStep.TopUpWallet -> setupTopUpWalletState(state)
+            is TwinCardsStep.Done -> setupDoneState(state)
+            else -> {}
         }
 
         setBalance(state)
@@ -231,12 +234,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                                 false,
                             )
                         }
+                        else -> {}
                     }
                 }
             }
             TwinCardsStep.Welcome, TwinCardsStep.Warning -> {
                 twinsWidget.toLeapfrog(onEnd = { switchToCard(state.cardNumber) })
             }
+            else -> {}
         }
 
         val twinIndexNumber = state.cardNumber?.indexNumber()
@@ -314,11 +319,13 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                             twinsWidget.toActivate(false)
                         }
                     }
+                    else -> {}
                 }
             }
             TwinCardsStep.CreateThirdWallet -> {
                 twinsWidget.toActivate()
             }
+            else -> {}
         }
 
         if (state.isBuyAllowed) {
@@ -401,11 +408,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun handleOnBackPressed() {
         store.dispatch(
-            TwinCardsAction.Wallet.HandleOnBackPressed { should, popAction ->
+            TwinCardsAction.OnBackPressed { should, popAction ->
                 store.dispatch(TwinCardsAction.Confetti.Hide)
                 showConfetti(false)
-                if (should) switchToCard(TwinCardNumber.First, true, popAction)
-                else popAction()
+                if (should) switchToCard(TwinCardNumber.First, true, popAction) else popAction()
             },
         )
     }

@@ -36,22 +36,21 @@ abstract class ComposeFragment<ScreenState> : Fragment() {
                     }
 
                     ScreenContent(
+                        state = provideState().value,
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = backgroundColor),
-                        state = provideState().value,
                     )
                 }
             }
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     protected abstract fun provideState(): State<ScreenState>
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
-    protected abstract fun ScreenContent(
-        modifier: Modifier,
-        state: ScreenState,
-    )
+    protected abstract fun ScreenContent(state: ScreenState, modifier: Modifier)
 }

@@ -13,10 +13,9 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.common.map
 import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.KeyWalletPublicKey
-import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
@@ -56,7 +55,7 @@ private data class CreateWalletResponse(
 }
 
 class CreateProductWalletTask(
-    private val type: ProductType,
+    private val cardTypesResolver: CardTypesResolver,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -71,9 +70,10 @@ class CreateProductWalletTask(
         }
         val cardDto = CardDTO(card)
 
-        val commandProcessor = when (type) {
-            ProductType.Note -> CreateWalletTangemNote()
-            ProductType.Twins -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
+        val commandProcessor = when {
+            cardTypesResolver.isTangemNote() -> CreateWalletTangemNote(cardTypesResolver)
+            cardTypesResolver.isTangemTwins() ->
+                throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
             else -> CreateWalletTangemWallet()
         }
         commandProcessor.proceed(cardDto, session) {
@@ -95,7 +95,8 @@ class CreateProductWalletTask(
     }
 }
 
-private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletResponse> {
+private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesResolver) :
+    ProductCommandProcessor<CreateWalletResponse> {
     override fun proceed(
         card: CardDTO,
         session: CardSession,
@@ -106,8 +107,8 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
             return
         }
 
-        val curvesSupportedByBlockchain = card.getTangemNoteBlockchain()?.getSupportedCurves()
-        if (curvesSupportedByBlockchain == null || curvesSupportedByBlockchain.isEmpty()) {
+        val curvesSupportedByBlockchain = cardTypesResolver.getBlockchain().getSupportedCurves().toSet()
+        if (curvesSupportedByBlockchain.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
         }
@@ -184,8 +185,8 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             else -> {
                 callback(
                     CompletionResult.Success(
-                        CreateProductWalletTaskResponse(card = session.environment.card!!)
-                    )
+                        CreateProductWalletTaskResponse(card = session.environment.card!!),
+                    ),
                 )
             }
         }
@@ -210,9 +211,10 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                             callback(
                                 CompletionResult.Success(
                                     CreateProductWalletTaskResponse(
-                                        card = session.environment.card!!, primaryCard = primaryCard
-                                    )
-                                )
+                                        card = session.environment.card!!,
+                                        primaryCard = primaryCard,
+                                    ),
+                                ),
                             )
                         }
                     }

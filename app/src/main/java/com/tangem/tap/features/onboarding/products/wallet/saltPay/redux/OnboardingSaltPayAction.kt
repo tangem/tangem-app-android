@@ -2,7 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
+import com.tangem.datasource.config.models.SaltPayConfig
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -37,4 +37,3 @@ sealed class OnboardingSaltPayAction : Action {
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
-

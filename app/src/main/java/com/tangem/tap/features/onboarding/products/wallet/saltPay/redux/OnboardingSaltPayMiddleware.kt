@@ -8,8 +8,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
-import com.tangem.datasource.api.paymentology.KYCStatus
-import com.tangem.datasource.api.paymentology.RegistrationResponse
+import com.tangem.datasource.api.paymentology.models.response.KYCStatus
+import com.tangem.datasource.api.paymentology.models.response.RegistrationResponse
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -40,10 +40,8 @@ import timber.log.Timber
 /**
 * [REDACTED_AUTHOR]
  */
-class OnboardingSaltPayMiddleware {
-    companion object {
-        val handler = onboardingSaltPayMiddleware
-    }
+object OnboardingSaltPayMiddleware {
+    val handler = onboardingSaltPayMiddleware
 }
 
 private val onboardingSaltPayMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -55,6 +53,7 @@ private val onboardingSaltPayMiddleware: Middleware<AppState> = { dispatch, stat
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> AppState?) {
     if (DemoHelper.tryHandle(appState, anyAction)) return
     val action = anyAction as? OnboardingSaltPayAction ?: return
@@ -298,6 +297,7 @@ suspend fun SaltPayActivationManager.update(
     return Result.Success(newStep)
 }
 
+@Suppress("ComplexMethod")
 private fun determineStep(
     currentStep: SaltPayActivationStep,
     amountToClaim: Amount?,
@@ -416,34 +416,6 @@ private suspend fun checkGasIfNeeded(
         is Result.Failure -> Timber.d("checkGasIfNeeded: has NO GAS")
     }
     return result
-}
-
-@Throws(SaltPayActivationError::class)
-fun RegistrationResponse.Item.toSaltPayStep(currentStep: SaltPayActivationStep): SaltPayActivationStep {
-    return when {
-        passed != true -> throw SaltPayActivationError.CardNotPassed(this.error)
-        disabledByAdmin == true -> throw SaltPayActivationError.CardDisabled(this.error)
-
-        // go to claim screen
-        active == true -> SaltPayActivationStep.Claim
-
-        // pinSet is false, go toPin screen
-        pinSet == false -> SaltPayActivationStep.NeedPin
-
-        kycStatus != null -> {
-            when (kycStatus) {
-                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
-                KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
-                KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                KYCStatus.APPROVED -> SaltPayActivationStep.Claim
-                null -> throw UnsupportedOperationException()
-            }
-        }
-        // kycDate is set, go to kyc waiting screen
-        kycDate != null -> SaltPayActivationStep.KycWaiting
-
-        else -> SaltPayActivationStep.KycIntro
-    }
 }
 
 @Throws(SaltPayActivationError::class)

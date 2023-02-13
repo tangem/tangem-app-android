@@ -1,11 +1,10 @@
 package com.tangem.tap.features.wallet.models
 
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
-import com.tangem.datasource.api.tangemTech.TokenResponse
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -57,17 +56,6 @@ sealed interface Currency {
 
     fun isBlockchain(): Boolean = this is Blockchain
     fun isToken(): Boolean = this is Token
-    fun toTokenResponse(): TokenResponse {
-        return TokenResponse(
-            id = coinId,
-            networkId = blockchain.toNetworkId(),
-            derivationPath = derivationPath,
-            name = currencyName,
-            symbol = currencySymbol,
-            decimals = decimals,
-            contractAddress = if (this is Token) token.contractAddress else null,
-        )
-    }
 
     companion object {
         fun fromBlockchainNetwork(
@@ -110,24 +98,24 @@ sealed interface Currency {
             )
         }
 
-        fun fromTokenResponse(tokenResponse: TokenResponse): Currency? {
-            val blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)
+        fun fromTokenResponse(tokenBody: UserTokensResponse.Token): Currency? {
+            val blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenBody.networkId)
                 ?: return null
             return when {
-                tokenResponse.contractAddress != null -> Token(
+                tokenBody.contractAddress != null -> Token(
                     token = SdkToken(
-                        name = tokenResponse.name,
-                        symbol = tokenResponse.symbol,
-                        contractAddress = tokenResponse.contractAddress!!,
-                        decimals = tokenResponse.decimals,
-                        id = tokenResponse.id,
+                        name = tokenBody.name,
+                        symbol = tokenBody.symbol,
+                        contractAddress = tokenBody.contractAddress!!,
+                        decimals = tokenBody.decimals,
+                        id = tokenBody.id,
                     ),
                     blockchain = blockchain,
-                    derivationPath = tokenResponse.derivationPath,
+                    derivationPath = tokenBody.derivationPath,
                 )
                 else -> Blockchain(
                     blockchain = blockchain,
-                    derivationPath = tokenResponse.derivationPath,
+                    derivationPath = tokenBody.derivationPath,
                 )
             }
         }

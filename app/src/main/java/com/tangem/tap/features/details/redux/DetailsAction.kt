@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.Action
@@ -27,7 +28,7 @@ sealed class DetailsAction : Action {
 
     object ScanCard : DetailsAction()
 
-    data class PrepareCardSettingsData(val card: CardDTO) : DetailsAction()
+    data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
 
     sealed class ManageSecurity : DetailsAction() {
@@ -44,11 +45,13 @@ sealed class DetailsAction : Action {
     sealed class AppSettings : DetailsAction() {
         data class SwitchPrivacySetting(
             val enable: Boolean,
-            val setting: PrivacySetting,
+            val setting: AppSetting,
         ) : AppSettings() {
-            data class Success(
-                val enable: Boolean,
-                val setting: PrivacySetting,
+            object Success : AppSettings()
+
+            data class Failure(
+                val prevState: Boolean,
+                val setting: AppSetting,
             ) : AppSettings()
         }
 
