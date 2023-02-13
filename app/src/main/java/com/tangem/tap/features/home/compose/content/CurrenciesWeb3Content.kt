@@ -53,7 +53,7 @@ fun StoriesCurrenciesContent(
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.halfHeight()
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 50.dp - (50.dp * index * decreaseRate)
+                val animateTo = 50.dp - 50.dp * index * decreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -70,6 +70,7 @@ fun StoriesCurrenciesContent(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun StoriesWeb3Content(
     paused: Boolean,
@@ -99,7 +100,7 @@ fun StoriesWeb3Content(
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.width / 3
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 70.dp - (70.dp * index * decreaseRate)
+                val animateTo = 70.dp - 70.dp * index * decreaseRate
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -112,7 +113,6 @@ fun StoriesWeb3Content(
                 )
             }
         }
-
     }
 }
 

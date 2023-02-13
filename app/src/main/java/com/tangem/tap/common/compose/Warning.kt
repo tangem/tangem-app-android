@@ -22,9 +22,9 @@ import com.tangem.wallet.R
  */
 @Composable
 fun AddCustomTokenWarning(
-    modifier: Modifier = Modifier,
     warning: ModuleMessage,
-    converter: ModuleMessageConverter
+    converter: ModuleMessageConverter,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier,
@@ -49,6 +49,5 @@ fun AddCustomTokenWarning(
                 lineHeight = 18.sp
             )
         }
-
     }
 }
