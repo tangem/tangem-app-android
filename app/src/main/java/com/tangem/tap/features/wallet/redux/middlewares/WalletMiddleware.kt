@@ -315,7 +315,11 @@ class WalletMiddleware {
         scope.launch(Dispatchers.Default) {
             val reduxWalletStores = walletsStores.mapToReduxModels()
             if (!state.isMultiwalletAllowed) {
-                findSelectedCurrency(reduxWalletStores, null, false)?.let {
+                findSelectedCurrency(
+                    walletsStores = reduxWalletStores,
+                    currentSelectedCurrency = null,
+                    isMultiWalletAllowed = false,
+                )?.let {
                     store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
                 }
             }
