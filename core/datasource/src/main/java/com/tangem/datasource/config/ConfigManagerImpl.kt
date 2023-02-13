@@ -97,6 +97,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             shopify = configValues.shopifyShop,
             zendesk = configValues.zendesk,
             saltPayConfig = configValues.saltPay,
+            swapReferrerAccount = configValues.swapReferrerAccount,
         )
     }
 }
