@@ -379,10 +379,7 @@ internal class SwapViewModel @Inject constructor(
     private fun createUiActions(): UiActions {
         return UiActions(
             onSearchEntered = { onSearchEntered(it) },
-            onTokenSelected = {
-                onTokenSelect(it)
-                analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
-            },
+            onTokenSelected = { onTokenSelect(it) },
             onAmountChanged = { onAmountChanged(it) },
             onSwapClick = {
                 onSwapClick()
@@ -414,6 +411,11 @@ internal class SwapViewModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
             onAmountSelected = { onAmountSelected(it) },
+            onSearchFocusChange = { focused ->
+                if (focused) {
+                    analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
+                }
+            },
         )
     }
 
