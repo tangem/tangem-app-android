@@ -37,8 +37,8 @@ internal class DefaultWalletCurrenciesManager(
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val walletStore = walletStoresRepository.getSync(userWallet.walletId)
             .find {
-                it.blockchain == currency.blockchain
-                    && it.derivationPath?.rawPath == currency.derivationPath
+                it.blockchain == currency.blockchain &&
+                    it.derivationPath?.rawPath == currency.derivationPath
             }
 
         if (walletStore != null) {
