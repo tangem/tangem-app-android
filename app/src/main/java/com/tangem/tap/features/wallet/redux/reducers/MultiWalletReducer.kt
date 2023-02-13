@@ -59,7 +59,7 @@ class MultiWalletReducer {
                     WalletStore(
                         walletManager = walletManager,
                         blockchainNetwork = blockchain,
-                        walletsData = listOfNotNull(walletData),
+                        walletsData = listOf(walletData),
                     )
                 }
 
