@@ -12,5 +12,7 @@ import dagger.hilt.components.SingletonComponent
 interface CoroutineDispatcherProviderModule {
 
     @Binds
-    fun bindCoroutineDispatcherProvider(coroutineDispatcherProvider: AppCoroutineDispatcherProvider): CoroutineDispatcherProvider
+    fun bindCoroutineDispatcherProvider(
+        coroutineDispatcherProvider: AppCoroutineDispatcherProvider,
+    ): CoroutineDispatcherProvider
 }
