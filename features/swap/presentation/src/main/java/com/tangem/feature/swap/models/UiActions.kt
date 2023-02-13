@@ -2,6 +2,7 @@ package com.tangem.feature.swap.models
 
 data class UiActions(
     val onSearchEntered: (String) -> Unit,
+    val onSearchFocusChange: (Boolean) -> Unit,
     val onTokenSelected: (String) -> Unit,
     val onAmountChanged: (String) -> Unit,
     val onAmountSelected: (Boolean) -> Unit,
