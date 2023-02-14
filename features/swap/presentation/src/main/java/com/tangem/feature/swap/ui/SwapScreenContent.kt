@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -163,7 +164,7 @@ private fun MainInfo(state: SwapStateHolder) {
         TransactionCard(
             type = state.sendCardData.type,
             balance = state.sendCardData.balance,
-            amount = state.sendCardData.amount,
+            textFieldValue = state.sendCardData.amountTextFieldValue,
             amountEquivalent = state.sendCardData.amountEquivalent,
             tokenIconUrl = state.sendCardData.tokenIconUrl,
             tokenCurrency = state.sendCardData.tokenCurrency,
@@ -180,7 +181,7 @@ private fun MainInfo(state: SwapStateHolder) {
         TransactionCard(
             type = state.receiveCardData.type,
             balance = state.receiveCardData.balance,
-            amount = state.receiveCardData.amount,
+            textFieldValue = state.receiveCardData.amountTextFieldValue,
             amountEquivalent = state.receiveCardData.amountEquivalent,
             tokenIconUrl = state.receiveCardData.tokenIconUrl,
             tokenCurrency = state.receiveCardData.tokenCurrency,
@@ -360,7 +361,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 
 private val sendCard = SwapCardData(
     type = TransactionCardType.SendCard({}) {},
-    amount = "1 000 000",
+    amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
@@ -372,7 +373,7 @@ private val sendCard = SwapCardData(
 
 private val receiveCard = SwapCardData(
     type = TransactionCardType.ReceiveCard(),
-    amount = "1 000 000",
+    amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
