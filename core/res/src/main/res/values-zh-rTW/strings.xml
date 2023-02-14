@@ -24,12 +24,18 @@
     <string name="app_settings_saved_wallet">將錢包保存在應用程序中</string>
     <string name="app_settings_saved_wallet_footer">啟用以將所有錢包鏈接到 Tangem 應用程序。解鎖應用程序需要生物識別身份驗證。交易簽名需要輕觸您的 Tangem 卡片</string>
     <string name="app_settings_title">APP設置</string>
+    <string name="biometric_lockout_permanent_warning_description">請掃描卡片</string>
+    <string name="biometric_lockout_warning_description">請30秒後重試或刷卡</string>
+    <string name="biometric_lockout_warning_title">嘗試次數過多</string>
+    <string name="card_settings_action_sheet_reset">重置</string>
+    <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
     <string name="card_settings_reset_card_to_factory">回復至原廠設置</string>
     <string name="card_settings_security_mode">安全模式</string>
     <string name="card_settings_title">卡片設置</string>
     <string name="chat_bot_name">Tangem 機器人</string>
+    <string name="chat_button_title">支援</string>
     <string name="common_accept">接受</string>
     <string name="common_add">添加</string>
     <string name="common_attention">注意</string>
@@ -134,13 +140,13 @@
     <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
     <string name="main_scan_card_warning_view_title">掃描卡片</string>
     <string name="main_tokens">代幣</string>
-    <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包。</string>
+    <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包</string>
     <string name="onboarding_access_code_feature_1_title">保護</string>
     <string name="onboarding_access_code_feature_2_description">您可以稍後在每張卡上設置單獨的訪問密碼</string>
     <string name="onboarding_access_code_feature_2_title">個人化</string>
-    <string name="onboarding_access_code_feature_3_description">門禁密碼可以用聯動卡恢復，不要把所有卡都放在一個地方。</string>
+    <string name="onboarding_access_code_feature_3_description">門禁密碼可以用聯動卡恢復，不要把所有卡都放在一個地方</string>
     <string name="onboarding_access_code_feature_3_title">恢復</string>
-    <string name="onboarding_access_code_hint">選擇您想要的任何單詞、短語或數字作為您的訪問代碼。</string>
+    <string name="onboarding_access_code_hint">選擇您想要的任何單詞、短語或數字作為您的訪問代碼</string>
     <string name="onboarding_access_code_intro_title">建立訪問密碼</string>
     <string name="onboarding_access_code_repeat_code_title">重新輸入訪問密碼</string>
     <string name="onboarding_access_code_too_short">訪問代碼的長度必須至少為 4 個字符</string>
@@ -163,7 +169,6 @@
     <string name="onboarding_button_scan_origin_card">掃描主卡</string>
     <string name="onboarding_button_skip_backup">暫時略過</string>
     <string name="onboarding_button_what_does_it_mean">它是如何運作的？</string>
-    <string name="onboarding_chat_button_title">支援</string>
     <string name="onboarding_create_wallet_body">讓我們生成您卡上的所有密鑰並創建一個安全的錢包</string>
     <string name="onboarding_create_wallet_button_create_wallet">創建錢包</string>
     <string name="onboarding_create_wallet_header">創造錢包</string>
@@ -191,7 +196,7 @@
     <string name="onboarding_subtitle_kyc_waiting">請等待驗證完成，您將收到電子郵件通知。通常最多需要 1 小時。您可以關閉該應用程序，稍後再回來</string>
     <string name="onboarding_subtitle_no_backup_cards">要開始備份過程，最多可添加兩張備份卡。</string>
     <string name="onboarding_subtitle_one_backup_card">您可以再添加一張卡或完成備份過程</string>
-    <string name="onboarding_subtitle_pin">為您的 SaltPay 卡設置 PIN 碼</string>
+    <string name="onboarding_subtitle_pin">設置一個 4 位密碼。 \n它將用在付款時使用。</string>
     <string name="onboarding_subtitle_register_wallet">將您的卡片連接到去中心化支付系統</string>
     <string name="onboarding_subtitle_scan_backup_card_format">準備編號為 %s 的備份卡</string>
     <string name="onboarding_subtitle_scan_origin_card">準備主卡</string>
@@ -199,7 +204,6 @@
     <string name="onboarding_subtitle_success_claim">恭喜！ 您的第一張支付加密卡已啟用！</string>
     <string name="onboarding_subtitle_success_tangem_wallet_onboarding">您的錢包卡已配置完畢，可以使用了</string>
     <string name="onboarding_subtitle_two_backup_cards">已添加至最大數量。完成備份過程</string>
-    <string name="onboarding_supplement_button_kyc_waiting">聯繫客服</string>
     <string name="onboarding_title">啟用卡片</string>
     <string name="onboarding_title_backup_card_format">備份卡 #%d</string>
     <string name="onboarding_title_claim">獲取%s</string>
@@ -303,7 +307,7 @@
     <string name="shop_buy_now">現在購買</string>
     <string name="shop_free">免費</string>
     <string name="shop_i_have_a_promo_code">輸入折扣碼</string>
-    <string name="shop_one_wallet">Tangem 冷錢包</string>
+    <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">其他付款方式</string>
     <string name="shop_shipping">運送</string>
     <string name="shop_total">總計</string>
@@ -328,6 +332,7 @@
     <string name="story_meet_title">認識Tangem</string>
     <string name="story_web3_description">交易、購買NFT、自由穿梭於100+去中心化服務</string>
     <string name="story_web3_title">兼容DeFi</string>
+    <string name="swapping_error_wrapper">錯誤： %s</string>
     <string name="swapping_generic_error">有錯誤。請再試一遍</string>
     <string name="swapping_give_permission">賦予權限</string>
     <string name="swapping_insufficient_funds">餘額不足</string>
@@ -359,6 +364,10 @@
     <string name="token_details_unable_hide_alert_message">%1$s 代幣是 %2$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
     <string name="token_details_unable_hide_alert_title">無法隱藏 %s</string>
     <string name="token_item_no_rate">無費用</string>
+    <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
+    <string name="transaction_history_error_failed_to_load">無法加載交易</string>
+    <string name="transaction_history_title">交易</string>
+    <string name="transaction_history_tx_in_progress">進行中...</string>
     <string name="twin_error_same_card">您掃描了同一張卡片。要創建雙錢包，您需要掃描編號為 %d 的卡</string>
     <string name="twins_onboarding_description_format">這一個是你手裡拿著的，另一個是編號為 %s 的，這兩張卡都可以用來從這個錢包中提取資金</string>
     <string name="twins_onboarding_subtitle">一個錢包，兩張卡片</string>
@@ -366,9 +375,10 @@
     <string name="twins_recreate_title_creating_wallet">創建錢包</string>
     <string name="twins_recreate_title_format">掃描 #%s 雙胞胎卡</string>
     <string name="twins_recreate_title_preparing">準備卡片</string>
-    <string name="twins_recreate_toolbar">Tangem雙胞胎卡</string>
+    <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">這個動作是不可逆的。您將無法訪問舊錢包</string>
     <string name="user_wallet_list_add_button">添加新錢包</string>
+    <string name="user_wallet_list_delete_prompt">您確定要刪除此錢包?</string>
     <string name="user_wallet_list_editing_count">已選擇 %d</string>
     <string name="user_wallet_list_error_wallet_already_saved">此錢包已保存，您可以再添加一個</string>
     <string name="user_wallet_list_multi_header">多幣種</string>
@@ -400,8 +410,11 @@
     <string name="wallet_connect_create_tx_message">請求為 %1$s 創建交易\n%2$s\n\n數量： %3$s\n費用： %4$s\n全部的： %5$s\n餘額： %6$s</string>
     <string name="wallet_connect_create_tx_not_enough_funds">無法交易，無足夠資金</string>
     <string name="wallet_connect_error_failed_to_connect">未能建立 WalletConnect 連接。請稍後再試</string>
+    <string name="wallet_connect_error_missing_blockchains">並非所有代幣都已添加到您的列表中。請先添加它們，然後重試。缺少標記:\n</string>
     <string name="wallet_connect_error_timeout">無法建立 WalletConnect 連接:超時錯誤。請稍後再試</string>
+    <string name="wallet_connect_error_unsupported_blockchains">會話請求包含不支持 WalletConnect 連接的區塊鏈。不支持的區塊鏈：\n</string>
     <string name="wallet_connect_error_unsupported_dapp">由於技術問題，無法與此 Dapp 建立連接</string>
+    <string name="wallet_connect_generic_error_with_code">我們遇到了未知錯誤。錯誤代碼：%d。如果問題仍然存在-請隨時聯繫我們的支持人員</string>
     <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
     <string name="wallet_connect_no_sessions_message">沒有打開中的WalletConnect連接</string>
     <string name="wallet_connect_no_sessions_title">Ooops, 沒有連接</string>
@@ -462,7 +475,4 @@
     <string name="welcome_unlock_card">掃描卡片</string>
     <string name="welcome_unlock_description">使用 %s 或掃描卡片以訪問該應用程序</string>
     <string name="welcome_unlock_title">歡迎回來!</string>
-
-    <!-- Special string -->
-    <string name="common_custom_string">%s</string>
 </resources>
