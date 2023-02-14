@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.models
 
+import androidx.compose.ui.text.input.TextFieldValue
+
 data class SwapStateHolder(
     val sendCardData: SwapCardData,
     val receiveCardData: SwapCardData,
@@ -30,9 +32,9 @@ data class SwapStateHolder(
 
 data class SwapCardData(
     val type: TransactionCardType,
-    val amount: String?,
     val amountEquivalent: String?,
     val coinId: String?,
+    val amountTextFieldValue: TextFieldValue?,
     val tokenIconUrl: String,
     val tokenCurrency: String,
     val balance: String,
