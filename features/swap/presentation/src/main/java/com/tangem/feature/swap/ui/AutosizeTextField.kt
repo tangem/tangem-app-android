@@ -24,12 +24,13 @@ import androidx.compose.ui.text.ParagraphIntrinsics
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.res.TangemTheme
 
 @Suppress("MagicNumber", "LongMethod")
 @Composable
 internal fun AutoSizeTextField(
-    amount: String,
+    textFieldValue: TextFieldValue,
     onAmountChange: (String) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -40,7 +41,7 @@ internal fun AutoSizeTextField(
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
         val calculateIntrinsics = @Composable {
             ParagraphIntrinsics(
-                text = amount,
+                text = textFieldValue.text,
                 style = TangemTheme.typography.h2.copy(
                     color = TangemTheme.colors.text.primary1,
                     fontSize = shrunkFontSize,
@@ -63,8 +64,10 @@ internal fun AutoSizeTextField(
         )
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
             BasicTextField(
-                value = amount,
-                onValueChange = onAmountChange,
+                value = textFieldValue,
+                onValueChange = {
+                    onAmountChange.invoke(it.text)
+                },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +79,7 @@ internal fun AutoSizeTextField(
                 ),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 decorationBox = { innerTextField ->
-                    if (amount.isBlank()) {
+                    if (textFieldValue.text.isBlank()) {
                         Text(
                             text = "0",
                             color = TangemTheme.colors.text.disabled,
