@@ -146,7 +146,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
     ): SwapState {
         syncWalletBalanceForTokens(networkId, listOf(fromToken, toToken))
-        val amountDecimal = amountToSwap.toBigDecimalOrNull()
+        val amountDecimal = toBigDecimalOrNull(amountToSwap)
         if (amountDecimal == null || amountDecimal.compareTo(BigDecimal.ZERO) == 0) {
             return createEmptyAmountState(fromToken, toToken)
         }
@@ -196,7 +196,7 @@ internal class SwapInteractorImpl @Inject constructor(
         currencyToGet: Currency,
         amountToSwap: String,
     ): TxState {
-        val amount = requireNotNull(amountToSwap.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
+        val amount = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format, use only digits" }
         val estimatedGas =
             increaseByPercents(TWENTY_FIVE_PERCENTS, swapData.transaction.gas.toIntOrNull() ?: DEFAULT_GAS)
         val fee = transactionManager.calculateFee(
@@ -594,6 +594,10 @@ internal class SwapInteractorImpl @Inject constructor(
     @Suppress("MagicNumber")
     private fun increaseByPercents(percents: Int, value: Int): Int {
         return value * (percents / 100 + 1)
+    }
+
+    private fun toBigDecimalOrNull(amountToSwap: String): BigDecimal? {
+        return amountToSwap.replace(",", ".").toBigDecimalOrNull()
     }
 
     companion object {
