@@ -22,10 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.Keyboard
@@ -40,7 +38,6 @@ import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.extensions.addAndNotify
 import com.tangem.tap.common.compose.extensions.removeAndNotify
 import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.pixelsToDp
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -65,7 +62,7 @@ fun CurrenciesScreen(
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
     val addedBlockchainsState = remember { mutableStateOf(tokensState.value.addedBlockchains) }
 
-    val isKeyboardOpen by keyboardAsState()
+    val keyboardState by keyboardAsState()
 
     val onAddCurrencyToggleClick = { currency: Currency, token: TokenWithBlockchain? ->
         val blockchain = Blockchain.fromNetworkId(currency.id)
@@ -94,7 +91,7 @@ fun CurrenciesScreen(
     Scaffold(
         floatingActionButton = {
             if (tokensState.value.allowToAdd) {
-                SaveChangesButton(isKeyboardOpen) {
+                SaveChangesButton(keyboardState) {
                     onSaveChanges(addedTokensState.value, addedBlockchainsState.value)
                 }
             }
@@ -224,15 +221,9 @@ private fun AnalyticsParam.CurrencyType.sendOff() {
 
 @Composable
 fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
-    val padding = if (keyboardState is Keyboard.Opened) {
-        LocalContext.current.pixelsToDp(keyboardState.height)
-    } else {
-        0
-    }
-
     PrimaryButton(
         modifier = Modifier
-            .padding(bottom = padding.dp)
+            .padding(bottom = keyboardState.height)
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         text = stringResource(id = R.string.common_save_changes),
