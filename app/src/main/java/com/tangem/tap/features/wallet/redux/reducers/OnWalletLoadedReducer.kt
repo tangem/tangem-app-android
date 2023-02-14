@@ -131,7 +131,8 @@ class OnWalletLoadedReducer {
         }
         val walletData = walletState.primaryWalletData?.copy(
             currencyData = BalanceWidgetData(
-                balanceStatus, wallet.blockchain.fullName,
+                status = balanceStatus,
+                currency = wallet.blockchain.fullName,
                 currencySymbol = wallet.blockchain.currency,
                 blockchainAmount = amount,
                 amount = amount,
