@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.ui
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.Currency
@@ -37,8 +39,8 @@ internal class StateBuilder(val actions: UiActions) {
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
-                amount = null,
                 amountEquivalent = null,
+                amountTextFieldValue = null,
                 tokenIconUrl = initialCurrency.logoUrl,
                 tokenCurrency = initialCurrency.symbol,
                 coinId = initialCurrency.id,
@@ -48,10 +50,10 @@ internal class StateBuilder(val actions: UiActions) {
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
-                amount = null,
                 amountEquivalent = null,
                 tokenIconUrl = "",
                 tokenCurrency = "",
+                amountTextFieldValue = null,
                 canSelectAnotherToken = false,
                 balance = "",
                 isNotNativeToken = false,
@@ -80,7 +82,7 @@ internal class StateBuilder(val actions: UiActions) {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
-                amount = uiStateHolder.sendCardData.amount,
+                amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
                 tokenIconUrl = fromToken.logoUrl,
                 tokenCurrency = fromToken.symbol,
@@ -91,7 +93,7 @@ internal class StateBuilder(val actions: UiActions) {
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
-                amount = null,
+                amountTextFieldValue = null,
                 amountEquivalent = null,
                 tokenIconUrl = toToken.logoUrl,
                 tokenCurrency = toToken.symbol,
@@ -130,7 +132,7 @@ internal class StateBuilder(val actions: UiActions) {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
-                amount = uiStateHolder.sendCardData.amount,
+                amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = quoteModel.fromTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = quoteModel.fromTokenInfo.coinId,
@@ -141,7 +143,7 @@ internal class StateBuilder(val actions: UiActions) {
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
-                amount = quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation(),
+                amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = quoteModel.toTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = quoteModel.toTokenInfo.coinId,
@@ -172,7 +174,7 @@ internal class StateBuilder(val actions: UiActions) {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
-                amount = uiStateHolder.sendCardData.amount,
+                amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = uiStateHolder.sendCardData.coinId,
@@ -183,7 +185,7 @@ internal class StateBuilder(val actions: UiActions) {
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
-                amount = "0",
+                amountTextFieldValue = TextFieldValue("0"),
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = uiStateHolder.receiveCardData.coinId,
@@ -252,7 +254,10 @@ internal class StateBuilder(val actions: UiActions) {
     fun updateSwapAmount(uiState: SwapStateHolder, amount: String): SwapStateHolder {
         return uiState.copy(
             sendCardData = uiState.sendCardData.copy(
-                amount = amount,
+                amountTextFieldValue = TextFieldValue(
+                    text = amount,
+                    selection = TextRange(amount.length),
+                ),
             ),
         )
     }
