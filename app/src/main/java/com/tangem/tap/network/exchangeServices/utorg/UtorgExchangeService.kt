@@ -86,7 +86,8 @@ class UtorgExchangeService(
             .appendPath(environment.sidValue)
             .appendPath(walletAddress)
             .appendQueryParameter("currency", cryptoCurrencyName)
-            .appendQueryParameter("paymentCurrency", "USD")
+        // if we set the paymentCurrency, then the Utorg widget didn't work
+        // .appendQueryParameter("paymentCurrency", "USD")
 
         val url = builder.build().toString()
         return url
