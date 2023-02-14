@@ -10,10 +10,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.fold
 import com.tangem.common.map
-import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
@@ -39,18 +37,12 @@ internal class BiometricUserWalletsKeysRepository(
     override suspend fun getAll(): CompletionResult<List<UserWalletEncryptionKey>> {
         return withContext(Dispatchers.IO) {
             getAllInternal()
-                .mapFailure { error ->
-                    UserWalletListError.ReceiveEncryptionKeysError(error.cause ?: error)
-                }
         }
     }
 
     override suspend fun save(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
             storeEncryptionKey(encryptionKey)
-                .mapFailure { error ->
-                    UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
-                }
         }
     }
 
@@ -91,7 +83,7 @@ internal class BiometricUserWalletsKeysRepository(
                 getEncryptionKey(userWalletId)
                     .doOnFailure { error ->
                         // If the user cancels biometric authentication, cancel the request for all keys
-                        if (error is TangemSdkError.BiometricsAuthenticationFailed) {
+                        if (error is TangemSdkError.UserCanceledBiometricsAuthentication) {
                             return CompletionResult.Failure(error)
                         }
                     }
