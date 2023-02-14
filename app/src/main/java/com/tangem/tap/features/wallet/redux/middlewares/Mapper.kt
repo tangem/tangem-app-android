@@ -111,7 +111,6 @@ private fun WalletDataModel.mapToReduxModel(
             amountFormatted = amountFormatted,
             fiatAmount = fiatAmount,
             fiatAmountFormatted = fiatAmountFormatted,
-            // token = null,
             amountToCreateAccount = (status as? WalletDataModel.NoAccount)
                 ?.amountToCreateAccount
                 ?.toString(),
