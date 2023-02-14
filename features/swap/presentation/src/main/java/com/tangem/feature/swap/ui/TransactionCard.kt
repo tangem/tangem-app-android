@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,8 +56,8 @@ fun TransactionCard(
     balance: String,
     tokenIconUrl: String,
     tokenCurrency: String,
-    amount: String?,
     amountEquivalent: String?,
+    textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
     @DrawableRes iconPlaceholder: Int? = null,
     @DrawableRes networkIconRes: Int? = null,
@@ -79,8 +80,8 @@ fun TransactionCard(
 
                 Content(
                     type = type,
-                    amount = amount,
                     amountEquivalent = amountEquivalent,
+                    textFieldValue = textFieldValue,
                 )
             }
 
@@ -169,8 +170,8 @@ private fun Header(
 @Composable
 private fun Content(
     type: TransactionCardType,
-    amount: String?,
     amountEquivalent: String?,
+    textFieldValue: TextFieldValue?,
 ) {
     Row(
         modifier = Modifier
@@ -192,9 +193,9 @@ private fun Content(
             val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
             when (type) {
                 is TransactionCardType.ReceiveCard -> {
-                    if (amount != null) {
+                    if (textFieldValue != null) {
                         ResizableText(
-                            text = amount,
+                            text = textFieldValue.text,
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
                             fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
@@ -216,7 +217,7 @@ private fun Content(
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
                         modifier = sumTextModifier,
-                        amount = amount ?: "",
+                        textFieldValue = textFieldValue ?: TextFieldValue(),
                         onAmountChange = { type.onAmountChanged(it) },
                         onFocusChange = type.onFocusChanged,
                     )
@@ -376,13 +377,13 @@ private fun Preview_SwapMainCard_InDarkTheme() {
 private fun TransactionCardPreview() {
     TransactionCard(
         type = TransactionCardType.SendCard({}) {},
-        amount = "1 000 000",
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
         balance = "123",
+        textFieldValue = TextFieldValue(),
     )
 }
 
