@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Special string -->
     <string name="common_custom_string" translatable="false">%s</string>
 </resources>
