@@ -55,7 +55,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/btn_container"
         app:layout_constraintStart_toStartOf="@id/btn_container"
-        tools:text="@string/onboarding_supplement_button_kyc_waiting" />
+        tools:text="@string/chat_button_title" />
 
     <FrameLayout
         android:id="@+id/btn_container"
