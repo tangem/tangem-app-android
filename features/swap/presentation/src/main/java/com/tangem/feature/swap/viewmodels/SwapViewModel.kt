@@ -8,7 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.ui.utils.getValidatedNumberWithFixedDecimals
+import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -32,6 +32,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -53,6 +56,8 @@ internal class SwapViewModel @Inject constructor(
     private val stateBuilder = StateBuilder(
         actions = createUiActions(),
     )
+    private val inputNumberFormatter =
+        InputNumberFormatter(NumberFormat.getInstance(Locale.getDefault()) as DecimalFormat)
     private val amountDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<SwapState>()
 
@@ -332,9 +337,12 @@ internal class SwapViewModel @Inject constructor(
                 toCurrency = newToToken,
             )
             isOrderReversed = !isOrderReversed
-            lastAmount.value =
-                cutAmountWithDecimals(blockchainInteractor.getTokenDecimals(newFromToken), lastAmount.value)
-            uiState = stateBuilder.updateSwapAmount(uiState, lastAmount.value)
+            val decimals = blockchainInteractor.getTokenDecimals(newFromToken)
+            lastAmount.value = cutAmountWithDecimals(decimals, lastAmount.value)
+            uiState = stateBuilder.updateSwapAmount(
+                uiState,
+                inputNumberFormatter.formatWithThousands(lastAmount.value, decimals),
+            )
             startLoadingQuotes(newFromToken, newToToken, lastAmount.value)
         }
     }
@@ -343,9 +351,11 @@ internal class SwapViewModel @Inject constructor(
         val fromToken = dataState.fromCurrency
         val toToken = dataState.toCurrency
         if (fromToken != null && toToken != null) {
-            val cutValue = cutAmountWithDecimals(blockchainInteractor.getTokenDecimals(fromToken), value)
-            uiState = stateBuilder.updateSwapAmount(uiState, cutValue)
+            val decimals = blockchainInteractor.getTokenDecimals(fromToken)
+            val cutValue = cutAmountWithDecimals(decimals, value)
             lastAmount.value = cutValue
+            uiState =
+                stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
             amountDebouncer.debounce(DEBOUNCE_AMOUNT_DELAY, viewModelScope) {
                 startLoadingQuotes(fromToken, toToken, lastAmount.value)
             }
@@ -367,7 +377,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
-        return getValidatedNumberWithFixedDecimals(amount, maxDecimals)
+        return inputNumberFormatter.getValidatedNumberWithFixedDecimals(amount, maxDecimals)
     }
 
     private fun makeDefaultAlert() {
