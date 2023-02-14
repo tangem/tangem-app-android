@@ -24,30 +24,20 @@ data class BalanceWidgetData(
     val status: BalanceStatus? = null,
     val currency: String? = null,
     val currencySymbol: String? = null,
-    val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
     val amount: BigDecimal? = null,
     val amountFormatted: String? = null,
     val fiatAmount: BigDecimal? = null,
     val fiatAmountFormatted: String? = null,
-    val token: TokenData? = null,
+    val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
     val amountToCreateAccount: String? = null,
     val errorMessage: String? = null,
-)
-
-data class TokenData(
-    val amountFormatted: String?,
-    val amount: BigDecimal? = null,
-    val tokenSymbol: String,
-    val fiatAmountFormatted: String? = null,
-    val fiatAmount: BigDecimal? = null,
-    val fiatRateString: String? = null,
-    val fiatRate: BigDecimal? = null,
 )
 
 class BalanceWidget(
     private val binding: CardBalanceBinding,
     private val fragment: WalletFragment,
     private val data: BalanceWidgetData,
+    private val token: BalanceWidgetData?,
     private val isTwinCard: Boolean,
 ) {
 
@@ -66,7 +56,7 @@ class BalanceWidget(
 
                 showStatus(R.id.tv_status_loading)
 
-                if (data.token != null) {
+                if (token != null) {
                     showBalanceWithToken(data, false)
                 } else {
                     showBalanceWithoutToken(data, false)
@@ -85,7 +75,7 @@ class BalanceWidget(
                 showStatus(statusView)
                 tvStatusErrorMessage.hide()
 
-                if (data.token != null) {
+                if (token != null) {
                     showBalanceWithToken(data, true)
                 } else {
                     showBalanceWithoutToken(data, true)
@@ -97,7 +87,7 @@ class BalanceWidget(
                 tvFiatAmount.hide()
                 groupBaseCurrency.hide()
 
-                val currency = if (data.token != null) data.token.tokenSymbol else data.currency
+                val currency = if (token != null) token.currencySymbol else data.currency
                 tvCurrency.text = currency
                 tvAmount.text = ""
 
@@ -152,13 +142,13 @@ class BalanceWidget(
 
     private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) = with(binding.lBalance) {
         groupBaseCurrency.show()
-        tvCurrency.text = data.token?.tokenSymbol
+        tvCurrency.text = token?.currencySymbol
         tvBaseCurrency.text = data.currency
-        tvAmount.text = if (showAmount) data.token?.amountFormatted else ""
+        tvAmount.text = if (showAmount) token?.amountFormatted else ""
         tvBaseAmount.text = if (showAmount) data.amountFormatted else ""
         if (showAmount) {
             tvFiatAmount.show()
-            tvFiatAmount.text = data.token?.fiatAmountFormatted
+            tvFiatAmount.text = token?.fiatAmountFormatted
         }
     }
 
