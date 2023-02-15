@@ -48,17 +48,18 @@ data class SwapButton(
     val onClick: () -> Unit,
 )
 
-sealed interface FeeState {
+sealed class FeeState(open val tangemFee: Double) {
 
-    object Empty : FeeState
+    object Empty : FeeState(0.0)
 
     data class Loaded(
+        override val tangemFee: Double,
         val fee: String = "",
-    ) : FeeState
+    ) : FeeState(tangemFee)
 
-    object Loading : FeeState
+    object Loading : FeeState(0.0)
 
-    data class NotEnoughFundsWarning(val fee: String) : FeeState
+    data class NotEnoughFundsWarning(override val tangemFee: Double, val fee: String) : FeeState(tangemFee)
 }
 
 sealed interface TransactionCardType {
