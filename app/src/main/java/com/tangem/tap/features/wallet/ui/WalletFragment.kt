@@ -39,9 +39,9 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
-import com.tangem.tap.features.wallet.ui.wallet.SaltPayWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
+import com.tangem.tap.features.wallet.ui.wallet.saltPay.SaltPayWalletView
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
@@ -150,15 +150,18 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         when {
             isSaltPay && (walletView !is SaltPayWalletView) -> {
+                walletView.onViewDestroy()
                 walletView = SaltPayWalletView()
                 walletView.changeWalletView(this, binding)
             }
             state.isMultiwalletAllowed && state.primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
                 walletView !is MultiWalletView -> {
+                walletView.onViewDestroy()
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
             }
             !state.isMultiwalletAllowed && !isSaltPay && walletView !is SingleWalletView -> {
+                walletView.onViewDestroy()
                 walletView = SingleWalletView()
                 walletView.changeWalletView(this, binding)
             }
@@ -174,7 +177,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
 
         setupNoInternetHandling(state)
-        setupCardImage(state)
+        setupCardImage(state, isSaltPay)
 
         if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
 
@@ -183,6 +186,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
+// [REDACTED_TODO_COMMENT]
+                walletView.pullToRefreshListener?.invoke()
                 Analytics.send(Portfolio.Refreshed())
                 store.dispatch(WalletAction.LoadData.Refresh)
             }
@@ -211,9 +216,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-    private fun setupCardImage(state: WalletState) {
+    private fun setupCardImage(state: WalletState, isSaltPay: Boolean) {
 // [REDACTED_TODO_COMMENT]
-        if (store.state.globalState.scanResponse?.isSaltPay() == true) {
+        if (isSaltPay) {
             binding.ivCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FIT)
                 crossfade(enable = true)

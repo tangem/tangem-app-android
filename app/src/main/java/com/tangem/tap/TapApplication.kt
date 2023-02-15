@@ -57,6 +57,7 @@ import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
+import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
 import javax.inject.Inject
@@ -146,7 +147,12 @@ class TapApplication : Application(), ImageLoaderFactory {
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
-        BlockchainSdkRetrofitBuilder.enableNetworkLogging = LogConfig.network.blockchainSdkNetwork
+        if (LogConfig.network.blockchainSdkNetwork) {
+            BlockchainSdkRetrofitBuilder.interceptors = listOf(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
+            )
+        }
+
 
         userTokensRepository = UserTokensRepository.init(
             context = this,
