@@ -243,7 +243,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 
 @Composable
 private fun FeeItem(feeState: FeeState, currency: String) {
-    val titleString = stringResource(id = R.string.send_fee_label)
+    val titleString = stringResource(id = R.string.send_network_fee_title)
     val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
     when (feeState) {
         is FeeState.Loaded -> {
