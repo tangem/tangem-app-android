@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.BlockchairCredentials
 import com.tangem.blockchain.common.GetBlockCredentials
 import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
+import com.tangem.tap.common.chat.ZendeskConfig
 import com.tangem.tap.common.shop.shopify.ShopifyShop
-import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 
