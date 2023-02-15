@@ -125,9 +125,9 @@ internal class StateBuilder(val actions: UiActions) {
             warnings.add(SwapWarning.InsufficientFunds)
         }
         val feeState = if (quoteModel.preparedSwapConfigState.isFeeEnough) {
-            FeeState.Loaded(quoteModel.fee)
+            FeeState.Loaded(tangemFee = quoteModel.tangemFee, fee = quoteModel.fee)
         } else {
-            FeeState.NotEnoughFundsWarning(quoteModel.fee)
+            FeeState.NotEnoughFundsWarning(tangemFee = quoteModel.tangemFee, fee = quoteModel.fee)
         }
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
