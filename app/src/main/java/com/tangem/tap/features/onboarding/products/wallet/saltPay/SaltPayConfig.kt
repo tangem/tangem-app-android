@@ -9,6 +9,7 @@ data class SaltPayConfig(
     val sprinklrAppID: String,
     val kycProvider: KYCProvider,
     val credentials: Credentials,
+    val blockscoutCredentials: Credentials,
 ) {
     companion object {
         fun stub(): SaltPayConfig {
@@ -16,6 +17,7 @@ data class SaltPayConfig(
                 sprinklrAppID = "",
                 kycProvider = KYCProvider("", "", "", ""),
                 credentials = Credentials("", ""),
+                blockscoutCredentials = Credentials("", ""),
             )
         }
     }
