@@ -9,7 +9,6 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.common.chat.SprinklrConfig
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -111,7 +110,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
 
             // if config not set -> try to get it based on a scanResponse.productType
             val unsafeChatConfig = action.chatConfig ?: when {
-                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.sprinklrAppID?.let(::SprinklrConfig)
+                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.sprinklr
                 else -> config.zendesk
             }
 
