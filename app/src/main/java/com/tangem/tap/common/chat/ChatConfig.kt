@@ -19,6 +19,10 @@ data class ZendeskConfig(
     val url: String,
 ) : ChatConfig
 
+@JsonClass(generateAdapter = true)
 data class SprinklrConfig(
+    @Json(name = "appID")
     val appId: String,
+    @Json(name = "baseURL")
+    val baseUrl: String,
 ) : ChatConfig
