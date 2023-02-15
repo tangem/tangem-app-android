@@ -114,6 +114,9 @@ object TangemSdkErrorMapper {
             is TangemSdkError.BackupFailedIncompatibleBatch -> TangemSdkError.BackupFailedIncompatibleBatch()
             is TangemSdkError.BiometricsUnavailable -> error
             is TangemSdkError.BiometricsAuthenticationFailed -> error
+            is TangemSdkError.BiometricsAuthenticationLockout -> error
+            is TangemSdkError.BiometricsAuthenticationPermanentLockout -> error
+            is TangemSdkError.UserCanceledBiometricsAuthentication -> error
         }
     }
 }

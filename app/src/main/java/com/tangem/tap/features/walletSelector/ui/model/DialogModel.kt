@@ -11,4 +11,9 @@ internal sealed interface DialogModel {
         val onConfirm: () -> Unit,
         val onDismiss: () -> Unit,
     ) : DialogModel
+
+    data class BiometricsLockoutDialog(
+        val isPermanent: Boolean,
+        val onDismiss: () -> Unit,
+    ) : DialogModel
 }

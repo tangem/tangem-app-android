@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -36,7 +37,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.components.RefreshableWaringCard
 import com.tangem.core.ui.components.SimpleOkDialog
-import com.tangem.core.ui.components.SmallInfoCard
+import com.tangem.core.ui.components.SmallInfoCardWithDisclaimer
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.WarningCard
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -163,7 +164,7 @@ private fun MainInfo(state: SwapStateHolder) {
         TransactionCard(
             type = state.sendCardData.type,
             balance = state.sendCardData.balance,
-            amount = state.sendCardData.amount,
+            textFieldValue = state.sendCardData.amountTextFieldValue,
             amountEquivalent = state.sendCardData.amountEquivalent,
             tokenIconUrl = state.sendCardData.tokenIconUrl,
             tokenCurrency = state.sendCardData.tokenCurrency,
@@ -180,7 +181,7 @@ private fun MainInfo(state: SwapStateHolder) {
         TransactionCard(
             type = state.receiveCardData.type,
             balance = state.receiveCardData.balance,
-            amount = state.receiveCardData.amount,
+            textFieldValue = state.receiveCardData.amountTextFieldValue,
             amountEquivalent = state.receiveCardData.amountEquivalent,
             tokenIconUrl = state.receiveCardData.tokenIconUrl,
             tokenCurrency = state.receiveCardData.tokenCurrency,
@@ -243,17 +244,29 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 @Composable
 private fun FeeItem(feeState: FeeState, currency: String) {
     val titleString = stringResource(id = R.string.send_fee_label)
+    val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
     when (feeState) {
         is FeeState.Loaded -> {
-            SmallInfoCard(startText = titleString, endText = feeState.fee, isLoading = false)
+            SmallInfoCardWithDisclaimer(
+                startText = titleString,
+                endText = feeState.fee,
+                disclaimer = disclaimer,
+                isLoading = false,
+            )
         }
         FeeState.Loading -> {
-            SmallInfoCard(startText = titleString, endText = "", isLoading = true)
+            SmallInfoCardWithDisclaimer(
+                startText = titleString,
+                endText = "",
+                disclaimer = disclaimer,
+                isLoading = true,
+            )
         }
         is FeeState.NotEnoughFundsWarning -> {
             SmallInfoCardWithWarning(
                 startText = titleString,
                 endText = feeState.fee,
+                disclaimer = disclaimer,
                 warningText = stringResource(
                     id = R.string.swapping_not_enough_funds_for_fee,
                     currency,
@@ -360,7 +373,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 
 private val sendCard = SwapCardData(
     type = TransactionCardType.SendCard({}) {},
-    amount = "1 000 000",
+    amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
@@ -372,7 +385,7 @@ private val sendCard = SwapCardData(
 
 private val receiveCard = SwapCardData(
     type = TransactionCardType.ReceiveCard(),
-    amount = "1 000 000",
+    amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
@@ -386,7 +399,7 @@ private val state = SwapStateHolder(
     networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)"),
+    fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)", tangemFee = 0.0),
     warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),

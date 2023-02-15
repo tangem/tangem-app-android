@@ -79,7 +79,6 @@ internal class DefaultWalletCurrenciesManager(
             .filter { it !in currenciesToRemove }
         val remainingBlockchains = remainingCurrencies
             .filterIsInstance<Currency.Blockchain>()
-            .map { it.blockchain }
 
         walletStoresRepository.deleteDifference(userWallet.walletId, remainingBlockchains)
             .flatMap {
@@ -116,43 +115,50 @@ internal class DefaultWalletCurrenciesManager(
     }
 
     private fun List<Currency>.addMissingBlockchains(card: CardDTO): List<Currency> {
-        val newCurrencies = arrayListOf<Currency>()
+        if (this.isEmpty()) return this
+        val currencies = this.asSequence()
 
-        this
-            .groupBy { it.blockchain }
-            .forEach { (blockchain, currencies) ->
-                val rawDerivationPath: String?
-                val blockchainCurrency = currencies
-                    .firstOrNull { it is Currency.Blockchain }
-                    as? Currency.Blockchain
-
-                // Add blockchain currency
-                if (blockchainCurrency != null) {
-                    rawDerivationPath = findDerivationPath(blockchainCurrency, card.derivationStyle)
-                    newCurrencies.add(blockchainCurrency.copy(derivationPath = rawDerivationPath))
-                } else {
-                    rawDerivationPath = findDerivationPath(currencies.first(), card.derivationStyle)
-                    newCurrencies.add(
-                        Currency.Blockchain(
-                            blockchain = blockchain,
-                            derivationPath = rawDerivationPath,
-                        ),
-                    )
-                }
-
-                // Add tokens currencies
-                currencies
-                    .filterIsInstance<Currency.Token>()
-                    .forEach { currency ->
-                        newCurrencies.add(currency.copy(derivationPath = rawDerivationPath))
-                    }
+        return currencies
+            .groupBy { currency ->
+                findBlockchainCurrency(currency, currencies, card.derivationStyle)
             }
-
-        return newCurrencies
+            .mapValues { (blockchainCurrency, blockchainCurrencies) ->
+                findBlockchainTokens(blockchainCurrency, blockchainCurrencies)
+            }
+            .flatMap { (blockchainCurrency, blockchainTokens) ->
+                arrayListOf(blockchainCurrency) + blockchainTokens
+            }
     }
 
-    private fun findDerivationPath(currency: Currency, cardDerivationStyle: DerivationStyle?): String? {
-        return currency.derivationPath ?: currency.blockchain.derivationPath(cardDerivationStyle)?.rawPath
+    private fun findBlockchainCurrency(
+        currency: Currency,
+        currencies: Sequence<Currency>,
+        cardDerivationStyle: DerivationStyle?,
+    ): Currency.Blockchain {
+        return currencies
+            .filterIsInstance<Currency.Blockchain>()
+            .firstOrNull {
+                it.blockchain == currency.blockchain &&
+                    it.derivationPath == currency.derivationPath
+            }
+            ?: Currency.Blockchain(
+                blockchain = currency.blockchain,
+                derivationPath = currency.derivationPath
+                    ?: currency.blockchain.derivationPath(cardDerivationStyle)?.rawPath,
+            )
+    }
+
+    private fun findBlockchainTokens(
+        blockchainCurrency: Currency.Blockchain,
+        blockchainCurrencies: List<Currency>,
+    ): List<Currency.Token> {
+        return blockchainCurrencies
+            .filterIsInstance<Currency.Token>()
+            .map { token ->
+                token.copy(
+                    derivationPath = token.derivationPath ?: blockchainCurrency.derivationPath,
+                )
+            }
     }
 
     private suspend fun updateWalletStores(
