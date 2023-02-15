@@ -458,7 +458,7 @@
     <string name="warning_existential_deposit_message">%1$s network has a concept of Existential Deposit. If your account drops below %2$s it will be deactivated and any remaining funds will be destroyed.</string>
     <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
     <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>
-    <string name="warning_important_security_info">Important security information \U26A0</string>
+    <string name="warning_important_security_info">Important security information %s</string>
     <string name="warning_low_signatures_format">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
     <string name="warning_rate_app_message">How do you like Tangem?</string>
     <string name="warning_rate_app_title">One question</string>
