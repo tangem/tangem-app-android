@@ -60,7 +60,12 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         fun getString(resId: Int?, default: String, formatArgs: String? = null) =
             if (resId == null) default else root.getString(resId, formatArgs)
 
-        tvTitle.text = getString(warning.titleResId, warning.title)
+        tvTitle.text = getString(
+            resId = warning.titleResId,
+            default = warning.title,
+            formatArgs = warning.titleFormatArg,
+        )
+
         tvMessage.text = getString(
             resId = warning.messageResId,
             default = warning.message,
