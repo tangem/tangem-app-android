@@ -2,6 +2,7 @@ package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.BlockscoutCredentials
 import com.tangem.blockchain.common.GetBlockCredentials
 import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
@@ -93,6 +94,10 @@ class ConfigManager {
                     authToken = values.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = values.blockcypherTokens,
+                blockscoutCredentials = BlockscoutCredentials(
+                    userName = values.saltPay.blockscoutCredentials.user,
+                    password = values.saltPay.blockscoutCredentials.password,
+                ),
                 quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = values.quiknodeApiKey,
                     subdomain = values.quiknodeSubdomain,
