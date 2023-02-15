@@ -16,12 +16,13 @@ sealed interface SwapState {
         val preparedSwapConfigState: PreparedSwapConfigState,
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
+        val tangemFee: Double,
     ) : SwapState
 
     data class EmptyAmountState(
         val fromTokenWalletBalance: String,
         val toTokenWalletBalance: String,
-        val zeroAmountEquivalent: String
+        val zeroAmountEquivalent: String,
     ) : SwapState
 
     data class SwapError(val error: DataError) : SwapState
