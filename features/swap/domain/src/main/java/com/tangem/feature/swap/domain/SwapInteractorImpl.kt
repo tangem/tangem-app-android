@@ -239,6 +239,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
+    private fun getTangemFee(): Double {
+        return repository.getTangemFee()
+    }
+
     fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
@@ -495,6 +499,7 @@ internal class SwapInteractorImpl @Inject constructor(
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             preparedSwapConfigState = preparedSwapConfigState,
             swapDataModel = swapDataModel,
+            tangemFee = getTangemFee(),
         )
     }
 
