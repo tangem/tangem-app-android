@@ -13,6 +13,7 @@ object LogConfig {
 object NetworkLogConfig {
     val mercuryoService: Boolean = false
     val moonPayService: Boolean = false
+    val utorgService: Boolean = false
     val tangemTechService: Boolean = BuildConfig.DEBUG
     val paymentologyApiService: Boolean = BuildConfig.DEBUG
     val blockchainSdkNetwork: Boolean = BuildConfig.DEBUG
