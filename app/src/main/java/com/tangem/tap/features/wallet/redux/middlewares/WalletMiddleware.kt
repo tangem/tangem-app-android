@@ -249,6 +249,8 @@ class WalletMiddleware {
             }
             is NetworkStateChanged -> {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
+                if (!action.isOnline) return
+
                 val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
                 if (selectedUserWallet != null) {
                     scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }

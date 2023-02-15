@@ -21,12 +21,10 @@
             android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:text="@string/onboarding_balance_title"
             android:textColor="@color/text_tertiary"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/tv_currency_name"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,8 +32,8 @@
             android:id="@+id/veil_balance"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintBottom_toTopOf="@id/tv_processing"
+            android:layout_marginTop="6dp"
+            app:layout_constraintBottom_toTopOf="@id/tv_unreachable"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title"
@@ -65,7 +63,7 @@
             android:id="@+id/veil_balance_crypto"
             android:layout_width="wrap_content"
             android:layout_height="18dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/veil_balance"
             app:veilLayout_baseColor="@color/lightGray0"
@@ -81,7 +79,6 @@
                 android:id="@+id/tv_balance_crypto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="2dp"
                 android:maxLines="1"
                 android:minWidth="152dp"
                 android:textColor="@color/text_tertiary"
@@ -92,14 +89,14 @@
         </com.skydoves.androidveil.VeilLayout>
 
         <TextView
-            android:id="@+id/tv_processing"
+            android:id="@+id/tv_unreachable"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_height="18dp"
+            android:layout_marginTop="6dp"
             android:text="@string/wallet_balance_blockchain_unreachable"
             android:textColor="@color/warning"
             android:textSize="12sp"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/veil_balance" />
 
@@ -108,7 +105,7 @@
             style="@style/BaseSaltPayButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="76dp"
             android:text="@string/wallet_button_buy"
             android:visibility="gone"
             app:icon="@drawable/ic_add"
@@ -116,7 +113,7 @@
             app:iconTint="@color/selector_saltpay_btn_text"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/veil_balance_crypto"
+            app:layout_constraintTop_toBottomOf="@+id/tv_title"
             tools:visibility="visible" />
 
         <TextView
