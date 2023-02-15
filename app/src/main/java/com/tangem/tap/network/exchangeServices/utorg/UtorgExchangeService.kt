@@ -53,7 +53,6 @@ class UtorgExchangeService(
     override fun isSellAllowed(): Boolean = false
 
     override fun availableForBuy(currency: Currency): Boolean {
-        return true
         if (!isBuyAllowed()) return false
 
         val foundUtorgCurrency = utorgCurrencies.firstOrNull { utorgCurrency ->
