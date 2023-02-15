@@ -458,7 +458,7 @@
     <string name="warning_existential_deposit_message">%1$s 網絡有一個 Existential Deposit 的概念。如果您的帳戶低於 %2$s，它將被停用，所有剩餘資金將被銷毀</string>
     <string name="warning_failed_to_verify_card_message">此卡可能是生產樣本或偽造品</string>
     <string name="warning_failed_to_verify_card_title">認證檢查失敗</string>
-    <string name="warning_important_security_info">重要安全信息\U26A0</string>
+    <string name="warning_important_security_info">重要安全信息%s</string>
     <string name="warning_low_signatures_format">此卡上只有 %s 個簽名可用。您必須提取所有資金</string>
     <string name="warning_rate_app_message">你喜歡 Tangem 嗎？</string>
     <string name="warning_rate_app_title">一個問題</string>
