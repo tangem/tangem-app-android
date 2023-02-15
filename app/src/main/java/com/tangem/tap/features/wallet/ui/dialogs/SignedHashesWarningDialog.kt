@@ -11,7 +11,7 @@ import com.tangem.wallet.R
 object SignedHashesWarningDialog {
     fun create(context: Context): AlertDialog {
         return AlertDialog.Builder(context).apply {
-            setTitle(context.getString(R.string.warning_important_security_info))
+            setTitle(context.getString(R.string.warning_important_security_info, "\u26A0"))
             setMessage(R.string.alert_signed_hashes_message)
             setPositiveButton(R.string.common_understand) { _, _ ->
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
