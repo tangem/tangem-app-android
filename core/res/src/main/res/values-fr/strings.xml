@@ -350,6 +350,7 @@
     <string name="swapping_success_view_title">In progress</string>
     <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
+    <string name="swapping_tangem_fee_disclaimer">Additionally, quotes include Tangem fee of %s. This helps us deliver a top-of-the-line product.</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
