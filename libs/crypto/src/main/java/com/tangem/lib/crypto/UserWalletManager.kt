@@ -37,7 +37,7 @@ interface UserWalletManager {
      * @param currency to add to wallet
      */
     @Throws(IllegalStateException::class)
-    fun addToken(currency: Currency)
+    suspend fun addToken(currency: Currency)
 
     /**
      * Returns wallet public address for token
