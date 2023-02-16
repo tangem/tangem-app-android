@@ -143,8 +143,8 @@ class SaltPayWalletView : WalletView() {
             val walletManager = state.primaryWalletManager as? EthereumWalletManager ?: return@launch
             val wallet = walletManager.wallet
             val token = wallet.getFirstToken() ?: return@launch
-            // val walletAddress = wallet.address
-            val walletAddress = "0xDA94Aae02a4Db0e09E1Cf240E3a0973ba89052cf"
+            val walletAddress = wallet.address
+            // val walletAddress = "0xDA94Aae02a4Db0e09E1Cf240E3a0973ba89052cf"
             when (val result = walletManager.getTransactionHistory(walletAddress, wallet.blockchain, setOf(token))) {
                 is Result.Success -> {
                     val tokensHistory = result.data
