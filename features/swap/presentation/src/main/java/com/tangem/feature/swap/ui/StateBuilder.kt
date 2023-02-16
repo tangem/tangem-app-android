@@ -124,6 +124,10 @@ internal class StateBuilder(val actions: UiActions) {
         if (!quoteModel.preparedSwapConfigState.isBalanceEnough) {
             warnings.add(SwapWarning.InsufficientFunds)
         }
+
+        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
+            warnings.add(SwapWarning.HighPriceImpact((quoteModel.priceImpact * HUNDRED_PERCENTS).toInt()))
+        }
         val feeState = if (quoteModel.preparedSwapConfigState.isFeeEnough) {
             FeeState.Loaded(tangemFee = quoteModel.tangemFee, fee = quoteModel.fee)
         } else {
@@ -358,5 +362,7 @@ internal class StateBuilder(val actions: UiActions) {
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
+        private const val PRICE_IMPACT_THRESHOLD = 0.1
+        private const val HUNDRED_PERCENTS = 100
     }
 }
