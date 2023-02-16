@@ -26,6 +26,7 @@ import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 @Suppress("LargeClass")
@@ -496,6 +497,12 @@ internal class SwapInteractorImpl @Inject constructor(
                 ),
             ),
             fee = formattedFee,
+            priceImpact = calculatePriceImpact(
+                fromTokenAmount = fromTokenAmount.value,
+                fromRate = rates[fromToken.id] ?: 0.0,
+                toTokenAmount = toTokenAmount.value,
+                toRate = rates[toToken.id] ?: 0.0,
+            ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             preparedSwapConfigState = preparedSwapConfigState,
             swapDataModel = swapDataModel,
@@ -603,6 +610,17 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private fun toBigDecimalOrNull(amountToSwap: String): BigDecimal? {
         return amountToSwap.replace(",", ".").toBigDecimalOrNull()
+    }
+
+    private fun calculatePriceImpact(
+        fromTokenAmount: BigDecimal,
+        fromRate: Double,
+        toTokenAmount: BigDecimal,
+        toRate: Double,
+    ): Float {
+        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
+        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
+        return (BigDecimal.ONE - toTokenFiatValue / fromTokenFiatValue).toFloat()
     }
 
     companion object {

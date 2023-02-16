@@ -161,6 +161,7 @@ private fun MainInfo(state: SwapStateHolder) {
             getActiveIconRes(state.blockchainId)
         }
         val (topCard, bottomCard, button) = createRefs()
+        val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
         TransactionCard(
             type = state.sendCardData.type,
             balance = state.sendCardData.balance,
@@ -168,6 +169,7 @@ private fun MainInfo(state: SwapStateHolder) {
             amountEquivalent = state.sendCardData.amountEquivalent,
             tokenIconUrl = state.sendCardData.tokenIconUrl,
             tokenCurrency = state.sendCardData.tokenCurrency,
+            priceImpact = priceImpactWarning,
             networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
             iconPlaceholder = state.sendCardData.coinId?.let {
                 getActiveIconResByCoinId(it, state.networkId)
@@ -185,6 +187,7 @@ private fun MainInfo(state: SwapStateHolder) {
             amountEquivalent = state.receiveCardData.amountEquivalent,
             tokenIconUrl = state.receiveCardData.tokenIconUrl,
             tokenCurrency = state.receiveCardData.tokenCurrency,
+            priceImpact = priceImpactWarning,
             networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
             iconPlaceholder = state.receiveCardData.coinId?.let {
                 getActiveIconResByCoinId(it, state.networkId)
@@ -289,9 +292,12 @@ private fun SwapWarnings(
     ) {
         warnings.forEach { warning ->
             when (warning) {
-                // SwapWarning.HighPriceImpact -> {
-                //     WarningCard(title = stringResource(id = R.string.), description = stringResource(id = R.string.))
-                // }
+                is SwapWarning.HighPriceImpact -> {
+                    WarningCard(
+                        title = stringResource(id = R.string.swapping_high_price_impact),
+                        description = stringResource(id = R.string.swapping_high_price_impact_description),
+                    )
+                }
                 is SwapWarning.PermissionNeeded -> {
                     WarningCard(
                         title = stringResource(id = R.string.swapping_permission_header),
