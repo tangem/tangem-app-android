@@ -1,6 +1,7 @@
 package com.tangem.tap.common.chat
 
 import android.content.Context
+import android.os.Build
 import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.tap.common.chat.opener.ChatOpener
 import com.tangem.tap.common.chat.opener.implementation.SprinklrChatOpener
@@ -19,11 +20,31 @@ class ChatManager(
     fun open(config: ChatConfig, feedbackDataBuilder: (Context) -> String) {
         val opener = openers.getOrPut(config) {
             when (config) {
-                is SprinklrConfig -> SprinklrChatOpener(config, store)
-                is ZendeskConfig -> ZendeskChatOpener(config, preferencesStorage, foregroundActivityObserver)
+                is SprinklrConfig -> SprinklrChatOpener(getSprinklrUserId(), config, store)
+                is ZendeskConfig -> ZendeskChatOpener(getZendeskUserId(), config, foregroundActivityObserver)
             }
         }
 
         opener.open(feedbackDataBuilder)
+    }
+
+    private fun getZendeskUserId(): String {
+        if (preferencesStorage.zendeskFirstLaunchTime == null) {
+            preferencesStorage.zendeskFirstLaunchTime = System.currentTimeMillis()
+        }
+
+        return getChatUserId(preferencesStorage.zendeskFirstLaunchTime!!)
+    }
+
+    private fun getSprinklrUserId(): String {
+        if (preferencesStorage.sprinklrFirstLaunchTime == null) {
+            preferencesStorage.sprinklrFirstLaunchTime = System.currentTimeMillis()
+        }
+
+        return getChatUserId(preferencesStorage.sprinklrFirstLaunchTime!!)
+    }
+
+    private fun getChatUserId(firstLaunchTimeMillis: Long): String {
+        return "${firstLaunchTimeMillis}${Build.MODEL}".hashCode().toString()
     }
 }
