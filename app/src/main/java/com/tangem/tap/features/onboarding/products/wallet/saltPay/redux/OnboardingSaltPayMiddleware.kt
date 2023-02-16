@@ -91,6 +91,17 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
                 handleInProgress = false
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep))
+
+                if (updateStep == SaltPayActivationStep.Claim) {
+                    handleClaimRefreshInProgress = true
+                    val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
+                        SaltPayExceptionHandler.handle(it.error)
+                        handleClaimRefreshInProgress = false
+                        return@launch
+                    }
+                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
+                    handleClaimRefreshInProgress = false
+                }
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
@@ -220,34 +231,29 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                when (val amountToClaimResult = state.saltPayManager.getAmountToClaim()) {
-                    is Result.Success -> {
-                        // need to re claim
-                        handleClaimRefreshInProgress = false
-                        dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(amountToClaimResult.data))
-                        dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Claim))
-                    }
-                    is Result.Failure -> {
-                        when (amountToClaimResult.error) {
-                            is SaltPayActivationError.NoFundsToClaim -> {
-                                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
-                                    SaltPayExceptionHandler.handle(it.error)
-                                    handleClaimRefreshInProgress = false
-                                    return@launch
-                                }
+                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
+                    SaltPayExceptionHandler.handle(it.error)
+                    handleClaimRefreshInProgress = false
+                    return@launch
+                }
+                dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
 
-                                handleClaimRefreshInProgress = false
-                                if (tokenAmountValue.isPositive()) {
-                                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
-                                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
-                                }
-                            }
-                            else -> {
-                                handleClaimRefreshInProgress = false
-                                SaltPayExceptionHandler.handle(amountToClaimResult.error)
-                            }
-                        }
+                val amountToClaim = state.saltPayManager.getAmountToClaim().successOr {
+                    if (it.error !is SaltPayActivationError.NoFundsToClaim) {
+                        handleClaimRefreshInProgress = false
+                        SaltPayExceptionHandler.handle(it.error)
+                        return@launch
+                    } else {
+                        null
                     }
+                }
+                handleClaimRefreshInProgress = false
+
+                if (tokenAmountValue.isPositive() && amountToClaim == null) {
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
+                } else {
+                    // mb in the next steps we decide to claim again, but now we going to ClaimSuccess step
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
                 }
             }
         }
