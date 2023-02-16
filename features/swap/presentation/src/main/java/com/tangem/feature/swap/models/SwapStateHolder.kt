@@ -84,7 +84,12 @@ sealed interface SwapWarning {
         val onClick: () -> Unit,
     ) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
-    // object HighPriceImpact : SwapWarning
+    /**
+     * High price impact warning
+     *
+     * @property priceImpact in format = 10 (means 10%)
+     */
+    data class HighPriceImpact(val priceImpact: Int) : SwapWarning
 }
 
 enum class GenericWarningType {

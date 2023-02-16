@@ -12,6 +12,7 @@ sealed interface SwapState {
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
         val fee: String,
+        val priceImpact: Float,
         val networkCurrency: String,
         val preparedSwapConfigState: PreparedSwapConfigState,
         val permissionState: PermissionDataState = PermissionDataState.Empty,

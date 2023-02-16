@@ -335,6 +335,8 @@
     <string name="swapping_error_wrapper">錯誤： %s</string>
     <string name="swapping_generic_error">有錯誤。請再試一遍</string>
     <string name="swapping_give_permission">賦予權限</string>
+    <string name="swapping_high_price_impact">High price impact!</string>
+    <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">餘額不足</string>
     <string name="swapping_not_enough_funds_for_fee">您的 %1$s 錢包中沒有足夠的資金來創建交易。首先為您的 %2$s 錢包充值</string>
     <string name="swapping_pending_transaction_subtitle">交易進行中...</string>
