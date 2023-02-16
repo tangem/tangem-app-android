@@ -335,6 +335,8 @@
     <string name="swapping_error_wrapper">Error: %s</string>
     <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_give_permission">Give Permission</string>
+    <string name="swapping_high_price_impact">High price impact!</string>
+    <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
     <string name="swapping_not_enough_funds_for_fee">Not enough funds for fee in your %1$s wallet to create a transaction. Top up your %2$s wallet first.</string>
     <string name="swapping_pending_transaction_subtitle">Transaction in progress...</string>
