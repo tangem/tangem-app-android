@@ -335,6 +335,8 @@
     <string name="swapping_error_wrapper">Ошибка: %s</string>
     <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
+    <string name="swapping_high_price_impact">Сильные колебания цены!</string>
+    <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
     <string name="swapping_not_enough_funds_for_fee">Недостаточно средств для оплаты на вашем %1$s кошельке для создания транзакции. Сначала пополните свой %2$s кошелек.</string>
     <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
