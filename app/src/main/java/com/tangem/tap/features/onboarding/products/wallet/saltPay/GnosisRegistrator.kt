@@ -23,6 +23,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -33,11 +35,12 @@ class GnosisRegistrator(
 ) {
 
     private val walletAddress = walletManager.wallet.address
+    private val blockchain = walletManager.wallet.blockchain
     private val token = walletManager.wallet.getFirstToken().guard {
         throw NullPointerException("WalletManager for GnosisRegistrator must contain token")
     }
 
-    private val otpProcessorContractAddress: String = when (walletManager.wallet.blockchain) {
+    private val otpProcessorContractAddress: String = when (blockchain) {
         Blockchain.SaltPay -> "0xc659f4FEd7A84a188F54cBA4A7a49D77c1a20522"
         else -> throw IllegalArgumentException("GnosisRegistrator supports only the SaltPay blockchain")
     }
@@ -154,6 +157,12 @@ class GnosisRegistrator(
                 return Result.Failure(BlockchainSdkError.WrappedThrowable(it.error))
             }
         }
+
+        // return transferFromStandardWay(amountToClaim, signer)
+        return transferFromHardcodeWay(amountToClaim, signer)
+    }
+
+    private suspend fun transferFromStandardWay(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
         val amount = Amount(token, amountToClaim)
         val feeAmount = walletManager.getFeeToTransferFrom(amount, addressTreasureSafe)
             .extractFeeAmount().successOr { return it }
@@ -162,6 +171,34 @@ class GnosisRegistrator(
         walletManager.transferFrom(transactionData, signer).successOr { return Result.Failure(it.error) }
 
         return Result.Success(Unit)
+    }
+
+    private suspend fun transferFromHardcodeWay(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
+        val amount = Amount(token, amountToClaim)
+        val gasPrice = walletManager.getGasPrice().successOr { return it }
+
+        val hardcodeGasLimit = BigInteger("300000")
+        val hardcodeFeeValue = (hardcodeGasLimit * gasPrice).toBigDecimal(
+            scale = blockchain.decimals(),
+            mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+        ).movePointLeft(blockchain.decimals())
+        val hardcodeFeeAmount = Amount(hardcodeFeeValue, blockchain)
+
+        val transactionData = walletManager.createTransferFromTransaction(
+            amount = amount,
+            fee = hardcodeFeeAmount,
+            source = addressTreasureSafe,
+        )
+        val transactionToSign = walletManager.transactionBuilder.buildTransferFromToSign(
+            transactionData,
+            walletManager.txCount.toBigInteger(),
+            hardcodeGasLimit,
+        ) ?: return Result.Failure(BlockchainSdkError.CustomError("Not enough data"))
+
+        return when (val result = walletManager.signAndSend(transactionToSign, signer)) {
+            SimpleResult.Success -> Result.Success(Unit)
+            is SimpleResult.Failure -> Result.Failure(result.error)
+        }
     }
 
     private fun Result<List<Amount>>.extractFeeAmount(): Result<Amount> {
