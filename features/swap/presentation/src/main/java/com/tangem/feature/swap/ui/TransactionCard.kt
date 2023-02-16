@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +48,9 @@ import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerW16
+import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
 import com.valentinilk.shimmer.shimmer
 
@@ -57,6 +62,7 @@ fun TransactionCard(
     tokenIconUrl: String,
     tokenCurrency: String,
     amountEquivalent: String?,
+    priceImpact: SwapWarning.HighPriceImpact?,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
     @DrawableRes iconPlaceholder: Int? = null,
@@ -82,6 +88,7 @@ fun TransactionCard(
                     type = type,
                     amountEquivalent = amountEquivalent,
                     textFieldValue = textFieldValue,
+                    priceImpact = priceImpact,
                 )
             }
 
@@ -171,6 +178,7 @@ private fun Header(
 private fun Content(
     type: TransactionCardType,
     amountEquivalent: String?,
+    priceImpact: SwapWarning.HighPriceImpact?,
     textFieldValue: TextFieldValue?,
 ) {
     Row(
@@ -227,12 +235,34 @@ private fun Content(
             SpacerH8()
 
             if (amountEquivalent != null) {
-                Text(
-                    text = amountEquivalent,
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.body2,
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
-                )
+                if (type is TransactionCardType.ReceiveCard && priceImpact != null) {
+                    Row {
+                        Text(
+                            text = makePriceImpactBalanceWarning(amountEquivalent, priceImpact.priceImpact),
+                            color = TangemTheme.colors.text.tertiary,
+                            style = TangemTheme.typography.body2,
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                                .align(Alignment.CenterVertically),
+                        )
+                        SpacerW4()
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_alert_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors.icon.attention,
+                            modifier = Modifier
+                                .size(size = TangemTheme.dimens.size20)
+                                .align(Alignment.CenterVertically),
+                        )
+                    }
+                } else {
+                    Text(
+                        text = amountEquivalent,
+                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.body2,
+                        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+                    )
+                }
             } else {
                 Box(
                     modifier = Modifier
@@ -340,6 +370,19 @@ fun ChangeTokenSelector() {
 }
 
 @Composable
+private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: Int): AnnotatedString {
+    val fullValue = "$value (-$priceImpactPercents%)"
+    return buildAnnotatedString {
+        append(fullValue)
+        addStyle(
+            style = SpanStyle(color = TangemTheme.colors.text.attention),
+            start = value.length,
+            end = fullValue.length,
+        )
+    }
+}
+
+@Composable
 private fun TokenImageShimmer(
     modifier: Modifier = Modifier,
 ) {
@@ -384,6 +427,7 @@ private fun TransactionCardPreview() {
         onChangeTokenClick = {},
         balance = "123",
         textFieldValue = TextFieldValue(),
+        priceImpact = null,
     )
 }
 
