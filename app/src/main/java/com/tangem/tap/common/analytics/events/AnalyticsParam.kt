@@ -60,6 +60,13 @@ sealed class AnalyticsParam {
         object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
+    sealed class ScannedFrom(val value: String) {
+        object Introduction : ScannedFrom("Introduction")
+        object Main : ScannedFrom("Main")
+        object SignIn : ScannedFrom("Sign In")
+        object MyWallets : ScannedFrom("My Wallets")
+    }
+
     companion object Key {
         const val Batch = "Batch"
         const val ProductType = "Product Type"
