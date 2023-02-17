@@ -252,8 +252,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 if (tokenAmountValue.isPositive() && amountToClaim == null) {
                     dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
                 } else {
-                    // mb in the next steps we decide to claim again, but now we going to ClaimSuccess step
-                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
+                    // dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
                 }
             }
         }
