@@ -1,6 +1,7 @@
 package com.tangem.tap.features.sprinklr.ui
 
 import androidx.lifecycle.ViewModel
+import com.google.accompanist.web.WebContent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.sprinklr.redux.SprinklrState
@@ -22,7 +23,9 @@ internal class SprinklrViewModel : ViewModel(), StoreSubscriber<SprinklrState> {
         stateInternal.update { prevState ->
             prevState.copy(
                 initialUrl = state.url,
+                sprinklrDomains = state.sprinklrDomains,
                 onNavigateBack = this::navigateBack,
+                onNewUrl = { updateWebContentOrOpenExternalUrl(it) },
             )
         }
     }
@@ -40,5 +43,19 @@ internal class SprinklrViewModel : ViewModel(), StoreSubscriber<SprinklrState> {
 
     private fun navigateBack() {
         store.dispatchOnMain(NavigationAction.PopBackTo())
+    }
+
+    private fun WebContent.updateWebContentOrOpenExternalUrl(url: String): WebContent {
+        return if (isExternalUrl(url)) {
+            store.dispatchOnMain(NavigationAction.OpenUrl(url))
+            this
+        } else when (this) {
+            is WebContent.Url -> copy(url = url)
+            else -> WebContent.Url(url)
+        }
+    }
+
+    private fun isExternalUrl(url: String): Boolean {
+        return state.value.sprinklrDomains.none { url.contains(it) }
     }
 }
