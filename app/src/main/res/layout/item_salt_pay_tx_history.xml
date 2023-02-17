@@ -53,13 +53,13 @@
         android:ellipsize="end"
         android:letterSpacing="0.03"
         android:singleLine="true"
+        android:text="@string/transaction_history_tx_in_progress"
         android:textColor="@color/text_attention"
         android:textSize="12sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tv_tx_amount_sign"
-        app:layout_constraintStart_toStartOf="@+id/tv_tx_hash"
-        tools:text="In progress..." />
+        app:layout_constraintStart_toStartOf="@+id/tv_tx_hash" />
 
     <TextView
         android:id="@+id/tv_tx_amount_sign"
