@@ -23,7 +23,7 @@ object Versions {
     // endregion Compose
 
     // region Other libraries
-    const val accompanist = "0.23.0"
+    const val accompanist = "0.28.0"
     const val amplitude = "2.36.1"
     const val appsflyer = "6.5.1"
     const val armadillo = "0.9.0"
