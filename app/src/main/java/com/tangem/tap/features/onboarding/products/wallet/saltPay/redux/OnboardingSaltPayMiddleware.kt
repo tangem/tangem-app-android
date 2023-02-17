@@ -258,6 +258,8 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         }
         is OnboardingSaltPayAction.SetStep -> {
             when (action.newStep) {
+                SaltPayActivationStep.NeedPin -> Analytics.send(Onboarding.PinScreenOpened())
+                SaltPayActivationStep.KycIntro -> Analytics.send(Onboarding.KYCScreenOpened())
                 SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
                 SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
                 SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
