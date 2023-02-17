@@ -6,6 +6,8 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.extensions.addCardContext
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -109,7 +111,7 @@ internal class WelcomeMiddleware {
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
         ScanCardProcessor.scan(
-            analyticsEvent = SignIn.CardWasScanned(),
+            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
             },
