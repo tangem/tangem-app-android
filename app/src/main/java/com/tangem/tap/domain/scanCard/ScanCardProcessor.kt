@@ -27,10 +27,10 @@ import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManagerFactory
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -187,7 +187,10 @@ object ScanCardProcessor {
 
         if (scanResponse.isSaltPay()) {
             if (scanResponse.isSaltPayVisa()) {
-                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
+                val manager = SaltPayActivationManagerFactory(
+                    blockchain = scanResponse.getBlockchain(),
+                    card = scanResponse.card,
+                ).create()
                 val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse, manager)
                 delay(500)
                 withMainContext {
@@ -197,7 +200,7 @@ object ScanCardProcessor {
                             if (isOnboardingCase) {
                                 onWalletNotCreated()
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
+                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager))
                                 store.dispatch(OnboardingSaltPayAction.Update)
                                 navigateTo(AppScreen.OnboardingWallet) { onProgressStateChange(it) }
                             } else {
