@@ -84,7 +84,7 @@ data class WalletState(
         get() = if (isMultiwalletAllowed || walletsStores.isEmpty() || walletsStores.size > 1) null
         else walletsStores[0]
 
-    private val primaryWalletManager: WalletManager?
+    val primaryWalletManager: WalletManager?
         get() = primaryWalletStore?.walletManager
 
     val primaryWalletData: WalletData?
