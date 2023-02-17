@@ -450,6 +450,10 @@
     <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
     <string name="wallet_balance_missing_derivation">Scan the card</string>
     <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
+    <string name="transaction_history_tx_in_progress">In progress…</string>
+    <string name="transaction_history_error_failed_to_load">Failed to load transactions</string>
+    <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
+    <string name="transaction_history_title">Transactions</string>
 
     <!-- Special string -->
     <string name="common_custom_string">%s</string>
