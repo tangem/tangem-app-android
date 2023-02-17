@@ -67,8 +67,10 @@ sealed class Onboarding(
         class SetupFinished : Twins("Twin Setup Finished")
     }
 
+    class PinScreenOpened : Onboarding("Onboarding", "PIN screen opened")
     class PinCodeSet : Onboarding("Onboarding", "PIN code set")
     class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
+    class KYCScreenOpened : Onboarding("Onboarding", "KYC screen opened")
     class KYCStarted : Onboarding("Onboarding", "KYC started")
     class KYCInProgress : Onboarding("Onboarding", "KYC in progress")
     class KYCRejected : Onboarding("Onboarding", "KYC rejected")
