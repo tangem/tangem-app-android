@@ -29,7 +29,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Analytics.send(IntroductionProcess.ScreenOpened())
+        store.dispatch(HomeAction.OnCreate)
         store.dispatch(HomeAction.Init)
     }
 
