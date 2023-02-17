@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -14,7 +13,6 @@ sealed class OnboardingSaltPayAction : Action {
 
     data class SetDependencies(
         val registrationManager: SaltPayActivationManager,
-        val saltPayConfig: SaltPayConfig,
     ) : OnboardingSaltPayAction()
 
     data class SetInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()
