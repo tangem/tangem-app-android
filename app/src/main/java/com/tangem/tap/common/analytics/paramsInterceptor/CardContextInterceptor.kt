@@ -37,15 +37,24 @@ class CardContextInterceptor(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Wallet -> "Wallet"
-            ProductType.SaltPay -> when (scanResponse.isSaltPayVisa()) {
-                true -> "Visa"
-                else -> "Visa Backup"
+            ProductType.SaltPay -> if (scanResponse.isSaltPayVisa()) {
+                "Visa"
+            } else {
+                "Visa Backup"
             }
             ProductType.Start2Coin -> "Start2Coin"
-            else -> when (DemoHelper.isDemoCard(scanResponse)) {
-// [REDACTED_TODO_COMMENT]
-                true -> "Demo Wallet | Demo Note"
-                else -> "Other"
+            else -> if (DemoHelper.isDemoCard(scanResponse)) {
+                if (DemoHelper.isTestDemoCard(scanResponse)) {
+                    "Demo Test"
+                } else {
+                    when (scanResponse.card.cardId.substring(0..1)) {
+                        "AC" -> "Demo Wallet"
+                        "AB" -> "Demo Note"
+                        else -> "Demo Other"
+                    }
+                }
+            } else {
+                "Other"
             }
         }
     }
