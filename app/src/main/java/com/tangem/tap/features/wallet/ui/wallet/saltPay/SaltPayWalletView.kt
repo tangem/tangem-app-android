@@ -6,6 +6,8 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.ShimmerData
+import com.tangem.tap.common.ShimmerRecyclerAdapter
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
@@ -18,9 +20,9 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
-import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.ShimmerData
-import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.ShimmerRecyclerAdapter
-import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.TransactionHistoryAdapter
+import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryItemData
+import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryTransactionData
+import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.TxHistoryAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -85,7 +87,7 @@ class SaltPayWalletView : WalletView() {
         txWidget.rvTxHistoryShimmer.adapter = adapter
         txWidget.rvTxHistoryShimmer.addItemDecoration(SpaceItemDecoration.vertical(10F))
 
-        txWidget.rvTxHistory.adapter = TransactionHistoryAdapter()
+        txWidget.rvTxHistory.adapter = TxHistoryAdapter()
         txWidget.rvTxHistory.addItemDecoration(SpaceItemDecoration.vertical(10F))
 
         handleTxInit()
@@ -147,18 +149,31 @@ class SaltPayWalletView : WalletView() {
             // val walletAddress = "0xDA94Aae02a4Db0e09E1Cf240E3a0973ba89052cf"
             when (val result = walletManager.getTransactionHistory(walletAddress, wallet.blockchain, setOf(token))) {
                 is Result.Success -> {
-                    val tokensHistory = result.data
+                    val dateAssociatedHistory = mutableMapOf<String, MutableList<HistoryTransactionData>>()
+
+                    result.data
                         .filter { it.contractAddress == token.contractAddress }
-                        .sortedBy { it.date?.timeInMillis ?: 0 }
-                        .map { HistoryTransactionData(it, walletAddress) }
+                        .sortedByDescending { it.date?.timeInMillis ?: 0 }
+                        .forEach {
+                            val txData = HistoryTransactionData(it, walletAddress)
+                            val list = dateAssociatedHistory[txData.date] ?: mutableListOf()
+                            list.add(txData)
+                            dateAssociatedHistory[txData.date] = list
+                        }
+
+                    val dataList = mutableListOf<HistoryItemData>()
+                    dateAssociatedHistory.forEach { entry ->
+                        dataList.add(HistoryItemData.Date(entry.key))
+                        entry.value.forEach { dataList.add(HistoryItemData.TransactionData(it)) }
+                    }
                     // .toMutableList().apply { clear() }
 
                     delay(300)
                     withMainContext {
-                        if (tokensHistory.isEmpty()) {
+                        if (dataList.isEmpty()) {
                             handleTxEmpty()
                         } else {
-                            handleTxSuccess(tokensHistory)
+                            handleTxSuccess(dataList)
                         }
                     }
                 }
@@ -185,7 +200,7 @@ class SaltPayWalletView : WalletView() {
         txWidget.groupShimmer.show()
     }
 
-    private fun handleTxSuccess(dataList: List<HistoryTransactionData>) = with(txWidget) {
+    private fun handleTxSuccess(dataList: List<HistoryItemData>) = with(txWidget) {
         groupShimmer.hide()
         groupEmpty.hide()
         groupError.hide()
@@ -212,7 +227,7 @@ class SaltPayWalletView : WalletView() {
         groupError.show()
     }
 
-    private fun updateTxHistoryWidget(dataList: List<HistoryTransactionData>) = with(txWidget) {
-        (rvTxHistory.adapter as TransactionHistoryAdapter).submitList(dataList)
+    private fun updateTxHistoryWidget(dataList: List<HistoryItemData>) = with(txWidget) {
+        (rvTxHistory.adapter as TxHistoryAdapter).submitList(dataList)
     }
 }
