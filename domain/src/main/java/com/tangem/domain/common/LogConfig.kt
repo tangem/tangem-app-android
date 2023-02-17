@@ -22,5 +22,5 @@ object NetworkLogConfig {
 object AnalyticsHandlersLogConfig {
     val firebase: Boolean = false
     val appsFlyer: Boolean = false
-    val amplitude: Boolean = false
+    val amplitude: Boolean = true
 }
