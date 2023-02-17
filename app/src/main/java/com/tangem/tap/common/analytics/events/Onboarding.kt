@@ -51,7 +51,7 @@ sealed class Onboarding(
 
         class ButtonBuyCrypto(currency: AnalyticsParam.CurrencyType) : Topup(
             event = "Button - Buy Crypto",
-            params = mapOf("Currency" to currency.value),
+            params = mapOf(AnalyticsParam.Currency to currency.value),
         )
 
         class ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")

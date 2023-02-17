@@ -19,14 +19,14 @@ sealed class Basic(
         event = "Signed in",
         params = mapOf(
             "State" to state.value,
-            "Currency" to currency.value,
-            AnalyticsParam.BatchId to batch,
+            AnalyticsParam.Currency to currency.value,
+            AnalyticsParam.Batch to batch,
         ),
     )
 
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
-        params = mapOf("Currency" to currency.value),
+        params = mapOf(AnalyticsParam.Currency to currency.value),
     )
 
     class ScanError(error: Throwable) : Basic(
