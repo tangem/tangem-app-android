@@ -13,7 +13,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
+import com.tangem.tap.common.extensions.addCardContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -75,7 +75,7 @@ object ScanCardProcessor {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
                 onScanStateChange(false)
-                sendAnalytics(analyticsEvent, scanResponse.card.batchId)
+                sendAnalytics(analyticsEvent, scanResponse)
 
                 checkForUnfinishedBackupForSaltPay(
                     backupService = backupService,
@@ -103,9 +103,9 @@ object ScanCardProcessor {
 
     private fun sendAnalytics(
         analyticsEvent: AnalyticsEvent?,
-        batchId: String,
+        scanResponse: ScanResponse,
     ) {
-        Analytics.addParamsInterceptor(BatchIdParamsInterceptor(batchId))
+        Analytics.addCardContext(scanResponse)
         analyticsEvent?.let { Analytics.send(it) }
     }
 
