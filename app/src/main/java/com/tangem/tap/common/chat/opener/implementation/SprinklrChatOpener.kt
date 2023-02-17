@@ -11,11 +11,12 @@ import com.tangem.tap.features.sprinklr.redux.SprinklrAction
 import org.rekotlin.Store
 
 internal class SprinklrChatOpener(
+    private val userId: String,
     private val config: SprinklrConfig,
     private val store: Store<AppState>,
 ) : ChatOpener {
     override fun open(feedbackDataBuilder: (Context) -> String) {
-        store.dispatch(SprinklrAction.SetConfig(config))
+        store.dispatch(SprinklrAction.Init(userId, config))
         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Sprinklr))
     }
 }
