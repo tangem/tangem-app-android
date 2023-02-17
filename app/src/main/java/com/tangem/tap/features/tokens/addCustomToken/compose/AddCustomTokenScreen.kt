@@ -55,7 +55,6 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.ComposeDialogManager
-import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
@@ -66,7 +65,7 @@ import kotlinx.coroutines.launch
 /**
 * [REDACTED_AUTHOR]
  */
-private class AddCustomTokenScreen {} // for simple search
+private class AddCustomTokenScreen  // for simple search
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -91,11 +90,13 @@ fun AddCustomTokenScreen(
         },
         sheetPeekHeight = 0.dp,
     ) {
-        Column() {
-            TestCasesList(onItemClick = {
-                selectedTestCase.value = it
-                toggleBottomSheet()
-            })
+        Column {
+            TestCasesList(
+                onItemClick = {
+                    selectedTestCase.value = it
+                    toggleBottomSheet()
+                },
+            )
             ScreenContent(state, closePopupTrigger)
         }
     }
@@ -228,23 +229,21 @@ private fun AddCustomTokenFab(
         FloatingActionButtonDefaults.elevation()
     }
 
-    ToggledRippleTheme(isEnabled) {
-        ExtendedFloatingActionButton(
-            modifier = modifier,
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    tint = contentColor,
-                    contentDescription = "Add",
-                )
-            },
-            text = { Text(text = stringResource(id = R.string.common_add)) },
-            onClick = { if (isEnabled) onClick() },
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            elevation = elevation,
-        )
-    }
+    ExtendedFloatingActionButton(
+        modifier = modifier,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                tint = contentColor,
+                contentDescription = "Add",
+            )
+        },
+        text = { Text(text = stringResource(id = R.string.common_add)) },
+        onClick = { if (isEnabled) onClick() },
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        elevation = elevation,
+    )
 }
 
 data class ScreenFieldData(
