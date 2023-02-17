@@ -9,6 +9,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.chat.SprinklrConfig
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -109,17 +110,16 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             val scanResponse = globalState.scanResponse ?: globalState.onboardingState.onboardingManager?.scanResponse
 
             // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeZendeskConfig = action.zendeskConfig ?: when {
-                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.zendesk
+            val unsafeChatConfig = action.chatConfig ?: when {
+                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.sprinklrAppID?.let(::SprinklrConfig)
                 else -> config.zendesk
             }
 
-            val zendeskConfig = unsafeZendeskConfig.guard {
+            val chatConfig = unsafeChatConfig.guard {
                 store.dispatchDebugErrorNotification("ZendeskConfig not initialized")
                 return
             }
-            feedbackManager.initChat(zendeskConfig)
-            feedbackManager.openChat(action.feedbackData)
+            feedbackManager.openChat(chatConfig, action.feedbackData)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {
             store.dispatch(WalletAction.Warnings.CheckRemainingSignatures(action.remainingSignatures))
