@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.common.extensions.guard
-import com.tangem.tap.common.chat.SprinklrConfig
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -21,14 +20,14 @@ class NoFundsForActivationDialog {
                 setTitle(R.string.saltpay_error_no_gas_title)
                 setMessage(R.string.saltpay_error_no_gas_message)
                 setPositiveButton(R.string.chat_button_title) { _, _ ->
-                    val sprinklrAppId = store.state.globalState.configManager?.config
+                    val sprinklrConfig = store.state.globalState.configManager?.config
                         ?.saltPayConfig
-                        ?.sprinklrAppID
+                        ?.sprinklr
                         .guard {
                             store.dispatchDebugErrorNotification("SaltPayConfig not initialized")
                             return@setPositiveButton
                         }
-                    store.dispatch(GlobalAction.OpenChat(SupportInfo(), SprinklrConfig(sprinklrAppId)))
+                    store.dispatch(GlobalAction.OpenChat(SupportInfo(), sprinklrConfig))
                 }
                 setNegativeButton(R.string.common_cancel) { _, _ ->
                 }
