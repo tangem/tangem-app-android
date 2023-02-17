@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.paramsInterceptor
 
-import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 
 /**
@@ -16,6 +16,6 @@ class BatchIdParamsInterceptor(
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = true
 
     override fun intercept(params: MutableMap<String, String>) {
-        params[AnalyticsParam.BatchId] = batchId
+        params[AnalyticsParam.Batch] = batchId
     }
 }
