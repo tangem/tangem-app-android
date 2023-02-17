@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui.wallet.saltPay.rv
+package com.tangem.tap.common
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
