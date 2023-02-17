@@ -1,7 +1,9 @@
 package com.tangem.tap.features.sprinklr.redux
 
+import com.tangem.tap.common.chat.SprinklrConfig
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.sprinklr.redux.model.SprinklrUrl
 import com.tangem.tap.store
 import org.rekotlin.Middleware
 
@@ -20,15 +22,21 @@ internal class SprinklrMiddleware {
 
     private fun handleAction(action: SprinklrAction) {
         when (action) {
-            is SprinklrAction.SetConfig -> createUrl()
-            is SprinklrAction.UpdateUrl -> Unit
+            is SprinklrAction.Init -> updateUrl(action.userId, action.config)
+            is SprinklrAction.UpdateUrl,
+            is SprinklrAction.UpdateSprinklrDomains,
+            -> Unit
         }
     }
 
-    private fun createUrl() {
-// [REDACTED_TODO_COMMENT]
-        val url = "https://prod-live-chat.sprinklr.com/" +
-            "page?appId=60c1d169c96beb5bf5a326f3_app_950954&device=MOBILE&enableClose=true&zoom=false"
+    private fun updateUrl(userId: String, config: SprinklrConfig) {
+        updateSprinklrDomains(config.baseUrl)
+        val url = SprinklrUrl.Prod(userId, config.baseUrl, config.appId).url
         store.dispatchOnMain(SprinklrAction.UpdateUrl(url))
+    }
+
+    private fun updateSprinklrDomains(baseUrl: String) {
+        val domains = listOf(baseUrl, SprinklrUrl.Static.url)
+        store.dispatchOnMain(SprinklrAction.UpdateSprinklrDomains(domains))
     }
 }
