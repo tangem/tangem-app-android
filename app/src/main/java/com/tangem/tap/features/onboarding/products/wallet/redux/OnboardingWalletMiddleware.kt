@@ -3,13 +3,13 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -22,8 +22,8 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingHelper
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManagerFactory
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.preferencesStorage
@@ -396,8 +396,11 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
     if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
         if (scanResponse == null) throw IllegalArgumentException()
 
-        val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
-        store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
+        val manager = SaltPayActivationManagerFactory(
+            blockchain = scanResponse.getBlockchain(),
+            card = scanResponse.card,
+        ).create()
+        store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager))
         store.dispatchOnMain(OnboardingSaltPayAction.Update)
     }
 }
