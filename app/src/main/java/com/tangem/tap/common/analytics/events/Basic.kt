@@ -11,6 +11,15 @@ sealed class Basic(
     error: Throwable? = null,
 ) : AnalyticsEvent("Basic", event, params, error) {
 
+    class CardWasScanned(
+        source: AnalyticsParam.ScannedFrom,
+    ) : Basic(
+        event = "Card Was Scanned",
+        params = mapOf(
+            "Source" to source.value,
+        ),
+    )
+
     class SignedIn(
         state: AnalyticsParam.CardBalanceState,
         currency: AnalyticsParam.CardCurrency,
