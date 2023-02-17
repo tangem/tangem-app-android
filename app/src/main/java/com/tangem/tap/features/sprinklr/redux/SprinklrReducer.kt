@@ -12,8 +12,9 @@ internal object SprinklrReducer {
 
     private fun internalReduce(action: SprinklrAction, state: SprinklrState): SprinklrState {
         return when (action) {
-            is SprinklrAction.SetConfig -> state
+            is SprinklrAction.Init -> state
             is SprinklrAction.UpdateUrl -> state.copy(url = action.url)
+            is SprinklrAction.UpdateSprinklrDomains -> state.copy(sprinklrDomains = action.domains)
         }
     }
 }
