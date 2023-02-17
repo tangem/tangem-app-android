@@ -12,7 +12,6 @@ sealed class SignIn(
 ) : AnalyticsEvent("Sign In", event, params, error) {
 
     class ScreenOpened : SignIn(event = "Sing In Screen Opened")
-    class CardWasScanned : SignIn(event = "Card Was Scanned")
 
     class ButtonBiometricSignIn : SignIn(event = "Button - Biometric Sign In")
     class ButtonCardSignIn : SignIn(event = "Button - Card Sign In")
