@@ -7,6 +7,7 @@ import org.rekotlin.Action
 
 sealed class HomeAction : Action {
 
+    object OnCreate : HomeAction()
     object Init : HomeAction()
 
     data class ReadCard(
