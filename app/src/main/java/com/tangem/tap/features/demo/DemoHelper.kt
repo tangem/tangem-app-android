@@ -49,6 +49,8 @@ object DemoHelper {
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
 
+    fun isTestDemoCard(scanResponse: ScanResponse): Boolean = config.isTestDemoCardId(scanResponse.card.cardId)
+
     fun isDemoCardId(cardId: String): Boolean = config.isDemoCardId(cardId)
 
     fun tryHandle(appState: () -> AppState?, action: Action): Boolean {
@@ -108,6 +110,8 @@ class DemoConfig {
 
     fun isDemoCardId(cardId: String): Boolean = demoCardIds.contains(cardId)
 
+    fun isTestDemoCardId(cardId: String): Boolean = testDemoCardIds.contains(cardId)
+
     fun getBalance(blockchain: Blockchain): Amount = walletBalances[blockchain]?.copy()
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
@@ -117,9 +121,6 @@ class DemoConfig {
 
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
-        "FB10000000000196", // Note BTC
-        "FB20000000000186", // Note ETH
-        "FB30000000000176", // Wallet
         "AC01000000041225",
         "AC01000000041472",
         "AB01000000046498",
@@ -489,17 +490,19 @@ class DemoConfig {
 
 class DemoTransactionSender(
     private val walletManager: WalletManager,
-    private val sender: TransactionSender = walletManager as TransactionSender
+    private val sender: TransactionSender = walletManager as TransactionSender,
 ) : TransactionSender {
 
     override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val blockchain = walletManager.wallet.blockchain
         return when (walletManager) {
-            is BitcoinWalletManager -> Result.Success(listOf(
-                Amount(0.0001.toBigDecimal(), blockchain),
-                Amount(0.0003.toBigDecimal(), blockchain),
-                Amount(0.00055.toBigDecimal(), blockchain),
-            ))
+            is BitcoinWalletManager -> Result.Success(
+                listOf(
+                    Amount(0.0001.toBigDecimal(), blockchain),
+                    Amount(0.0003.toBigDecimal(), blockchain),
+                    Amount(0.00055.toBigDecimal(), blockchain),
+                ),
+            )
             else -> sender.getFee(amount, destination)
         }
     }
@@ -508,7 +511,7 @@ class DemoTransactionSender(
         val dataToSign = randomString(32).toByteArray()
         val signerResponse = signer.sign(
             hash = dataToSign,
-            publicKey = walletManager.wallet.publicKey
+            publicKey = walletManager.wallet.publicKey,
         )
         return when (signerResponse) {
             is CompletionResult.Success -> SimpleResult.Failure(Exception(ID).toBlockchainSdkError())
@@ -529,5 +532,4 @@ class DemoTransactionSender(
     companion object {
         val ID = DemoTransactionSender::class.java.simpleName
     }
-
 }
