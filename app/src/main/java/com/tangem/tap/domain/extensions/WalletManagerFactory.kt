@@ -1,19 +1,15 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
@@ -137,23 +133,4 @@ private fun selectWallet(wallets: List<CardDTO.Wallet>): CardDTO.Wallet? {
         1 -> wallets[0]
         else -> wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: wallets[0]
     }
-}
-
-fun WalletManagerFactory.makeSaltPayWalletManager(
-    scanResponse: ScanResponse,
-): EthereumWalletManager {
-    val blockchain = scanResponse.getBlockchain()
-    if (blockchain != Blockchain.SaltPay)
-        throw IllegalArgumentException()
-
-    val token = SaltPayWorkaround.tokenFrom(blockchain)
-    val cardWallet = scanResponse.card.wallets.firstOrNull().guard {
-        throw NullPointerException("SaltPay card must have one wallet at least")
-    }
-
-    return makeWalletManager(
-        blockchain = blockchain,
-        publicKey = Wallet.PublicKey(cardWallet.publicKey, null, null),
-        tokens = listOf(token),
-    ) as EthereumWalletManager
 }
