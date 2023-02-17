@@ -61,7 +61,10 @@ sealed class AnalyticsParam {
     }
 
     companion object Key {
-        const val BatchId = "Batch"
+        const val Batch = "Batch"
+        const val ProductType = "Product Type"
+        const val Firmware = "Firmware"
+        const val Currency = "Currency"
         const val ErrorDescription = "Error Description"
         const val ErrorCode = "Error Code"
         const val ErrorKey = "Error Key"
