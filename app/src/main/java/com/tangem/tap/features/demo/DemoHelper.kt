@@ -121,9 +121,6 @@ class DemoConfig {
 
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
-        "FB10000000000196", // Note BTC
-        "FB20000000000186", // Note ETH
-        "FB30000000000176", // Wallet
         "AC01000000041225",
         "AC01000000041472",
         "AB01000000046498",
