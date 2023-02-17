@@ -14,6 +14,5 @@ sealed class IntroductionProcess(
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCard : IntroductionProcess("Button - Scan Card")
-    class CardWasScanned : IntroductionProcess("Card Was Scanned")
     class ButtonRequestSupport : IntroductionProcess("Button - Request Support")
 }
