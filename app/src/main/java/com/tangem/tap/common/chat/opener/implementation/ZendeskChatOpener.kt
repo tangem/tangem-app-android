@@ -1,13 +1,11 @@
 package com.tangem.tap.common.chat.opener.implementation
 
 import android.content.Context
-import android.os.Build
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.tap.common.chat.ZendeskConfig
 import com.tangem.tap.common.chat.opener.ChatOpener
-import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 import com.zendesk.logger.Logger
@@ -20,8 +18,8 @@ import zendesk.configurations.Configuration
 import zendesk.messaging.MessagingActivity
 
 internal class ZendeskChatOpener(
+    private val userId: String,
     private val config: ZendeskConfig,
-    private val preferencesStorage: PreferencesStorage,
     private val foregroundActivityObserver: ForegroundActivityObserver,
 ) : ChatOpener {
     private var isInitialized = false
@@ -44,12 +42,8 @@ internal class ZendeskChatOpener(
     }
 
     private fun setChatVisitorInfo() {
-        if (preferencesStorage.chatFirstLaunchTime == null) {
-            preferencesStorage.chatFirstLaunchTime = System.currentTimeMillis()
-        }
-        val chatUserId = (preferencesStorage.chatFirstLaunchTime.toString() + Build.MODEL).hashCode()
         val visitorInfo = VisitorInfo.builder()
-            .withName("User $chatUserId")
+            .withName("User $userId")
             .build()
 
         Chat.INSTANCE.chatProvidersConfiguration = ChatProvidersConfiguration.builder()
