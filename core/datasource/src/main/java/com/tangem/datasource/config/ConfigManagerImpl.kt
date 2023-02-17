@@ -2,6 +2,8 @@ package com.tangem.datasource.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.GetBlockCredentials
+import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
 import com.tangem.datasource.config.ConfigManager.Companion.IS_CREATING_TWIN_CARDS_ALLOWED
 import com.tangem.datasource.config.ConfigManager.Companion.IS_SENDING_TO_PAY_ID_ENABLED
@@ -91,6 +93,8 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 infuraProjectId = configValues.infuraProjectId,
                 tronGridApiKey = configValues.tronGridApiKey,
                 saltPayAuthToken = configValues.saltPay.credentials.token,
+                nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
+                getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey)
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
