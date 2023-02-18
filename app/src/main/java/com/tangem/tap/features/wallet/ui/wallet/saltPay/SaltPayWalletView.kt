@@ -2,19 +2,16 @@ package com.tangem.tap.features.wallet.ui.wallet.saltPay
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.extensions.Result
+import com.skydoves.androidveil.VeilLayout
 import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ShimmerData
 import com.tangem.tap.common.ShimmerRecyclerAdapter
 import com.tangem.tap.common.extensions.animateVisibility
-import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
-import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -31,40 +28,41 @@ import com.tangem.wallet.databinding.ItemSaltPayTxHistoryShimmerBinding
 import com.tangem.wallet.databinding.LayoutSaltPayBalanceBinding
 import com.tangem.wallet.databinding.LayoutSaltPayTxHistoryBinding
 import com.tangem.wallet.databinding.LayoutSaltPayWalletBinding
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import java.util.concurrent.atomic.AtomicBoolean
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
  */
 class SaltPayWalletView : WalletView() {
 
-    private lateinit var saltPayBinding: LayoutSaltPayWalletBinding
+    private var saltPayBinding: LayoutSaltPayWalletBinding? = null
+
     private val actionDebouncer = debounce<Action>(500, mainScope) { store.dispatch(it) }
 
-    private val balanceWidget: LayoutSaltPayBalanceBinding
-        get() = saltPayBinding.lSaltPayBalance
+    private val balanceWidget: LayoutSaltPayBalanceBinding?
+        get() = saltPayBinding?.lSaltPayBalance
 
-    private val txWidget: LayoutSaltPayTxHistoryBinding
-        get() = saltPayBinding.lSaltPayTxHistory
+    private val txWidget: LayoutSaltPayTxHistoryBinding?
+        get() = saltPayBinding?.lSaltPayTxHistory
 
-    private var initialized = AtomicBoolean(false)
+    private val itemDecorator = SpaceItemDecoration.vertical(10F)
 
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
+        Timber.d("changeWalletView")
         saltPayBinding = binding.lSaltPayWallet
-        setFragment(fragment, binding)
-        onViewCreated()
         showSaltPayView(binding)
+        onViewCreated()
     }
 
     override fun onViewCreated() {
-        this.pullToRefreshListener = this::handlePullToRefresh
-        prepareTxRecyclers()
+        Timber.d("onViewCreated")
+        prepareTxRecyclers(txWidget!!)
     }
 
     private fun showSaltPayView(binding: FragmentWalletBinding) = with(binding) {
+        Timber.d("showSaltPayView")
         rvWarningMessages.hide()
         rvPendingTransaction.hide()
         rvMultiwallet.hide()
@@ -78,32 +76,41 @@ class SaltPayWalletView : WalletView() {
         lSaltPayWallet.root.show()
     }
 
-    private fun prepareTxRecyclers() {
+    private fun prepareTxRecyclers(txWidget: LayoutSaltPayTxHistoryBinding) = with(txWidget) {
+        Timber.d("prepareTxRecyclers")
         val vhViewFactory: (ViewGroup) -> ViewGroup = {
             val inflater = LayoutInflater.from(it.context)
             ItemSaltPayTxHistoryShimmerBinding.inflate(inflater, it, false).root
         }
         val adapter = ShimmerRecyclerAdapter(vhViewFactory)
-        txWidget.rvTxHistoryShimmer.adapter = adapter
-        txWidget.rvTxHistoryShimmer.addItemDecoration(SpaceItemDecoration.vertical(10F))
+        rvTxHistoryShimmer.adapter = adapter
+        rvTxHistoryShimmer.addItemDecoration(itemDecorator)
+        adapter.submitList(
+            listOf(
+                ShimmerData(),
+                ShimmerData(),
+                ShimmerData(),
+            ),
+        )
 
-        txWidget.rvTxHistory.adapter = TxHistoryAdapter()
-        txWidget.rvTxHistory.addItemDecoration(SpaceItemDecoration.vertical(10F))
-
-        handleTxInit()
-    }
-
-    private fun handlePullToRefresh() {
-        requestTxHistory(store.state.walletState)
+        rvTxHistory.adapter = TxHistoryAdapter()
+        rvTxHistory.addItemDecoration(itemDecorator)
     }
 
     override fun onNewState(state: WalletState) {
-        if (!initialized.getAndSet(true)) requestTxHistory(state)
-        setupBalanceWidget(state)
+        val balanceWidget = balanceWidget ?: return
+        val txWidget = txWidget ?: return
+
+        setupBalanceWidget(balanceWidget, state)
+        setupTxHistoryWidget(txWidget, state)
     }
 
-    private fun setupBalanceWidget(state: WalletState) = with(balanceWidget) {
-        val tokenData = state.primaryTokenData ?: return@with
+    private fun setupBalanceWidget(
+        balanceWidget: LayoutSaltPayBalanceBinding,
+        state: WalletState,
+    ) = with(balanceWidget) {
+        Timber.d("setupBalanceWidget")
+        val tokenData = state.primaryTokenData ?: return
 
         val appCurrency = store.state.globalState.appCurrency
         val mainProgressState = state.state
@@ -119,6 +126,7 @@ class SaltPayWalletView : WalletView() {
         veilBalanceCrypto.animateVisibility(show = mainProgressState != ProgressState.Error)
 
         if (tokenData.currencyData.fiatAmount == null) {
+            veilBalance.veil()
             actionDebouncer(WalletAction.LoadFiatRate())
         } else {
             veilBalance.unVeil()
@@ -140,94 +148,107 @@ class SaltPayWalletView : WalletView() {
         }
     }
 
-    private fun requestTxHistory(state: WalletState) {
+    private fun setupTxHistoryWidget(txWidget: LayoutSaltPayTxHistoryBinding, state: WalletState) {
+        Timber.d("setupTxHistoryWidget")
+        if (state.state == ProgressState.Loading) {
+            handleTxLoading(txWidget)
+            return
+        }
+        if (state.state == ProgressState.Error) {
+            handleTxError(txWidget)
+            return
+        }
+        if (state.state != ProgressState.Done) return
+        val walletAddress = state.primaryWalletManager?.wallet?.address ?: return
+        val tokenData = state.primaryTokenData ?: return
+        val historyTransactions = tokenData.historyTransactions ?: return
+        if (historyTransactions.isEmpty()) {
+            handleTxEmpty(txWidget)
+            return
+        }
+
         scope.launch {
-            val walletManager = state.primaryWalletManager as? EthereumWalletManager ?: return@launch
-            val wallet = walletManager.wallet
-            val token = wallet.getFirstToken() ?: return@launch
-            val walletAddress = wallet.address
-            // val walletAddress = "0xDA94Aae02a4Db0e09E1Cf240E3a0973ba89052cf"
-            when (val result = walletManager.getTransactionHistory(walletAddress, wallet.blockchain, setOf(token))) {
-                is Result.Success -> {
-                    val dateAssociatedHistory = mutableMapOf<String, MutableList<HistoryTransactionData>>()
-
-                    result.data
-                        .filter { it.contractAddress == token.contractAddress }
-                        .sortedByDescending { it.date?.timeInMillis ?: 0 }
-                        .forEach {
-                            val txData = HistoryTransactionData(it, walletAddress)
-                            val list = dateAssociatedHistory[txData.date] ?: mutableListOf()
-                            list.add(txData)
-                            dateAssociatedHistory[txData.date] = list
-                        }
-
-                    val dataList = mutableListOf<HistoryItemData>()
-                    dateAssociatedHistory.forEach { entry ->
-                        dataList.add(HistoryItemData.Date(entry.key))
-                        entry.value.forEach { dataList.add(HistoryItemData.TransactionData(it)) }
-                    }
-                    // .toMutableList().apply { clear() }
-
-                    delay(300)
-                    withMainContext {
-                        if (dataList.isEmpty()) {
-                            handleTxEmpty()
-                        } else {
-                            handleTxSuccess(dataList)
-                        }
-                    }
-                }
-                is Result.Failure -> {
-                    delay(300)
-                    withMainContext { handleTxError() }
+            val dateAssociatedHistory = mutableListOf<Pair<String, MutableList<HistoryTransactionData>>>()
+            historyTransactions.forEach { tx ->
+                val txHistoryData = HistoryTransactionData(tx, walletAddress)
+                val item = dateAssociatedHistory.firstOrNull { it.first == txHistoryData.date }
+                if (item == null) {
+                    dateAssociatedHistory.add(Pair(txHistoryData.date, mutableListOf(txHistoryData)))
+                } else {
+                    item.second.add(txHistoryData)
                 }
             }
+
+            val rvDataList = mutableListOf<HistoryItemData>()
+            dateAssociatedHistory.forEach { (txData, txHistoryData) ->
+                rvDataList.add(HistoryItemData.Date(txData))
+                rvDataList.addAll(txHistoryData.map { HistoryItemData.TransactionData(it) })
+            }
+
+            withMainContext { handleTxSuccess(txWidget, rvDataList) }
         }
     }
 
-    private fun handleTxInit() = with(txWidget) {
-        (rvTxHistoryShimmer.adapter as? ShimmerRecyclerAdapter)?.submitList(
-            listOf(
-                ShimmerData(),
-                ShimmerData(),
-                ShimmerData(),
-            ),
-        )
+    private fun handleTxLoading(txWidget: LayoutSaltPayTxHistoryBinding) = with(txWidget) {
+        Timber.d("handleTxLoading")
         groupEmpty.hide()
         groupError.hide()
         groupSuccess.hide()
-        root.beginDelayedTransition()
-        txWidget.groupShimmer.show()
+        // root.beginDelayedTransition()
+        groupShimmer.show()
     }
 
-    private fun handleTxSuccess(dataList: List<HistoryItemData>) = with(txWidget) {
+    private fun handleTxSuccess(
+        txWidget: LayoutSaltPayTxHistoryBinding,
+        dataList: List<HistoryItemData>,
+    ) = with(txWidget) {
+        Timber.d("handleTxSuccess")
         groupShimmer.hide()
         groupEmpty.hide()
         groupError.hide()
-        root.beginDelayedTransition()
-        updateTxHistoryWidget(dataList)
+        // root.beginDelayedTransition()
+        updateTxHistoryWidget(txWidget, dataList)
         groupSuccess.show()
     }
 
-    private fun handleTxEmpty() = with(txWidget) {
+    private fun handleTxEmpty(txWidget: LayoutSaltPayTxHistoryBinding) = with(txWidget) {
+        Timber.d("handleTxEmpty")
         groupShimmer.hide()
         groupError.hide()
         groupSuccess.hide()
-        root.beginDelayedTransition()
-        updateTxHistoryWidget(emptyList())
+        // root.beginDelayedTransition()
+        updateTxHistoryWidget(txWidget, emptyList())
         groupEmpty.show()
     }
 
-    private fun handleTxError() = with(txWidget) {
+    private fun handleTxError(txWidget: LayoutSaltPayTxHistoryBinding) = with(txWidget) {
+        Timber.d("handleTxError")
         groupShimmer.hide()
         groupEmpty.hide()
         groupSuccess.hide()
-        root.beginDelayedTransition()
-        updateTxHistoryWidget(emptyList())
+        // root.beginDelayedTransition()
+        updateTxHistoryWidget(txWidget, emptyList())
         groupError.show()
     }
 
-    private fun updateTxHistoryWidget(dataList: List<HistoryItemData>) = with(txWidget) {
+    private fun updateTxHistoryWidget(
+        txWidget: LayoutSaltPayTxHistoryBinding,
+        dataList: List<HistoryItemData>,
+    ) = with(txWidget) {
         (rvTxHistory.adapter as TxHistoryAdapter).submitList(dataList)
     }
+
+    override fun onViewDestroy() {
+        Timber.d("onViewDestroy")
+        txWidget?.apply {
+            rvTxHistoryShimmer.removeItemDecoration(itemDecorator)
+            rvTxHistory.removeItemDecoration(itemDecorator)
+        }
+        super.onViewDestroy()
+    }
+}
+
+private fun VeilLayout.changeVeilState(show: Boolean) {
+    if (show) this.veil()
+    else this.unVeil()
 }
