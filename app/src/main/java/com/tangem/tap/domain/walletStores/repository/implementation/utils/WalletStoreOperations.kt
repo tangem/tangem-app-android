@@ -41,6 +41,14 @@ internal fun WalletStoreModel.updateWithError(
     )
 }
 
+internal fun WalletStoreModel.updateWithTxHistories(
+    wallet: Wallet,
+): WalletStoreModel {
+    return this.copy(
+        walletsData = walletsData.updateWithTxHistories(wallet = wallet),
+    )
+}
+
 internal fun WalletStoreModel.updateWithAmounts(
     wallet: Wallet,
 ): WalletStoreModel {
