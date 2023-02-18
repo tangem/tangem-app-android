@@ -6,9 +6,6 @@ import com.tangem.wallet.databinding.FragmentWalletBinding
 
 abstract class WalletView {
 
-    //TODO: blueprint
-    var pullToRefreshListener: (() -> Unit)? = null
-
     protected var fragment: WalletFragment? = null
     protected var binding: FragmentWalletBinding? = null
 
@@ -22,9 +19,8 @@ abstract class WalletView {
         binding = null
     }
 
-    //TODO: blueprint
     open fun onViewDestroy() {
-        pullToRefreshListener = null
+        removeFragment()
     }
 
     open fun onDestroyFragment() {}
