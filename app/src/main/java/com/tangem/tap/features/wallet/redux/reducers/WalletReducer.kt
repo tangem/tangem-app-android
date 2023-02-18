@@ -350,6 +350,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         }
         is WalletAction.WalletStoresChanged.UpdateWalletStores -> {
             newState = newState.copy(
+                state = action.reduxWalletStores.flatMap { it.walletsData }.findProgressState(newState.state),
                 walletsStores = action.reduxWalletStores,
             )
         }

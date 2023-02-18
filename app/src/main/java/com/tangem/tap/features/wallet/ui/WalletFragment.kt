@@ -186,8 +186,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
-// [REDACTED_TODO_COMMENT]
-                walletView.pullToRefreshListener?.invoke()
                 Analytics.send(Portfolio.Refreshed())
                 store.dispatch(WalletAction.LoadData.Refresh)
             }
