@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.model
 
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.tap.domain.model.WalletDataModel.Status
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -23,6 +24,7 @@ data class WalletDataModel(
     val existentialDeposit: BigDecimal?,
     val fiatRate: BigDecimal?,
     val isCardSingleToken: Boolean,
+    val historyTransactions: List<TransactionData>?,
 ) {
 
     /**

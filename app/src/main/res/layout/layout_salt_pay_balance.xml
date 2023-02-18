@@ -51,7 +51,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:minWidth="152dp"
                 android:textColor="@color/text_primary_1"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -96,7 +95,7 @@
             android:text="@string/wallet_balance_blockchain_unreachable"
             android:textColor="@color/warning"
             android:textSize="12sp"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/veil_balance" />
 
