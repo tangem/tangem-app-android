@@ -6,6 +6,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.extensions.getBlockchainTxHistory
+import com.tangem.tap.common.extensions.getTokenTxHistory
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -98,6 +100,7 @@ private fun BlockchainNetwork.getBlockchainWalletData(walletManager: WalletManag
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = false,
+        historyTransactions = walletManager?.getBlockchainTxHistory(),
     )
 }
 
@@ -115,6 +118,7 @@ private fun BlockchainNetwork.getTokensWalletsData(walletManager: WalletManager?
                 existentialDeposit = getExistentialDeposit(walletManager),
                 fiatRate = null,
                 isCardSingleToken = walletManager?.cardTokens?.contains(token) ?: false,
+                historyTransactions = walletManager?.getTokenTxHistory(token),
             )
         }
 }
@@ -131,6 +135,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = false,
+        historyTransactions = walletManager.getBlockchainTxHistory(),
     )
 }
 
@@ -147,6 +152,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager): WalletDataMod
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = walletManager.cardTokens.contains(this),
+        historyTransactions = walletManager.getTokenTxHistory(this),
     )
 }
 
