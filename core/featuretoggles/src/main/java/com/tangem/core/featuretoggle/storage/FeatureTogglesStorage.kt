@@ -1,7 +1,5 @@
 package com.tangem.core.featuretoggle.storage
 
-import com.tangem.core.featuretoggle.models.FeatureToggleDTO
-
 /**
  * Component that initializes and stores a list of feature toggles
  *
@@ -10,7 +8,7 @@ import com.tangem.core.featuretoggle.models.FeatureToggleDTO
 internal interface FeatureTogglesStorage {
 
     /** List of feature toggles */
-    val featureToggles: List<FeatureToggleDTO>
+    val featureToggles: List<FeatureToggle>
 
     /** Initialize storage */
     suspend fun init()

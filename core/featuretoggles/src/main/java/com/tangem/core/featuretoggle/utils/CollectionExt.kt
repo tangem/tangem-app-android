@@ -1,14 +1,13 @@
 package com.tangem.core.featuretoggle.utils
 
-import com.tangem.core.featuretoggle.comparator.VersionContract
-import com.tangem.core.featuretoggle.models.FeatureToggleDTO
+import com.tangem.core.featuretoggle.contract.VersionAvailabilityContract
+import com.tangem.core.featuretoggle.storage.FeatureToggle
 
-/** Returns a Map containing toggle name and toggle availability pairs using version contract [contract] */
-internal fun List<FeatureToggleDTO>.associate(contract: VersionContract): Map<String, Boolean> {
-    return associate { toggle ->
+internal fun List<FeatureToggle>.associateToggles(currentVersion: String): Map<String, Boolean> {
+    return associate { localToggle ->
         Pair(
-            first = toggle.name,
-            second = contract(toggle.version),
+            first = localToggle.name,
+            second = VersionAvailabilityContract(currentVersion, localToggle.version),
         )
     }
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.core.featuretoggle.comparator.VersionContract
 import com.tangem.core.featuretoggle.manager.DevFeatureTogglesManager
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.featuretoggle.manager.ProdFeatureTogglesManager
@@ -31,19 +30,18 @@ internal object FeatureTogglesManagerModule {
     ): FeatureTogglesManager {
         val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
         val localFeatureTogglesStorage = LocalFeatureTogglesStorage(context = context, jsonAdapter = moshi.adapter())
-        val versionContract = VersionContract(context)
 
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevFeatureTogglesManager(
                 localFeatureTogglesStorage = localFeatureTogglesStorage,
-                versionContract = versionContract,
                 appPreferenceStorage = appPreferenceStorage,
                 jsonAdapter = moshi.adapter(),
+                context = context,
             )
         } else {
             ProdFeatureTogglesManager(
                 localFeatureTogglesStorage = localFeatureTogglesStorage,
-                versionContract = versionContract,
+                context = context,
             )
         }
     }

@@ -1,26 +1,27 @@
 package com.tangem.core.featuretoggle.manager
 
+import android.content.Context
 import com.squareup.moshi.JsonAdapter
-import com.tangem.core.featuretoggle.comparator.VersionContract
+import com.tangem.core.featuretoggle.FeatureToggle
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
-import com.tangem.core.featuretoggle.utils.associate
+import com.tangem.core.featuretoggle.utils.associateToggles
+import com.tangem.core.featuretoggle.utils.getVersion
 import com.tangem.datasource.local.AppPreferenceStorage
 import kotlin.properties.Delegates
 
 /**
- * Manager implementation for getting information about the availability of feature toggles
- * in DEV build
+ * Feature toggles manager implementation in DEV build
  *
  * @property localFeatureTogglesStorage local feature toggles storage
- * @property versionContract            contract that returns the availability of feature toggle version
  * @property appPreferenceStorage       application local storage
  * @property jsonAdapter                adapter for parsing json
+ * @property context                    context
  */
 internal class DevFeatureTogglesManager(
     private val localFeatureTogglesStorage: FeatureTogglesStorage,
-    private val versionContract: VersionContract,
     private val appPreferenceStorage: AppPreferenceStorage,
     private val jsonAdapter: JsonAdapter<Map<String, Boolean>>,
+    private val context: Context,
 ) : MutableFeatureTogglesManager {
 
     private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
@@ -35,14 +36,14 @@ internal class DevFeatureTogglesManager(
         }
 
         featureTogglesMap = localFeatureTogglesStorage.featureToggles
-            .associate(versionContract)
+            .associateToggles(currentVersion = context.getVersion() ?: "")
             .mapValues { resultToggle ->
                 savedFeatureToggles[resultToggle.key] ?: resultToggle.value
             }
             .toMutableMap()
     }
 
-    override fun isFeatureEnabled(toggle: IFeatureToggle): Boolean = featureTogglesMap.any { it.key == toggle.name }
+    override fun isFeatureEnabled(toggle: FeatureToggle): Boolean = featureTogglesMap.any { it.key == toggle.name }
 
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 

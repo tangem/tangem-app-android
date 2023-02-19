@@ -1,9 +1,15 @@
-package com.tangem.core.featuretoggle.models
+package com.tangem.core.featuretoggle.contract
+
+import timber.log.Timber
 
 /**
+ * Presentation of application version (<major>.<minor>.<fix?>).
+ *
+ * @param value version value as string
+ *
  * @author Andrew Khokhlov on 17/02/2023
  */
-class Version private constructor(value: String) : Comparable<Version> {
+internal class Version private constructor(value: String) : Comparable<Version> {
 
     private val major: Int
     private val minor: Int
@@ -42,12 +48,14 @@ class Version private constructor(value: String) : Comparable<Version> {
         private const val VERSION_DELIMITER = "."
 
         /**
-         *
+         * Create instance with value [value].
+         * If [value] doesn't meet all requirements, the function returns null.
          */
         fun create(value: String): Version? {
             return try {
                 Version(value)
-            } catch (exception: IllegalStateException) {
+            } catch (exception: Exception) {
+                Timber.e(exception, "Version %s is null", value)
                 return null
             }
         }

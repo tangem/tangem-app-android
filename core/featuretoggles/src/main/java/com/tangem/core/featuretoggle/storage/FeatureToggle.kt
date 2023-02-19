@@ -1,4 +1,4 @@
-package com.tangem.core.featuretoggle.models
+package com.tangem.core.featuretoggle.storage
 
 /**
  * Data model with information about feature toggle
@@ -10,4 +10,4 @@ package com.tangem.core.featuretoggle.models
  *
  * @author Andrew Khokhlov on 25/01/2023
  */
-internal data class FeatureToggleDTO(val name: String, val version: String)
+internal data class FeatureToggle(val name: String, val version: String)

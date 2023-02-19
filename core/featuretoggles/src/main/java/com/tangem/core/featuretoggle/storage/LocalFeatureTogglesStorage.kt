@@ -2,7 +2,6 @@ package com.tangem.core.featuretoggle.storage
 
 import android.content.Context
 import com.squareup.moshi.JsonAdapter
-import com.tangem.core.featuretoggle.models.FeatureToggleDTO
 import com.tangem.core.featuretoggle.storage.LocalFeatureTogglesStorage.Companion.LOCAL_CONFIG_PATH
 import timber.log.Timber
 import java.io.BufferedReader
@@ -19,10 +18,10 @@ import kotlin.properties.Delegates
  */
 internal class LocalFeatureTogglesStorage(
     private val context: Context,
-    private val jsonAdapter: JsonAdapter<List<FeatureToggleDTO>>,
+    private val jsonAdapter: JsonAdapter<List<FeatureToggle>>,
 ) : FeatureTogglesStorage {
 
-    override var featureToggles: List<FeatureToggleDTO> by Delegates.notNull()
+    override var featureToggles: List<FeatureToggle> by Delegates.notNull()
         private set
 
     override suspend fun init() {
