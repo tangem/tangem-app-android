@@ -5,7 +5,7 @@ import com.tangem.common.core.TangemError
 import org.rekotlin.Action
 
 internal sealed interface WelcomeAction : Action {
-    object OnCreate: WelcomeAction
+    object OnCreate : WelcomeAction
     object ProceedWithBiometrics : WelcomeAction {
         object Success : WelcomeAction
         data class Error(val error: TangemError) : WelcomeAction
