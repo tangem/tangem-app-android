@@ -137,7 +137,7 @@ internal class DefaultWalletStoresManager(
                         { walletManager ->
                             walletStoresRepository.storeOrUpdate(
                                 userWalletId = userWalletId,
-                                walletStore = WalletStoreBuilder(userWalletId, blockchainNetwork)
+                                walletStore = WalletStoreBuilder(userWallet, blockchainNetwork)
                                     .walletManager(walletManager)
                                     .build(),
                             )
@@ -171,7 +171,7 @@ internal class DefaultWalletStoresManager(
                 val userWalletId = userWallet.walletId
                 walletStoresRepository.storeOrUpdate(
                     userWalletId = userWalletId,
-                    walletStore = WalletStoreBuilder(userWalletId, walletManager)
+                    walletStore = WalletStoreBuilder(userWallet, walletManager)
                         .build(),
                 )
             }
