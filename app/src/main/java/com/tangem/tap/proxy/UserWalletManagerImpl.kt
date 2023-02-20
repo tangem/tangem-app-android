@@ -113,6 +113,7 @@ class UserWalletManagerImpl(
             val action = addNonNativeTokenToWalletAction(currency, card, blockchain)
             val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
             mainStore.dispatchOnMain(action)
+            delay(DELAY_UPDATE_WALLET)
         }
     }
 
@@ -236,6 +237,11 @@ class UserWalletManagerImpl(
             ),
             save = true,
         )
+    }
+
+    override fun refreshWallet() {
+        // workaround, should update wallet after transaction
+        appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
     }
 
     private fun createDerivationParams(derivationStyle: DerivationStyle?): DerivationParams? {
