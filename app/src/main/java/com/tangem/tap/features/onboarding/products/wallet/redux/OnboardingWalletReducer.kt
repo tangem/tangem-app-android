@@ -43,7 +43,7 @@ private class ReducerForGlobalAction {
                 is GlobalAction.Onboarding.Start -> {
                     OnboardingWalletState(
                         backupState = state.backupState.copy(
-                            maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
+                            maxBackupCards = maxBackupCards(action.scanResponse.isSaltPay()),
                             canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
                         ),
                         isSaltPay = action.scanResponse.isSaltPay(),
@@ -52,15 +52,17 @@ private class ReducerForGlobalAction {
                 is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
                     OnboardingWalletState(
                         backupState = state.backupState.copy(
-                            maxBackupCards = 2,
+                            maxBackupCards = maxBackupCards(action.isSaltPayVisa),
                             canSkipBackup = false,
                         ),
-                        isSaltPay = false,
+                        isSaltPay = action.isSaltPayVisa,
                     )
                 }
                 else -> state
             }
         }
+
+        private fun maxBackupCards(isSaltPay: Boolean): Int = if (isSaltPay) 1 else 2
     }
 }
 
