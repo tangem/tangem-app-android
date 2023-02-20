@@ -155,7 +155,7 @@ class MultiWalletReducer {
                         derivationPath = action.blockchain.derivationPath,
                     ),
                     walletRent = findWalletRent(state.getWalletStore(walletManager.wallet)),
-                    historyTransactions = walletManager.getTokenTxHistory(action.token)
+                    historyTransactions = walletManager.getTokenTxHistory(action.token),
                 )
                 state.updateWalletData(newTokenWalletData)
             }
