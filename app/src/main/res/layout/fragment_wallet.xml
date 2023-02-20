@@ -47,6 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
+                android:clipChildren="false"
                 android:paddingBottom="92dp">
 
                 <ImageView
@@ -136,9 +137,8 @@
 
                 </LinearLayout>
 
-                <include
+                <com.tangem.tap.features.wallet.ui.view.TotalBalanceCard
                     android:id="@+id/l_card_total_balance"
-                    layout="@layout/layout_card_total_balance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
