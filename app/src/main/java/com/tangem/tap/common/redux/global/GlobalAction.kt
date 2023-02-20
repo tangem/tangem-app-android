@@ -36,18 +36,16 @@ sealed class GlobalAction : Action {
     sealed class Onboarding : GlobalAction() {
         /**
          * Initiate an onboarding process.
-         * For SaltPay cards it's additionally checks for unfinished backup.
-         * For resuming unfinished backup for standard Wallet cards see CheckForUnfinishedBackup and
-         * StartForUnfinishedBackup
+         * For resuming unfinished backup of standard Wallet and SaltPay cards see
+         * BackupAction.CheckForUnfinishedBackup, GlobalAction.Onboarding.StartForUnfinishedBackup
          */
         data class Start(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : Onboarding()
 
         /**
-         * Initiate resuming of unfinished backup only for standard Wallet cards.
-         * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
-         * See more Onboarding.Start, CheckForUnfinishedBackup
+         * Initiate resuming of unfinished backup for standard Wallet and SaltPay cards.
+         * See more BackupAction.CheckForUnfinishedBackup
          */
-        object StartForUnfinishedBackup : Onboarding()
+        data class StartForUnfinishedBackup(val isSaltPayVisa: Boolean) : Onboarding()
         object Stop : Onboarding()
     }
 
