@@ -26,7 +26,6 @@ import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
 
@@ -109,8 +108,6 @@ class TransactionManagerImpl(
             FirebaseCrashlytics.getInstance().recordException(ex)
             return SendTxResult.UnknownError(ex)
         }
-        // workaround, should update wallet after transaction
-        appStateHolder.mainStore?.dispatch(WalletAction.LoadData.Refresh)
         return handleSendResult(sendResult)
     }
 
