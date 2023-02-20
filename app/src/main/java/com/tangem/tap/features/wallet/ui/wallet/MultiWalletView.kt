@@ -3,7 +3,6 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -11,8 +10,6 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
-import com.tangem.tap.common.extensions.animateVisibility
-import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -21,7 +18,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -36,14 +32,7 @@ class MultiWalletView : WalletView() {
 
     private lateinit var walletsAdapter: WalletAdapter
 
-    private val watcher = modelWatcher<WalletState> {
-        val totalBalanceStrategy: DiffStrategy<WalletState> = { old, new ->
-            old.cardId != new.cardId ||
-                old.totalBalance != new.totalBalance ||
-                old.state != new.state ||
-                old.walletsStores.size != new.walletsStores.size
-        }
-
+    private val watcher = modelWatcher {
         // !!! Workaround !!!
         // Checking state properties instead of state params can reduce application performance,
         // but here it is necessary because the WalletStore has an unsuitable equals method
@@ -68,13 +57,11 @@ class MultiWalletView : WalletView() {
                 handleBackupWarning(it, showBackupWarnings)
             }
         }
-        watch({ it }, totalBalanceStrategy) { walletState ->
+        WalletState::totalBalance { totalBalance ->
             binding?.let {
                 handleTotalBalance(
                     binding = it,
-                    totalBalance = walletState.totalBalance,
-                    progressState = walletState.state,
-                    walletsCount = walletState.walletsDataFromStores.size,
+                    totalBalance = totalBalance,
                 )
             }
         }
@@ -95,7 +82,7 @@ class MultiWalletView : WalletView() {
         lAddress.root.hide()
         rowButtons.hide()
         lSingleWalletBalance.root.hide()
-        lCardTotalBalance.root.show()
+        lCardTotalBalance.show()
         rvMultiwallet.show()
         btnAddToken.show()
     }
@@ -180,40 +167,11 @@ class MultiWalletView : WalletView() {
     private fun handleTotalBalance(
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance?,
-        progressState: ProgressState,
-        walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
-        if (walletsCount == 0) {
-            root.isVisible = false
-        } else {
-            if (totalBalance == null) {
-                if (progressState != ProgressState.Loading) {
-                    root.isVisible = false
-                }
-            } else {
-                root.isVisible = true
-                // Skip changes when on refreshing state
-                if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
-                    return@with
-                }
-
-                if (totalBalance.state == ProgressState.Loading) {
-                    veilBalance.veil()
-                } else {
-                    veilBalance.unVeil()
-                }
-                tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
-
-                tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-                    currencySymbol = totalBalance.fiatCurrency.symbol,
-                )
-                tvCurrencyName.text = totalBalance.fiatCurrency.code
-
-                tvCurrencyName.setOnClickListener {
-                    store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
-                }
-            }
+        onChangeFiatCurrencyClick = {
+            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
+        status = totalBalance
     }
 
     private fun handleErrorStates(
