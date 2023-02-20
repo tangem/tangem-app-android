@@ -60,7 +60,7 @@ data class OnboardingWalletState(
                     -> 9
                     SaltPayActivationStep.Claim -> 10
                     SaltPayActivationStep.ClaimInProgress -> 11
-                    SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success, SaltPayActivationStep.Finished,
+                    SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success,
                     -> getMaxProgress()
                 }
             }
