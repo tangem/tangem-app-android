@@ -618,9 +618,9 @@ internal class SwapInteractorImpl @Inject constructor(
         toTokenAmount: BigDecimal,
         toRate: Double,
     ): Float {
-        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
-        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
-        return (BigDecimal.ONE - toTokenFiatValue / fromTokenFiatValue).toFloat()
+        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
+        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
+        return (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
     }
 
     companion object {
