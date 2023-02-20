@@ -43,5 +43,4 @@ enum class SaltPayActivationStep {
     ClaimInProgress,
     ClaimSuccess,
     Success,
-    Finished;
 }
