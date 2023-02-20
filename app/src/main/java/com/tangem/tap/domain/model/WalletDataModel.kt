@@ -16,6 +16,7 @@ import java.math.BigDecimal
  * founds will be destroyed. Null if currency don't have existential deposit
  * @param fiatRate Wallet's fiat rate, used to calculate fiat balance. Null if not provided
  * @param isCardSingleToken shows that [Currency] is a card token
+ * @param isCustom shows that currency is a custom
  * */
 data class WalletDataModel(
     val currency: Currency,
@@ -24,6 +25,7 @@ data class WalletDataModel(
     val existentialDeposit: BigDecimal?,
     val fiatRate: BigDecimal?,
     val isCardSingleToken: Boolean,
+    val isCustom: Boolean,
     val historyTransactions: List<TransactionData>?,
 ) {
 
@@ -59,9 +61,7 @@ data class WalletDataModel(
 
     data class NoAccount(
         val amountToCreateAccount: BigDecimal?,
-    ) : Status() {
-        override val isErrorStatus: Boolean = true
-    }
+    ) : Status()
 
     data class Unreachable(
         override val errorMessage: String?,
