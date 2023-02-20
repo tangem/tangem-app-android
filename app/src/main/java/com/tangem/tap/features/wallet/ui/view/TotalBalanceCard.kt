@@ -37,6 +37,7 @@ import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.formatWithSpaces
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.wallet.R
 import com.valentinilk.shimmer.shimmer
 import java.math.BigDecimal
@@ -91,7 +92,7 @@ internal class TotalBalanceCard @JvmOverloads constructor(
             ProgressState.Refreshing,
             ProgressState.Done,
             -> TotalBalanceCardState.Success(
-                amount = status.fiatAmount,
+                amount = status.fiatAmount ?: BigDecimal.ZERO,
                 fiatCurrency = status.fiatCurrency,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
             )
@@ -232,9 +233,11 @@ private fun LoadedAmount(
 
 @Composable
 private fun buildAmountString(
-    amount: BigDecimal,
+    amount: BigDecimal?,
     fiatCurrencySymbol: String,
 ): AnnotatedString {
+    if (amount == null) return AnnotatedString(text = UNKNOWN_AMOUNT_SIGN)
+
     val format = DecimalFormat.getInstance(Locale.getDefault()) as DecimalFormat
     val scaledAmount = amount
         .setScale(2, RoundingMode.HALF_UP)
@@ -255,12 +258,12 @@ private fun buildAmountString(
 }
 
 private sealed interface TotalBalanceCardState {
-    val amount: BigDecimal
+    val amount: BigDecimal?
     val onChangeFiatCurrencyClick: () -> Unit
     val fiatCurrency: FiatCurrency
 
     object Empty : TotalBalanceCardState {
-        override val amount: BigDecimal = BigDecimal.ZERO
+        override val amount: BigDecimal? = null
         override val fiatCurrency: FiatCurrency = FiatCurrency.Default
         override val onChangeFiatCurrencyClick: () -> Unit = { /* no-op */ }
     }
@@ -273,7 +276,7 @@ private sealed interface TotalBalanceCardState {
     }
 
     data class Failure(
-        override val amount: BigDecimal,
+        override val amount: BigDecimal?,
         override val fiatCurrency: FiatCurrency,
         override val onChangeFiatCurrencyClick: () -> Unit,
     ) : TotalBalanceCardState
