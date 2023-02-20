@@ -218,6 +218,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (result) {
             is SendTxResult.Success -> {
                 userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet))
+                userWalletManager.refreshWallet()
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(swapData.fromTokenAmount, currencyToSend.symbol),
                     toAmount = amountFormatter.formatSwapAmountToUI(swapData.toTokenAmount, currencyToGet.symbol),
