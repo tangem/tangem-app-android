@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.config
 
+import com.tangem.tap.common.chat.ZendeskConfig
 import com.tangem.tap.common.shop.shopify.ShopifyShop
-import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 
 /**
@@ -15,6 +15,7 @@ class FeatureModel(
     val isCreatingTwinCardsAllowed: Boolean,
 )
 
+@Suppress("LongParameterList")
 class ConfigValueModel(
     val coinMarketCapKey: String,
     val mercuryoWidgetId: String,
@@ -37,11 +38,17 @@ class ConfigValueModel(
     val saltPay: SaltPayConfig,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
+    val swapReferrerAccount: SwapReferrerAccount?,
 )
 
 data class AppsFlyer(
     val appsFlyerDevKey: String,
     val appsFlyerAppID: String,
+)
+
+data class SwapReferrerAccount(
+    val address: String,
+    val fee: String,
 )
 
 class ConfigModel(
