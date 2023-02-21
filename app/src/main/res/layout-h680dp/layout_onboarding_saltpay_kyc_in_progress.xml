@@ -52,7 +52,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
-        android:text="@string/onboarding_supplement_button_kyc_waiting"
+        android:text="@string/chat_button_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/btn_container"
         app:layout_constraintStart_toStartOf="@id/btn_container" />

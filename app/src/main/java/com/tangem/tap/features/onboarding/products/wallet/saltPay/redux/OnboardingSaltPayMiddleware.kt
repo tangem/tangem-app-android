@@ -79,6 +79,9 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 onboardingManager.activationStarted(card.cardId)
             }
         }
+        is OnboardingSaltPayAction.OnSwitchedToSaltPayProcess -> {
+            sendAnalyticsScreenOpened(getState().step, newStep = SaltPayActivationStep.None)
+        }
         is OnboardingSaltPayAction.Update -> {
             handleInProgress = true
 
@@ -90,7 +93,18 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep, action.withAnalytics))
+
+                if (updateStep == SaltPayActivationStep.Claim) {
+                    handleClaimRefreshInProgress = true
+                    val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
+                        SaltPayExceptionHandler.handle(it.error)
+                        handleClaimRefreshInProgress = false
+                        return@launch
+                    }
+                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
+                    handleClaimRefreshInProgress = false
+                }
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
@@ -137,6 +151,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
 
+                Analytics.send(Onboarding.PinCodeSet())
                 handleInProgress = false
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
             }
@@ -160,13 +175,13 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.Update)
+                dispatchOnMain(OnboardingSaltPayAction.Update())
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
-                Analytics.send(Onboarding.PinCodeSet())
+                Analytics.send(Onboarding.ButtonSetPinCode())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -220,59 +235,69 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                when (val amountToClaimResult = state.saltPayManager.getAmountToClaim()) {
-                    is Result.Success -> {
-                        // need to re claim
-                        handleClaimRefreshInProgress = false
-                        dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(amountToClaimResult.data))
-                        dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Claim))
-                    }
-                    is Result.Failure -> {
-                        when (amountToClaimResult.error) {
-                            is SaltPayActivationError.NoFundsToClaim -> {
-                                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
-                                    SaltPayExceptionHandler.handle(it.error)
-                                    handleClaimRefreshInProgress = false
-                                    return@launch
-                                }
+                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
+                    SaltPayExceptionHandler.handle(it.error)
+                    handleClaimRefreshInProgress = false
+                    return@launch
+                }
+                dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
 
-                                handleClaimRefreshInProgress = false
-                                if (tokenAmountValue.isPositive()) {
-                                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
-                                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
-                                }
-                            }
-                            else -> {
-                                handleClaimRefreshInProgress = false
-                                SaltPayExceptionHandler.handle(amountToClaimResult.error)
-                            }
-                        }
+                val amountToClaim = state.saltPayManager.getAmountToClaim().successOr {
+                    if (it.error !is SaltPayActivationError.NoFundsToClaim) {
+                        handleClaimRefreshInProgress = false
+                        SaltPayExceptionHandler.handle(it.error)
+                        return@launch
+                    } else {
+                        null
                     }
+                }
+                handleClaimRefreshInProgress = false
+
+                if (tokenAmountValue.isPositive() && amountToClaim == null) {
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
+                } else {
+                    // dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
                 }
             }
         }
         is OnboardingSaltPayAction.SetStep -> {
-            when (action.newStep) {
-                SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
-                SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
-                SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
-                SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
-                SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success -> {
-                    Analytics.send(Onboarding.Finished())
-                    val onboardingManager = getOnboardingManager().guard {
-                        // Null is possible if it is started from a standard pending backup and in this case
-                        // it is impossible to get here
-                        store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
-                        return
-                    }
-                    finishCardActivation(getOnboardingWalletState().backupState, onboardingManager.scanResponse.card)
+            if (action.withAnalytics) {
+                sendAnalyticsScreenOpened(getState().step, action.newStep)
+            }
+            if (action.newStep == SaltPayActivationStep.ClaimSuccess ||
+                action.newStep == SaltPayActivationStep.Success
+            ) {
+                val onboardingManager = getOnboardingManager().guard {
+                    // Null is possible if it is started from a standard pending backup and in this case
+                    // it is impossible to get here
+                    store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
+                    return
                 }
-                else -> {}
+                finishCardActivation(
+                    getOnboardingWalletState().backupState,
+                    onboardingManager.scanResponse.card,
+                )
             }
         }
         else -> {
             /* do nothing, only reduce */
         }
+    }
+}
+
+private fun sendAnalyticsScreenOpened(currentStep: SaltPayActivationStep, newStep: SaltPayActivationStep) {
+    if (currentStep == newStep) return
+
+    when (newStep) {
+        SaltPayActivationStep.NeedPin -> Analytics.send(Onboarding.PinScreenOpened())
+        SaltPayActivationStep.CardRegistration -> Analytics.send(Onboarding.CardConnectionScreenOpened())
+        SaltPayActivationStep.KycIntro -> Analytics.send(Onboarding.KYCScreenOpened())
+        SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success -> Analytics.send(Onboarding.Finished())
+        else -> {}
     }
 }
 
@@ -362,6 +387,7 @@ private suspend fun getAmountToClaimIfNeeded(
         return amountToClaim
     }
 
+    // return Amount(BigDecimal(0.1), Blockchain.SaltPay)
     return when (val result = saltPayManager.getAmountToClaim()) {
         is Result.Success -> {
             Timber.d("getAmountToClaimIfNeeded: success: %s", result.data)
