@@ -30,6 +30,7 @@ object Library {
     const val accompanistAppCompatTheme = "com.google.accompanist:accompanist-appcompat-theme:" + Versions.accompanist
     const val accompanistSystemUiController =
         "com.google.accompanist:accompanist-systemuicontroller:" + Versions.accompanist
+    const val accompanistWebView = "com.google.accompanist:accompanist-webview:" + Versions.accompanist
     const val amplitude = "com.amplitude:android-sdk:" + Versions.amplitude
     const val appsflyer = "com.appsflyer:af-android-sdk:" + Versions.appsflyer
     const val armadillo = "at.favre.lib:armadillo:" + Versions.armadillo

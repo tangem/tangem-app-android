@@ -210,6 +210,7 @@ fun View.animateVisibility(
     hiddenVisibility: Int = View.GONE,
 ) {
     if (show) {
+        if (this.visibility == View.VISIBLE) return
         this.animate()
             .alpha(1f)
             .setDuration(durationMillis)
@@ -218,6 +219,7 @@ fun View.animateVisibility(
                 this.isVisible = true
             }
     } else {
+        if (this.visibility == hiddenVisibility) return
         this.animate()
             .alpha(0f)
             .setDuration(durationMillis)

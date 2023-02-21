@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.core.TangemError
+import com.tangem.tap.common.extensions.getBlockchainTxHistory
+import com.tangem.tap.common.extensions.getTokenTxHistory
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
@@ -26,6 +28,29 @@ internal fun List<WalletDataModel>.updateWithFiatRates(
     return this.map { walletData ->
         val rate = fiatRates[walletData.currency.coinId]?.toBigDecimal()
         walletData.updateWithFiatRate(rate)
+    }
+}
+
+internal fun WalletDataModel.updateWithTxHistory(wallet: Wallet): WalletDataModel {
+    return this.copy(
+        historyTransactions = when (currency) {
+            is Currency.Blockchain -> wallet.getBlockchainTxHistory()
+            is Currency.Token -> wallet.getTokenTxHistory(currency.token)
+        },
+    )
+}
+
+internal fun List<WalletDataModel>.updateWithTxHistories(
+    wallet: Wallet,
+): List<WalletDataModel> {
+    return this.map { walletData ->
+        walletData.updateWithTxHistory(wallet)
+    }
+}
+
+internal fun List<WalletDataModel>.updateWithAmounts(wallet: Wallet): List<WalletDataModel> {
+    return this.map { walletData ->
+        walletData.updateWithAmount(wallet)
     }
 }
 
@@ -80,12 +105,6 @@ internal fun WalletDataModel.updateWithDemoAmount(wallet: Wallet): WalletDataMod
     return this.copy(
         status = WalletDataModel.VerifiedOnline(amount = amount.value ?: BigDecimal.ZERO),
     )
-}
-
-internal fun List<WalletDataModel>.updateWithAmounts(wallet: Wallet): List<WalletDataModel> {
-    return this.map { walletData ->
-        walletData.updateWithAmount(wallet)
-    }
 }
 
 internal fun List<WalletDataModel>.updateWithDemoAmounts(wallet: Wallet): List<WalletDataModel> {

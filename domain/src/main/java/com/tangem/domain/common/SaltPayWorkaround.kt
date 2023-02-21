@@ -19,6 +19,8 @@ object SaltPayWorkaround {
         }
     }
 
+    fun isSaltPayCardId(cardId: String): Boolean = isVisaBatchId(cardId.take(4)) || isWalletCardId(cardId)
+
     fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
 
     fun isWalletCardId(cardId: String): Boolean {

@@ -35,6 +35,7 @@ class SingleWalletView : WalletView() {
     }
 
     private fun showSingleWalletView(binding: FragmentWalletBinding) = with(binding) {
+        lSaltPayWallet.root.hide()
         tvTwinCardNumber.hide()
         rvMultiwallet.hide()
         btnAddToken.hide()
@@ -63,13 +64,13 @@ class SingleWalletView : WalletView() {
 
     override fun onNewState(state: WalletState) {
         val binding = binding ?: return
-        state.primaryWallet ?: return
+        val primaryWalletData = state.primaryWalletData ?: return
 
         setupTwinCards(state.twinCardsState, binding)
-        setupButtons(state.primaryWallet, binding, state.isExchangeServiceFeatureOn)
+        setupButtons(primaryWalletData, binding, state.isExchangeServiceFeatureOn)
         setupAddressCard(state, binding)
-        showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
-        setupBalance(state, state.primaryWallet)
+        showPendingTransactionsIfPresent(primaryWalletData.pendingTransactions)
+        setupBalance(state, primaryWalletData)
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
@@ -88,6 +89,7 @@ class SingleWalletView : WalletView() {
                 binding = this.lCardBalance,
                 fragment = fragment,
                 data = primaryWallet.currencyData,
+                token = state.primaryTokenData?.currencyData,
                 isTwinCard = state.isTangemTwins,
             ).setup()
         }
@@ -152,7 +154,7 @@ class SingleWalletView : WalletView() {
     }
 
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
-        val primaryWallet = state.primaryWallet
+        val primaryWallet = state.primaryWalletData
         if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
             if (primaryWallet.shouldShowMultipleAddress()) {
@@ -187,7 +189,7 @@ class SingleWalletView : WalletView() {
 
     private fun setupCardInfo(state: WalletState) {
         val textView = binding?.lAddress?.tvInfo
-        val blockchain = state.primaryWallet?.currency?.blockchain
+        val blockchain = state.primaryWalletData?.currency?.blockchain
         if (textView != null && blockchain != null) {
             textView.text = textView.getString(
                 id = R.string.address_qr_code_message_format,
