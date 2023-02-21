@@ -51,7 +51,7 @@ sealed class Onboarding(
 
         class ButtonBuyCrypto(currency: AnalyticsParam.CurrencyType) : Topup(
             event = "Button - Buy Crypto",
-            params = mapOf("Currency" to currency.value),
+            params = mapOf(AnalyticsParam.Currency to currency.value),
         )
 
         class ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
@@ -67,15 +67,25 @@ sealed class Onboarding(
         class SetupFinished : Twins("Twin Setup Finished")
     }
 
-    class PinCodeSet : Onboarding("Onboarding", "PIN code set")
+    class PinScreenOpened : Onboarding("Onboarding", "PIN screen opened")
+    class ButtonSetPinCode : Onboarding("Onboarding", "Button - Set PIN Code")
+    class CardConnectionScreenOpened : Onboarding("Onboarding", "Card Connection Screen Opened")
     class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
+    class PinCodeSet : Onboarding("Onboarding", "PIN code set")
+
+    class KYCScreenOpened : Onboarding("Onboarding", "KYC screen opened")
     class KYCStarted : Onboarding("Onboarding", "KYC started")
     class KYCInProgress : Onboarding("Onboarding", "KYC in progress")
     class KYCRejected : Onboarding("Onboarding", "KYC rejected")
+
     class ClaimScreenOpened : Onboarding("Onboarding", "Claim screen opened")
     class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
     class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim was successfully")
-    class ButtonChat: Onboarding("Onboarding", "Button - Chat")
+
+    class ButtonChat : Onboarding("Onboarding", "Button - Chat")
+
+    class NotEnoughGasError : Onboarding("Onboarding", "Not Enough Gas Error")
+    class CardNotPassedError : Onboarding("Onboarding", "Card Not Passed Error")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
