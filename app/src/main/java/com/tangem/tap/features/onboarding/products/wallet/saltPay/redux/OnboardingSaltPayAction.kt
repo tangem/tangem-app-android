@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -12,9 +11,13 @@ import java.math.BigDecimal
 sealed class OnboardingSaltPayAction : Action {
     object Init : OnboardingSaltPayAction()
 
+    /**
+     * Notification about the switching from the Wallet view to the SaltPay view.
+     */
+    object OnSwitchedToSaltPayProcess : OnboardingSaltPayAction()
+
     data class SetDependencies(
         val registrationManager: SaltPayActivationManager,
-        val saltPayConfig: SaltPayConfig,
     ) : OnboardingSaltPayAction()
 
     data class SetInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()
@@ -22,7 +25,7 @@ sealed class OnboardingSaltPayAction : Action {
 
     data class SetAccessCode(val accessCode: String?) : OnboardingSaltPayAction()
 
-    object Update : OnboardingSaltPayAction()
+    data class Update(val withAnalytics: Boolean = true) : OnboardingSaltPayAction()
     object RegisterCard : OnboardingSaltPayAction()
     object OpenUtorgKYC : OnboardingSaltPayAction()
     object UtorgKYCRedirectSuccess : OnboardingSaltPayAction()
@@ -33,7 +36,11 @@ sealed class OnboardingSaltPayAction : Action {
     data class TrySetPin(val pin: String) : OnboardingSaltPayAction()
     data class SetPin(val pin: String) : OnboardingSaltPayAction()
 
-    data class SetStep(val newStep: SaltPayActivationStep) : OnboardingSaltPayAction()
+    data class SetStep(
+        val newStep: SaltPayActivationStep,
+        val withAnalytics: Boolean = true,
+    ) : OnboardingSaltPayAction()
+
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
