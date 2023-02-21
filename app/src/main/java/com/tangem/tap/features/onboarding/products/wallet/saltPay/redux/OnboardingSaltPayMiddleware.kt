@@ -79,6 +79,9 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 onboardingManager.activationStarted(card.cardId)
             }
         }
+        is OnboardingSaltPayAction.OnSwitchedToSaltPayProcess -> {
+            sendAnalyticsScreenOpened(getState().step, newStep = SaltPayActivationStep.None)
+        }
         is OnboardingSaltPayAction.Update -> {
             handleInProgress = true
 
@@ -90,7 +93,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep, action.withAnalytics))
 
                 if (updateStep == SaltPayActivationStep.Claim) {
                     handleClaimRefreshInProgress = true
@@ -172,7 +175,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.Update)
+                dispatchOnMain(OnboardingSaltPayAction.Update())
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
@@ -258,29 +261,44 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.SetStep -> {
-            when (action.newStep) {
-                SaltPayActivationStep.NeedPin -> Analytics.send(Onboarding.PinScreenOpened())
-                SaltPayActivationStep.KycIntro -> Analytics.send(Onboarding.KYCScreenOpened())
-                SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
-                SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
-                SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
-                SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
-                SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success -> {
-                    Analytics.send(Onboarding.Finished())
-                    val onboardingManager = getOnboardingManager().guard {
-                        // Null is possible if it is started from a standard pending backup and in this case
-                        // it is impossible to get here
-                        store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
-                        return
-                    }
-                    finishCardActivation(getOnboardingWalletState().backupState, onboardingManager.scanResponse.card)
+            if (action.withAnalytics) {
+                sendAnalyticsScreenOpened(getState().step, action.newStep)
+            }
+
+
+            if (action.newStep == SaltPayActivationStep.ClaimSuccess ||
+                action.newStep == SaltPayActivationStep.Success
+            ) {
+                val onboardingManager = getOnboardingManager().guard {
+                    // Null is possible if it is started from a standard pending backup and in this case
+                    // it is impossible to get here
+                    store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
+                    return
                 }
-                else -> {}
+                finishCardActivation(
+                    getOnboardingWalletState().backupState,
+                    onboardingManager.scanResponse.card,
+                )
             }
         }
         else -> {
             /* do nothing, only reduce */
         }
+    }
+}
+
+private fun sendAnalyticsScreenOpened(currentStep: SaltPayActivationStep, newStep: SaltPayActivationStep) {
+    if (currentStep == newStep) return
+
+    when (newStep) {
+        SaltPayActivationStep.NeedPin -> Analytics.send(Onboarding.PinScreenOpened())
+        SaltPayActivationStep.KycIntro -> Analytics.send(Onboarding.KYCScreenOpened())
+        SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success -> Analytics.send(Onboarding.Finished())
+        else -> {}
     }
 }
 
@@ -370,6 +388,7 @@ private suspend fun getAmountToClaimIfNeeded(
         return amountToClaim
     }
 
+    // return Amount(BigDecimal(0.1), Blockchain.SaltPay)
     return when (val result = saltPayManager.getAmountToClaim()) {
         is Result.Success -> {
             Timber.d("getAmountToClaimIfNeeded: success: %s", result.data)
