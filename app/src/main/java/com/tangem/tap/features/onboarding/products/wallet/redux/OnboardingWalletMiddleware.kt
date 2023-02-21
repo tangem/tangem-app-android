@@ -87,6 +87,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                         scanResponse.isSaltPay() -> {
                             store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
                             store.dispatch(BackupAction.FinishBackup(withAnalytics = false))
+                            store.dispatch(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
                         }
 
                         else -> store.dispatch(BackupAction.FinishBackup())
@@ -325,7 +326,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.FinishBackup -> {
-            if (action.withAnalytics){
+            if (action.withAnalytics) {
                 Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
             }
             if (!onboardingWalletState.isSaltPay) {
