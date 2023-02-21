@@ -50,6 +50,7 @@ class GnosisRegistrator(
     private val atomicNonce = AtomicLong()
 
     suspend fun checkHasGas(): Result<Boolean> {
+        // return Result.Success(true) // test
         val wallet = walletManager.safeUpdate().successOr {
             return Result.Failure(BlockchainSdkError.WrappedThrowable(it.error))
         }
@@ -148,6 +149,7 @@ class GnosisRegistrator(
     }
 
     suspend fun getAllowance(): Result<Amount> {
+        // return Result.Success(Amount(BigDecimal(0.1), walletManager.wallet.blockchain)) // test
         return walletManager.getAllowance(addressTreasureSafe, token)
     }
 
