@@ -24,7 +24,6 @@ internal class SprinklrViewModel : ViewModel(), StoreSubscriber<SprinklrState> {
             prevState.copy(
                 initialUrl = state.url,
                 sprinklrDomains = state.sprinklrDomains,
-                onNavigateBack = this::navigateBack,
                 onNewUrl = { updateWebContentOrOpenExternalUrl(it) },
             )
         }
@@ -34,15 +33,19 @@ internal class SprinklrViewModel : ViewModel(), StoreSubscriber<SprinklrState> {
         store.unsubscribe(this)
     }
 
+    fun setNavigateBackCallback(callback: () -> Unit) {
+        stateInternal.update { prevState ->
+            prevState.copy(
+                onNavigateBack = callback,
+            )
+        }
+    }
+
     private fun subscribeToStoreChanges() {
         store.subscribe(this) { appState ->
             appState.skip { old, new -> old.sprinklrState == new.sprinklrState }
                 .select { it.sprinklrState }
         }
-    }
-
-    private fun navigateBack() {
-        store.dispatchOnMain(NavigationAction.PopBackTo())
     }
 
     private fun WebContent.updateWebContentOrOpenExternalUrl(url: String): WebContent {
