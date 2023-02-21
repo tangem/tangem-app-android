@@ -37,7 +37,7 @@ data class HistoryTransactionData(
     } ?: ""
 
     val time: String = transactionData.date?.let {
-        SimpleDateFormat("hh:MM").format(it.time)
+        SimpleDateFormat("HH:mm").format(it.time)
     } ?: "00:00"
 
     val date: String = calculateDate()
