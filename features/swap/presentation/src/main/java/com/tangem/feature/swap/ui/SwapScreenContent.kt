@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -120,7 +121,9 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
 
         AnimatedVisibility(
             visible = keyboard is Keyboard.Opened,
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier
+                .imePadding()
+                .align(Alignment.BottomCenter),
         ) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
