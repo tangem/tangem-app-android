@@ -53,7 +53,7 @@
         android:focusable="true"
         android:gravity="center_vertical"
         android:padding="16dp"
-        android:text="@string/swapping_swap"
+        android:text="@string/swapping_swap_action"
         android:textColor="@color/darkGray3"
         android:textSize="14sp"
         android:textStyle="bold"
