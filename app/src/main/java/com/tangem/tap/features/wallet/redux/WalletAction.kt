@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
@@ -98,8 +97,6 @@ sealed class WalletAction : Action {
         data class RemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallets(val currencies: List<Currency>) : MultiWallet()
 
-        data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
-        data class SetPrimaryToken(val token: Token) : MultiWallet()
         data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
         object BackupWallet : MultiWallet()
         object ScheduleCheckForMissingDerivation : MultiWallet()
