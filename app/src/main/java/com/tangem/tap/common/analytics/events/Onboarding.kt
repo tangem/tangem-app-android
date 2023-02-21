@@ -68,6 +68,7 @@ sealed class Onboarding(
     }
 
     class PinScreenOpened : Onboarding("Onboarding", "PIN screen opened")
+    class ButtonSetPinCode : Onboarding("Onboarding", "Button - Set PIN Code")
     class PinCodeSet : Onboarding("Onboarding", "PIN code set")
     class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
     class KYCScreenOpened : Onboarding("Onboarding", "KYC screen opened")
