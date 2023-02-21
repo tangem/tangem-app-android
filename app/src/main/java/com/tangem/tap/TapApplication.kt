@@ -25,6 +25,7 @@ import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
+import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -55,11 +56,10 @@ import com.tangem.tap.persistence.CardBalanceStateAdapter
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
-import com.zendesk.logger.Logger
 import dagger.hilt.android.HiltAndroidApp
+import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
-import zendesk.chat.Chat
 import javax.inject.Inject
 
 lateinit var store: Store<AppState>
@@ -147,7 +147,12 @@ class TapApplication : Application(), ImageLoaderFactory {
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
-        BlockchainSdkRetrofitBuilder.enableNetworkLogging = LogConfig.network.blockchainSdkNetwork
+        if (LogConfig.network.blockchainSdkNetwork) {
+            BlockchainSdkRetrofitBuilder.interceptors = listOf(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
+            )
+        }
+
 
         userTokensRepository = UserTokensRepository.init(
             context = this,
@@ -188,7 +193,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     private fun initWithConfigDependency(config: Config) {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
-        initFeedbackManager(this, preferencesStorage, config)
+        initFeedbackManager(this, preferencesStorage, foregroundActivityObserver, store)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -210,7 +215,12 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.build(Analytics, buildData)
     }
 
-    private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
+    private fun initFeedbackManager(
+        context: Context,
+        preferencesStorage: PreferencesStorage,
+        foregroundActivityObserver: ForegroundActivityObserver,
+        store: Store<AppState>,
+    ) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
             appVersion = try {
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -243,12 +253,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         val feedbackManager = FeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
-            preferencesStorage = preferencesStorage,
+            chatManager = ChatManager(preferencesStorage, foregroundActivityObserver, store),
         )
-        feedbackManager.chatInitializer = { zendeskConfig ->
-            Chat.INSTANCE.init(context, zendeskConfig.accountKey, zendeskConfig.appId)
-            Logger.setLoggable(LogConfig.zendesk)
-        }
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 
