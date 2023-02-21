@@ -2,6 +2,8 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
@@ -17,8 +19,15 @@ class SaltPayExceptionHandler {
             when (throwable) {
                 is SaltPayActivationError -> {
                     val dialog = when (throwable) {
-                        is SaltPayActivationError.NoGas -> SaltPayDialog.Activation.NoGas
+                        is SaltPayActivationError.NoGas -> {
+                            Analytics.send(Onboarding.NotEnoughGasError())
+                            SaltPayDialog.Activation.NoGas
+                        }
                         is SaltPayActivationError.PutVisaCard -> SaltPayDialog.Activation.PutVisaCard
+                        is SaltPayActivationError.CardNotPassed -> {
+                            Analytics.send(Onboarding.CardNotPassedError())
+                            SaltPayDialog.Activation.OnError(throwable)
+                        }
                         else -> SaltPayDialog.Activation.OnError(throwable)
                     }
                     store.dispatchDialogShow(dialog)
