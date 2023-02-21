@@ -12,9 +12,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -131,18 +129,6 @@ fun ClearButton(
             else -> content()
         }
     }
-}
-
-/**
- * Used for disable ripple if button is enable = false
- */
-@Composable
-fun ToggledRippleTheme(
-    isEnabled: Boolean,
-    content: @Composable () -> Unit,
-) {
-    val theme = LocalRippleTheme provides if (isEnabled) LocalRippleTheme.current else NoRippleTheme()
-    CompositionLocalProvider(theme) { content() }
 }
 
 @Preview
