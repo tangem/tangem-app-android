@@ -5,7 +5,9 @@ import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import java.math.BigDecimal
 
-fun List<WalletData>.findProgressState(): ProgressState {
+fun List<WalletData>.findProgressState(initialState: ProgressState = ProgressState.Done): ProgressState {
+    if (this.isEmpty()) return initialState
+
     return this
         .mapToProgressState()
         .reduce(ProgressState::or)
