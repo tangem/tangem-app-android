@@ -20,6 +20,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd
+import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
@@ -32,6 +33,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithFiatRates
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithMissedDerivation
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithRent
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithTxHistories
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithUnreachable
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
@@ -203,7 +205,7 @@ internal class DefaultWalletAmountsRepository(
                 updateWalletStoreWithUnreachable(walletStore)
             }
             else -> {
-                withInternetConnection { walletManager.update() }
+                withInternetConnection { walletManager.safeUpdate() }
                     .map { updateWalletManagerWithAmounts(userWalletId, walletManager) }
                     .flatMap {
                         updateWalletStoreWithAmounts(
@@ -318,7 +320,7 @@ internal class DefaultWalletAmountsRepository(
                         it.updateWithDemoAmounts(wallet = updatedWallet)
                     } else {
                         it.updateWithAmounts(wallet = updatedWallet)
-                    }
+                    }.updateWithTxHistories(wallet = updatedWallet)
                 },
             )
         }
