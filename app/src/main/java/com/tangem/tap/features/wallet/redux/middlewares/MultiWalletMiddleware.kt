@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.addContext
@@ -38,7 +37,6 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 class MultiWalletMiddleware {
@@ -251,10 +249,16 @@ class MultiWalletMiddleware {
                 scope.launch { userTokensRepository.saveUserTokens(scanResponse.card, currencies) }
             }
         } ?: wmFactory.makeWalletManagerForApp(scanResponse, blockchainNetwork)?.also {
-            store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchainNetwork.updateTokens(tokens), it, save))
+            store.dispatchOnMain(
+                WalletAction.MultiWallet.AddBlockchain(
+                    blockchain = blockchainNetwork.updateTokens(tokens),
+                    walletManager = it,
+                    save = save,
+                ),
+            )
         }
 
-        store.dispatch(
+        store.dispatchOnMain(
             WalletAction.LoadFiatRate(
                 coinsList = tokens.map { token ->
                     Currency.Token(
@@ -268,30 +272,25 @@ class MultiWalletMiddleware {
         if (tokens.isNotEmpty()) walletManager?.addTokens(tokens)
 
         scope.launch {
-            val result = walletManager?.safeUpdate()
-            withMainContext {
-                when (result) {
-                    is com.tangem.common.services.Result.Success -> {
-                        val wallet = result.data
-                        wallet.getTokens()
-                            .filter { tokens.contains(it) }
-                            .mapNotNull { token ->
-                                wallet.getTokenAmount(token)?.let { Pair(token, it) }
-                            }
-                            .forEach {
-                                withContext(Dispatchers.Main) {
-                                    store.dispatch(
-                                        WalletAction.MultiWallet.TokenLoaded(
-                                            it.second,
-                                            it.first,
-                                            blockchainNetwork,
-                                        ),
-                                    )
-                                }
-                            }
-                    }
-                    else -> {}
+            when (val result = walletManager?.safeUpdate()) {
+                is com.tangem.common.services.Result.Success -> {
+                    val wallet = result.data
+                    wallet.getTokens()
+                        .filter { tokens.contains(it) }
+                        .mapNotNull { token ->
+                            wallet.getTokenAmount(token)?.let { amount -> Pair(token, amount) }
+                        }
+                        .forEach { (token, tokenAmount) ->
+                            store.dispatchOnMain(
+                                WalletAction.MultiWallet.TokenLoaded(
+                                    amount = tokenAmount,
+                                    token = token,
+                                    blockchain = blockchainNetwork,
+                                ),
+                            )
+                        }
                 }
+                else -> Unit
             }
         }
     }
