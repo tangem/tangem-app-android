@@ -6,8 +6,8 @@ internal sealed class SprinklrUrl {
     class Prod(userId: String, baseUrl: String, appId: String) : SprinklrUrl() {
         private val locale = java.util.Locale.getDefault().language
 
-        override val url: String = "$baseUrl/page?" +
-            "appId=$appId" +
+        override val url: String = "$baseUrl/page" +
+            "?appId=$appId" +
             "&device=$Device" +
             "&enableClose=$CloseEnabled" +
             "&zoom=$ZoomEnabled" +
