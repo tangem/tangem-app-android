@@ -6,6 +6,8 @@ import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.features.demo.DemoHelper
 
 /**
@@ -17,7 +19,12 @@ class CardContextInterceptor(
 
     override fun id(): String = CardContextInterceptor.id()
 
-    override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = true
+    override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
+        return when (event) {
+            is IntroductionProcess.ButtonScanCard, is MainScreen.ButtonScanCard -> false
+            else -> true
+        }
+    }
 
     override fun intercept(params: MutableMap<String, String>) {
         scanResponse ?: return
