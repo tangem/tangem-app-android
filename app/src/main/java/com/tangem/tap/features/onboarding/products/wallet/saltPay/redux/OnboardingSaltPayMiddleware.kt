@@ -148,6 +148,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
 
+                Analytics.send(Onboarding.PinCodeSet())
                 handleInProgress = false
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
             }
@@ -177,7 +178,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
-                Analytics.send(Onboarding.PinCodeSet())
+                Analytics.send(Onboarding.ButtonSetPinCode())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
