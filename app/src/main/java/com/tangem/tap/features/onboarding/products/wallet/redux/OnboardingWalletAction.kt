@@ -64,7 +64,11 @@ sealed class BackupAction : Action {
     data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
-    object FinishBackup : BackupAction()
+    /**
+     * It always calls for the SaltPay cards when resuming the activation process.
+     */
+    data class FinishBackup(val withAnalytics: Boolean = true) : BackupAction()
+
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
