@@ -13,5 +13,5 @@ interface ParamsInterceptor {
 
 interface ParamsInterceptorHolder {
     fun addParamsInterceptor(interceptor: ParamsInterceptor)
-    fun removeParamsInterceptor(interceptor: ParamsInterceptor): ParamsInterceptor?
+    fun removeParamsInterceptor(interceptorId: String): ParamsInterceptor?
 }
