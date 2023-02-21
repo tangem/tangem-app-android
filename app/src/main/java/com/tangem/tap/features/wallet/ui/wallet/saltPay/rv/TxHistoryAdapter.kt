@@ -96,7 +96,7 @@ private class TransactionItemVH(
     }
 
     private fun setupTitle(data: HistoryTransactionData) = with(binding) {
-        tvTxHash.text = data.hash
+        tvTxHash.text = data.address
     }
 
     private fun setupSubtitle(data: HistoryTransactionData) = with(binding) {
