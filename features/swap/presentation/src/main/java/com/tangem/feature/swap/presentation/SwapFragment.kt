@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.tangem.feature.swap.router.CustomTabsManager
@@ -26,7 +25,6 @@ class SwapFragment : Fragment() {
     private val viewModel by viewModels<SwapViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
         viewModel.setRouter(
             SwapRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
