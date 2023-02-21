@@ -111,19 +111,53 @@ data class BasicEventsSourceData(
     val paramCardBalanceState: AnalyticsParam.CardBalanceState by lazy { calculateAmount().toCardBalanceState() }
 
     private fun calculateAmount(): BigDecimal {
-        return biometricsWalletDataModels?.calculateTotalCryptoAmount()
-            ?: walletState.walletsDataFromStores.calculateTotalCryptoAmount()
+        val calculator: IBalanceCalculator = biometricsWalletDataModels
+            ?.let { BiometricsBalanceCalculator(it) }
+            ?: BalanceCalculator(walletState)
+
+        return calculator.calculate()
     }
 
     private fun BigDecimal.toCardBalanceState(): AnalyticsParam.CardBalanceState = when {
         isZero() -> AnalyticsParam.CardBalanceState.Empty
         else -> AnalyticsParam.CardBalanceState.Full
     }
+}
 
-    private fun List<WalletDataModel>.calculateTotalCryptoAmount(): BigDecimal {
-        return this
-            .map { it.status.amount }
-            .reduce(BigDecimal::plus)
+private interface IBalanceCalculator {
+    fun calculate(): BigDecimal
+}
+
+private class BiometricsBalanceCalculator(
+    private val walletDataModel: List<WalletDataModel>,
+) : IBalanceCalculator {
+
+    override fun calculate(): BigDecimal {
+        val singleToken = walletDataModel
+            .filter { it.currency.isToken() }
+            .firstOrNull { it.isCardSingleToken }
+
+        val totalAmount = singleToken?.status?.amount
+            ?: walletDataModel.calculateTotalCryptoAmount()
+
+        return totalAmount
+    }
+
+    private fun List<WalletDataModel>.calculateTotalCryptoAmount(): BigDecimal = this
+        .map { it.status.amount }
+        .reduce(BigDecimal::plus)
+}
+
+private class BalanceCalculator(
+    private val walletState: WalletState,
+) : IBalanceCalculator {
+
+    override fun calculate(): BigDecimal {
+        val singleTokenData = walletState.primaryTokenData
+        val totalAmount = singleTokenData?.currencyData?.amount
+            ?: walletState.walletsDataFromStores.calculateTotalCryptoAmount()
+
+        return totalAmount
     }
 }
 
