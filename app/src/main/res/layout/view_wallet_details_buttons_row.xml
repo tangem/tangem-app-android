@@ -39,7 +39,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_swap"
             style="@style/TapPrimaryIconButton"
-            android:text="@string/swapping_swap"
+            android:text="@string/swapping_swap_action"
             android:visibility="gone"
             app:icon="@drawable/ic_arrows_up_down"
             tools:visibility="gone" />
