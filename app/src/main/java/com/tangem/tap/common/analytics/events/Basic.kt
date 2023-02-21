@@ -11,6 +11,15 @@ sealed class Basic(
     error: Throwable? = null,
 ) : AnalyticsEvent("Basic", event, params, error) {
 
+    class CardWasScanned(
+        source: AnalyticsParam.ScannedFrom,
+    ) : Basic(
+        event = "Card Was Scanned",
+        params = mapOf(
+            "Source" to source.value,
+        ),
+    )
+
     class SignedIn(
         state: AnalyticsParam.CardBalanceState,
         currency: AnalyticsParam.CardCurrency,
@@ -19,14 +28,14 @@ sealed class Basic(
         event = "Signed in",
         params = mapOf(
             "State" to state.value,
-            "Currency" to currency.value,
-            AnalyticsParam.BatchId to batch,
+            AnalyticsParam.Currency to currency.value,
+            AnalyticsParam.Batch to batch,
         ),
     )
 
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
-        params = mapOf("Currency" to currency.value),
+        params = mapOf(AnalyticsParam.Currency to currency.value),
     )
 
     class ScanError(error: Throwable) : Basic(
