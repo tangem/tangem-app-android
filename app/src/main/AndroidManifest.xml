@@ -138,8 +138,11 @@
 
         <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
 
-        <activity android:name="zendesk.messaging.MessagingActivity"
+        <activity
+            android:name="zendesk.messaging.MessagingActivity"
             android:theme="@style/ZendeskTheme" />
+
+        <activity android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
