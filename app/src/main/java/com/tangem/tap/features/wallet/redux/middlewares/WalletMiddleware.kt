@@ -15,6 +15,7 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.converters.BasicEventsPreChecker
 import com.tangem.tap.common.analytics.converters.BasicEventsSourceData
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -49,6 +50,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
+import com.tangem.tap.features.wallet.redux.reducers.findSelectedCurrency
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
@@ -153,7 +155,7 @@ class WalletMiddleware {
                             if (walletState.isMultiwalletAllowed) {
                                 walletState.walletsDataFromStores.map { it.currency }
                             } else {
-                                val derivationPath = walletState.primaryWallet?.currency?.derivationPath
+                                val derivationPath = walletState.primaryWalletData?.currency?.derivationPath
                                 val primaryBlockchain = walletState.primaryBlockchain
                                 val primaryToken = walletState.primaryToken
                                 listOfNotNull(
@@ -248,6 +250,8 @@ class WalletMiddleware {
             }
             is NetworkStateChanged -> {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
+                if (!action.isOnline) return
+
                 val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
                 if (selectedUserWallet != null) {
                     scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }
@@ -310,15 +314,14 @@ class WalletMiddleware {
         }
     }
 
-    private fun updateWalletStores(wallStores: List<WalletStoreModel>, state: WalletState) {
+    private fun updateWalletStores(walletsStores: List<WalletStoreModel>, state: WalletState) {
         scope.launch(Dispatchers.Default) {
+            val reduxWalletStores = walletsStores.mapToReduxModels()
             if (!state.isMultiwalletAllowed) {
-                wallStores.firstOrNull()?.walletsData?.firstOrNull()?.let {
-                    store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it.currency))
+                findSelectedCurrency(reduxWalletStores, null, false)?.let {
+                    store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
                 }
             }
-
-            val reduxWalletStores = wallStores.mapToReduxModels()
             store.dispatchOnMain(
                 WalletAction.WalletStoresChanged.UpdateWalletStores(
                     reduxWalletStores = reduxWalletStores,
@@ -376,7 +379,7 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan(MainScreen.CardWasScanned()))
+                store.dispatch(WalletAction.Scan(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main)))
             }
         }
     }
@@ -438,11 +441,7 @@ class WalletMiddleware {
         walletStore: WalletStore?,
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(walletStore?.blockchainNetwork)?.fiatRate
-        val tokenRate = if (state?.isMultiwalletAllowed == true) {
-            selectedWalletData?.fiatRate
-        } else {
-            selectedWalletData?.currencyData?.token?.fiatRate
-        }
+        val tokenRate = selectedWalletData?.fiatRate
         val coinAmount = walletStore?.walletManager?.wallet?.amounts?.get(AmountType.Coin)
 
         return PrepareSendScreen(
