@@ -10,8 +10,6 @@ import androidx.annotation.FloatRange
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -20,7 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 
-abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragment() {
+abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragment(), ComposeScreen<ScreenState> {
     open val initialBottomSheetState = BottomSheetBehavior.STATE_EXPANDED
 
     @FloatRange(from = 0.0, to = 1.0)
@@ -47,7 +45,7 @@ abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragme
         return dialog
     }
 
-    private fun createComposeView(context: Context): View {
+    override fun createComposeView(context: Context): View {
         return ComposeView(context).apply {
             setContent {
                 TangemTheme {
@@ -67,13 +65,4 @@ abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragme
             }
         }
     }
-
-    @Composable
-    protected abstract fun provideState(): State<ScreenState>
-
-    @Composable
-    protected abstract fun ScreenContent(
-        modifier: Modifier,
-        state: ScreenState,
-    )
 }
