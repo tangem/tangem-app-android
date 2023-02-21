@@ -16,7 +16,7 @@ sealed class HistoryItemData(
     val itemId: Long,
 ) {
     data class Date(val date: String) : HistoryItemData(0, date.hashCode().toLong())
-    data class TransactionData(val data: HistoryTransactionData) : HistoryItemData(1, data.hash.hashCode().toLong())
+    data class TransactionData(val data: HistoryTransactionData) : HistoryItemData(1, data.address.hashCode().toLong())
 }
 
 data class HistoryTransactionData(
@@ -32,12 +32,14 @@ data class HistoryTransactionData(
         else -> PendingTransactionType.Unknown
     }
 
-    val hash: String = transactionData.hash?.let {
-        "${it.substring(0..5)}...${it.substring(it.length - 4)}"
-    } ?: ""
+    val address: String = when (transactionType) {
+        PendingTransactionType.Incoming -> transactionData.sourceAddress.reduceAddress()
+        PendingTransactionType.Outgoing -> transactionData.destinationAddress.reduceAddress()
+        PendingTransactionType.Unknown -> "Unknown address"
+    }
 
     val time: String = transactionData.date?.let {
-        SimpleDateFormat("hh:MM").format(it.time)
+        SimpleDateFormat("HH:mm").format(it.time)
     } ?: "00:00"
 
     val date: String = calculateDate()
@@ -71,4 +73,6 @@ data class HistoryTransactionData(
 
         return date
     }
+
+    private fun String.reduceAddress(): String = "${substring(0..5)}...${substring(length - 4)}"
 }
