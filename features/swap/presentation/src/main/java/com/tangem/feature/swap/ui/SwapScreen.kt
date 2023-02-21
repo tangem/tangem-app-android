@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
@@ -39,6 +40,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
 
     TangemTheme {
         ModalBottomSheetLayout(
+            modifier = Modifier.systemBarsPadding(),
             sheetContent = {
                 if (stateHolder.permissionState is SwapPermissionState.ReadyForRequest) {
                     SwapPermissionBottomSheetContent(
