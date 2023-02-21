@@ -1,14 +1,20 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import android.net.Uri
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.SignedEthereumTransaction
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.datasource.api.paymentology.AttestationResponse
@@ -18,12 +24,15 @@ import com.tangem.datasource.api.paymentology.RegisterWalletRequest
 import com.tangem.datasource.api.paymentology.RegisterWalletResponse
 import com.tangem.datasource.api.paymentology.RegistrationResponse
 import com.tangem.datasource.api.paymentology.tryExtractError
+import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
+import com.tangem.tap.store
 import java.math.BigDecimal
 
 /**
@@ -199,5 +208,97 @@ class KYCUrlProvider(
             .appendQueryParameter(kycProvider.sidParameterKey, kycProvider.sidValue)
             .appendQueryParameter(kycProvider.externalIdParameterKey, kycRefId)
             .build().toString()
+    }
+}
+
+class SaltPayActivationManagerFactory(
+    private val blockchain: Blockchain,
+    private val card: CardDTO,
+) {
+
+    fun create(): SaltPayActivationManager {
+        val wallet = card.wallets.first()
+        val saltPayConfig = store.state.globalState.configManager?.config?.saltPayConfig.guard {
+            throw NullPointerException("SaltPayConfig is not initialized")
+        }
+        val wmFactory = store.state.globalState.tapWalletManager.walletManagerFactory
+        val paymentologyService = store.state.domainNetworks.paymentologyService
+
+        // return createDummyActivationManager(saltPayConfig, wmFactory, paymentologyService)
+        return createActivationPayManager(
+            cardId = card.cardId,
+            cardPublicKey = card.cardPublicKey,
+            kycProvider = saltPayConfig.kycProvider,
+            gnosisRegistrator = GnosisRegistrator(
+                walletManager = makeSaltPayWalletManager(
+                    blockchain = blockchain,
+                    walletPublicKey = wallet.publicKey,
+                    wmFactory = wmFactory,
+                ),
+            ),
+            paymentologyService = paymentologyService,
+        )
+    }
+
+    private fun makeSaltPayWalletManager(
+        blockchain: Blockchain,
+        walletPublicKey: ByteArray,
+        wmFactory: WalletManagerFactory,
+    ): EthereumWalletManager {
+        return wmFactory.makeWalletManager(
+            blockchain = blockchain,
+            publicKey = Wallet.PublicKey(walletPublicKey, null, null),
+            tokens = listOf(SaltPayWorkaround.tokenFrom(blockchain)),
+        ) as EthereumWalletManager
+    }
+
+    private fun createActivationPayManager(
+        cardId: String,
+        cardPublicKey: ByteArray,
+        kycProvider: KYCProvider,
+        gnosisRegistrator: GnosisRegistrator,
+        paymentologyService: PaymentologyApiService,
+    ): SaltPayActivationManager {
+        return SaltPayActivationManager(
+            cardId = cardId,
+            cardPublicKey = cardPublicKey,
+            kycProvider = kycProvider,
+            paymentologyService = paymentologyService,
+            gnosisRegistrator = gnosisRegistrator,
+        )
+    }
+
+    private fun createDummyActivationManager(
+        saltPayConfig: SaltPayConfig,
+        wmFactory: WalletManagerFactory,
+        paymentologyService: PaymentologyApiService,
+    ): SaltPayActivationManager {
+        val fakeSource = DummySaltPayCardSource()
+
+        val walletManager = wmFactory.makeWalletManager(
+            blockchain = fakeSource.blockchain,
+            publicKey = fakeSource.blockchainPublicKey,
+            tokens = listOf(fakeSource.token),
+        ) as EthereumWalletManager
+
+        return createActivationPayManager(
+            cardId = fakeSource.cardId,
+            cardPublicKey = fakeSource.cardPublicKey,
+            kycProvider = saltPayConfig.kycProvider,
+            gnosisRegistrator = GnosisRegistrator(walletManager),
+            paymentologyService = paymentologyService,
+        )
+    }
+
+    private data class DummySaltPayCardSource(
+        val blockchain: Blockchain = Blockchain.SaltPay,
+        val cardId: String = "FF03000001001057",
+        private val cardPublicKeyString: String = "039C2D2F9B68003766BFC29766761F55F4084E48B8B012BF439E115A79AB122D48",
+        private val walletPublicKeyString: String = "0399B2DF5B129FBF69097DAA7C44FB5849E578CCFC22228A409870C74B56C4C3D1",
+    ) {
+        val cardPublicKey: ByteArray = cardPublicKeyString.hexToBytes()
+        val walletPublicKey: ByteArray = walletPublicKeyString.hexToBytes()
+        val blockchainPublicKey = Wallet.PublicKey(walletPublicKey, null, null)
+        val token: Token = SaltPayWorkaround.tokenFrom(blockchain)
     }
 }
