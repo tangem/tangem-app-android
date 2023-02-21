@@ -20,7 +20,7 @@ class ChatManager(
     fun open(config: ChatConfig, feedbackDataBuilder: (Context) -> String) {
         val opener = openers.getOrPut(config) {
             when (config) {
-                is SprinklrConfig -> SprinklrChatOpener(getSprinklrUserId(), config, store)
+                is SprinklrConfig -> SprinklrChatOpener(getSprinklrUserId(), config, store, foregroundActivityObserver)
                 is ZendeskConfig -> ZendeskChatOpener(getZendeskUserId(), config, foregroundActivityObserver)
             }
         }
