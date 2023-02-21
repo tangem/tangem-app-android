@@ -25,7 +25,6 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFra
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
-import com.tangem.tap.features.sprinklr.ui.SprinklrFragment
 import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
@@ -121,6 +120,5 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Welcome -> WelcomeFragment()
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
-        AppScreen.Sprinklr -> SprinklrFragment()
     }
 }
