@@ -6,7 +6,6 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -17,16 +16,10 @@ import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 [REDACTED_AUTHOR]
  */
 class MercuryoService(
-    private val apiVersion: String,
-    private val mercuryoWidgetId: String,
-    private val secret: String,
-    private val logEnabled: Boolean,
-) : ExchangeService, ExchangeUrlBuilder {
+    private val environment: MercuryoEnvironment,
+) : ExchangeService {
 
-    private val api: MercuryoApi = createRetrofitInstance(
-        baseUrl = MercuryoApi.BASE_URL,
-        logEnabled = logEnabled,
-    ).create(MercuryoApi::class.java)
+    private val api: MercuryoApi = environment.mercuryoApi
 
     private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
     private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
@@ -34,7 +27,7 @@ class MercuryoService(
     override fun featureIsSwitchedOn(): Boolean = true
 
     override suspend fun update() {
-        when (val result = performRequest { api.currencies(apiVersion) }) {
+        when (val result = performRequest { api.currencies(environment.apiVersion) }) {
             is Result.Success -> {
                 val response = result.data
                 if (response.status == 200) {
@@ -108,14 +101,14 @@ class MercuryoService(
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
-        walletAddress: String
+        walletAddress: String,
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)
             .authority("exchange.mercuryo.io")
-            .appendQueryParameter("widget_id", mercuryoWidgetId)
+            .appendQueryParameter("widget_id", environment.widgetId)
             .appendQueryParameter("type", action.name.lowercase())
             .appendQueryParameter("currency", cryptoCurrencyName)
             .appendQueryParameter("address", walletAddress)
@@ -128,13 +121,12 @@ class MercuryoService(
     }
 
     private fun signature(address: String): String {
-        return (address + secret).calculateSha512().toHexString().lowercase()
+        return (address + environment.secret).calculateSha512().toHexString().lowercase()
     }
-
 
     override fun getSellCryptoReceiptUrl(
         action: CurrencyExchangeManager.Action,
-        transactionId: String
+        transactionId: String,
     ): String? = null
 
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
