@@ -1,7 +1,9 @@
-package com.tangem.tap.common.zendesk
+package com.tangem.tap.common.chat
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+
+sealed interface ChatConfig
 
 @JsonClass(generateAdapter = true)
 data class ZendeskConfig(
@@ -15,4 +17,12 @@ data class ZendeskConfig(
     val accountKey: String,
     @Json(name = "zendeskUrl")
     val url: String,
-)
+) : ChatConfig
+
+@JsonClass(generateAdapter = true)
+data class SprinklrConfig(
+    @Json(name = "appID")
+    val appId: String,
+    @Json(name = "baseURL")
+    val baseUrl: String,
+) : ChatConfig
