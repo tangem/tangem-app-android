@@ -186,6 +186,11 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
+        if (card.wallets.isNotEmpty() && card.backupStatus?.isActive == true) {
+            startLinkingForBackupIfNeeded(card, session, callback)
+            return
+        }
+
         if (card.wallets.isEmpty() || !card.isFirmwareMultiwalletAllowed) {
             startLinkingForBackupIfNeeded(card, session, callback)
             return
