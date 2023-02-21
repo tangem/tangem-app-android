@@ -321,13 +321,26 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         twinCardsState.currentStep != TwinCardsStep.Done
 
                     store.dispatch(TwinCardsAction.CardsManager.Release)
+
                     action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
-                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                        store.dispatchOnMain(NavigationAction.PopBackTo(getPopBackScreen()))
                     }
                 }
                 store.dispatchDialogShow(OnboardingDialog.InterruptOnboarding(onOkCallback))
             }
         }
         else -> Unit
+    }
+}
+
+private fun getPopBackScreen(): AppScreen {
+    return if (userWalletsListManager.hasSavedUserWallets) {
+        if (userWalletsListManager.isLockedSync) {
+            AppScreen.Welcome
+        } else {
+            AppScreen.Wallet
+        }
+    } else {
+        AppScreen.Home
     }
 }
