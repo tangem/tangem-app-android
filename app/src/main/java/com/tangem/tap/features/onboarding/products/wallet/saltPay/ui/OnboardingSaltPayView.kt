@@ -80,6 +80,7 @@ internal class OnboardingSaltPayView(
                 if (state.backupState.backupStep == BackupStep.Finished) {
                     // if backup finished -> switch OnboardingWalletStep to the SaltPay
                     store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
+                    store.dispatch(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
                 } else {
                     // if not -> back to the standard backup process
                     walletFragment.handleOnboardingStep(state)
@@ -228,7 +229,7 @@ internal class OnboardingSaltPayView(
 
         btnKycAction.text = getText(R.string.onboarding_button_kyc_waiting)
         btnKycAction.setOnClickListener {
-            store.dispatch(OnboardingSaltPayAction.Update)
+            store.dispatch(OnboardingSaltPayAction.Update())
         }
         progressButton = SaltPayProgressButton(root)
     }
@@ -244,7 +245,7 @@ internal class OnboardingSaltPayView(
         btnOpenSupportChat.hide()
         btnKycAction.text = getText(R.string.onboarding_button_kyc_start)
         btnKycAction.setOnClickListener {
-            store.dispatch(OnboardingSaltPayAction.Update)
+            store.dispatch(OnboardingSaltPayAction.Update())
         }
         progressButton = SaltPayProgressButton(root)
     }
