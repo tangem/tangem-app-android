@@ -3,10 +3,12 @@ package com.tangem.tap.features.wallet.ui.wallet.saltPay
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.skydoves.androidveil.VeilLayout
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ShimmerData
 import com.tangem.tap.common.ShimmerRecyclerAdapter
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.hide
@@ -144,6 +146,7 @@ class SaltPayWalletView : WalletView() {
 
         btnBuy.show(tokenData.isAvailableToBuy)
         btnBuy.setOnClickListener {
+            Analytics.send(MainScreen.ButtonBuy())
             store.dispatch(WalletAction.TradeCryptoAction.Buy(false))
         }
     }
