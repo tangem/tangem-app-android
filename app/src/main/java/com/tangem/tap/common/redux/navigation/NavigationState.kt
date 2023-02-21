@@ -26,5 +26,4 @@ enum class AppScreen(
     Welcome,
     SaveWallet(isDialogFragment = true),
     WalletSelector(isDialogFragment = true),
-    Sprinklr,
 }
