@@ -201,7 +201,7 @@ object ScanCardProcessor {
                                 onWalletNotCreated()
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
                                 store.dispatch(OnboardingSaltPayAction.SetDependencies(manager))
-                                store.dispatch(OnboardingSaltPayAction.Update)
+                                store.dispatch(OnboardingSaltPayAction.Update(withAnalytics = false))
                                 navigateTo(AppScreen.OnboardingWallet) { onProgressStateChange(it) }
                             } else {
                                 delay(DELAY_SDK_DIALOG_CLOSE)
