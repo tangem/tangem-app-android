@@ -21,7 +21,6 @@ private fun internalReduce(anyAction: Action, onboardingWalletState: OnboardingW
         return onboardingWalletState.copy(
             onboardingSaltPayState = OnboardingSaltPayState(
                 saltPayManager = action.registrationManager,
-                saltPayConfig = action.saltPayConfig,
             ),
         )
     }
