@@ -14,6 +14,7 @@ sealed class MainScreen(
 
     class ButtonScanCard : MainScreen("Button - Scan Card")
     class ButtonMyWallets : MainScreen("Button - My Wallets")
+    class ButtonBuy : MainScreen("Button - Buy")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
         event = "Enable Biometric",
