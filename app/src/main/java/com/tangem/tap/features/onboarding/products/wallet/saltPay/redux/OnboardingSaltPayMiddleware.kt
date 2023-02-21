@@ -264,8 +264,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             if (action.withAnalytics) {
                 sendAnalyticsScreenOpened(getState().step, action.newStep)
             }
-
-
             if (action.newStep == SaltPayActivationStep.ClaimSuccess ||
                 action.newStep == SaltPayActivationStep.Success
             ) {
@@ -292,6 +290,7 @@ private fun sendAnalyticsScreenOpened(currentStep: SaltPayActivationStep, newSte
 
     when (newStep) {
         SaltPayActivationStep.NeedPin -> Analytics.send(Onboarding.PinScreenOpened())
+        SaltPayActivationStep.CardRegistration -> Analytics.send(Onboarding.CardConnectionScreenOpened())
         SaltPayActivationStep.KycIntro -> Analytics.send(Onboarding.KYCScreenOpened())
         SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
         SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
