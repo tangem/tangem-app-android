@@ -30,9 +30,8 @@ sealed class BackupAction : Action {
     object ScanPrimaryCard : BackupAction()
 
     /**
-     * Check for unfinished backup of standard Wallet cards.
-     * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
-     * See more Onboarding.Start, CheckForUnfinishedBackup, StartForUnfinishedBackup
+     * Check for unfinished backup of standard Wallets and SaltPay cards
+     * See more GlobalAction.Onboarding.StartForUnfinishedBackup
      */
     object CheckForUnfinishedBackup : BackupAction()
 
