@@ -23,7 +23,7 @@ object Versions {
     // endregion Compose
 
     // region Other libraries
-    const val accompanist = "0.23.0"
+    const val accompanist = "0.28.0"
     const val amplitude = "2.36.1"
     const val appsflyer = "6.5.1"
     const val armadillo = "0.9.0"
@@ -59,7 +59,7 @@ object Versions {
     // endregion Other libraries
 
     // region Tangem
-    const val tangemBlockchainSdk = "develop-152-hotfix-4.0.1-156"
+    const val tangemBlockchainSdk = "develop-152-hotfix-4.0.1-4.0.2-162"
     // const val tangemBlockchainSdk = "0.0.1"
 
     const val tangemCardSdk = "develop-179-hotfix-4.0.1-189"
