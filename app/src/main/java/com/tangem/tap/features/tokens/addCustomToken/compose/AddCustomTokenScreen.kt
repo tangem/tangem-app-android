@@ -55,7 +55,6 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.ComposeDialogManager
-import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
@@ -66,7 +65,7 @@ import kotlinx.coroutines.launch
 /**
 [REDACTED_AUTHOR]
  */
-private class AddCustomTokenScreen {} // for simple search
+private class AddCustomTokenScreen  // for simple search
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -77,7 +76,7 @@ fun AddCustomTokenScreen(
     val selectedTestCase = remember { mutableStateOf(TestCase.ContractAddress) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
     )
     val coroutineScope = rememberCoroutineScope()
     val toggleBottomSheet = { coroutineScope.launch { bottomSheetScaffoldState.toggle() } }
@@ -91,11 +90,13 @@ fun AddCustomTokenScreen(
         },
         sheetPeekHeight = 0.dp,
     ) {
-        Column() {
-            TestCasesList(onItemClick = {
-                selectedTestCase.value = it
-                toggleBottomSheet()
-            })
+        Column {
+            TestCasesList(
+                onItemClick = {
+                    selectedTestCase.value = it
+                    toggleBottomSheet()
+                },
+            )
             ScreenContent(state, closePopupTrigger)
         }
     }
@@ -144,7 +145,7 @@ private fun ScreenContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(16.dp),
                         ) {
                             FormFields(state, closePopupTrigger)
                         }
@@ -195,7 +196,7 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
             AddCustomTokenWarning(
                 modifier = modifier.fillMaxWidth(),
                 warning = item,
-                converter = warningConverter
+                converter = warningConverter,
             )
         }
     }
@@ -206,7 +207,7 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
     AddCustomTokenFab(
         modifier = Modifier
             .widthIn(210.dp, 280.dp),
-        isEnabled = state.value.screenState.addButton.isEnabled
+        isEnabled = state.value.screenState.addButton.isEnabled,
     ) { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) }
 }
 
@@ -214,7 +215,7 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
 private fun AddCustomTokenFab(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val contentColor = Color.White
     val backgroundColor = if (isEnabled) {
@@ -228,42 +229,40 @@ private fun AddCustomTokenFab(
         FloatingActionButtonDefaults.elevation()
     }
 
-    ToggledRippleTheme(isEnabled) {
-        ExtendedFloatingActionButton(
-            modifier = modifier,
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    tint = contentColor,
-                    contentDescription = "Add",
-                )
-            },
-            text = { Text(text = stringResource(id = R.string.common_add)) },
-            onClick = { if (isEnabled) onClick() },
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            elevation = elevation,
-        )
-    }
+    ExtendedFloatingActionButton(
+        modifier = modifier,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                tint = contentColor,
+                contentDescription = "Add",
+            )
+        },
+        text = { Text(text = stringResource(id = R.string.common_add)) },
+        onClick = { if (isEnabled) onClick() },
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        elevation = elevation,
+    )
 }
 
 data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
     val errorConverter: ModuleMessageConverter,
-    val viewState: ViewStates.TokenField
+    val viewState: ViewStates.TokenField,
 ) {
     companion object {
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: ModuleMessageConverter
+            errorConverter: ModuleMessageConverter,
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
                 error = state.getError(field.id),
                 errorConverter = errorConverter,
-                viewState = selectField(field.id, state.screenState)
+                viewState = selectField(field.id, state.screenState),
             )
         }
 
