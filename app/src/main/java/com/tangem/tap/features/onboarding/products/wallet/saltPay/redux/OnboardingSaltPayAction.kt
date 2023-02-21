@@ -11,6 +11,11 @@ import java.math.BigDecimal
 sealed class OnboardingSaltPayAction : Action {
     object Init : OnboardingSaltPayAction()
 
+    /**
+     * Notification about the switching from the Wallet view to the SaltPay view.
+     */
+    object OnSwitchedToSaltPayProcess : OnboardingSaltPayAction()
+
     data class SetDependencies(
         val registrationManager: SaltPayActivationManager,
     ) : OnboardingSaltPayAction()
@@ -20,7 +25,7 @@ sealed class OnboardingSaltPayAction : Action {
 
     data class SetAccessCode(val accessCode: String?) : OnboardingSaltPayAction()
 
-    object Update : OnboardingSaltPayAction()
+    data class Update(val withAnalytics: Boolean = true) : OnboardingSaltPayAction()
     object RegisterCard : OnboardingSaltPayAction()
     object OpenUtorgKYC : OnboardingSaltPayAction()
     object UtorgKYCRedirectSuccess : OnboardingSaltPayAction()
@@ -31,7 +36,11 @@ sealed class OnboardingSaltPayAction : Action {
     data class TrySetPin(val pin: String) : OnboardingSaltPayAction()
     data class SetPin(val pin: String) : OnboardingSaltPayAction()
 
-    data class SetStep(val newStep: SaltPayActivationStep) : OnboardingSaltPayAction()
+    data class SetStep(
+        val newStep: SaltPayActivationStep,
+        val withAnalytics: Boolean = true,
+    ) : OnboardingSaltPayAction()
+
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
