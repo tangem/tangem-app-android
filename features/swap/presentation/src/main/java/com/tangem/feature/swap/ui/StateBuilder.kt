@@ -198,6 +198,7 @@ internal class StateBuilder(val actions: UiActions) {
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = emptyAmountState.toTokenWalletBalance,
             ),
+            warnings = emptyList(),
             fee = FeeState.Empty,
             swapButton = SwapButton(
                 enabled = false,
