@@ -52,7 +52,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet = userWalletManager.getUserTokens(networkId, false)
+        val tokensInWallet = userWalletManager.getUserTokens(networkId, true)
             .filter { it.symbol != initialCurrency.symbol }
             .map { token ->
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
@@ -288,8 +288,9 @@ internal class SwapInteractorImpl @Inject constructor(
                         amountFormatter.formatSwapAmountToUI(amount, it.symbol)
                     },
                     amountEquivalent = balance?.value?.toFiatString(
-                        rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                        appCurrency.symbol,
+                        rateValue = rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                        fiatCurrencyName = appCurrency.symbol,
+                        formatWithSpaces = true,
                     ),
                 ),
             )
@@ -334,7 +335,11 @@ internal class SwapInteractorImpl @Inject constructor(
         return SwapState.EmptyAmountState(
             fromTokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
             toTokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
-            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(BigDecimal.ONE, appCurrency.symbol),
+            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
+                rateValue = BigDecimal.ONE,
+                fiatCurrencyName = appCurrency.symbol,
+                formatWithSpaces = true,
+            ),
         )
     }
 
@@ -405,7 +410,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
         val rates = repository.getRates(appCurrency.code, listOf(fromTokenId, toTokenId, nativeToken.id))
         return rates[nativeToken.id]?.toBigDecimal()?.let { rate ->
-            " (${fee.toFiatString(rate, appCurrency.symbol)})"
+            " (${fee.toFiatString(rate, appCurrency.symbol, true)})"
         }.orEmpty()
     }
 
@@ -485,8 +490,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = fromTokenAmount.value.toFiatString(
-                    rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                    appCurrency.symbol,
+                    rateValue = rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    fiatCurrencyName = appCurrency.symbol,
+                    formatWithSpaces = true,
                 ),
             ),
             toTokenInfo = TokenSwapInfo(
@@ -495,8 +501,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = toTokenAmount.value.toFiatString(
-                    rates[toToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                    appCurrency.symbol,
+                    rateValue = rates[toToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    fiatCurrencyName = appCurrency.symbol,
+                    formatWithSpaces = true,
                 ),
             ),
             fee = formattedFee,
