@@ -284,7 +284,9 @@ internal class SwapInteractorImpl @Inject constructor(
             TokenWithBalance(
                 token = it,
                 tokenBalanceData = TokenBalanceData(
-                    amount = balance?.let { amount -> amountFormatter.formatSwapAmountToUI(amount, "") },
+                    amount = balance?.let { amount ->
+                        amountFormatter.formatSwapAmountToUI(amount, it.symbol)
+                    },
                     amountEquivalent = balance?.value?.toFiatString(
                         rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
                         appCurrency.symbol,
