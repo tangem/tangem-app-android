@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
                     iconRes = R.drawable.ic_close_24,
                 )
             },
+            modifier = Modifier.systemBarsPadding(),
         )
     }
 }
