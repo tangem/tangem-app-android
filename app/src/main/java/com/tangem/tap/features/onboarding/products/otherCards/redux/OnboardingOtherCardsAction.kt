@@ -15,6 +15,7 @@ sealed class OnboardingOtherCardsAction : Action {
     class SetArtworkUrl(val artworkUrl: String) : OnboardingOtherCardsAction()
     object DetermineStepOfScreen : OnboardingOtherCardsAction()
     object Done : OnboardingOtherCardsAction()
+    object OnBackPressed : OnboardingOtherCardsAction()
 
     data class SetStepOfScreen(val step: OnboardingOtherCardsStep) : OnboardingOtherCardsAction()
 
