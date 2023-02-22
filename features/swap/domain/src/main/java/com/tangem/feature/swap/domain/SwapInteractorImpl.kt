@@ -556,12 +556,15 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun syncWalletBalanceForTokens(networkId: String, tokens: List<Currency>) {
-        val tokensBalance =
-            userWalletManager.getCurrentWalletTokensBalance(
-                networkId = networkId,
-                extraTokens = tokens.map { cryptoCurrencyConverter.convert(it) },
-            )
-        cache.cacheBalances(tokensBalance.mapValues { SwapAmount(it.value.value, it.value.decimals) })
+        val tokensToSync = tokens.filter { cache.getBalanceForToken(it.symbol) == null }
+        if (tokensToSync.isNotEmpty()) {
+            val tokensBalance =
+                userWalletManager.getCurrentWalletTokensBalance(
+                    networkId = networkId,
+                    extraTokens = tokensToSync.map { cryptoCurrencyConverter.convert(it) },
+                )
+            cache.cacheBalances(tokensBalance.mapValues { SwapAmount(it.value.value, it.value.decimals) })
+        }
     }
 
     private fun isBalanceEnough(fromToken: Currency, amount: SwapAmount, fee: BigDecimal?): Boolean {
