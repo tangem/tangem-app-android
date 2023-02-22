@@ -181,13 +181,13 @@ private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             ) {
                 Text(
-                    text = token.addedTokenBalanceData.amount ?: "",
+                    text = token.addedTokenBalanceData.amountEquivalent.orEmpty(),
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
                 )
                 SpacerW2()
                 Text(
-                    text = token.addedTokenBalanceData.amountEquivalent ?: "",
+                    text = token.addedTokenBalanceData.amount.orEmpty(),
                     style = TangemTheme.typography.caption,
                     color = TangemTheme.colors.text.tertiary,
                 )
