@@ -68,17 +68,17 @@ internal class SwapInteractorImpl @Inject constructor(
             .mapValues { SwapAmount(it.value.value, it.value.decimals) }
         val appCurrency = userWalletManager.getUserAppCurrency()
         val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
-        cache.cacheLoadedTokens(loadedTokens)
         cache.cacheBalances(tokensBalance)
-        cache.cacheInWalletTokens(tokensInWallet)
+        cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
+        cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
         return TokensDataState(
             preselectTokens = PreselectTokens(
                 fromToken = initialCurrency,
                 toToken = selectToToken(initialCurrency, tokensInWallet, loadedTokens),
             ),
             foundTokensState = FoundTokensState(
-                tokensInWallet = getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
-                loadedTokens = loadedTokens.map { TokenWithBalance(it) },
+                tokensInWallet = cache.getInWalletTokens(),
+                loadedTokens = cache.getLoadedTokens(),
             ),
         )
     }
@@ -87,28 +87,29 @@ internal class SwapInteractorImpl @Inject constructor(
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.token.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val loadedTokens = cache.getLoadedTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.token.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
-        val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList())
-            .mapValues { SwapAmount(it.value.value, it.value.decimals) }
-        val appCurrency = userWalletManager.getUserAppCurrency()
-        val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
+        // val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList())
+        //     .mapValues { SwapAmount(it.value.value, it.value.decimals) }
+        // val appCurrency = userWalletManager.getUserAppCurrency()
+        // val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
         return FoundTokensState(
-            tokensInWallet = getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
-            loadedTokens = loadedTokens.map { TokenWithBalance(it) },
+            tokensInWallet = tokensInWallet, // getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
+            loadedTokens = loadedTokens, // loadedTokens.map { TokenWithBalance(it) },
         )
     }
 
     override fun findTokenById(id: String): Currency? {
         val tokensInWallet = cache.getInWalletTokens()
         val loadedTokens = cache.getLoadedTokens()
-        return tokensInWallet.firstOrNull { it.id == id } ?: loadedTokens.firstOrNull { it.id == id }
+        return tokensInWallet.firstOrNull { it.token.id == id }?.token
+            ?: loadedTokens.firstOrNull { it.token.id == id }?.token
     }
 
     override suspend fun givePermissionToSwap(
