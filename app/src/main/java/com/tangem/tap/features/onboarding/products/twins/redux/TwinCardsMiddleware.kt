@@ -3,10 +3,10 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -26,8 +26,8 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
-import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -121,7 +121,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 }
             }
         }
-        is TwinCardsAction.Wallet.HandleOnBackPressed -> {
+        is TwinCardsAction.Wallet.OnBackPressed -> {
             val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet
                 && twinCardsState.currentStep != TwinCardsStep.TopUpWallet
                 && twinCardsState.currentStep != TwinCardsStep.Done
@@ -136,6 +136,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 val stateDialog = TwinCardsAction.Wallet.ShowInterruptDialog(onInterruptPrompt)
                 store.dispatchDialogShow(stateDialog)
             } else {
+                OnboardingHelper.onInterrupted()
                 store.dispatch(TwinCardsAction.CardsManager.Release)
                 action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
                     store.dispatch(NavigationAction.PopBackTo())
