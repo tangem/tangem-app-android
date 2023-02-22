@@ -426,6 +426,7 @@ private fun handleOnBackPressed(state: OnboardingWalletState) {
             if (state.isSaltPay) {
                 showInterruptOnboardingDialog()
             } else {
+                OnboardingHelper.onInterrupted()
                 store.dispatch(NavigationAction.PopBackTo())
             }
         }
@@ -436,6 +437,7 @@ private fun showInterruptOnboardingDialog() {
     store.dispatchDialogShow(
         OnboardingDialog.InterruptOnboarding(
             onOk = {
+                OnboardingHelper.onInterrupted()
                 store.dispatch(BackupAction.DiscardBackup)
                 store.dispatch(NavigationAction.PopBackTo())
             },
