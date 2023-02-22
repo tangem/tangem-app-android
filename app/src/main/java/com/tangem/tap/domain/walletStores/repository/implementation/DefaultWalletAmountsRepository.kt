@@ -442,7 +442,7 @@ internal class DefaultWalletAmountsRepository(
                 .toMutableList()
                 .apply {
                     replaceByOrAdd(walletManager) {
-                        it.wallet.blockchain == it.wallet.blockchain
+                        it.wallet.blockchain == walletManager.wallet.blockchain
                     }
                 }
 
