@@ -210,4 +210,9 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
     }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingNoteAction.OnBackPressed)
+        super.handleOnBackPressed()
+    }
 }
