@@ -10,7 +10,7 @@ import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.eraseCardContext
+import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -54,7 +54,7 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
 private fun handleHomeAction(action: Action) {
     when (action) {
         is HomeAction.OnCreate -> {
-            Analytics.eraseCardContext()
+            Analytics.eraseContext()
             Analytics.send(IntroductionProcess.ScreenOpened())
         }
         is HomeAction.Init -> {
