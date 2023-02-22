@@ -42,6 +42,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.ErrorType
@@ -333,8 +334,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
-        pendingTransactionAdapter.submitList(pendingTransactions)
-        binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
+        val knownTransactions = pendingTransactions.filterNot {
+            it.type == PendingTransactionType.Unknown
+        }
+        pendingTransactionAdapter.submitList(knownTransactions)
+        binding.rvPendingTransaction.show(knownTransactions.isNotEmpty())
     }
 
     private fun setupAddressCard(
