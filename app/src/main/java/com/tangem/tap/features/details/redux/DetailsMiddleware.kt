@@ -74,7 +74,10 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanProduct(userTokensRepository)
+                    tangemSdkManager.scanProduct(
+                        userTokensRepository = userTokensRepository,
+                        allowsRequestAccessCodeFromRepository = true,
+                    )
                         .doOnSuccess { scanResponse ->
                             val currentUserWalletId = state.scanResponse
                                 ?.let { UserWalletIdBuilder.scanResponse(it).build() }
