@@ -38,6 +38,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.components.RefreshableWaringCard
 import com.tangem.core.ui.components.SimpleOkDialog
+import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithDisclaimer
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.WarningCard
@@ -280,7 +281,9 @@ private fun FeeItem(feeState: FeeState, currency: String) {
                 ),
             )
         }
-        is FeeState.Empty -> {}
+        is FeeState.Empty -> {
+            SmallInfoCard(startText = titleString, endText = "")
+        }
     }
 }
 
