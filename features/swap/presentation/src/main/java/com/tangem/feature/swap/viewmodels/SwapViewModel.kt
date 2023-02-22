@@ -251,6 +251,9 @@ internal class SwapViewModel @Inject constructor(
                             analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
                             swapRouter.openScreen(SwapNavScreen.Success)
                         }
+                        is TxState.UserCancelled -> {
+                            startLoadingQuotesFromLastState()
+                        }
                         else -> {
                             startLoadingQuotesFromLastState()
                             uiState = stateBuilder.createErrorTransaction(uiState, it) {
@@ -281,6 +284,9 @@ internal class SwapViewModel @Inject constructor(
                     when (it) {
                         is TxState.TxSent -> {
                             uiState = stateBuilder.loadingPermissionState(uiState)
+                        }
+                        is TxState.UserCancelled -> {
+                            // do nothing
                         }
                         else -> {
                             uiState = stateBuilder.createErrorTransaction(uiState, it) {

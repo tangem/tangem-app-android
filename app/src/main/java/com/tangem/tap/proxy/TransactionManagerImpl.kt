@@ -171,6 +171,10 @@ class TransactionManagerImpl(
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {
                     is BlockchainSdkError.WrappedTangemError -> {
+                        val errorByCode = mapErrorByCode(error)
+                        if (errorByCode != null) {
+                            return errorByCode
+                        }
                         val tangemSdkError = error.tangemError as? TangemSdkError ?: return SendTxResult.UnknownError()
                         if (tangemSdkError is TangemSdkError.UserCancelled) return SendTxResult.UserCancelledError
                         return SendTxResult.TangemSdkError(tangemSdkError.code, tangemSdkError.cause)
@@ -179,6 +183,17 @@ class TransactionManagerImpl(
                         return SendTxResult.TangemSdkError(error.code, error.cause)
                     }
                 }
+            }
+        }
+    }
+
+    private fun mapErrorByCode(error: BlockchainSdkError.WrappedTangemError): SendTxResult? {
+        return when (error.code) {
+            USER_CANCELLED_ERROR_CODE -> {
+                return SendTxResult.UserCancelledError
+            }
+            else -> {
+                null
             }
         }
     }
@@ -291,5 +306,6 @@ class TransactionManagerImpl(
 
     companion object {
         private const val HEX_PREFIX = "0x"
+        private const val USER_CANCELLED_ERROR_CODE = 50002
     }
 }
