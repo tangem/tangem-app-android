@@ -79,6 +79,8 @@ internal class StateBuilder(val actions: UiActions) {
         toToken: Currency,
         mainTokenId: String,
     ): SwapStateHolder {
+        val canSelectSendToken = mainTokenId != fromToken.id
+        val canSelectReceiveToken = mainTokenId != toToken.id
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
@@ -88,8 +90,8 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = fromToken.symbol,
                 coinId = fromToken.id,
                 isNotNativeToken = fromToken.isNonNative(),
-                canSelectAnotherToken = mainTokenId != fromToken.id,
-                balance = "",
+                canSelectAnotherToken = canSelectSendToken,
+                balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -99,8 +101,8 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = toToken.symbol,
                 coinId = toToken.id,
                 isNotNativeToken = toToken.isNonNative(),
-                canSelectAnotherToken = mainTokenId != toToken.id,
-                balance = "",
+                canSelectAnotherToken = canSelectReceiveToken,
+                balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
             ),
             fee = FeeState.Loading,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
