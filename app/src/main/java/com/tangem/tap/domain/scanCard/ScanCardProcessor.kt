@@ -13,9 +13,11 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.tap.common.extensions.addCardContext
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
+import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -104,8 +106,15 @@ object ScanCardProcessor {
         analyticsEvent: AnalyticsEvent?,
         scanResponse: ScanResponse,
     ) {
-        Analytics.addCardContext(scanResponse)
-        analyticsEvent?.let { Analytics.send(it) }
+        analyticsEvent?.let {
+            // this workaround needed to send CardWasScannedEvent without adding a context
+            val interceptor = CardContextInterceptor(scanResponse)
+            val params = it.params.toMutableMap()
+            interceptor.intercept(params)
+            it.params = params.toMap()
+
+            Analytics.send(it)
+        }
     }
 
     /**
@@ -195,6 +204,7 @@ object ScanCardProcessor {
                 withMainContext {
                     when (result) {
                         is Result.Success -> {
+                            Analytics.addContext(scanResponse)
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 onWalletNotCreated()
@@ -221,16 +231,19 @@ object ScanCardProcessor {
                     SaltPayExceptionHandler.handle(error)
                     onFailure(TangemSdkError.ExceptionError(error))
                 } else {
+                    Analytics.setContext(scanResponse)
                     onSuccess(scanResponse)
                 }
             }
         } else {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+                Analytics.addContext(scanResponse)
                 onWalletNotCreated()
                 store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
                 val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
                 navigateTo(appScreen) { onProgressStateChange(it) }
             } else {
+                Analytics.setContext(scanResponse)
                 if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                     onWalletNotCreated()
                     store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
