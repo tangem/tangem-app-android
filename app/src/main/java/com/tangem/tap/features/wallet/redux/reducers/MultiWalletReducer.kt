@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.extensions.getBlockchainTxHistory
 import com.tangem.tap.common.extensions.getTokenTxHistory
@@ -113,14 +114,17 @@ class MultiWalletReducer {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
                 val walletManager = state.getWalletManager(currency)
                 if (walletManager == null) {
-                    if (userWalletsListManager.hasSavedUserWallets) {
-                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Welcome))
+                    val screen = if (userWalletsListManager.hasSavedUserWallets) {
+                        AppScreen.Welcome
                     } else {
-                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
+                        AppScreen.Home
                     }
+                    store.dispatchOnMain(NavigationAction.PopBackTo(screen))
+
                     FirebaseCrashlytics.getInstance().recordException(
                         IllegalStateException("MultiWallet.TokenLoaded: walletManager is null"),
                     )
+
                     store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
                     return state
                 }
