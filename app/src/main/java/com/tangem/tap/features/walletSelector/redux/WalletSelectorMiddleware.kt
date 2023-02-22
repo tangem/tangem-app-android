@@ -12,7 +12,6 @@ import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MyWallets
-import com.tangem.tap.common.extensions.addCardContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -199,8 +198,6 @@ internal class WalletSelectorMiddleware {
                 .doOnSuccess {
                     val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                     if (selectedUserWallet != null) {
-                        Analytics.addCardContext(selectedUserWallet.scanResponse)
-
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                         store.onUserWalletSelected(selectedUserWallet)
                     }

@@ -23,8 +23,6 @@ sealed class DetailsAction : Action {
         object Success : ResetToFactory()
     }
 
-    object CreateBackup : DetailsAction()
-
     object ScanCard : DetailsAction()
 
     data class PrepareCardSettingsData(val card: CardDTO) : DetailsAction()
