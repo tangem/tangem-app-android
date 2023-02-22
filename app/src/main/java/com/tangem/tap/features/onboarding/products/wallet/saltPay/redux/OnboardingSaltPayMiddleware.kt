@@ -152,8 +152,15 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 Analytics.send(Onboarding.PinCodeSet())
+
+                var nextStep = SaltPayActivationStep.KycIntro
+                nextStep = saltPayManager.update(nextStep, state.amountToClaim).successOr {
+                    onException(it.error)
+                    return@launch
+                }
+
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(nextStep))
             }
         }
         is OnboardingSaltPayAction.OpenUtorgKYC -> {
