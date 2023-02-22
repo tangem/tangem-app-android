@@ -5,8 +5,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -64,12 +64,6 @@ class DetailsMiddleware {
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
-            }
-            is DetailsAction.CreateBackup -> {
-                state.scanResponse?.let {
-                    store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                }
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
