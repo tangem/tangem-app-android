@@ -21,6 +21,7 @@ sealed class OnboardingNoteAction : Action {
     data class SetWalletManager(val walletManager: WalletManager) : OnboardingNoteAction()
     object DetermineStepOfScreen : OnboardingNoteAction()
     object Done : OnboardingNoteAction()
+    object OnBackPressed : OnboardingNoteAction()
 
     data class SetStepOfScreen(val step: OnboardingNoteStep) : OnboardingNoteAction()
 
