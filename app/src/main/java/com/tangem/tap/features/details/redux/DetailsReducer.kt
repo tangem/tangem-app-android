@@ -2,9 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
@@ -109,11 +107,9 @@ private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesRe
 }
 
 private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
-    val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
-    val notAllowedByCard = notAllowedByAnyWallet ||
-        card.isWalletDataSupported && !cardTypesResolver.isTangemNote() && !card.settings.isBackupAllowed ||
-        card.isSaltPay
-    return !notAllowedByCard
+    val hasPermanentWallet = card.wallets.any { it.settings.isPermanent }
+    val isNotAllowed = hasPermanentWallet || cardTypesResolver.isSaltPay() || cardTypesResolver.isStart2Coin()
+    return !isNotAllowed
 }
 
 private fun handleEraseWallet(
