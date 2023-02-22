@@ -2,9 +2,9 @@ package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -119,9 +119,7 @@ private fun handleOtherCardsAction(action: Action) {
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
                         }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -130,9 +128,9 @@ private fun handleOtherCardsAction(action: Action) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(onboardingManager.scanResponse)
         }
-        is OnboardingOtherCardsAction.Confetti.Hide,
-        is OnboardingOtherCardsAction.SetArtworkUrl,
-        is OnboardingOtherCardsAction.Confetti.Show,
-        -> Unit
+        OnboardingOtherCardsAction.OnBackPressed -> {
+            OnboardingHelper.onInterrupted()
+        }
+        else -> Unit
     }
 }
