@@ -77,7 +77,7 @@ internal class OnboardingSaltPayView(
         when (state.step) {
             OnboardingWalletStep.SaltPay -> setSaltPayStep(state.onboardingSaltPayState)
             OnboardingWalletStep.Backup -> {
-                if (state.backupState.backupStep == BackupStep.Finished) {
+                if (state.backupState.backupStep == BackupStep.Finished && !state.backupState.isInterruptedBackup) {
                     // if backup finished -> switch OnboardingWalletStep to the SaltPay
                     store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
                     store.dispatch(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
@@ -100,7 +100,7 @@ internal class OnboardingSaltPayView(
         } else {
             walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
         }
-        imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
+        imvFirstBackupCard.load(R.drawable.img_salt_pay_visa)
 
         // if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
         //     //if saltPay url not loaded -> load from resource
