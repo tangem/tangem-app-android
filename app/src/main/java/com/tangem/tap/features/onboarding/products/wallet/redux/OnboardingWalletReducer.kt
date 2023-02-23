@@ -54,6 +54,7 @@ private class ReducerForGlobalAction {
                         backupState = state.backupState.copy(
                             maxBackupCards = maxBackupCards(action.isSaltPayVisa),
                             canSkipBackup = false,
+                            isInterruptedBackup = true,
                         ),
                         isSaltPay = action.isSaltPayVisa,
                     )
