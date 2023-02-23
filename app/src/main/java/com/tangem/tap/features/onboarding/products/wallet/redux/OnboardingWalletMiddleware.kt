@@ -398,11 +398,12 @@ private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
  */
 private fun initSaltPayOnBackupFinishedIfNeeded(
     scanResponse: ScanResponse?,
-    onboardingWalletState: OnboardingWalletState,
+    state: OnboardingWalletState,
 ) {
-    if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
-        if (scanResponse == null) throw IllegalArgumentException()
+    if (state.backupState.isInterruptedBackup) return
+    if (scanResponse == null) return
 
+    if (state.isSaltPay && state.onboardingSaltPayState == null) {
         val manager = SaltPayActivationManagerFactory(
             blockchain = scanResponse.getBlockchain(),
             card = scanResponse.card,
