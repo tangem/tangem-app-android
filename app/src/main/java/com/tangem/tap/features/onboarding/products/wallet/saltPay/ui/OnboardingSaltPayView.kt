@@ -100,7 +100,7 @@ internal class OnboardingSaltPayView(
         } else {
             walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
         }
-        imvFirstBackupCard.load(R.drawable.img_salt_pay_visa)
+        imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
 
         // if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
         //     //if saltPay url not loaded -> load from resource
