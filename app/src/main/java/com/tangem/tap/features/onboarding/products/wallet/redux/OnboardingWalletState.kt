@@ -85,6 +85,7 @@ data class BackupState(
     val backupStep: BackupStep = BackupStep.InitBackup,
     val maxBackupCards: Int = 2,
     val canSkipBackup: Boolean = true,
+    val isInterruptedBackup: Boolean = false,
 )
 
 enum class AccessCodeError {
