@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference
 /**
  * Created by Anton Zhilenkov on 1/09/2020.
  */
+@Deprecated("Use com.tangem.datasource.connection.NetworkConnectionManager")
 class NetworkConnectivity(
     private val store: Store<*>,
     context: Context,

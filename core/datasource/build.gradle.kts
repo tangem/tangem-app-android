@@ -40,6 +40,7 @@ android {
 dependencies {
 
     /** Project */
+    implementation(project(":core:utils"))
     implementation(project(":libs:auth"))
 
     /** Tangem libraries */
