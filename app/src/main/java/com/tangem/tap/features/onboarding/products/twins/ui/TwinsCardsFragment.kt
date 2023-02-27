@@ -411,7 +411,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             TwinCardsAction.OnBackPressed { should, popAction ->
                 store.dispatch(TwinCardsAction.Confetti.Hide)
                 showConfetti(false)
-                if (should) switchToCard(TwinCardNumber.First, true, popAction) else popAction()
+                if (should) {
+                    switchToCard(TwinCardNumber.First, true, popAction)
+                } else {
+                    popAction()
+                }
             },
         )
     }
