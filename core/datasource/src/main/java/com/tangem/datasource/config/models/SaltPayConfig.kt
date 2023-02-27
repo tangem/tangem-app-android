@@ -6,7 +6,7 @@ import org.spongycastle.util.encoders.Base64.toBase64String
  * Created by Anton Zhilenkov on 13.10.2022.
  */
 data class SaltPayConfig(
-    val zendesk: ZendeskConfig,
+    val zendesk: ZendeskConfig?,
     val kycProvider: KYCProvider,
     val credentials: Credentials,
 ) {

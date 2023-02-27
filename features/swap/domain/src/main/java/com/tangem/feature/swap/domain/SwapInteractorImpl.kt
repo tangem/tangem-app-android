@@ -52,7 +52,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet = userWalletManager.getUserTokens(networkId, true)
+        val tokensInWallet = userWalletManager.getUserTokens(networkId = networkId, isExcludeCustom = true)
             .filter { it.symbol != initialCurrency.symbol }
             .map { token ->
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
@@ -95,13 +95,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 it.token.name.lowercase().contains(searchQueryLowerCase) ||
                     it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
-        // val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList())
-        //     .mapValues { SwapAmount(it.value.value, it.value.decimals) }
-        // val appCurrency = userWalletManager.getUserAppCurrency()
-        // val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
         return FoundTokensState(
-            tokensInWallet = tokensInWallet, // getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
-            loadedTokens = loadedTokens, // loadedTokens.map { TokenWithBalance(it) },
+            tokensInWallet = tokensInWallet,
+            loadedTokens = loadedTokens,
         )
     }
 
