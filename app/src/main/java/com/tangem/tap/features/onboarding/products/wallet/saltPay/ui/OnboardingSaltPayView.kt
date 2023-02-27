@@ -80,9 +80,10 @@ internal class OnboardingSaltPayView(
         when (state.step) {
             OnboardingWalletStep.SaltPay -> setSaltPayStep(state.onboardingSaltPayState)
             OnboardingWalletStep.Backup -> {
-                if (state.backupState.backupStep == BackupStep.Finished) {
+                if (state.backupState.backupStep == BackupStep.Finished && !state.backupState.isInterruptedBackup) {
                     // if backup finished -> switch OnboardingWalletStep to the SaltPay
                     store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
+                    store.dispatch(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
                 } else {
                     // if not -> back to the standard backup process
                     walletFragment.handleOnboardingStep(state)
@@ -103,7 +104,7 @@ internal class OnboardingSaltPayView(
             val uri = Uri.parse(state.onboardingSaltPayState.saltPayCardArtworkUrl)
             walletFragment.loadImageIntoImageView(uri, imvFrontCard)
         }
-        imvFirstBackupCard.load(R.drawable.img_salt_pay_visa)
+        imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
 
         // if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
         //     //if saltPay url not loaded -> load from resource
@@ -233,7 +234,7 @@ internal class OnboardingSaltPayView(
 
         btnKycAction.text = getText(R.string.onboarding_button_kyc_waiting)
         btnKycAction.setOnClickListener {
-            store.dispatch(OnboardingSaltPayAction.Update)
+            store.dispatch(OnboardingSaltPayAction.Update())
         }
         progressButton = SaltPayProgressButton(root)
     }
@@ -249,7 +250,7 @@ internal class OnboardingSaltPayView(
         btnOpenSupportChat.hide()
         btnKycAction.text = getText(R.string.onboarding_button_kyc_start)
         btnKycAction.setOnClickListener {
-            store.dispatch(OnboardingSaltPayAction.Update)
+            store.dispatch(OnboardingSaltPayAction.Update())
         }
         progressButton = SaltPayProgressButton(root)
     }
