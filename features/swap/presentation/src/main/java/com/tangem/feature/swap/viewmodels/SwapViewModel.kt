@@ -286,7 +286,7 @@ internal class SwapViewModel @Inject constructor(
                             uiState = stateBuilder.loadingPermissionState(uiState)
                         }
                         is TxState.UserCancelled -> {
-                            // do nothing
+                            /* no-op */
                         }
                         else -> {
                             uiState = stateBuilder.createErrorTransaction(uiState, it) {
