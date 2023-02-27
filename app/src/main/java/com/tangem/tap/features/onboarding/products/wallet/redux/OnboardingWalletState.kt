@@ -62,7 +62,7 @@ data class OnboardingWalletState(
                     -> 9
                     SaltPayActivationStep.Claim -> 10
                     SaltPayActivationStep.ClaimInProgress -> 11
-                    SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success, SaltPayActivationStep.Finished,
+                    SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success,
                     -> getMaxProgress()
                 }
             }
@@ -87,6 +87,7 @@ data class BackupState(
     val backupStep: BackupStep = BackupStep.InitBackup,
     val maxBackupCards: Int = 2,
     val canSkipBackup: Boolean = true,
+    val isInterruptedBackup: Boolean = false,
 )
 
 enum class AccessCodeError {
