@@ -54,8 +54,8 @@ object Analytics : GlobalAnalyticsEventHandler {
         paramsInterceptors[interceptor.id()] = interceptor
     }
 
-    override fun removeParamsInterceptor(interceptor: ParamsInterceptor): ParamsInterceptor? {
-        return paramsInterceptors.remove(interceptor.id())
+    override fun removeParamsInterceptor(interceptorId: String): ParamsInterceptor? {
+        return paramsInterceptors.remove(interceptorId)
     }
 
     override fun send(event: AnalyticsEvent) {
