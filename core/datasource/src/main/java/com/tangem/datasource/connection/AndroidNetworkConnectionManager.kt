@@ -105,7 +105,6 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
         private fun NetworkCapabilities.hasNetworkTransport(): Boolean {
             return hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
                 hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
                 hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
         }
     }
