@@ -5,10 +5,12 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -49,6 +51,10 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
 
 private fun handleHomeAction(action: Action) {
     when (action) {
+        is HomeAction.OnCreate -> {
+            Analytics.eraseContext()
+            Analytics.send(IntroductionProcess.ScreenOpened())
+        }
         is HomeAction.Init -> {
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
