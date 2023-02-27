@@ -196,6 +196,7 @@ dependencies {
     }
     implementation(Library.accompanistAppCompatTheme)
     implementation(Library.accompanistSystemUiController)
+    implementation(Library.accompanistWebView)
     implementation(Library.xmlShimmer)
     implementation(Library.viewBindingDelegate)
     implementation(Library.armadillo)
