@@ -31,9 +31,8 @@ sealed class BackupAction : Action {
     object ScanPrimaryCard : BackupAction()
 
     /**
-     * Check for unfinished backup of standard Wallet cards.
-     * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
-     * See more Onboarding.Start, CheckForUnfinishedBackup, StartForUnfinishedBackup
+     * Check for unfinished backup of standard Wallets and SaltPay cards
+     * See more GlobalAction.Onboarding.StartForUnfinishedBackup
      */
     object CheckForUnfinishedBackup : BackupAction()
 
@@ -65,7 +64,11 @@ sealed class BackupAction : Action {
     data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
-    object FinishBackup : BackupAction()
+    /**
+     * It always calls for the SaltPay cards when resuming the activation process.
+     */
+    data class FinishBackup(val withAnalytics: Boolean = true) : BackupAction()
+
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
