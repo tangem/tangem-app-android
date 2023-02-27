@@ -15,6 +15,7 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.converters.BasicEventsPreChecker
 import com.tangem.tap.common.analytics.converters.BasicEventsSourceData
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -249,6 +250,8 @@ class WalletMiddleware {
             }
             is NetworkStateChanged -> {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
+                if (!action.isOnline) return
+
                 val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
                 if (selectedUserWallet != null) {
                     scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }
@@ -380,7 +383,7 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan(MainScreen.CardWasScanned()))
+                store.dispatch(WalletAction.Scan(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main)))
             }
         }
     }

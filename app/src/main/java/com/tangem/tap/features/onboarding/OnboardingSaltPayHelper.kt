@@ -12,23 +12,39 @@ import com.tangem.tap.preferencesStorage
 /**
 * [REDACTED_AUTHOR]
  */
-object OnboardingSaltPayHelper {
-    suspend fun isOnboardingCase(scanResponse: ScanResponse, manager: SaltPayActivationManager): Result<Boolean> {
-        return try {
-            var updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
+class OnboardingSaltPayHelper {
+    companion object {
 
-            val cardStorage = preferencesStorage.usedCardsPrefStorage
-            val activationIsFinished = cardStorage.isActivationFinished(scanResponse.card.cardId)
-            if (updatedStep == SaltPayActivationStep.Success && activationIsFinished) {
-                updatedStep = SaltPayActivationStep.Finished
+        suspend fun isOnboardingCase(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> {
+            return try {
+                val updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
+
+                val cardStorage = preferencesStorage.usedCardsPrefStorage
+                val activationIsFinished = cardStorage.isActivationFinished(scanResponse.card.cardId)
+                if (updatedStep == SaltPayActivationStep.Success && !activationIsFinished) {
+                    cardStorage.activationFinished(scanResponse.card.cardId)
+                }
+                val isActivationCase = updatedStep != SaltPayActivationStep.Success
+                val isBackupCase = scanResponse.card.backupStatus?.isActive == false
+                Result.Success(isActivationCase || isBackupCase)
+            } catch (ex: Exception) {
+                Result.Failure(ex)
+            } catch (error: SaltPayActivationError) {
+                Result.Failure(error)
             }
-            val isActivationCase = updatedStep != SaltPayActivationStep.Finished
-            val isBackupCase = scanResponse.card.backupStatus?.isActive == false
-            Result.Success(isActivationCase || isBackupCase)
-        } catch (ex: Exception) {
-            Result.Failure(ex)
-        } catch (error: SaltPayActivationError) {
-            Result.Failure(error)
         }
+
+        fun testProceedToOnboarding(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> = Result.Success(true)
+
+        fun testProceedToMainScreen(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> = Result.Success(false)
     }
 }

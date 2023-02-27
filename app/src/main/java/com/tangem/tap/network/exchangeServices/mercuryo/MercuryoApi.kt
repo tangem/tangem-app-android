@@ -20,11 +20,6 @@ interface MercuryoApi {
     suspend fun currencies(
         @Path("apiVersion") apiVersion: String,
     ): MercuryoCurrenciesResponse
-
-    companion object {
-        const val BASE_URL = "https://api.mercuryo.io/"
-        const val API_VERSION = "v1.6"
-    }
 }
 
 data class MercuryoCurrenciesResponse(
@@ -34,7 +29,7 @@ data class MercuryoCurrenciesResponse(
     data class Data(
         val fiat: List<String>,
         val crypto: List<String>,
-        val config: Config
+        val config: Config,
     )
 
     data class Config(

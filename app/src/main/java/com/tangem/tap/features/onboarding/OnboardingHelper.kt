@@ -1,9 +1,12 @@
 package com.tangem.tap.features.onboarding
 
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.removeContext
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
@@ -55,6 +58,7 @@ object OnboardingHelper {
         accessCode: String? = null,
         backupCardsIds: List<String>? = null,
     ) {
+        Analytics.setContext(scanResponse)
         when {
             // When should save user wallets, then save card without navigate to save wallet screen
             preferencesStorage.shouldSaveUserWallets -> scope.launch {
@@ -91,5 +95,9 @@ object OnboardingHelper {
         }
 
         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+    }
+
+    fun onInterrupted() {
+        Analytics.removeContext()
     }
 }
