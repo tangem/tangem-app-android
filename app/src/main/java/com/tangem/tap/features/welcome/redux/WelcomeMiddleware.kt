@@ -4,9 +4,13 @@ import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -38,6 +42,10 @@ internal class WelcomeMiddleware {
 
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
         when (action) {
+            is WelcomeAction.OnCreate -> {
+                Analytics.eraseContext()
+                Analytics.send(SignIn.ScreenOpened())
+            }
             is WelcomeAction.ProceedWithBiometrics -> {
                 proceedWithBiometrics(state)
             }
@@ -107,7 +115,7 @@ internal class WelcomeMiddleware {
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
         ScanCardProcessor.scan(
-            analyticsEvent = SignIn.CardWasScanned(),
+            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
             },
