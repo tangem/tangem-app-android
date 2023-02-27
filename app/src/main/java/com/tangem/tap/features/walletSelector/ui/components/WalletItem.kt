@@ -4,7 +4,17 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -29,6 +39,7 @@ import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.tap.common.extensions.cardImageData
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
@@ -100,7 +111,7 @@ private fun WalletCardImage(
         SubcomposeAsyncImage(
             modifier = cardImageModifier,
             model = ImageRequest.Builder(LocalContext.current)
-                .data(cardImageUrl)
+                .cardImageData(cardImageUrl)
                 .crossfade(true)
                 .build(),
             loading = { CardImageShimmer(modifier = cardImageModifier) },
