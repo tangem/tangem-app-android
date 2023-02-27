@@ -118,4 +118,9 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         transition.interpolator = OvershootInterpolator()
         TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
     }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingOtherCardsAction.OnBackPressed)
+        super.handleOnBackPressed()
+    }
 }
