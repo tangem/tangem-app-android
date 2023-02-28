@@ -119,9 +119,7 @@ private fun handleOtherCardsAction(action: Action) {
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
                         }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -130,9 +128,9 @@ private fun handleOtherCardsAction(action: Action) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(onboardingManager.scanResponse)
         }
-        is OnboardingOtherCardsAction.Confetti.Hide,
-        is OnboardingOtherCardsAction.SetArtworkUrl,
-        is OnboardingOtherCardsAction.Confetti.Show,
-        -> Unit
+        OnboardingOtherCardsAction.OnBackPressed -> {
+            OnboardingHelper.onInterrupted()
+        }
+        else -> Unit
     }
 }
