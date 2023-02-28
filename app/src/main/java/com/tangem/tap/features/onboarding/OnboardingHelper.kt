@@ -1,21 +1,27 @@
 package com.tangem.tap.features.onboarding
 
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnSuccess
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -75,7 +81,7 @@ object OnboardingHelper {
             // then open save wallet screen
             tangemSdkManager.canUseBiometry &&
                 preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
-                store.onCardScanned(scanResponse)
+                proceedWithScanResponse(scanResponse)
 
                 delay(timeMillis = 1_200)
 
@@ -90,7 +96,7 @@ object OnboardingHelper {
             }
             // If device has no biometry and save wallet screen has been shown, then go through old scenario
             else -> scope.launch {
-                store.onCardScanned(scanResponse)
+                proceedWithScanResponse(scanResponse)
             }
         }
 
@@ -99,5 +105,20 @@ object OnboardingHelper {
 
     fun onInterrupted() {
         Analytics.removeContext()
+    }
+
+    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse) {
+        val userWallet = UserWalletBuilder(scanResponse).build().guard {
+            Timber.e("User wallet not created")
+            return
+        }
+
+        userWalletsListManager.save(userWallet)
+            .doOnFailure { error ->
+                Timber.e(error, "Unable to save user wallet")
+            }
+            .doOnSuccess {
+                scope.launch { store.onUserWalletSelected(userWallet) }
+            }
     }
 }
