@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.ui.wallet.saltPay
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.skydoves.androidveil.VeilLayout
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
@@ -23,6 +22,7 @@ import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryItemData
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryTransactionData
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.TxHistoryAdapter
 import com.tangem.tap.mainScope
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.FragmentWalletBinding
@@ -103,12 +103,14 @@ class SaltPayWalletView : WalletView() {
         val balanceWidget = balanceWidget ?: return
         val txWidget = txWidget ?: return
 
-        setupBalanceWidget(balanceWidget, state)
+        val exchangeManager = store.state.globalState.exchangeManager
+        setupBalanceWidget(balanceWidget, exchangeManager, state)
         setupTxHistoryWidget(txWidget, state)
     }
 
     private fun setupBalanceWidget(
         balanceWidget: LayoutSaltPayBalanceBinding,
+        exchangeManager: CurrencyExchangeManager,
         state: WalletState,
     ) = with(balanceWidget) {
         Timber.d("setupBalanceWidget")
@@ -144,7 +146,7 @@ class SaltPayWalletView : WalletView() {
             store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
 
-        btnBuy.show(tokenData.isAvailableToBuy)
+        btnBuy.show(tokenData.isAvailableToBuy(exchangeManager))
         btnBuy.setOnClickListener {
             Analytics.send(MainScreen.ButtonBuy())
             store.dispatch(WalletAction.TradeCryptoAction.Buy(false))
@@ -249,9 +251,4 @@ class SaltPayWalletView : WalletView() {
         }
         super.onViewDestroy()
     }
-}
-
-private fun VeilLayout.changeVeilState(show: Boolean) {
-    if (show) this.veil()
-    else this.unVeil()
 }

@@ -3,10 +3,8 @@ package com.tangem.tap.features.disclaimer.redux
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
-class DisclaimerReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): DisclaimerState = internalReduce(action, state)
-    }
+object DisclaimerReducer {
+    fun reduce(action: Action, state: AppState): DisclaimerState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): DisclaimerState {
