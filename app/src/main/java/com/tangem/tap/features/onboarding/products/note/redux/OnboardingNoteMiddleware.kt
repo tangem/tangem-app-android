@@ -18,10 +18,12 @@ import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -36,10 +38,8 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class OnboardingNoteMiddleware {
-    companion object {
-        val handler = onboardingNoteMiddleware
-    }
+object OnboardingNoteMiddleware {
+    val handler = onboardingNoteMiddleware
 }
 
 private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -51,6 +51,7 @@ private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state -
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch: DispatchFunction) {
     if (action !is OnboardingNoteAction) return
     if (DemoHelper.tryHandle(appState, action)) return
@@ -80,7 +81,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 noteState.walletBalance.balanceIsToppedUp() -> OnboardingNoteStep.Done
                 else -> OnboardingNoteStep.TopUpWallet
             }
-            store.dispatch((OnboardingNoteAction.SetStepOfScreen(step)))
+            store.dispatch(OnboardingNoteAction.SetStepOfScreen(step))
         }
         is OnboardingNoteAction.SetStepOfScreen -> {
             when (action.step) {
@@ -96,6 +97,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                     onboardingManager.activationFinished(card.cardId)
                     postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
+                else -> {}
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
@@ -186,12 +188,20 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 store.dispatchOpenUrl(topUpUrl)
             }
         }
-        OnboardingNoteAction.Done -> {
+        is OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
         }
-        OnboardingNoteAction.OnBackPressed -> {
-            OnboardingHelper.onInterrupted()
+        is OnboardingNoteAction.OnBackPressed -> {
+            store.dispatchDialogShow(
+                OnboardingDialog.InterruptOnboarding(
+                    onOk = {
+                        OnboardingHelper.onInterrupted()
+                        store.dispatch(NavigationAction.PopBackTo())
+                    },
+                ),
+            )
         }
+        else -> Unit
     }
 }

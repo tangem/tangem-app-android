@@ -50,9 +50,9 @@ import com.tangem.core.ui.res.TangemTypography
  * */
 @Composable
 fun OutlineTextField(
-    modifier: Modifier = Modifier,
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     caption: String? = null,
@@ -79,12 +79,13 @@ fun OutlineTextField(
 }
 
 // region Defaults
+@Suppress("LongMethod")
 @Composable
 private fun TangemTextField(
-    modifier: Modifier = Modifier,
     value: TextFieldValue,
     singleLine: Boolean,
     onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     caption: String? = null,
@@ -105,7 +106,7 @@ private fun TangemTextField(
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),
             value = value,
-            textStyle = TangemTypography.body1,
+            textStyle = TangemTheme.typography.body1,
             onValueChange = onValueChange,
             singleLine = singleLine,
             enabled = enabled,
@@ -120,7 +121,7 @@ private fun TangemTextField(
                 if (!label.isNullOrEmpty()) {
                     Text(
                         text = label,
-                        style = TangemTypography.caption,
+                        style = TangemTheme.typography.caption,
                         color = colors.labelColor(
                             enabled = enabled,
                             error = isError,
@@ -133,14 +134,14 @@ private fun TangemTextField(
                 if (!placeholder.isNullOrEmpty()) {
                     Text(
                         text = placeholder,
-                        style = TangemTypography.body1,
+                        style = TangemTheme.typography.body1,
                         color = colors.placeholderColor(enabled = enabled).value,
                     )
                 }
             },
             trailingIcon = {
                 val iconRes by rememberUpdatedState(
-                    newValue = if (isError) R.drawable.ic_alert else R.drawable.ic_close,
+                    newValue = if (isError) R.drawable.ic_alert_24 else R.drawable.ic_close_24,
                 )
                 IconButton(
                     modifier = Modifier.size(32.dp),
@@ -192,7 +193,7 @@ private fun TangemTextFieldSize.toShape(): Shape = when (this) {
     TangemTextFieldSize.Default -> TangemTheme.shapes.roundedCornersSmall2
 }
 
-private object TangemTextFieldsDefault {
+internal object TangemTextFieldsDefault {
     val defaultTextFieldColors: TangemTextFieldColors
         @Composable @Stable get() = TangemTextFieldColors(
             textColor = TangemTheme.colors.text.primary1,
@@ -223,7 +224,7 @@ private object TangemTextFieldsDefault {
 }
 
 @Immutable
-private data class TangemTextFieldColors(
+internal data class TangemTextFieldColors(
     private val textColor: Color,
     private val disabledTextColor: Color,
     private val cursorColor: Color,
@@ -330,6 +331,7 @@ private data class TangemTextFieldColors(
         return rememberUpdatedState(if (isError) errorCursorColor else cursorColor)
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun captionColor(enabled: Boolean, isError: Boolean): State<Color> {
         return rememberUpdatedState(

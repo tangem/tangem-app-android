@@ -3,11 +3,9 @@ package com.tangem.tap.features.wallet.redux
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -17,18 +15,13 @@ import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
-import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import org.rekotlin.StateType
-import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
 
 /**
@@ -67,7 +60,7 @@ data class WalletState(
     }
 
     val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
+        get() = store.state.globalState.scanResponse?.cardTypesResolver?.isTangemTwins() == true
 
     val isExchangeServiceFeatureOn: Boolean
         get() = store.state.globalState.exchangeManager.featureIsSwitchedOn()
@@ -82,8 +75,11 @@ data class WalletState(
         get() = walletsStores.mapNotNull { it.walletManager }
 
     private val primaryWalletStore: WalletStore?
-        get() = if (isMultiwalletAllowed || walletsStores.isEmpty() || walletsStores.size > 1) null
-        else walletsStores[0]
+        get() = if (isMultiwalletAllowed || walletsStores.isEmpty() || walletsStores.size > 1) {
+            null
+        } else {
+            walletsStores[0]
+        }
 
     val primaryWalletManager: WalletManager?
         get() = primaryWalletStore?.walletManager
@@ -131,7 +127,7 @@ data class WalletState(
         if (currency == null) return null
         return walletsStores.firstOrNull {
             it.blockchainNetwork.derivationPath == currency.derivationPath &&
-                (it.blockchainNetwork.blockchain == currency.blockchain)
+                it.blockchainNetwork.blockchain == currency.blockchain
         }
     }
 
@@ -146,7 +142,7 @@ data class WalletState(
         if (blockchainNetwork == null) return null
         return walletsStores.firstOrNull {
             it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
-                (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
+                it.blockchainNetwork.blockchain == blockchainNetwork.blockchain
         }
     }
 
@@ -211,8 +207,8 @@ data class WalletState(
         return when (val currency = walletData.currency) {
             is Currency.Blockchain -> {
                 val walletStores = walletsStores.filterNot {
-                    it.blockchainNetwork.blockchain == currency.blockchain
-                        && it.blockchainNetwork.derivationPath == currency.derivationPath
+                    it.blockchainNetwork.blockchain == currency.blockchain &&
+                        it.blockchainNetwork.derivationPath == currency.derivationPath
                 }
                 copy(walletsStores = walletStores)
                     .updateTotalBalance()
@@ -245,9 +241,9 @@ data class WalletState(
                     fiatCurrency = store.state.globalState.appCurrency,
                 ),
             )
-        } else this.copy(
-            totalBalance = null,
-        )
+        } else {
+            this.copy(totalBalance = null)
+        }
     }
 
     private fun updateProgressState(): WalletState {
@@ -323,81 +319,6 @@ data class Artwork(
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
         const val SALT_PAY_URL = "key_for_switch_url_to_drawableId_of_salt_pay_card"
     }
-}
-
-data class WalletData(
-    val pendingTransactions: List<PendingTransaction> = emptyList(),
-    val historyTransactions: List<TransactionData>? = null,
-    val hashesCountVerified: Boolean? = null,
-    val walletAddresses: WalletAddresses? = null,
-    val currencyData: BalanceWidgetData = BalanceWidgetData(),
-    val updatingWallet: Boolean = false,
-    val fiatRateString: String? = null,
-    val fiatRate: BigDecimal? = null,
-    val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-    val currency: Currency,
-    val walletRent: WalletRent? = null,
-    val existentialDepositString: String? = null,
-) {
-    val isAvailableToBuy: Boolean
-        get() = store.state.globalState.exchangeManager.availableForBuy(currency)
-
-    val isAvailableToSell: Boolean
-        get() = store.state.globalState.exchangeManager.availableForSell(currency)
-
-    fun shouldShowMultipleAddress(): Boolean {
-        val listOfAddresses = walletAddresses?.list ?: return false
-        return listOfAddresses.size > 1
-    }
-
-    fun shouldEnableTokenSendButton(): Boolean = if (blockchainAmountIsEmpty()) {
-        false
-    } else {
-        !tokenAmountIsEmpty()
-    }
-
-    fun assembleWarnings(): List<WalletWarning> {
-        val walletWarnings = mutableListOf<WalletWarning>()
-        assembleNonTypedWarnings(walletWarnings)
-        assembleBlockchainWarnings(walletWarnings)
-        assembleTokenWarnings(walletWarnings)
-
-        return walletWarnings.sortedBy { it.showingPosition }
-    }
-
-    private fun assembleNonTypedWarnings(walletWarnings: MutableList<WalletWarning>) {
-        if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
-            walletWarnings.add(WalletWarning.TransactionInProgress(currency.currencyName))
-        }
-    }
-
-    private fun assembleBlockchainWarnings(walletWarnings: MutableList<WalletWarning>) {
-        if (!currency.isBlockchain()) return
-
-        if (existentialDepositString != null) {
-            val warning = WalletWarning.ExistentialDeposit(
-                currencyName = currency.currencyName,
-                edStringValueWithSymbol = "$existentialDepositString ${currency.currencySymbol}",
-            )
-            walletWarnings.add(warning)
-        }
-        if (walletRent != null) {
-            walletWarnings.add(WalletWarning.Rent(walletRent))
-        }
-    }
-
-    private fun assembleTokenWarnings(walletWarnings: MutableList<WalletWarning>) {
-        if (!currency.isToken()) return
-
-        val blockchainFullName = currency.blockchain.fullName
-        if ((blockchainAmountIsEmpty() && !tokenAmountIsEmpty())) {
-            walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(blockchainFullName))
-        }
-    }
-
-    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() == true
-
-    private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
 
 data class WalletStore(

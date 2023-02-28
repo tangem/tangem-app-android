@@ -7,8 +7,8 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.domain.tasks.SignHashesTask
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class TangemSigner(
     private val card: CardDTO,
@@ -20,9 +20,9 @@ class TangemSigner(
 
     override suspend fun sign(
         hashes: List<ByteArray>,
-        publicKey: Wallet.PublicKey
+        publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             val cardId = if (card.backupStatus?.isActive == true) null else card.cardId
 
             val task = SignHashesTask(hashes, publicKey)
@@ -37,13 +37,17 @@ class TangemSigner(
                         signerCallback(
                             TangemSignerResponse(
                                 result.data.totalSignedHashes,
-                                result.data.remainingSignatures
-                            )
+                                result.data.remainingSignatures,
+                            ),
                         )
-                        continuation.resume(CompletionResult.Success(result.data.signatures))
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Success(result.data.signatures))
+                        }
                     }
                     is CompletionResult.Failure ->
-                        continuation.resume(CompletionResult.Failure(result.error))
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Failure(result.error))
+                        }
                 }
             }
         }
@@ -51,11 +55,11 @@ class TangemSigner(
 
     override suspend fun sign(
         hash: ByteArray,
-        publicKey: Wallet.PublicKey
+        publicKey: Wallet.PublicKey,
     ): CompletionResult<ByteArray> {
         val result = sign(
             hashes = listOf(hash),
-            publicKey = publicKey
+            publicKey = publicKey,
         )
 
         return when (result) {

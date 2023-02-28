@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,26 +21,28 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
+fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
         content = { ResetCardView(state = state) },
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
         backgroundColor = Color.Transparent,
     )
 }
 
+@Suppress("LongMethod", "MagicNumber")
 @Composable
 fun ResetCardView(state: ResetCardScreenState) {
     Column(
@@ -50,7 +53,7 @@ fun ResetCardView(state: ResetCardScreenState) {
     ) {
         Box {
             Image(
-                painter = painterResource(id = R.drawable.ic_reset_background),
+                painter = painterResource(id = R.drawable.ill_reset_background),
                 contentDescription = null,
                 modifier = Modifier.offset(y = (-82).dp),
             )
@@ -64,17 +67,17 @@ fun ResetCardView(state: ResetCardScreenState) {
             Text(
                 text = stringResource(id = R.string.common_attention),
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTypography.headline3,
-                color = colorResource(id = R.color.text_primary_1),
+                style = TangemTheme.typography.h3,
+                color = TangemTheme.colors.text.primary1,
             )
 
             Spacer(modifier = Modifier.size(24.dp))
 
             Text(
-                text = stringResource(id = state.descriptionResId),
+                text = state.descriptionText.resolveReference(),
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTypography.body1,
-                color = colorResource(id = R.color.text_secondary),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.secondary,
             )
 
             Spacer(modifier = Modifier.size(28.dp))
@@ -101,16 +104,16 @@ fun ResetCardView(state: ResetCardScreenState) {
                         ),
                         contentDescription = null,
                         tint = if (state.accepted) {
-                            colorResource(id = R.color.icon_accent)
+                            TangemTheme.colors.icon.accent
                         } else {
-                            colorResource(id = R.color.icon_secondary)
+                            TangemTheme.colors.icon.secondary
                         },
                     )
                 }
                 Text(
                     text = stringResource(id = R.string.reset_card_to_factory_warning_message),
-                    style = TangemTypography.body2,
-                    color = colorResource(id = R.color.text_secondary),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.secondary,
                     modifier = Modifier.padding(end = 20.dp),
                 )
             }
@@ -129,16 +132,40 @@ fun ResetCardView(state: ResetCardScreenState) {
     }
 }
 
+// region Preview
 @Composable
-@Preview
-fun ResetCardScreenPreview() {
-    ResetCardScreen(
-        state = ResetCardScreenState(
-            descriptionResId = R.string.reset_card_without_backup_to_factory_message,
-            accepted = false,
-            onAcceptWarningToggleClick = {},
-            onResetButtonClick = {},
-        ),
-        onBackPressed = {},
-    )
+private fun ResetCardScreenSample(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        ResetCardScreen(
+            state = ResetCardScreenState(
+                accepted = true,
+                descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
+                onAcceptWarningToggleClick = {},
+                onResetButtonClick = {},
+            ),
+            onBackClick = {},
+        )
+    }
 }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ResetCardScreenPreview_Light() {
+    TangemTheme {
+        ResetCardScreenSample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ResetCardScreenPreview_Dark() {
+    TangemTheme(isDark = true) {
+        ResetCardScreenSample()
+    }
+}
+// endregion Preview

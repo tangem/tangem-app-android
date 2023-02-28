@@ -48,6 +48,9 @@ class AdditionalFeedbackInfo {
     var fee: String = ""
     var token: String = ""
 
+    private val Address.name: String
+        get() = type.javaClass.simpleName
+
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
         cardBlockchain = data.walletData?.blockchain ?: ""
@@ -108,6 +111,7 @@ class AdditionalFeedbackInfo {
         }
     }
 
+    @Suppress("MagicNumber")
     private fun Wallet.formatAddressWith(with: String, mapAddress: (Address) -> String): String {
         return if (addresses.size == 1) {
             getExploreUrl(address)
@@ -117,7 +121,4 @@ class AdditionalFeedbackInfo {
                 .joinToString("\n")
         }
     }
-
-    private val Address.name: String
-        get() = type.javaClass.simpleName
 }
