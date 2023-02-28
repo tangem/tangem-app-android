@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
@@ -102,15 +103,14 @@ class UserWalletManagerImpl(
         val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
         val blockchainNetwork = BlockchainNetwork(blockchain, card)
 
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            walletCurrenciesManager.addCurrencies(
-                userWallet = selectedUserWallet,
-                currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
-            )
-        } else {
-            Timber.e("Unable to add token, selected user wallet is null")
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to add token, no user wallet selected")
+            return
         }
+        walletCurrenciesManager.addCurrencies(
+            userWallet = selectedUserWallet,
+            currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
+        )
     }
 
     override fun getWalletAddress(networkId: String): String {
