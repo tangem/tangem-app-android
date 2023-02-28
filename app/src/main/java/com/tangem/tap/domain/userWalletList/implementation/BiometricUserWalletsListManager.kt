@@ -23,7 +23,7 @@ internal class BiometricUserWalletsListManager(
     private val publicInformationRepository: UserWalletsPublicInformationRepository,
     private val sensitiveInformationRepository: UserWalletsSensitiveInformationRepository,
     private val selectedUserWalletRepository: SelectedUserWalletRepository,
-) : UserWalletsListManager {
+) : UserWalletsListManager.Lockable {
     private val state = MutableStateFlow(State())
 
     override val userWallets: Flow<List<UserWallet>>
@@ -50,10 +50,10 @@ internal class BiometricUserWalletsListManager(
     override val isLockedSync: Boolean
         get() = state.value.isLocked
 
-    override val hasSavedUserWallets: Boolean
+    override val hasUserWallets: Boolean
         get() = keysRepository.hasSavedEncryptionKeys()
 
-    override suspend fun unlockWithBiometry(): CompletionResult<UserWallet?> {
+    override suspend fun unlock(): CompletionResult<UserWallet?> {
         return unlockWithBiometryInternal()
             .map { selectedUserWalletSync }
     }
@@ -62,20 +62,20 @@ internal class BiometricUserWalletsListManager(
         state.update { State() }
     }
 
-    override suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
+    override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         if (state.value.selectedUserWalletId == userWalletId) {
             return@catching findSelectedUserWallet()!!
         }
 
         selectedUserWalletRepository.set(userWalletId)
 
-        state.update { prevState ->
+        val newState = state.updateAndGet { prevState ->
             prevState.copy(
                 selectedUserWalletId = userWalletId,
             )
         }
 
-        findSelectedUserWallet()!!
+        newState.userWallets.first { it.walletId == userWalletId }
     }
 
     override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
@@ -289,7 +289,7 @@ internal class BiometricUserWalletsListManager(
     }
 
     private fun findSelectedUserWallet(userWallets: List<UserWallet> = state.value.userWallets): UserWallet? {
-        return userWallets.find {
+        return userWallets.firstOrNull {
             it.walletId == state.value.selectedUserWalletId
         }
     }
