@@ -26,75 +26,105 @@ import com.tangem.core.ui.res.textColor
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryStartIconButton_Enabled_InLightTheme() {
-    TangemTheme(isDark = false) {
-        PrimaryStartIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
-    }
-}
-
-@Preview(widthDp = 328, heightDp = 48, showBackground = true)
-@Composable
-fun Preview_PrimaryStartIconButton_Enabled_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        PrimaryStartIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
-    }
-}
-
-@Preview(widthDp = 328, heightDp = 48, showBackground = true)
-@Composable
-fun Preview_PrimaryStartIconButton_Disabled_InLightTheme() {
+private fun Preview_PrimaryStartIconButton_Enabled_InLightTheme() {
     TangemTheme(isDark = false) {
         PrimaryStartIconButton(
             text = "Manage tokens",
-            iconResId = R.drawable.ic_tangem,
-            enabled = false,
-            onClicked = {},
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = true,
+            onClick = {},
         )
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryStartIconButton_Disabled_InDarkTheme() {
+private fun Preview_PrimaryStartIconButton_Enabled_InDarkTheme() {
     TangemTheme(isDark = true) {
         PrimaryStartIconButton(
             text = "Manage tokens",
-            iconResId = R.drawable.ic_tangem,
-            enabled = false,
-            onClicked = {},
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = true,
+            onClick = {},
         )
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryEndIconButton_Enabled_InLightTheme() {
+private fun Preview_PrimaryStartIconButton_Disabled_InLightTheme() {
     TangemTheme(isDark = false) {
-        PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
+        PrimaryStartIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = false,
+            onClick = {},
+        )
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryEndIconButton_Enabled_InDarkTheme() {
+private fun Preview_PrimaryStartIconButton_Disabled_InDarkTheme() {
     TangemTheme(isDark = true) {
-        PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
+        PrimaryStartIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = false,
+            onClick = {},
+        )
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryEndIconButton_Disabled_InLightTheme() {
+private fun Preview_PrimaryEndIconButton_Enabled_InLightTheme() {
     TangemTheme(isDark = false) {
-        PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = false, onClicked = {})
+        PrimaryEndIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = true,
+            onClick = {},
+        )
     }
 }
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
+private fun Preview_PrimaryEndIconButton_Enabled_InDarkTheme() {
     TangemTheme(isDark = true) {
-        PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = false, onClicked = {})
+        PrimaryEndIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 48, showBackground = true)
+@Composable
+private fun Preview_PrimaryEndIconButton_Disabled_InLightTheme() {
+    TangemTheme(isDark = false) {
+        PrimaryEndIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = false,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 48, showBackground = true)
+@Composable
+private fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
+    TangemTheme(isDark = true) {
+        PrimaryEndIconButton(
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = false,
+            onClick = {},
+        )
     }
 }
 
@@ -105,7 +135,7 @@ fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
  * @param text      button text
  * @param iconResId button icon res id
  * @param enabled   controls the enabled state of the button
- * @param onClicked the lambda to be invoked when this button is pressed
+ * @param onClick the lambda to be invoked when this button is pressed
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=233%3A258&t=WdN5XpixzZLlQAZO-4"
  * >Figma component</a>
@@ -113,20 +143,25 @@ fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
 @Deprecated("Use PrimaryButtonIconRight instead")
 @Composable
 fun PrimaryStartIconButton(
-    modifier: Modifier = Modifier,
     text: String,
     @DrawableRes iconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onClicked: () -> Unit,
 ) {
-    PrimaryButtonRow(modifier = modifier, enabled = enabled, onClicked = onClicked) {
-        Icon(
-            painter = painterResource(id = iconResId),
-            contentDescription = null,
-        )
-        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
-        Text(text = text)
-    }
+    PrimaryButtonRow(
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
+        content = {
+            Icon(
+                painter = painterResource(id = iconResId),
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
+            Text(text = text)
+        },
+    )
 }
 
 /**
@@ -136,7 +171,7 @@ fun PrimaryStartIconButton(
  * @param text      button text
  * @param iconResId button icon res id
  * @param enabled   controls the enabled state of the button
- * @param onClicked the lambda to be invoked when this button is pressed
+ * @param onClick the lambda to be invoked when this button is pressed
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=68%3A47&t=WdN5XpixzZLlQAZO-4"
  * >Figma component</a>
@@ -144,31 +179,36 @@ fun PrimaryStartIconButton(
 @Deprecated("Use PrimaryButtonIconLeft instead")
 @Composable
 fun PrimaryEndIconButton(
-    modifier: Modifier = Modifier,
     text: String,
     @DrawableRes iconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onClicked: () -> Unit,
 ) {
-    PrimaryButtonRow(modifier = modifier, enabled = enabled, onClicked = onClicked) {
-        Text(text = text)
-        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
-        Icon(
-            painter = painterResource(id = iconResId),
-            contentDescription = null,
-        )
-    }
+    PrimaryButtonRow(
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
+        content = {
+            Text(text = text)
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
+            Icon(
+                painter = painterResource(id = iconResId),
+                contentDescription = null,
+            )
+        },
+    )
 }
 
 @Composable
 private fun PrimaryButtonRow(
-    modifier: Modifier,
     enabled: Boolean,
-    onClicked: () -> Unit,
+    onClick: () -> Unit,
     content: @Composable (RowScope.() -> Unit),
+    modifier: Modifier = Modifier,
 ) {
     Button(
-        onClick = onClicked,
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.size48)),

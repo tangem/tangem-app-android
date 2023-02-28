@@ -23,7 +23,7 @@ import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.redux.PrivacySetting
+import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.ui.appsettings.components.EnrollBiometricsCard
 import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -31,78 +31,61 @@ import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
 
 @Composable
-fun AppSettingsScreen(
-    state: AppSettingsScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
-        content = {
-            AppSettings(state = state, modifier = modifier)
-        },
+        content = { AppSettings(state = state) },
         titleRes = R.string.app_settings_title,
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
-private fun AppSettings(
-    state: AppSettingsScreenState,
-    modifier: Modifier = Modifier,
-) {
-    var dialogType by remember { mutableStateOf<PrivacySetting?>(null) }
-    val onDialogStateChange: (PrivacySetting?) -> Unit = { dialogType = it }
+private fun AppSettings(state: AppSettingsScreenState) {
+    var dialogType by remember { mutableStateOf<AppSetting?>(null) }
+    val onDialogStateChange: (AppSetting?) -> Unit = { dialogType = it }
 
     dialogType?.let {
         SettingsAlertDialog(
             element = it,
             onDialogStateChange = onDialogStateChange,
-            onSettingToggled = state.onSettingToggled,
+            onSettingToggle = { state.onSettingToggled(it, false) },
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize(),
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         if (state.showEnrollBiometricsCard) {
-            EnrollBiometricsCard(
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing8)
-                    .fillMaxWidth(),
-                onClick = state.onEnrollBiometrics,
-            )
+            EnrollBiometricsCard(onClick = state.onEnrollBiometrics)
             SpacerH24()
         }
 
         AppSettingsElement(
             state = state,
-            setting = PrivacySetting.SaveWallets,
+            setting = AppSetting.SaveWallets,
             onDialogStateChange = onDialogStateChange,
         )
         SpacerH32()
         AppSettingsElement(
             state = state,
-            setting = PrivacySetting.SaveAccessCode,
+            setting = AppSetting.SaveAccessCode,
             onDialogStateChange = onDialogStateChange,
         )
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun AppSettingsElement(
-    modifier: Modifier = Modifier,
     state: AppSettingsScreenState,
-    setting: PrivacySetting,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
+    setting: AppSetting,
+    onDialogStateChange: (AppSetting?) -> Unit,
 ) {
     val titleRes = when (setting) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_saved_wallet
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_saved_access_codes
+        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet
+        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes
     }
     val subtitleRes = when (setting) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_saved_wallet_footer
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_saved_access_codes_footer
+        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet_footer
+        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes_footer
     }
     val checked = state.settings[setting] ?: false
 
@@ -122,7 +105,7 @@ private fun AppSettingsElement(
     )
 
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
@@ -161,12 +144,12 @@ private fun AppSettingsElement(
 }
 
 private fun onCheckedChange(
-    element: PrivacySetting,
+    element: AppSetting,
     enabled: Boolean,
-    onSettingToggled: (PrivacySetting, Boolean) -> Unit,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
+    onSettingToggled: (AppSetting, Boolean) -> Unit,
+    onDialogStateChange: (AppSetting?) -> Unit,
 ) {
-    //Show warning if user wants to disable the switch
+    // Show warning if user wants to disable the switch
     if (!enabled) {
         onDialogStateChange(element)
     } else {
@@ -186,15 +169,15 @@ private fun AppSettingsScreenSample(
         AppSettingsScreen(
             state = AppSettingsScreenState(
                 settings = mapOf(
-                    PrivacySetting.SaveWallets to true,
-                    PrivacySetting.SaveAccessCode to false,
+                    AppSetting.SaveWallets to true,
+                    AppSetting.SaveAccessCode to false,
                 ),
                 showEnrollBiometricsCard = false,
                 isTogglesEnabled = true,
                 onSettingToggled = { _, _ -> },
                 onEnrollBiometrics = {},
             ),
-            onBackPressed = { },
+            onBackClick = { },
         )
     }
 }
@@ -219,22 +202,19 @@ private fun AppSettingsScreenPreview_Dark() {
 private fun AppSettingsScreen_EnrollBiometrics_Sample(
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
-    ) {
+    Column(modifier = modifier.background(TangemTheme.colors.background.primary)) {
         AppSettingsScreen(
             state = AppSettingsScreenState(
                 settings = mapOf(
-                    PrivacySetting.SaveWallets to true,
-                    PrivacySetting.SaveAccessCode to false,
+                    AppSetting.SaveWallets to true,
+                    AppSetting.SaveAccessCode to false,
                 ),
                 showEnrollBiometricsCard = true,
                 isTogglesEnabled = false,
                 onSettingToggled = { _, _ -> },
                 onEnrollBiometrics = {},
             ),
-            onBackPressed = { },
+            onBackClick = { },
         )
     }
 }
