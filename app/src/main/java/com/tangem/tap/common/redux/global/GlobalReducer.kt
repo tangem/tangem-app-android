@@ -9,8 +9,8 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
+@Suppress("LongMethod", "ComplexMethod")
 fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
-
     if (action !is GlobalAction) return state.globalState
 
     val globalState = state.globalState
@@ -39,6 +39,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             globalState.copy(scanResponse = action.scanResponse)
         }
         is GlobalAction.ChangeAppCurrency -> {
+            appStateHolder.appFiatCurrency = action.appCurrency
             globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.RestoreAppCurrency.Success -> {
