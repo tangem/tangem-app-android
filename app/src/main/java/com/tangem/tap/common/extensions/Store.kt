@@ -1,6 +1,5 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.StateDialog
@@ -78,21 +77,18 @@ fun Store<*>.dispatchDialogHide() {
 /**
  * Dispatch action inside a coroutine with the Main dispatcher
  */
+@Deprecated(
+    message = "Use dispatchWithMain instead",
+    replaceWith = ReplaceWith(expression = "dispatchWithMain"),
+)
 suspend fun dispatchOnMain(vararg actions: Action) {
     withMainContext { actions.forEach { store.dispatch(it) } }
 }
 
-/**
- * Dispatch action
- */
-suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
-    store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
-}
-
 fun Store<*>.dispatchOpenUrl(url: String) {
-    store.dispatch(NavigationAction.OpenUrl(url))
+    dispatch(NavigationAction.OpenUrl(url))
 }
 
 fun Store<*>.dispatchShare(url: String) {
-    store.dispatch(NavigationAction.Share(url))
+    dispatch(NavigationAction.Share(url))
 }
