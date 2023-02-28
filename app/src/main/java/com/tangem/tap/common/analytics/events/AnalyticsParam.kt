@@ -10,7 +10,7 @@ sealed class AnalyticsParam {
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
         class FiatCurrency(
             fiatCurrency: com.tangem.tap.common.entities.FiatCurrency,
-        ) : CurrencyType(fiatCurrency.symbol)
+        ) : CurrencyType(fiatCurrency.code)
 
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
@@ -63,8 +63,18 @@ sealed class AnalyticsParam {
         object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
+    sealed class ScannedFrom(val value: String) {
+        object Introduction : ScannedFrom("Introduction")
+        object Main : ScannedFrom("Main")
+        object SignIn : ScannedFrom("Sign In")
+        object MyWallets : ScannedFrom("My Wallets")
+    }
+
     companion object Key {
-        const val BatchId = "Batch"
+        const val Batch = "Batch"
+        const val ProductType = "Product Type"
+        const val Firmware = "Firmware"
+        const val Currency = "Currency"
         const val ErrorDescription = "Error Description"
         const val ErrorCode = "Error Code"
         const val ErrorKey = "Error Key"
