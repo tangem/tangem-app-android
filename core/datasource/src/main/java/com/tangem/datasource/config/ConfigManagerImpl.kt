@@ -2,6 +2,7 @@ package com.tangem.datasource.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.BlockscoutCredentials
 import com.tangem.blockchain.common.GetBlockCredentials
 import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
@@ -82,6 +83,10 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     authToken = configValues.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = configValues.blockcypherTokens,
+                blockscoutCredentials = BlockscoutCredentials(
+                    userName = configValues.saltPay.blockscoutCredentials.user,
+                    password = configValues.saltPay.blockscoutCredentials.password,
+                ),
                 quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = configValues.quiknodeApiKey,
                     subdomain = configValues.quiknodeSubdomain,
@@ -94,7 +99,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 tronGridApiKey = configValues.tronGridApiKey,
                 saltPayAuthToken = configValues.saltPay.credentials.token,
                 nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
-                getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey)
+                getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey),
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
