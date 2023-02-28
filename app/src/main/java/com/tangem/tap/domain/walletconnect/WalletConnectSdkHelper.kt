@@ -22,9 +22,9 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
@@ -48,6 +48,7 @@ import java.math.BigDecimal
 
 class WalletConnectSdkHelper {
 
+    @Suppress("MagicNumber")
     suspend fun prepareTransactionData(
         transaction: WCEthereumTransaction,
         session: WalletConnectSession,
@@ -62,7 +63,7 @@ class WalletConnectSdkHelper {
 
         val gas = transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
-            ?: BigDecimal(300000) //Set high gasLimit if not provided
+            ?: BigDecimal(300000) // Set high gasLimit if not provided
 
         val decimals = wallet.blockchain.decimals()
 
@@ -70,8 +71,7 @@ class WalletConnectSdkHelper {
             ?.movePointLeft(decimals) ?: return null
 
         val gasPrice = transaction.gasPrice?.hexToBigDecimal()
-            ?: when (val result =
-                (walletManager as? EthereumGasLoader)?.getGasPrice()) {
+            ?: when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
                     (result.error as? Throwable)?.let { Timber.e(it) }
@@ -101,7 +101,7 @@ class WalletConnectSdkHelper {
             gasAmount = fee.toFormattedString(decimals),
             totalAmount = total.toFormattedString(decimals),
             balance = balance.toFormattedString(decimals),
-            isEnoughFundsToSend = (balance - total) >= BigDecimal.ZERO,
+            isEnoughFundsToSend = balance - total >= BigDecimal.ZERO,
             session = session.session,
             id = id,
             type = type,
@@ -270,7 +270,9 @@ class WalletConnectSdkHelper {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!),
+                    signedHash = hash,
+                    hashToSign = hashToSign,
+                    publicKey = CryptoUtils.decompressPublicKey(key!!),
                 )
             }
             is CompletionResult.Failure -> {
