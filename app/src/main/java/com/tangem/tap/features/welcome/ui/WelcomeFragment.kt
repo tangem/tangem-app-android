@@ -19,14 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.viewModels
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.fragments.ComposeFragment
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.ui.components.BiometricsLockoutDialog
 import com.tangem.tap.features.welcome.ui.components.WelcomeScreenContent
+import com.tangem.tap.store
 import com.tangem.wallet.R
 
 internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
@@ -34,7 +34,7 @@ internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Analytics.send(SignIn.ScreenOpened())
+        store.dispatch(WelcomeAction.OnCreate)
     }
 
     @Composable
@@ -43,7 +43,10 @@ internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
     }
 
     @Composable
-    override fun ScreenContent(state: WelcomeScreenState, modifier: Modifier) {
+    override fun ScreenContent(
+        state: WelcomeScreenState,
+        modifier: Modifier,
+    ) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val biometricsLockoutDialog by rememberUpdatedState(newValue = state.biometricsLockoutDialog)
