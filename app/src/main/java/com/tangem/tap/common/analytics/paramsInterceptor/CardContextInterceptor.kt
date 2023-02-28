@@ -34,7 +34,7 @@ class CardContextInterceptor(
         params[AnalyticsParam.ProductType] = getProductType(scanResponse)
         params[AnalyticsParam.Firmware] = card.firmwareVersion.stringValue
 
-        ParamCardCurrencyConverter().convert(scanResponse)?.let {
+        ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)?.let {
             params[AnalyticsParam.Currency] = it.value
         }
     }
@@ -44,7 +44,7 @@ class CardContextInterceptor(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Wallet -> "Wallet"
-            ProductType.SaltPay -> if (scanResponse.isSaltPayVisa()) {
+            ProductType.SaltPay -> if (scanResponse.cardTypesResolver.isSaltPayVisa()) {
                 "Visa"
             } else {
                 "Visa Backup"

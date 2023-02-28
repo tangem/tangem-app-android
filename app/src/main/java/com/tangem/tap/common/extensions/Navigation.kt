@@ -1,12 +1,12 @@
 package com.tangem.tap.common.extensions
 
-import androidx.activity.OnBackPressedCallback
+import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.feature.referral.ReferralFragment
+import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
@@ -37,10 +37,12 @@ import timber.log.Timber
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,
+    bundle: Bundle? = null,
     fgShareTransition: FragmentShareTransition? = null,
 ) {
     val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
+    fragment.arguments = bundle
     fgShareTransition?.apply {
         fragment.sharedElementEnterTransition = enterTransitionSet
         fragment.sharedElementReturnTransition = exitTransitionSet
@@ -80,21 +82,15 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
     } else {
         0
     }
-    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
+    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount) {
         this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
-    else null
+    } else {
+        null
+    }
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
-fun FragmentActivity.addOnBackPressedDispatcher(
-    isEnabled: Boolean = true,
-    onBackPressed: VoidCallback
-): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
-    override fun handleOnBackPressed() {
-        onBackPressed()
-    }
-}).also { this.onBackPressedDispatcher.addCallback(it) }
-
+@Suppress("ComplexMethod")
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
@@ -117,6 +113,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
         AppScreen.ReferralProgram -> ReferralFragment()
+        AppScreen.Swap -> SwapFragment()
         AppScreen.Welcome -> WelcomeFragment()
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()

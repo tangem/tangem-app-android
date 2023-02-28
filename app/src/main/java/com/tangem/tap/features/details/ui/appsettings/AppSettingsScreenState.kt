@@ -1,11 +1,11 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import com.tangem.tap.features.details.redux.PrivacySetting
+import com.tangem.tap.features.details.redux.AppSetting
 
 data class AppSettingsScreenState(
-    val settings: Map<PrivacySetting, Boolean> = emptyMap(),
+    val settings: Map<AppSetting, Boolean> = emptyMap(),
     val showEnrollBiometricsCard: Boolean = false,
-    val isTogglesEnabled: Boolean = true,
-    val onSettingToggled: (PrivacySetting, Boolean) -> Unit = { _, _ -> /* no-op */ },
+    val isTogglesEnabled: Boolean = false,
+    val onSettingToggled: (AppSetting, Boolean) -> Unit = { _, _ -> /* no-op */ },
     val onEnrollBiometrics: () -> Unit = { /* no-op */ },
 )

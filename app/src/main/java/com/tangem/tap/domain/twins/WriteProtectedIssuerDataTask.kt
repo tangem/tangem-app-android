@@ -15,7 +15,8 @@ import com.tangem.operations.issuerAndUserData.WriteIssuerDataCommand
 import com.tangem.operations.sign.SignHashCommand
 
 class WriteProtectedIssuerDataTask(
-    private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
+    private val twinPublicKey: ByteArray,
+    private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<SuccessResponse> {
 
     override fun run(
@@ -33,12 +34,19 @@ class WriteProtectedIssuerDataTask(
                             when (readResult) {
                                 is CompletionResult.Success -> {
                                     writeIssuerData(
-                                        twinPublicKey, issuerKeys, signResult.data.signature,
-                                        readResult.data, session, callback
+                                        twinPublicKey,
+                                        issuerKeys,
+                                        signResult.data.signature,
+                                        readResult.data,
+                                        session,
+                                        callback,
                                     )
                                 }
-                                is CompletionResult.Failure -> callback(CompletionResult.Failure(
-                                    readResult.error))
+                                is CompletionResult.Failure -> callback(
+                                    CompletionResult.Failure(
+                                        readResult.error,
+                                    ),
+                                )
                             }
                         }
                     }
@@ -47,8 +55,11 @@ class WriteProtectedIssuerDataTask(
             }
     }
 
+    @Suppress("LongParameterList")
     private fun writeIssuerData(
-        twinPublicKey: ByteArray, issuerKeys: KeyPair, cardSignature: ByteArray,
+        twinPublicKey: ByteArray,
+        issuerKeys: KeyPair,
+        cardSignature: ByteArray,
         readResponse: ReadIssuerDataResponse,
         session: CardSession,
         callback: (
