@@ -40,10 +40,9 @@ import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
@@ -68,6 +67,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         cardId: String? = null,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
+        allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
@@ -75,6 +75,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
                 card = null,
                 userTokensRepository = userTokensRepository,
                 additionalBlockchainsToDerive = additionalBlockchainsToDerive,
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             ),
             cardId = cardId,
             initialMessage = message,
@@ -111,7 +112,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     suspend fun derivePublicKeys(
-        cardId: String,
+        cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
@@ -195,9 +196,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         accessCode: String? = null,
     ): CompletionResult<T> =
         withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
+            suspendCancellableCoroutine { continuation ->
                 tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
-                    if (continuation.context.isActive) continuation.resume(result)
+                    if (continuation.isActive) continuation.resume(result)
                 }
             }
         }
