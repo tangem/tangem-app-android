@@ -320,6 +320,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         twinCardsState.currentStep != TwinCardsStep.TopUpWallet &&
                         twinCardsState.currentStep != TwinCardsStep.Done
 
+                    OnboardingHelper.onInterrupted()
                     store.dispatch(TwinCardsAction.CardsManager.Release)
                     action.shouldResetTwinCardsWidget(shouldReturnCardBack) {
                         store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))

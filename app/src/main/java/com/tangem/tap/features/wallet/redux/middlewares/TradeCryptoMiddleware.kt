@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import androidx.core.os.bundleOf
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
@@ -22,6 +23,7 @@ import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.scope
@@ -49,10 +51,9 @@ class TradeCryptoMiddleware {
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
+        val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
 
-        val currency = selectedWalletData.currency
         Analytics.send(Token.ButtonBuy(AnalyticsParam.CurrencyType.Currency(currency)))
-
         if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
             store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog())
             return
@@ -96,12 +97,12 @@ class TradeCryptoMiddleware {
 
     private fun proceedSellAction() {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
+        val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
 
         val appCurrency = store.state.globalState.appCurrency
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
         if (addresses.isEmpty()) return
 
-        val currency = selectedWalletData.currency
         Analytics.send(Token.ButtonSell(AnalyticsParam.CurrencyType.Currency(currency)))
 
         store.state.globalState.exchangeManager.getUrl(
@@ -113,6 +114,17 @@ class TradeCryptoMiddleware {
         )?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Withdraw.ScreenOpened())
+        }
+    }
+
+    private fun chooseAppropriateCurrency(walletState: WalletState): Currency? {
+        return if (walletState.primaryTokenData == null) {
+            walletState.selectedWalletData?.currency
+        } else {
+            walletState.primaryTokenData?.currency as? Currency.Token
+        }.guard {
+            store.dispatchDebugErrorNotification("Can't select an appropriate currency for a Trade action")
+            return null
         }
     }
 
