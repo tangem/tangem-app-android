@@ -1,23 +1,23 @@
 package com.tangem.tap.domain.tokens
 
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.getListOfCoins
-import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.datasource.api.tangemTech.CoinsResponse
-import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.common.MoshiConverter
-import com.tangem.tap.common.AssetReader
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
+import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.datasource.utils.AssetReader
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 class LoadAvailableCoinsService(
-    private val networkService: TangemTechService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
     private val assetReader: AssetReader,
 ) {
-    private val moshi: Moshi by lazy { MoshiConverter.defaultMoshi() }
     private val currenciesAdapter: JsonAdapter<CurrenciesFromJson> =
-        moshi.adapter(CurrenciesFromJson::class.java)
+        MoshiConverter.networkMoshi.adapter(CurrenciesFromJson::class.java)
 
     suspend fun getSupportedTokens(
         isTestNet: Boolean = false,
@@ -43,7 +43,7 @@ class LoadAvailableCoinsService(
                     LoadedCoins(
                         currencies = data.coins.map { Currency.fromCoinResponse(it, data.imageHost) },
                         moreAvailable = data.total > offset + LOAD_PER_PAGE,
-                    )
+                    ),
                 )
             }
             is Result.Failure -> {
@@ -55,16 +55,23 @@ class LoadAvailableCoinsService(
     private suspend fun loadCoins(
         supportedBlockchains: List<Blockchain>,
         offset: Int,
-        searchInput: String? = null
+        searchInput: String? = null,
     ): Result<CoinsResponse> {
-        val networkIds = supportedBlockchains.toSet().map { it.toNetworkId() }
-        return networkService.getListOfCoins(
-            networkIds = networkIds,
-            active = true,
-            offset = offset,
-            limit = LOAD_PER_PAGE,
-            searchText = searchInput,
-        )
+        return withContext(dispatchers.io) {
+            runCatching {
+                tangemTechApi.getCoins(
+                    networkIds = supportedBlockchains.toSet().map(Blockchain::toNetworkId).joinToString(","),
+                    active = true,
+                    searchText = searchInput,
+                    offset = offset,
+                    limit = LOAD_PER_PAGE,
+                )
+            }
+                .onSuccess { return@withContext Result.Success(it) }
+                .onFailure { return@withContext Result.Failure(it) }
+
+            error("Unreachable code because runCatching must return result")
+        }
     }
 
     fun getTestnetCoins(): List<Currency> {
@@ -87,7 +94,6 @@ class LoadAvailableCoinsService(
         private const val FILE_NAME_TESTNET_COINS = "testnet_tokens"
     }
 }
-
 
 data class LoadedCoins(
     val currencies: List<Currency>,
