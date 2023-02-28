@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -18,6 +19,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
@@ -100,6 +102,7 @@ class TapWalletManager {
     }
 
     suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean) {
+        Analytics.setContext(userWallet.scanResponse)
         val scanResponse = userWallet.scanResponse
         val card = scanResponse.card
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
