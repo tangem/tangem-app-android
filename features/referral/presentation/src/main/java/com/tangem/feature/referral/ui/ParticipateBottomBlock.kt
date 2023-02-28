@@ -29,16 +29,17 @@ import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun ParticipateBottomBlock(
     purchasedWalletCount: Int,
     code: String,
     shareLink: String,
-    onAgreementClicked: () -> Unit,
-    showCopySnackbar: () -> Unit,
-    onCopyClicked: () -> Unit,
-    onShareClicked: () -> Unit,
+    onAgreementClick: () -> Unit,
+    onShowCopySnackbar: () -> Unit,
+    onCopyClick: () -> Unit,
+    onShareClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -61,11 +62,11 @@ internal fun ParticipateBottomBlock(
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
-            showCopySnackbar = showCopySnackbar,
-            onCopyClicked = onCopyClicked,
-            onShareClicked = onShareClicked,
+            onShowCopySnackbar = onShowCopySnackbar,
+            onCopyClick = onCopyClick,
+            onShareClick = onShareClick,
         )
-        AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClicked = onAgreementClicked)
+        AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
     }
 }
 
@@ -105,9 +106,9 @@ private fun PersonalCodeCard(code: String) {
 private fun AdditionalButtons(
     code: String,
     shareLink: String,
-    showCopySnackbar: () -> Unit,
-    onCopyClicked: () -> Unit,
-    onShareClicked: () -> Unit,
+    onShowCopySnackbar: () -> Unit,
+    onCopyClick: () -> Unit,
+    onShareClick: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -119,12 +120,12 @@ private fun AdditionalButtons(
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_copy),
-            iconResId = R.drawable.ic_copy,
-            onClicked = {
-                onCopyClicked.invoke()
+            iconResId = R.drawable.ic_copy_24,
+            onClick = {
+                onCopyClick.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 clipboardManager.setText(AnnotatedString(code))
-                showCopySnackbar()
+                onShowCopySnackbar()
             },
         )
 
@@ -132,9 +133,9 @@ private fun AdditionalButtons(
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_share),
-            iconResId = R.drawable.ic_share,
-            onClicked = {
-                onShareClicked.invoke()
+            iconResId = R.drawable.ic_share_24,
+            onClick = {
+                onShareClick.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 context.shareText(context.getString(R.string.referral_share_link, shareLink))
             },
@@ -154,17 +155,17 @@ private fun Context.shareText(text: String) {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ParticipateBottomBlock_InLightTheme() {
+private fun Preview_ParticipateBottomBlock_InLightTheme() {
     TangemTheme(isDark = false) {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
                 shareLink = "",
-                onAgreementClicked = {},
-                showCopySnackbar = {},
-                onCopyClicked = {},
-                onShareClicked = {},
+                onAgreementClick = {},
+                onShowCopySnackbar = {},
+                onCopyClick = {},
+                onShareClick = {},
             )
         }
     }
@@ -172,17 +173,17 @@ fun Preview_ParticipateBottomBlock_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ParticipateBottomBlock_InDarkTheme() {
+private fun Preview_ParticipateBottomBlock_InDarkTheme() {
     TangemTheme(isDark = true) {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
                 shareLink = "",
-                onAgreementClicked = {},
-                showCopySnackbar = {},
-                onCopyClicked = {},
-                onShareClicked = {},
+                onAgreementClick = {},
+                onShowCopySnackbar = {},
+                onCopyClick = {},
+                onShareClick = {},
             )
         }
     }

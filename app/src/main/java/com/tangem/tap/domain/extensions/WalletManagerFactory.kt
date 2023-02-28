@@ -33,7 +33,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 
     val seedKey = wallet.extendedPublicKey
     return when {
-        scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
+        scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 walletPublicKey = wallet.publicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
@@ -41,7 +41,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 curve = wallet.curve,
             )
         }
-        scanResponse.card.isHdWalletAllowedByApp && (seedKey != null && derivationParams != null) -> {
+        scanResponse.card.isHdWalletAllowedByApp && seedKey != null && derivationParams != null -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
             val derivationPath = when (derivationParams) {
                 is DerivationParams.Default -> blockchain.derivationPath(derivationParams.style)
@@ -68,7 +68,8 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 }
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchainNetwork: BlockchainNetwork,
+    scanResponse: ScanResponse,
+    blockchainNetwork: BlockchainNetwork,
 ): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
@@ -115,9 +116,9 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     scanResponse: ScanResponse,
 ): WalletManager? {
     val blockchain = if (scanResponse.card.isTestCard) {
-        scanResponse.getBlockchain().getTestnetVersion() ?: return null
+        scanResponse.cardTypesResolver.getBlockchain().getTestnetVersion() ?: return null
     } else {
-        scanResponse.getBlockchain()
+        scanResponse.cardTypesResolver.getBlockchain()
     }
     val derivationParams = getDerivationParams(null, scanResponse.card)
     return makeWalletManagerForApp(
