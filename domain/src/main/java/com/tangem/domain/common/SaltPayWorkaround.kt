@@ -6,8 +6,12 @@ import com.tangem.common.CardIdRange
 import com.tangem.common.contains
 
 object SaltPayWorkaround {
+
     @Suppress("MagicNumber")
-    val visaBatches = listOf("AE02", "AE03") + attachTestVisaBatches()
+    val visaBatches = listOf(
+        "AE02",
+        "AE03",
+    ) + attachTestVisaBatches()
 
     val walletCardIds = listOf(
         "AC01000000033503",
@@ -57,21 +61,24 @@ object SaltPayWorkaround {
         }
     }
 
+    @Suppress("MagicNumber")
+    fun isSaltPayCardId(cardId: String): Boolean = isVisaBatchId(cardId.take(4)) || isWalletCardId(cardId)
+
     fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
 
     fun isWalletCardId(cardId: String): Boolean {
         return if (walletCardIds.contains(cardId)) true else walletCardIdRanges.contains(cardId)
     }
 
-    private fun attachTestVisaBatches(): List<String> {
-        return listOf("FF03")
-    }
+    private fun attachTestVisaBatches(): List<String> = listOf(
+        "FF03",
+    )
 
-    private fun attachTestWalletCardIds(): List<String> {
-        return listOf("FF04000000000232")
-    }
+    private fun attachTestWalletCardIds(): List<String> = listOf(
+        "FF04000000000232",
+    )
 
-    private fun attachTestWalletCardIdRanges(): List<CardIdRange> {
-        return listOf(CardIdRange("FF04000000000000", "FF04999999999999")!!)
-    }
+    private fun attachTestWalletCardIdRanges(): List<CardIdRange> = listOf(
+        CardIdRange("FF04000000000000", "FF04999999999999")!!,
+    )
 }
