@@ -59,12 +59,7 @@ internal class BiometricUserWalletsListManager(
     }
 
     override fun lock() {
-        state.update { prevState ->
-            prevState.copy(
-                encryptionKeys = emptyList(),
-                isLocked = true,
-            )
-        }
+        state.update { State() }
     }
 
     override suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
@@ -115,21 +110,26 @@ internal class BiometricUserWalletsListManager(
     }
 
     override suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit> {
-        if (userWalletIds.isEmpty()) {
+        val idsToRemove = state.value.userWallets
+            .takeIf { it.isNotEmpty() }
+            ?.filter { it.walletId in userWalletIds }
+            ?.map { it.walletId }
+
+        if (idsToRemove.isNullOrEmpty()) {
             return CompletionResult.Success(Unit)
         }
 
-        changeSelectedUserWalletIdIfNeeded(userWalletIds)
+        changeSelectedUserWalletIdIfNeeded(idsToRemove)
 
-        return sensitiveInformationRepository.delete(userWalletIds)
-            .flatMap { publicInformationRepository.delete(userWalletIds) }
-            .flatMap { keysRepository.delete(userWalletIds) }
+        return sensitiveInformationRepository.delete(idsToRemove)
+            .flatMap { publicInformationRepository.delete(idsToRemove) }
+            .flatMap { keysRepository.delete(idsToRemove) }
             .map {
                 state.update { prevState ->
-                    val newUserWallets = prevState.userWallets.filter { it.walletId !in userWalletIds }
+                    val newUserWallets = prevState.userWallets.filter { it.walletId !in idsToRemove }
 
                     prevState.copy(
-                        encryptionKeys = prevState.encryptionKeys.filter { it.walletId !in userWalletIds },
+                        encryptionKeys = prevState.encryptionKeys.filter { it.walletId !in idsToRemove },
                         userWallets = newUserWallets,
                         isLocked = newUserWallets.any { it.isLocked },
                     )
@@ -143,7 +143,7 @@ internal class BiometricUserWalletsListManager(
             .flatMap { keysRepository.clear() }
             .map {
                 selectedUserWalletRepository.set(null)
-                state.update { State() }
+                lock()
             }
     }
 
@@ -219,13 +219,18 @@ internal class BiometricUserWalletsListManager(
     private suspend fun loadModels(): CompletionResult<Unit> {
         return getSavedUserWallets()
             .map { userWallets ->
-                if (userWallets.isNotEmpty()) state.update { prevState ->
-                    val wallets = (userWallets + prevState.userWallets).distinctBy { it.walletId }
+                if (userWallets.isNotEmpty()) {
+                    state.update { prevState ->
+                        val wallets = (userWallets + prevState.userWallets).distinctBy { it.walletId }
 
-                    prevState.copy(
-                        userWallets = wallets,
-                        selectedUserWalletId = findOrSetSelectedUserWalletId(prevState.selectedUserWalletId, wallets),
-                    )
+                        prevState.copy(
+                            userWallets = wallets,
+                            selectedUserWalletId = findOrSetSelectedUserWalletId(
+                                prevSelectedWalletId = prevState.selectedUserWalletId,
+                                userWallets = wallets,
+                            ),
+                        )
+                    }
                 }
             }
             .doOnFailure { error ->
