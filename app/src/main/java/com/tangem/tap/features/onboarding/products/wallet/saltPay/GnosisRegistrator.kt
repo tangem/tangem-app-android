@@ -164,6 +164,7 @@ class GnosisRegistrator(
         return transferFromHardcodeWay(amountToClaim, signer)
     }
 
+    @Suppress("UnusedPrivateMember")
     private suspend fun transferFromStandardWay(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
         val amount = Amount(token, amountToClaim)
         val feeAmount = walletManager.getFeeToTransferFrom(amount, addressTreasureSafe)

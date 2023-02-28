@@ -20,7 +20,6 @@ import coil.size.Scale
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.MainScreen
