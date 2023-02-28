@@ -196,6 +196,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             store.dispatchDialogShow(
                 OnboardingDialog.InterruptOnboarding(
                     onOk = {
+                        OnboardingHelper.onInterrupted()
                         store.dispatch(NavigationAction.PopBackTo())
                     },
                 ),
