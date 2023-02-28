@@ -13,8 +13,8 @@ sealed class MainScreen(
     class ScreenOpened : MainScreen("Screen opened")
 
     class ButtonScanCard : MainScreen("Button - Scan Card")
-    class CardWasScanned : MainScreen("Card Was Scanned")
     class ButtonMyWallets : MainScreen("Button - My Wallets")
+    class ButtonBuy : MainScreen("Button - Buy")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
         event = "Enable Biometric",
