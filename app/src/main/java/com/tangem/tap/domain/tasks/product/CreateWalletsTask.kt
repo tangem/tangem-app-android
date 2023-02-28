@@ -23,7 +23,7 @@ class CreateWalletsTask(
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit) {
-        if (curves.isEmpty()){
+        if (curves.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.WalletIsNotCreated()))
             return
         }

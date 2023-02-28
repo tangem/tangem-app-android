@@ -2,13 +2,15 @@ package com.tangem.tap.common.shop.shopify.data
 
 import com.shopify.buy3.Storefront
 
+@Suppress("MagicNumber")
 fun Storefront.CollectionConnectionQuery.collectionFieldsFragment() {
     edges { collectionEdgeQuery ->
         collectionEdgeQuery
             .node { collectionQuery ->
                 collectionQuery
                     .title()
-                    .products({ arg -> arg.first(250) }
+                    .products(
+                        { arg -> arg.first(250) },
                     ) { productConnectionQuery ->
                         productConnectionQuery
                             .edges { productEdgeQuery ->

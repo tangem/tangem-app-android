@@ -55,6 +55,7 @@ dependencies {
     /** Other libraries */
     implementation(Library.accompanistSystemUiController)
     implementation(Library.materialComponent)
+    implementation(Library.composeShimmer)
 
     implementation(project(":core:res"))
 }
