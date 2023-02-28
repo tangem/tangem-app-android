@@ -35,7 +35,7 @@ object SaltPayExceptionHandler {
             is TangemSdkError -> {
                 when (throwable) {
                     is TangemSdkError.NetworkError -> {
-                        val message = (throwable).customMessage
+                        val message = throwable.customMessage
                         store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(message))
                     }
                     else -> Unit
