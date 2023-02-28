@@ -377,7 +377,7 @@ class WalletMiddleware {
 
     private fun changeWallet() {
         when {
-            userWalletsListManager.hasSavedUserWallets -> {
+            userWalletsListManager.hasUserWallets -> {
                 Analytics.send(MainScreen.ButtonMyWallets())
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
             }
