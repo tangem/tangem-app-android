@@ -1,13 +1,12 @@
 package com.tangem.core.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,21 +30,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 
+// region TextButton
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=97%3A103&t=TmfD6UBHPg9uYfev-4)
  * */
 @Composable
 fun TextButton(
-    modifier: Modifier = Modifier,
     text: String,
-    enabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     TangemButton(
         modifier = modifier,
@@ -64,11 +65,11 @@ fun TextButton(
  * */
 @Composable
 fun TextButtonIconLeft(
-    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
-    enabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     TangemButton(
         modifier = modifier,
@@ -84,10 +85,10 @@ fun TextButtonIconLeft(
 
 @Composable
 fun WarningTextButton(
-    modifier: Modifier = Modifier,
     text: String,
-    enabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     TangemButton(
         modifier = modifier,
@@ -100,14 +101,16 @@ fun WarningTextButton(
         size = TangemButtonSize.Text,
     )
 }
+// endregion TextButton
 
+// region PrimaryButton
 @Composable
 fun PrimaryButton(
-    modifier: Modifier = Modifier,
     text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -125,12 +128,12 @@ fun PrimaryButton(
  * */
 @Composable
 fun PrimaryButtonIconRight(
-    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -148,12 +151,12 @@ fun PrimaryButtonIconRight(
  * */
 @Composable
 fun PrimaryButtonIconLeft(
-    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -165,14 +168,16 @@ fun PrimaryButtonIconLeft(
         showProgress = showProgress,
     )
 }
+// endregion PrimaryButton
 
+// region SecondaryButton
 @Composable
 fun SecondaryButton(
-    modifier: Modifier = Modifier,
     text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -190,12 +195,12 @@ fun SecondaryButton(
  * */
 @Composable
 fun SecondaryButtonIconRight(
-    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -213,12 +218,12 @@ fun SecondaryButtonIconRight(
  * */
 @Composable
 fun SecondaryButtonIconLeft(
-    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     TangemButton(
         modifier = modifier,
@@ -230,25 +235,49 @@ fun SecondaryButtonIconLeft(
         showProgress = showProgress,
     )
 }
+// endregion SecondaryButton
+
+// region Other
+@Composable
+fun SelectorButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        textStyle = TangemTheme.typography.subtitle2,
+        icon = TangemButtonIcon.Right(painterResource(id = R.drawable.ic_chevron_24)),
+        onClick = onClick,
+        colors = TangemButtonsDefaults.selectorButtonColors,
+        showProgress = false,
+        enabled = enabled,
+        size = TangemButtonSize.Selector,
+    )
+}
+// endregion Other
 
 // region Defaults
+@Suppress("LongParameterList")
 @Composable
 private fun TangemButton(
-    modifier: Modifier = Modifier,
     text: String,
     icon: TangemButtonIcon,
     onClick: () -> Unit,
     colors: ButtonColors,
     showProgress: Boolean,
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     size: TangemButtonSize = TangemButtonSize.Default,
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
+    textStyle: TextStyle = TangemTheme.typography.button,
 ) {
     Button(
         modifier = modifier
             .width(IntrinsicSize.Min)
-            .height(IntrinsicSize.Min)
-            .heightIn(size.toHeightDp()),
+            .heightIn(min = size.toHeightDp()),
         onClick = {
             if (!showProgress) {
                 onClick()
@@ -261,19 +290,24 @@ private fun TangemButton(
     ) {
         ButtonContent(
             text = text,
+            textStyle = textStyle,
             buttonIcon = icon,
             colors = colors,
             showProgress = showProgress,
             enabled = enabled,
+            size = size,
         )
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ButtonContent(
     text: String,
+    textStyle: TextStyle,
     buttonIcon: TangemButtonIcon,
     colors: ButtonColors,
+    size: TangemButtonSize,
     enabled: Boolean,
     showProgress: Boolean,
 ) {
@@ -286,29 +320,32 @@ private fun ButtonContent(
         )
     }
 
-    if (showProgress) Box(
-        modifier = Modifier.wrapContentSize(),
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(TangemTheme.dimens.size24),
-            color = colors.contentColor(enabled = enabled).value,
-            strokeWidth = TangemTheme.dimens.size4,
-        )
-    } else Row {
-        if (buttonIcon is TangemButtonIcon.Left) {
-            icon(buttonIcon.painter)
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
+    if (showProgress) {
+        Box(modifier = Modifier.wrapContentSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(TangemTheme.dimens.size24),
+                color = colors.contentColor(enabled = enabled).value,
+                strokeWidth = TangemTheme.dimens.size4,
+            )
         }
-        Text(
-            text = text,
-            style = TangemTypography.button,
-            color = colors.contentColor(enabled = enabled).value,
-        )
-        if (buttonIcon is TangemButtonIcon.Right) {
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
-            icon(buttonIcon.painter)
+    } else {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(size.toIconPadding()),
+        ) {
+            if (buttonIcon is TangemButtonIcon.Left) {
+                icon(buttonIcon.painter)
+            }
+            Text(
+                text = text,
+                style = textStyle,
+                color = colors.contentColor(enabled = enabled).value,
+            )
+            if (buttonIcon is TangemButtonIcon.Right) {
+                icon(buttonIcon.painter)
+            }
         }
     }
 }
@@ -330,18 +367,28 @@ sealed interface TangemButtonIcon {
 enum class TangemButtonSize {
     Default,
     Text,
+    Selector,
 }
 
 @Composable
 private fun TangemButtonSize.toHeightDp(): Dp = when (this) {
     TangemButtonSize.Default -> TangemTheme.dimens.size48
     TangemButtonSize.Text -> TangemTheme.dimens.size40
+    TangemButtonSize.Selector -> TangemTheme.dimens.size24
 }
 
 @Composable
 private fun TangemButtonSize.toShape(): Shape = when (this) {
     TangemButtonSize.Default -> TangemTheme.shapes.roundedCornersMedium
     TangemButtonSize.Text -> TangemTheme.shapes.roundedCornersSmall
+    TangemButtonSize.Selector -> TangemTheme.shapes.roundedCornersSmall
+}
+
+@Composable
+private fun TangemButtonSize.toIconPadding(): Dp = when (this) {
+    TangemButtonSize.Default -> TangemTheme.dimens.spacing8
+    TangemButtonSize.Text -> TangemTheme.dimens.spacing8
+    TangemButtonSize.Selector -> 0.dp
 }
 
 object TangemButtonsDefaults {
@@ -380,6 +427,14 @@ object TangemButtonsDefaults {
         @Composable get() = TangemButtonColors(
             backgroundColor = Color.Transparent,
             contentColor = TangemTheme.colors.text.warning,
+            disabledBackgroundColor = Color.Transparent,
+            disabledContentColor = TangemTheme.colors.text.disabled,
+        )
+
+    val selectorButtonColors: ButtonColors
+        @Composable get() = TangemButtonColors(
+            backgroundColor = Color.Transparent,
+            contentColor = TangemTheme.colors.text.tertiary,
             disabledBackgroundColor = Color.Transparent,
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
@@ -429,14 +484,14 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -450,7 +505,7 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -458,7 +513,7 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -505,14 +560,14 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -526,7 +581,7 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -534,7 +589,7 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -572,7 +627,7 @@ private fun TextButtonSample(
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         TextButtonIconLeft(
             text = "Enabled",
-            icon = painterResource(id = R.drawable.ic_plus),
+            icon = painterResource(id = R.drawable.ic_plus_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -584,13 +639,18 @@ private fun TextButtonSample(
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         TextButtonIconLeft(
             text = "Enabled",
-            icon = painterResource(id = R.drawable.ic_plus),
+            icon = painterResource(id = R.drawable.ic_plus_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         WarningTextButton(
             text = "Delete",
+            onClick = { /* no-op */ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        SelectorButton(
+            text = "USD",
             onClick = { /* no-op */ },
         )
     }

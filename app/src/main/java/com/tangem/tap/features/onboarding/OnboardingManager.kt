@@ -55,7 +55,7 @@ class OnboardingManager(
                 }
             }
             is Result.Failure -> {
-                val error = (result.error as? TapError) ?: TapError.UnknownError
+                val error = result.error as? TapError ?: TapError.UnknownError
                 when (error) {
                     is TapError.WalletManager.NoAccountError -> OnboardingWalletBalance.error(error)
                     // NoInternetConnection, WalletManager.InternalError
@@ -69,7 +69,8 @@ class OnboardingManager(
 
         return balance.copy(
             currency = Currency.Blockchain(
-                walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath,
+                blockchain = walletManager.wallet.blockchain,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath,
             ),
         )
     }
@@ -100,10 +101,10 @@ data class OnboardingWalletBalance(
     val criticalError: TapError? = null,
 ) {
 
-    fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
-
     val amountToCreateAccount: String?
         get() = if (error is TapError.WalletManager.NoAccountError) error.customMessage else null
+
+    fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
 
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
