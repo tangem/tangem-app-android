@@ -24,18 +24,15 @@ import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
+@Suppress("LongMethod")
 @Composable
 internal fun WelcomeScreenContent(
-    modifier: Modifier = Modifier,
     showUnlockProgress: Boolean,
     showScanCardProgress: Boolean,
     onUnlockClick: () -> Unit,
     onScanCardClick: () -> Unit,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         SpacerHMax()
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size96),
@@ -85,7 +82,7 @@ internal fun WelcomeScreenContent(
                 .fillMaxWidth(),
             text = stringResource(R.string.welcome_unlock_card),
             showProgress = showScanCardProgress,
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = onScanCardClick,
         )
         SpacerH16()

@@ -14,7 +14,6 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.hasSignedHashes
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -98,10 +97,8 @@ class WarningsMiddleware {
             } else if (!preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) {
                 checkIfWarningNeeded(scanResponse)?.let { warning -> addWarningMessage(warning) }
             }
-            if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release) {
-                if (!globalState.cardVerifiedOnline) {
-                    addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
-                }
+            if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release && !globalState.cardVerifiedOnline) {
+                addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
             }
             if (scanResponse.isDemoCard()) {
                 addWarningMessage(WarningMessagesManager.demoCardWarning())
@@ -122,9 +119,9 @@ class WarningsMiddleware {
     private fun checkIfWarningNeeded(
         scanResponse: ScanResponse,
     ): WarningMessage? {
-        if (scanResponse.isTangemTwins() || scanResponse.isDemoCard()) return null
+        if (scanResponse.cardTypesResolver.isTangemTwins() || scanResponse.isDemoCard()) return null
 
-        if (scanResponse.card.isMultiwalletAllowed) {
+        if (scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             val isBackupForbidden = with(scanResponse.card.settings) { !(isBackupAllowed || isHDWalletAllowed) }
             return if (scanResponse.card.hasSignedHashes() && isBackupForbidden) {
                 WarningMessagesManager.signedHashesMultiWalletWarning()
@@ -156,7 +153,9 @@ class WarningsMiddleware {
         val card = scanResponse?.card
         if (card == null || preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) return
 
-        if (scanResponse.isTangemTwins() || card.isMultiwalletAllowed) return
+        if (scanResponse.cardTypesResolver.isTangemTwins() || scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+            return
+        }
 
         val validator = store.state.walletState.walletManagers.firstOrNull()
             as? SignatureCountValidator
