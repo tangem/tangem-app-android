@@ -1,3 +1,5 @@
+@file:Suppress("MaximumLineLength")
+
 package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import android.net.Uri
@@ -37,10 +39,20 @@ import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
+import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.tangem.tap.store
 import java.math.BigDecimal
+import kotlin.ByteArray
+import kotlin.Exception
+import kotlin.IllegalStateException
+import kotlin.NullPointerException
+import kotlin.String
+import kotlin.Suppress
+import kotlin.Unit
+import kotlin.UnsupportedOperationException
+import kotlin.byteArrayOf
+import kotlin.minus
 import com.tangem.blockchain.extensions.Result as BlockchainResult
 
 /**
@@ -295,6 +307,7 @@ class SaltPayActivationManagerFactory(
         )
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun createDummyActivationManager(
         saltPayConfig: SaltPayConfig,
         wmFactory: WalletManagerFactory,
