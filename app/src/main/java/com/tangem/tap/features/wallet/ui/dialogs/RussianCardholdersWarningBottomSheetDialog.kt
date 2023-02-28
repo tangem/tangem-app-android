@@ -5,8 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -20,7 +18,7 @@ class RussianCardholdersWarningBottomSheetDialog(
     context: Context,
     private val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data?,
 ) : BottomSheetDialog
-    (context) {
+(context) {
 
     private var binding: DialogRussiansCardholdersWarningBinding? = null
 

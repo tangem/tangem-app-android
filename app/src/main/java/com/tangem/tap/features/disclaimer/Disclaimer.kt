@@ -51,6 +51,7 @@ class Start2CoinDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaime
     override fun getUri(): Uri = Uri.parse("$baseUrl/" + filename(dataProvider.getLanguage(), getRegion()))
     override fun getPreferenceKey(): String = "start2Coin_tos_accepted_${getRegion()}"
 
+    @Suppress("ComplexMethod")
     private fun filename(languageCode: String, regionCode: String?): String {
         return when {
             languageCode == "fr" && regionCode == "ch" -> "start2coin-fr-ch-tangem.html"
