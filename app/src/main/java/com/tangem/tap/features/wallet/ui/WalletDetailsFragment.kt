@@ -30,7 +30,6 @@ import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
 import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -39,7 +38,6 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
@@ -65,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.StoreSubscriber
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
@@ -257,14 +256,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                                 }
                             }
                     } else {
-                        val blockchainNetwork = BlockchainNetwork(
-                            blockchain = currency.blockchain,
-                            derivationPath = currency.derivationPath,
-                            tokens = emptyList(),
-                        )
-
-                        store.dispatchOnMain(WalletAction.LoadWallet(blockchainNetwork))
-                        store.dispatchOnMain(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
+                        Timber.e("Unable to refresh wallet details screen, no user wallet selected")
                     }
                 }
             }
