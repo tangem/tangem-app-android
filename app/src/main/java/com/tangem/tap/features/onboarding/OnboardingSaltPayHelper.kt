@@ -13,16 +13,20 @@ import com.tangem.tap.preferencesStorage
 [REDACTED_AUTHOR]
  */
 object OnboardingSaltPayHelper {
-    suspend fun isOnboardingCase(scanResponse: ScanResponse, manager: SaltPayActivationManager): Result<Boolean> {
+
+    suspend fun isOnboardingCase(
+        scanResponse: ScanResponse,
+        manager: SaltPayActivationManager,
+    ): Result<Boolean> {
         return try {
-            var updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
+            val updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
 
             val cardStorage = preferencesStorage.usedCardsPrefStorage
             val activationIsFinished = cardStorage.isActivationFinished(scanResponse.card.cardId)
-            if (updatedStep == SaltPayActivationStep.Success && activationIsFinished) {
-                updatedStep = SaltPayActivationStep.Finished
+            if (updatedStep == SaltPayActivationStep.Success && !activationIsFinished) {
+                cardStorage.activationFinished(scanResponse.card.cardId)
             }
-            val isActivationCase = updatedStep != SaltPayActivationStep.Finished
+            val isActivationCase = updatedStep != SaltPayActivationStep.Success
             val isBackupCase = scanResponse.card.backupStatus?.isActive == false
             Result.Success(isActivationCase || isBackupCase)
         } catch (ex: Exception) {
@@ -31,4 +35,16 @@ object OnboardingSaltPayHelper {
             Result.Failure(error)
         }
     }
+
+    @Suppress("UnusedPrivateMember")
+    fun testProceedToOnboarding(
+        scanResponse: ScanResponse,
+        manager: SaltPayActivationManager,
+    ): Result<Boolean> = Result.Success(true)
+
+    @Suppress("UnusedPrivateMember")
+    fun testProceedToMainScreen(
+        scanResponse: ScanResponse,
+        manager: SaltPayActivationManager,
+    ): Result<Boolean> = Result.Success(false)
 }
