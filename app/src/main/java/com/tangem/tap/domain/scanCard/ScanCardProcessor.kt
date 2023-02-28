@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.scanCard
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
@@ -46,7 +45,6 @@ import kotlinx.coroutines.launch
 object ScanCardProcessor {
     suspend fun scan(
         analyticsEvent: AnalyticsEvent? = null,
-        additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onScanStateChange: suspend (scanInProgress: Boolean) -> Unit = {},
@@ -63,7 +61,6 @@ object ScanCardProcessor {
         val result = tangemSdkManager.scanProduct(
             userTokensRepository = userTokensRepository,
             cardId = cardId,
-            additionalBlockchainsToDerive = additionalBlockchainsToDerive,
         )
 
         store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result))

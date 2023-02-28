@@ -14,7 +14,9 @@ import com.tangem.datasource.config.models.ConfigModel
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.FeatureModel
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     override var config: Config = Config()
