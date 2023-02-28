@@ -14,10 +14,9 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQ
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
+import com.tangem.tap.features.onboarding.OnboardingDialog
+import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.InterruptOnboardingDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.NoFundsForActivationDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.PutVisaCardDialog
@@ -57,6 +56,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
         store.unsubscribe(this)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     override fun newState(state: GlobalState) {
         if (state.dialog == null) {
             dialog?.dismiss()
@@ -74,7 +74,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
+            is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
             is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
@@ -135,13 +135,15 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is SaltPayDialog.Activation.PutVisaCard -> PutVisaCardDialog.create(context)
             is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
             is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
-            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context)
+            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context, state.dialog)
             is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog -> SignedHashesWarningDialog.create(context)
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
-                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle,
+                    state.dialog.messageRes,
+                    state.dialog.currencySymbol,
+                    state.dialog.currencyTitle,
                 ),
                 context = context,
             )

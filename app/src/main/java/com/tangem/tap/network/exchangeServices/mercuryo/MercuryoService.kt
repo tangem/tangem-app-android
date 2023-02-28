@@ -26,11 +26,12 @@ class MercuryoService(
 
     override fun featureIsSwitchedOn(): Boolean = true
 
+    @Suppress("NestedBlockDepth")
     override suspend fun update() {
         when (val result = performRequest { api.currencies(environment.apiVersion) }) {
             is Result.Success -> {
                 val response = result.data
-                if (response.status == 200) {
+                if (response.status == RESPONSE_SUCCESS_STATUS_CODE) {
                     // all currencies which can be bought
                     val currenciesAvailableToBy = response.data.crypto
                     // tokens which can be bought only from specific blockchain network
@@ -134,5 +135,9 @@ class MercuryoService(
         "ETH" -> Blockchain.Ethereum
         "ADA" -> Blockchain.CardanoShelley
         else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
+    }
+
+    companion object {
+        private const val RESPONSE_SUCCESS_STATUS_CODE = 200
     }
 }

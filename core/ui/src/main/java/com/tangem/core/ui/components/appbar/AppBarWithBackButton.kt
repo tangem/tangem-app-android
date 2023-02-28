@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components.appbar
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -20,23 +22,31 @@ import com.tangem.core.ui.res.TangemTheme
 /**
  * App bar with back button and optional title
  *
- * @param text        optional title
  * @param onBackClick the lambda to be invoked when this icon is pressed
+ * @param modifier    modifier
+ * @param text        optional title
+ * @param iconRes     icon res id
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=123%3A287&t=WdN5XpixzZLlQAZO-4"
  * >Figma component</a>
  */
 @Composable
-fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+fun AppBarWithBackButton(
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String? = null,
+    @DrawableRes iconRes: Int? = null,
+) {
     Row(
         modifier = modifier
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth()
             .padding(all = dimensionResource(R.dimen.spacing16)),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing16)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_back),
+            painter = painterResource(iconRes ?: R.drawable.ic_back_24),
             contentDescription = null,
             modifier = Modifier
                 .size(size = dimensionResource(R.dimen.size24))
@@ -56,7 +66,7 @@ fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit, modifier
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun PreviewAppBarWithBackButtonInLightTheme() {
+private fun PreviewAppBarWithBackButtonInLightTheme() {
     TangemTheme(isDark = false) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
@@ -64,7 +74,7 @@ fun PreviewAppBarWithBackButtonInLightTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun PreviewAppBarWithBackButtonInDarkTheme() {
+private fun PreviewAppBarWithBackButtonInDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
