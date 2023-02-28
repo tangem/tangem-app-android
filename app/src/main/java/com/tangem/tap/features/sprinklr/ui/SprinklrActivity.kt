@@ -30,7 +30,10 @@ internal class SprinklrActivity : ComposeActivity<SprinklrScreenState>() {
     }
 
     @Composable
-    override fun ScreenContent(modifier: Modifier, state: SprinklrScreenState) {
+    override fun ScreenContent(
+        state: SprinklrScreenState,
+        modifier: Modifier,
+    ) {
         BackHandler(onBack = state.onNavigateBack)
         SprinklrScreenContent(
             modifier = modifier

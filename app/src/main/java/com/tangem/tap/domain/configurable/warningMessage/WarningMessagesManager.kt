@@ -39,8 +39,8 @@ class WarningMessagesManager {
         val foundWarning = findWarning(warning)
         return when {
             foundWarning == null -> false
-            foundWarning.type == WarningMessage.Type.Temporary
-                || foundWarning.type == WarningMessage.Type.AppRating -> {
+            foundWarning.type == WarningMessage.Type.Temporary ||
+                foundWarning.type == WarningMessage.Type.AppRating -> {
                 if (foundWarning.isHidden) {
                     false
                 } else {
@@ -70,6 +70,8 @@ class WarningMessagesManager {
     }
 
     companion object {
+        const val REMAINING_SIGNATURES_WARNING = 10
+
         fun devCardWarning(): WarningMessage = WarningMessage(
             "",
             "",
@@ -105,6 +107,7 @@ class WarningMessagesManager {
             messageResId = R.string.warning_signed_tx_previously,
             origin = WarningMessage.Origin.Local,
             buttonTextId = R.string.warning_button_learn_more,
+            titleFormatArg = "\u26A0"
         )
 
         fun appRatingWarning(): WarningMessage = WarningMessage(
@@ -171,7 +174,5 @@ class WarningMessagesManager {
             R.string.alert_demo_message,
             WarningMessage.Origin.Local,
         )
-
-        const val REMAINING_SIGNATURES_WARNING = 10
     }
 }

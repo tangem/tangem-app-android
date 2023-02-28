@@ -1,3 +1,5 @@
+@file:Suppress("MaximumLineLength")
+
 package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import android.net.Uri
@@ -16,14 +18,19 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.isZero
+import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
-import com.tangem.datasource.api.paymentology.AttestationResponse
+import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.paymentology.PaymentologyApiService
-import com.tangem.datasource.api.paymentology.RegisterKYCRequest
-import com.tangem.datasource.api.paymentology.RegisterWalletRequest
-import com.tangem.datasource.api.paymentology.RegisterWalletResponse
-import com.tangem.datasource.api.paymentology.RegistrationResponse
-import com.tangem.datasource.api.paymentology.tryExtractError
+import com.tangem.datasource.api.paymentology.models.request.CheckRegistrationRequests
+import com.tangem.datasource.api.paymentology.models.request.RegisterKYCRequest
+import com.tangem.datasource.api.paymentology.models.request.RegisterWalletRequest
+import com.tangem.datasource.api.paymentology.models.response.AttestationResponse
+import com.tangem.datasource.api.paymentology.models.response.RegisterWalletResponse
+import com.tangem.datasource.api.paymentology.models.response.RegistrationResponse
+import com.tangem.datasource.api.paymentology.models.response.tryExtractError
+import com.tangem.datasource.config.models.KYCProvider
+import com.tangem.datasource.config.models.SaltPayConfig
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.extensions.successOr
@@ -33,7 +40,20 @@ import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.store
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
+import kotlin.ByteArray
+import kotlin.Exception
+import kotlin.IllegalStateException
+import kotlin.NullPointerException
+import kotlin.String
+import kotlin.Suppress
+import kotlin.Unit
+import kotlin.UnsupportedOperationException
+import kotlin.byteArrayOf
+import kotlin.minus
+import com.tangem.blockchain.extensions.Result as BlockchainResult
 
 /**
 [REDACTED_AUTHOR]
@@ -56,24 +76,34 @@ class SaltPayActivationManager(
 
     suspend fun checkHasGas(): Result<Unit> {
         return when (val hasGasResult = gnosisRegistrator.checkHasGas()) {
-            is com.tangem.blockchain.extensions.Result.Success -> if (hasGasResult.data) {
+            is BlockchainResult.Success -> if (hasGasResult.data) {
                 Result.Success(Unit)
             } else {
                 Result.Failure(SaltPayActivationError.NoGas)
             }
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
+            is BlockchainResult.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
         }
     }
 
     suspend fun registerKYC(): Result<Unit> {
-        return when (val result = paymentologyService.registerKYC(makeRegisterKYCRequest())) {
+        val result = withContext(Dispatchers.IO) {
+            performRequest { paymentologyService.api.registerKYC(makeRegisterKYCRequest()) }
+        }
+        return when (result) {
             is Result.Success -> Result.Success(Unit)
             is Result.Failure -> result
         }
     }
 
     suspend fun checkRegistration(): Result<RegistrationResponse.Item> {
-        val response: RegistrationResponse = paymentologyService.checkRegistration(cardId, cardPublicKey)
+        val requestItem = CheckRegistrationRequests.Item(cardId, cardPublicKey.toHexString())
+        val request = CheckRegistrationRequests(listOf(requestItem))
+
+        val response: RegistrationResponse = withContext(Dispatchers.IO) {
+            performRequest {
+                paymentologyService.api.checkRegistration(request)
+            }
+        }
             .successOr { return it }
             .tryExtractError<RegistrationResponse>()
             .successOr { return it }
@@ -82,7 +112,7 @@ class SaltPayActivationManager(
             if (response.results.isEmpty()) throw SaltPayActivationError.EmptyResponse
 
             val item = response.results[0]
-            if (item.error != null) throw Exception(response.makeErrorMessage())
+            if (item.error != null) throw IllegalStateException(response.makeErrorMessage())
 
             Result.Success(item)
         } catch (ex: Exception) {
@@ -91,14 +121,19 @@ class SaltPayActivationManager(
     }
 
     suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
-        return paymentologyService.requestAttestationChallenge(cardId, cardPublicKey)
+        val requestItem = CheckRegistrationRequests.Item(cardId, cardPublicKey.toHexString())
+        return withContext(Dispatchers.IO) {
+            performRequest {
+                paymentologyService.api.requestAttestationChallenge(requestItem)
+            }
+        }
             .successOr { return it }
             .tryExtractError()
     }
 
     suspend fun sendTransactions(
         signedTransactions: List<SignedEthereumTransaction>,
-    ): com.tangem.blockchain.extensions.Result<List<String>> {
+    ): BlockchainResult<List<String>> {
         return gnosisRegistrator.sendTransactions(signedTransactions)
     }
 
@@ -116,7 +151,11 @@ class SaltPayActivationManager(
             cardSignature = attestResponse.cardSignature ?: byteArrayOf(),
             pin = pinCode,
         )
-        return paymentologyService.registerWallet(request)
+        return withContext(Dispatchers.IO) {
+            performRequest {
+                paymentologyService.api.registerWallet(request)
+            }
+        }
             .successOr { return it }
             .tryExtractError()
     }
@@ -180,7 +219,7 @@ class SaltPayActivationManager(
     companion object {
         fun stub(): SaltPayActivationManager = SaltPayActivationManager(
             kycProvider = SaltPayConfig.stub().kycProvider,
-            paymentologyService = PaymentologyApiService.stub(),
+            paymentologyService = PaymentologyApiService,
             gnosisRegistrator = GnosisRegistrator.stub(),
             cardId = "",
             cardPublicKey = byteArrayOf(),
@@ -268,6 +307,7 @@ class SaltPayActivationManagerFactory(
         )
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun createDummyActivationManager(
         saltPayConfig: SaltPayConfig,
         wmFactory: WalletManagerFactory,

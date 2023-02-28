@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
+import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.addContext
@@ -21,7 +21,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
@@ -33,17 +32,20 @@ import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.redux.reducers.toWallet
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 class MultiWalletMiddleware {
+    @Suppress("LongMethod", "ComplexMethod")
     fun handle(
-        action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
+        action: WalletAction.MultiWallet,
+        walletState: WalletState?,
+        globalState: GlobalState?,
     ) {
         val globalState = globalState ?: return
 
@@ -69,7 +71,6 @@ class MultiWalletMiddleware {
                 val currencies: List<Currency> =
                     (walletState?.currencies ?: emptyList()) + action.blockchain.toCurrencies()
 
-
                 if (action.save && globalState.scanResponse != null) {
                     scope.launch {
                         userTokensRepository.saveUserTokens(
@@ -91,7 +92,8 @@ class MultiWalletMiddleware {
                 )
                 store.dispatch(
                     WalletAction.LoadWallet(
-                        action.blockchain, action.walletManager,
+                        blockchain = action.blockchain,
+                        walletManager = action.walletManager,
                     ),
                 )
             }
@@ -129,11 +131,13 @@ class MultiWalletMiddleware {
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-                if (selectedUserWallet != null) scope.launch {
-                    walletCurrenciesManager.removeCurrency(
-                        userWallet = selectedUserWallet,
-                        currencyToRemove = action.currency,
-                    )
+                if (selectedUserWallet != null) {
+                    scope.launch {
+                        walletCurrenciesManager.removeCurrency(
+                            userWallet = selectedUserWallet,
+                            currencyToRemove = action.currency,
+                        )
+                    }
                 } else {
                     val currency = action.currency
                     val card = globalState.scanResponse?.card.guard {
@@ -144,8 +148,9 @@ class MultiWalletMiddleware {
                     var currencies = walletState?.currencies ?: emptyList()
                     currencies = currencies.filterNot { it == currency }
                     if (currency.isBlockchain()) {
-                        currencies
-                            .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
+                        currencies.filter {
+                            it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath
+                        }
                     }
                     scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
                 }
@@ -180,6 +185,7 @@ class MultiWalletMiddleware {
                     store.dispatch(WalletAction.Scan(onScanSuccessEvent = null))
                 }
             }
+            else -> {}
         }
     }
 
@@ -188,24 +194,26 @@ class MultiWalletMiddleware {
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
         dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
-        ScanCardProcessor.scan(
-            analyticsEvent = null,
+        tangemSdkManager.scanProduct(
             cardId = selectedUserWallet.cardId,
+            userTokensRepository = userTokensRepository,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
-        ) { scanResponse ->
-            userWalletsListManager.update(
-                userWalletId = selectedUserWallet.walletId,
-                update = { userWallet ->
-                    userWallet.copy(
-                        scanResponse = scanResponse,
-                    )
-                },
-            )
-                .doOnSuccess { updatedUserWallet ->
-                    store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
-                    store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
-                }
-        }
+            allowsRequestAccessCodeFromRepository = true,
+        )
+            .flatMap { scanResponse ->
+                userWalletsListManager.update(
+                    userWalletId = selectedUserWallet.walletId,
+                    update = { userWallet ->
+                        userWallet.copy(
+                            scanResponse = scanResponse,
+                        )
+                    },
+                )
+            }
+            .doOnSuccess { updatedUserWallet ->
+                store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
+            }
     }
 
     private fun addDummyBalances(walletManagers: List<WalletManager>) {
@@ -227,8 +235,10 @@ class MultiWalletMiddleware {
     }
 
     private fun addTokens(
-        tokens: List<Token>, blockchainNetwork: BlockchainNetwork,
-        walletState: WalletState?, globalState: GlobalState?,
+        tokens: List<Token>,
+        blockchainNetwork: BlockchainNetwork,
+        walletState: WalletState?,
+        globalState: GlobalState?,
         save: Boolean,
     ) {
         if (tokens.isEmpty()) return
@@ -242,14 +252,22 @@ class MultiWalletMiddleware {
                 scope.launch { userTokensRepository.saveUserTokens(scanResponse.card, currencies) }
             }
         } ?: wmFactory.makeWalletManagerForApp(scanResponse, blockchainNetwork)?.also {
-            store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchainNetwork.updateTokens(tokens), it, save))
+            store.dispatchOnMain(
+                WalletAction.MultiWallet.AddBlockchain(
+                    blockchain = blockchainNetwork.updateTokens(tokens),
+                    walletManager = it,
+                    save = save,
+                ),
+            )
         }
 
-        store.dispatch(
+        store.dispatchOnMain(
             WalletAction.LoadFiatRate(
                 coinsList = tokens.map { token ->
                     Currency.Token(
-                        token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath,
+                        token,
+                        blockchainNetwork.blockchain,
+                        blockchainNetwork.derivationPath,
                     )
                 },
             ),
@@ -257,30 +275,25 @@ class MultiWalletMiddleware {
         if (tokens.isNotEmpty()) walletManager?.addTokens(tokens)
 
         scope.launch {
-            val result = walletManager?.safeUpdate()
-            withMainContext {
-                when (result) {
-                    is com.tangem.common.services.Result.Success -> {
-                        val wallet = result.data
-                        wallet.getTokens()
-                            .filter { tokens.contains(it) }
-                            .mapNotNull { token ->
-                                wallet.getTokenAmount(token)?.let { Pair(token, it) }
-                            }
-                            .forEach {
-                                withContext(Dispatchers.Main) {
-                                    store.dispatch(
-                                        WalletAction.MultiWallet.TokenLoaded(
-                                            it.second,
-                                            it.first,
-                                            blockchainNetwork,
-                                        ),
-                                    )
-                                }
-                            }
-                    }
-                    else -> {}
+            when (val result = walletManager?.safeUpdate()) {
+                is com.tangem.common.services.Result.Success -> {
+                    val wallet = result.data
+                    wallet.getTokens()
+                        .filter { tokens.contains(it) }
+                        .mapNotNull { token ->
+                            wallet.getTokenAmount(token)?.let { amount -> Pair(token, amount) }
+                        }
+                        .forEach { (token, tokenAmount) ->
+                            store.dispatchOnMain(
+                                WalletAction.MultiWallet.TokenLoaded(
+                                    amount = tokenAmount,
+                                    token = token,
+                                    blockchain = blockchainNetwork,
+                                ),
+                            )
+                        }
                 }
+                else -> Unit
             }
         }
     }

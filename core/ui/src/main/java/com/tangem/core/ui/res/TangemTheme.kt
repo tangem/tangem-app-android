@@ -11,7 +11,8 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 
-internal val isSystemInDarkTheme: Boolean = false // TODO: use isSystemInDarkTheme() for automatic color detection
+// TODO: use isSystemInDarkTheme() for automatic color detection
+internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
 
 @Composable
 fun TangemTheme(
