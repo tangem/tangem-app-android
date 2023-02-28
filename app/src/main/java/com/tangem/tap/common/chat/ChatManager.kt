@@ -3,7 +3,10 @@ package com.tangem.tap.common.chat
 import android.content.Context
 import android.os.Build
 import com.tangem.tap.ForegroundActivityObserver
+import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.tap.common.chat.opener.ChatOpener
+import com.tangem.datasource.config.models.SprinklrConfig
+import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.tap.common.chat.opener.implementation.SprinklrChatOpener
 import com.tangem.tap.common.chat.opener.implementation.ZendeskChatOpener
 import com.tangem.tap.common.redux.AppState

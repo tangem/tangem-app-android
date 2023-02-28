@@ -80,6 +80,7 @@ private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
             onDismissRequest
         )
         is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
+        else -> {}
     }
 }
 
