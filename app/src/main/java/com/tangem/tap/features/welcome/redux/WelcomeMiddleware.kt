@@ -17,6 +17,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.intentHandler
 import com.tangem.tap.preferencesStorage
@@ -66,7 +67,7 @@ internal class WelcomeMiddleware {
 
     private fun proceedWithBiometrics(state: WelcomeState) {
         scope.launch {
-            userWalletsListManager.unlockWithBiometry()
+            userWalletsListManager.unlockIfLockable()
                 .doOnFailure { error ->
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Error(error))
                 }
