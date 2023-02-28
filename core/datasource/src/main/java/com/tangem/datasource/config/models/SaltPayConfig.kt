@@ -6,16 +6,18 @@ import org.spongycastle.util.encoders.Base64.toBase64String
 [REDACTED_AUTHOR]
  */
 data class SaltPayConfig(
-    val zendesk: ZendeskConfig,
+    val sprinklr: SprinklrConfig,
     val kycProvider: KYCProvider,
     val credentials: Credentials,
+    val blockscoutCredentials: Credentials,
 ) {
     companion object {
         fun stub(): SaltPayConfig {
             return SaltPayConfig(
-                zendesk = ZendeskConfig("", "", "", "", ""),
+                sprinklr = SprinklrConfig("", ""),
                 kycProvider = KYCProvider("", "", "", ""),
                 credentials = Credentials("", ""),
+                blockscoutCredentials = Credentials("", ""),
             )
         }
     }
