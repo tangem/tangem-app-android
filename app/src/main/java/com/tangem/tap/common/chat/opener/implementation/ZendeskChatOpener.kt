@@ -4,8 +4,8 @@ import android.content.Context
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.ForegroundActivityObserver
-import com.tangem.tap.common.chat.ZendeskConfig
 import com.tangem.tap.common.chat.opener.ChatOpener
+import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 import com.zendesk.logger.Logger
@@ -42,19 +42,14 @@ internal class ZendeskChatOpener(
     }
 
     private fun setChatVisitorInfo() {
-        val visitorInfo = VisitorInfo.builder()
-            .withName("User $userId")
-            .build()
+        val visitorInfo = VisitorInfo.builder().withName("User $userId").build()
 
-        Chat.INSTANCE.chatProvidersConfiguration = ChatProvidersConfiguration.builder()
-            .withVisitorInfo(visitorInfo)
-            .build()
+        Chat.INSTANCE.chatProvidersConfiguration =
+            ChatProvidersConfiguration.builder().withVisitorInfo(visitorInfo).build()
     }
 
     private fun setChatVisitorNote(note: String) {
-        Chat.INSTANCE.providers()
-            ?.profileProvider()
-            ?.setVisitorNote(note)
+        Chat.INSTANCE.providers()?.profileProvider()?.setVisitorNote(note)
     }
 
     private fun showMessagingActivity(context: Context) {

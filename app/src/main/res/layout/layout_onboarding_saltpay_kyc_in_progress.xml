@@ -48,7 +48,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_open_support_chat"
-        style="@style/OnboardingButton.Alternative"
+        style="@style/TapSecondaryButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
@@ -68,7 +68,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_kyc_action"
-            style="@style/OnboardingButton"
+            style="@style/TapPrimaryButton"
             android:layout_height="wrap_content"
             android:text="@string/onboarding_button_kyc_waiting" />
 
