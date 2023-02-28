@@ -164,6 +164,7 @@ class GnosisRegistrator(
         return transferFromHardcodeWay(amountToClaim, signer)
     }
 
+    @Suppress("UnusedPrivateMember")
     private suspend fun transferFromStandardWay(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
         val amount = Amount(token, amountToClaim)
         val feeAmount = walletManager.getFeeToTransferFrom(amount, addressTreasureSafe)
@@ -203,11 +204,15 @@ class GnosisRegistrator(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun Result<List<Amount>>.extractFeeAmount(): Result<Amount> {
         return when (this) {
             is Result.Success -> {
-                if (this.data.size != 3) Result.Failure(BlockchainSdkError.FailedToLoadFee)
-                else Result.Success(this.data[1])
+                if (this.data.size != 3) {
+                    Result.Failure(BlockchainSdkError.FailedToLoadFee)
+                } else {
+                    Result.Success(this.data[1])
+                }
             }
             is Result.Failure -> this
         }

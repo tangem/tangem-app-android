@@ -74,7 +74,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
-            style="@style/OnboardingButton"
+            style="@style/TapPrimaryButton"
             tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
@@ -91,12 +91,12 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
-        style="@style/TapButtonText"
+        style="@style/TapTextButton"
         android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Atlernative action" />
+        tools:text="Alternative action" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
