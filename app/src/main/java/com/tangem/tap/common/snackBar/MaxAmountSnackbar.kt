@@ -17,15 +17,15 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 class MaxAmountSnackbar(
-        parent: ViewGroup,
-        content: MaxAmountSnackbarView
+    parent: ViewGroup,
+    content: MaxAmountSnackbarView
 ) : BaseTransientBottomBar<MaxAmountSnackbar>(parent, content, content) {
 
     companion object {
 
         fun make(view: View, onClick: () -> Unit): MaxAmountSnackbar {
             val parent = view.findSuitableParent() ?: throw IllegalArgumentException(
-                    "No suitable parent found from the given view. Please provide a valid view."
+                "No suitable parent found from the given view. Please provide a valid view."
             )
             val inflater = LayoutInflater.from(view.context)
             val customView = inflater.inflate(R.layout.view_snackbar_max_amount, parent, false) as MaxAmountSnackbarView
@@ -57,21 +57,19 @@ class MaxAmountSnackbar(
             } while (view != null)
             return fallback
         }
-
     }
 }
 
 class MaxAmountSnackbarView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ContentViewCallback {
 
     init {
         View.inflate(context, R.layout.view_snackbar_max_amount_content, this)
         clipToPadding = false
     }
-
 
     override fun animateContentIn(delay: Int, duration: Int) {
     }

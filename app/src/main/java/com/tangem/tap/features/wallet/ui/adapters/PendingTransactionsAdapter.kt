@@ -13,12 +13,14 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemPendingTransactionBinding
 
-class PendingTransactionsAdapter
-    : ListAdapter<PendingTransaction, PendingTransactionsAdapter.TransactionsViewHolder>(DiffUtilCallback) {
+class PendingTransactionsAdapter :
+    ListAdapter<PendingTransaction, PendingTransactionsAdapter.TransactionsViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionsViewHolder {
         val binding = ItemPendingTransactionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return TransactionsViewHolder(binding)
     }
@@ -29,19 +31,20 @@ class PendingTransactionsAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<PendingTransaction>() {
         override fun areContentsTheSame(
-                oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction,
+            newItem: PendingTransaction
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-                oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction,
+            newItem: PendingTransaction
         ) = oldItem == newItem
     }
 
     class TransactionsViewHolder(val binding: ItemPendingTransactionBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(transaction: PendingTransaction) {
-
             if (transaction.type == PendingTransactionType.Unknown) {
                 binding.root.hide()
             }
@@ -69,7 +72,7 @@ class PendingTransactionsAdapter
 
             if (transaction.address != null) {
                 binding.tvPendingTransactionAddress.text =
-                        binding.root.getString(transactionAddressRes, transaction.address)
+                    binding.root.getString(transactionAddressRes, transaction.address)
             }
             binding.ivPendingTransaction.setImageDrawable(binding.root.context.getDrawableCompat(image))
         }

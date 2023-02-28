@@ -13,41 +13,40 @@ import com.tangem.tap.store
 /**
 [REDACTED_AUTHOR]
  */
-class SaltPayExceptionHandler {
-    companion object {
-        fun handle(throwable: Throwable) {
-            when (throwable) {
-                is SaltPayActivationError -> {
-                    val dialog = when (throwable) {
-                        is SaltPayActivationError.NoGas -> {
-                            Analytics.send(Onboarding.NotEnoughGasError())
-                            SaltPayDialog.Activation.NoGas
-                        }
-                        is SaltPayActivationError.PutVisaCard -> SaltPayDialog.Activation.PutVisaCard
-                        is SaltPayActivationError.CardNotPassed -> {
-                            Analytics.send(Onboarding.CardNotPassedError())
-                            SaltPayDialog.Activation.OnError(throwable)
-                        }
-                        else -> SaltPayDialog.Activation.OnError(throwable)
+object SaltPayExceptionHandler {
+
+    fun handle(throwable: Throwable) {
+        when (throwable) {
+            is SaltPayActivationError -> {
+                val dialog = when (throwable) {
+                    is SaltPayActivationError.NoGas -> {
+                        Analytics.send(Onboarding.NotEnoughGasError())
+                        SaltPayDialog.Activation.NoGas
                     }
-                    store.dispatchDialogShow(dialog)
-                }
-                is TangemSdkError -> {
-                    when (throwable) {
-                        is TangemSdkError.NetworkError -> {
-                            val message = (throwable).customMessage
-                            store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(message))
-                        }
-                        else -> Unit
+                    is SaltPayActivationError.PutVisaCard -> SaltPayDialog.Activation.PutVisaCard
+                    is SaltPayActivationError.CardNotPassed -> {
+                        Analytics.send(Onboarding.CardNotPassedError())
+                        SaltPayDialog.Activation.OnError(throwable)
                     }
+                    else -> SaltPayDialog.Activation.OnError(throwable)
                 }
-                is BlockchainSdkError -> {
-                    store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(throwable.customMessage))
+                store.dispatchDialogShow(dialog)
+            }
+            is TangemSdkError -> {
+                when (throwable) {
+                    is TangemSdkError.NetworkError -> {
+                        val message = throwable.customMessage
+                        store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(message))
+                    }
+                    else -> Unit
                 }
-                else -> {
-                    val message = throwable.localizedMessage ?: "SaltPay unknown error"
-                    store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(message))
-                }
+            }
+            is BlockchainSdkError -> {
+                store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(throwable.customMessage))
+            }
+            else -> {
+                val message = throwable.localizedMessage ?: "SaltPay unknown error"
+                store.dispatchDialogShow(AppDialog.SimpleOkErrorDialog(message))
             }
         }
     }
