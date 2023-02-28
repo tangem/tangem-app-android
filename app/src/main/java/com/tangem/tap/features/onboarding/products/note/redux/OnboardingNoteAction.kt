@@ -15,13 +15,13 @@ sealed class OnboardingNoteAction : Action {
     object CreateWallet : OnboardingNoteAction()
     object TopUp : OnboardingNoteAction()
     object ShowAddressInfoDialog : OnboardingNoteAction()
+    object OnBackPressed : OnboardingNoteAction()
 
     // from redux
     class SetArtworkUrl(val artworkUrl: String) : OnboardingNoteAction()
     data class SetWalletManager(val walletManager: WalletManager) : OnboardingNoteAction()
     object DetermineStepOfScreen : OnboardingNoteAction()
     object Done : OnboardingNoteAction()
-    object OnBackPressed : OnboardingNoteAction()
 
     data class SetStepOfScreen(val step: OnboardingNoteStep) : OnboardingNoteAction()
 

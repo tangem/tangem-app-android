@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.domain.common.util.UserWalletId
@@ -10,6 +9,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.isSame
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStore
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithSelf
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
+import com.tangem.tap.features.wallet.models.Currency
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -43,13 +43,13 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
 
     override suspend fun deleteDifference(
         userWalletId: UserWalletId,
-        currentBlockchains: List<Blockchain>,
+        currentBlockchains: List<Currency.Blockchain>,
     ): CompletionResult<Unit> = catching {
-        if (currentBlockchains != getSync(userWalletId).map { it.blockchain }) {
+        if (currentBlockchains != getSync(userWalletId)) {
             walletStoresStorage.update { prevStores ->
                 prevStores.apply {
                     this[userWalletId] = this[userWalletId]
-                        ?.filter { it.blockchain in currentBlockchains }
+                        ?.filter { it.blockchainWalletData.currency in currentBlockchains }
                         .orEmpty()
                 }
             }

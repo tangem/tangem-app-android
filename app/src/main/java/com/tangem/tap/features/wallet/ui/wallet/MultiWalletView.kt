@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
 import android.widget.Button
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.badoo.mvicore.DiffStrategy
@@ -11,8 +12,6 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
-import com.tangem.tap.common.extensions.animateVisibility
-import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -95,7 +94,7 @@ class MultiWalletView : WalletView() {
         lAddress.root.hide()
         rowButtons.hide()
         lSingleWalletBalance.root.hide()
-        lCardTotalBalance.root.show()
+        lCardTotalBalance.show()
         rvMultiwallet.show()
         btnAddToken.show()
     }
@@ -183,37 +182,12 @@ class MultiWalletView : WalletView() {
         progressState: ProgressState,
         walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
-        if (walletsCount == 0) {
-            root.isVisible = false
-        } else {
-            if (totalBalance == null) {
-                if (progressState != ProgressState.Loading) {
-                    root.isVisible = false
-                }
-            } else {
-                root.isVisible = true
-                // Skip changes when on refreshing state
-                if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
-                    return@with
-                }
+        isGone = progressState == ProgressState.Done && walletsCount == 0
 
-                if (totalBalance.state == ProgressState.Loading) {
-                    veilBalance.veil()
-                } else {
-                    veilBalance.unVeil()
-                }
-                tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
-
-                tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-                    currencySymbol = totalBalance.fiatCurrency.symbol,
-                )
-                tvCurrencyName.text = totalBalance.fiatCurrency.code
-
-                tvCurrencyName.setOnClickListener {
-                    store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
-                }
-            }
+        onChangeFiatCurrencyClick = {
+            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
+        status = totalBalance
     }
 
     private fun handleErrorStates(
@@ -243,7 +217,9 @@ class MultiWalletView : WalletView() {
     }
 
     private fun showErrorState(
-        binding: FragmentWalletBinding, errorTitle: CharSequence, errorDescription: CharSequence,
+        binding: FragmentWalletBinding,
+        errorTitle: CharSequence,
+        errorDescription: CharSequence,
     ) = with(binding) {
         lCardBalance.root.show()
         with(lCardBalance) {
