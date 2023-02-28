@@ -24,7 +24,7 @@ class OnboardingWalletStateConverter : StringStateConverter<AppState> {
             BackupStepAdapter(),
             BigIntegerAdapter(),
 
-            )
+        )
     }
 
     override fun convert(stateHolder: AppState): String {
@@ -56,6 +56,7 @@ class BackupStepAdapter {
         }
     }
 
+    @Suppress("MagicNumber")
     @FromJson
     fun fromJson(json: String): BackupStep {
         return when (json) {

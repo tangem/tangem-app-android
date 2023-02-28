@@ -27,7 +27,9 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
                 when (walletsData.findStatus()) {
                     TotalFiatBalanceStatus.Loading -> TotalFiatBalance.Loading
                     TotalFiatBalanceStatus.Error -> TotalFiatBalance.Error(calculateAmount())
-                    TotalFiatBalanceStatus.Loaded -> TotalFiatBalance.Loaded(calculateAmount())
+                    TotalFiatBalanceStatus.Loaded -> TotalFiatBalance.Loaded(
+                        amount = calculateAmount() ?: BigDecimal.ZERO,
+                    )
                 }
             }
         }
@@ -48,9 +50,10 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
                 is WalletDataModel.SameCurrencyTransactionInProgress,
                 is WalletDataModel.TransactionInProgress,
                 is WalletDataModel.NoAccount,
-                -> {
-                    if (walletData.fiatRate == null) TotalFiatBalanceStatus.Error
-                    else TotalFiatBalanceStatus.Loaded
+                -> if (walletData.isCustom || walletData.fiatRate == null) {
+                    TotalFiatBalanceStatus.Error
+                } else {
+                    TotalFiatBalanceStatus.Loaded
                 }
                 is WalletDataModel.Unreachable,
                 is WalletDataModel.MissedDerivation,
@@ -60,14 +63,17 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
         }
     }
 
-    private fun Sequence<WalletDataModel>.calculateTotalFiatAmount(): BigDecimal {
+    private fun Sequence<WalletDataModel>.calculateTotalFiatAmount(): BigDecimal? {
         return this
+            .filterNot { it.isCustom }
             .map { walletData ->
                 walletData.fiatRate
+                    ?.takeUnless { walletData.status.isErrorStatus }
                     ?.let { walletData.status.amount.toFiatValue(it) }
-                    ?: BigDecimal.ZERO
             }
-            .reduce(BigDecimal::plus)
+            .reduce { acc, value ->
+                value?.let { acc?.plus(it) }
+            }
     }
 
     private fun getCurrentStatus(
@@ -88,8 +94,6 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
     }
 
     private enum class TotalFiatBalanceStatus {
-        Loading,
-        Error,
-        Loaded,
+        Loading, Error, Loaded,
     }
 }
