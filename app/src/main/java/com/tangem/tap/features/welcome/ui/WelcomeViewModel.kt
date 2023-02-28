@@ -1,12 +1,15 @@
 package com.tangem.tap.features.welcome.ui
 
 import androidx.lifecycle.ViewModel
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState
+import com.tangem.tap.features.welcome.ui.model.BiometricsLockoutDialog
 import com.tangem.tap.store
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,17 +38,20 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
     fun closeError() {
         store.dispatch(WelcomeAction.CloseError)
     }
-
+// [REDACTED_TODO_COMMENT]
     override fun newState(state: WelcomeState) {
+        val biometricsLockoutDialog = createBiometricLockoutDialogIfNeeded(state.error)
+
         stateInternal.update { prevState ->
             prevState.copy(
                 showUnlockWithBiometricsProgress = state.isUnlockWithBiometricsInProgress,
                 showUnlockWithCardProgress = state.isUnlockWithCardInProgress,
+                biometricsLockoutDialog = biometricsLockoutDialog,
                 error = state.error
-                    ?.takeUnless { it.silent }
-                    ?.let { error ->
-                        error.messageResId?.let { TextReference.Res(it) }
-                            ?: TextReference.Str(error.customMessage)
+                    ?.takeIf { !it.silent && biometricsLockoutDialog == null }
+                    ?.let { e ->
+                        e.messageResId?.let { TextReference.Res(it) }
+                            ?: TextReference.Str(e.customMessage)
                     },
             )
         }
@@ -53,6 +59,29 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
 
     override fun onCleared() {
         store.unsubscribe(this)
+    }
+
+    private fun createBiometricLockoutDialogIfNeeded(error: TangemError?): BiometricsLockoutDialog? {
+        return when (error) {
+            is TangemSdkError.BiometricsAuthenticationLockout -> BiometricsLockoutDialog(
+                isPermanent = false,
+                onDismiss = this::dismissDialog,
+            )
+            is TangemSdkError.BiometricsAuthenticationPermanentLockout -> BiometricsLockoutDialog(
+                isPermanent = true,
+                onDismiss = this::dismissDialog,
+            )
+            else -> null
+        }
+    }
+
+    private fun dismissDialog() {
+        stateInternal.update { prevState ->
+            prevState.copy(
+                biometricsLockoutDialog = null,
+            )
+        }
+        closeError()
     }
 
     private fun subscribeToStoreChanges() {

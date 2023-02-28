@@ -42,7 +42,7 @@ class WalletConnectFragment : Fragment(), StoreSubscriber<WalletConnectState> {
                 TangemTheme {
                     WalletConnectScreen(
                         state = screenState.value,
-                        onBackPressed = {
+                        onBackClick = {
                             if (screenState.value.isLoading) {
                                 store.dispatch(
                                     WalletConnectAction.FailureEstablishingSession(

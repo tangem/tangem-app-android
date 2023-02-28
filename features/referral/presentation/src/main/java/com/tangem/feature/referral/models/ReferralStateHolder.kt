@@ -50,4 +50,3 @@ internal data class ReferralStateHolder(
         val onShareClicked: () -> Unit,
     )
 }
-

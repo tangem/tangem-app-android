@@ -11,12 +11,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
+@Suppress("MagicNumber")
 @Composable
 fun TextAutoSize(
-    modifier: Modifier = Modifier,
     text: String,
-    textStyle: TextStyle = LocalTextStyle.current,
     fontSizeRange: FontSizeRange,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = LocalTextStyle.current,
 ) {
     val fontSizeValue = remember { mutableStateOf(fontSizeRange.max.value) }
     val readyToDraw = remember { mutableStateOf(false) }
@@ -46,7 +47,7 @@ fun TextAutoSize(
             } else {
                 readyToDraw.value = true
             }
-        }
+        },
     )
 }
 

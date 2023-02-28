@@ -1,6 +1,6 @@
 package com.tangem.tap.features.sprinklr.redux
 
-import com.tangem.tap.common.chat.SprinklrConfig
+import com.tangem.datasource.config.models.SprinklrConfig
 import org.rekotlin.Action
 
 sealed interface SprinklrAction : Action {

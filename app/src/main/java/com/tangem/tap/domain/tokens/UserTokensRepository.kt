@@ -2,117 +2,106 @@ package com.tangem.tap.domain.tokens
 
 import android.content.Context
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.common.services.Result
+import com.tangem.common.core.TangemSdkError
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
-import com.tangem.datasource.api.tangemTech.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.AndroidFileReader
-import com.tangem.tap.domain.NoDataError
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
+import com.tangem.tap.domain.tokens.converters.CurrencyConverter
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.store
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 class UserTokensRepository(
     private val storageService: UserTokensStorageService,
-    private val networkService: UserTokensNetworkService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
-    suspend fun getUserTokens(card: CardDTO): List<Currency> {
-        val userId = getUserWalletId(card) ?: return emptyList()
+// [REDACTED_TODO_COMMENT]
+    suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
         if (DemoHelper.isDemoCardId(card.cardId)) {
-            return loadTokensOffline(card, userId).ifEmpty { loadDemoCurrencies() }
+            return@withContext loadTokensOffline(card, userId).ifEmpty(::loadDemoCurrencies)
         }
 
         if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-            return loadTokensOffline(card, userId)
+            return@withContext loadTokensOffline(card, userId)
         }
 
-        return when (val networkResult = networkService.getUserTokens(userId)) {
-            is Result.Success -> {
-                val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
-                storageService.saveUserTokens(userId, tokens.toUserTokensResponse())
-                tokens.distinct()
+        runCatching { tangemTechApi.getUserTokens(userId) }
+            .onSuccess { response ->
+                return@withContext response.tokens
+                    .mapNotNull(Currency.Companion::fromTokenResponse).also {
+                        storageService.saveUserTokens(userId, it.toUserTokensResponse())
+                    }
+                    .distinct()
+            }
+            .onFailure {
+                return@withContext handleGetUserTokensFailure(card = card, userId = userId, error = it)
             }
 
-            is Result.Failure -> {
-                handleGetUserTokensFailure(card = card, userId = userId, error = networkResult.error)
-            }
-        }
+        error("Unreachable code because runCatching must return result")
     }
-
-    suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) {
-        val userId = getUserWalletId(card) ?: return
+// [REDACTED_TODO_COMMENT]
+    suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
+        val userId = getUserWalletId(card) ?: return@withContext
         val userTokens = tokens.toUserTokensResponse()
-        networkService.saveUserTokens(userId, userTokens)
+        tangemTechApi.saveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
     }
 
-    suspend fun removeUserTokens(card: CardDTO) {
-        val userId = getUserWalletId(card) ?: return
-        val userTokens = emptyList<Currency>().toUserTokensResponse()
-        networkService.saveUserTokens(userId, userTokens)
-        storageService.saveUserTokens(userId, userTokens)
-    }
-
-    private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
-        val tokensResponse = this.map { it.toTokenResponse() }
-        return UserTokensResponse(
-            tokens = tokensResponse,
-            group = GROUP_DEFAULT_VALUE,
-            sort = SORT_DEFAULT_VALUE,
-        )
-    }
-
-    suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> {
-        val userId = getUserWalletId(card) ?: return emptyList()
-        val blockchainNetworks = loadTokensOffline(card, userId).toBlockchainNetworks()
+    suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
+        val blockchainNetworks = loadTokensOffline(card = card, userId = userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
-            return blockchainNetworks
-                .ifEmpty { loadDemoCurrencies().toBlockchainNetworks() }
+            return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies()::toBlockchainNetworks)
         }
 
-        return blockchainNetworks
+        return@withContext blockchainNetworks
+    }
+
+    private suspend fun loadTokensOffline(card: CardDTO, userId: String): List<Currency> {
+        return storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
     }
 
     private fun loadDemoCurrencies(): List<Currency> {
-        return DemoHelper.config.demoBlockchains.map {
-            BlockchainNetwork(
-                blockchain = it,
-                derivationPath = it.derivationPath(DerivationStyle.LEGACY)?.rawPath,
-                tokens = emptyList(),
-            )
-        }.flatMap { it.toCurrencies() }
+        return DemoHelper.config.demoBlockchains
+            .map { blockchain ->
+                BlockchainNetwork(
+                    blockchain = blockchain,
+                    derivationPath = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath,
+                    tokens = emptyList(),
+                )
+            }
+            .flatMap(BlockchainNetwork::toCurrencies)
     }
 
-    private suspend fun handleGetUserTokensFailure(
-        card: CardDTO,
-        userId: String,
-        error: Throwable,
-    ): List<Currency> {
-        return when (error) {
-            is NoDataError -> {
-                val tokens = storageService.getUserTokens(card)
-                val userTokens = tokens.toUserTokensResponse()
-                coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = userTokens) } }
-                tokens
-            }
+    private fun List<Currency>.toUserTokensResponse() = UserTokensResponse(
+        tokens = CurrencyConverter.convertList(this),
+        group = GROUP_DEFAULT_VALUE,
+        sort = SORT_DEFAULT_VALUE,
+    )
 
+    private suspend fun handleGetUserTokensFailure(card: CardDTO, userId: String, error: Throwable): List<Currency> {
+        return when {
+            error is TangemSdkError.NetworkError && error.customMessage.contains(NOT_FOUND_HTTP_CODE) ->
+                storageService.getUserTokens(card).also {
+                    tangemTechApi.saveUserTokens(userId = userId, userTokens = it.toUserTokensResponse())
+                }
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
                 tokens.distinct()
             }
         }
-    }
-
-    private suspend fun loadTokensOffline(card: CardDTO, userId: String): List<Currency> {
-        return storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
     }
 
     private fun getUserWalletId(card: CardDTO): String? {
@@ -121,16 +110,29 @@ class UserTokensRepository(
     }
 
     companion object {
-        const val SORT_DEFAULT_VALUE = "manual"
-        const val GROUP_DEFAULT_VALUE = "none"
+        private const val GROUP_DEFAULT_VALUE = "none"
+        private const val SORT_DEFAULT_VALUE = "manual"
+        private const val NOT_FOUND_HTTP_CODE = "404"
+// [REDACTED_TODO_COMMENT]
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
+            val dispatchers = AppCoroutineDispatcherProvider()
+
             val oldUserTokensRepository = OldUserTokensRepository(
-                fileReader, store.state.domainNetworks.tangemTechService,
+                fileReader = fileReader,
+                tangemTechApi = tangemTechService.api,
+                dispatchers = dispatchers,
             )
-            val storageService = UserTokensStorageService(oldUserTokensRepository, fileReader)
-            val networkService = UserTokensNetworkService(tangemTechService)
-            return UserTokensRepository(storageService, networkService)
+            val storageService = UserTokensStorageService(
+                oldUserTokensRepository = oldUserTokensRepository,
+                fileReader = fileReader,
+            )
+
+            return UserTokensRepository(
+                storageService = storageService,
+                tangemTechApi = tangemTechService.api,
+                dispatchers = dispatchers,
+            )
         }
     }
 }

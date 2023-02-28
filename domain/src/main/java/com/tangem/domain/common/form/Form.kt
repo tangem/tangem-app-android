@@ -60,4 +60,3 @@ abstract class BaseDataField<T>(
         dataConverter.visit(getData())
     }
 }
-

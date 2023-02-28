@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.handlers.appsFlyer
 
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
-import com.tangem.analytics.api.EventLogger
+import com.tangem.core.analytics.api.EventLogger
 
 /**
 * [REDACTED_AUTHOR]

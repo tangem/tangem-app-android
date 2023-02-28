@@ -26,7 +26,7 @@ data class PendingTransaction(
 
     val currency: String = transactionData.amount.currencySymbol
 
-    fun nullIfUnknown(address: String):String? = if (address == "unknown") null else address
+    fun nullIfUnknown(address: String): String? = if (address == "unknown") null else address
 }
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
@@ -99,7 +99,6 @@ fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
 
 fun Wallet.isSendableAmount(type: AmountType): Boolean {
     return amounts[type]?.isAboveZero() == true
-
 }
 
 fun Wallet.isSendableAmount(token: Token): Boolean {

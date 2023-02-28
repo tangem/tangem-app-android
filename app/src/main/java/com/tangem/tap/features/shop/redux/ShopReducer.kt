@@ -2,20 +2,18 @@ package com.tangem.tap.features.shop.redux
 
 import org.rekotlin.Action
 
-class ShopReducer {
-    companion object {
-        fun reduce(action: Action, state: ShopState): ShopState = internalReduce(action, state)
-    }
+object ShopReducer {
+    fun reduce(action: Action, state: ShopState): ShopState = internalReduce(action, state)
 }
 
+@Suppress("ComplexMethod")
 private fun internalReduce(action: Action, state: ShopState): ShopState {
-
     if (action !is ShopAction) return state
 
     return when (action) {
         is ShopAction.ApplyPromoCode -> state.copy(
             promoCode = action.promoCode,
-            promoCodeLoading = true
+            promoCodeLoading = true,
         )
         ShopAction.BuyWithGooglePay -> state
         ShopAction.LoadProducts -> state
@@ -26,13 +24,14 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         }
         ShopAction.StartWebCheckout -> state
         ShopAction.ApplyPromoCode.InvalidPromoCode -> state.copy(
-            promoCode = null, promoCodeLoading = false
+            promoCode = null,
+            promoCodeLoading = false,
         )
         is ShopAction.ApplyPromoCode.Success -> {
             state.copy(
                 promoCode = action.promoCode,
                 availableProducts = action.products,
-                promoCodeLoading = false
+                promoCodeLoading = false,
 
             )
         }
@@ -49,7 +48,6 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         }
         ShopAction.CheckIfGooglePayAvailable.Success -> {
             state.copy(isGooglePayAvailable = false) // TODO: change when we add support for GPay
-
         }
         is ShopAction.BuyWithGooglePay.Failure -> {
             state

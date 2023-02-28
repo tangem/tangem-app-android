@@ -28,25 +28,23 @@ interface SendInternalReducer {
     fun handle(action: SendScreenAction, sendState: SendState): SendState
 }
 
-class SendScreenReducer {
-    companion object {
-        fun reduce(incomingAction: Action, sendState: SendState): SendState {
-            if (incomingAction is ReleaseSendState) return SendState()
-            val action = incomingAction as? SendScreenAction ?: return sendState
+object SendScreenReducer {
+    fun reduce(incomingAction: Action, sendState: SendState): SendState {
+        if (incomingAction is ReleaseSendState) return SendState()
+        val action = incomingAction as? SendScreenAction ?: return sendState
 
-            val reducer: SendInternalReducer = when (action) {
-                is PrepareSendScreen -> PrepareSendScreenStatesReducer()
-                is AddressPayIdActionUi, is AddressPayIdVerifyAction -> AddressPayIdReducer()
-                is TransactionExtrasAction -> TransactionExtrasReducer()
-                is AmountActionUi, is AmountAction -> AmountReducer()
-                is FeeActionUi, is FeeAction -> FeeReducer()
-                is ReceiptAction -> ReceiptReducer()
-                is SendAction -> SendReducer()
-                else -> EmptyReducer()
-            }
-
-            return reducer.handle(action, sendState)
+        val reducer: SendInternalReducer = when (action) {
+            is PrepareSendScreen -> PrepareSendScreenStatesReducer()
+            is AddressPayIdActionUi, is AddressPayIdVerifyAction -> AddressPayIdReducer()
+            is TransactionExtrasAction -> TransactionExtrasReducer()
+            is AmountActionUi, is AmountAction -> AmountReducer()
+            is FeeActionUi, is FeeAction -> FeeReducer()
+            is ReceiptAction -> ReceiptReducer()
+            is SendAction -> SendReducer()
+            else -> EmptyReducer()
         }
+
+        return reducer.handle(action, sendState)
     }
 }
 
@@ -70,19 +68,20 @@ private class SendReducer : SendInternalReducer {
     }
 
     private fun handleSendSpecificTransactionAction(
-        action: SendAction.SendSpecificTransaction, state: SendState
+        action: SendAction.SendSpecificTransaction,
+        state: SendState,
     ): SendState {
         return state.copy(
             externalTransactionData =
             ExternalTransactionData(action.sendAmount, action.destinationAddress, action.transactionId),
             feeState = state.feeState.copy(
-                includeFeeSwitcherIsEnabled = false
+                includeFeeSwitcherIsEnabled = false,
             ),
             amountState = state.amountState.copy(
-                inputIsEnabled = false
+                inputIsEnabled = false,
             ),
             addressPayIdState = state.addressPayIdState.copy(
-                inputIsEnabled = false
+                inputIsEnabled = false,
             ),
         )
     }
@@ -100,17 +99,17 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
         val decimals = amountToExtract.decimals
 
         return sendState.copy(
-                walletManager = walletManager,
-                coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
-                tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
-                amountState = sendState.amountState.copy(
-                        amountToExtract = amountToExtract,
-                        typeOfAmount = amountToExtract.type,
-                        balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO
-                ),
-                feeState = sendState.feeState.copy(
-                        includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin
-                )
+            walletManager = walletManager,
+            coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
+            tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
+            amountState = sendState.amountState.copy(
+                amountToExtract = amountToExtract,
+                typeOfAmount = amountToExtract.type,
+                balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO,
+            ),
+            feeState = sendState.feeState.copy(
+                includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin,
+            ),
         )
     }
 }
@@ -119,4 +118,3 @@ internal fun updateLastState(sendState: SendState, lastChangedState: IdStateHold
     sendState.lastChangedStates.add(lastChangedState.stateId)
     return sendState
 }
-

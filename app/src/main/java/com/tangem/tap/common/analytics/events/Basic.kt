@@ -43,4 +43,3 @@ sealed class Basic(
         error = error,
     )
 }
-

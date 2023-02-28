@@ -7,8 +7,8 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
+import com.tangem.common.doOnSuccess
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.map
 import com.tangem.common.mapFailure
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
@@ -22,7 +22,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -38,7 +38,9 @@ internal class DefaultWalletManagersRepository(
         return findOrMakeInternal(userWallet, blockchainNetwork)
     }
 
-    override suspend fun findOrMakeSingleCurrencyWalletManager(userWallet: UserWallet): CompletionResult<WalletManager> {
+    override suspend fun findOrMakeSingleCurrencyWalletManager(
+        userWallet: UserWallet,
+    ): CompletionResult<WalletManager> {
         return findOrMakeInternal(userWallet, blockchainNetwork = null)
     }
 
@@ -64,7 +66,7 @@ internal class DefaultWalletManagersRepository(
     ): CompletionResult<WalletManager> {
         val scanResponse = userWallet.scanResponse
         val blockchain = blockchainNetwork?.blockchain
-            ?: scanResponse.getBlockchain().let { blockchain ->
+            ?: scanResponse.cardTypesResolver.getBlockchain().let { blockchain ->
                 if (scanResponse.card.isTestCard) blockchain.getTestnetVersion() else blockchain
             }
         val derivationParams = getDerivationParams(
@@ -91,10 +93,7 @@ internal class DefaultWalletManagersRepository(
                     scanResponse = scanResponse,
                     blockchainNetwork = blockchainNetwork,
                 )
-                    .map { updatedWalletManager ->
-                        store(userWallet.walletId, updatedWalletManager)
-                        updatedWalletManager
-                    }
+                    .doOnSuccess { store(userWallet.walletId, it) }
             }
             else -> {
                 val error = WalletStoresError.WalletManagerNotCreated(blockchain)
@@ -154,10 +153,11 @@ internal class DefaultWalletManagersRepository(
     ): CompletionResult<WalletManager> {
         val walletManager = this
         return catching {
-            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.getPrimaryToken())
+            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.cardTypesResolver.getPrimaryToken())
 
-            if (tokens != cardTokens) {
-                cardTokens.clear()
+            if (tokens != walletManager.cardTokens) {
+                walletManager.cardTokens.clear()
+                walletManager.wallet.removeAllTokens()
                 if (tokens.isNotEmpty()) {
                     walletManager.cardTokens.addAll(tokens)
                 }
@@ -179,10 +179,16 @@ internal class DefaultWalletManagersRepository(
         userWalletId: UserWalletId,
         blockchain: Blockchain?,
     ): WalletManager? {
-        return walletManagersStorage.getAll().first()[userWalletId]?.let { userWalletManagers ->
-            if (blockchain == null) userWalletManagers.firstOrNull()
-            else userWalletManagers.find { it.wallet.blockchain == blockchain }
-        }
+        return walletManagersStorage.getAll()
+            .firstOrNull()
+            ?.get(userWalletId)
+            ?.let { userWalletManagers ->
+                if (blockchain == null) {
+                    userWalletManagers.firstOrNull()
+                } else {
+                    userWalletManagers.firstOrNull { it.wallet.blockchain == blockchain }
+                }
+            }
     }
 
     private fun getDerivationParams(derivationPath: String?, card: CardDTO): DerivationParams? {

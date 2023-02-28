@@ -4,10 +4,8 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import org.rekotlin.Action
 
-class OnboardingOtherCardsReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): OnboardingOtherCardsState = internalReduce(action, state)
-    }
+object OnboardingOtherCardsReducer {
+    fun reduce(action: Action, state: AppState): OnboardingOtherCardsState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, appState: AppState): OnboardingOtherCardsState {

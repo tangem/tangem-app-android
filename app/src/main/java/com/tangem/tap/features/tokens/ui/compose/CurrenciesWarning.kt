@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.wallet.R
 
+@Suppress("MagicNumber")
 @Composable
 fun CurrenciesWarning() {
     Box(
@@ -28,8 +29,7 @@ fun CurrenciesWarning() {
                 color = Color(0xFFF2F2F2),
                 shape = RoundedCornerShape(10.dp),
             ),
-    )
-    {
+    ) {
         val warning = stringResource(id = R.string.alert_manage_tokens_addresses_message)
         val end = warning.indexOf(" ")
         val spanStyles = listOf(

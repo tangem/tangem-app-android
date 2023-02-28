@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.common.card.EllipticCurve
 import java.math.BigDecimal
 
-
+@Suppress("MagicNumber")
 fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(1.5) else BigDecimal.ONE

@@ -19,7 +19,11 @@ class AddressPayIdReducer : SendInternalReducer {
         else -> sendState
     }
 
-    private fun handleUiAction(action: AddressPayIdActionUi, sendState: SendState, state: AddressPayIdState): SendState {
+    private fun handleUiAction(
+        action: AddressPayIdActionUi,
+        sendState: SendState,
+        state: AddressPayIdState,
+    ): SendState {
         val result = when (action) {
             is AddressPayIdActionUi.HandleUserInput -> state
             is AddressPayIdActionUi.SetTruncateHandler -> state.copy(truncateHandler = action.handler)
@@ -35,24 +39,28 @@ class AddressPayIdReducer : SendInternalReducer {
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }
 
-    private fun handleAction(action: AddressPayIdVerifyAction, sendState: SendState, state: AddressPayIdState): SendState {
+    private fun handleAction(
+        action: AddressPayIdVerifyAction,
+        sendState: SendState,
+        state: AddressPayIdState,
+    ): SendState {
         val result = when (action) {
             is PayIdVerification.SetPayIdWalletAddress -> {
                 state.copy(
-                        viewFieldValue = InputViewValue(action.payId, action.isUserInput),
-                        normalFieldValue = action.payId,
-                        truncatedFieldValue = state.truncate(action.payId),
-                        destinationWalletAddress = action.payIdWalletAddress,
-                        error = null
+                    viewFieldValue = InputViewValue(action.payId, action.isUserInput),
+                    normalFieldValue = action.payId,
+                    truncatedFieldValue = state.truncate(action.payId),
+                    destinationWalletAddress = action.payIdWalletAddress,
+                    error = null,
                 )
             }
             is AddressVerification.SetWalletAddress -> {
                 state.copy(
-                        viewFieldValue = InputViewValue(action.address, action.isUserInput),
-                        normalFieldValue = action.address,
-                        truncatedFieldValue = state.truncate(action.address),
-                        destinationWalletAddress = action.address,
-                        error = null
+                    viewFieldValue = InputViewValue(action.address, action.isUserInput),
+                    normalFieldValue = action.address,
+                    truncatedFieldValue = state.truncate(action.address),
+                    destinationWalletAddress = action.address,
+                    error = null,
                 )
             }
             is AddressPayIdVerifyAction.ChangePasteBtnEnableState -> state.copy(pasteIsEnabled = action.isEnabled)

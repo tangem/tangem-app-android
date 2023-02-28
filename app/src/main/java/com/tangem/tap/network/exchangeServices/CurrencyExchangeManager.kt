@@ -86,7 +86,6 @@ class CurrencyExchangeManager(
     }
 }
 
-@Suppress("unused")
 suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     card: CardDTO,
     walletManager: EthereumWalletManager,
@@ -104,9 +103,8 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
         ) as? Result.Success ?: return
     val fee = feeResult.data[0]
 
-    if ((walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO) < fee.value) {
-        return
-    }
+    val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
+    if (coinValue < fee.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 

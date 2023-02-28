@@ -1,12 +1,16 @@
 package com.tangem.tap.common.compose.extensions
 
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import com.tangem.tap.common.extensions.hideKeyboard
 
 @Composable
-fun LazyListState.OnBottomReached(loadMoreThreshold: Int, loadMore: () -> Unit) {
+fun LazyListState.OnBottomReached(loadMoreThreshold: Int, onLoadMore: () -> Unit) {
     require(loadMoreThreshold >= 0)
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -17,7 +21,7 @@ fun LazyListState.OnBottomReached(loadMoreThreshold: Int, loadMore: () -> Unit) 
     }
 
     LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) loadMore()
+        if (shouldLoadMore) onLoadMore()
     }
 }
 

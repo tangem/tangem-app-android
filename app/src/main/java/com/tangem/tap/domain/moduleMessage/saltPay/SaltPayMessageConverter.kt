@@ -32,4 +32,3 @@ class SaltPayErrorConverter(
         else -> null
     }
 }
-

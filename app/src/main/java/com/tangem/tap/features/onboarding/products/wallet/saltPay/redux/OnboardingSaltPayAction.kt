@@ -44,4 +44,3 @@ sealed class OnboardingSaltPayAction : Action {
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
-
