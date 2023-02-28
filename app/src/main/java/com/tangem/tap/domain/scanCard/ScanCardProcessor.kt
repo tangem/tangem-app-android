@@ -13,9 +13,11 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
+import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -27,10 +29,10 @@ import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManagerFactory
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -75,7 +77,7 @@ object ScanCardProcessor {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
                 onScanStateChange(false)
-                sendAnalytics(analyticsEvent, scanResponse.card.batchId)
+                sendAnalytics(analyticsEvent, scanResponse)
 
                 checkForUnfinishedBackupForSaltPay(
                     backupService = backupService,
@@ -103,10 +105,17 @@ object ScanCardProcessor {
 
     private fun sendAnalytics(
         analyticsEvent: AnalyticsEvent?,
-        batchId: String,
+        scanResponse: ScanResponse,
     ) {
-        Analytics.addParamsInterceptor(BatchIdParamsInterceptor(batchId))
-        analyticsEvent?.let { Analytics.send(it) }
+        analyticsEvent?.let {
+            // this workaround needed to send CardWasScannedEvent without adding a context
+            val interceptor = CardContextInterceptor(scanResponse)
+            val params = it.params.toMutableMap()
+            interceptor.intercept(params)
+            it.params = params.toMap()
+
+            Analytics.send(it)
+        }
     }
 
     /**
@@ -188,20 +197,25 @@ object ScanCardProcessor {
 
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-        if (scanResponse.cardTypesResolver.isSaltPay()) {
-            if (scanResponse.cardTypesResolver.isSaltPayVisa()) {
-                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
+        val cardTypesResolver = scanResponse.cardTypesResolver
+        if (cardTypesResolver.isSaltPay()) {
+            if (cardTypesResolver.isSaltPayVisa()) {
+                val manager = SaltPayActivationManagerFactory(
+                    blockchain = scanResponse.cardTypesResolver.getBlockchain(),
+                    card = scanResponse.card,
+                ).create()
                 val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse, manager)
                 delay(500)
                 withMainContext {
                     when (result) {
                         is Result.Success -> {
+                            Analytics.addContext(scanResponse)
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 onWalletNotCreated()
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
-                                store.dispatch(OnboardingSaltPayAction.Update)
+                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager))
+                                store.dispatch(OnboardingSaltPayAction.Update(withAnalytics = false))
                                 navigateTo(AppScreen.OnboardingWallet) { onProgressStateChange(it) }
                             } else {
                                 delay(DELAY_SDK_DIALOG_CLOSE)
@@ -222,16 +236,19 @@ object ScanCardProcessor {
                     SaltPayExceptionHandler.handle(error)
                     onFailure(TangemSdkError.ExceptionError(error))
                 } else {
+                    Analytics.setContext(scanResponse)
                     onSuccess(scanResponse)
                 }
             }
         } else {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+                Analytics.addContext(scanResponse)
                 onWalletNotCreated()
                 store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
                 val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
                 navigateTo(appScreen) { onProgressStateChange(it) }
             } else {
+                Analytics.setContext(scanResponse)
                 if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                     onWalletNotCreated()
                     store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
