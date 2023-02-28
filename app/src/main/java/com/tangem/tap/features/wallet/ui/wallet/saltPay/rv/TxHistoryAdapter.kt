@@ -20,9 +20,10 @@ import com.tangem.wallet.databinding.ItemSaltPayTxHistoryDateBinding
  */
 internal class TxHistoryAdapter : ListAdapter<HistoryItemData, BaseTxHistoryVH>(DiffUtilCallback) {
 
-    override fun getItemId(position: Int): Long {
-        return if (currentList.isEmpty()) 0L
-        else currentList[position].itemId
+    override fun getItemId(position: Int): Long = if (currentList.isEmpty()) {
+        0L
+    } else {
+        currentList[position].itemId
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseTxHistoryVH {
