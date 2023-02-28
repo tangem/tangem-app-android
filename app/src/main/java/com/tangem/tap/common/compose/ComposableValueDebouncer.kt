@@ -11,19 +11,19 @@ import com.tangem.domain.common.util.ValueDebouncer
 @Composable
 fun <T> valueDebouncerAsState(
     initialValue: T,
+    onValueChange: (T) -> Unit,
     debounce: Long = 600,
-    onEmitValueReceived: (T) -> Unit = {},
-    onValueChanged: (T) -> Unit,
+    onEmitValueReceive: (T) -> Unit = {},
 ): ValueDebouncer<T> {
     return remember {
-        ValueDebouncer<T>(
+        ValueDebouncer(
             initialValue = initialValue,
             debounceDuration = debounce,
             onEmitValueReceived = { emitValue ->
-                emitValue?.let { onEmitValueReceived(it) }
+                emitValue?.let { onEmitValueReceive(it) }
             },
             onValueChanged = { changedValue ->
-                changedValue?.let { onValueChanged(it) }
+                changedValue?.let { onValueChange(it) }
             },
         )
     }
@@ -32,16 +32,16 @@ fun <T> valueDebouncerAsState(
 @Composable
 fun <T> valueDebouncerNullableAsState(
     initialValue: T?,
+    onValueChange: (T?) -> Unit,
     debounce: Long = 400,
-    onEmitValueReceived: (T?) -> Unit = {},
-    onValueChanged: (T?) -> Unit,
+    onEmitValueReceive: (T?) -> Unit = {},
 ): ValueDebouncer<T?> {
     return remember {
         ValueDebouncer(
             initialValue = initialValue,
             debounceDuration = debounce,
-            onEmitValueReceived = onEmitValueReceived,
-            onValueChanged = onValueChanged,
+            onEmitValueReceived = onEmitValueReceive,
+            onValueChanged = onValueChange,
         )
     }
 }
