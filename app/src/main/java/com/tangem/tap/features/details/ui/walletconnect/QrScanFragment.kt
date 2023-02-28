@@ -88,5 +88,4 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     private fun requestPermission() {
         requestPermissions(arrayOf(Manifest.permission.CAMERA), CameraView.PERMISSION_REQUEST_CODE)
     }
-
 }

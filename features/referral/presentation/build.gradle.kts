@@ -69,6 +69,7 @@ dependencies {
 
     /** Other libraries */
     implementation(Library.composeShimmer)
+    implementation(Library.accompanistWebView)
 
     /** DI */
     implementation(Library.hilt)

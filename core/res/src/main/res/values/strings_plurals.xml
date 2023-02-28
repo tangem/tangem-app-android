@@ -6,16 +6,16 @@
         <item quantity="other">%d cards</item>
     </plurals>
 
+    <plurals name="referral_wallets_purchased_count">
+        <item quantity="zero">%d wallets</item>
+        <item quantity="one">%d wallet</item>
+        <item quantity="other">%d wallets</item>
+    </plurals>
+
     <plurals name="tokens_count">
         <item quantity="zero">%d tokens</item>
         <item quantity="one">%d token</item>
         <item quantity="two">%d tokens</item>
         <item quantity="other">%d tokens</item>
-    </plurals>
-
-    <plurals name="referral_wallets_purchased_count">
-        <item quantity="zero">%d wallets</item>
-        <item quantity="one">%d wallet</item>
-        <item quantity="other">%d wallets</item>
     </plurals>
 </resources>

@@ -29,14 +29,12 @@ class ScanResponseConverter : StringStateConverter<AppState> {
                 )
             }
             derivedKeysMap[keyWalletPubKey.bytes.toHexString()] = exPubKeysMap
-
         }
         scanResponseMap["derivedKeys"] = derivedKeysMap
 
         val json = converter.prettyPrint(scanResponseMap)
 
         return json
-
     }
 }
 
