@@ -6,7 +6,9 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.stringResource
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
+import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import com.tangem.wallet.R
+import com.tangem.tap.features.details.redux.CardInfo as ReduxCardInfo
 
 data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
@@ -46,9 +48,9 @@ sealed class CardInfo(
         clickable = true,
     )
 
-    class ResetToFactorySettings(subtitle: TextReference.Res) : CardInfo(
+    class ResetToFactorySettings(cardInfo: ReduxCardInfo) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_reset_card_to_factory),
-        subtitle = subtitle,
+        subtitle = cardInfo.toResetCardDescriptionText(),
         clickable = true,
     )
 }

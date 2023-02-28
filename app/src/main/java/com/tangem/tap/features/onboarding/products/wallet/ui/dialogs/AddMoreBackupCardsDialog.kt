@@ -7,22 +7,19 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
-class AddMoreBackupCardsDialog {
-    companion object {
-        fun create(context: Context): AlertDialog {
-            return AlertDialog.Builder(context).apply {
-                setTitle(R.string.common_warning)
-                setMessage(R.string.onboarding_alert_message_not_max_backup_cards_added)
-                setPositiveButton(R.string.common_continue) { _, _ ->
-                    store.dispatch(BackupAction.ShowAccessCodeInfoScreen)
-                }
-                setNegativeButton(R.string.common_cancel) { _, _ ->
-
-                }
-                setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
-                }
-            }.create()
-        }
+object AddMoreBackupCardsDialog {
+    fun create(context: Context): AlertDialog {
+        return AlertDialog.Builder(context).apply {
+            setTitle(R.string.common_warning)
+            setMessage(R.string.onboarding_alert_message_not_max_backup_cards_added)
+            setPositiveButton(R.string.common_continue) { _, _ ->
+                store.dispatch(BackupAction.ShowAccessCodeInfoScreen)
+            }
+            setNegativeButton(R.string.common_cancel) { _, _ ->
+            }
+            setOnDismissListener {
+                store.dispatch(GlobalAction.HideDialog)
+            }
+        }.create()
     }
 }
