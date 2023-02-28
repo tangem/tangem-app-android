@@ -341,7 +341,7 @@ class TokensMiddleware {
     private suspend fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
         when {
             currencies.isEmpty() -> Unit
-            userWalletsListManager.hasSavedUserWallets -> {
+            userWalletsListManager.hasUserWallets -> {
                 walletCurrenciesManager.removeCurrencies(
                     userWallet = userWalletsListManager.selectedUserWalletSync!!,
                     currenciesToRemove = currencies,
