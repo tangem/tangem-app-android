@@ -49,10 +49,8 @@ class ScanProductTask(
     val card: Card? = null,
     private val userTokensRepository: UserTokensRepository?,
     private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+    override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
-
-    override val allowsRequestAccessCodeFromRepository: Boolean
-        get() = !additionalBlockchainsToDerive.isNullOrEmpty()
 
     override fun run(
         session: CardSession,
@@ -186,6 +184,11 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
+        if (card.wallets.isNotEmpty() && card.backupStatus?.isActive == true) {
+            startLinkingForBackupIfNeeded(card, session, callback)
+            return
+        }
+
         if (card.wallets.isEmpty() || !card.isFirmwareMultiwalletAllowed) {
             startLinkingForBackupIfNeeded(card, session, callback)
             return
