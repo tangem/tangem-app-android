@@ -88,6 +88,7 @@ class WalletCardsWidget(
         return getCardTypesTypes().map { createCardAnimator(it, propertyFactory(it)) }
     }
 
+    @Suppress("MagicNumber")
     private fun getCardTypesTypes(): List<BackupCardType> = when (leapfrogWidget.getViewsCount()) {
         2 -> listOf(BackupCardType.ORIGIN, BackupCardType.FIRST_BACKUP)
         3 -> listOf(BackupCardType.ORIGIN, BackupCardType.FIRST_BACKUP, BackupCardType.SECOND_BACKUP)
@@ -114,6 +115,7 @@ class WalletCardsWidget(
         return animator
     }
 
+    @Suppress("MagicNumber")
     private fun createWelcomeProperties(cardType: BackupCardType): CardProperties {
         return when (cardType) {
             BackupCardType.ORIGIN -> CardProperties(
@@ -140,6 +142,7 @@ class WalletCardsWidget(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun createFanProperties(cardType: BackupCardType): CardProperties {
         return when (cardType) {
             BackupCardType.ORIGIN -> CardProperties(
@@ -166,6 +169,7 @@ class WalletCardsWidget(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun createLeapfrogProperties(cardType: BackupCardType): CardProperties {
         return when (cardType) {
             BackupCardType.ORIGIN -> CardProperties(
@@ -192,17 +196,6 @@ class WalletCardsWidget(
         }
     }
 
-    private fun createActivateProperties(cardType: BackupCardType): CardProperties {
-        val topOfAnchorView = getTopOfAnchorViewForActivateState()
-        val twinProperties = CardProperties.from(getLeapViewByCard(cardType).state)
-        return twinProperties.copy(
-            xTranslation = twinProperties.xTranslation,
-            yTranslation = twinProperties.yTranslation - topOfAnchorView,
-            rotation = 0f,
-            scale = twinProperties.scale - 0.4f,
-        )
-    }
-
     @Throws(UnsupportedOperationException::class)
     fun getOriginCardView(): ImageView {
         return getLeapViewByCard(BackupCardType.ORIGIN).view as ImageView
@@ -218,6 +211,7 @@ class WalletCardsWidget(
         return getLeapViewByCard(BackupCardType.SECOND_BACKUP).view as ImageView
     }
 
+    @Suppress("MagicNumber")
     @Throws(UnsupportedOperationException::class)
     private fun getLeapViewByCard(cardType: BackupCardType): LeapView {
         fun getByIndex(index: Int): LeapView {

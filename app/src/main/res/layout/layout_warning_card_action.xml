@@ -22,7 +22,7 @@
             android:tint="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/warning_content_container"
-            app:srcCompat="@drawable/ic_close" />
+            app:srcCompat="@drawable/ic_close_24" />
 
         <include
             android:id="@+id/warning_content_container"

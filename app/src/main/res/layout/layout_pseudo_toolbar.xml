@@ -18,6 +18,6 @@
         android:clickable="true"
         android:focusable="true"
         android:padding="16dp"
-        android:src="@drawable/ic_close" />
+        android:src="@drawable/ic_close_24" />
 
 </FrameLayout>
