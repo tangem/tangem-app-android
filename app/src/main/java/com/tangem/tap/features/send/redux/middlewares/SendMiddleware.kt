@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
@@ -333,17 +334,16 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
 }
 
 private suspend fun updateWallet(walletManager: WalletManager) {
-    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-    if (selectedUserWallet != null) {
-        val wallet = walletManager.wallet
-        walletCurrenciesManager.update(
-            userWallet = selectedUserWallet,
-            currency = Currency.Blockchain(
-                blockchain = wallet.blockchain,
-                derivationPath = wallet.publicKey.derivationPath?.rawPath,
-            ),
-        )
-    } else {
+    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
         Timber.e("Unable to update wallet, no user wallet selected")
+        return
     }
+    val wallet = walletManager.wallet
+    walletCurrenciesManager.update(
+        userWallet = selectedUserWallet,
+        currency = Currency.Blockchain(
+            blockchain = wallet.blockchain,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath,
+        ),
+    )
 }
