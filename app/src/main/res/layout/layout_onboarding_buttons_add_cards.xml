@@ -7,7 +7,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_add_card"
-        style="@style/OnboardingButton.Alternative"
+        style="@style/TapSecondaryButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
@@ -18,7 +18,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_continue"
-        style="@style/OnboardingButton"
+        style="@style/TapPrimaryButton"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"

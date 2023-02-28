@@ -22,6 +22,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
@@ -41,6 +42,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.ErrorType
@@ -58,13 +60,20 @@ import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
+@Suppress("LargeClass", "MagicNumber")
+@AndroidEntryPoint
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     StoreSubscriber<WalletState> {
+
+    @Inject
+    lateinit var swapInteractor: SwapInteractor
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
@@ -184,15 +193,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtons() = with(binding) {
-        rowButtons.onBuyClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy())
-        }
-        rowButtons.onSellClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Sell)
-        }
-        rowButtons.onTradeClick = {
-            store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog)
-        }
         rowButtons.onSendClick = {
             store.dispatch(WalletAction.Send())
         }
@@ -288,10 +288,29 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtonsRow(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) {
+        val exchangeManager = store.state.globalState.exchangeManager
+        binding.rowButtons.apply {
+            onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
+            onSellClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+            onSwapClick = { store.dispatch(WalletAction.TradeCryptoAction.Swap) }
+            onTradeClick = {
+                store.dispatch(
+                    WalletAction.DialogAction.ChooseTradeActionDialog(
+                        buyAllowed = selectedWallet.isAvailableToBuy(exchangeManager),
+                        sellAllowed = selectedWallet.isAvailableToSell(exchangeManager),
+                        swapAllowed = selectedWallet.isAvailableToSwap(swapInteractor, isExchangeServiceFeatureOn),
+                    ),
+                )
+            }
+        }
+        val actions = selectedWallet.getAvailableActions(
+            swapInteractor = swapInteractor,
+            exchangeManager = exchangeManager,
+            isExchangeFeatureOn = isExchangeServiceFeatureOn,
+        )
         binding.rowButtons.updateButtonsVisibility(
+            actions = actions,
             exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
-            buyAllowed = selectedWallet.isAvailableToBuy,
-            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
@@ -315,8 +334,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
-        pendingTransactionAdapter.submitList(pendingTransactions)
-        binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
+        val knownTransactions = pendingTransactions.filterNot {
+            it.type == PendingTransactionType.Unknown
+        }
+        pendingTransactionAdapter.submitList(knownTransactions)
+        binding.rvPendingTransaction.show(knownTransactions.isNotEmpty())
     }
 
     private fun setupAddressCard(
@@ -397,7 +419,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
                 lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
@@ -408,7 +430,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
                 lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
                 when (data.status) {
                     BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
@@ -439,6 +461,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                         data.currencySymbol,
                     )
             }
+            else -> {}
         }
     }
 
