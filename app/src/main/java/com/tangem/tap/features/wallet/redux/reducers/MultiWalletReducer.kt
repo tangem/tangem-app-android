@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.extensions.getBlockchainTxHistory
 import com.tangem.tap.common.extensions.getTokenTxHistory
@@ -33,13 +34,14 @@ import com.tangem.wallet.R
 import java.math.BigDecimal
 
 class MultiWalletReducer {
+    @Suppress("LongMethod", "ComplexMethod")
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
                 val walletStores: List<WalletStore> = action.blockchains.map { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
-                            (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
+                            it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath
                     }
                     val wallet = walletManager?.wallet
                     val walletData = WalletData(
@@ -61,7 +63,7 @@ class MultiWalletReducer {
                     WalletStore(
                         walletManager = walletManager,
                         blockchainNetwork = blockchain,
-                        walletsData = listOfNotNull(walletData),
+                        walletsData = listOf(walletData),
                     )
                 }
 
@@ -112,14 +114,17 @@ class MultiWalletReducer {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
                 val walletManager = state.getWalletManager(currency)
                 if (walletManager == null) {
-                    if (userWalletsListManager.hasSavedUserWallets) {
-                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Welcome))
+                    val screen = if (userWalletsListManager.hasSavedUserWallets) {
+                        AppScreen.Welcome
                     } else {
-                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
+                        AppScreen.Home
                     }
+                    store.dispatchOnMain(NavigationAction.PopBackTo(screen))
+
                     FirebaseCrashlytics.getInstance().recordException(
                         IllegalStateException("MultiWallet.TokenLoaded: walletManager is null"),
                     )
+
                     store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
                     return state
                 }
@@ -132,15 +137,16 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
-                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                    && pendingTransactions.isEmpty()
+                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                    pendingTransactions.isEmpty()
 
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
                         amount = action.amount.value,
                         amountFormatted = action.amount.value?.toFormattedCurrencyString(
-                            action.amount.decimals, action.amount.currencySymbol,
+                            decimals = action.amount.decimals,
+                            currency = action.amount.currencySymbol,
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)

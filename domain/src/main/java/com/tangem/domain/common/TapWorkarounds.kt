@@ -13,14 +13,10 @@ object TapWorkarounds {
     private const val TEST_CARD_BATCH = "99FF"
     private const val TEST_CARD_ID_STARTS_WITH = "FF99"
 
-    fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
-        return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
-    }
-
     val CardDTO.isTangemTwins: Boolean
         get() = TwinsHelper.getTwinCardNumber(cardId) != null
 
-    //TODO: replace by reading files from a card
+    // TODO: replace by reading files from a card
     val CardDTO.isTangemNote: Boolean
         get() = tangemNoteBatches.contains(batchId)
 
@@ -41,6 +37,7 @@ object TapWorkarounds {
 
     val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
+
     val CardDTO.derivationStyle: DerivationStyle?
         get() = if (!settings.isHDWalletAllowed) {
             null
@@ -49,7 +46,6 @@ object TapWorkarounds {
         } else {
             DerivationStyle.NEW
         }
-
     val CardDTO.isExcluded: Boolean
         get() {
             val excludedBatch = excludedBatches.contains(batchId)
@@ -60,9 +56,6 @@ object TapWorkarounds {
     val CardDTO.isNotSupportedInThatRelease: Boolean
         get() = false
 
-    fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
-        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
-
     private val tangemNoteBatches = mapOf(
         "AB01" to Blockchain.Bitcoin,
         "AB02" to Blockchain.Ethereum,
@@ -72,22 +65,26 @@ object TapWorkarounds {
         "AB06" to Blockchain.XRP,
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
-        "AB09" to Blockchain.Bitcoin,       // new batches for 3.34
+        "AB09" to Blockchain.Bitcoin, // new batches for 3.34
         "AB10" to Blockchain.Ethereum,
         "AB11" to Blockchain.Bitcoin,
         "AB12" to Blockchain.Ethereum,
     )
 
+    private val excludedBatches = listOf("0027", "0030", "0031", "0035")
+
+    private val excludedIssuers = listOf("TTM BANK")
+
+    @Deprecated(
+        "Now blockchain is read form files (CardTypesResolver.getBlockchain), " +
+            "but for previously saved cards this method is still used",
+    )
+    fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
+        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
+
+    fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
+        return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
+    }
+
     fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId] ?: null
-
-    private val excludedBatches = listOf(
-        "0027",
-        "0030",
-        "0031",
-        "0035",
-    )
-
-    private val excludedIssuers = listOf(
-        "TTM BANK",
-    )
 }

@@ -16,8 +16,7 @@ import timber.log.Timber
 import java.nio.charset.Charset
 
 class WalletConnectRepository(val context: Application) {
-    private val moshi = MoshiConverter.defaultMoshi()
-    private val walletConnectAdapter: JsonAdapter<List<SessionDao>> = moshi.adapter(
+    private val walletConnectAdapter: JsonAdapter<List<SessionDao>> = MoshiConverter.sdkMoshi.adapter(
         Types.newParameterizedType(List::class.java, SessionDao::class.java),
     )
 

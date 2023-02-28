@@ -23,6 +23,7 @@ enum class AppScreen(
     WalletConnectSessions,
     QrScan,
     ReferralProgram,
+    Swap,
     Welcome,
     SaveWallet(isDialogFragment = true),
     WalletSelector(isDialogFragment = true),
