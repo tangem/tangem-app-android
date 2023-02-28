@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -67,13 +68,12 @@ class AppCurrencyMiddleware(
         store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
         store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
         store.dispatch(WalletSelectorAction.ChangeAppCurrency(action.fiatCurrency))
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            scope.launch {
-                tapWalletManager.loadData(selectedUserWallet, refresh = true)
-            }
-        } else {
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to select currency, no user wallet selected")
+            return
+        }
+        scope.launch {
+            tapWalletManager.loadData(selectedUserWallet, refresh = true)
         }
     }
 

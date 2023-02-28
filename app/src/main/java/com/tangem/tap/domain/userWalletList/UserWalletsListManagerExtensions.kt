@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
+ * Indicates that the [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
+ * */
+val UserWalletsListManager.isLockable: Boolean
+    get() = this is UserWalletsListManager.Lockable
+
+/**
  * Indicates that the [UserWalletsListManager] is locked
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns [Flow] which
