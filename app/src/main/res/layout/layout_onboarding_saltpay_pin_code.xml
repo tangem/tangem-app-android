@@ -53,7 +53,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_set_pin"
-            style="@style/OnboardingButton"
+            style="@style/TapPrimaryButton"
             android:layout_height="wrap_content"
             android:text="@string/onboarding_button_pin" />
 
