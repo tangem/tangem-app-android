@@ -57,6 +57,12 @@ import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 
+/**
+[REDACTED_AUTHOR]
+ */
+@Suppress("UnusedPrivateClass")
+private class AddCustomTokenScreen // for simple search
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddCustomTokenScreen(
