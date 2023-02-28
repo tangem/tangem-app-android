@@ -47,22 +47,24 @@ internal class WelcomeMiddleware {
                 Analytics.send(SignIn.ScreenOpened())
             }
             is WelcomeAction.ProceedWithBiometrics -> {
-                proceedWithBiometry(state)
+                proceedWithBiometrics(state)
             }
             is WelcomeAction.ProceedWithCard -> {
                 proceedWithCard(state)
+            }
+            is WelcomeAction.HandleIntentIfNeeded -> {
+                handleInitialIntent(action.intent)
             }
             is WelcomeAction.ProceedWithBiometrics.Error,
             is WelcomeAction.ProceedWithCard.Error,
             is WelcomeAction.ProceedWithBiometrics.Success,
             is WelcomeAction.ProceedWithCard.Success,
             is WelcomeAction.CloseError,
-            is WelcomeAction.HandleDeepLink,
             -> Unit
         }
     }
 
-    private fun proceedWithBiometry(state: WelcomeState) {
+    private fun proceedWithBiometrics(state: WelcomeState) {
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
                 .doOnFailure { error ->
@@ -74,7 +76,7 @@ internal class WelcomeMiddleware {
                         store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
                         store.onUserWalletSelected(selectedUserWallet)
 
-                        handleDeepLinkIfNeeded(state.deepLinkIntent)
+                        intentHandler.handleWalletConnectLink(state.intent)
                     }
                 }
         }
@@ -93,13 +95,17 @@ internal class WelcomeMiddleware {
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet)
 
-                    handleDeepLinkIfNeeded(state.deepLinkIntent)
+                    intentHandler.handleWalletConnectLink(state.intent)
                 }
         }
     }
 
-    private fun handleDeepLinkIfNeeded(intent: Intent?) {
-        intentHandler.handleWalletConnectLink(intent)
+    private fun handleInitialIntent(intent: Intent?) {
+        val isBackgroundScanWasHandled = intentHandler.handleBackgroundScan(intent, hasSavedUserWallets = true)
+
+        if (!isBackgroundScanWasHandled) {
+            store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
+        }
     }
 
     private suspend inline fun scanCardInternal(
