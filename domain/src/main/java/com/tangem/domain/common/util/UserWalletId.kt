@@ -25,6 +25,7 @@ class UserWalletId(
         return stringValue.hashCode()
     }
 
+    @Suppress("MagicNumber")
     override fun toString(): String {
         return with(stringValue) {
             "UserWalletId(${take(3)}...${takeLast(3)})"

@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
-@Suppress("unused", "MemberVisibilityCanBePrivate")
+@Suppress("LongParameterList")
 @Stable
 class TangemColors internal constructor(
     text: Text,
