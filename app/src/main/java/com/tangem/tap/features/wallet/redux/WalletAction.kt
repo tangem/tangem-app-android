@@ -24,6 +24,10 @@ import java.math.BigDecimal
 
 sealed class WalletAction : Action {
 
+    object PopBackToInitialScreen : WalletAction()
+
+    data class UpdateCanSaveUserWallets(val canSaveUserWallets: Boolean) : WalletAction()
+
     data class ResetState(val newCard: CardDTO) : WalletAction()
 
     data class SetIfTestnetCard(val isTestnet: Boolean) : WalletAction()

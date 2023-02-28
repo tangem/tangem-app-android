@@ -70,8 +70,7 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
         selectedUserWalletRepository = selectedUserWalletRepository,
     )
 }
-// [REDACTED_TODO_COMMENT]
-@Suppress("unused")
+
 fun UserWalletsListManager.Companion.provideRuntimeImplementation(): UserWalletsListManager {
     return RuntimeUserWalletsListManager()
 }

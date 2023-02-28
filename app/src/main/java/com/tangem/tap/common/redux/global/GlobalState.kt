@@ -1,13 +1,14 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapWalletManager
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import org.rekotlin.StateType
@@ -26,6 +27,7 @@ data class GlobalState(
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val userCountryCode: String? = null,
+    val userWalletsListManager: UserWalletsListManager? = null,
 ) : StateType
 
 typealias CryptoCurrencyName = String
