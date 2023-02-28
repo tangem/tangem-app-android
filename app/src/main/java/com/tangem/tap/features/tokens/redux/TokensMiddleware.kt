@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.common.hdWallet.DerivationPath
@@ -273,35 +274,33 @@ class TokensMiddleware {
     )
 
     private fun submitAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            scope.launch {
-                userWalletsListManager.update(
-                    userWalletId = selectedUserWallet.walletId,
-                    update = { userWallet ->
-                        userWallet.copy(scanResponse = scanResponse)
-                    },
-                )
-                    .flatMap { updatedUserWallet ->
-                        walletCurrenciesManager.addCurrencies(
-                            userWallet = updatedUserWallet,
-                            currenciesToAdd = currencyList,
-                        )
-                    }
-            }
-        } else {
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to add currencies, no user wallet selected")
+            return
+        }
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = selectedUserWallet.walletId,
+                update = { userWallet ->
+                    userWallet.copy(scanResponse = scanResponse)
+                },
+            )
+                .flatMap { updatedUserWallet ->
+                    walletCurrenciesManager.addCurrencies(
+                        userWallet = updatedUserWallet,
+                        currenciesToAdd = currencyList,
+                    )
+                }
         }
     }
 
     private suspend fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
         if (currencies.isEmpty()) return
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            walletCurrenciesManager.removeCurrencies(selectedUserWallet, currencies)
-        } else {
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to remove currencies, no user wallet selected")
+            return
         }
+        walletCurrenciesManager.removeCurrencies(selectedUserWallet, currencies)
     }
 
     private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
