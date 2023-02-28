@@ -48,8 +48,8 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     override fun ScreenContent(
-        modifier: Modifier,
         state: WalletSelectorScreenState,
+        modifier: Modifier,
     ) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
