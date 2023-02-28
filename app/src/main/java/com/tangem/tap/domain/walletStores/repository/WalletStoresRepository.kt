@@ -1,9 +1,9 @@
 package com.tangem.tap.domain.walletStores.repository
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.features.wallet.models.Currency
 import kotlinx.coroutines.flow.Flow
 
 interface WalletStoresRepository {
@@ -17,7 +17,7 @@ interface WalletStoresRepository {
 
     suspend fun deleteDifference(
         userWalletId: UserWalletId,
-        currentBlockchains: List<Blockchain>,
+        currentBlockchains: List<Currency.Blockchain>,
     ): CompletionResult<Unit>
 
     suspend fun clear(): CompletionResult<Unit>

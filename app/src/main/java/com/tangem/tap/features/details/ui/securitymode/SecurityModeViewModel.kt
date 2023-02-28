@@ -9,13 +9,15 @@ import org.rekotlin.Store
 class SecurityModeViewModel(val store: Store<AppState>) {
 
     fun updateState(state: ManageSecurityState?): SecurityModeScreenState {
-        if (state == null) return SecurityModeScreenState(
-            availableOptions = emptyList(),
-            selectedSecurityMode = SecurityOption.LongTap,
-            isSaveChangesEnabled = false,
-            onNewModeSelected = {},
-            onSaveChangesClicked = {},
-        )
+        if (state == null) {
+            return SecurityModeScreenState(
+                availableOptions = emptyList(),
+                selectedSecurityMode = SecurityOption.LongTap,
+                isSaveChangesEnabled = false,
+                onNewModeSelected = {},
+                onSaveChangesClicked = {},
+            )
+        }
         return SecurityModeScreenState(
             availableOptions = state.allowedOptions.toList(),
             selectedSecurityMode = state.selectedOption,
