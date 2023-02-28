@@ -20,7 +20,6 @@ import coil.size.Scale
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -40,9 +39,9 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
-import com.tangem.tap.features.wallet.ui.wallet.SaltPayWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
+import com.tangem.tap.features.wallet.ui.wallet.saltPay.SaltPayWalletView
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
@@ -155,19 +154,22 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
-        val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
+        val isSaltPay = store.state.globalState.scanResponse?.cardTypesResolver?.isSaltPay() == true
 
         when {
             isSaltPay && walletView !is SaltPayWalletView -> {
+                walletView.onViewDestroy()
                 walletView = SaltPayWalletView()
                 walletView.changeWalletView(this, binding)
             }
             state.isMultiwalletAllowed && state.primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
                 walletView !is MultiWalletView -> {
+                walletView.onViewDestroy()
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
             }
             !state.isMultiwalletAllowed && !isSaltPay && walletView !is SingleWalletView -> {
+                walletView.onViewDestroy()
                 walletView = SingleWalletView()
                 walletView.changeWalletView(this, binding)
             }
@@ -185,7 +187,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
 
         setupNoInternetHandling(state)
-        setupCardImage(state)
+        setupCardImage(state, isSaltPay)
 
         if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
 
@@ -222,9 +224,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-    private fun setupCardImage(state: WalletState) {
+    private fun setupCardImage(state: WalletState, isSaltPay: Boolean) {
         // TODO: SaltPay: remove hardCode
-        if (store.state.globalState.scanResponse?.cardTypesResolver?.isSaltPay() == true) {
+        if (isSaltPay) {
             binding.ivCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FIT)
                 crossfade(enable = true)
