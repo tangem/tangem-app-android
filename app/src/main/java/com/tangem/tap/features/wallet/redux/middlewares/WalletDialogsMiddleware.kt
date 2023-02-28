@@ -20,7 +20,13 @@ class WalletDialogsMiddleware {
                 store.state.walletState.selectedWalletData?.let {
                     Analytics.send(Token.ButtonExchange(AnalyticsParam.CurrencyType.Currency(it.currency)))
                 }
-                store.dispatchDialogShow(WalletDialog.ChooseTradeActionDialog)
+                store.dispatchDialogShow(
+                    WalletDialog.ChooseTradeActionDialog(
+                        buyAllowed = action.buyAllowed,
+                        sellAllowed = action.sellAllowed,
+                        swapAllowed = action.swapAllowed,
+                    ),
+                )
             }
             is WalletAction.DialogAction.QrCode -> {
                 store.dispatchDialogShow(

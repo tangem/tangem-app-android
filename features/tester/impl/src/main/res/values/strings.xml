@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tester_menu" translatable="false">Tester menu</string>
+    <string name="feature_toggles" translatable="false">Feature toggles</string>
+    <string name="stand_toggles" translatable="false">Stand toggles</string>
+</resources>
