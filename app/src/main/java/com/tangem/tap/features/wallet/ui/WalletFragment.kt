@@ -32,7 +32,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
-import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -44,7 +43,6 @@ import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.SaltPayWalletView
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
@@ -82,13 +80,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    userWalletsListManager.lockIfLockable()
-                    val screen = if (userWalletsListManager.hasUserWallets) {
-                        AppScreen.Welcome
-                    } else {
-                        AppScreen.Home
-                    }
-                    store.dispatch(NavigationAction.PopBackTo(screen))
+                    store.dispatch(WalletAction.PopBackToInitialScreen)
                 }
             },
         )
@@ -202,7 +194,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }
         }
 
-        val navigationIconRes = if (state.hasSavedWallets) R.drawable.ic_wallet_24 else R.drawable.ic_tap_card_24
+        val navigationIconRes = if (state.canSaveUserWallets) {
+            R.drawable.ic_wallet_24
+        } else {
+            R.drawable.ic_tap_card_24
+        }
         binding.toolbar.setNavigationIcon(navigationIconRes)
     }
 
