@@ -19,6 +19,7 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.googlepay.GooglePayService
@@ -27,6 +28,7 @@ import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -45,10 +47,7 @@ import kotlin.coroutines.CoroutineContext
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
-lateinit var userWalletsListManager: UserWalletsListManager
 internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
-    private set
-var userWalletsListManagerSafe: UserWalletsListManager? = null
     private set
 var notificationsHandler: NotificationsHandler? = null
 
@@ -59,6 +58,12 @@ val scope = CoroutineScope(coroutineContext)
 private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
+
+// TODO: Move to DI
+val userWalletsListManagerSafe: UserWalletsListManager?
+    get() = store.state.globalState.userWalletsListManager
+val userWalletsListManager: UserWalletsListManager
+    get() = userWalletsListManagerSafe!!
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
@@ -83,19 +88,27 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         appStateHolder.tangemSdkManager = tangemSdkManager
         appStateHolder.tangemSdk = tangemSdk
         backupService = BackupService.init(tangemSdk, this)
-        userWalletsListManager = UserWalletsListManager.provideBiometricImplementation(
-            context = applicationContext,
-            tangemSdkManager = tangemSdkManager,
-        )
-        appStateHolder.userWalletsListManager = userWalletsListManager
-        userWalletsListManagerSafe = userWalletsListManager
         lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
+
+        initUserWalletsListManager()
 
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this),
             ),
         )
+    }
+
+    private fun initUserWalletsListManager() {
+        val manager = if (preferencesStorage.shouldSaveUserWallets) {
+            UserWalletsListManager.provideBiometricImplementation(
+                context = applicationContext,
+                tangemSdkManager = tangemSdkManager,
+            )
+        } else {
+            UserWalletsListManager.provideRuntimeImplementation()
+        }
+        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 
     private fun systemActions() {
@@ -200,11 +213,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             backStackIsEmpty -> {
                 navigateToInitialScreen(intent)
             }
+            else -> Unit
         }
     }
 
     private fun navigateToInitialScreen(intent: Intent?) {
-        if (userWalletsListManager.hasUserWallets) {
+        if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
             store.dispatchOnMain(WelcomeAction.HandleIntentIfNeeded(intent))
         } else {

@@ -367,6 +367,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 ),
             )
         }
+        is WalletAction.UpdateCanSaveUserWallets -> {
+            newState = newState.copy(
+                canSaveUserWallets = action.canSaveUserWallets,
+            )
+        }
         else -> Unit
     }
     appStateHolder.walletState = newState
