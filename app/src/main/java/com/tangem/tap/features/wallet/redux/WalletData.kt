@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux
 
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -14,6 +15,7 @@ import java.math.BigDecimal
 
 data class WalletData(
     val pendingTransactions: List<PendingTransaction> = emptyList(),
+    val historyTransactions: List<TransactionData>? = null,
     val hashesCountVerified: Boolean? = null,
     val walletAddresses: WalletAddresses? = null,
     val currencyData: BalanceWidgetData = BalanceWidgetData(),
