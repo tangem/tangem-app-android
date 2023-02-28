@@ -6,6 +6,6 @@ import java.math.BigDecimal
 
 data class TotalBalance(
     val state: ProgressState,
-    val fiatAmount: BigDecimal,
+    val fiatAmount: BigDecimal?,
     val fiatCurrency: FiatCurrency,
 )
