@@ -68,6 +68,8 @@ object OnboardingHelper {
         when {
             // When should save user wallets, then save card without navigate to save wallet screen
             preferencesStorage.shouldSaveUserWallets -> scope.launch {
+                proceedWithScanResponse(scanResponse, backupCardsIds)
+
                 store.dispatchOnMain(
                     SaveWalletAction.ProvideBackupInfo(
                         scanResponse = scanResponse,
@@ -81,7 +83,7 @@ object OnboardingHelper {
             // then open save wallet screen
             tangemSdkManager.canUseBiometry &&
                 preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
-                proceedWithScanResponse(scanResponse)
+                proceedWithScanResponse(scanResponse, backupCardsIds)
 
                 delay(timeMillis = 1_200)
 
@@ -96,7 +98,7 @@ object OnboardingHelper {
             }
             // If device has no biometry and save wallet screen has been shown, then go through old scenario
             else -> scope.launch {
-                proceedWithScanResponse(scanResponse)
+                proceedWithScanResponse(scanResponse, backupCardsIds)
             }
         }
 
@@ -107,13 +109,16 @@ object OnboardingHelper {
         Analytics.removeContext()
     }
 
-    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse) {
-        val userWallet = UserWalletBuilder(scanResponse).build().guard {
-            Timber.e("User wallet not created")
-            return
-        }
+    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse, backupCardsIds: List<String>?) {
+        val userWallet = UserWalletBuilder(scanResponse)
+            .backupCardsIds(backupCardsIds?.toSet())
+            .build()
+            .guard {
+                Timber.e("User wallet not created")
+                return
+            }
 
-        userWalletsListManager.save(userWallet)
+        userWalletsListManager.save(userWallet, canOverride = true)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to save user wallet")
             }
