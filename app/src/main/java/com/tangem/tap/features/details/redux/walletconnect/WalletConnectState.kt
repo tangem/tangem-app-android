@@ -74,7 +74,7 @@ data class WalletForSession(
     }
 
     override fun hashCode(): Int {
-        var result = (walletPublicKey?.contentHashCode() ?: 0)
+        var result = walletPublicKey?.contentHashCode() ?: 0
         result = 31 * result + (derivedPublicKey?.contentHashCode() ?: 0)
         result = 31 * result + (derivationPath?.hashCode() ?: 0)
         result = 31 * result + isTestNet.hashCode()
@@ -82,7 +82,6 @@ data class WalletForSession(
         return result
     }
 }
-
 
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
@@ -133,7 +132,7 @@ data class WcPersonalSignData(
     val id: Long,
     val dialogData: PersonalSignDialogData,
 
-    )
+)
 
 sealed class BinanceMessageData(
     val address: String,

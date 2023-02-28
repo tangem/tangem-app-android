@@ -2,13 +2,18 @@ package com.tangem.tap.features.walletSelector.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
-import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
+import com.tangem.tap.features.walletSelector.ui.model.DialogModel
+import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
+import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
@@ -67,28 +72,28 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     }
 
     fun renameWallet() = with(state.value) {
-        if (editingUserWalletsIds.isNotEmpty() && renameWalletDialog == null) {
+        if (editingUserWalletsIds.isNotEmpty() && dialog == null) {
             val editedUserWalletId = editingUserWalletsIds.first()
             val editedUserWallet = (multiCurrencyWallets + singleCurrencyWallets)
                 .find { it.id == editedUserWalletId }
 
             if (editedUserWallet != null) {
                 Analytics.send(MyWallets.Button.EditWalletTapped())
-                val dialog = RenameWalletDialog(
+                val dialog = DialogModel.RenameWalletDialog(
                     currentName = editedUserWallet.name,
-                    onApply = { newName ->
+                    onConfirm = { newName ->
                         store.dispatch(WalletSelectorAction.RenameWallet(editedUserWalletId, newName))
                         stateInternal.update { prevState ->
                             prevState.copy(
-                                renameWalletDialog = null,
+                                dialog = null,
                                 editingUserWalletsIds = emptyList(),
                             )
                         }
                     },
-                    onCancel = {
+                    onDismiss = {
                         stateInternal.update { prevState ->
                             prevState.copy(
-                                renameWalletDialog = null,
+                                dialog = null,
                             )
                         }
                     },
@@ -96,7 +101,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
                 stateInternal.update { prevState ->
                     prevState.copy(
-                        renameWalletDialog = dialog,
+                        dialog = dialog,
                     )
                 }
             }
@@ -105,7 +110,30 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
     fun deleteWallets() = with(state.value) {
         if (editingUserWalletsIds.isNotEmpty()) {
-            store.dispatch(WalletSelectorAction.RemoveWallets(userWalletsIds = editingUserWalletsIds))
+            val dialog = DialogModel.RemoveWalletDialog(
+                onConfirm = {
+                    store.dispatch(WalletSelectorAction.RemoveWallets(editingUserWalletsIds))
+                    stateInternal.update { prevState ->
+                        prevState.copy(
+                            dialog = null,
+                            editingUserWalletsIds = emptyList(),
+                        )
+                    }
+                },
+                onDismiss = {
+                    stateInternal.update { prevState ->
+                        prevState.copy(
+                            dialog = null,
+                        )
+                    }
+                },
+            )
+
+            stateInternal.update { prevState ->
+                prevState.copy(
+                    dialog = dialog,
+                )
+            }
         }
     }
 
@@ -113,14 +141,72 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
         store.dispatch(WalletSelectorAction.CloseError)
     }
 
+    // TODO: Refactor errors handling
     override fun newState(state: WalletSelectorState) {
         stateInternal.update { prevState ->
-            prevState.updateWithNewState(state)
+            val walletsUi = state.wallets.toUiModels(state.fiatCurrency)
+            val walletsIds = walletsUi.map { it.id }
+            val multiCurrencyWallets = arrayListOf<MultiCurrencyUserWalletItem>()
+            val singleCurrencyWallets = arrayListOf<SingleCurrencyUserWalletItem>()
+            walletsUi.forEach { wallet ->
+                when (wallet) {
+                    is MultiCurrencyUserWalletItem -> {
+                        multiCurrencyWallets.add(wallet)
+                    }
+                    is SingleCurrencyUserWalletItem -> {
+                        singleCurrencyWallets.add(wallet)
+                    }
+                }
+            }
+            val biometricsLockoutDialog = createBiometricsLockoutDialogIfNeeded(state.error, prevState.dialog)
+
+            prevState.copy(
+                multiCurrencyWallets = multiCurrencyWallets,
+                singleCurrencyWallets = singleCurrencyWallets,
+                selectedUserWalletId = state.selectedWalletId,
+                editingUserWalletsIds = prevState.editingUserWalletsIds.filter { it in walletsIds },
+                isLocked = state.isLocked,
+                showUnlockProgress = state.isUnlockInProgress,
+                showAddCardProgress = state.isCardSavingInProgress,
+                dialog = biometricsLockoutDialog,
+                error = state.error
+                    ?.takeIf { !it.silent && biometricsLockoutDialog == null }
+                    ?.let { error ->
+                        error.messageResId?.let { TextReference.Res(it) }
+                            ?: TextReference.Str(error.customMessage)
+                    },
+            )
         }
     }
 
     override fun onCleared() {
         store.unsubscribe(this)
+    }
+
+    private fun createBiometricsLockoutDialogIfNeeded(
+        error: TangemError?,
+        currentDialogModel: DialogModel?,
+    ): DialogModel? {
+        return when (error) {
+            is TangemSdkError.BiometricsAuthenticationLockout -> DialogModel.BiometricsLockoutDialog(
+                isPermanent = false,
+                onDismiss = this::dismissDialog,
+            )
+            is TangemSdkError.BiometricsAuthenticationPermanentLockout -> DialogModel.BiometricsLockoutDialog(
+                isPermanent = true,
+                onDismiss = this::dismissDialog,
+            )
+            else -> currentDialogModel
+        }
+    }
+
+    private fun dismissDialog() {
+        stateInternal.update { prevState ->
+            prevState.copy(
+                dialog = null,
+            )
+        }
+        closeError()
     }
 
     private fun editWallet(userWalletId: UserWalletId) {

@@ -68,11 +68,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
@@ -80,23 +80,25 @@ class WalletMiddleware {
     private val walletDialogMiddleware = WalletDialogsMiddleware()
     private val appCurrencyMiddleware by lazy(mode = LazyThreadSafetyMode.NONE) {
         AppCurrencyMiddleware(
-            tangemTechService = store.state.domainNetworks.tangemTechService,
+            // TODO("After adding DI") get dependencies by DI
+            walletRepository = store.state.featureRepositoryProvider.walletRepository,
             tapWalletManager = store.state.globalState.tapWalletManager,
             fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage,
             appCurrencyProvider = { store.state.globalState.appCurrency },
         )
     }
 
-    val walletMiddleware: Middleware<AppState> = { dispatch, state ->
+    val walletMiddleware: Middleware<AppState> = { _, state ->
         { next ->
             { action ->
-                handleAction(state, action, dispatch)
+                handleAction(state, action)
                 next(action)
             }
         }
     }
 
-    private fun handleAction(state: () -> AppState?, action: Action, dispatch: DispatchFunction) {
+    @Suppress("LongMethod", "ComplexMethod")
+    private fun handleAction(state: () -> AppState?, action: Action) {
         if (DemoHelper.tryHandle(state, action)) return
 
         val globalState = store.state.globalState
@@ -125,17 +127,15 @@ class WalletMiddleware {
             is WalletAction.LoadWallet.Success -> {
                 checkForRentWarning(walletState.getWalletManager(action.blockchain))
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
-                if (coinAmount != null && !coinAmount.isZero()) {
-                    if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(
-                            WalletAction.MultiWallet.AddBlockchain(
-                                action.blockchain,
-                                null,
-                                true,
-                            ),
-                        )
-                        store.dispatch(WalletAction.LoadWallet.Success(action.wallet, action.blockchain))
-                    }
+                if (coinAmount?.isZero() == false && walletState.getWalletData(action.blockchain) == null) {
+                    store.dispatch(
+                        WalletAction.MultiWallet.AddBlockchain(
+                            blockchain = action.blockchain,
+                            walletManager = null,
+                            save = true,
+                        ),
+                    )
+                    store.dispatch(WalletAction.LoadWallet.Success(action.wallet, action.blockchain))
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
@@ -204,7 +204,7 @@ class WalletMiddleware {
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                 scope.launch {
-                    delay(700)
+                    delay(timeMillis = 700)
                     store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
                 }
             }
@@ -318,7 +318,11 @@ class WalletMiddleware {
         scope.launch(Dispatchers.Default) {
             val reduxWalletStores = walletsStores.mapToReduxModels()
             if (!state.isMultiwalletAllowed) {
-                findSelectedCurrency(reduxWalletStores, null, false)?.let {
+                findSelectedCurrency(
+                    walletsStores = reduxWalletStores,
+                    currentSelectedCurrency = null,
+                    isMultiWalletAllowed = false,
+                )?.let {
                     store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
                 }
             }
@@ -346,7 +350,7 @@ class WalletMiddleware {
                 .filter { store ->
                     store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
                 }
-                .map { it.blockchainNetwork }
+                .map(WalletStoreModel::blockchainNetwork)
 
             store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(missedDerivations))
         }
@@ -363,9 +367,9 @@ class WalletMiddleware {
     }
 
     private fun showSaveWalletIfNeeded() {
-        if (preferencesStorage.shouldShowSaveUserWalletScreen
-            && tangemSdkManager.canUseBiometry
-            && store.state.navigationState.backStack.lastOrNull() == AppScreen.Wallet
+        if (preferencesStorage.shouldShowSaveUserWalletScreen &&
+            tangemSdkManager.canUseBiometry &&
+            store.state.navigationState.backStack.lastOrNull() == AppScreen.Wallet
         ) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
         }
@@ -420,7 +424,8 @@ class WalletMiddleware {
                     }
                 }
             } else {
-                if ((amounts?.size ?: 0) > 1) {
+                val amountsSize = amounts?.size ?: 0
+                if (amountsSize > 1) {
                     WalletAction.DialogAction.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
@@ -482,8 +487,8 @@ class WalletMiddleware {
                         dispatchOnMain(
                             WalletAction.SetWalletRent(
                                 wallet = walletManager.wallet,
-                                minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                                rentExempt = ("${rentExempt.stripZeroPlainString()} $currency"),
+                                minRent = "${rentProvider.rentAmount().stripZeroPlainString()} $currency",
+                                rentExempt = "${rentExempt.stripZeroPlainString()} $currency",
                             ),
                         )
                     } else {

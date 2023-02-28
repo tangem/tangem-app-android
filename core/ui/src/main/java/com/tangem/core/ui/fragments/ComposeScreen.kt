@@ -24,22 +24,24 @@ internal interface ComposeScreen<ScreenState> {
                     }
 
                     ScreenContent(
+                        state = provideState().value,
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = backgroundColor),
-                        state = provideState().value,
                     )
                 }
             }
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun provideState(): State<ScreenState>
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun ScreenContent(
-        modifier: Modifier,
         state: ScreenState,
+        modifier: Modifier,
     )
 }
