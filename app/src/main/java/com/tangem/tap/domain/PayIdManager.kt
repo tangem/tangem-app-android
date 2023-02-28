@@ -10,7 +10,11 @@ import java.util.*
 
 class PayIdManager {
 
-    suspend fun verifyPayId(payId: String, blockchain: Blockchain): Result<VerifyPayIdResponse> = withContext(Dispatchers.IO) {
+    @Suppress("MagicNumber")
+    suspend fun verifyPayId(
+        payId: String,
+        blockchain: Blockchain,
+    ): Result<VerifyPayIdResponse> = withContext(Dispatchers.IO) {
         val splitPayId = payId.split("\$")
         val user = splitPayId[0]
         val baseUrl = "https://${splitPayId[1]}/"
@@ -22,25 +26,26 @@ class PayIdManager {
             Blockchain.XRP -> "XRPL"
             Blockchain.RSK -> "RSK"
             else -> this.currency
-        }.toLowerCase()
+        }.lowercase(Locale.getDefault())
     }
 
     companion object {
-        val payIdRegExp = "^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$".toRegex()
+        private val payIdRegExp = ("^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9]" +
+            "(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$").toRegex()
 
         val payIdSupported: EnumSet<Blockchain> = EnumSet.of(
-                Blockchain.XRP,
-                Blockchain.Ethereum,
-                Blockchain.Bitcoin,
-                Blockchain.Litecoin,
-                Blockchain.Stellar,
-                Blockchain.Cardano,
-                Blockchain.CardanoShelley,
-                Blockchain.Ducatus,
-                Blockchain.BitcoinCash,
-                Blockchain.Binance,
-                Blockchain.RSK,
-                Blockchain.Tezos
+            Blockchain.XRP,
+            Blockchain.Ethereum,
+            Blockchain.Bitcoin,
+            Blockchain.Litecoin,
+            Blockchain.Stellar,
+            Blockchain.Cardano,
+            Blockchain.CardanoShelley,
+            Blockchain.Ducatus,
+            Blockchain.BitcoinCash,
+            Blockchain.Binance,
+            Blockchain.RSK,
+            Blockchain.Tezos,
         )
 
         fun isPayId(value: String?): Boolean = value?.contains(payIdRegExp) ?: false
