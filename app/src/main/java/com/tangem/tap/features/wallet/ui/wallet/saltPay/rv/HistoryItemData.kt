@@ -74,5 +74,6 @@ data class HistoryTransactionData(
         return date
     }
 
+    @Suppress("MagicNumber")
     private fun String.reduceAddress(): String = "${substring(0..5)}...${substring(length - 4)}"
 }

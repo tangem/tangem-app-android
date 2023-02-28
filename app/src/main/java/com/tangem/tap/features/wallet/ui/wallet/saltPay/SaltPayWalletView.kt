@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.ui.wallet.saltPay
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.skydoves.androidveil.VeilLayout
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
@@ -252,9 +251,4 @@ class SaltPayWalletView : WalletView() {
         }
         super.onViewDestroy()
     }
-}
-
-private fun VeilLayout.changeVeilState(show: Boolean) {
-    if (show) this.veil()
-    else this.unVeil()
 }

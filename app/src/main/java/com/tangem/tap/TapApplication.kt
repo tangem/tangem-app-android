@@ -12,9 +12,9 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
-import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
+import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.utils.AndroidAssetReader
 import com.tangem.datasource.utils.AssetReader
 import com.tangem.domain.DomainLayer
@@ -151,7 +151,6 @@ class TapApplication : Application(), ImageLoaderFactory {
                 HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
             )
         }
-
 
         userTokensRepository = UserTokensRepository.init(
             context = this,
