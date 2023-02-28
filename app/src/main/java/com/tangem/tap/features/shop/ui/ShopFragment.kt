@@ -12,6 +12,7 @@ import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.data.ProductType
@@ -23,12 +24,12 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentShopBinding
 import org.rekotlin.StoreSubscriber
 
-
 class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<ShopState> {
 
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
+    private var cardTranslationY = 70f
 
-    lateinit var keyboardObserver: KeyboardObserver
+    private lateinit var keyboardObserver: KeyboardObserver
 
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
@@ -42,12 +43,15 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(ShopAction.ResetState)
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatch(ShopAction.ResetState)
+                }
+            },
+        )
     }
 
     override fun onDestroyView() {
@@ -73,7 +77,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         }
     }
 
-    private var cardTranslationY = 70f
+    @Suppress("MagicNumber")
     private fun setupCardsImages() {
         GlobalLayoutStateHandler(binding.imvSecond).apply {
             onStateChanged = {
@@ -91,7 +95,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
                 detach()
             }
         }
-
     }
 
     private fun setupProductSelection() = with(binding) {
@@ -101,6 +104,8 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         chipProduct2.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) store.dispatch(ShopAction.SelectProduct(ProductType.WALLET_2_CARDS))
         }
+        chipProduct1.text = chipProduct1.getQuantityString(R.plurals.card_label_card_count, quantity = 3)
+        chipProduct2.text = chipProduct2.getQuantityString(R.plurals.card_label_card_count, quantity = 2)
     }
 
     private fun setupPromoCodeEditText() = with(binding) {
@@ -144,12 +149,14 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         if (show) imvThird.show()
         imvThird.animate()
             .translationY(translationY)
-            .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    super.onAnimationEnd(animation)
-                    imvThird.show(show)
-                }
-            })
+            .setListener(
+                object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        super.onAnimationEnd(animation)
+                        imvThird.show(show)
+                    }
+                },
+            )
     }
 
     private fun handlePriceState(state: ShopState) = with(binding) {
@@ -157,7 +164,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         tvTotalBeforeDiscount.text = state.priceBeforeDiscount
 
         pbPrice.show(state.total == null)
-
     }
 
     private fun handlePromoCodeState(state: ShopState) = with(binding) {

@@ -1,6 +1,6 @@
 package com.tangem.tap.features.sprinklr.redux
 
-import com.tangem.tap.common.chat.SprinklrConfig
+import com.tangem.datasource.config.models.SprinklrConfig
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.sprinklr.redux.model.SprinklrUrl
