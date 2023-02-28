@@ -18,6 +18,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -126,7 +127,9 @@ internal class DefaultWalletStoresManager(
                 .also { blockchainNetworks ->
                     walletStoresRepository.deleteDifference(
                         userWalletId = userWalletId,
-                        currentBlockchains = blockchainNetworks.map { it.blockchain },
+                        currentBlockchains = blockchainNetworks.map {
+                            Currency.Blockchain(it.blockchain, it.derivationPath)
+                        },
                     )
                 }
                 .map { blockchainNetwork ->
@@ -134,7 +137,7 @@ internal class DefaultWalletStoresManager(
                         { walletManager ->
                             walletStoresRepository.storeOrUpdate(
                                 userWalletId = userWalletId,
-                                walletStore = WalletStoreBuilder(userWalletId, blockchainNetwork)
+                                walletStore = WalletStoreBuilder(userWallet, blockchainNetwork)
                                     .walletManager(walletManager)
                                     .build(),
                             )
@@ -168,7 +171,7 @@ internal class DefaultWalletStoresManager(
                 val userWalletId = userWallet.walletId
                 walletStoresRepository.storeOrUpdate(
                     userWalletId = userWalletId,
-                    walletStore = WalletStoreBuilder(userWalletId, walletManager)
+                    walletStore = WalletStoreBuilder(userWallet, walletManager)
                         .build(),
                 )
             }

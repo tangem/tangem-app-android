@@ -4,8 +4,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.chat.ChatConfig
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -15,7 +16,6 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.details.redux.SecurityOption
@@ -45,7 +45,11 @@ sealed class GlobalAction : Action {
          * Initiate resuming of unfinished backup for standard Wallet and SaltPay cards.
          * See more BackupAction.CheckForUnfinishedBackup
          */
-        data class StartForUnfinishedBackup(val isSaltPayVisa: Boolean) : Onboarding()
+        data class StartForUnfinishedBackup(
+            val addedBackupCardsCount: Int,
+            val isSaltPayVisa: Boolean,
+        ) : Onboarding()
+
         object Stop : Onboarding()
     }
 
