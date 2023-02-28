@@ -18,6 +18,7 @@ object Compose {
     const val material = "androidx.compose.material:material:" + Versions.compose
     const val ui = "androidx.compose.ui:ui:" + Versions.compose
     const val uiTooling = "androidx.compose.ui:ui-tooling:" + Versions.compose
+    const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:" + Versions.composeConstraint
 }
 
 object Firebase {
@@ -68,12 +69,18 @@ object Library {
     const val zxingQrBarcodeScanner = "me.dm7.barcodescanner:zxing:" + Versions.zxingQrBarcodeScanner
     const val zxingQrCore = "com.google.zxing:core:" + Versions.zxingQrCode
     const val mviCoreWatcher = "com.github.badoo.mvicore:mvicore-diff:" + Versions.mviCore
+    const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:" + Versions.kotlinSerialization
 }
 
 object Tangem {
     const val blockchain = "com.tangem:blockchain:" + Versions.tangemBlockchainSdk
     const val cardAndroid = "com.tangem.tangem-sdk-kotlin:android:" + Versions.tangemCardSdk
     const val cardCore = "com.tangem.tangem-sdk-kotlin:core:" + Versions.tangemCardSdk
+}
+
+object Tools {
+    const val composeDetektRules = "ru.kode:detekt-rules-compose:" + Versions.composeDetektRules
+    const val formattingDetektRules = "io.gitlab.arturbosch.detekt:detekt-formatting:" + Versions.formattingDetektRules
 }
 
 object Test {

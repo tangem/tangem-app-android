@@ -18,13 +18,12 @@ fun EditText.update(text: String?) {
 
     val textLength = text?.length ?: 0
 
-    //prevent cursor jumping while editing a text
+    // prevent cursor jumping while editing a text
     val cursorPosition = if (selectionEnd > textLength) textLength else selectionEnd
     this.setText(text)
     if (!isFocused || textLength == 0) return
 
-    if (cursorPosition == 0) setSelection(textLength)
-    else setSelection(cursorPosition)
+    if (cursorPosition == 0) setSelection(textLength) else setSelection(cursorPosition)
 }
 
 fun EditText.setOnImeActionListener(action: Int, handler: (EditText) -> Unit) {
@@ -56,13 +55,4 @@ fun TextInputLayout.enableError(enable: Boolean, errorMessage: String? = null) {
         error = null
         isErrorEnabled = false
     }
-}
-
-fun TextView.isEllipsized(): Boolean {
-    val layout = this.layout
-    if (layout != null) {
-        val lines: Int = layout.lineCount
-        return (lines > 0) && (layout.getEllipsisCount(lines - 1) > 0)
-    }
-    return false
 }

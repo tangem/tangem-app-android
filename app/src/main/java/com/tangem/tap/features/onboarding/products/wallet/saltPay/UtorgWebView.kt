@@ -64,7 +64,9 @@ class UtorgWebChromeClient(
         if (!readyToShowFileChooser()) return false
 
         val type: String
-        if (fileChooserParams != null && fileChooserParams.acceptTypes != null && fileChooserParams.acceptTypes.isNotEmpty()) {
+        if (fileChooserParams != null && fileChooserParams.acceptTypes != null &&
+            fileChooserParams.acceptTypes.isNotEmpty()
+        ) {
             type = if (!TextUtils.isEmpty(fileChooserParams.acceptTypes[0])) fileChooserParams.acceptTypes[0] else "*/*"
             this.filePathCallback = filePathCallback
         } else {

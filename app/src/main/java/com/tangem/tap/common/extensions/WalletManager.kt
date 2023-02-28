@@ -25,6 +25,7 @@ import timber.log.Timber
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("MagicNumber")
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
 
@@ -79,8 +80,7 @@ fun WalletManager?.getAddressData(): AddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
-    return if (addressDataList.isEmpty()) null
-    else addressDataList[0]
+    return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
 
 fun WalletManager.getTxHistory(currency: Currency): List<TransactionData> = wallet.getTxHistory(currency)
