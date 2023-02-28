@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.ui.details
 
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -9,7 +8,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
