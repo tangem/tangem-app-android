@@ -41,7 +41,7 @@ class SingleWalletView : WalletView() {
         btnAddToken.hide()
         rvPendingTransaction.hide()
         pbLoadingUserTokens.hide()
-        lCardTotalBalance.root.hide()
+        lCardTotalBalance.hide()
         lSingleWalletBalance.root.hide()
         lWalletRescanWarning.root.hide()
         lWalletBackupWarning.root.hide()

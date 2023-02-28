@@ -207,9 +207,8 @@ class TokensMiddleware {
         }
 
         scope.launch {
-            val card = scanResponse.card
             val result = tangemSdkManager.derivePublicKeys(
-                cardId = card.cardId,
+                cardId = null,
                 derivations = derivations,
             )
             when (result) {
@@ -232,7 +231,6 @@ class TokensMiddleware {
 
                     onSuccess(updatedScanResponse)
                 }
-
                 is CompletionResult.Failure -> {
                     store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
                 }
