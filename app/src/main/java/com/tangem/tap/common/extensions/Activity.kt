@@ -26,11 +26,11 @@ fun Activity.sendEmail(
 ) {
     fun createEmailShareIntent(recipient: String, subject: String, text: String, file: File? = null): Intent {
         val builder = ShareCompat.IntentBuilder.from(this)
-                .setType("message/rfc822")
-                .setEmailTo(arrayOf(recipient))
-                .setSubject(subject)
-                .setText(text)
-        file?.let { builder.setStream(FileProvider.getUriForFile(this, "${packageName}.provider", it)) }
+            .setType("message/rfc822")
+            .setEmailTo(arrayOf(recipient))
+            .setSubject(subject)
+            .setText(text)
+        file?.let { builder.setStream(FileProvider.getUriForFile(this, "$packageName.provider", it)) }
         return builder.intent
     }
 
@@ -41,17 +41,17 @@ fun Activity.sendEmail(
     val emailFilterIntentResults = packageManager.queryIntentActivities(emailFilterIntent, 0)
 
     val targetedIntents = originalIntentResults
-            .filter { originalResult ->
-                emailFilterIntentResults.any {
-                    originalResult.activityInfo.packageName == it.activityInfo.packageName
-                }
+        .filter { originalResult ->
+            emailFilterIntentResults.any {
+                originalResult.activityInfo.packageName == it.activityInfo.packageName
             }
-            .map {
-                createEmailShareIntent(email, subject, message, file).apply {
-                    setPackage(it.activityInfo.packageName)
-                }
+        }
+        .map {
+            createEmailShareIntent(email, subject, message, file).apply {
+                setPackage(it.activityInfo.packageName)
             }
-            .toMutableList()
+        }
+        .toMutableList()
     try {
         val chooserIntent = Intent.createChooser(targetedIntents.removeAt(0), "Send mail...")
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
