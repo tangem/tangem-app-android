@@ -1,7 +1,7 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.entities.FiatCurrency
@@ -18,6 +18,7 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class AppCurrencyMiddleware(
     private val walletRepository: WalletRepository,
@@ -72,8 +73,7 @@ class AppCurrencyMiddleware(
                 tapWalletManager.loadData(selectedUserWallet, refresh = true)
             }
         } else {
-            tapWalletManager.rates.clear()
-            store.dispatch(WalletAction.LoadFiatRate())
+            Timber.e("Unable to select currency, no user wallet selected")
         }
     }
 
