@@ -38,6 +38,7 @@ import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
+import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -300,7 +301,7 @@ class WalletMiddleware {
                 showSaveWalletIfNeeded()
             }
             is WalletAction.ChangeWallet -> {
-                changeWallet()
+                changeWallet(walletState)
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
@@ -311,6 +312,16 @@ class WalletMiddleware {
                 tryToShowAppRatingWarning(action.walletStores)
             }
             is WalletAction.TotalFiatBalanceChanged -> Unit
+            is WalletAction.PopBackToInitialScreen -> {
+                userWalletsListManager.lockIfLockable()
+                val screen = if (walletState.canSaveUserWallets) {
+                    AppScreen.Welcome
+                } else {
+                    AppScreen.Home
+                }
+
+                store.dispatchOnMain(NavigationAction.PopBackTo(screen))
+            }
         }
     }
 
@@ -375,9 +386,9 @@ class WalletMiddleware {
         }
     }
 
-    private fun changeWallet() {
+    private fun changeWallet(state: WalletState) {
         when {
-            userWalletsListManager.hasUserWallets -> {
+            state.canSaveUserWallets -> {
                 Analytics.send(MainScreen.ButtonMyWallets())
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
             }
