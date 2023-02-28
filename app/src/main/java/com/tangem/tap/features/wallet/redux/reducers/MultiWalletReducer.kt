@@ -114,7 +114,7 @@ class MultiWalletReducer {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
                 val walletManager = state.getWalletManager(currency)
                 if (walletManager == null) {
-                    val screen = if (userWalletsListManager.hasSavedUserWallets) {
+                    val screen = if (userWalletsListManager.hasUserWallets) {
                         AppScreen.Welcome
                     } else {
                         AppScreen.Home
