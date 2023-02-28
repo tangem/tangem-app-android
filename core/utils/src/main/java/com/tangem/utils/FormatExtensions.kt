@@ -50,7 +50,7 @@ fun BigDecimal.toFiatString(
     val formatter = NumberFormat.getInstance(Locale.getDefault()) as? DecimalFormat
     val df = formatter?.apply {
         maximumFractionDigits = 2
-        minimumFractionDigits = 0
+        minimumFractionDigits = 2
         isGroupingUsed = true
         this.roundingMode = roundingMode
     }
