@@ -36,6 +36,7 @@ import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.middlewares.handleBasicAnalyticsEvent
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
@@ -113,8 +114,10 @@ class TapWalletManager {
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
         updateConfigManager(scanResponse)
         withMainContext {
+            // Order is important
             store.dispatch(DisclaimerAction.SetDisclaimer(card.createDisclaimer()))
             store.dispatch(WalletAction.UserWalletChanged(userWallet))
+            store.dispatch(WalletAction.UpdateCanSaveUserWallets(preferencesStorage.shouldSaveUserWallets))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
