@@ -61,6 +61,7 @@ object SaltPayWorkaround {
         }
     }
 
+    @Suppress("MagicNumber")
     fun isSaltPayCardId(cardId: String): Boolean = isVisaBatchId(cardId.take(4)) || isWalletCardId(cardId)
 
     fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
