@@ -45,6 +45,7 @@ data class WalletState(
     val derivationsCheckIsScheduled: Boolean = false,
     val loadingUserTokens: Boolean = false,
     val walletCardsCount: Int? = null,
+    val canSaveUserWallets: Boolean = false,
 ) : StateType {
 
     val walletsDataFromStores: List<WalletData>
