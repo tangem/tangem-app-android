@@ -2,8 +2,6 @@ package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
@@ -11,16 +9,13 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
@@ -88,12 +83,6 @@ data class WalletState(
     val primaryWalletData: WalletData?
         get() = primaryWalletStore?.walletsData?.firstOrNull()
 
-    val primaryBlockchain: Blockchain?
-        get() = primaryWalletManager?.wallet?.blockchain
-
-    val primaryToken: Token?
-        get() = primaryWalletManager?.wallet?.getFirstToken()
-
     val primaryTokenData: WalletData?
         get() = primaryWalletStore?.walletsData?.toMutableList()
             ?.apply { remove(primaryWalletData) }
@@ -102,9 +91,6 @@ data class WalletState(
     val shouldShowDetails: Boolean =
         primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
             primaryWalletData?.currencyData?.status != BalanceStatus.UnknownBlockchain
-
-    val hasSavedWallets: Boolean
-        get() = userWalletsListManager.hasUserWallets
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
@@ -132,14 +118,7 @@ data class WalletState(
         }
     }
 
-    fun getWalletStore(wallet: Wallet?): WalletStore? {
-        if (wallet == null) return null
-        val currency =
-            Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath)
-        return getWalletStore(currency)
-    }
-
-    fun getWalletStore(blockchainNetwork: BlockchainNetwork?): WalletStore? {
+    private fun getWalletStore(blockchainNetwork: BlockchainNetwork?): WalletStore? {
         if (blockchainNetwork == null) return null
         return walletsStores.firstOrNull {
             it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
@@ -152,37 +131,17 @@ data class WalletState(
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
     }
 
-    fun replaceWalletStoreInWalletsStores(wallet: WalletStore?): List<WalletStore> {
-        if (wallet == null) return walletsStores
-        var changed = false
-        val updatedWallets = walletsStores.map {
-            if (it.blockchainNetwork == wallet.blockchainNetwork) {
-                changed = true
-                wallet
-            } else {
-                it
-            }
-        }
-        return if (changed) updatedWallets else walletsStores + wallet
-    }
-
     fun updateWalletData(walletData: WalletData?): WalletState {
         if (walletData == null) return this
         return updateWalletsData(listOf(walletData))
     }
 
-    fun updateWalletsData(walletsData: List<WalletData>): WalletState {
+    private fun updateWalletsData(walletsData: List<WalletData>): WalletState {
         val walletStores = walletsData
             .map { BlockchainNetwork(it.currency.blockchain, it.currency.derivationPath, emptyList()) }
             .distinct().map { getWalletStore(it) }.mapNotNull { it?.updateWallets(walletsData) }
 
         return updateWalletsStores(walletStores)
-    }
-
-    fun updateWalletStore(walletStore: WalletStore?): WalletState {
-        return copy(walletsStores = replaceWalletStoreInWalletsStores(walletStore))
-            .updateTotalBalance()
-            .updateProgressState()
     }
 
     private fun updateWalletsStores(walletStores: List<WalletStore>): WalletState {
@@ -199,52 +158,7 @@ data class WalletState(
             }
         }
         return copy(walletsStores = updatedWallets + walletStoresMutable)
-            .updateTotalBalance()
             .updateProgressState()
-    }
-
-    fun removeWalletData(walletData: WalletData?): WalletState {
-        if (walletData == null) return this
-        return when (val currency = walletData.currency) {
-            is Currency.Blockchain -> {
-                val walletStores = walletsStores.filterNot {
-                    it.blockchainNetwork.blockchain == currency.blockchain &&
-                        it.blockchainNetwork.derivationPath == currency.derivationPath
-                }
-                copy(walletsStores = walletStores)
-                    .updateTotalBalance()
-                    .updateProgressState()
-            }
-            is Currency.Token -> {
-                val walletStore = getWalletStore(walletData.currency)
-                val walletDataList = walletStore?.walletsData
-                    ?.filterNot { it.currency == walletData.currency }
-                    ?: emptyList()
-                val updatedWalletManager = walletStore?.walletManager?.also { it.removeToken(currency.token) }
-                val updatedWalletStore = walletStore?.copy(
-                    walletsData = walletDataList,
-                    walletManager = updatedWalletManager,
-                )
-                updateWalletStore(updatedWalletStore)
-            }
-        }
-    }
-
-    private fun updateTotalBalance(): WalletState {
-        val walletsData = this.walletsStores
-            .flatMap(WalletStore::walletsData)
-
-        return if (walletsData.isNotEmpty()) {
-            this.copy(
-                totalBalance = TotalBalance(
-                    state = walletsData.findProgressState(),
-                    fiatAmount = walletsData.calculateTotalFiatAmount(),
-                    fiatCurrency = store.state.globalState.appCurrency,
-                ),
-            )
-        } else {
-            this.copy(totalBalance = null)
-        }
     }
 
     private fun updateProgressState(): WalletState {
@@ -266,21 +180,6 @@ data class WalletState(
         const val ROUGH_SIGN = "≈"
         const val CAN_BE_LOWER_SIGN = "<"
     }
-}
-
-fun List<WalletData>.replaceSomeWalletsData(newWallets: List<WalletData>): List<WalletData> {
-    val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
-    val updatedWallets = this.map { wallet ->
-        val newWallet = newWallets
-            .firstOrNull { wallet.currency == it.currency }
-        if (newWallet == null) {
-            wallet
-        } else {
-            remainingWallets.remove(newWallet)
-            newWallet
-        }
-    }
-    return updatedWallets + remainingWallets
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
