@@ -12,37 +12,37 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
 @Composable
-internal fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onParticipateClicked: () -> Unit) {
+internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipateClick: () -> Unit) {
     Column {
         AgreementText(
             firstPartResId = R.string.referral_tos_not_enroled_prefix,
-            onClicked = onAgreementClicked,
+            onClick = onAgreementClick,
         )
         PrimaryEndIconButton(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
             text = stringResource(id = R.string.referral_button_participate),
-            iconResId = R.drawable.ic_tangem,
-            onClicked = onParticipateClicked,
+            iconResId = R.drawable.ic_tangem_24,
+            onClick = onParticipateClick,
         )
     }
 }
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_NonParticipateBottomBlock_InLightTheme() {
+private fun Preview_NonParticipateBottomBlock_InLightTheme() {
     TangemTheme(isDark = false) {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            NonParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
+            NonParticipateBottomBlock(onAgreementClick = {}, onParticipateClick = {})
         }
     }
 }
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_NonParticipateBottomBlock_InDarkTheme() {
+private fun Preview_NonParticipateBottomBlock_InDarkTheme() {
     TangemTheme(isDark = true) {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            NonParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
+            NonParticipateBottomBlock(onAgreementClick = {}, onParticipateClick = {})
         }
     }
 }

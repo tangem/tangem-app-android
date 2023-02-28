@@ -30,4 +30,5 @@ open class ShimmerRecyclerAdapter(
 
 class ShimmerVH(viewGroup: ViewGroup) : RecyclerView.ViewHolder(viewGroup)
 
+@Suppress("UnusedPrivateMember")
 data class ShimmerData(private val any: String = "")
