@@ -13,12 +13,6 @@ fun List<WalletData>.findProgressState(initialState: ProgressState = ProgressSta
         .reduce(ProgressState::or)
 }
 
-fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
-    return this
-        .map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
-        .reduce(BigDecimal::plus)
-}
-
 fun List<WalletData>.calculateTotalCryptoAmount(): BigDecimal {
     return this
         .map { it.currencyData.amount ?: BigDecimal.ZERO }
