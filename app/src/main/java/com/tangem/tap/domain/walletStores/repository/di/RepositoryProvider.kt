@@ -8,6 +8,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.DefaultWalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.DefaultWalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.DefaultWalletStoresRepository
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 
 fun WalletStoresRepository.Companion.provideDefaultImplementation(): WalletStoresRepository {
     return DefaultWalletStoresRepository()
@@ -22,5 +23,9 @@ fun WalletManagersRepository.Companion.provideDefaultImplementation(
 fun WalletAmountsRepository.Companion.provideDefaultImplementation(
     tangemTechService: TangemTechService,
 ): WalletAmountsRepository {
-    return DefaultWalletAmountsRepository(tangemTechService)
+    // TODO("After adding DI") get dependencies by DI
+    return DefaultWalletAmountsRepository(
+        tangemTechApi = tangemTechService.api,
+        dispatchers = AppCoroutineDispatcherProvider(),
+    )
 }
