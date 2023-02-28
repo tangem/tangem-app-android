@@ -117,6 +117,7 @@ private fun WalletDataModel.mapToReduxModel(
                 ?.toString(),
             errorMessage = status.errorMessage,
         ),
+        historyTransactions = historyTransactions,
     )
 }
 
