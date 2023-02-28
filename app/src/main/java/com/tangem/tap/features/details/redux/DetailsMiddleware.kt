@@ -20,6 +20,8 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
+import com.tangem.tap.domain.userWalletList.isLockedSync
+import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -132,7 +134,7 @@ class DetailsMiddleware {
                                         store.onUserWalletSelected(selectedUserWallet)
                                     }
                                 } else {
-                                    userWalletsListManager.lock()
+                                    userWalletsListManager.lockIfLockable()
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                             }
