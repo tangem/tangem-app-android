@@ -52,7 +52,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet = userWalletManager.getUserTokens(networkId, false)
+        val tokensInWallet = userWalletManager.getUserTokens(networkId = networkId, isExcludeCustom = true)
             .filter { it.symbol != initialCurrency.symbol }
             .map { token ->
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
@@ -68,17 +68,17 @@ internal class SwapInteractorImpl @Inject constructor(
             .mapValues { SwapAmount(it.value.value, it.value.decimals) }
         val appCurrency = userWalletManager.getUserAppCurrency()
         val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
-        cache.cacheLoadedTokens(loadedTokens)
         cache.cacheBalances(tokensBalance)
-        cache.cacheInWalletTokens(tokensInWallet)
+        cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
+        cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
         return TokensDataState(
             preselectTokens = PreselectTokens(
                 fromToken = initialCurrency,
                 toToken = selectToToken(initialCurrency, tokensInWallet, loadedTokens),
             ),
             foundTokensState = FoundTokensState(
-                tokensInWallet = getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
-                loadedTokens = loadedTokens.map { TokenWithBalance(it) },
+                tokensInWallet = cache.getInWalletTokens(),
+                loadedTokens = cache.getLoadedTokens(),
             ),
         )
     }
@@ -87,28 +87,25 @@ internal class SwapInteractorImpl @Inject constructor(
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.token.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val loadedTokens = cache.getLoadedTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.token.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
-        val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList())
-            .mapValues { SwapAmount(it.value.value, it.value.decimals) }
-        val appCurrency = userWalletManager.getUserAppCurrency()
-        val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
         return FoundTokensState(
-            tokensInWallet = getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency),
-            loadedTokens = loadedTokens.map { TokenWithBalance(it) },
+            tokensInWallet = tokensInWallet,
+            loadedTokens = loadedTokens,
         )
     }
 
     override fun findTokenById(id: String): Currency? {
         val tokensInWallet = cache.getInWalletTokens()
         val loadedTokens = cache.getLoadedTokens()
-        return tokensInWallet.firstOrNull { it.id == id } ?: loadedTokens.firstOrNull { it.id == id }
+        return tokensInWallet.firstOrNull { it.token.id == id }?.token
+            ?: loadedTokens.firstOrNull { it.token.id == id }?.token
     }
 
     override suspend fun givePermissionToSwap(
@@ -218,6 +215,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (result) {
             is SendTxResult.Success -> {
                 userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet))
+                userWalletManager.refreshWallet()
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(swapData.fromTokenAmount, currencyToSend.symbol),
                     toAmount = amountFormatter.formatSwapAmountToUI(swapData.toTokenAmount, currencyToGet.symbol),
@@ -283,10 +281,13 @@ internal class SwapInteractorImpl @Inject constructor(
             TokenWithBalance(
                 token = it,
                 tokenBalanceData = TokenBalanceData(
-                    amount = balance?.let { amount -> amountFormatter.formatSwapAmountToUI(amount, "") },
+                    amount = balance?.let { amount ->
+                        amountFormatter.formatSwapAmountToUI(amount, it.symbol)
+                    },
                     amountEquivalent = balance?.value?.toFiatString(
-                        rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                        appCurrency.symbol,
+                        rateValue = rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                        fiatCurrencyName = appCurrency.symbol,
+                        formatWithSpaces = true,
                     ),
                 ),
             )
@@ -331,7 +332,11 @@ internal class SwapInteractorImpl @Inject constructor(
         return SwapState.EmptyAmountState(
             fromTokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
             toTokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }.orEmpty(),
-            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(BigDecimal.ONE, appCurrency.symbol),
+            zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
+                rateValue = BigDecimal.ONE,
+                fiatCurrencyName = appCurrency.symbol,
+                formatWithSpaces = true,
+            ),
         )
     }
 
@@ -402,7 +407,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
         val rates = repository.getRates(appCurrency.code, listOf(fromTokenId, toTokenId, nativeToken.id))
         return rates[nativeToken.id]?.toBigDecimal()?.let { rate ->
-            " (${fee.toFiatString(rate, appCurrency.symbol)})"
+            " (${fee.toFiatString(rate, appCurrency.symbol, true)})"
         }.orEmpty()
     }
 
@@ -482,8 +487,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = fromTokenAmount.value.toFiatString(
-                    rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                    appCurrency.symbol,
+                    rateValue = rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    fiatCurrencyName = appCurrency.symbol,
+                    formatWithSpaces = true,
                 ),
             ),
             toTokenInfo = TokenSwapInfo(
@@ -492,8 +498,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = toTokenAmount.value.toFiatString(
-                    rates[toToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                    appCurrency.symbol,
+                    rateValue = rates[toToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    fiatCurrencyName = appCurrency.symbol,
+                    formatWithSpaces = true,
                 ),
             ),
             fee = formattedFee,
@@ -546,12 +553,15 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun syncWalletBalanceForTokens(networkId: String, tokens: List<Currency>) {
-        val tokensBalance =
-            userWalletManager.getCurrentWalletTokensBalance(
-                networkId = networkId,
-                extraTokens = tokens.map { cryptoCurrencyConverter.convert(it) },
-            )
-        cache.cacheBalances(tokensBalance.mapValues { SwapAmount(it.value.value, it.value.decimals) })
+        val tokensToSync = tokens.filter { cache.getBalanceForToken(it.symbol) == null }
+        if (tokensToSync.isNotEmpty()) {
+            val tokensBalance =
+                userWalletManager.getCurrentWalletTokensBalance(
+                    networkId = networkId,
+                    extraTokens = tokensToSync.map { cryptoCurrencyConverter.convert(it) },
+                )
+            cache.cacheBalances(tokensBalance.mapValues { SwapAmount(it.value.value, it.value.decimals) })
+        }
     }
 
     private fun isBalanceEnough(fromToken: Currency, amount: SwapAmount, fee: BigDecimal?): Boolean {
@@ -618,9 +628,9 @@ internal class SwapInteractorImpl @Inject constructor(
         toTokenAmount: BigDecimal,
         toRate: Double,
     ): Float {
-        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
-        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal()).setScale(2, RoundingMode.HALF_UP)
-        return (BigDecimal.ONE - toTokenFiatValue / fromTokenFiatValue).toFloat()
+        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
+        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
+        return (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
     }
 
     companion object {
