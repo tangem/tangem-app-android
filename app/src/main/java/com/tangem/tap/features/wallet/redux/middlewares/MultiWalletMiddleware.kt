@@ -9,6 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
+import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -169,6 +170,7 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
             is WalletAction.MultiWallet.BackupWallet -> {
                 store.state.globalState.scanResponse?.let {
+                    Analytics.addContext(it)
                     store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                 }
