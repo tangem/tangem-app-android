@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain.cache
 
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.ui.TokenWithBalance
 import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
@@ -9,28 +10,28 @@ class SwapDataCacheImpl : SwapDataCache {
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
     private val feesForNetworks: MutableMap<String, BigDecimal> = mutableMapOf()
     private val tokensBalances: MutableMap<String, SwapAmount> = mutableMapOf()
-    private val lastInWalletTokens = mutableListOf<Currency>()
-    private val lastLoadedTokens = mutableListOf<Currency>()
+    private val lastInWalletTokens = mutableListOf<TokenWithBalance>()
+    private val lastLoadedTokens = mutableListOf<TokenWithBalance>()
 
     override fun cacheLastFeeForNetwork(fee: BigDecimal, networkId: String) {
         feesForNetworks[networkId] = fee
     }
 
-    override fun cacheInWalletTokens(tokens: List<Currency>) {
+    override fun cacheInWalletTokens(tokens: List<TokenWithBalance>) {
         lastInWalletTokens.clear()
         lastInWalletTokens.addAll(tokens)
     }
 
-    override fun cacheLoadedTokens(tokens: List<Currency>) {
+    override fun cacheLoadedTokens(tokens: List<TokenWithBalance>) {
         lastLoadedTokens.clear()
         lastLoadedTokens.addAll(tokens)
     }
 
-    override fun getInWalletTokens(): List<Currency> {
+    override fun getInWalletTokens(): List<TokenWithBalance> {
         return lastInWalletTokens
     }
 
-    override fun getLoadedTokens(): List<Currency> {
+    override fun getLoadedTokens(): List<TokenWithBalance> {
         return lastLoadedTokens
     }
 

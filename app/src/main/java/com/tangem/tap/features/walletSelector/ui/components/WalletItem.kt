@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -31,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -38,6 +39,7 @@ import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.common.extensions.cardImageData
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
@@ -137,23 +139,21 @@ private fun WalletCardImage(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun RowScope.WalletInfo(
-    wallet: UserWalletItem,
-    isSelected: Boolean,
-) {
+private fun RowScope.WalletInfo(wallet: UserWalletItem, isSelected: Boolean) {
     Column(
-        modifier = Modifier.weight(weight = .6f),
+        modifier = Modifier.weight(weight = 2f),
         verticalArrangement = Arrangement.SpaceAround,
+        horizontalAlignment = Alignment.Start,
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
             text = wallet.name,
             color = if (isSelected) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
             style = TangemTypography.subtitle1,
         )
         SpacerH2()
         Text(
-            modifier = Modifier.fillMaxWidth(),
             text = when (wallet) {
                 is MultiCurrencyUserWalletItem -> pluralStringResource(
                     id = R.plurals.card_label_card_count,
@@ -162,20 +162,17 @@ private fun RowScope.WalletInfo(
                 )
                 is SingleCurrencyUserWalletItem -> wallet.tokenName
             },
-            style = TangemTheme.typography.caption,
             color = TangemTheme.colors.text.tertiary,
+            maxLines = 1,
+            style = TangemTheme.typography.caption,
         )
     }
 }
 
 @Composable
-private fun RowScope.TokensInfo(
-    isLocked: Boolean,
-    balance: UserWalletItem.Balance,
-    tokensCount: Int?,
-) {
+private fun RowScope.TokensInfo(isLocked: Boolean, balance: UserWalletItem.Balance, tokensCount: Int?) {
     Column(
-        modifier = Modifier.weight(weight = .4f),
+        modifier = Modifier.weight(weight = 3f),
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.End,
     ) {
@@ -254,9 +251,11 @@ private fun LoadedTokensInfo(
         ) {
             Text(
                 text = balanceAmount,
-                style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.End,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = TangemTheme.typography.subtitle1,
             )
             if (showWarning) {
                 Icon(
@@ -369,6 +368,28 @@ private fun CheckedWalletMark(
             painter = painterResource(id = R.drawable.ic_check_24),
             tint = TangemTheme.colors.icon.primary2,
             contentDescription = null,
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 72, showBackground = true)
+@Composable
+private fun PreviewWalletItem() {
+    TangemTheme {
+        WalletItem(
+            wallet = MultiCurrencyUserWalletItem(
+                id = UserWalletId(value = null),
+                name = "Tangem Card",
+                imageUrl = "",
+                balance = UserWalletItem.Balance.Loaded("141212121888 BTC"),
+                isLocked = false,
+                tokensCount = 2,
+                cardsInWallet = 1,
+            ),
+            isSelected = false,
+            isChecked = false,
+            onWalletClick = {},
+            onWalletLongClick = {},
         )
     }
 }

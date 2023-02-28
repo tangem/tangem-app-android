@@ -26,7 +26,6 @@ import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
 
@@ -172,6 +171,10 @@ class TransactionManagerImpl(
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {
                     is BlockchainSdkError.WrappedTangemError -> {
+                        val errorByCode = mapErrorByCode(error)
+                        if (errorByCode != null) {
+                            return errorByCode
+                        }
                         val tangemSdkError = error.tangemError as? TangemSdkError ?: return SendTxResult.UnknownError()
                         if (tangemSdkError is TangemSdkError.UserCancelled) return SendTxResult.UserCancelledError
                         return SendTxResult.TangemSdkError(tangemSdkError.code, tangemSdkError.cause)
@@ -184,6 +187,17 @@ class TransactionManagerImpl(
         }
     }
 
+    private fun mapErrorByCode(error: BlockchainSdkError.WrappedTangemError): SendTxResult? {
+        return when (error.code) {
+            USER_CANCELLED_ERROR_CODE -> {
+                return SendTxResult.UserCancelledError
+            }
+            else -> {
+                null
+            }
+        }
+    }
+
     private fun transactionSigner(walletManager: WalletManager): TransactionSigner {
         val actualCard = requireNotNull(appStateHolder.getActualCard()) { "no card found" }
         return TangemSigner(
@@ -191,7 +205,7 @@ class TransactionManagerImpl(
             tangemSdk = tangemSdk,
             initialMessage = Message(),
         ) { signResponse ->
-            store.dispatch(
+            appStateHolder.mainStore?.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
                     walletPublicKey = walletManager.wallet.publicKey.seedKey,
@@ -292,5 +306,6 @@ class TransactionManagerImpl(
 
     companion object {
         private const val HEX_PREFIX = "0x"
+        private const val USER_CANCELLED_ERROR_CODE = 50002
     }
 }
