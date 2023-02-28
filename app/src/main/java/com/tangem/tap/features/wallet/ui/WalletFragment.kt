@@ -32,6 +32,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
+import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -81,13 +82,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    val popBackTo = if (userWalletsListManager.hasSavedUserWallets) {
-                        userWalletsListManager.lock()
+                    userWalletsListManager.lockIfLockable()
+                    val screen = if (userWalletsListManager.hasUserWallets) {
                         AppScreen.Welcome
                     } else {
                         AppScreen.Home
                     }
-                    store.dispatch(NavigationAction.PopBackTo(popBackTo))
+                    store.dispatch(NavigationAction.PopBackTo(screen))
                 }
             },
         )
