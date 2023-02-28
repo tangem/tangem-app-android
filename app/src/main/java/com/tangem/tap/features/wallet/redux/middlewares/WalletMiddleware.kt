@@ -239,13 +239,7 @@ class WalletMiddleware {
                             refresh = action is WalletAction.LoadData.Refresh,
                         )
                     } else {
-                        val scanResponse = globalState.scanResponse ?: return@launch
-
-                        if (walletState.walletsDataFromStores.isNotEmpty()) {
-                            globalState.tapWalletManager.reloadData(scanResponse)
-                        } else {
-                            globalState.tapWalletManager.loadData(scanResponse)
-                        }
+                        Timber.e("Unable to load/refresh wallets data, no user wallet selected")
                     }
                 }
             }
@@ -257,9 +251,7 @@ class WalletMiddleware {
                 if (selectedUserWallet != null) {
                     scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }
                 } else {
-                    globalState.scanResponse?.let { scanNoteResponse ->
-                        scope.launch { globalState.tapWalletManager.loadData(scanNoteResponse) }
-                    }
+                    Timber.e("Unable to proceed with changed network state, no user wallet selected")
                 }
             }
             is WalletAction.CopyAddress -> {
