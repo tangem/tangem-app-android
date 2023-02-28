@@ -7,7 +7,7 @@ import org.rekotlin.Action
 /**
 [REDACTED_AUTHOR]
  */
-//TODO: refactoring: is alias for the GlobalAction
+// TODO: refactoring: is alias for the GlobalAction
 sealed class DomainGlobalAction : Action {
     data class SaveScanNoteResponse(val scanResponse: ScanResponse) : DomainGlobalAction()
     data class ShowDialog(val stateDialog: DomainDialog?) : DomainGlobalAction()
