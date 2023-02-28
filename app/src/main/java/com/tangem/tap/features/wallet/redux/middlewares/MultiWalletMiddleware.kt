@@ -38,6 +38,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.math.BigDecimal
 
 class MultiWalletMiddleware {
@@ -139,20 +140,7 @@ class MultiWalletMiddleware {
                         )
                     }
                 } else {
-                    val currency = action.currency
-                    val card = globalState.scanResponse?.card.guard {
-                        store.dispatchErrorNotification(TapError.UnsupportedState("card is NULL"))
-                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                        return
-                    }
-                    var currencies = walletState?.currencies ?: emptyList()
-                    currencies = currencies.filterNot { it == currency }
-                    if (currency.isBlockchain()) {
-                        currencies.filter {
-                            it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath
-                        }
-                    }
-                    scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
+                    Timber.e("Unable to remove wallet, no user wallet selected")
                 }
             }
             is WalletAction.MultiWallet.RemoveWallets -> {
@@ -178,11 +166,11 @@ class MultiWalletMiddleware {
                 scope.launch { handleBasicAnalyticsEvent() }
             }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
-                val selectedWallet = userWalletsListManager.selectedUserWalletSync
-                if (selectedWallet != null) {
-                    scanAndUpdateCard(selectedWallet, walletState)
+                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+                if (selectedUserWallet != null) {
+                    scanAndUpdateCard(selectedUserWallet, walletState)
                 } else {
-                    store.dispatch(WalletAction.Scan(onScanSuccessEvent = null))
+                    Timber.e("Unable to scan to get derivations, no user wallet selected")
                 }
             }
             else -> {}
