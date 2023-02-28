@@ -26,7 +26,7 @@ fun StoriesProgressBar(
     currentStep: Int,
     paused: Boolean = false,
     stepDuration: Int = 8_000,
-    onStepFinished: () -> Unit = {},
+    onStepFinish: () -> Unit = {},
 ) {
     val progress = remember(currentStep) { Animatable(0f) }
 
@@ -42,9 +42,8 @@ fun StoriesProgressBar(
                 )
             )
             progress.snapTo(0f)
-            onStepFinished()
+            onStepFinish()
         }
-
     }
 
     Row(
@@ -81,6 +80,6 @@ fun StoriesProgressBar(
 
 @Preview
 @Composable
-fun StoriesProgressBarPreview() {
+private fun StoriesProgressBarPreview() {
     StoriesProgressBar(steps = 3, currentStep = 2, paused = false) { }
 }

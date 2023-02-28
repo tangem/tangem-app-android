@@ -3,10 +3,8 @@ package com.tangem.tap.features.tokens.redux
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
-class TokensReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): TokensState = internalReduce(action, state)
-    }
+object TokensReducer {
+    fun reduce(action: Action, state: AppState): TokensState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): TokensState {
@@ -23,7 +21,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             }
             tokensState.copy(
                 scanResponse = action.scanResponse,
-                loadCoinsState = loadingState
+                loadCoinsState = loadingState,
             )
         }
         is TokensAction.LoadCurrencies.Success -> {
@@ -31,16 +29,15 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 currencies = tokensState.currencies + action.currencies,
                 needToLoadMore = action.loadMore,
                 pageToLoad = tokensState.pageToLoad + 1,
-                loadCoinsState = LoadCoinsState.LOADED
+                loadCoinsState = LoadCoinsState.LOADED,
             )
         }
         is TokensAction.SetAddedCurrencies -> {
-
             tokensState.copy(
                 addedBlockchains = action.wallets.toNonCustomBlockchains(action.derivationStyle),
                 addedTokens = action.wallets.toNonCustomTokensWithBlockchains(action.derivationStyle),
                 addedWallets = action.wallets,
-                derivationStyle = action.derivationStyle
+                derivationStyle = action.derivationStyle,
             )
         }
         is TokensAction.AllowToAddTokens -> {
@@ -52,7 +49,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 needToLoadMore = true,
                 currencies = emptyList(),
                 pageToLoad = 0,
-                loadCoinsState = LoadCoinsState.LOADING
+                loadCoinsState = LoadCoinsState.LOADING,
             )
         }
         else -> tokensState

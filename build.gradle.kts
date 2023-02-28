@@ -16,6 +16,7 @@ buildscript {
 
 plugins {
     id("com.google.dagger.hilt.android") version "2.44" apply false
+    kotlin("plugin.serialization") version Versions.kotlin apply false
 }
 
 allprojects {
@@ -27,6 +28,10 @@ allprojects {
         maven("https://jitpack.io")
         maven("https://zendesk.jfrog.io/zendesk/repo")
     }
+}
+
+subprojects {
+    apply(plugin = "detekt-convention")
 }
 
 tasks.register("clean", Delete::class) {
