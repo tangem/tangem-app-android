@@ -48,6 +48,8 @@ object DemoHelper {
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
 
+    fun isTestDemoCard(scanResponse: ScanResponse): Boolean = config.isTestDemoCardId(scanResponse.card.cardId)
+
     fun isDemoCardId(cardId: String): Boolean = config.isDemoCardId(cardId)
 
     fun tryHandle(appState: () -> AppState?, action: Action): Boolean {
@@ -108,6 +110,8 @@ class DemoConfig {
 
     fun isDemoCardId(cardId: String): Boolean = demoCardIds.contains(cardId)
 
+    fun isTestDemoCardId(cardId: String): Boolean = testDemoCardIds.contains(cardId)
+
     fun getBalance(blockchain: Blockchain): Amount = walletBalances[blockchain]?.copy()
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
@@ -118,9 +122,6 @@ class DemoConfig {
     @Suppress("ClassOrdering")
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
-        "FB10000000000196", // Note BTC
-        "FB20000000000186", // Note ETH
-        "FB30000000000176", // Wallet
         "AC01000000041225",
         "AC01000000041472",
         "AB01000000046498",
