@@ -20,7 +20,6 @@ import coil.size.Scale
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -226,7 +225,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupCardImage(state: WalletState, isSaltPay: Boolean) {
-        //TODO: SaltPay: remove hardCode
+        // TODO: SaltPay: remove hardCode
         if (isSaltPay) {
             binding.ivCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FIT)
