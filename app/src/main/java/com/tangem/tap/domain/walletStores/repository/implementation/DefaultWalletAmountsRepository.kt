@@ -142,8 +142,8 @@ internal class DefaultWalletAmountsRepository(
                     Timber.e(
                         error,
                         """
-                        Unable to fetch fiat rates
-                        |- Coins ids: $coinsIds
+                            Unable to fetch fiat rates
+                            |- Coins ids: $coinsIds
                         """.trimIndent(),
                     )
 
@@ -278,6 +278,7 @@ internal class DefaultWalletAmountsRepository(
                 Unable to fetch amounts
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
+                |- Derivation path: ${walletStore.derivationPath?.rawPath}
             """.trimIndent(),
         )
 
@@ -310,6 +311,7 @@ internal class DefaultWalletAmountsRepository(
                 Fetched amounts
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
+                |- Derivation path: ${walletStore.derivationPath?.rawPath}
             """.trimIndent(),
         )
 
@@ -337,6 +339,7 @@ internal class DefaultWalletAmountsRepository(
                 Missed derivation
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
+                |- Derivation path: ${walletStore.derivationPath?.rawPath}
             """.trimIndent(),
         )
 
@@ -360,6 +363,7 @@ internal class DefaultWalletAmountsRepository(
                 Wallet manager is null
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
+                |- Derivation path: ${walletStore.derivationPath?.rawPath}
             """.trimIndent(),
         )
 
@@ -405,6 +409,7 @@ internal class DefaultWalletAmountsRepository(
                 Fetched wallet rent
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
+                |- Derivation path: ${walletStore.derivationPath?.rawPath}
                 |- Rent: $rent
             """.trimIndent(),
         )
