@@ -1,11 +1,10 @@
 package com.tangem.core.featuretoggle.manager
 
-import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.tangem.core.featuretoggle.FeatureToggle
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
-import com.tangem.core.featuretoggle.utils.getVersion
+import com.tangem.core.featuretoggle.version.VersionProvider
 import com.tangem.datasource.local.AppPreferenceStorage
 import kotlin.properties.Delegates
 
@@ -15,13 +14,13 @@ import kotlin.properties.Delegates
  * @property localFeatureTogglesStorage local feature toggles storage
  * @property appPreferenceStorage       application local storage
  * @property jsonAdapter                adapter for parsing json
- * @property context                    context
+ * @property versionProvider            application version provider
  */
 internal class DevFeatureTogglesManager(
     private val localFeatureTogglesStorage: FeatureTogglesStorage,
     private val appPreferenceStorage: AppPreferenceStorage,
     private val jsonAdapter: JsonAdapter<Map<String, Boolean>>,
-    private val context: Context,
+    private val versionProvider: VersionProvider,
 ) : MutableFeatureTogglesManager {
 
     private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
@@ -36,7 +35,7 @@ internal class DevFeatureTogglesManager(
         }
 
         featureTogglesMap = localFeatureTogglesStorage.featureToggles
-            .associateToggles(currentVersion = context.getVersion() ?: "")
+            .associateToggles(currentVersion = versionProvider.get() ?: "")
             .mapValues { resultToggle ->
                 savedFeatureToggles[resultToggle.key] ?: resultToggle.value
             }
