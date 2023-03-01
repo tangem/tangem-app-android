@@ -121,9 +121,10 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
         if (currentWalletStore != updatedWalletStore) {
             Timber.d(
                 """
-                        Update wallet store in storage
-                        |- User wallet ID: ${updatedWalletStore.userWalletId}
-                        |- Blockchain: ${updatedWalletStore.blockchain}
+                    Update wallet store in storage
+                    |- User wallet ID: ${updatedWalletStore.userWalletId}
+                    |- Blockchain: ${updatedWalletStore.blockchain}
+                    |- Derivation path: ${updatedWalletStore.derivationPath?.rawPath}
                 """.trimIndent(),
             )
 
