@@ -448,6 +448,7 @@
     <string name="wallet_error_no_account">帳號尚未被創造</string>
     <string name="wallet_error_unsupported_blockchain">不支持此卡</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">您的 Tangem 卡是為與不同的應用程序一起工作而設計的。請查看卡片上的名稱和說明，並安裝正確的應用程序</string>
+    <string name="wallet_connect_error_wrong_card_selected">在 Tangem App 中選擇了錯誤的卡</string>
     <string name="wallet_notification_address_copied">地址已復製到剪貼板</string>
     <string name="wallet_notification_no_internet">無網路</string>
     <string name="wallet_pending_tx_receiving">接收中</string>

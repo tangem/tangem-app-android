@@ -29,6 +29,15 @@ android {
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        configurations {
+            all {
+                exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+                resolutionStrategy {
+                    force("org.bouncycastle:bcpkix-jdk15on:1.70")
+                }
+            }
+        }
     }
 
     buildFeatures {
@@ -205,6 +214,8 @@ dependencies {
     implementation(Library.composeShimmer)
     implementation(Library.mviCoreWatcher)
     implementation(Library.kotlinSerialization)
+    implementation(Library.walletConnectCore)
+    implementation(Library.walletConnectWeb3)
 
     /** Testing libraries */
     testImplementation(Test.junit)

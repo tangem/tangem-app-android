@@ -59,6 +59,8 @@ object Versions {
     const val zxingQrCode = "3.3.3"
     const val mviCore = "1.3.1"
     const val kotlinSerialization = "1.4.1"
+    const val walletConnectCore = "1.9.1"
+    const val walletConnectWeb3 = "1.2.1"
     // endregion Other libraries
 
     // region Tangem

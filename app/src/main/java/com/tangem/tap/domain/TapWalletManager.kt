@@ -39,6 +39,7 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
+import com.tangem.tap.walletConnectInteractor
 import com.tangem.tap.walletStoresManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
@@ -122,8 +123,20 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
-
+        setupWalletConnectV2(userWallet)
         loadData(userWallet, refresh)
+    }
+
+    private fun setupWalletConnectV2(userWallet: UserWallet) {
+        val cardId = if (userWallet.cardsInWallet.size == 1) {
+            userWallet.cardId
+        } else {
+            null
+        }
+        walletConnectInteractor.startListening(
+            userWalletId = userWallet.walletId.stringValue,
+            cardId = cardId,
+        )
     }
 
     suspend fun loadData(userWallet: UserWallet, refresh: Boolean = false) {

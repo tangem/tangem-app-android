@@ -27,6 +27,10 @@ import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
+import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
+import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -59,6 +63,8 @@ val scope = CoroutineScope(coroutineContext)
 private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
+
+lateinit var walletConnectInteractor: WalletConnectInteractor
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
@@ -95,6 +101,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this),
             ),
+        )
+
+        walletConnectInteractor = WalletConnectInteractor(
+            handler = WalletConnectEventsHandlerImpl(),
+            walletConnectRepository = walletConnect2Repository,
+            sessionsRepository = walletConnectSessionsRepository,
+            sdkHelper = WalletConnectSdkHelper(),
+            blockchainHelper = TangemWcBlockchainHelper(),
         )
     }
 
