@@ -71,6 +71,8 @@ object Library {
     const val zxingQrCore = "com.google.zxing:core:" + Versions.zxingQrCode
     const val mviCoreWatcher = "com.github.badoo.mvicore:mvicore-diff:" + Versions.mviCore
     const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:" + Versions.kotlinSerialization
+    const val walletConnectCore = "com.walletconnect:android-core:" + Versions.walletConnectCore
+    const val walletConnectWeb3 = "com.walletconnect:web3wallet:" + Versions.walletConnectWeb3
 }
 
 object Tangem {

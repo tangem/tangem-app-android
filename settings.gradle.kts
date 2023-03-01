@@ -23,6 +23,5 @@ include(":features:referral:presentation")
 include(":features:swap:data")
 include(":features:swap:domain")
 include(":features:swap:presentation")
-
 include(":features:tester:impl")
 // endregion Feature modules

@@ -7,6 +7,8 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
@@ -18,16 +20,24 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
+import com.tangem.tap.domain.walletconnect.extensions.toWcEthTransaction
+import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
+import com.tangem.tap.domain.walletconnect2.domain.models.Account
+import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
+import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.walletConnect2Repository
+import com.tangem.tap.walletConnectInteractor
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("LargeClass")
 class WalletConnectMiddleware {
     private var walletConnectManager = WalletConnectManager()
     val walletConnectMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -114,9 +124,13 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard))
             }
             is WalletConnectAction.OpenSession -> {
-                walletConnectManager.connect(
-                    wcUri = action.wcUri,
-                )
+                val index = action.wcUri.indexOf("@")
+                when (action.wcUri[index + 1]) {
+                    '1' -> {
+                        walletConnectManager.connect(wcUri = action.wcUri)
+                    }
+                    '2' -> walletConnect2Repository.pair(uri = action.wcUri)
+                }
             }
             is WalletConnectAction.RefuseOpeningSession -> {
                 store.dispatch(
@@ -133,11 +147,15 @@ class WalletConnectMiddleware {
                 walletConnectManager.approve(action.session)
             }
             is WalletConnectAction.DisconnectSession -> {
-                walletConnectManager.disconnect(action.session)
+                if (action.session != null) {
+                    walletConnectManager.disconnect(action.session)
+                } else {
+                    walletConnectInteractor.disconnectSession(action.topic)
+                }
             }
             is WalletConnectAction.HandleTransactionRequest -> {
                 walletConnectManager.handleTransactionRequest(
-                    transaction = action.transaction,
+                    transaction = action.transaction.toWcEthTransaction(),
                     session = action.session,
                     id = action.id,
                     type = action.type,
@@ -151,23 +169,30 @@ class WalletConnectMiddleware {
                 )
             }
             is WalletConnectAction.RejectRequest -> {
-                walletConnectManager.rejectRequest(action.session, action.id)
+                walletConnectManager.rejectRequest(action.topic, action.id)
             }
             is WalletConnectAction.SendTransaction -> {
-                walletConnectManager.completeTransaction(action.session)
+                walletConnectManager.completeTransaction(action.topic)
             }
             is WalletConnectAction.SignMessage -> {
-                walletConnectManager.sendSignedMessage(action.session)
+                walletConnectManager.sendSignedMessage(action.topic)
             }
             is WalletConnectAction.BinanceTransaction.Trade -> {
                 val messageData = BnbHelper.createMessageData(action.order)
                 store.dispatchOnMain(
                     GlobalAction.ShowDialog(
                         WalletConnectDialog.BnbTransactionDialog(
-                            data = messageData,
-                            session = action.sessionData.session,
-                            sessionId = action.id,
-                            dAppName = action.sessionData.peerMeta.name,
+                            WcPreparedRequest.BnbTransaction(
+                                preparedRequestData = BnbData(
+                                    data = messageData,
+                                    topic = action.sessionData.session.topic,
+                                    requestId = action.id,
+                                    dAppName = action.sessionData.peerMeta.name,
+                                ),
+                                topic = action.sessionData.session.topic,
+                                requestId = action.id,
+                                derivationPath = action.sessionData.wallet.derivationPath?.rawPath,
+                            ),
                         ),
                     ),
                 )
@@ -177,10 +202,17 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(
                     GlobalAction.ShowDialog(
                         WalletConnectDialog.BnbTransactionDialog(
-                            data = messageData,
-                            session = action.sessionData.session,
-                            sessionId = action.id,
-                            dAppName = action.sessionData.peerMeta.name,
+                            WcPreparedRequest.BnbTransaction(
+                                preparedRequestData = BnbData(
+                                    data = messageData,
+                                    topic = action.sessionData.session.topic,
+                                    requestId = action.id,
+                                    dAppName = action.sessionData.peerMeta.name,
+                                ),
+                                topic = action.sessionData.session.topic,
+                                requestId = action.id,
+                                derivationPath = action.sessionData.wallet.derivationPath?.rawPath,
+                            ),
                         ),
                     ),
                 )
@@ -189,7 +221,7 @@ class WalletConnectMiddleware {
                 walletConnectManager.signBnb(
                     id = action.id,
                     data = action.data,
-                    sessionData = action.sessionData,
+                    topic = action.topic,
                 )
             }
             is WalletConnectAction.SwitchBlockchain -> {
@@ -224,6 +256,80 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.UpdateBlockchain -> {
                 walletConnectManager.updateBlockchain(action.updatedSession)
+            }
+            is WalletConnectAction.ApproveProposal -> {
+                val accounts = store.state.walletState.walletManagers
+                    .mapNotNull {
+                        val wallet = it.wallet
+                        val chainId = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                            wallet.blockchain.toNetworkId(),
+                        )
+                        chainId?.let {
+                            Account(
+                                chainId,
+                                wallet.address,
+                                wallet.publicKey.derivationPath?.rawPath,
+                            )
+                        }
+                    }
+
+                walletConnectInteractor.approveSessionProposal(accounts)
+            }
+            is WalletConnectAction.RejectProposal -> {
+                walletConnectInteractor.rejectSessionProposal()
+            }
+            is WalletConnectAction.SessionEstablished -> {
+            }
+            is WalletConnectAction.SessionRejected -> {
+                when (action.error) {
+                    is WalletConnectError.ApprovalErrorAddNetwork -> {
+                        val blockchains = action.error.networks.mapNotNull { Blockchain.fromNetworkId(it)?.fullName }
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.AddNetwork(blockchains.toString()),
+                            ),
+                        )
+                    }
+
+                    WalletConnectError.ApprovalErrorUnsupportedNetwork -> {
+                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                    }
+                    is WalletConnectError.ExternalApprovalError -> {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                AppDialog.SimpleOkWarningDialog(
+                                    message = action.error.message ?: "",
+                                ),
+                            ),
+                        )
+                    }
+                    else -> Unit
+                }
+            }
+
+            is WalletConnectAction.ShowSessionRequest -> {
+                val dialog: WalletConnectDialog = when (val request = action.sessionRequest) {
+                    is WcPreparedRequest.BnbTransaction -> WalletConnectDialog.BnbTransactionDialog(request)
+                    is WcPreparedRequest.EthTransaction -> WalletConnectDialog.RequestTransaction(request)
+                    is WcPreparedRequest.EthSign -> WalletConnectDialog.PersonalSign(request)
+                }
+                store.dispatch(GlobalAction.ShowDialog(dialog))
+            }
+            is WalletConnectAction.PerformRequestedAction -> {
+                walletConnectInteractor.continueWithRequest(action.sessionRequest)
+            }
+            is WalletConnectAction.RejectSessionRequest -> {
+                store.dispatch(
+                    GlobalAction.ShowDialog(
+                        AppDialog.SimpleOkDialogRes(
+                            headerId = R.string.common_warning,
+                            messageId = R.string.wallet_connect_error_wrong_card_selected,
+                        ),
+                    ),
+                )
+            }
+            is WalletConnectAction.RejectUnsupportedRequest -> {
+                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
             }
         }
     }

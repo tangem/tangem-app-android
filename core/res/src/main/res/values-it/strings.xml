@@ -448,6 +448,7 @@
     <string name="wallet_error_no_account">Conto non creato</string>
     <string name="wallet_error_unsupported_blockchain">Questa carta non è supportata</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">La tua carta Tangem è stata creata per funzionare con un\'altra applicazione. Leggere il nome e le istruzioni sulla carta e installare l\'applicazione corretta</string>
+    <string name="wallet_connect_error_wrong_card_selected">Wrong card selected in Tangem App</string>
     <string name="wallet_notification_address_copied">L\'indirizzo è stato copiato con successo</string>
     <string name="wallet_notification_no_internet">Nessuna connessione a Internet</string>
     <string name="wallet_pending_tx_receiving">Riceviu</string>
