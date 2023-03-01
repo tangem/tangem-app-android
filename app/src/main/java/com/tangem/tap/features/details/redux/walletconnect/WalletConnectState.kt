@@ -8,6 +8,10 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.StateDialog
+import com.tangem.tap.domain.walletconnect2.domain.WcEthereumSignMessage
+import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
+import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
+import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.trustwallet.walletconnect.models.WCPeerMeta
@@ -16,6 +20,7 @@ import com.trustwallet.walletconnect.models.session.WCSession
 data class WalletConnectState(
     val loading: Boolean = false,
     val sessions: List<WalletConnectSession> = listOf(),
+    val wc2Sessions: List<WcSessionForScreen> = listOf(),
     val newSessionData: NewWcSessionData? = null,
 )
 
@@ -95,43 +100,47 @@ sealed class WalletConnectDialog : StateDialog {
         val networks: List<Blockchain>,
     ) : WalletConnectDialog()
 
+    data class SessionProposalDialog(
+        val sessionProposal: WalletConnectEvents.SessionProposal,
+        val networks: String,
+        val onApprove: () -> Unit,
+        val onReject: () -> Unit,
+    ) : WalletConnectDialog()
+
     data class ChooseNetwork(
         val session: WalletConnectSession,
         val networks: List<Blockchain>,
     ) : WalletConnectDialog()
 
-    data class RequestTransaction(val dialogData: TransactionRequestDialogData) :
+    data class RequestTransaction(val data: WcPreparedRequest.EthTransaction) :
         WalletConnectDialog()
 
-    data class PersonalSign(val data: PersonalSignDialogData) : WalletConnectDialog()
+    data class PersonalSign(val data: WcPreparedRequest.EthSign) : WalletConnectDialog()
     data class BnbTransactionDialog(
-        val data: BinanceMessageData,
-        val session: WCSession,
-        val sessionId: Long,
-        val dAppName: String,
+        val data: WcPreparedRequest.BnbTransaction,
     ) : WalletConnectDialog()
 }
 
 data class WcTransactionData(
-    val type: WcTransactionType,
+    val type: WcEthTransactionType,
     val transaction: TransactionData,
-    val session: WalletConnectSession,
+    val topic: String,
     val id: Long,
     val walletManager: WalletManager,
     val dialogData: TransactionRequestDialogData,
 )
 
-enum class WcTransactionType {
+enum class WcEthTransactionType {
     EthSignTransaction,
     EthSendTransaction,
 }
 
 data class WcPersonalSignData(
     val hash: ByteArray,
-    val session: WalletConnectSession,
+    val topic: String,
     val id: Long,
     val dialogData: PersonalSignDialogData,
-
+    val type: WcEthereumSignMessage.WCSignType,
 )
 
 sealed class BinanceMessageData(
