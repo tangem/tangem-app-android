@@ -6,6 +6,9 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import org.rekotlin.StateType
 
@@ -17,6 +20,9 @@ data class DaggerGraphState(
     val scanCardUseCase: ScanCardUseCase? = null,
     val walletFeatureToggles: WalletFeatureToggles? = null,
     val walletRouter: WalletRouter? = null,
+    val walletConnectRepository: WalletConnectRepository? = null,
+    val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
+    val walletConnectInteractor: WalletConnectInteractor? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
