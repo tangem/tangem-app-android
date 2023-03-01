@@ -110,6 +110,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             shopify = configValues.shopifyShop,
             zendesk = configValues.zendesk,
             swapReferrerAccount = configValues.swapReferrerAccount,
+            walletConnectProjectId = configValues.walletConnectProjectId,
         )
     }
 }
