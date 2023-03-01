@@ -35,6 +35,8 @@ fun DisclaimerType.createDisclaimer(cardDTO: CardDTO): Disclaimer {
     }
 }
 
+fun CardDTO.createDisclaimer(): Disclaimer = DisclaimerType.get(this).createDisclaimer(this)
+
 private fun provideDisclaimerDataProvider(cardId: String): DisclaimerDataProvider {
     return object : DisclaimerDataProvider {
         override fun getLanguage(): String = Locale.getDefault().language
