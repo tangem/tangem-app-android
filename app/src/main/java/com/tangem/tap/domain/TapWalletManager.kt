@@ -24,9 +24,12 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.middlewares.handleBasicAnalyticsEvent
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.walletConnectInteractor
 import com.tangem.tap.walletStoresManager
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class TapWalletManager {
@@ -58,8 +61,22 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
-
+        setupWalletConnectV2(userWallet)
         loadData(userWallet, refresh)
+    }
+
+    private fun setupWalletConnectV2(userWallet: UserWallet) {
+        val cardId = if (userWallet.cardsInWallet.size == 1) {
+            userWallet.cardId
+        } else {
+            null
+        }
+        scope.launch {
+            walletConnectInteractor.startListening(
+                userWalletId = userWallet.walletId.stringValue,
+                cardId = cardId,
+            )
+        }
     }
 
     suspend fun loadData(userWallet: UserWallet, refresh: Boolean = false) {

@@ -20,6 +20,18 @@ sealed class AppDialog : StateDialog {
         val onOk: VoidCallback? = null,
     ) : AppDialog()
 
+    data class OkCancelDialogRes(
+        val headerId: Int,
+        val messageId: Int,
+        val okButton: DialogButton,
+        val cancelButton: DialogButton,
+    ) : AppDialog()
+
+    data class DialogButton(
+        val title: Int,
+        val action: VoidCallback? = null,
+    )
+
     object ScanFailsDialog : AppDialog()
 
     data class AddressInfoDialog(
