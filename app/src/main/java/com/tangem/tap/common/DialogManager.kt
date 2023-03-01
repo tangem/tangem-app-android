@@ -12,6 +12,7 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDi
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ChooseNetworkDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.SessionProposalDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
@@ -111,14 +112,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 ChooseNetworkDialog.create(state.dialog.session, state.dialog.networks, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
                 ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
-            is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.dialogData, context)
+            is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.data, context)
             is WalletConnectDialog.PersonalSign -> PersonalSignDialog.create(state.dialog.data, context)
             is WalletConnectDialog.BnbTransactionDialog ->
                 BnbTransactionDialog.create(
-                    data = state.dialog.data,
-                    session = state.dialog.session,
-                    sessionId = state.dialog.sessionId,
-                    dAppName = state.dialog.dAppName,
+                    preparedData = state.dialog.data,
                     context = context,
                 )
             is WalletConnectDialog.UnsupportedNetwork ->
@@ -127,6 +125,15 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
                     context = context,
                 )
+            is WalletConnectDialog.SessionProposalDialog -> {
+                SessionProposalDialog.create(
+                    sessionProposal = state.dialog.sessionProposal,
+                    networks = state.dialog.networks,
+                    context = context,
+                    onApprove = state.dialog.onApprove,
+                    onReject = state.dialog.onReject,
+                )
+            }
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)

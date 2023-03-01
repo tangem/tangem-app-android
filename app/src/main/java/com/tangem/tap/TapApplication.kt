@@ -50,6 +50,9 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.data.WalletConnectRepositoryImpl
+import com.tangem.tap.domain.walletconnect2.data.WalletConnectSessionsRepositoryImpl
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
@@ -69,6 +72,8 @@ lateinit var preferencesStorage: PreferencesStorage
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 lateinit var userTokensRepository: UserTokensRepository
+lateinit var walletConnect2Repository: com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepositoryImpl
 
 private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
 private val walletManagersRepository by lazy {
@@ -179,6 +184,13 @@ class TapApplication : Application(), ImageLoaderFactory {
         scope.launch {
             featureTogglesManager.init()
         }
+
+        walletConnect2Repository = WalletConnectRepositoryImpl(
+            application = this,
+            wcRequestDeserializer = WcJrpcRequestsDeserializer(MoshiConverter.sdkMoshi),
+        )
+        walletConnect2Repository.init("")
+        walletConnectSessionsRepository = WalletConnectSessionsRepositoryImpl(context = this)
     }
 
     override fun newImageLoader(): ImageLoader {

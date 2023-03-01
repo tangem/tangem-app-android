@@ -420,6 +420,7 @@
     <string name="wallet_connect_error_unsupported_blockchains">Session request contains unsupported blockchains for WalletConnect connection. Unsupported blockchains:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
     <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
+    <string name="wallet_connect_error_wrong_card_selected">Wrong card selected in Tangem App</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
     <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>

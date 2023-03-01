@@ -30,11 +30,16 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
+import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
+import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
+import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -60,6 +65,8 @@ val scope = CoroutineScope(coroutineContext)
 private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
+
+lateinit var walletConnectInteractor: WalletConnectInteractor
 
 // TODO: Move to DI
 val userWalletsListManagerSafe: UserWalletsListManager?
@@ -102,6 +109,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this),
             ),
+        )
+
+        walletConnectInteractor = WalletConnectInteractor(
+            handler = WalletConnectEventsHandlerImpl(),
+            walletConnectRepository = walletConnect2Repository,
+            sessionsRepository = walletConnectSessionsRepository,
+            sdkHelper = WalletConnectSdkHelper(),
+            blockchainHelper = TangemWcBlockchainHelper(),
+            dispatcher = AppCoroutineDispatcherProvider(),
         )
 
         store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter))
