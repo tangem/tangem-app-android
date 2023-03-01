@@ -1,24 +1,11 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +23,7 @@ import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit) {
@@ -164,7 +152,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
 private fun WalletConnectScreenPreview() {
     WalletConnectScreen(
         state = WalletConnectScreenState(
-            sessions = listOf(
+            sessions = persistentListOf(
                 WcSessionForScreen(
                     description = "session from some dApp",
                     sessionId = "",
