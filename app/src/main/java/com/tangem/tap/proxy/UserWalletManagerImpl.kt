@@ -144,7 +144,9 @@ class UserWalletManagerImpl(
         val card = requireNotNull(appStateHolder.getActualCard()) { "card not found" }
         val blockchainNetwork = BlockchainNetwork(blockchain, card)
         val walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
-        return walletManager?.wallet?.recentTransactions?.lastOrNull()?.hash?.let { HEX_PREFIX + it }
+        return walletManager?.wallet?.recentTransactions
+            ?.lastOrNull { it.hash?.isNotEmpty() == true }
+            ?.hash?.let { HEX_PREFIX + it }
     }
 
     override suspend fun getCurrentWalletTokensBalance(
