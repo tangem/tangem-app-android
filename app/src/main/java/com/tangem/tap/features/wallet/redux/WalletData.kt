@@ -77,36 +77,35 @@ data class WalletData(
         if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
             walletWarnings.add(WalletWarning.TransactionInProgress(currency.currencyName))
         }
-    }
-
-    private fun assembleBlockchainWarnings(walletWarnings: MutableList<WalletWarning>) {
-        if (!currency.isBlockchain()) return
-
-        if (existentialDepositString != null) {
-            val warning = WalletWarning.ExistentialDeposit(
-                currencyName = currency.currencyName,
-                edStringValueWithSymbol = "$existentialDepositString ${currency.currencySymbol}",
-            )
-            walletWarnings.add(warning)
-        }
         if (walletRent != null) {
             walletWarnings.add(WalletWarning.Rent(walletRent))
         }
     }
 
-    private fun assembleTokenWarnings(walletWarnings: MutableList<WalletWarning>) {
-        with(currency) {
-            if (!isToken()) return
+    private fun assembleBlockchainWarnings(walletWarnings: MutableList<WalletWarning>) = with(currency) {
+        if (!isBlockchain()) return
 
-            if (blockchainAmountIsEmpty() && !tokenAmountIsEmpty()) {
-                walletWarnings.add(
-                    WalletWarning.BalanceNotEnoughForFee(
-                        currencyName = currencyName,
-                        blockchainFullName = blockchain.fullName,
-                        blockchainSymbol = blockchain.currency,
-                    ),
-                )
-            }
+        if (existentialDepositString != null) {
+            val warning = WalletWarning.ExistentialDeposit(
+                currencyName = currencyName,
+                edStringValueWithSymbol = "$existentialDepositString $currencySymbol",
+            )
+            walletWarnings.add(warning)
+        }
+
+    }
+
+    private fun assembleTokenWarnings(walletWarnings: MutableList<WalletWarning>) = with(currency) {
+        if (!isToken()) return
+
+        if (blockchainAmountIsEmpty() && !tokenAmountIsEmpty()) {
+            walletWarnings.add(
+                WalletWarning.BalanceNotEnoughForFee(
+                    currencyName = currencyName,
+                    blockchainFullName = blockchain.fullName,
+                    blockchainSymbol = blockchain.currency,
+                ),
+            )
         }
     }
 
