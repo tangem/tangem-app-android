@@ -41,6 +41,7 @@ import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithDisclaimer
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.WarningCard
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.keyboardAsState
@@ -343,6 +344,7 @@ private fun SwapWarnings(
                 //     )
                 // }
             }
+            SpacerH8()
         }
     }
 }
