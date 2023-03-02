@@ -20,7 +20,6 @@ import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.disclaimer.DisclaimerType
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
@@ -150,7 +149,7 @@ object ScanCardProcessor {
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
         crossinline onFailure: suspend (error: TangemError) -> Unit,
     ) {
-        val disclaimer = DisclaimerType.get(scanResponse.card).createDisclaimer(scanResponse.card)
+        val disclaimer = scanResponse.card.createDisclaimer()
         store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         if (disclaimer.isAccepted()) {
