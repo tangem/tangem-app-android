@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.common.extensions.guard
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
@@ -12,6 +13,7 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -20,9 +22,15 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
+import com.tangem.tap.domain.userWalletList.isLockedSync
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -132,7 +140,6 @@ class DetailsMiddleware {
                                         store.onUserWalletSelected(selectedUserWallet)
                                     }
                                 } else {
-                                    userWalletsListManager.lock()
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                             }
@@ -234,7 +241,7 @@ class DetailsMiddleware {
                         delay(timeMillis = 100)
                     }
                 }
-                store.dispatchOnMain(
+                store.dispatchWithMain(
                     DetailsAction.AppSettings.BiometricsStatusChanged(
                         needEnrollBiometrics = tangemSdkManager.needEnrollBiometrics,
                     ),
@@ -250,13 +257,13 @@ class DetailsMiddleware {
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
             if (preferencesStorage.shouldSaveUserWallets == enable) {
-                store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
             }
 
             toggleSaveWallets(state.scanResponse, enable)
                 .doOnFailure {
-                    store.dispatchOnMain(
+                    store.dispatchWithMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Failure(
                             prevState = !enable,
                             setting = AppSetting.SaveWallets,
@@ -264,7 +271,7 @@ class DetailsMiddleware {
                     )
                 }
                 .doOnSuccess {
-                    store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                    store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 }
         }
 
@@ -282,13 +289,13 @@ class DetailsMiddleware {
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
             if (preferencesStorage.shouldSaveAccessCodes == enable) {
-                store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
             }
 
             toggleSaveAccessCodes(state.scanResponse, state.appSettingsState.saveWallets, enable)
                 .doOnFailure {
-                    store.dispatchOnMain(
+                    store.dispatchWithMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Failure(
                             prevState = !enable,
                             setting = AppSetting.SaveAccessCode,
@@ -296,7 +303,7 @@ class DetailsMiddleware {
                     )
                 }
                 .doOnSuccess {
-                    store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                    store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 }
         }
 
@@ -320,10 +327,13 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
-            val userWallet = scanResponse?.let { UserWalletBuilder(it).build() }
+            val userWallet = userWalletsListManager.selectedUserWalletSync
+                ?: scanResponse?.let { UserWalletBuilder(it).build() }
                 ?: return CompletionResult.Failure(
-                    TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
+                    error = TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
                 )
+
+            updateUserWalletsListManager(enableUserWalletsSaving = true)
 
             return userWalletsListManager.save(userWallet)
                 .flatMap {
@@ -339,7 +349,7 @@ class DetailsMiddleware {
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
                     preferencesStorage.shouldSaveUserWallets = true
 
-                    store.onUserWalletSelected(userWallet)
+                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -352,9 +362,11 @@ class DetailsMiddleware {
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
+                    updateUserWalletsListManager(enableUserWalletsSaving = false)
                     preferencesStorage.shouldSaveUserWallets = false
 
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
+                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved wallets")
@@ -385,6 +397,28 @@ class DetailsMiddleware {
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")
                 }
+        }
+
+        private suspend fun updateUserWalletsListManager(enableUserWalletsSaving: Boolean) {
+            val manager = if (enableUserWalletsSaving) {
+                createBiometricsUserWalletsManager() ?: return
+            } else {
+                UserWalletsListManager.provideRuntimeImplementation()
+            }
+
+            store.dispatchWithMain(GlobalAction.UpdateUserWalletsListManager(manager))
+        }
+
+        private fun createBiometricsUserWalletsManager(): UserWalletsListManager? {
+            val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
+                Timber.e(IllegalStateException("No activities in foreground"))
+                return null
+            }
+
+            return UserWalletsListManager.provideBiometricImplementation(
+                context = context,
+                tangemSdkManager = tangemSdkManager,
+            )
         }
     }
 }
