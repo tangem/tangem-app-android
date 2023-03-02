@@ -2,13 +2,9 @@ package com.tangem.tap.proxy
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationParams
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
@@ -19,20 +15,17 @@ import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
-import kotlinx.coroutines.delay
-import org.rekotlin.Action
+import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
 
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
-    private val walletManagerFactory: WalletManagerFactory,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(networkId: String, isExcludeCustom: Boolean): List<Currency> {
@@ -110,21 +103,14 @@ class UserWalletManagerImpl(
         val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
         val blockchainNetwork = BlockchainNetwork(blockchain, card)
 
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            walletCurrenciesManager.addCurrencies(
-                userWallet = selectedUserWallet,
-                currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
-            )
-        } else {
-            val walletManager = getOrCreateBlockchain(blockchainNetwork, blockchain)
-            if (currency is NonNativeToken && !walletManager.cardTokens.contains(currency.toSdkToken())) {
-                val action = addNonNativeTokenToWalletAction(currency, card, blockchain)
-                val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
-                mainStore.dispatchOnMain(action)
-                delay(DELAY_UPDATE_WALLET)
-            }
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to add token, no user wallet selected")
+            return
         }
+        walletCurrenciesManager.addCurrencies(
+            userWallet = selectedUserWallet,
+            currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
+        )
     }
 
     override fun getWalletAddress(networkId: String): String {
@@ -207,58 +193,9 @@ class UserWalletManagerImpl(
         )
     }
 
-    private suspend fun getOrCreateBlockchain(
-        blockchainNetwork: BlockchainNetwork,
-        blockchain: Blockchain,
-    ): WalletManager {
-        val card = requireNotNull(appStateHolder.getActualCard()) { "card not found" }
-        val scanResponse = requireNotNull(appStateHolder.scanResponse) { "scanResponse not found" }
-        var walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
-        if (walletManager == null) {
-            walletManager = walletManagerFactory.makeWalletManagerForApp(
-                scanResponse = scanResponse,
-                blockchain = blockchain,
-                derivationParams = createDerivationParams(card.derivationStyle),
-            )
-            val action = WalletAction.MultiWallet.AddBlockchain(
-                blockchain = blockchainNetwork,
-                walletManager = walletManager,
-                save = true,
-            )
-            val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
-            mainStore.dispatchOnMain(action)
-            // workaround to wait until blockchain adds to walletStores and update appStateHolder.walletState
-            delay(DELAY_UPDATE_WALLET)
-        }
-
-        return requireNotNull(walletManager) { "cant create walletManager" }
-    }
-
-    private fun addNonNativeTokenToWalletAction(token: NonNativeToken, card: CardDTO, blockchain: Blockchain): Action {
-        return WalletAction.MultiWallet.AddToken(
-            token = Token(
-                id = token.id,
-                name = token.name,
-                symbol = token.symbol,
-                contractAddress = token.contractAddress,
-                decimals = token.decimalCount,
-            ),
-            blockchain = BlockchainNetwork(
-                blockchain,
-                card,
-            ),
-            save = true,
-        )
-    }
-
     override fun refreshWallet() {
         // workaround, should update wallet after transaction
         appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
-    }
-
-    private fun createDerivationParams(derivationStyle: DerivationStyle?): DerivationParams? {
-        // todo clarify if its need to add Custom
-        return derivationStyle?.let { DerivationParams.Default(derivationStyle) }
     }
 
     private fun getActualWalletManager(blockchain: Blockchain): WalletManager {
@@ -271,7 +208,6 @@ class UserWalletManagerImpl(
 
     companion object {
         private const val HEX_PREFIX = "0x"
-        private const val DELAY_UPDATE_WALLET = 500L
     }
 }
 
