@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
@@ -33,7 +34,6 @@ import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi
@@ -61,6 +61,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 import java.util.*
 
 /**
@@ -333,17 +334,16 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
 }
 
 private suspend fun updateWallet(walletManager: WalletManager) {
-    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-    if (selectedUserWallet != null) {
-        val wallet = walletManager.wallet
-        walletCurrenciesManager.update(
-            userWallet = selectedUserWallet,
-            currency = Currency.Blockchain(
-                blockchain = wallet.blockchain,
-                derivationPath = wallet.publicKey.derivationPath?.rawPath,
-            ),
-        )
-    } else {
-        store.dispatchOnMain(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))
+    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+        Timber.e("Unable to update wallet, no user wallet selected")
+        return
     }
+    val wallet = walletManager.wallet
+    walletCurrenciesManager.update(
+        userWallet = selectedUserWallet,
+        currency = Currency.Blockchain(
+            blockchain = wallet.blockchain,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath,
+        ),
+    )
 }
