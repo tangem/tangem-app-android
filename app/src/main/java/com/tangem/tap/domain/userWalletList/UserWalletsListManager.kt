@@ -22,47 +22,19 @@ interface UserWalletsListManager {
     val selectedUserWalletSync: UserWallet?
 
     /**
-     * Indicates that all [UserWallet]s is unlocked
-     *
-     * @see [isLockedSync]
-     * @see [UserWallet.isLocked]
+     * Indicates that the [UserWalletsListManager] contains at least one saved [UserWallet]
      * */
-    val isLocked: Flow<Boolean>
-
-    /**
-     * Indicates that all [UserWallet]s is unlocked
-     *
-     * Sync version
-     *
-     * @see [isLocked]
-     * @see [UserWallet.isLocked]
-     * */
-    val isLockedSync: Boolean
-
-    val hasSavedUserWallets: Boolean
-
-    /**
-     * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [isLocked] as false.
-     * Require biometric user authorization
-     *
-     * @return [CompletionResult] of operation, with selected [UserWallet]
-     * or null if there is no selected [UserWallet]
-     * */
-    suspend fun unlockWithBiometry(): CompletionResult<UserWallet?>
-
-    /**
-     * Remove [UserWallet]s from [userWallets] and set [isLocked] as true
-     * */
-    fun lock()
+    val hasUserWallets: Boolean
 
     /**
      * Set [UserWallet] with provided [UserWalletId] as selected
      *
      * @param userWalletId [UserWalletId] of [UserWallet] which must be selected
      *
-     * @return [CompletionResult] of operation with selected [UserWallet]
+     * @return [CompletionResult.Success] with selected [UserWallet]
+     * or [CompletionResult.Failure] with [NoSuchElementException] if [UserWallet] with [userWalletId] not found
      * */
-    suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet>
+    suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet>
 
     /**
      * Save provided user wallet and set it as selected
@@ -80,12 +52,15 @@ interface UserWalletsListManager {
      * Can terminate with [NoSuchElementException] if unable to find [UserWallet] with provided [UserWalletId]
      * @param userWalletId update [UserWallet] with that [UserWalletId]
      * @param update lambda that receives stored [UserWallet] and returns updated [UserWallet]
-     * @return [CompletionResult] of operation with updated [UserWallet]
+     * @return [CompletionResult.Success] with updated [UserWallet]
+     * or [CompletionResult.Failure] with [NoSuchElementException] if [UserWallet] with [userWalletId] not found
      * */
     suspend fun update(userWalletId: UserWalletId, update: (UserWallet) -> UserWallet): CompletionResult<UserWallet>
 
     /**
      * Delete saved [UserWallet]s with provided [UserWalletId]s
+     *
+     * Sets [isLocked] as true if [userWallets] is empty or if all [userWallets] are locked
      *
      * @param userWalletIds [UserWalletId]s of [UserWallet]s which must be deleted
      *
@@ -102,11 +77,44 @@ interface UserWalletsListManager {
 
     /**
      * Get [UserWallet] with provided [UserWalletId]
-     * May terminate with [NoSuchElementException] if [UserWallet] is not found
      *
-     * @return [CompletionResult] of operation with found [UserWallet]
+     * @return [CompletionResult.Success] with found [UserWallet]
+     * or [CompletionResult.Failure] with [NoSuchElementException] if [UserWallet] with [userWalletId] not found
      * */
     suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet>
+
+    interface Lockable : UserWalletsListManager {
+        /**
+         * Indicates that all [UserWallet]s is locked
+         *
+         * @see [isLockedSync]
+         * @see [UserWallet.isLocked]
+         * */
+        val isLocked: Flow<Boolean>
+
+        /**
+         * Indicates that all [UserWallet]s is locked
+         *
+         * Sync version
+         *
+         * @see [isLocked]
+         * @see [UserWallet.isLocked]
+         * */
+        val isLockedSync: Boolean
+
+        /**
+         * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [isLocked] as false.
+         *
+         * @return [CompletionResult] of operation, with selected [UserWallet]
+         * or null if there is no selected [UserWallet]
+         * */
+        suspend fun unlock(): CompletionResult<UserWallet?>
+
+        /**
+         * Remove [UserWallet]s from [userWallets] and set [isLocked] as true
+         * */
+        fun lock()
+    }
 
     // For provider
     companion object
