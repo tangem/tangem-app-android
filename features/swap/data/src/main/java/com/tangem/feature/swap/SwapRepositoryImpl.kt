@@ -35,8 +35,24 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val approveConverter = ApproveConverter()
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
+        // workaround cause backend do not return arbitrum and optimism rates
+        val addedTokens = if (tokenIds.contains(OPTIMISM_ID) || tokenIds.contains(ARBITRUM_ID)) {
+            tokenIds.toMutableList().apply {
+                add(ETHEREUM_ID)
+            }
+        } else {
+            tokenIds
+        }
         return withContext(coroutineDispatcher.io) {
-            tangemTechApi.getRates(currencyId.lowercase(), tokenIds.joinToString(",")).rates
+            val rates = tangemTechApi.getRates(currencyId.lowercase(), addedTokens.joinToString(",")).rates
+            val ethRate = rates[ETHEREUM_ID]
+            rates.mapValues {
+                if (it.key == OPTIMISM_ID || it.key == ARBITRUM_ID) {
+                    ethRate ?: 0.0
+                } else {
+                    it.value
+                }
+            }
         }
     }
 
@@ -135,5 +151,12 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     private fun getOneInchApi(networkId: String): OneInchApi {
         return oneInchApiFactory.getApi(networkId)
+    }
+
+    companion object {
+        // TODO("get this ids from blockchain enum later")
+        private const val OPTIMISM_ID = "optimistic-ethereum"
+        private const val ARBITRUM_ID = "arbitrum-one"
+        private const val ETHEREUM_ID = "ethereum"
     }
 }
