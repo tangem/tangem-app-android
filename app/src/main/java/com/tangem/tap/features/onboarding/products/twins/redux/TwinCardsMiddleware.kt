@@ -26,6 +26,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.domain.userWalletList.isLockedSync
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
@@ -335,7 +336,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 }
 
 private fun getPopBackScreen(): AppScreen {
-    return if (userWalletsListManager.hasSavedUserWallets) {
+    return if (userWalletsListManager.hasUserWallets) {
         if (userWalletsListManager.isLockedSync) {
             AppScreen.Welcome
         } else {
