@@ -15,7 +15,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
-import com.tangem.datasource.utils.AndroidAssetReader
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
@@ -39,9 +39,15 @@ import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @Suppress("LargeClass")
+@AndroidEntryPoint
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
+
+    @Inject
+    lateinit var assetReader: AssetReader
 
     private val mainBinding by lazy { binding.vMain }
     private var previousStep: TwinCardsStep = TwinCardsStep.None
@@ -253,8 +259,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchFirstStep(
-                    Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
-                    AndroidAssetReader(requireContext()),
+                    initialMessage = Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
+                    reader = assetReader,
                 ),
             )
         }
