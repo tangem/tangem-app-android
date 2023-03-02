@@ -35,7 +35,7 @@ internal class DevFeatureTogglesManager(
         }
 
         featureTogglesMap = localFeatureTogglesStorage.featureToggles
-            .associateToggles(currentVersion = versionProvider.get() ?: "")
+            .associateToggles(currentVersion = versionProvider.get().orEmpty())
             .mapValues { resultToggle ->
                 savedFeatureToggles[resultToggle.key] ?: resultToggle.value
             }
