@@ -10,6 +10,7 @@ import com.tangem.tangem_sdk_new.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
+import com.tangem.tap.domain.userWalletList.implementation.RuntimeUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricUserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
@@ -68,4 +69,10 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
         sensitiveInformationRepository = sensitiveInformationRepository,
         selectedUserWalletRepository = selectedUserWalletRepository,
     )
+}
+
+// TODO: Will be used in further MR's
+@Suppress("unused")
+fun UserWalletsListManager.Companion.provideRuntimeImplementation(): UserWalletsListManager {
+    return RuntimeUserWalletsListManager()
 }
