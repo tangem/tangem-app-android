@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
@@ -171,10 +172,14 @@ internal class DefaultWalletManagersRepository(
             val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.cardTypesResolver.getPrimaryToken())
 
             if (tokens != walletManager.cardTokens) {
+                // TODO: remove ability to manipulate with walletManager.cardTokens
                 walletManager.cardTokens.clear()
                 walletManager.wallet.removeAllTokens()
                 if (tokens.isNotEmpty()) {
                     walletManager.cardTokens.addAll(tokens)
+                    // add empty amounts to prepare templates of tokens WalletDataModel
+                    // see: WalletMangerWalletStoreBuilderImpl.build()
+                    tokens.forEach { walletManager.wallet.setAmount(Amount(it)) }
                 }
             }
 
