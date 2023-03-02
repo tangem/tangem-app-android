@@ -29,7 +29,7 @@ class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
 ) : DerivationManager {
 
-    override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine<Boolean> { continuation ->
+    override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
         val card = appStateHolder.getActualCard()
         if (blockchain != null && card != null) {
@@ -89,7 +89,7 @@ class DerivationManagerImpl(
         }
 
         scope.launch {
-            val selectedWallet = appStateHolder.userWalletsListManager?.selectedUserWalletSync
+            val selectedUserWallet = appStateHolder.userWalletsListManager?.selectedUserWalletSync
 
             val result = appStateHolder.tangemSdkManager?.derivePublicKeys(
                 scanResponse.card.cardId,
@@ -110,8 +110,8 @@ class DerivationManagerImpl(
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
                     )
-                    if (selectedWallet != null) {
-                        val userWallet = selectedWallet.copy(
+                    if (selectedUserWallet != null) {
+                        val userWallet = selectedUserWallet.copy(
                             scanResponse = updatedScanResponse,
                         )
 
@@ -166,14 +166,10 @@ class DerivationManagerImpl(
 
         return DerivationData(
             derivations = mapKeyOfWalletPublicKey to toDerive,
-            alreadyDerivedKeys = alreadyDerivedKeys,
-            mapKeyOfWalletPublicKey = mapKeyOfWalletPublicKey,
         )
     }
 
     private class DerivationData(
         val derivations: Pair<ByteArrayKey, List<DerivationPath>>,
-        val alreadyDerivedKeys: ExtendedPublicKeysMap,
-        val mapKeyOfWalletPublicKey: ByteArrayKey,
     )
 }
