@@ -20,8 +20,10 @@ import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.ModelWatcher
 import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
@@ -30,7 +32,6 @@ import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
 import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -39,7 +40,6 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
@@ -63,8 +63,8 @@ import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.rekotlin.StoreSubscriber
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
@@ -248,24 +248,16 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             if (currencyData.status != BalanceStatus.Loading && currencyData.status != BalanceStatus.Refreshing) {
                 Analytics.send(Token.Refreshed())
                 lifecycleScope.launch(Dispatchers.Default) {
-                    val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
-                    if (selectedUserWallet != null) {
-                        walletCurrenciesManager.update(selectedUserWallet, currency)
-                            .doOnResult {
-                                withContext(Dispatchers.Main) {
-                                    binding.srlWalletDetails.isRefreshing = false
-                                }
-                            }
-                    } else {
-                        val blockchainNetwork = BlockchainNetwork(
-                            blockchain = currency.blockchain,
-                            derivationPath = currency.derivationPath,
-                            tokens = emptyList(),
-                        )
-
-                        store.dispatchOnMain(WalletAction.LoadWallet(blockchainNetwork))
-                        store.dispatchOnMain(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
+                    val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync.guard {
+                        Timber.e("Unable to refresh wallet details screen, no user wallet selected")
+                        return@launch
                     }
+                    walletCurrenciesManager.update(selectedUserWallet, currency)
+                        .doOnResult {
+                            withMainContext {
+                                binding.srlWalletDetails.isRefreshing = false
+                            }
+                        }
                 }
             }
         }
