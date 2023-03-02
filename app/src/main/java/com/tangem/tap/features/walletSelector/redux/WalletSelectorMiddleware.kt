@@ -23,6 +23,7 @@ import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -63,7 +64,7 @@ internal class WalletSelectorMiddleware {
                 updateBalances(action.walletsStores, state)
             }
             is WalletSelectorAction.UnlockWithBiometry -> {
-                unlockWalletsWithBiometry()
+                unlockWallets()
             }
             is WalletSelectorAction.AddWallet -> {
                 addWallet()
@@ -115,11 +116,11 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private fun unlockWalletsWithBiometry() {
+    private fun unlockWallets() {
         Analytics.send(MyWallets.Button.UnlockWithBiometrics())
 
         scope.launch {
-            userWalletsListManager.unlockWithBiometry()
+            userWalletsListManager.unlockIfLockable()
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to unlock all user wallets")
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Error(error))
@@ -195,7 +196,7 @@ internal class WalletSelectorMiddleware {
                     if (userWallet.isLocked) {
                         unlockUserWalletWithScannedCard(userWallet)
                     } else {
-                        userWalletsListManager.selectWallet(userWalletId)
+                        userWalletsListManager.select(userWalletId)
                     }
                 }
                 .doOnFailure { error ->
