@@ -2,10 +2,10 @@ package com.tangem.datasource.config
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.models.ConfigModel
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.FeatureModel
-import com.tangem.datasource.utils.AssetReader
 import timber.log.Timber
 
 /**
@@ -25,8 +25,8 @@ class FeaturesLocalLoader(
             val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
             val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(ConfigValueModel::class.java)
 
-            val jsonFeatures = assetReader.readAssetAsString(featuresName)
-            val jsonConfigValues = assetReader.readAssetAsString(configValuesName)
+            val jsonFeatures = assetReader.readJson(featuresName)
+            val jsonConfigValues = assetReader.readJson(configValuesName)
 
             ConfigModel(featureAdapter.fromJson(jsonFeatures), valuesAdapter.fromJson(jsonConfigValues))
         } catch (ex: Exception) {
