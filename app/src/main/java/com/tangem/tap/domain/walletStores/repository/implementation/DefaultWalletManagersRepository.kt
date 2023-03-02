@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigDecimal
 
 internal class DefaultWalletManagersRepository(
     private val walletManagerFactory: WalletManagerFactory,
@@ -175,6 +176,7 @@ internal class DefaultWalletManagersRepository(
                 walletManager.wallet.removeAllTokens()
                 if (tokens.isNotEmpty()) {
                     walletManager.cardTokens.addAll(tokens)
+                    tokens.forEach { walletManager.wallet.addTokenValue(BigDecimal.ZERO, it) }
                 }
             }
 
