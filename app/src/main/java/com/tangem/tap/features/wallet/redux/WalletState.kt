@@ -103,7 +103,7 @@ data class WalletState(
             primaryWalletData?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val hasSavedWallets: Boolean
-        get() = userWalletsListManager.hasSavedUserWallets
+        get() = userWalletsListManager.hasUserWallets
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
