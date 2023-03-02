@@ -1,7 +1,5 @@
 package com.tangem.datasource.config.models
 
-import org.spongycastle.util.encoders.Base64.toBase64String
-
 /**
 [REDACTED_AUTHOR]
  */
@@ -34,5 +32,5 @@ data class Credentials(
     val user: String,
     val password: String,
 ) {
-    val token: String by lazy { "Basic ${toBase64String("$user:$password".toByteArray())}" }
+    val basicAuthToken: String by lazy { okhttp3.Credentials.basic(user, password) }
 }
