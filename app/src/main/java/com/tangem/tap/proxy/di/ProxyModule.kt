@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy.di
 
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
@@ -29,7 +28,6 @@ class ProxyModule {
     fun provideUserWalletManager(appStateHolder: AppStateHolder): UserWalletManager {
         return UserWalletManagerImpl(
             appStateHolder = appStateHolder,
-            walletManagerFactory = WalletManagerFactory(),
         )
     }
 

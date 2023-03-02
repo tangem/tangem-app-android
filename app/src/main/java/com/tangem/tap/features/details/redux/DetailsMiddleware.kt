@@ -26,7 +26,6 @@ import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.userWalletList.isLockedSync
-import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -141,7 +140,6 @@ class DetailsMiddleware {
                                         store.onUserWalletSelected(selectedUserWallet)
                                     }
                                 } else {
-                                    userWalletsListManager.lockIfLockable()
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                             }
@@ -329,9 +327,10 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
-            val userWallet = scanResponse?.let { UserWalletBuilder(it).build() }
+            val userWallet = userWalletsListManager.selectedUserWalletSync
+                ?: scanResponse?.let { UserWalletBuilder(it).build() }
                 ?: return CompletionResult.Failure(
-                    TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
+                    error = TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
                 )
 
             updateUserWalletsListManager(enableUserWalletsSaving = true)
