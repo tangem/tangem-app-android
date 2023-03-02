@@ -99,7 +99,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 ),
                 infuraProjectId = configValues.infuraProjectId,
                 tronGridApiKey = configValues.tronGridApiKey,
-                saltPayAuthToken = configValues.saltPay.credentials.token,
+                saltPayAuthToken = configValues.saltPay.credentials.basicAuthToken,
                 nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
                 getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey),
             ),
