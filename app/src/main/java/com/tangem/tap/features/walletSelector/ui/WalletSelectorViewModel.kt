@@ -8,6 +8,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.domain.userWalletList.isLocked
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
