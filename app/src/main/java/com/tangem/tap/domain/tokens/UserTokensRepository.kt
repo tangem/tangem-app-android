@@ -19,6 +19,7 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class UserTokensRepository(
     private val storageService: UserTokensStorageService,
@@ -37,26 +38,14 @@ class UserTokensRepository(
             return@withContext loadTokensOffline(card, userId)
         }
 
-        runCatching { tangemTechApi.getUserTokens(userId) }
-            .onSuccess { response ->
-                return@withContext response.tokens
-                    .mapNotNull(Currency.Companion::fromTokenResponse).also {
-                        storageService.saveUserTokens(userId, it.toUserTokensResponse())
-                    }
-                    .distinct()
-            }
-            .onFailure {
-                return@withContext handleGetUserTokensFailure(card = card, userId = userId, error = it)
-            }
-
-        error("Unreachable code because runCatching must return result")
+        return@withContext remoteGetUserTokens(card, userId)
     }
 
     // TODO("After adding DI") replace with CoroutineDispatcherProvider
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
         val userId = getUserWalletId(card) ?: return@withContext
         val userTokens = tokens.toUserTokensResponse()
-        tangemTechApi.saveUserTokens(userId, userTokens)
+        remoteSaveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
     }
 
@@ -97,12 +86,37 @@ class UserTokensRepository(
         return when {
             error is TangemSdkError.NetworkError && error.customMessage.contains(NOT_FOUND_HTTP_CODE) ->
                 storageService.getUserTokens(card).also {
-                    tangemTechApi.saveUserTokens(userId = userId, userTokens = it.toUserTokensResponse())
+                    remoteSaveUserTokens(userId = userId, userTokens = it.toUserTokensResponse())
                 }
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
                 tokens.distinct()
             }
+        }
+    }
+
+    private suspend fun remoteGetUserTokens(card: CardDTO, userId: String): List<Currency> {
+        runCatching {
+            tangemTechApi.getUserTokens(userId)
+        }.onSuccess { response ->
+            return response.tokens
+                .mapNotNull(Currency.Companion::fromTokenResponse).also {
+                    storageService.saveUserTokens(userId, it.toUserTokensResponse())
+                }
+                .distinct()
+        }.onFailure {
+            return handleGetUserTokensFailure(card = card, userId = userId, error = it)
+        }
+        error("Unreachable code because runCatching must return result")
+    }
+
+    private suspend fun remoteSaveUserTokens(userId: String, userTokens: UserTokensResponse) {
+        // it can throw okhttp3.internal.http2.StreamResetException: stream was reset: INTERNAL_ERROR
+        // if the /user-tokens endpoint disabled
+        runCatching {
+            tangemTechApi.saveUserTokens(userId, userTokens)
+        }.onFailure {
+            Timber.e(it)
         }
     }
 
