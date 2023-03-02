@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.userWalletList.asLockable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -95,8 +96,9 @@ internal class LockUserWalletsTimer(
         val startTime = System.currentTimeMillis()
         delay(duration)
         if (isActive) {
-            val userWalletsListManager = userWalletsListManagerSafe ?: return@launch
-            if (userWalletsListManager.hasSavedUserWallets) {
+            val userWalletsListManager = userWalletsListManagerSafe?.asLockable()
+                ?: return@launch
+            if (userWalletsListManager.hasUserWallets) {
                 val currentTime = System.currentTimeMillis()
                 Timber.d(
                     """
