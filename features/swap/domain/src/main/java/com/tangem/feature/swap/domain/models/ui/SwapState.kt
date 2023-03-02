@@ -5,6 +5,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import java.math.BigDecimal
 
 sealed interface SwapState {
 
@@ -14,10 +15,15 @@ sealed interface SwapState {
         val fee: String,
         val priceImpact: Float,
         val networkCurrency: String,
-        val preparedSwapConfigState: PreparedSwapConfigState,
+        val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
+            isAllowedToSpend = false,
+            isBalanceEnough = false,
+            isFeeEnough = false,
+        ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
         val tangemFee: Double,
+        val feeRaw: BigDecimal,
     ) : SwapState
 
     data class EmptyAmountState(
