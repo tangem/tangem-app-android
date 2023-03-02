@@ -12,11 +12,10 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.utils.AndroidAssetReader
-import com.tangem.datasource.utils.AssetReader
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
@@ -49,6 +48,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
+import com.tangem.tap.features.di.redux.DaggerGraphAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
@@ -66,7 +66,6 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
 
 private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
@@ -117,6 +116,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var configManager: ConfigManager
 
+    @Inject
+    lateinit var assetReader: AssetReader
+
     override fun onCreate() {
         super.onCreate()
 
@@ -141,7 +143,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
-        assetReader = AndroidAssetReader(this)
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
@@ -159,6 +160,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
+
+        store.dispatch(DaggerGraphAction.SetDependencies(assetReader))
     }
 
     override fun newImageLoader(): ImageLoader {
