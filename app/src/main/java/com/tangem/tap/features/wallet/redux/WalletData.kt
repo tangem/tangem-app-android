@@ -92,7 +92,6 @@ data class WalletData(
             )
             walletWarnings.add(warning)
         }
-
     }
 
     private fun assembleTokenWarnings(walletWarnings: MutableList<WalletWarning>) = with(currency) {
