@@ -3,7 +3,6 @@ package com.tangem.tap.features.wallet.ui.wallet.saltPay
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.extensions.debounce
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ShimmerData
 import com.tangem.tap.common.ShimmerRecyclerAdapter
@@ -21,7 +20,6 @@ import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryItemData
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryTransactionData
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.TxHistoryAdapter
-import com.tangem.tap.mainScope
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -31,7 +29,6 @@ import com.tangem.wallet.databinding.LayoutSaltPayBalanceBinding
 import com.tangem.wallet.databinding.LayoutSaltPayTxHistoryBinding
 import com.tangem.wallet.databinding.LayoutSaltPayWalletBinding
 import kotlinx.coroutines.launch
-import org.rekotlin.Action
 import timber.log.Timber
 
 /**
@@ -40,8 +37,6 @@ import timber.log.Timber
 class SaltPayWalletView : WalletView() {
 
     private var saltPayBinding: LayoutSaltPayWalletBinding? = null
-
-    private val actionDebouncer = debounce<Action>(500, mainScope) { store.dispatch(it) }
 
     private val balanceWidget: LayoutSaltPayBalanceBinding?
         get() = saltPayBinding?.lSaltPayBalance
@@ -131,7 +126,6 @@ class SaltPayWalletView : WalletView() {
 
         if (tokenData.currencyData.fiatAmount == null) {
             veilBalance.veil()
-            actionDebouncer(WalletAction.LoadFiatRate())
         } else {
             veilBalance.unVeil()
             tvBalance.text = tokenData.currencyData.fiatAmount.formatAmountAsSpannedString(
