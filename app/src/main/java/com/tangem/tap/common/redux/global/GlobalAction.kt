@@ -18,6 +18,7 @@ import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
 
@@ -105,4 +106,6 @@ sealed class GlobalAction : Action {
     object FetchUserCountry : GlobalAction() {
         data class Success(val countryCode: String) : GlobalAction()
     }
+
+    data class UpdateUserWalletsListManager(val manager: UserWalletsListManager) : GlobalAction()
 }
