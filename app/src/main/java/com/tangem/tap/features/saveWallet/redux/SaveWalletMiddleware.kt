@@ -19,6 +19,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.isLockable
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.preferencesStorage
@@ -97,7 +98,8 @@ internal class SaveWalletMiddleware {
             val userWallet = userWalletsListManager.selectedUserWalletSync
                 ?: UserWalletBuilder(scanResponse)
                     .backupCardsIds(state.backupInfo?.backupCardsIds)
-                    .build() ?: return@launch
+                    .build()
+                ?: return@launch
 
             provideBiometricUserWalletsListManager()
 
@@ -110,13 +112,11 @@ internal class SaveWalletMiddleware {
                 }
                 .doOnSuccess {
                     preferencesStorage.shouldSaveUserWallets = true
-
                     // Enable saving access codes only if this is the first time user save the wallet
                     preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
                         preferencesStorage.shouldSaveAccessCodes
 
                     store.dispatchWithMain(SaveWalletAction.Save.Success)
-
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                 }
@@ -124,6 +124,8 @@ internal class SaveWalletMiddleware {
     }
 
     private suspend fun provideBiometricUserWalletsListManager() {
+        if (store.state.globalState.userWalletsListManager?.isLockable == true) return
+
         val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
             val error = IllegalStateException("No activities in foreground")
             Timber.e(error)
