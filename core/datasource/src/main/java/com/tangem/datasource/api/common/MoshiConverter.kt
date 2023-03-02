@@ -3,6 +3,7 @@ package com.tangem.datasource.api.common
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.common.json.TangemSdkAdapter
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
@@ -15,6 +16,7 @@ object MoshiConverter {
     val networkMoshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .add(BigDecimalAdapter())
+        .add(TangemSdkAdapter.ByteArrayAdapter())
         .build()
 
     val networkMoshiConverter: MoshiConverterFactory = MoshiConverterFactory.create(networkMoshi)
