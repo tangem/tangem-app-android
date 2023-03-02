@@ -74,6 +74,7 @@ dependencies {
     /** Other libraries */
     implementation(Library.composeShimmer)
     implementation(Library.kotlinSerialization)
+    implementation(Library.timber)
 
     /** DI */
     implementation(Library.hilt)
