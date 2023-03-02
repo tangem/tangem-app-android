@@ -71,8 +71,6 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
     )
 }
 
-// TODO: Will be used in further MR's
-@Suppress("unused")
 fun UserWalletsListManager.Companion.provideRuntimeImplementation(): UserWalletsListManager {
     return RuntimeUserWalletsListManager()
 }
