@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.viewmodels
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -32,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
@@ -122,7 +122,7 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
                 .onFailure {
-                    Log.e("SwapViewModel", it.message ?: it.cause.toString())
+                    Timber.e(it)
                 }
         }
     }
@@ -198,11 +198,13 @@ internal class SwapViewModel @Inject constructor(
                         )
                     }
                     is SwapState.SwapError -> {
+                        Timber.e("SwapError when loading quotes ${swapState.error}")
                         uiState = stateBuilder.mapError(uiState, swapState.error) { startLoadingQuotesFromLastState() }
                     }
                 }
             },
             onError = {
+                Timber.e("Error when loading quotes: $it")
                 uiState = stateBuilder.addWarning(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
