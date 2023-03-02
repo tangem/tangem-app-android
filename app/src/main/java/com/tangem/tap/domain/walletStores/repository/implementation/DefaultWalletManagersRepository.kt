@@ -51,6 +51,7 @@ internal class DefaultWalletManagersRepository(
         val foundWalletManager = findWalletManager(
             userWalletId = userWallet.walletId,
             blockchain = blockchainNetwork?.blockchain,
+            derivationPath = blockchainNetwork?.derivationPath,
         )
 
         foundWalletManager?.updateTokens(
@@ -85,7 +86,13 @@ internal class DefaultWalletManagersRepository(
         return when {
             blockchain == Blockchain.Unknown || blockchain == null -> {
                 val error = WalletStoresError.UnknownBlockchain()
-                Timber.e(error)
+                Timber.e(
+                    error,
+                    """
+                        Unknown blockchain while creating wallet manager
+                        |- User wallet ID: ${userWallet.walletId}
+                    """.trimIndent(),
+                )
                 CompletionResult.Failure(error)
             }
             walletManager != null -> {
@@ -97,7 +104,15 @@ internal class DefaultWalletManagersRepository(
             }
             else -> {
                 val error = WalletStoresError.WalletManagerNotCreated(blockchain)
-                Timber.e(error)
+                Timber.e(
+                    error,
+                    """
+                        Unable to create wallet manager
+                        |- User wallet ID: ${userWallet.walletId}
+                        |- Blockchain: $blockchain
+                        |- Derivation path: ${blockchainNetwork?.derivationPath}
+                    """.trimIndent(),
+                )
                 CompletionResult.Failure(error)
             }
         }
@@ -178,15 +193,19 @@ internal class DefaultWalletManagersRepository(
     private suspend fun findWalletManager(
         userWalletId: UserWalletId,
         blockchain: Blockchain?,
+        derivationPath: String?,
     ): WalletManager? {
         return walletManagersStorage.getAll()
             .firstOrNull()
             ?.get(userWalletId)
             ?.let { userWalletManagers ->
-                if (blockchain == null) {
+                if (blockchain == null || derivationPath == null) {
                     userWalletManagers.firstOrNull()
                 } else {
-                    userWalletManagers.firstOrNull { it.wallet.blockchain == blockchain }
+                    userWalletManagers.firstOrNull {
+                        it.wallet.blockchain == blockchain &&
+                            it.wallet.publicKey.derivationPath?.rawPath == derivationPath
+                    }
                 }
             }
     }
