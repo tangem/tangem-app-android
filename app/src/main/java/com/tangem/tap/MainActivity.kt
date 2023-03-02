@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intentHandler.handleIntent(intent, userWalletsListManager.hasSavedUserWallets)
+        intentHandler.handleIntent(intent, userWalletsListManager.hasUserWallets)
     }
 
     override fun onStart() {
@@ -204,7 +204,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intent: Intent?) {
-        if (userWalletsListManager.hasSavedUserWallets) {
+        if (userWalletsListManager.hasUserWallets) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
             store.dispatchOnMain(WelcomeAction.HandleIntentIfNeeded(intent))
         } else {
