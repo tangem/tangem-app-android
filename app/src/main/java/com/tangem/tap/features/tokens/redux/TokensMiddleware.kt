@@ -1,11 +1,11 @@
 package com.tangem.tap.features.tokens.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.common.hdWallet.DerivationPath
@@ -30,11 +30,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -44,6 +41,7 @@ import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 @Suppress("LargeClass")
 class TokensMiddleware {
@@ -191,7 +189,7 @@ class TokensMiddleware {
         }
     }
 
-    fun deriveMissingBlockchains(
+    private fun deriveMissingBlockchains(
         scanResponse: ScanResponse,
         currencyList: List<Currency>,
         onSuccess: (ScanResponse) -> Unit,
@@ -268,89 +266,41 @@ class TokensMiddleware {
 
         return DerivationData(
             derivations = mapKeyOfWalletPublicKey to toDerive,
-            alreadyDerivedKeys = alreadyDerivedKeys,
-            mapKeyOfWalletPublicKey = mapKeyOfWalletPublicKey,
         )
     }
 
     private class DerivationData(
         val derivations: Pair<ByteArrayKey, List<DerivationPath>>,
-        val alreadyDerivedKeys: ExtendedPublicKeysMap,
-        val mapKeyOfWalletPublicKey: ByteArrayKey,
     )
 
     private fun submitAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-        if (selectedUserWallet != null) {
-            scope.launch {
-                userWalletsListManager.update(
-                    userWalletId = selectedUserWallet.walletId,
-                    update = { userWallet ->
-                        userWallet.copy(scanResponse = scanResponse)
-                    },
-                )
-                    .flatMap { updatedUserWallet ->
-                        walletCurrenciesManager.addCurrencies(
-                            userWallet = updatedUserWallet,
-                            currenciesToAdd = currencyList,
-                        )
-                    }
-            }
-        } else {
-            val factory = store.state.globalState.tapWalletManager.walletManagerFactory
-            val derivationStyle = scanResponse.card.derivationStyle
-
-            val addActions = currencyList.mapIndexedNotNull { index, currency ->
-                when (currency) {
-                    is Currency.Blockchain -> {
-                        val derivationPath = currency.derivationPath?.let { DerivationPath(it) }
-                        val derivationParams = derivationStyle?.let {
-                            when (derivationPath) {
-                                null -> DerivationParams.Default(derivationStyle)
-                                else -> DerivationParams.Custom(derivationPath)
-                            }
-                        }
-                        val walletManager = factory.makeWalletManagerForApp(
-                            scanResponse = scanResponse,
-                            blockchain = currency.blockchain,
-                            derivationParams = derivationParams,
-                        ) ?: return@mapIndexedNotNull null
-                        WalletAction.MultiWallet.AddBlockchain(
-                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
-                            walletManager = walletManager,
-                            save = index == currencyList.lastIndex,
-                        )
-                    }
-                    is Currency.Token -> {
-                        val rawDerivationPath = currency.derivationPath
-                            ?: currency.blockchain.derivationPath(derivationStyle)?.rawPath
-                        val blockchainNetwork =
-                            BlockchainNetwork(currency.blockchain, rawDerivationPath, listOf(currency.token))
-                        WalletAction.MultiWallet.AddToken(
-                            token = currency.token,
-                            blockchain = blockchainNetwork,
-                            save = index == currencyList.lastIndex,
-                        )
-                    }
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to add currencies, no user wallet selected")
+            return
+        }
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = selectedUserWallet.walletId,
+                update = { userWallet ->
+                    userWallet.copy(scanResponse = scanResponse)
+                },
+            )
+                .flatMap { updatedUserWallet ->
+                    walletCurrenciesManager.addCurrencies(
+                        userWallet = updatedUserWallet,
+                        currenciesToAdd = currencyList,
+                    )
                 }
-            }
-            addActions.forEach { store.dispatchOnMain(it) }
         }
     }
 
     private suspend fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
-        when {
-            currencies.isEmpty() -> Unit
-            userWalletsListManager.hasUserWallets -> {
-                walletCurrenciesManager.removeCurrencies(
-                    userWallet = userWalletsListManager.selectedUserWalletSync!!,
-                    currenciesToRemove = currencies,
-                )
-            }
-            else -> {
-                store.dispatch(WalletAction.MultiWallet.RemoveWallets(currencies))
-            }
+        if (currencies.isEmpty()) return
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to remove currencies, no user wallet selected")
+            return
         }
+        walletCurrenciesManager.removeCurrencies(selectedUserWallet, currencies)
     }
 
     private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
