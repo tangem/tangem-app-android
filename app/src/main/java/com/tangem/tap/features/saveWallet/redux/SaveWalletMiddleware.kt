@@ -90,7 +90,7 @@ internal class SaveWalletMiddleware {
                 .backupCardsIds(state.backupInfo?.backupCardsIds)
                 .build() ?: return@launch
 
-            val isFirstSavedWallet = !userWalletsListManager.hasSavedUserWallets
+            val isFirstSavedWallet = !userWalletsListManager.hasUserWallets
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
                 .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
