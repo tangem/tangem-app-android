@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy.di
 
+import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
@@ -33,8 +34,8 @@ class ProxyModule {
 
     @Provides
     @Singleton
-    fun provideTransactionManager(appStateHolder: AppStateHolder): TransactionManager {
-        return TransactionManagerImpl(appStateHolder)
+    fun provideTransactionManager(appStateHolder: AppStateHolder, analytics: AnalyticsHandler): TransactionManager {
+        return TransactionManagerImpl(appStateHolder, analytics)
     }
 
     @Provides
