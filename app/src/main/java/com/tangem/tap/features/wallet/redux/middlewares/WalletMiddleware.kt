@@ -143,7 +143,7 @@ class WalletMiddleware {
                     Timber.e("Unable to proceed with changed network state, no user wallet selected")
                     return
                 }
-                scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }
+                scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet, refresh = true) }
             }
             is WalletAction.CopyAddress -> {
                 Analytics.send(Token.Receive.ButtonCopyAddress())

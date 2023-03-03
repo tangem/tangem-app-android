@@ -186,7 +186,7 @@ internal class DefaultWalletManagersRepository(
             walletManager
         }
             .mapFailure {
-                val error = WalletStoresError.UpdateWalletManagerError(
+                val error = WalletStoresError.UpdateWalletManagerTokensError(
                     blockchain = walletManager.wallet.blockchain,
                     cause = it,
                 )
