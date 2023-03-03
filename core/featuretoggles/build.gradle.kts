@@ -19,10 +19,23 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
     }
 
     buildTypes {
+        release {
+            BuildConfigFieldFactory(
+                fields = listOf(Field.TesterMenuAvailability(false)),
+                builder = ::buildConfigField,
+            ).create()
+        }
+
+        debug {
+            BuildConfigFieldFactory(
+                fields = listOf(Field.TesterMenuAvailability(true)),
+                builder = ::buildConfigField,
+            ).create()
+        }
+
         create("debug_beta") {
             initWith(getByName("release"))
             BuildConfigFieldFactory(
@@ -30,6 +43,7 @@ android {
                     Field.Environment("release"),
                     Field.TestActionEnabled(true),
                     Field.LogEnabled(true),
+                    Field.TesterMenuAvailability(true),
                 ),
                 builder = ::buildConfigField,
             ).create()
@@ -38,37 +52,11 @@ android {
 }
 
 dependencies {
-
-    /** Project */
-    implementation(project(":core:utils"))
-    implementation(project(":libs:auth"))
-
-    /** Tangem libraries */
-    implementation(Tangem.blockchain)
-    implementation(Tangem.cardCore)
-
-    /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
-
-    /** Coroutines */
-    implementation(Library.coroutine)
-
-    /** Logging */
-    implementation(Library.timber)
-
-    /** Network */
-    implementation(Library.krateSharedPref)
     implementation(Library.moshi)
     implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
+    implementation(Library.hilt)
+    kapt(Library.hiltKapt)
+    implementation(Library.timber)
 
-    /** Time */
-    implementation(Library.jodatime)
-
-    /** Security */
-    implementation(Library.spongecastleCryptoCore)
+    implementation(project(":core:datasource"))
 }
