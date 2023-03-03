@@ -25,6 +25,8 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
@@ -144,6 +146,7 @@ class WalletConnectSdkHelper {
         )
         return when (result) {
             SimpleResult.Success -> {
+                Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.WalletConnect))
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
