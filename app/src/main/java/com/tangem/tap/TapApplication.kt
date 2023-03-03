@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
@@ -54,6 +55,7 @@ import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
@@ -119,6 +121,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var assetReader: AssetReader
 
+    @Inject
+    lateinit var featureTogglesManager: FeatureTogglesManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -162,6 +167,10 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.walletStoresManager = walletStoresManager
 
         store.dispatch(DaggerGraphAction.SetDependencies(assetReader))
+
+        scope.launch {
+            featureTogglesManager.init()
+        }
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -211,6 +220,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     ) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
             appVersion = try {
+// [REDACTED_TODO_COMMENT]
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 pInfo.versionName
             } catch (e: PackageManager.NameNotFoundException) {
