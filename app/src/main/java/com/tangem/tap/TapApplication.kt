@@ -49,10 +49,10 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.features.di.redux.DaggerGraphAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
@@ -166,7 +166,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
-        store.dispatch(DaggerGraphAction.SetDependencies(assetReader))
+        store.dispatch(DaggerGraphAction.SetApplicationDependencies(assetReader))
 
         scope.launch {
             featureTogglesManager.init()

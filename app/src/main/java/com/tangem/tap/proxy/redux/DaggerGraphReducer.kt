@@ -1,4 +1,4 @@
-package com.tangem.tap.features.di.redux
+package com.tangem.tap.proxy.redux
 
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
@@ -12,8 +12,11 @@ object DaggerGraphReducer {
 
     private fun internalReduce(action: DaggerGraphAction, state: AppState): DaggerGraphState {
         return when (action) {
-            is DaggerGraphAction.SetDependencies -> state.daggerGraphState.copy(
-                assetReader = action.assetReader,
+            is DaggerGraphAction.SetApplicationDependencies -> state.daggerGraphState.copy(
+                assetReader = action.assetReader
+            )
+            is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
+                testerRouter = action.testerRouter
             )
         }
     }
