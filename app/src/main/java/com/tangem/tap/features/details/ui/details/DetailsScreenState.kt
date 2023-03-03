@@ -20,6 +20,7 @@ enum class SettingsElement(
     val iconRes: Int,
     val titleRes: Int,
 ) {
+    // TODO("Enum item name must be in the SCREAMING_SNAKE register")
     WalletConnect(R.drawable.ic_walletconnect, R.string.wallet_connect_title),
     Chat(R.drawable.ic_chat, R.string.details_chat),
     SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),
@@ -29,7 +30,8 @@ enum class SettingsElement(
     AppSettings(R.drawable.ic_settings, R.string.app_settings_title),
     LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
     TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App
-    PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy);
+    PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy),
+    TesterMenu(R.drawable.ic_alert_24, R.string.tester_menu)
 }
 
 @Immutable

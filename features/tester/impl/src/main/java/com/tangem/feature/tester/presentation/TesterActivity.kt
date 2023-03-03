@@ -48,6 +48,7 @@ internal class TesterActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun TesterNavHost() {
         val navController = rememberNavController().also { innerTesterRouter.setNavController(it) }
