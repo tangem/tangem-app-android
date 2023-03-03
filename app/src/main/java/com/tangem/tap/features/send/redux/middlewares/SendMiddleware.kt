@@ -20,6 +20,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
@@ -234,8 +235,10 @@ private fun sendTransaction(
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
+                        Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Sell))
                         dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
+                        Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Send))
                         dispatch(NavigationAction.PopBackTo())
                     }
                     scope.launch(Dispatchers.IO) {
