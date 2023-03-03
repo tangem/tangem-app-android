@@ -16,7 +16,7 @@ sealed class Basic(
     ) : Basic(
         event = "Card Was Scanned",
         params = mapOf(
-            "Source" to source.value,
+            AnalyticsParam.Source to source.value,
         ),
     )
 
@@ -36,6 +36,11 @@ sealed class Basic(
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
         params = mapOf(AnalyticsParam.Currency to currency.value),
+    )
+
+    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom) : Basic(
+        event = "Transaction sent",
+        params = mapOf(AnalyticsParam.Source to sentFrom.value),
     )
 
     class ScanError(error: Throwable) : Basic(
