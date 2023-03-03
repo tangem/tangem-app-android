@@ -70,7 +70,15 @@ sealed class AnalyticsParam {
         object MyWallets : ScannedFrom("My Wallets")
     }
 
+    sealed class TxSentFrom(val value: String) {
+        object Send : TxSentFrom("Send")
+        object Swap : TxSentFrom("Swap")
+        object WalletConnect : TxSentFrom("WalletConnect")
+        object Sell : TxSentFrom("Sell")
+    }
+
     companion object Key {
+        const val Source = "Source"
         const val Batch = "Batch"
         const val ProductType = "Product Type"
         const val Firmware = "Firmware"
