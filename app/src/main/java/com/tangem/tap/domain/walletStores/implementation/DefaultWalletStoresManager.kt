@@ -153,7 +153,7 @@ internal class DefaultWalletStoresManager(
                         .flatMapOnFailure { error ->
                             when (error) {
                                 is WalletStoresError.WalletManagerNotCreated,
-                                is WalletStoresError.UpdateWalletManagerError,
+                                is WalletStoresError.UpdateWalletManagerTokensError,
                                 -> storeWalletStore(null)
                                 else -> CompletionResult.Failure(error)
                             }
@@ -178,7 +178,7 @@ internal class DefaultWalletStoresManager(
             .flatMapOnFailure { error ->
                 when (error) {
                     is WalletStoresError.WalletManagerNotCreated,
-                    is WalletStoresError.UpdateWalletManagerError,
+                    is WalletStoresError.UpdateWalletManagerTokensError,
                     -> CompletionResult.Success(Unit)
                     else -> CompletionResult.Failure(error)
                 }
