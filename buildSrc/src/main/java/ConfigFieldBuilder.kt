@@ -18,9 +18,19 @@ class BuildConfigFieldFactory(
  */
 sealed class Field(val type: String, val name: String, val value: String) {
 
-    class Environment(value: String) : Field("String", "ENVIRONMENT", "\"$value\"")
+    class Environment(value: String) : Field(type = "String", name = "ENVIRONMENT", value = "\"$value\"")
 
-    class TestActionEnabled(isEnabled: Boolean) : Field("Boolean","TEST_ACTION_ENABLED", isEnabled.toString())
+    class TestActionEnabled(isEnabled: Boolean) : Field(
+        type = "Boolean",
+        name = "TEST_ACTION_ENABLED",
+        value = isEnabled.toString(),
+    )
 
-    class LogEnabled(isEnabled: Boolean) : Field("Boolean","LOG_ENABLED", isEnabled.toString())
+    class LogEnabled(isEnabled: Boolean) : Field(type = "Boolean", name = "LOG_ENABLED", value = isEnabled.toString())
+
+    class TesterMenuAvailability(isEnabled: Boolean) : Field(
+        type = "Boolean",
+        name = "TESTER_MENU_ENABLED",
+        value = isEnabled.toString(),
+    )
 }
