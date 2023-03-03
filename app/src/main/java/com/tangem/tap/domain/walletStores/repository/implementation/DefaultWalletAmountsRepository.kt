@@ -2,7 +2,9 @@ package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionHistoryProvider
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result.Failure
@@ -17,9 +19,9 @@ import com.tangem.common.map
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd
-import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
@@ -37,6 +39,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
@@ -47,10 +50,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
+import kotlin.time.Duration
 
 @Suppress("LargeClass")
 internal class DefaultWalletAmountsRepository(
@@ -118,8 +123,12 @@ internal class DefaultWalletAmountsRepository(
         walletStores: List<WalletStoreModel>?,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        val walletStoresInternal = walletStores ?: getWalletStores(userWallets)
+        // FIXME: Use NetworkConnectionManager when it is added to DI
+        if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+            return CompletionResult.Failure(WalletStoresError.NoInternetConnection)
+        }
 
+        val walletStoresInternal = walletStores ?: getWalletStores(userWallets)
         val currencies = walletStoresInternal
             .asSequence()
             .flatMap { it.walletsData }
@@ -177,6 +186,14 @@ internal class DefaultWalletAmountsRepository(
         scanResponse: ScanResponse,
         walletStores: List<WalletStoreModel>,
     ): CompletionResult<Unit> = coroutineScope {
+        // FIXME: Use NetworkConnectionManager when it is added to DI
+        if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+            walletStores.forEach {
+                updateWalletStoreWithUnreachable(it)
+            }
+            return@coroutineScope CompletionResult.Failure(WalletStoresError.NoInternetConnection)
+        }
+
         walletStores.map { walletStore ->
             async {
                 // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
@@ -206,8 +223,8 @@ internal class DefaultWalletAmountsRepository(
                 updateWalletStoreWithUnreachable(walletStore)
             }
             else -> {
-                withInternetConnection { walletManager.safeUpdate() }
-                    .map { updateWalletManagerWithAmounts(userWalletId, walletManager) }
+                updateWalletManager(scanResponse, walletManager)
+                    .map { updateWalletManagerInStorage(userWalletId, walletManager) }
                     .flatMap {
                         updateWalletStoreWithAmounts(
                             walletStore = walletStore,
@@ -224,6 +241,24 @@ internal class DefaultWalletAmountsRepository(
                             error = error,
                         )
                     }
+            }
+        }
+    }
+
+    private suspend fun updateWalletManager(
+        scanResponse: ScanResponse,
+        walletManager: WalletManager,
+        demoCardsDelay: Duration = with(Duration) { 500.milliseconds },
+    ): CompletionResult<Unit> = catching {
+        if (scanResponse.isDemoCard() || TestActions.testAmountInjectionForWalletManagerEnabled) {
+            delay(demoCardsDelay)
+            TestActions.testAmountInjectionForWalletManagerEnabled = false
+        } else {
+            walletManager.update()
+
+            val wallet = walletManager.wallet
+            if (wallet.blockchain == Blockchain.SaltPay && walletManager is TransactionHistoryProvider) {
+                walletManager.getTransactionHistory(wallet.address, wallet.blockchain, wallet.getTokens())
             }
         }
     }
@@ -426,19 +461,7 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend inline fun withInternetConnection(crossinline block: suspend () -> Unit): CompletionResult<Unit> {
-        return if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-            val error = WalletStoresError.NoInternetConnection
-            Timber.e(error)
-            CompletionResult.Failure(error)
-        } else {
-            withContext(Dispatchers.IO) {
-                catching { block() }
-            }
-        }
-    }
-
-    private suspend fun updateWalletManagerWithAmounts(
+    private suspend fun updateWalletManagerInStorage(
         userWalletId: UserWalletId,
         walletManager: WalletManager,
     ) = withContext(Dispatchers.Default) {
