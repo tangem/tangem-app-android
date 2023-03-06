@@ -64,7 +64,7 @@ object Versions {
     const val tangemBlockchainSdk = "develop-174"
     // const val tangemBlockchainSdk = "0.0.1" // Keep it! - used for local builds
 
-    const val tangemCardSdk = "develop-199"
+    const val tangemCardSdk = "develop-200"
     // const val tangemCardSdk = "0.0.1" // Keep it! - used for local builds
     // endregion Tangem
 
