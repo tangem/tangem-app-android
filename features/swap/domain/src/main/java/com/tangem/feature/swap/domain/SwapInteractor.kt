@@ -11,6 +11,8 @@ import com.tangem.feature.swap.domain.models.ui.TxState
 
 interface SwapInteractor {
 
+    fun initDerivationPath(derivationPath: String?)
+
     /**
      * Init tokens to swap, load tokens list available to swap for given network
      *
