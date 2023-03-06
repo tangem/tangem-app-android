@@ -25,6 +25,10 @@ import timber.log.Timber
 /**
 [REDACTED_AUTHOR]
  */
+@Deprecated(
+    message = "Use WalletStoresManager.fetch({userWalletId}, refresh = true) (to update all user wallet tokens)" +
+        "or WalletCurrenciesManager.update(...) (to update only one user wallet blockchain and its tokens) instead",
+)
 @Suppress("MagicNumber")
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
