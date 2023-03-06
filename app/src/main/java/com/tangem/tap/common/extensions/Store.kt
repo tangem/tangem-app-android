@@ -1,7 +1,7 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -16,10 +16,25 @@ import org.rekotlin.Store
 
 /**
  * Dispatch action with creating the new coroutine with the Main dispatcher
+ *
+ * @see dispatchWithMain
  */
 fun Store<*>.dispatchOnMain(action: Action) {
     scope.launch(Dispatchers.Main) {
-        store.dispatch(action)
+        dispatch(action)
+    }
+}
+
+/**
+ * Dispatch action on the Main coroutine context
+ *
+ * @param action [Action] to be dispatched
+ *
+ * @see dispatchOnMain
+ * */
+suspend fun Store<*>.dispatchWithMain(action: Action) {
+    withMainContext {
+        dispatch(action)
     }
 }
 
@@ -27,9 +42,8 @@ fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
 }
 
-@Suppress("UnusedReceiverParameter")
-suspend fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
-    store.state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
+suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
+    state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
 }
 
 fun Store<*>.dispatchToastNotification(resId: Int) {
@@ -63,20 +77,18 @@ fun Store<*>.dispatchDialogHide() {
 /**
  * Dispatch action inside a coroutine with the Main dispatcher
  */
+@Deprecated(
+    message = "Use dispatchWithMain instead",
+    replaceWith = ReplaceWith(expression = "dispatchWithMain"),
+)
 suspend fun dispatchOnMain(vararg actions: Action) {
     withMainContext { actions.forEach { store.dispatch(it) } }
 }
 
-/**
- * Dispatch action
- */
-suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
-    store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
+fun Store<*>.dispatchOpenUrl(url: String) {
+    dispatch(NavigationAction.OpenUrl(url))
 }
 
-fun Store<*>.dispatchOpenUrl(url: String) {
-    store.dispatch(NavigationAction.OpenUrl(url))
-}
 fun Store<*>.dispatchShare(url: String) {
-    store.dispatch(NavigationAction.Share(url))
+    dispatch(NavigationAction.Share(url))
 }
