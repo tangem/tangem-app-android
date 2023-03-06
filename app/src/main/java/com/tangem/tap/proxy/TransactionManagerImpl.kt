@@ -48,9 +48,10 @@ class TransactionManagerImpl(
         gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
+        derivationPath: String?,
     ): SendTxResult {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = getActualWalletManager(blockchain)
+        val walletManager = getActualWalletManager(blockchain, derivationPath)
         walletManager.update()
         val amount = Amount(value = BigDecimal.ZERO, blockchain = blockchain)
         return sendTransactionInternal(
@@ -73,9 +74,10 @@ class TransactionManagerImpl(
         dataToSign: String,
         isSwap: Boolean,
         currencyToSend: Currency,
+        derivationPath: String?,
     ): SendTxResult {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = getActualWalletManager(blockchain)
+        val walletManager = getActualWalletManager(blockchain, derivationPath)
         walletManager.update()
         val amount = if (isSwap) {
             createAmountForSwap(amountToSend, currencyToSend, blockchain)
@@ -129,9 +131,9 @@ class TransactionManagerImpl(
         return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
 
-    override suspend fun updateWalletManager(networkId: String) {
+    override suspend fun updateWalletManager(networkId: String, derivationPath: String?) {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        getActualWalletManager(blockchain).update()
+        getActualWalletManager(blockchain, derivationPath).update()
     }
 
     override fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal {
@@ -147,9 +149,10 @@ class TransactionManagerImpl(
         currencyToSend: Currency,
         destinationAddress: String,
         data: String?,
+        derivationPath: String?,
     ): ProxyFee {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = getActualWalletManager(blockchain)
+        val walletManager = getActualWalletManager(blockchain, derivationPath)
         if (walletManager is EthereumWalletManager) {
             val gasLimit = getGasLimit(
                 evmWalletManager = walletManager,
@@ -293,19 +296,10 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun getActualWalletManager(blockchain: Blockchain): WalletManager {
-        val card = appStateHolder.getActualCard()
-        if (card != null) {
-            val blockchainNetwork = BlockchainNetwork(blockchain, card)
-            val walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
-            if (walletManager != null) {
-                return walletManager
-            } else {
-                error("no wallet manager found")
-            }
-        } else {
-            error("card not found")
-        }
+    private fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
+        val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
+        val walletManager = appStateHolder.walletState?.getWalletManager(blockchainNetwork)
+        return requireNotNull(walletManager) { "no wallet manager found" }
     }
 
     private fun createExtras(
