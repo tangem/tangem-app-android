@@ -9,10 +9,10 @@ import com.tangem.common.KeyPair
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.datasource.utils.AssetReader
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
@@ -89,7 +89,7 @@ class TwinCardsManager(
         }
 
         private fun getIssuers(reader: AssetReader): List<Issuer> {
-            val file = reader.readAssetAsString("tangem-app-config/issuers")
+            val file = reader.readJson(fileName = "tangem-app-config/issuers")
             return getAdapter().fromJson(file)!!
         }
     }
