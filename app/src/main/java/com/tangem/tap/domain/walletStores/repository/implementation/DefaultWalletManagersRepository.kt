@@ -204,7 +204,7 @@ internal class DefaultWalletManagersRepository(
             .firstOrNull()
             ?.get(userWalletId)
             ?.let { userWalletManagers ->
-                if (blockchain == null || derivationPath == null) {
+                if (blockchain == null) {
                     userWalletManagers.firstOrNull()
                 } else {
                     userWalletManagers.firstOrNull {
