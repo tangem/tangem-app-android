@@ -47,6 +47,7 @@ object Library {
     const val hiltCore = "com.google.dagger:hilt-core:" + Versions.hilt
     const val hiltKapt = "com.google.dagger:hilt-compiler:" + Versions.hilt
     const val jodatime = "joda-time:joda-time:" + Versions.jodatime
+    const val krateSharedPref = "hu.autsoft:krate:" + Versions.krateSharedPref
     const val kotsonGsonExt = "com.github.salomonbrys.kotson:kotson:" + Versions.kotsonGsonExt
     const val lottie = "com.airbnb.android:lottie:" + Versions.lottie
     const val materialComponent = "com.google.android.material:material:" + Versions.googleMaterialComponent
