@@ -27,6 +27,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 internal class WelcomeMiddleware {
     val middleware: Middleware<AppState> = { _, appStateProvider ->
@@ -69,16 +70,15 @@ internal class WelcomeMiddleware {
         scope.launch {
             userWalletsListManager.unlockIfLockable()
                 .doOnFailure { error ->
+                    Timber.e(error, "Unable to unlock user wallets with biometrics")
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Error(error))
                 }
                 .doOnSuccess { selectedUserWallet ->
-                    if (selectedUserWallet != null) {
-                        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
-                        store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
-                        store.onUserWalletSelected(selectedUserWallet)
+                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
+                    store.onUserWalletSelected(selectedUserWallet)
 
-                        intentHandler.handleWalletConnectLink(state.intent)
-                    }
+                    intentHandler.handleWalletConnectLink(state.intent)
                 }
         }
     }
@@ -89,6 +89,7 @@ internal class WelcomeMiddleware {
 
             userWalletsListManager.save(userWallet, canOverride = true)
                 .doOnFailure { error ->
+                    Timber.e(error, "Unable to save user wallet")
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
