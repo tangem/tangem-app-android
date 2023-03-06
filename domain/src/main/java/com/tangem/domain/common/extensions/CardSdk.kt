@@ -13,15 +13,12 @@ val FirmwareVersion.Companion.SolanaTokensAvailable
     get() = FirmwareVersion(4, 52)
 
 fun CardDTO.supportedBlockchains(): List<Blockchain> {
-    val supportedBlockchains = when {
-        firmwareVersion < FirmwareVersion.MultiWalletAvailable -> {
-            Blockchain.fromCurve(EllipticCurve.Secp256k1)
-        }
-
-        else -> {
-            (Blockchain.fromCurve(EllipticCurve.Secp256k1) + Blockchain.fromCurve(EllipticCurve.Ed25519)).distinct()
-        }
+    val supportedBlockchains = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
+        Blockchain.fromCurve(EllipticCurve.Secp256k1)
+    } else {
+        wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct()
     }
+
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }
         .filter { it.isSupportedInApp() }
@@ -38,12 +35,8 @@ fun CardDTO.supportedTokens(): List<Blockchain> {
             }
         }
     }
-    val filtered = tokensSupportedByCard.filter { isTestCard == it.isTestnet() }
-    return filtered
-}
 
-fun CardDTO.canHandleBlockchain(blockchain: Blockchain): Boolean {
-    return this.supportedBlockchains().contains(blockchain)
+    return tokensSupportedByCard.filter { isTestCard == it.isTestnet() }
 }
 
 fun CardDTO.canHandleToken(blockchain: Blockchain): Boolean {
