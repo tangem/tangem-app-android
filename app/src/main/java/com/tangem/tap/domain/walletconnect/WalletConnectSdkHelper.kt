@@ -146,7 +146,8 @@ class WalletConnectSdkHelper {
         )
         return when (result) {
             SimpleResult.Success -> {
-                Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.WalletConnect))
+                val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
+                Analytics.send(Basic.TransactionSent(sentFrom))
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
