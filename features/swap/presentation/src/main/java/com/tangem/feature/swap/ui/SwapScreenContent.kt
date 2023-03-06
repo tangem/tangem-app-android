@@ -255,12 +255,14 @@ private fun FeeItem(feeState: FeeState, currency: String) {
     val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
     when (feeState) {
         is FeeState.Loaded -> {
-            SmallInfoCardWithDisclaimer(
-                startText = titleString,
-                endText = feeState.fee,
-                disclaimer = disclaimer,
-                isLoading = false,
-            )
+            if (feeState.fee.isNotEmpty()) {
+                SmallInfoCardWithDisclaimer(
+                    startText = titleString,
+                    endText = feeState.fee,
+                    disclaimer = disclaimer,
+                    isLoading = false,
+                )
+            }
         }
         FeeState.Loading -> {
             SmallInfoCardWithDisclaimer(
@@ -271,16 +273,18 @@ private fun FeeItem(feeState: FeeState, currency: String) {
             )
         }
         is FeeState.NotEnoughFundsWarning -> {
-            SmallInfoCardWithWarning(
-                startText = titleString,
-                endText = feeState.fee,
-                disclaimer = disclaimer,
-                warningText = stringResource(
-                    id = R.string.swapping_not_enough_funds_for_fee,
-                    currency,
-                    currency,
-                ),
-            )
+            if (feeState.fee.isNotEmpty()) {
+                SmallInfoCardWithWarning(
+                    startText = titleString,
+                    endText = feeState.fee,
+                    disclaimer = disclaimer,
+                    warningText = stringResource(
+                        id = R.string.swapping_not_enough_funds_for_fee,
+                        currency,
+                        currency,
+                    ),
+                )
+            }
         }
         is FeeState.Empty -> {
             SmallInfoCard(startText = titleString, endText = "")
