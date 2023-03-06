@@ -35,10 +35,10 @@ sealed class WalletStoresError(code: Int) : TangemError(code) {
     }
 
     @Suppress("MagicNumber")
-    class UpdateWalletManagerError(
+    class UpdateWalletManagerTokensError(
         blockchain: Blockchain,
         override val cause: Throwable,
     ) : WalletStoresError(600015) {
-        override var customMessage: String = "Unable to update wallet manager for currency $blockchain: $cause"
+        override var customMessage: String = "Unable to update wallet manager tokens for currency $blockchain: $cause"
     }
 }
