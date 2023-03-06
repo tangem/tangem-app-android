@@ -25,6 +25,20 @@ android {
     }
 
     buildTypes {
+        release {
+            BuildConfigFieldFactory(
+                fields = listOf(Field.TesterMenuAvailability(false)),
+                builder = ::buildConfigField,
+            ).create()
+        }
+
+        debug {
+            BuildConfigFieldFactory(
+                fields = listOf(Field.TesterMenuAvailability(true)),
+                builder = ::buildConfigField,
+            ).create()
+        }
+
         create("debug_beta") {
             initWith(getByName("release"))
             BuildConfigFieldFactory(
@@ -32,6 +46,7 @@ android {
                     Field.Environment("release"),
                     Field.TestActionEnabled(true),
                     Field.LogEnabled(true),
+                    Field.TesterMenuAvailability(true)
                 ),
                 builder = ::buildConfigField,
             ).create()
