@@ -117,6 +117,8 @@ object TangemSdkErrorMapper {
             is TangemSdkError.BiometricsAuthenticationLockout -> error
             is TangemSdkError.BiometricsAuthenticationPermanentLockout -> error
             is TangemSdkError.UserCanceledBiometricsAuthentication -> error
+            is TangemSdkError.EncryptionOperationFailed -> error
+            is TangemSdkError.InvalidEncryptionKey -> error
         }
     }
 }
