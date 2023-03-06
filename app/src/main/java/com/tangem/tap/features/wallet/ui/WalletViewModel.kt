@@ -3,28 +3,55 @@ package com.tangem.tap.features.wallet.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.rekotlin.StoreSubscriber
 
-internal class WalletViewModel : ViewModel() {
+// TODO: Kill me, please
+@OptIn(ExperimentalCoroutinesApi::class)
+internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListManager?> {
+    private var observeWalletStoresUpdatesJob: Job? = null
+        set(value) {
+            field?.cancel()
+            field = value
+        }
+
+    init {
+        subscribeToUserWalletsListManagerUpdates()
+    }
+
+    override fun onCleared() {
+        store.unsubscribe(this)
+    }
+
+    override fun newState(state: UserWalletsListManager?) {
+        // Restarting observing of wallet store updates when the manager changes
+        if (state != null) {
+            bootstrapSelectedWalletStoresChanges(state)
+        }
+    }
+
     fun launch() {
-        bootstrapSelectedWalletStoresChanges()
+        val manager = store.state.globalState.userWalletsListManager
+        if (manager != null) {
+            bootstrapSelectedWalletStoresChanges(manager)
+        }
         bootstrapShowSaveWalletIfNeeded()
     }
 
-    private fun bootstrapSelectedWalletStoresChanges() {
-        userWalletsListManager.selectedUserWallet
+    private fun bootstrapSelectedWalletStoresChanges(manager: UserWalletsListManager) {
+        observeWalletStoresUpdatesJob = manager.selectedUserWallet
             .map { it.walletId }
-            .distinctUntilChanged()
             .flatMapLatest { selectedUserWalletId ->
                 walletStoresManager.get(selectedUserWalletId)
             }
@@ -38,6 +65,16 @@ internal class WalletViewModel : ViewModel() {
         viewModelScope.launch {
             delay(timeMillis = 1_800)
             store.dispatchOnMain(WalletAction.ShowSaveWalletIfNeeded)
+        }
+    }
+
+    private fun subscribeToUserWalletsListManagerUpdates() {
+        store.subscribe(this) { appState ->
+            appState
+                .skip { old, new ->
+                    old.globalState.userWalletsListManager == new.globalState.userWalletsListManager
+                }
+                .select { it.globalState.userWalletsListManager }
         }
     }
 }
