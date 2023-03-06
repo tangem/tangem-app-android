@@ -132,6 +132,7 @@
     <string name="initial_message_sign_header">Нажмите, чтобы подписать</string>
     <string name="initial_message_tap_header">Приложите карту</string>
     <string name="internal_error_wallet_manager_not_found">Внутренняя ошибка: не удается найти менеджер кошельков</string>
+    <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
@@ -384,6 +385,7 @@
     <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
     <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
     <string name="user_wallet_list_editing_count">%d выбрано</string>
+    <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту для входа</string>
     <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
     <string name="user_wallet_list_multi_header">Мультивалютные</string>
     <string name="user_wallet_list_rename_popup_placeholder">Имя кошелька</string>
@@ -418,6 +420,7 @@
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
     <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
+    <string name="wallet_connect_error_wrong_card_selected">Неверная карта выбрана в приложении Tangem</string>
     <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
