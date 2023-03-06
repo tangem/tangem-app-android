@@ -29,15 +29,16 @@ interface UserWalletManager {
      * @param currency to receive referral payments
      */
     @Throws(IllegalStateException::class)
-    suspend fun isTokenAdded(currency: Currency): Boolean
+    suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean
 
     /**
      * Adds token to wallet if its not
      *
      * @param currency to add to wallet
+     * @param derivationPath if null uses default
      */
     @Throws(IllegalStateException::class)
-    suspend fun addToken(currency: Currency)
+    suspend fun addToken(currency: Currency, derivationPath: String?)
 
     fun refreshWallet()
 
@@ -45,21 +46,27 @@ interface UserWalletManager {
      * Returns wallet public address for token
      *
      * @param networkId for currency
+     * @param derivationPath if null uses default
      */
     @Throws(IllegalStateException::class)
-    fun getWalletAddress(networkId: String): String
+    fun getWalletAddress(networkId: String, derivationPath: String?): String
 
     /**
      * Return balances from wallet found by networkId
      *
      * @param networkId
+     * @param derivationPath if null uses default
      * @return map of <Symbol, [ProxyAmount]>
      */
     @Throws(IllegalStateException::class)
-    suspend fun getCurrentWalletTokensBalance(networkId: String, extraTokens: List<Currency>): Map<String, ProxyAmount>
+    suspend fun getCurrentWalletTokensBalance(
+        networkId: String,
+        extraTokens: List<Currency>,
+        derivationPath: String?,
+    ): Map<String, ProxyAmount>
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenBalance(networkId: String): ProxyAmount?
+    fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount?
 
     /**
      * @param networkId
@@ -74,5 +81,5 @@ interface UserWalletManager {
     fun getUserAppCurrency(): ProxyFiatCurrency
 
     @Throws(IllegalStateException::class)
-    fun getLastTransactionHash(networkId: String): String?
+    fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
 }
