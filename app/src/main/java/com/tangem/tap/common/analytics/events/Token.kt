@@ -46,6 +46,12 @@ sealed class Token(
         params = mapOf("Token" to type.value),
     )
 
+    class Bought(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Token bought",
+        params = mapOf("Token" to type.value),
+    )
+
     sealed class Receive(
         event: String,
         params: Map<String, String> = mapOf(),
