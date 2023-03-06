@@ -52,6 +52,7 @@ internal class SwapViewModel @Inject constructor(
         savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
             ?: error("no expected parameter Currency found"),
     )
+    private val derivationPath = savedStateHandle.get<String>(SwapFragment.DERIVATION_PATH)
 
     private val stateBuilder = StateBuilder(
         actions = createUiActions(),
@@ -78,6 +79,7 @@ internal class SwapViewModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     init {
+        swapInteractor.initDerivationPath(derivationPath)
         initTokens(currency)
     }
 
