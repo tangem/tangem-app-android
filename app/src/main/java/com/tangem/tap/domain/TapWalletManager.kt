@@ -72,9 +72,12 @@ class TapWalletManager {
             .doOnFailure { error ->
                 val errorAction = when (error) {
                     is WalletStoresError -> when (error) {
-                        is WalletStoresError.FetchFiatRatesError,
-                        is WalletStoresError.UpdateWalletManagerError,
-                        -> WalletAction.LoadData.Failure(error = null)
+                        is WalletStoresError.FetchFiatRatesError -> WalletAction.LoadData.Failure(error = null)
+                        is WalletStoresError.UpdateWalletManagerTokensError -> WalletAction.LoadData.Failure(
+                            error = TapError.WalletManager.InternalError(
+                                message = error.cause.localizedMessage ?: error.customMessage,
+                            ),
+                        )
                         is WalletStoresError.WalletManagerNotCreated -> WalletAction.LoadData.Failure(
                             error = TapError.WalletManager.CreationError,
                         )
