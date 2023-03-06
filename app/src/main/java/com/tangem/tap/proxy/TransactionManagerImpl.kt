@@ -17,12 +17,15 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.isNetworkError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyNetworkInfo
 import com.tangem.lib.crypto.models.transactions.SendTxResult
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -31,6 +34,7 @@ import java.math.BigDecimal
 
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
+    private val analytics: AnalyticsHandler,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
@@ -165,7 +169,10 @@ class TransactionManagerImpl(
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
         when (result) {
-            is SimpleResult.Success -> return SendTxResult.Success
+            is SimpleResult.Success -> {
+                analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Swap))
+                return SendTxResult.Success
+            }
             is SimpleResult.Failure -> {
                 if (result.isNetworkError()) return SendTxResult.NetworkError(result.error)
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
