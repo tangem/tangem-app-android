@@ -26,7 +26,7 @@ internal class ReferralInteractorImpl(
         if (tokensForReferral.isNotEmpty()) {
             val currency = tokensConverter.convert(tokensForReferral.first())
             deriveOrAddTokens(currency)
-            val publicAddress = userWalletManager.getWalletAddress(currency.networkId)
+            val publicAddress = userWalletManager.getWalletAddress(currency.networkId, null)
             return repository.startReferral(
                 walletId = userWalletManager.getWalletId(),
                 networkId = currency.networkId,
@@ -42,8 +42,8 @@ internal class ReferralInteractorImpl(
         if (!derivationManager.hasDerivation(currency.networkId)) {
             derivationManager.deriveMissingBlockchains(currency)
         }
-        if (!userWalletManager.isTokenAdded(currency)) {
-            userWalletManager.addToken(currency)
+        if (!userWalletManager.isTokenAdded(currency, null)) {
+            userWalletManager.addToken(currency, null)
         }
     }
 
