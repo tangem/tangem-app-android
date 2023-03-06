@@ -1,4 +1,4 @@
-package com.tangem.tap.features.welcome.ui.components
+package com.tangem.tap.features.walletSelector.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -8,27 +8,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.welcome.ui.model.BiometricsLockoutDialog
+import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import com.tangem.wallet.R
 
 @Composable
-internal fun BiometricsLockoutDialog(
-    dialog: BiometricsLockoutDialog?,
+internal fun BiometricsLockoutWarningContent(
+    warning: WarningModel.BiometricsLockoutWarning,
 ) {
-    if (dialog == null) return
     BasicDialog(
         title = stringResource(id = R.string.biometric_lockout_warning_title),
         message = stringResource(
-            id = if (dialog.isPermanent) {
+            id = if (warning.isPermanent) {
                 R.string.biometric_lockout_permanent_warning_description
             } else {
                 R.string.biometric_lockout_warning_description
             },
         ),
-        onDismissDialog = dialog.onDismiss,
+        onDismissDialog = warning.onDismiss,
         confirmButton = DialogButton(
             title = stringResource(id = R.string.common_ok),
-            onClick = dialog.onDismiss,
+            onClick = warning.onDismiss,
         ),
     )
 }
@@ -39,8 +38,8 @@ private fun BiometricsLockoutDialogSample(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        BiometricsLockoutDialog(
-            dialog = BiometricsLockoutDialog(
+        BiometricsLockoutWarningContent(
+            warning = WarningModel.BiometricsLockoutWarning(
                 isPermanent = false,
                 onDismiss = {},
             ),
@@ -69,8 +68,8 @@ private fun BiometricsLockoutDialog_Permanent_Sample(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        BiometricsLockoutDialog(
-            dialog = BiometricsLockoutDialog(
+        BiometricsLockoutWarningContent(
+            warning = WarningModel.BiometricsLockoutWarning(
                 isPermanent = true,
                 onDismiss = {},
             ),
