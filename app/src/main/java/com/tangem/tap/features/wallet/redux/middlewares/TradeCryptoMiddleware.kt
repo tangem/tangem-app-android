@@ -161,7 +161,11 @@ class TradeCryptoMiddleware {
 
     private fun openSwap() {
         val currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency()
-        val bundle = bundleOf(SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency))
+        val bundle =
+            bundleOf(
+                SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
+                SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath
+            )
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
     }
 
