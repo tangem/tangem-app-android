@@ -12,7 +12,7 @@ sealed interface SwapState {
     data class QuotesLoadedState(
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
-        val fee: String,
+        val fee: String?,
         val priceImpact: Float,
         val networkCurrency: String,
         val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
@@ -21,9 +21,8 @@ sealed interface SwapState {
             isFeeEnough = false,
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
-        val swapDataModel: SwapDataModel? = null,
+        val swapDataModel: SwapStateData? = null,
         val tangemFee: Double,
-        val feeRaw: BigDecimal,
     ) : SwapState
 
     data class EmptyAmountState(
@@ -61,6 +60,13 @@ data class TokenSwapInfo(
 )
 
 data class RequestApproveStateData(
-    val estimatedGas: Int,
+    val fee: BigDecimal,
+    val gasLimit: Int,
     val approveModel: ApproveModel,
+)
+
+data class SwapStateData(
+    val fee: BigDecimal,
+    val gasLimit: Int,
+    val swapModel: SwapDataModel,
 )

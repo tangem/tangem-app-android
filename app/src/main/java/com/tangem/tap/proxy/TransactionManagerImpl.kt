@@ -21,6 +21,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.lib.crypto.models.ProxyFee
 import com.tangem.lib.crypto.models.ProxyNetworkInfo
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -28,7 +29,11 @@ import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
 
+@Suppress("LargeClass")
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
 ) : TransactionManager {
@@ -36,7 +41,7 @@ class TransactionManagerImpl(
     override suspend fun sendApproveTransaction(
         networkId: String,
         feeAmount: BigDecimal,
-        estimatedGas: Int,
+        gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
     ): SendTxResult {
@@ -49,7 +54,7 @@ class TransactionManagerImpl(
             amount = amount,
             blockchain = blockchain,
             feeAmount = feeAmount,
-            estimatedGas = estimatedGas,
+            gasLimit = gasLimit,
             destinationAddress = destinationAddress,
             dataToSign = dataToSign,
         )
@@ -59,7 +64,7 @@ class TransactionManagerImpl(
         networkId: String,
         amountToSend: BigDecimal,
         feeAmount: BigDecimal,
-        estimatedGas: Int,
+        gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
         isSwap: Boolean,
@@ -78,7 +83,7 @@ class TransactionManagerImpl(
             amount = amount,
             blockchain = blockchain,
             feeAmount = feeAmount,
-            estimatedGas = estimatedGas,
+            gasLimit = gasLimit,
             destinationAddress = destinationAddress,
             dataToSign = dataToSign,
         )
@@ -90,7 +95,7 @@ class TransactionManagerImpl(
         amount: Amount,
         blockchain: Blockchain,
         feeAmount: BigDecimal,
-        estimatedGas: Int,
+        gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
     ): SendTxResult {
@@ -98,7 +103,7 @@ class TransactionManagerImpl(
             amount = amount,
             fee = Amount(value = feeAmount, blockchain = blockchain),
             destination = destinationAddress,
-        ).copy(hash = dataToSign, extras = createExtras(walletManager, estimatedGas, dataToSign))
+        ).copy(hash = dataToSign, extras = createExtras(walletManager, gasLimit, dataToSign))
 
         val signer = transactionSigner(walletManager)
 
@@ -137,19 +142,54 @@ class TransactionManagerImpl(
         amountToSend: BigDecimal,
         currencyToSend: Currency,
         destinationAddress: String,
-    ): ProxyAmount {
+        data: String?,
+    ): ProxyFee {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain)
-        val fee = (walletManager as TransactionSender).getFee(
-            amount = createAmount(amountToSend, currencyToSend, blockchain),
-            destination = destinationAddress,
-        )
-        when (fee) {
-            is Result.Success -> {
-                return convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found"))
+        if (walletManager is EthereumWalletManager) {
+            val gasLimit = getGasLimit(
+                evmWalletManager = walletManager,
+                blockchain = blockchain,
+                amount = amountToSend,
+                currency = currencyToSend,
+                destinationAddress = destinationAddress,
+                data = data,
+            )
+            return when (val gasPrice = walletManager.getGasPrice()) {
+                is Result.Success -> {
+                    val fee = gasLimit.multiply(gasPrice.data).toBigDecimal(
+                        scale = blockchain.decimals(),
+                        mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+                    )
+                    ProxyFee(
+                        gasLimit = gasLimit,
+                        fee = ProxyAmount(
+                            currencySymbol = blockchain.currency,
+                            value = fee,
+                            decimals = blockchain.decimals(),
+                        ),
+                    )
+                }
+                is Result.Failure -> {
+                    error(gasPrice.error.message ?: gasPrice.error.customMessage)
+                }
             }
-            is Result.Failure -> {
-                error(fee.error.message ?: fee.error.customMessage)
+        } else {
+            val fee = (walletManager as TransactionSender).getFee(
+                amount = createAmount(amountToSend, currencyToSend, blockchain),
+                destination = destinationAddress,
+            )
+            when (fee) {
+                is Result.Success -> {
+                    // for not EVM blockchains set gasLimit ZERO for now
+                    return ProxyFee(
+                        gasLimit = BigInteger.ZERO,
+                        fee = convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found")),
+                    )
+                }
+                is Result.Failure -> {
+                    error(fee.error.message ?: fee.error.customMessage)
+                }
             }
         }
     }
@@ -161,6 +201,37 @@ class TransactionManagerImpl(
             blockchainId = blockchain.id,
             blockchainCurrency = blockchain.currency,
         )
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun getGasLimit(
+        evmWalletManager: EthereumWalletManager,
+        blockchain: Blockchain,
+        amount: BigDecimal,
+        currency: Currency,
+        destinationAddress: String,
+        data: String?,
+    ): BigInteger {
+        val result = if (data.isNullOrEmpty()) {
+            evmWalletManager.getGasLimit(
+                amount = createAmount(amount, currency, blockchain),
+                destination = destinationAddress,
+            )
+        } else {
+            evmWalletManager.getGasLimit(
+                amount = createAmount(amount, currency, blockchain),
+                destination = destinationAddress,
+                data = data,
+            )
+        }
+        when (result) {
+            is Result.Success -> {
+                return result.data
+            }
+            is Result.Failure -> {
+                error(result.error.message ?: result.error.customMessage)
+            }
+        }
     }
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
@@ -232,14 +303,14 @@ class TransactionManagerImpl(
 
     private fun createExtras(
         walletManager: WalletManager,
-        estimatedGas: Int,
+        gasLimit: Int,
         transactionHash: String,
     ): TransactionExtras? {
         return when (walletManager) {
             is EthereumWalletManager -> {
                 return EthereumTransactionExtras(
                     data = transactionHash.removePrefix(HEX_PREFIX).hexToBytes(),
-                    gasLimit = estimatedGas.toBigInteger(),
+                    gasLimit = gasLimit.toBigInteger(),
                 )
             }
             else -> {
