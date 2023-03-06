@@ -20,7 +20,6 @@ enum class SettingsElement(
     val iconRes: Int,
     val titleRes: Int,
 ) {
-    // TODO("Enum item name must be in the SCREAMING_SNAKE register")
     WalletConnect(R.drawable.ic_walletconnect, R.string.wallet_connect_title),
     Chat(R.drawable.ic_chat, R.string.details_chat),
     SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),

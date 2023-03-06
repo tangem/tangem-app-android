@@ -16,7 +16,7 @@ import javax.inject.Inject
  * @author Andrew Khokhlov on 07/02/2023
  */
 @ActivityScoped
-internal class TesterRouterImpl @Inject constructor(
+internal class DefaultTesterRouter @Inject constructor(
     @ActivityContext private val context: Context,
 ) : InnerTesterRouter {
 

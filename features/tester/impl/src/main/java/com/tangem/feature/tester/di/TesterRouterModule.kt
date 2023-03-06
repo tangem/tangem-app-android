@@ -1,6 +1,6 @@
 package com.tangem.feature.tester.di
 
-import com.tangem.feature.tester.presentation.navigation.TesterRouterImpl
+import com.tangem.feature.tester.presentation.navigation.DefaultTesterRouter
 import com.tangem.features.tester.api.TesterRouter
 import dagger.Binds
 import dagger.Module
@@ -14,5 +14,5 @@ internal interface TesterRouterModule {
 
     @Binds
     @ActivityScoped
-    fun bindTesterRouter(testerRouterImpl: TesterRouterImpl): TesterRouter
+    fun bindTesterRouter(defaultTesterRouter: DefaultTesterRouter): TesterRouter
 }
