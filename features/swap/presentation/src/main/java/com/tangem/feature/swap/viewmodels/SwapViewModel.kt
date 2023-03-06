@@ -12,11 +12,11 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.SwapStateData
 import com.tangem.feature.swap.domain.models.ui.TxState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
@@ -169,9 +169,8 @@ internal class SwapViewModel @Inject constructor(
                 runCatching(dispatchers.io) {
                     dataState = dataState.copy(
                         amount = amount,
-                        swapModel = null,
-                        estimatedGas = null,
-                        approveModel = null,
+                        swapDataModel = null,
+                        approveDataModel = null,
                     )
                     swapInteractor.findBestQuote(
                         networkId = dataState.networkId,
@@ -210,15 +209,14 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun fillDataState(permissionState: PermissionDataState, swapDataModel: SwapDataModel?) {
+    private fun fillDataState(permissionState: PermissionDataState, swapDataModel: SwapStateData?) {
         dataState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
             dataState.copy(
-                estimatedGas = permissionState.requestApproveData.estimatedGas,
-                approveModel = permissionState.requestApproveData.approveModel,
+                approveDataModel = permissionState.requestApproveData,
             )
         } else {
             dataState.copy(
-                swapModel = swapDataModel,
+                swapDataModel = swapDataModel,
             )
         }
     }
@@ -230,7 +228,7 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
                     networkId = dataState.networkId,
-                    swapData = requireNotNull(dataState.swapModel),
+                    swapStateData = requireNotNull(dataState.swapDataModel),
                     currencyToSend = requireNotNull(dataState.fromCurrency),
                     currencyToGet = requireNotNull(dataState.toCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
@@ -276,8 +274,7 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.givePermissionToSwap(
                     networkId = dataState.networkId,
-                    estimatedGas = dataState.estimatedGas!!,
-                    transactionData = dataState.approveModel!!,
+                    approveData = dataState.approveDataModel!!,
                     forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
                         ?: "",
                 )
