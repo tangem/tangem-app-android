@@ -84,7 +84,6 @@ class IntentHandler {
         val successUri = Uri.parse(ExchangeUrlBuilder.SUCCESS_URL)
         if (data.host == successUri.host && data.authority == successUri.authority) {
             val currency = store.state.walletState.selectedCurrency ?: return
-            
             val currencyType = AnalyticsParam.CurrencyType.Currency(currency)
             Analytics.send(Token.Bought(currencyType))
         }
