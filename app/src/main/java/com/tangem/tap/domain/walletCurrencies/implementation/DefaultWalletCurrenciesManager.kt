@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.walletCurrencies.implementation
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.flatMap
@@ -69,7 +68,7 @@ internal class DefaultWalletCurrenciesManager(
             .flatMap {
                 updateWalletStoresAmounts(
                     userWallet = userWallet,
-                    updatedBlockchains = currenciesToAdd.map { it.blockchain }.distinct(),
+                    updatedCurrencies = currenciesToAddWithMissingBlockchains,
                 )
             }
     }
@@ -220,11 +219,13 @@ internal class DefaultWalletCurrenciesManager(
 
     private suspend fun updateWalletStoresAmounts(
         userWallet: UserWallet,
-        updatedBlockchains: List<Blockchain>,
+        updatedCurrencies: List<Currency>,
     ): CompletionResult<Unit> {
+        val updatedBlockchains = updatedCurrencies
+            .filterIsInstance<Currency.Blockchain>()
         val updatedWalletStores = walletStoresRepository.get(userWallet.walletId)
             .firstOrNull()
-            ?.filter { it.blockchain in updatedBlockchains }
+            ?.filter { it.blockchainWalletData.currency in updatedBlockchains }
             ?: return CompletionResult.Success(Unit)
 
         return walletAmountsRepository.updateAmountsForWalletStores(
