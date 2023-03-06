@@ -26,13 +26,14 @@ import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManagerFactory
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
+import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -135,12 +136,12 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                                 BlockchainNetwork(blockchain, result.data.card)
                             }
 
-                            store.dispatch(
-                                WalletAction.MultiWallet.SaveCurrencies(
-                                    blockchainNetworks = blockchainNetworks,
+                            scope.launch {
+                                userTokensRepository.saveUserTokens(
                                     card = result.data.card,
-                                ),
-                            )
+                                    tokens = blockchainNetworks.toCurrencies(),
+                                )
+                            }
                             startCardActivation(updatedResponse)
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
