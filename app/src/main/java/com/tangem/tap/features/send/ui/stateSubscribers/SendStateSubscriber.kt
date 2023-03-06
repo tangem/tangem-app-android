@@ -213,7 +213,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                         .map { getMessageString(context, it.first, it.second) }
                     multiError.builder(messageList)
                 }
-                else -> context.getString(state.error.messageResource)
+                else -> context.getString(state.error.messageResId)
             }
             tilAmountToSend.enableError(true, message)
         } else {

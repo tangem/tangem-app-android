@@ -103,13 +103,13 @@ private fun handleNotificationAction(action: Action) {
                     val args = (action.error as? ArgError)?.args ?: listOf()
                     when (action) {
                         is DebugNotification -> {
-                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                            notificationsHandler?.showNotification(action.error.messageResId, args)
                         }
                         is DebugToastNotification -> {
-                            notificationsHandler?.showToastNotification(action.error.messageResource, args)
+                            notificationsHandler?.showToastNotification(action.error.messageResId, args)
                         }
                         is DebugErrorAction -> {
-                            notificationsHandler?.showDebugErrorNotification(action.error.messageResource, args)
+                            notificationsHandler?.showDebugErrorNotification(action.error.messageResId, args)
                         }
                     }
                 }
@@ -121,7 +121,7 @@ private fun handleNotificationAction(action: Action) {
                         }
                         else -> {
                             val args = (action.error as? ArgError)?.args ?: listOf()
-                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                            notificationsHandler?.showNotification(action.error.messageResId, args)
                         }
                     }
                 }

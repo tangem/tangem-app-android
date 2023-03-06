@@ -25,11 +25,6 @@ sealed class WalletStoresError(code: Int) : TangemError(code) {
     }
 
     @Suppress("MagicNumber")
-    object NoInternetConnection : WalletStoresError(60013) {
-        override var customMessage: String = "No internet connection"
-    }
-
-    @Suppress("MagicNumber")
     class WalletManagerNotCreated(blockchain: Blockchain) : WalletStoresError(60014) {
         override var customMessage: String = "Wallet manager can not be created for $blockchain"
     }

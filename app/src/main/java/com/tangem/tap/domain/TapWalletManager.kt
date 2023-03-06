@@ -11,6 +11,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -21,7 +22,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.datasource.config.ConfigManager
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.model.UserWallet
@@ -143,10 +143,8 @@ class TapWalletManager {
                         is WalletStoresError.UnknownBlockchain -> WalletAction.LoadData.Failure(
                             error = TapError.UnknownBlockchain,
                         )
-                        is WalletStoresError.NoInternetConnection -> WalletAction.LoadData.Failure(
-                            error = TapError.NoInternetConnection,
-                        )
                     }
+                    is TapError -> WalletAction.LoadData.Failure(error)
                     else -> WalletAction.LoadData.Failure(error = null)
                 }
 

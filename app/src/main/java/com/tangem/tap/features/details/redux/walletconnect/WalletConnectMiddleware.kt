@@ -101,7 +101,7 @@ class WalletConnectMiddleware {
                         GlobalAction.ShowDialog(
                             AppDialog.SimpleOkDialogRes(
                                 headerId = R.string.common_warning,
-                                messageId = action.error.messageResource,
+                                messageId = action.error.messageResId,
                             ),
                         ),
                     )
