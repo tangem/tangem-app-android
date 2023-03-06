@@ -1,15 +1,20 @@
 package com.tangem.tap.common
 
 import android.content.Intent
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
+import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.delay
@@ -27,6 +32,7 @@ class IntentHandler {
     fun handleIntent(intent: Intent?, hasSavedUserWallets: Boolean) {
         handleBackgroundScan(intent, hasSavedUserWallets)
         handleWalletConnectLink(intent)
+        handleBuyCurrencyCallback(intent)
         handleSellCurrencyCallback(intent)
     }
 
@@ -70,6 +76,18 @@ class IntentHandler {
         }
 
         return true
+    }
+
+    private fun handleBuyCurrencyCallback(intent: Intent?) {
+        val data = intent?.data ?: return
+
+        val successUri = Uri.parse(ExchangeUrlBuilder.SUCCESS_URL)
+        if (data.host == successUri.host && data.authority == successUri.authority) {
+            val currency = store.state.walletState.selectedCurrency ?: return
+            
+            val currencyType = AnalyticsParam.CurrencyType.Currency(currency)
+            Analytics.send(Token.Bought(currencyType))
+        }
     }
 
     fun handleSellCurrencyCallback(intent: Intent?) {
