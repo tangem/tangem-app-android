@@ -1,11 +1,11 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
+import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.SwapStateData
 import com.tangem.feature.swap.domain.models.ui.TokensDataState
 import com.tangem.feature.swap.domain.models.ui.TxState
 
@@ -42,15 +42,13 @@ interface SwapInteractor {
      * Gives permission to swap, this starts scan card process
      *
      * @param networkId network in which selected token
-     * @param estimatedGas estimated gas for transaction
-     * @param transactionData tx data to give approve, it loaded from 1inch in findBestQuote if needed
+     * @param approveData tx data to give approve, it loaded from 1inch in findBestQuote if needed
      * @param forTokenContractAddress token contract address for which needs permission
      */
     @Throws(IllegalStateException::class)
     suspend fun givePermissionToSwap(
         networkId: String,
-        estimatedGas: Int,
-        transactionData: ApproveModel,
+        approveData: RequestApproveStateData,
         forTokenContractAddress: String,
     ): TxState
 
@@ -76,7 +74,7 @@ interface SwapInteractor {
      * Starts swap transaction, perform sign transaction
      *
      * @param networkId network for tokens
-     * @param swapData tx data to swap, contains data to sign
+     * @param swapStateData tx data to swap, contains data to sign
      * @param currencyToSend [Currency]
      * @param currencyToGet [Currency]
      * @param amountToSwap amount to swap
@@ -85,7 +83,7 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
         networkId: String,
-        swapData: SwapDataModel,
+        swapStateData: SwapStateData,
         currencyToSend: Currency,
         currencyToGet: Currency,
         amountToSwap: String,
