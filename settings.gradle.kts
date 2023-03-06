@@ -5,6 +5,7 @@ include(":common")
 // region Core modules
 include(":core:analytics")
 include(":core:datasource")
+include(":core:featuretoggles")
 include(":core:res")
 include(":core:utils")
 include(":core:ui")
