@@ -84,6 +84,12 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.FetchUserCountry.Success -> globalState.copy(
             userCountryCode = action.countryCode,
         )
+        is GlobalAction.UpdateUserWalletsListManager -> {
+            appStateHolder.userWalletsListManager = action.manager
+            globalState.copy(
+                userWalletsListManager = action.manager,
+            )
+        }
         else -> globalState
     }
 }
