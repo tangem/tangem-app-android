@@ -339,7 +339,7 @@
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">餘額不足</string>
     <string name="swapping_not_enough_funds_for_fee">您的 %1$s 錢包中沒有足夠的資金來創建交易。首先為您的 %2$s 錢包充值</string>
-    <string name="swapping_pending_transaction_subtitle">交易進行中...</string>
+    <string name="swapping_pending_transaction_subtitle">交易進行中…</string>
     <string name="swapping_pending_transaction_title">等待中</string>
     <string name="swapping_permission_buttons_approve">允許</string>
     <string name="swapping_permission_header">賦予權限</string>
@@ -371,7 +371,7 @@
     <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
     <string name="transaction_history_error_failed_to_load">無法加載交易</string>
     <string name="transaction_history_title">交易</string>
-    <string name="transaction_history_tx_in_progress">進行中...</string>
+    <string name="transaction_history_tx_in_progress">進行中…</string>
     <string name="twin_error_same_card">您掃描了同一張卡片。要創建雙錢包，您需要掃描編號為 %d 的卡</string>
     <string name="twins_onboarding_description_format">這一個是你手裡拿著的，另一個是編號為 %s 的，這兩張卡都可以用來從這個錢包中提取資金</string>
     <string name="twins_onboarding_subtitle">一個錢包，兩張卡片</string>
@@ -384,6 +384,7 @@
     <string name="user_wallet_list_add_button">添加新錢包</string>
     <string name="user_wallet_list_delete_prompt">您確定要刪除此錢包?</string>
     <string name="user_wallet_list_editing_count">已選擇 %d</string>
+    <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card to log in</string>
     <string name="user_wallet_list_error_wallet_already_saved">此錢包已保存，您可以再添加一個</string>
     <string name="user_wallet_list_multi_header">多幣種</string>
     <string name="user_wallet_list_rename_popup_placeholder">錢包名稱</string>
