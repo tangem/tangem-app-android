@@ -17,7 +17,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.isNetworkError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.Currency
@@ -39,7 +39,7 @@ import java.math.RoundingMode
 @Suppress("LargeClass")
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
-    private val analytics: AnalyticsHandler,
+    private val analytics: AnalyticsEventHandler,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
