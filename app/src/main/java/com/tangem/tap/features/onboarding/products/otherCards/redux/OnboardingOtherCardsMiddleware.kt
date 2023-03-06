@@ -11,10 +11,11 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -112,9 +113,12 @@ private fun handleOtherCardsAction(action: Action) {
                                 )
                             }
 
-                            store.dispatch(
-                                WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks, updatedResponse.card),
-                            )
+                            scope.launch {
+                                userTokensRepository.saveUserTokens(
+                                    card = result.data.card,
+                                    tokens = blockchainNetworks.toCurrencies(),
+                                )
+                            }
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
