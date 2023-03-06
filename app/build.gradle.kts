@@ -112,6 +112,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
     implementation(project(":core:ui"))
     implementation(project(":core:datasource"))
