@@ -39,6 +39,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private val cryptoCurrencyConverter = CryptoCurrencyConverter()
     private val amountFormatter = AmountFormatter()
+    private var derivationPath: String? = null
+
+    override fun initDerivationPath(derivationPath: String?) {
+        this.derivationPath = derivationPath
+    }
 
     override suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState {
         val networkId = initialCurrency.networkId
@@ -63,7 +68,7 @@ internal class SwapInteractorImpl @Inject constructor(
             .filter {
                 !loadedOnWalletsMap.contains(it.symbol)
             }
-        val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList())
+        val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId, emptyList(), derivationPath)
             .mapValues { SwapAmount(it.value.value, it.value.decimals) }
         val appCurrency = userWalletManager.getUserAppCurrency()
         val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
@@ -118,11 +123,12 @@ internal class SwapInteractorImpl @Inject constructor(
             gasLimit = approveData.gasLimit,
             destinationAddress = approveData.approveModel.toAddress,
             dataToSign = approveData.approveModel.data,
+            derivationPath = derivationPath,
         )
         return when (result) {
             is SendTxResult.Success -> {
                 allowPermissionsHandler.addAddressToInProgress(forTokenContractAddress)
-                TxState.TxSent(txAddress = userWalletManager.getLastTransactionHash(networkId) ?: "")
+                TxState.TxSent(txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath) ?: "")
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
             is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
@@ -149,7 +155,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val isAllowedToSpend = checkAllowance(networkId, fromTokenAddress)
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
-            transactionManager.updateWalletManager(networkId)
+            transactionManager.updateWalletManager(networkId, derivationPath)
         }
         val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
@@ -192,10 +198,11 @@ internal class SwapInteractorImpl @Inject constructor(
             destinationAddress = swapStateData.swapModel.transaction.toWalletAddress,
             dataToSign = swapStateData.swapModel.transaction.data,
             isSwap = true,
+            derivationPath = derivationPath,
         )
         return when (result) {
             is SendTxResult.Success -> {
-                userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet))
+                userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet), derivationPath)
                 userWalletManager.refreshWallet()
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
@@ -206,7 +213,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         swapStateData.swapModel.toTokenAmount,
                         currencyToGet.symbol,
                     ),
-                    txAddress = userWalletManager.getLastTransactionHash(networkId) ?: "",
+                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath) ?: "",
                 )
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
@@ -285,7 +292,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val allowance = repository.checkTokensSpendAllowance(
             networkId = networkId,
             tokenAddress = fromTokenAddress,
-            walletAddress = userWalletManager.getWalletAddress(networkId),
+            walletAddress = userWalletManager.getWalletAddress(networkId, derivationPath),
         )
         return allowance.error == DataError.NoError && allowance.dataModel != ZERO_BALANCE
     }
@@ -396,6 +403,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     currencyToSend = cryptoCurrencyConverter.convert(fromToken),
                     destinationAddress = swapData.transaction.toWalletAddress,
                     data = swapData.transaction.data,
+                    derivationPath = derivationPath,
                 )
                 val feeFiat = getFormattedFiatFee(networkId, feeData.fee.value)
                 val formattedFee = amountFormatter.formatBigDecimalAmountToUI(
@@ -513,6 +521,7 @@ internal class SwapInteractorImpl @Inject constructor(
             currencyToSend = userWalletManager.getNativeTokenForNetwork(networkId),
             destinationAddress = transactionData.toAddress,
             data = transactionData.data,
+            derivationPath = derivationPath,
         )
         val feeFiat = getFormattedFiatFee(networkId, feeData.fee.value)
         val formattedFee = amountFormatter.formatBigDecimalAmountToUI(
@@ -543,6 +552,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 userWalletManager.getCurrentWalletTokensBalance(
                     networkId = networkId,
                     extraTokens = tokensToSync.map { cryptoCurrencyConverter.convert(it) },
+                    derivationPath = derivationPath,
                 )
             cache.cacheBalances(tokensBalance.mapValues { SwapAmount(it.value.value, it.value.decimals) })
         }
@@ -558,7 +568,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private fun getWalletAddress(networkId: String): String {
-        return userWalletManager.getWalletAddress(networkId)
+        return userWalletManager.getWalletAddress(networkId, derivationPath)
     }
 
     private fun getTokenAddress(currency: Currency): String {
@@ -581,7 +591,7 @@ internal class SwapInteractorImpl @Inject constructor(
         if (fee == null) {
             return false
         }
-        val nativeTokenBalance = userWalletManager.getNativeTokenBalance(networkId)
+        val nativeTokenBalance = userWalletManager.getNativeTokenBalance(networkId, derivationPath)
         val percentsToFeeIncrease = BigDecimal.valueOf(INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT)
         return when (fromToken) {
             is Currency.NativeToken -> {
