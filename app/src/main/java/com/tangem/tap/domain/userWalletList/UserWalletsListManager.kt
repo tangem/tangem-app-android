@@ -39,7 +39,7 @@ interface UserWalletsListManager {
     /**
      * Save provided user wallet and set it as selected
      * @param userWallet [UserWallet] to save
-     * @param canOverride If false, then terminate with [UserWalletListError.WalletAlreadySaved] when user tries
+     * @param canOverride If false, then terminate with [UserWalletsListError.WalletAlreadySaved] when user tries
      * to save an already saved card
      * @return [CompletionResult] of operation
      */
@@ -47,7 +47,7 @@ interface UserWalletsListManager {
 
     /**
      * Same as [save] but not change selected user wallet ID
-     * and not terminate with [UserWalletListError.WalletAlreadySaved] if [UserWallet] already saved
+     * and not terminate with [UserWalletsListError.WalletAlreadySaved] if [UserWallet] already saved
      *
      * Can terminate with [NoSuchElementException] if unable to find [UserWallet] with provided [UserWalletId]
      * @param userWalletId update [UserWallet] with that [UserWalletId]
@@ -108,7 +108,7 @@ interface UserWalletsListManager {
          * @return [CompletionResult] of operation, with selected [UserWallet]
          * or null if there is no selected [UserWallet]
          * */
-        suspend fun unlock(): CompletionResult<UserWallet?>
+        suspend fun unlock(): CompletionResult<UserWallet>
 
         /**
          * Remove [UserWallet]s from [userWallets] and set [isLocked] as true
