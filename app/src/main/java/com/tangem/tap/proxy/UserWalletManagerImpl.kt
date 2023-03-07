@@ -28,7 +28,11 @@ class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
 ) : UserWalletManager {
 
-    override suspend fun getUserTokens(networkId: String, isExcludeCustom: Boolean): List<Currency> {
+    override suspend fun getUserTokens(
+        networkId: String,
+        derivationPath: String?,
+        isExcludeCustom: Boolean,
+    ): List<Currency> {
         val card = appStateHolder.getActualCard()
         val userTokensRepository =
             requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
@@ -40,7 +44,9 @@ class UserWalletManagerImpl(
                     } else {
                         true
                     }
-                    it.blockchain.toNetworkId() == networkId && checkCustom
+                    it.blockchain.toNetworkId() == networkId &&
+                        checkCustom &&
+                        it.derivationPath == derivationPath
                 }
                 .map {
                     if (it is com.tangem.tap.features.wallet.models.Currency.Token) {
