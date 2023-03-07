@@ -4,7 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.userWalletList.UserWalletListError
+import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +49,7 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
             val isWalletSaved = state.value.userWallet?.walletId == userWallet.walletId
 
             if (isWalletSaved) {
-                CompletionResult.Failure(UserWalletListError.WalletAlreadySaved)
+                CompletionResult.Failure(UserWalletsListError.WalletAlreadySaved)
             } else {
                 saveInternal(userWallet)
             }
