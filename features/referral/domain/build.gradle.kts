@@ -1,7 +1,7 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
+    kotlin("jvm")
     kotlin("kapt")
+    id("configuration")
 }
 
 dependencies {
@@ -16,9 +16,4 @@ dependencies {
     /** DI */
     implementation(Library.hiltCore)
     kapt(Library.hiltKapt)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
 }
