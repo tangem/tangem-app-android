@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -14,24 +14,24 @@ dependencies {
     implementation(project(":core:ui"))
 
     /** AndroidX */
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(Library.materialComponent)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.material)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.ui.tooling)
 
     /** Domain */
     implementation(project(":features:referral:domain"))
 
     /** Other libraries */
-    implementation(Library.composeShimmer)
-    implementation(Library.accompanistWebView)
+    implementation(deps.compose.shimmer)
+    implementation(deps.compose.accompanist.webView)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }

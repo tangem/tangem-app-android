@@ -1,9 +1,9 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    kotlin("plugin.serialization")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -14,28 +14,28 @@ dependencies {
     implementation(project(":core:ui"))
 
     /** AndroidX */
-    implementation(AndroidX.activityCompose)
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(AndroidX.browser)
+    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.androidx.browser)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
-    implementation(Compose.coil)
-    implementation(Compose.constraintLayout)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
 
     /** Domain */
     implementation(project(":features:swap:domain"))
 
     /** Other libraries */
-    implementation(Library.composeShimmer)
-    implementation(Library.kotlinSerialization)
-    implementation(Library.timber)
+    implementation(deps.compose.shimmer)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.timber)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }
