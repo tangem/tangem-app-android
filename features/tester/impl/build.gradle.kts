@@ -1,27 +1,27 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
 dependencies {
     /** AndroidX */
-    implementation(AndroidX.activityCompose)
+    implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.hiltNavigation)
-    implementation(Compose.material)
-    implementation(Compose.navigation)
-    implementation(Compose.ui)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.material)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.navigation)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */
-    implementation(Library.accompanistSystemUiController)
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Core modules */
     implementation(project(":core:featuretoggles"))
