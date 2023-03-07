@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.toNetworkId
@@ -37,6 +38,7 @@ data class WalletData(
 
     fun isAvailableToSwap(swapInteractor: SwapInteractor, isExchangeFeatureOn: Boolean): Boolean {
         return swapInteractor.isAvailableToSwap(currency.blockchain.toNetworkId()) &&
+            currency.blockchain.id != Blockchain.Optimism.id && // disable optimism blockchain for now
             isExchangeFeatureOn &&
             !currency.isCustomCurrency(null)
     }
