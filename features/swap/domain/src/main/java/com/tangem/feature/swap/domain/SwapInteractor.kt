@@ -94,9 +94,10 @@ interface SwapInteractor {
     /**
      * Returns token in wallet balance
      *
+     * @param networkId
      * @param token
      */
-    fun getTokenBalance(token: Currency): SwapAmount
+    fun getTokenBalance(networkId: String, token: Currency): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
 }
