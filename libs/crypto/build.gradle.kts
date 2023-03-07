@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm")
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
 }
 
 dependencies {
 
     /** Coroutines */
-    implementation(Library.coroutine)
+    implementation(deps.kotlin.coroutines)
 }
