@@ -1,4 +1,4 @@
 plugins {
-    kotlin("jvm")
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
 }

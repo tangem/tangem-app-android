@@ -1,17 +1,17 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
 dependencies {
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
-    implementation(Library.timber)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    implementation(deps.timber)
 
     implementation(project(":core:datasource"))
 }
