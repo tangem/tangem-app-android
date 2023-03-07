@@ -1,8 +1,8 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
+    kotlin("jvm")
     kotlin("kapt")
     kotlin("plugin.serialization")
+    id("configuration")
 }
 
 dependencies {
@@ -16,9 +16,4 @@ dependencies {
 
     /** Other Libraries **/
     implementation(Library.kotlinSerialization)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
 }
