@@ -1,22 +1,22 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
 }
 
 dependencies {
     /** AndroidX libraries */
-    implementation(AndroidX.fragmentKtx)
+    implementation(deps.androidx.fragment.ktx)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.ui.tooling)
 
     /** Other libraries */
-    implementation(Library.accompanistSystemUiController)
-    implementation(Library.materialComponent)
-    implementation(Library.composeShimmer)
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.material)
+    implementation(deps.compose.shimmer)
 
     implementation(project(":core:res"))
 }
