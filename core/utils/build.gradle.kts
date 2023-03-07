@@ -1,15 +1,15 @@
 plugins {
-    kotlin("jvm")
-    kotlin("kapt")
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
     id("configuration")
 }
 
 dependencies {
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 
     /** Coroutines */
-    implementation(Library.coroutine)
+    implementation(deps.kotlin.coroutines)
 }
