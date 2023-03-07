@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
 }
 
@@ -11,28 +11,28 @@ dependencies {
     implementation(project(":libs:auth"))
 
     /** Tangem libraries */
-    implementation(Tangem.blockchain) {
+    implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(Tangem.cardCore)
-    implementation(Tangem.cardAndroid) {
+    implementation(deps.tangem.card.core)
+    implementation(deps.tangem.card.android) {
         exclude(module = "joda-time")
     }
 
     /** Other libraries */
-    implementation(Library.reKotlin)
+    implementation(deps.reKotlin)
     //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttpLogging)
-    implementation(Library.timber)
-    implementation(Library.coroutine)
+    implementation(deps.retrofit)
+    implementation(deps.retrofit.moshi)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.okHttp.logging)
+    implementation(deps.timber)
+    implementation(deps.kotlin.coroutines)
 
     /** Testing libraries */
-    testImplementation(Test.junit)
-    testImplementation(Test.truth)
-    androidTestImplementation(Test.junitAndroidExt)
-    androidTestImplementation(Test.espresso)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.truth)
+    androidTestImplementation(deps.test.junit.android)
+    androidTestImplementation(deps.test.espresso)
 }
