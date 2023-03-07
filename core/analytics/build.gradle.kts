@@ -1,16 +1,16 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
 dependencies {
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Core shouldn't depends on core, but in case with utils and logging its necessary */
     implementation(project(":core:utils"))

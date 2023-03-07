@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -13,31 +13,31 @@ dependencies {
     implementation(project(":libs:auth"))
 
     /** Tangem libraries */
-    implementation(Tangem.blockchain)
-    implementation(Tangem.cardCore)
+    implementation(deps.tangem.blockchain)
+    implementation(deps.tangem.card.core)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Coroutines */
-    implementation(Library.coroutine)
+    implementation(deps.kotlin.coroutines)
 
     /** Logging */
-    implementation(Library.timber)
+    implementation(deps.timber)
 
     /** Network */
-    implementation(Library.krateSharedPref)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
+    implementation(deps.krateSharedPref)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.okHttp)
+    implementation(deps.okHttp.logging)
+    implementation(deps.retrofit)
+    implementation(deps.retrofit.moshi)
 
     /** Time */
-    implementation(Library.jodatime)
+    implementation(deps.jodatime)
 
     /** Security */
-    implementation(Library.spongecastleCryptoCore)
+    implementation(deps.spongecastle.core)
 }
