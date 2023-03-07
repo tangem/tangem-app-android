@@ -2,6 +2,8 @@ include(":app")
 include(":domain")
 include(":common")
 
+includeBuild("includedBuild/configuration")
+
 // region Core modules
 include(":core:analytics")
 include(":core:datasource")
