@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm")
-    kotlin("kapt")
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
     id("configuration")
 }
 
@@ -11,9 +11,9 @@ dependencies {
     implementation(project(":libs:crypto"))
 
     /** Time */
-    implementation(Library.jodatime)
+    implementation(deps.jodatime)
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 }
