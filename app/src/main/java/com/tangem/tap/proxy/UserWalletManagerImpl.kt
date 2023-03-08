@@ -93,9 +93,13 @@ class UserWalletManagerImpl(
 
     override suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
-        val walletManager = getActualWalletManager(blockchain, derivationPath)
-        return walletManager.cardTokens.any {
-            it.id == currency.id
+        return try {
+            val walletManager = getActualWalletManager(blockchain, derivationPath)
+            walletManager.cardTokens.any {
+                it.id == currency.id
+            }
+        } catch (e: IllegalArgumentException) {
+            false
         }
     }
 
@@ -191,6 +195,7 @@ class UserWalletManagerImpl(
         appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
     }
 
+    @kotlin.jvm.Throws(IllegalArgumentException::class)
     private fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
         val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
         return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
