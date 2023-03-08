@@ -12,7 +12,14 @@ interface DerivationManager {
     suspend fun deriveMissingBlockchains(currency: Currency): Boolean
 
     /**
-     * Checks that given [networkId] has derivations
+     * Returns derivationPath or null for blockchain with given networkId
+     *
+     * @param networkId
      */
-    fun hasDerivation(networkId: String): Boolean
+    fun getDerivationPathForBlockchain(networkId: String): String?
+
+    /**
+     * Checks that given [networkId] has derivations for [derivationPath]
+     */
+    fun hasDerivation(networkId: String, derivationPath: String): Boolean
 }
