@@ -25,8 +25,8 @@ internal class ReferralInteractorImpl(
     override suspend fun startReferral(): ReferralData {
         if (tokensForReferral.isNotEmpty()) {
             val currency = tokensConverter.convert(tokensForReferral.first())
-            deriveOrAddTokens(currency)
-            val publicAddress = userWalletManager.getWalletAddress(currency.networkId, null)
+            val derivationPath = deriveOrAddTokens(currency)
+            val publicAddress = userWalletManager.getWalletAddress(currency.networkId, derivationPath)
             return repository.startReferral(
                 walletId = userWalletManager.getWalletId(),
                 networkId = currency.networkId,
@@ -38,13 +38,16 @@ internal class ReferralInteractorImpl(
         }
     }
 
-    private suspend fun deriveOrAddTokens(currency: Currency) {
-        if (!derivationManager.hasDerivation(currency.networkId)) {
+    private suspend fun deriveOrAddTokens(currency: Currency): String {
+        val derivationPath = derivationManager.getDerivationPathForBlockchain(currency.networkId)
+        if (derivationPath.isNullOrEmpty()) error("derivationPath shouldn't be empty")
+        if (!derivationManager.hasDerivation(currency.networkId, derivationPath)) {
             derivationManager.deriveMissingBlockchains(currency)
         }
-        if (!userWalletManager.isTokenAdded(currency, null)) {
-            userWalletManager.addToken(currency, null)
+        if (!userWalletManager.isTokenAdded(currency, derivationPath)) {
+            userWalletManager.addToken(currency, derivationPath)
         }
+        return derivationPath
     }
 
     private fun saveRefTokens(tokens: List<TokenData>) {
