@@ -246,10 +246,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         return when (item.itemId) {
             R.id.details_menu -> {
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
-                store.state.globalState.scanResponse?.let { scanNoteResponse ->
+                store.state.globalState.scanResponse?.let { scanResponse ->
                     store.dispatch(
                         DetailsAction.PrepareScreen(
-                            scanResponse = scanNoteResponse,
+                            scanResponse = scanResponse,
                             wallets = store.state.walletState.walletManagers.map { it.wallet },
                         ),
                     )
