@@ -411,6 +411,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     amountToSend = amount.value,
                     currencyToSend = cryptoCurrencyConverter.convert(fromToken),
                     destinationAddress = swapData.transaction.toWalletAddress,
+                    increaseBy = INCREASE_GAS_LIMIT_BY,
                     data = swapData.transaction.data,
                     derivationPath = derivationPath,
                 )
@@ -529,6 +530,7 @@ internal class SwapInteractorImpl @Inject constructor(
             amountToSend = BigDecimal.ZERO,
             currencyToSend = userWalletManager.getNativeTokenForNetwork(networkId),
             destinationAddress = transactionData.toAddress,
+            increaseBy = INCREASE_GAS_LIMIT_BY,
             data = transactionData.data,
             derivationPath = derivationPath,
         )
@@ -645,6 +647,7 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val ZERO_BALANCE = "0"
         private const val DEFAULT_BLOCKCHAIN_INCH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
         private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.4
+        private const val INCREASE_GAS_LIMIT_BY = 125
         private const val USDT_SYMBOL = "USDT"
         private const val USDC_SYMBOL = "USDC"
         private const val INFINITY_SYMBOL = "∞"
