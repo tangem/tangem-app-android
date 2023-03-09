@@ -33,6 +33,18 @@ interface TransactionManager {
         derivationPath: String?,
     ): SendTxResult
 
+    /**
+     * Get fee
+     *
+     * @param networkId network id of blockchain
+     * @param amountToSend amount
+     * @param currencyToSend currency to send in tx
+     * @param destinationAddress address to send tx
+     * @param increaseBy percents in format 125 = 25%
+     * @param data data for tx
+     * @param derivationPath derivation path
+     * @return
+     */
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getFee(
@@ -40,6 +52,7 @@ interface TransactionManager {
         amountToSend: BigDecimal,
         currencyToSend: Currency,
         destinationAddress: String,
+        increaseBy: Int?,
         data: String?,
         derivationPath: String?,
     ): ProxyFee
