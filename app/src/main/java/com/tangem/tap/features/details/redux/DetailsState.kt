@@ -5,11 +5,8 @@ import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.util.*
-import kotlin.properties.ReadOnlyProperty
 
 data class DetailsState(
     val scanResponse: ScanResponse? = null,
@@ -19,14 +16,7 @@ data class DetailsState(
     val createBackupAllowed: Boolean = false,
     val appCurrency: FiatCurrency = FiatCurrency.Default,
     val appSettingsState: AppSettingsState = AppSettingsState(),
-) : StateType {
-
-    // if you do not delegate - the application crashes on startup,
-    // because twinCardsState has not been created yet
-    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
-        store.state.twinCardsState
-    }
-}
+) : StateType
 
 data class CardInfo(
     val cardId: String,
