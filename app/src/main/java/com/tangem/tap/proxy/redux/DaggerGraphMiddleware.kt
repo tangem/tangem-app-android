@@ -1,4 +1,4 @@
-package com.tangem.tap.features.di.redux
+package com.tangem.tap.proxy.redux
 
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Middleware
