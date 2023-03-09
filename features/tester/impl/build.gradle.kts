@@ -46,7 +46,7 @@ android {
                     Field.Environment("release"),
                     Field.TestActionEnabled(true),
                     Field.LogEnabled(true),
-                    Field.TesterMenuAvailability(true)
+                    Field.TesterMenuAvailability(true),
                 ),
                 builder = ::buildConfigField,
             ).create()
@@ -67,14 +67,22 @@ dependencies {
     implementation(AndroidX.activityCompose)
 
     /** Compose */
+    implementation(Compose.foundation)
+    implementation(Compose.hiltNavigation)
     implementation(Compose.material)
+    implementation(Compose.navigation)
     implementation(Compose.ui)
     implementation(Compose.uiTooling)
 
     /** DI */
+    implementation(Library.accompanistSystemUiController)
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
 
     /** Core modules */
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:ui"))
+
+    /** Feature Apis */
+    implementation(project(":features:tester:api"))
 }
