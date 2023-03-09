@@ -23,6 +23,7 @@ import com.tangem.wallet.R
  */
 abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackPressedHandler {
 
+    @Suppress("MemberVisibilityCanBePrivate")
     protected lateinit var mainView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +39,9 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mainView = super.onCreateView(inflater, container, savedInstanceState)!!
-        return mainView
+        return mainView.also { view ->
+            (view as? ViewGroup)?.isTransitionGroup = true
+        }
     }
 
     override fun handleOnBackPressed() {
