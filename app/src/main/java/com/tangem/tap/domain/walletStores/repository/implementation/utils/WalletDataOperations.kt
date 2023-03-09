@@ -102,6 +102,7 @@ internal fun WalletDataModel.updateWithAmount(wallet: Wallet): WalletDataModel {
 
 internal fun WalletDataModel.updateWithDemoAmount(wallet: Wallet): WalletDataModel {
     val amount = DemoHelper.config.getBalance(wallet.blockchain)
+    wallet.setAmount(amount)
     return this.copy(
         status = WalletDataModel.VerifiedOnline(amount = amount.value ?: BigDecimal.ZERO),
     )
