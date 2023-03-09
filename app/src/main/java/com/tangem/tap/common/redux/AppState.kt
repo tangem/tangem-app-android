@@ -11,8 +11,6 @@ import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
-import com.tangem.tap.features.di.redux.DaggerGraphMiddleware
-import com.tangem.tap.features.di.redux.DaggerGraphState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.features.home.redux.HomeMiddleware
@@ -43,6 +41,8 @@ import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
+import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
