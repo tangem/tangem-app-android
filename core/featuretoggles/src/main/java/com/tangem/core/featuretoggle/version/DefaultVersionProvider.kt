@@ -16,7 +16,12 @@ internal class DefaultVersionProvider @Inject constructor(
 ) : VersionProvider {
 
     override fun get(): String? {
-        val versionName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        return runCatching { getVersionName().substringBefore(VERSION_NAME_DELIMITER) }
+            .fold(onSuccess = { it }, onFailure = { null })
+    }
+
+    private fun getVersionName(): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager
                 .getPackageInfo(
                     context.packageName,
@@ -26,9 +31,6 @@ internal class DefaultVersionProvider @Inject constructor(
         } else {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
         }
-
-        return runCatching { versionName.substringBefore(VERSION_NAME_DELIMITER) }
-            .fold(onSuccess = { it }, onFailure = { null })
     }
 
     private companion object {
