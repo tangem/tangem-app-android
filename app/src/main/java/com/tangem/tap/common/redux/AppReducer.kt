@@ -4,7 +4,6 @@ import com.tangem.tap.common.redux.global.globalReducer
 import com.tangem.tap.common.redux.navigation.NavigationReducer
 import com.tangem.tap.features.details.redux.DetailsReducer
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectReducer
-import com.tangem.tap.features.di.redux.DaggerGraphReducer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerReducer
 import com.tangem.tap.features.home.redux.HomeReducer
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteReducer
@@ -20,6 +19,7 @@ import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphReducer
 import org.rekotlin.Action
 
 fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder): AppState {
