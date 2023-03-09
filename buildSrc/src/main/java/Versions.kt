@@ -20,6 +20,8 @@ object Versions {
     // region Compose
     const val compose = "1.3.1"
     const val composeFoundation = "1.3.1"
+    const val composeHiltNavigation = "1.0.0"
+    const val composeNavigation = "2.5.1"
     const val composeConstraint = "1.0.1"
     // endregion Compose
 
