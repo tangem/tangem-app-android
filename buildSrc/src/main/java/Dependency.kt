@@ -15,7 +15,9 @@ object Compose {
     const val animation = "androidx.compose.animation:animation:" + Versions.compose
     const val coil = "io.coil-kt:coil-compose:" + Versions.coil
     const val foundation = "androidx.compose.foundation:foundation:" + Versions.composeFoundation
+    const val hiltNavigation = "androidx.hilt:hilt-navigation-compose:" + Versions.composeHiltNavigation
     const val material = "androidx.compose.material:material:" + Versions.compose
+    const val navigation = "androidx.navigation:navigation-compose:" + Versions.composeNavigation
     const val ui = "androidx.compose.ui:ui:" + Versions.compose
     const val uiTooling = "androidx.compose.ui:ui-tooling:" + Versions.compose
     const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:" + Versions.composeConstraint
