@@ -68,7 +68,7 @@ class DetailsMiddleware {
     private fun handleAction(state: DetailsState, action: Action) {
         when (action) {
             is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
-            is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
+            is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action, state)
             is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
@@ -157,15 +157,15 @@ class DetailsMiddleware {
 
     class ManageSecurityMiddleware {
         @Suppress("ComplexMethod")
-        fun handle(action: DetailsAction.ManageSecurity) {
+        fun handle(action: DetailsAction.ManageSecurity, detailsState: DetailsState) {
             when (action) {
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
-                    val cardId = store.state.detailsState.scanResponse?.card?.cardId
-                    val selectedOption =
-                        store.state.detailsState.cardSettingsState?.manageSecurityState?.selectedOption
+                    val cardSettingsState = detailsState.cardSettingsState
+                    val cardId = cardSettingsState?.card?.cardId
+                    val selectedOption = cardSettingsState?.manageSecurityState?.selectedOption
                     scope.launch {
                         val result = when (selectedOption) {
                             SecurityOption.LongTap -> tangemSdkManager.setLongTap(cardId)
