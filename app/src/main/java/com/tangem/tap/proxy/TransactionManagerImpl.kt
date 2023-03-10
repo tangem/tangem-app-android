@@ -148,6 +148,7 @@ class TransactionManagerImpl(
         amountToSend: BigDecimal,
         currencyToSend: Currency,
         destinationAddress: String,
+        increaseBy: Int?,
         data: String?,
         derivationPath: String?,
     ): ProxyFee {
@@ -161,7 +162,13 @@ class TransactionManagerImpl(
                 currency = currencyToSend,
                 destinationAddress = destinationAddress,
                 data = data,
-            )
+            ).let {
+                if (increaseBy != null && increaseBy != 0) {
+                    it.multiply(increaseBy.toBigInteger()).divide(BigInteger("100"))
+                } else {
+                    it
+                }
+            }
             return when (val gasPrice = walletManager.getGasPrice()) {
                 is Result.Success -> {
                     val fee = gasLimit.multiply(gasPrice.data).toBigDecimal(
