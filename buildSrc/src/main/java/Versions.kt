@@ -20,6 +20,8 @@ object Versions {
     // region Compose
     const val compose = "1.3.1"
     const val composeFoundation = "1.3.1"
+    const val composeHiltNavigation = "1.0.0"
+    const val composeNavigation = "2.5.1"
     const val composeConstraint = "1.0.1"
     // endregion Compose
 
@@ -39,6 +41,7 @@ object Versions {
     const val googlePlayServicesWallet = "19.1.0"
     const val hilt = "2.44"
     const val jodatime = "2.12.1"
+    const val krateSharedPref = "2.0.0"
     const val kotsonGsonExt = "2.5.0"
     const val lottie = "3.4.0"
     const val moshi = "1.12.0"
