@@ -47,6 +47,7 @@ android {
                     Field.Environment("prod"),
                     Field.TestActionEnabled(false),
                     Field.LogEnabled(false),
+                    Field.TesterMenuAvailability(false),
                 ),
                 builder = ::buildConfigField,
             ).create()
@@ -67,6 +68,7 @@ android {
                     Field.Environment("dev"),
                     Field.TestActionEnabled(true),
                     Field.LogEnabled(true),
+                    Field.TesterMenuAvailability(true),
                 ),
                 builder = ::buildConfigField,
             ).create()
@@ -77,6 +79,10 @@ android {
             versionNameSuffix = "-beta"
             applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("debug")
+            BuildConfigFieldFactory(
+                fields = listOf(Field.TesterMenuAvailability(true)),
+                builder = ::buildConfigField,
+            ).create()
         }
     }
 
@@ -112,6 +118,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
     implementation(project(":core:ui"))
     implementation(project(":core:datasource"))
@@ -126,6 +133,8 @@ dependencies {
     implementation(project(":features:swap:presentation"))
     implementation(project(":features:swap:domain"))
     implementation(project(":features:swap:data"))
+    implementation(project(":features:tester:api"))
+    implementation(project(":features:tester:impl"))
 
     /** AndroidX libraries */
     implementation(AndroidX.coreKtx)
