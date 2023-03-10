@@ -41,6 +41,8 @@ import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
+import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
@@ -64,6 +66,7 @@ data class AppState(
     val saveWalletState: SaveWalletState = SaveWalletState(),
     val walletSelectorState: WalletSelectorState = WalletSelectorState(),
     val sprinklrState: SprinklrState = SprinklrState(),
+    val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
 
     val domainState: DomainState
@@ -105,6 +108,7 @@ data class AppState(
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 SprinklrMiddleware().middleware,
+                DaggerGraphMiddleware.daggerGraphMiddleware,
             )
         }
     }
