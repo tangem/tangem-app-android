@@ -9,7 +9,7 @@ class SwapDataCacheImpl : SwapDataCache {
 
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
     private val feesForNetworks: MutableMap<String, BigDecimal> = mutableMapOf()
-    private val tokensBalances: MutableMap<String, SwapAmount> = mutableMapOf()
+    private val tokensBalances: MutableMap<String, Map<String, SwapAmount>> = mutableMapOf()
     private val lastInWalletTokens = mutableListOf<TokenWithBalance>()
     private val lastLoadedTokens = mutableListOf<TokenWithBalance>()
 
@@ -35,12 +35,12 @@ class SwapDataCacheImpl : SwapDataCache {
         return lastLoadedTokens
     }
 
-    override fun getBalanceForToken(symbol: String): SwapAmount? {
-        return tokensBalances[symbol]
+    override fun getBalanceForToken(networkId: String, derivationPath: String?, symbol: String): SwapAmount? {
+        return tokensBalances[createKeyFrom(networkId, derivationPath)]?.get(symbol)
     }
 
-    override fun cacheBalances(balances: Map<String, SwapAmount>) {
-        tokensBalances.putAll(balances)
+    override fun cacheBalances(networkId: String, derivationPath: String?, balances: Map<String, SwapAmount>) {
+        tokensBalances[createKeyFrom(networkId, derivationPath)] = balances
     }
 
     override fun cacheAvailableToSwapTokens(networkId: String, tokens: List<Currency>) {
@@ -53,5 +53,9 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun getAvailableTokens(networkId: String): List<Currency> {
         return availableTokensForNetwork.getOrElse(networkId) { emptyList() }
+    }
+
+    private fun createKeyFrom(networkId: String, derivationPath: String?): String {
+        return "$networkId;$derivationPath"
     }
 }
