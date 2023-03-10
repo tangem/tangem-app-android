@@ -6,8 +6,8 @@ import com.tangem.common.services.Result
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.datasource.utils.AssetReader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -74,8 +74,8 @@ class LoadAvailableCoinsService(
         }
     }
 
-    fun getTestnetCoins(): List<Currency> {
-        val json = assetReader.readAssetAsString(FILE_NAME_TESTNET_COINS)
+    private fun getTestnetCoins(): List<Currency> {
+        val json = assetReader.readJson(FILE_NAME_TESTNET_COINS)
         return currenciesAdapter.fromJson(json)!!.coins
             .map { Currency.fromJsonObject(it) }
     }
