@@ -19,6 +19,7 @@ import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphReducer
 import org.rekotlin.Action
 
 fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder): AppState {
@@ -44,6 +45,7 @@ fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder)
         saveWalletState = SaveWalletReducer.reduce(action, state),
         walletSelectorState = WalletSelectorReducer.reduce(action, state),
         sprinklrState = SprinklrReducer.reduce(action, state),
+        daggerGraphState = DaggerGraphReducer.reduce(action, state),
     )
 }
 
