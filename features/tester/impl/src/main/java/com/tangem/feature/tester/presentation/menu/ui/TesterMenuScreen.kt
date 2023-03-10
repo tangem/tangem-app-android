@@ -16,29 +16,22 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.impl.R
-import com.tangem.feature.tester.presentation.menu.state.TesterMenuStateHolder
+import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
 
 /**
  * Screen with functionality for testers
  *
- * @param stateHolder screen state
+ * @param state screen state
  */
 @Composable
-fun TesterMenuScreen(stateHolder: TesterMenuStateHolder) {
-    when (stateHolder) {
-        is TesterMenuStateHolder.Content -> TesterMenuContent(content = stateHolder)
-    }
-}
-
-@Composable
-private fun TesterMenuContent(content: TesterMenuStateHolder.Content) {
+internal fun TesterMenuScreen(state: TesterMenuContentState) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.secondary),
     ) {
         AppBarWithBackButton(
-            onBackClick = content.onBackClicked,
+            onBackClick = state.onBackClick,
             text = stringResource(id = R.string.tester_menu),
         )
         Column(
@@ -52,12 +45,12 @@ private fun TesterMenuContent(content: TesterMenuStateHolder.Content) {
         ) {
             PrimaryButton(
                 text = stringResource(R.string.feature_toggles),
-                onClick = content.onFeatureTogglesClicked,
+                onClick = state.onFeatureTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
             )
             PrimaryButton(
                 text = stringResource(R.string.stand_toggles),
-                onClick = content.onFeatureTogglesClicked,
+                onClick = state.onFeatureTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = false,
             )
@@ -70,9 +63,9 @@ private fun TesterMenuContent(content: TesterMenuStateHolder.Content) {
 private fun PreviewTesterMenuScreen_InLightTheme() {
     TangemTheme(isDark = false) {
         TesterMenuScreen(
-            stateHolder = TesterMenuStateHolder.Content(
-                onBackClicked = {},
-                onFeatureTogglesClicked = {},
+            state = TesterMenuContentState(
+                onBackClick = {},
+                onFeatureTogglesClick = {},
             ),
         )
     }
@@ -83,9 +76,9 @@ private fun PreviewTesterMenuScreen_InLightTheme() {
 private fun PreviewTesterMenuScreen_InDarkTheme() {
     TangemTheme(isDark = true) {
         TesterMenuScreen(
-            stateHolder = TesterMenuStateHolder.Content(
-                onBackClicked = {},
-                onFeatureTogglesClicked = {},
+            state = TesterMenuContentState(
+                onBackClick = {},
+                onFeatureTogglesClick = {},
             ),
         )
     }
