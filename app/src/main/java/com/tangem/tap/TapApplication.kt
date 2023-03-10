@@ -17,6 +17,7 @@ import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
@@ -49,7 +50,6 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
@@ -124,6 +124,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var featureTogglesManager: FeatureTogglesManager
 
+    @Inject
+    lateinit var networkConnectionManager: NetworkConnectionManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -144,7 +147,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         DomainLayer.init()
-        NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
@@ -161,12 +163,18 @@ class TapApplication : Application(), ImageLoaderFactory {
         userTokensRepository = UserTokensRepository.init(
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
+            networkConnectionManager = networkConnectionManager,
         )
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
-        store.dispatch(DaggerGraphAction.SetApplicationDependencies(assetReader))
+        store.dispatch(
+            action = DaggerGraphAction.SetApplicationDependencies(
+                assetReader = assetReader,
+                networkConnectionManager = networkConnectionManager,
+            ),
+        )
 
         scope.launch {
             featureTogglesManager.init()
