@@ -59,12 +59,19 @@ class DerivationManagerImpl(
         }
     }
 
-    override fun hasDerivation(networkId: String): Boolean {
+    override fun getDerivationPathForBlockchain(networkId: String): String? {
         val scanResponse = appStateHolder.scanResponse
         val blockchain = Blockchain.fromNetworkId(networkId)
         if (scanResponse != null && blockchain != null) {
-            val derivationPath = blockchain.derivationPath(appStateHolder.getActualCard()?.derivationStyle)?.rawPath
-            if (derivationPath.isNullOrEmpty()) return false
+            return blockchain.derivationPath(appStateHolder.getActualCard()?.derivationStyle)?.rawPath
+        }
+        return null
+    }
+
+    override fun hasDerivation(networkId: String, derivationPath: String): Boolean {
+        val scanResponse = appStateHolder.scanResponse
+        val blockchain = Blockchain.fromNetworkId(networkId)
+        if (scanResponse != null && blockchain != null) {
             return scanResponse.hasDerivation(
                 blockchain,
                 derivationPath,
