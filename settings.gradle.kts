@@ -5,6 +5,7 @@ include(":common")
 // region Core modules
 include(":core:analytics")
 include(":core:datasource")
+include(":core:featuretoggles")
 include(":core:res")
 include(":core:utils")
 include(":core:ui")
@@ -23,5 +24,6 @@ include(":features:swap:data")
 include(":features:swap:domain")
 include(":features:swap:presentation")
 
+include(":features:tester:api")
 include(":features:tester:impl")
 // endregion Feature modules
