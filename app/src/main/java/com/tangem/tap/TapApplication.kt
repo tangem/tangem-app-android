@@ -11,12 +11,13 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
-import com.tangem.datasource.utils.AndroidAssetReader
-import com.tangem.datasource.utils.AssetReader
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
@@ -49,11 +50,12 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
@@ -66,7 +68,6 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
 
 private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
@@ -117,6 +118,15 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var configManager: ConfigManager
 
+    @Inject
+    lateinit var assetReader: AssetReader
+
+    @Inject
+    lateinit var featureTogglesManager: FeatureTogglesManager
+
+    @Inject
+    lateinit var networkConnectionManager: NetworkConnectionManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -137,11 +147,9 @@ class TapApplication : Application(), ImageLoaderFactory {
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         DomainLayer.init()
-        NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
-        assetReader = AndroidAssetReader(this)
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
@@ -155,10 +163,22 @@ class TapApplication : Application(), ImageLoaderFactory {
         userTokensRepository = UserTokensRepository.init(
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
+            networkConnectionManager = networkConnectionManager,
         )
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
+
+        store.dispatch(
+            action = DaggerGraphAction.SetApplicationDependencies(
+                assetReader = assetReader,
+                networkConnectionManager = networkConnectionManager,
+            ),
+        )
+
+        scope.launch {
+            featureTogglesManager.init()
+        }
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -208,6 +228,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     ) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
             appVersion = try {
+                // TODO don't use deprecated method
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 pInfo.versionName
             } catch (e: PackageManager.NameNotFoundException) {
