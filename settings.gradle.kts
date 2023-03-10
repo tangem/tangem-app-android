@@ -1,3 +1,32 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+
+    includeBuild("plugins/configuration")
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+    repositories {
+        google()
+        mavenCentral()
+        jcenter() // unable to replace with mavenCentral() due to rekotlin and com.otaliastudios:cameraview
+        maven("https://nexus.tangem-tech.com/repository/maven-releases/")
+        maven("https://jitpack.io")
+        maven("https://zendesk.jfrog.io/zendesk/repo")
+    }
+
+    versionCatalogs {
+        create("deps") {
+            from(files("gradle/dependencies.toml"))
+        }
+    }
+}
+
 include(":app")
 include(":domain")
 include(":common")
