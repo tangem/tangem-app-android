@@ -31,6 +31,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -84,7 +85,7 @@ class TokensMiddleware {
         val loadCoinsService = LoadAvailableCoinsService(
             tangemTechApi = store.state.domainNetworks.tangemTechService.api,
             dispatchers = AppCoroutineDispatcherProvider(),
-            assetReader = requireNotNull(store.state.daggerGraphState.assetReader) { "Asset reader is null" },
+            assetReader = store.state.daggerGraphState.get(DaggerGraphState::assetReader),
         )
 
         scope.launch {
