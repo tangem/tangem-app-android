@@ -58,12 +58,13 @@ dependencies {
     implementation(Library.timber)
 
     /** Network */
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
+    implementation(Library.krateSharedPref)
     implementation(Library.moshi)
     implementation(Library.moshiKotlin)
     implementation(Library.okHttp)
     implementation(Library.okHttpLogging)
+    implementation(Library.retrofit)
+    implementation(Library.retrofitMoshiConverter)
 
     /** Time */
     implementation(Library.jodatime)
