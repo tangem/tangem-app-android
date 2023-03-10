@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
@@ -15,7 +16,6 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.models.toCurrencies
-import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -25,6 +25,7 @@ class UserTokensRepository(
     private val storageService: UserTokensStorageService,
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val networkConnectionManager: NetworkConnectionManager,
 ) {
 
     // TODO("After adding DI") replace with CoroutineDispatcherProvider
@@ -34,7 +35,7 @@ class UserTokensRepository(
             return@withContext loadTokensOffline(card, userId).ifEmpty(::loadDemoCurrencies)
         }
 
-        if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+        if (!networkConnectionManager.isOnline) {
             return@withContext loadTokensOffline(card, userId)
         }
 
@@ -131,7 +132,11 @@ class UserTokensRepository(
         private const val NOT_FOUND_HTTP_CODE = "404"
 
         // TODO("After adding DI") get dependencies by DI
-        fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
+        fun init(
+            context: Context,
+            tangemTechService: TangemTechService,
+            networkConnectionManager: NetworkConnectionManager,
+        ): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
             val dispatchers = AppCoroutineDispatcherProvider()
 
@@ -149,6 +154,7 @@ class UserTokensRepository(
                 storageService = storageService,
                 tangemTechApi = tangemTechService.api,
                 dispatchers = dispatchers,
+                networkConnectionManager = networkConnectionManager,
             )
         }
     }
