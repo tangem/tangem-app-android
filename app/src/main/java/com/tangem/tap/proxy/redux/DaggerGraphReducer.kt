@@ -13,10 +13,11 @@ object DaggerGraphReducer {
     private fun internalReduce(action: DaggerGraphAction, state: AppState): DaggerGraphState {
         return when (action) {
             is DaggerGraphAction.SetApplicationDependencies -> state.daggerGraphState.copy(
-                assetReader = action.assetReader
+                assetReader = action.assetReader,
+                networkConnectionManager = action.networkConnectionManager,
             )
             is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
-                testerRouter = action.testerRouter
+                testerRouter = action.testerRouter,
             )
         }
     }

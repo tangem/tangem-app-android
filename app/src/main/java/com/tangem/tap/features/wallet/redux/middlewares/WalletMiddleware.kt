@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.tap.common.analytics.converters.BasicEventsPreChecker
 import com.tangem.tap.common.analytics.converters.BasicEventsSourceData
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -37,15 +38,13 @@ import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.redux.reducers.findSelectedCurrency
-import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +70,9 @@ class WalletMiddleware {
             appCurrencyProvider = { store.state.globalState.appCurrency },
         )
     }
+
+    private val networkConnectionManager: NetworkConnectionManager
+        get() = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
 
     val walletMiddleware: Middleware<AppState> = { _, state ->
         { next ->
@@ -135,16 +137,6 @@ class WalletMiddleware {
                     )
                 }
             }
-            is NetworkStateChanged -> {
-                store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
-                if (!action.isOnline) return
-
-                val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync.guard {
-                    Timber.e("Unable to proceed with changed network state, no user wallet selected")
-                    return
-                }
-                scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet, refresh = true) }
-            }
             is WalletAction.CopyAddress -> {
                 Analytics.send(Token.Receive.ButtonCopyAddress())
                 action.context.copyToClipboard(action.address)
@@ -159,7 +151,7 @@ class WalletMiddleware {
                 store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
-                if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+                if (!networkConnectionManager.isOnline) {
                     store.dispatchErrorNotification(TapError.NoInternetConnection)
                     return
                 }
