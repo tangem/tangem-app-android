@@ -16,6 +16,8 @@ val UserWalletsListManager.isLockable: Boolean
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns [Flow] which
  * produces only one false value
+ *
+ * @see UserWalletsListManager.Lockable.isLockedSync
  * */
 val UserWalletsListManager.isLocked: Flow<Boolean>
     get() = asLockable()?.isLocked ?: flowOf(false)
@@ -24,6 +26,8 @@ val UserWalletsListManager.isLocked: Flow<Boolean>
  * Indicates that the [UserWalletsListManager] is locked
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns false
+ *
+ * @see UserWalletsListManager.Lockable.isLockedSync
  * */
 val UserWalletsListManager.isLockedSync: Boolean
     get() = asLockable()?.isLockedSync ?: false
@@ -32,15 +36,22 @@ val UserWalletsListManager.isLockedSync: Boolean
  * Call [UserWalletsListManager.Lockable.unlock] if [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable]
- * returns [CompletionResult.Success] with [UserWalletsListManager.selectedUserWalletSync]
+ * returns [CompletionResult.Failure] with [UserWalletsListError.UnableToUnlockUserWallets]
+ *
+ * If [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
+ * returns [CompletionResult.Success] with selected [UserWallet]
+ *
+ * @see UserWalletsListManager.Lockable.unlock
  * */
-suspend fun UserWalletsListManager.unlockIfLockable(): CompletionResult<UserWallet?> {
-    return asLockable()?.unlock() ?: CompletionResult.Success(selectedUserWalletSync)
+suspend fun UserWalletsListManager.unlockIfLockable(): CompletionResult<UserWallet> {
+    return asLockable()?.unlock() ?: CompletionResult.Failure(UserWalletsListError.UnableToUnlockUserWallets())
 }
 
 /**
  * Call [UserWalletsListManager.Lockable.lock] if [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
  * or do nothing otherwise
+ *
+ * @see UserWalletsListManager.Lockable.lock
  * */
 fun UserWalletsListManager.lockIfLockable() {
     asLockable()?.lock()
