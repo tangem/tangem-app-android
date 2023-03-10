@@ -24,7 +24,7 @@ import com.tangem.core.ui.fragments.ComposeFragment
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.welcome.redux.WelcomeAction
-import com.tangem.tap.features.welcome.ui.components.BiometricsLockoutDialog
+import com.tangem.tap.features.welcome.ui.components.WarningDialog
 import com.tangem.tap.features.welcome.ui.components.WelcomeScreenContent
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -49,7 +49,7 @@ internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
     ) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
-        val biometricsLockoutDialog by rememberUpdatedState(newValue = state.biometricsLockoutDialog)
+        val warning by rememberUpdatedState(newValue = state.warning)
 
         val backgroundColor = colorResource(id = R.color.background_primary)
         SystemBarsEffect {
@@ -80,7 +80,7 @@ internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
             )
         }
 
-        BiometricsLockoutDialog(biometricsLockoutDialog)
+        WarningDialog(warning)
 
         LaunchedEffect(key1 = errorMessage) {
             errorMessage?.let {
