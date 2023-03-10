@@ -13,7 +13,7 @@ interface UserWalletManager {
      * Returns all user tokens (merged from local and backend)
      */
     @Throws(IllegalStateException::class)
-    suspend fun getUserTokens(networkId: String, isExcludeCustom: Boolean): List<Currency>
+    suspend fun getUserTokens(networkId: String, derivationPath: String?, isExcludeCustom: Boolean): List<Currency>
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenForNetwork(networkId: String): Currency
@@ -55,6 +55,7 @@ interface UserWalletManager {
      * Return balances from wallet found by networkId
      *
      * @param networkId
+     * @param extraTokens tokens you want to check balance that not exists in wallet
      * @param derivationPath if null uses default
      * @return map of <Symbol, [ProxyAmount]>
      */
