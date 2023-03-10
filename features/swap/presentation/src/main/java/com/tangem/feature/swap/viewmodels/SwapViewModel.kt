@@ -371,7 +371,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onMaxAmountClicked() {
         dataState.fromCurrency?.let {
-            val balance = swapInteractor.getTokenBalance(it)
+            val balance = swapInteractor.getTokenBalance(currency.networkId, it)
             onAmountChanged(balance.formatToUIRepresentation())
         }
     }
