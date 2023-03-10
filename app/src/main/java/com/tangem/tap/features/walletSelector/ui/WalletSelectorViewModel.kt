@@ -3,11 +3,11 @@ package com.tangem.tap.features.walletSelector.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.core.TangemError
-import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.isLocked
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
@@ -15,6 +15,7 @@ import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
+import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
@@ -159,7 +160,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                     }
                 }
             }
-            val biometricsLockoutDialog = createBiometricsLockoutDialogIfNeeded(state.error, prevState.dialog)
+            val warningDialog = createWarningDialogIfNeeded(state.error, prevState.dialog)
 
             prevState.copy(
                 multiCurrencyWallets = multiCurrencyWallets,
@@ -169,9 +170,9 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 isLocked = state.isLocked,
                 showUnlockProgress = state.isUnlockInProgress,
                 showAddCardProgress = state.isCardSavingInProgress,
-                dialog = biometricsLockoutDialog,
+                dialog = warningDialog,
                 error = state.error
-                    ?.takeIf { !it.silent && biometricsLockoutDialog == null }
+                    ?.takeIf { !it.silent && warningDialog == null }
                     ?.let { error ->
                         error.messageResId?.let { TextReference.Res(it) }
                             ?: TextReference.Str(error.customMessage)
@@ -184,24 +185,23 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
         store.unsubscribe(this)
     }
 
-    private fun createBiometricsLockoutDialogIfNeeded(
+    private fun createWarningDialogIfNeeded(
         error: TangemError?,
-        currentDialogModel: DialogModel?,
+        currentDialog: DialogModel?,
     ): DialogModel? {
         return when (error) {
-            is TangemSdkError.BiometricsAuthenticationLockout -> DialogModel.BiometricsLockoutDialog(
-                isPermanent = false,
-                onDismiss = this::dismissDialog,
+            is UserWalletsListError.BiometricsAuthenticationLockout -> WarningModel.BiometricsLockoutWarning(
+                isPermanent = error.isPermanent,
+                onDismiss = this::dismissWarningDialog,
             )
-            is TangemSdkError.BiometricsAuthenticationPermanentLockout -> DialogModel.BiometricsLockoutDialog(
-                isPermanent = true,
-                onDismiss = this::dismissDialog,
+            is UserWalletsListError.InvalidEncryptionKey -> WarningModel.KeyInvalidatedWarning(
+                onDismiss = this::dismissWarningDialog,
             )
-            else -> currentDialogModel
+            else -> currentDialog
         }
     }
 
-    private fun dismissDialog() {
+    private fun dismissWarningDialog() {
         stateInternal.update { prevState ->
             prevState.copy(
                 dialog = null,
