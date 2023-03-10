@@ -1,49 +1,9 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
-}
-
-android {
-
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    id("configuration")
 }
 
 dependencies {
@@ -54,24 +14,24 @@ dependencies {
     implementation(project(":core:ui"))
 
     /** AndroidX */
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(Library.materialComponent)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.material)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.ui.tooling)
 
     /** Domain */
     implementation(project(":features:referral:domain"))
 
     /** Other libraries */
-    implementation(Library.composeShimmer)
-    implementation(Library.accompanistWebView)
+    implementation(deps.compose.shimmer)
+    implementation(deps.compose.accompanist.webView)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }
