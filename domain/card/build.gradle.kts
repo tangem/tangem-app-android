@@ -5,13 +5,10 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain)
+    api(project(":domain:core"))
 
-    /** DI */
+    implementation(deps.tangem.card.core)
+
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
-
-    /** Coroutines */
-    implementation(deps.kotlin.coroutines)
 }

@@ -5,6 +5,8 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.domain.card.ScanCardException
+import com.tangem.domain.card.model.ScanCardResult
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
@@ -26,6 +28,7 @@ import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -80,6 +83,21 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     tangemSdkManager.setAccessCodeRequestPolicy(
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
     )
+    val cardInteractor = store.state.daggerGraphState.get(DaggerGraphState::cardInteractor)
+    cardInteractor.scanCard()
+        .onFailure { e ->
+            changeButtonState(ButtonState.ENABLED)
+            if (e is ScanCardException) {
+                proceedWithScanCardException(e)
+            } else {
+                Timber.e(e, "Unable to scan a card")
+            }
+        }
+        .onSuccess { result ->
+            changeButtonState(ButtonState.ENABLED)
+            proceedWithScanResult(result)
+        }
+
     ScanCardProcessor.scan(
         analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
@@ -120,6 +138,20 @@ fun proceedWithScanResponse(scanResponse: ScanResponse) {
                 store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
                 navigateTo(AppScreen.Wallet)
             }
+    }
+}
+
+fun proceedWithScanResult(result: ScanCardResult) {
+    TODO("Not yet implemented")
+}
+
+fun proceedWithScanCardException(exception: ScanCardException) {
+    when (exception) {
+        is ScanCardException.WalletNotCreated -> TODO("Navigate to onboarding")
+        is ScanCardException.EmptyChains -> TODO("Show error")
+        is ScanCardException.Generic -> TODO("Show error")
+        is ScanCardException.WrongCardId -> TODO("Show error")
+        is ScanCardException.SaltPayActivationError -> TODO("Handle SaltPay error")
     }
 }
 

@@ -19,6 +19,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.card.CardInteractor
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -130,6 +131,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var tokensListFeatureToggles: TokensListFeatureToggles
 
+    @Inject
+    lateinit var cardInteractor: CardInteractor
+
     override fun onCreate() {
         super.onCreate()
 
@@ -179,6 +183,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                 assetReader = assetReader,
                 networkConnectionManager = networkConnectionManager,
                 tokensListFeatureToggles = tokensListFeatureToggles,
+                cardInteractor = cardInteractor,
             ),
         )
 

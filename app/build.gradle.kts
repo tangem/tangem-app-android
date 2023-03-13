@@ -11,7 +11,7 @@ plugins {
 
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
-    implementation(project(":domain"))
+    implementation(project(":domain-legacy"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
     implementation(project(":core:featuretoggles"))
@@ -32,6 +32,9 @@ dependencies {
     implementation(project(":features:swap:data"))
     implementation(project(":features:tester:api"))
     implementation(project(":features:tester:impl"))
+
+    implementation(project(":domain:card"))
+    implementation(project(":data:store:card"))
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

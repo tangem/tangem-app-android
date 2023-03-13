@@ -1,11 +1,9 @@
-package com.tangem.domain.common
+package com.tangem.utils
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.common.CardIdRange
-import com.tangem.common.contains
 
-object SaltPayWorkaround {
+object SaltPayUtils {
 
     @Suppress("MagicNumber")
     val visaBatches = listOf(

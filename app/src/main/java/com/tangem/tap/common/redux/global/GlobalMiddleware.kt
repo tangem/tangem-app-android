@@ -8,7 +8,6 @@ import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -154,28 +153,6 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 return
             }
             scope.launch { exchangeManager.update() }
-        }
-        is GlobalAction.ScanCard -> {
-            scope.launch {
-                tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
-                val result = tangemSdkManager.scanProduct(
-                    userTokensRepository = userTokensRepository,
-                    additionalBlockchainsToDerive = action.additionalBlockchainsToDerive,
-                    messageRes = action.messageResId,
-                )
-                withMainContext {
-                    store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
-                    when (result) {
-                        is CompletionResult.Success -> {
-                            tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
-                            action.onSuccess?.invoke(result.data)
-                        }
-                        is CompletionResult.Failure -> {
-                            action.onFailure?.invoke(result.error)
-                        }
-                    }
-                }
-            }
         }
         is GlobalAction.FetchUserCountry -> {
             scope.launch {
