@@ -15,6 +15,7 @@ import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.router.ReferralRouter
+import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,8 @@ internal class ReferralViewModel @Inject constructor(
         private set
 
     private var referralRouter: ReferralRouter by Delegates.notNull()
+
+    private val lastReferralData = mutableStateOf<ReferralData?>(null)
 
     init {
         loadReferralData()
@@ -61,7 +64,11 @@ internal class ReferralViewModel @Inject constructor(
     private fun loadReferralData() {
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) { referralInteractor.getReferralStatus() }
+            runCatching(dispatchers.io) {
+                referralInteractor.getReferralStatus().apply {
+                    lastReferralData.value = this
+                }
+            }
                 .onSuccess(::showContent)
                 .onFailure(::showErrorSnackbar)
         }
@@ -73,7 +80,16 @@ internal class ReferralViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) { referralInteractor.startReferral() }
                 .onSuccess(::showContent)
-                .onFailure(::showErrorSnackbar)
+                .onFailure {
+                    if (it is UserCancelledException) {
+                        val lastRefData = lastReferralData.value
+                        if (lastRefData != null) {
+                            showContent(lastRefData)
+                        }
+                    } else {
+                        showErrorSnackbar(it)
+                    }
+                }
         }
     }
 
