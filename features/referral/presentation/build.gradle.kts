@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":core:res"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
+    implementation(project(":libs:crypto"))
 
     /** AndroidX */
     implementation(deps.androidx.appCompat)
