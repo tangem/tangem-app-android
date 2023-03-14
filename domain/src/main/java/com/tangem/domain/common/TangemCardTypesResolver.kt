@@ -40,13 +40,16 @@ class TangemCardTypesResolver(
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
             ProductType.SaltPay -> Blockchain.SaltPay
+            ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown // todo restored old logic
             else -> {
                 val blockchainName: String = walletData?.blockchain.guard {
-                    if (productType == ProductType.Note) {
-                        return card.getTangemNoteBlockchain() ?: Blockchain.Unknown
-                    } else {
-                        return Blockchain.Unknown
-                    }
+                    // TODO(hotfix [REDACTED_TASK_KEY], for note bnb, card determined as beacon blockchain, refactor later)
+                    //
+                    // if (productType == ProductType.Note) {
+                    //     return card.getTangemNoteBlockchain() ?: Blockchain.Unknown
+                    // } else {
+                    // }
+                    return Blockchain.Unknown
                 }
                 Blockchain.fromId(blockchainName)
             }
