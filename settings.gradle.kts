@@ -14,6 +14,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        mavenLocal()
         jcenter() // unable to replace with mavenCentral() due to rekotlin and com.otaliastudios:cameraview
         maven("https://nexus.tangem-tech.com/repository/maven-releases/")
         maven("https://jitpack.io")
