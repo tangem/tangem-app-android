@@ -3,7 +3,7 @@ package com.tangem.tap.common.recyclerView
 import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.sdk.extensions.dpToPx
 
 class SpaceItemDecoration(
     private val horizontalSpaceDp: Float,
