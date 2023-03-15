@@ -25,7 +25,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.sdk.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.analytics.events.DetailsScreen
