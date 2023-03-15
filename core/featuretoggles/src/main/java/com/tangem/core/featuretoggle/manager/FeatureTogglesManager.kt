@@ -1,7 +1,5 @@
 package com.tangem.core.featuretoggle.manager
 
-import com.tangem.core.featuretoggle.FeatureToggle
-
 /**
  * Component for getting information about the availability of feature toggles
  *
@@ -12,6 +10,6 @@ interface FeatureTogglesManager {
     /** Initialize manager */
     suspend fun init()
 
-    /** Check feature toggle [toggle] availability */
-    fun isFeatureEnabled(toggle: FeatureToggle): Boolean
+    /** Check feature toggle availability by name [name] */
+    fun isFeatureEnabled(name: String): Boolean
 }
