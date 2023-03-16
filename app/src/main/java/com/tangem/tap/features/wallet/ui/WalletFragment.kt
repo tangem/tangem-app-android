@@ -22,6 +22,8 @@ import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
@@ -75,7 +77,21 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        Analytics.send(MainScreen.ScreenOpened())
+        val scanResponse = store.state.globalState.scanResponse
+        if (scanResponse != null) {
+            val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+            val signInType = store.state.signInState.type
+            if (currency != null && signInType != null) {
+                Analytics.send(
+                    Basic.SignedIn(
+                        currency = currency,
+                        batch = scanResponse.card.batchId,
+                        signInType = signInType,
+                    ),
+                )
+            }
+        }
+
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -91,6 +107,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onStart() {
         super.onStart()
+        Analytics.send(MainScreen.ScreenOpened())
 
         setStatusBarColor(R.color.background_secondary)
 

@@ -8,6 +8,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -261,6 +262,15 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                Analytics.send(
+                    event = Basic.ToppedUp(
+                        currency = AnalyticsParam.CardCurrency.SingleCurrency(
+                            type = AnalyticsParam.CurrencyType.Blockchain(
+                                blockchain = getScanResponse().cardTypesResolver.getBlockchain(),
+                            ),
+                        ),
+                    ),
+                )
                 scope.launch {
                     withMainContext { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done)) }
                 }

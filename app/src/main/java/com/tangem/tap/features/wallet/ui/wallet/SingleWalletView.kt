@@ -3,6 +3,8 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getQuantityString
@@ -118,6 +120,8 @@ class SingleWalletView : WalletView() {
             }
         }
         lAddress.btnShowQr.setOnClickListener {
+            Analytics.send(Token.ShowWalletAddress)
+
             walletData.walletAddresses?.selectedAddress?.let { selectedAddress ->
                 store.dispatch(
                     WalletAction.DialogAction.QrCode(

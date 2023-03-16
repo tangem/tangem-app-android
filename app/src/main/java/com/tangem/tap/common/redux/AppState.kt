@@ -31,6 +31,8 @@ import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.shop.redux.ShopMiddleware
 import com.tangem.tap.features.shop.redux.ShopState
+import com.tangem.tap.features.signin.redux.SignInMiddleware
+import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.sprinklr.redux.SprinklrMiddleware
 import com.tangem.tap.features.sprinklr.redux.SprinklrState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
@@ -64,6 +66,7 @@ data class AppState(
     val saveWalletState: SaveWalletState = SaveWalletState(),
     val walletSelectorState: WalletSelectorState = WalletSelectorState(),
     val sprinklrState: SprinklrState = SprinklrState(),
+    val signInState: SignInState = SignInState()
 ) : StateType {
 
     val domainState: DomainState
@@ -105,6 +108,7 @@ data class AppState(
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 SprinklrMiddleware().middleware,
+                SignInMiddleware.middleware
             )
         }
     }

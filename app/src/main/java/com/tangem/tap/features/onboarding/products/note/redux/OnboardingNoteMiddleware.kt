@@ -6,6 +6,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -159,6 +160,15 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                Analytics.send(
+                    event = Basic.ToppedUp(
+                        currency = AnalyticsParam.CardCurrency.SingleCurrency(
+                            type = AnalyticsParam.CurrencyType.Blockchain(
+                                blockchain = scanResponse.cardTypesResolver.getBlockchain(),
+                            ),
+                        ),
+                    ),
+                )
                 store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.Done))
             }
         }
