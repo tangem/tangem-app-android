@@ -4,15 +4,10 @@ import com.squareup.moshi.JsonAdapter
 import com.tangem.Log
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.FileReader
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.toCurrencies
 
-class UserTokensStorageService(
-    private val oldUserTokensRepository: OldUserTokensRepository,
-    private val fileReader: FileReader,
-) {
+class UserTokensStorageService(private val fileReader: FileReader) {
     private val userTokensAdapter: JsonAdapter<UserTokensResponse> =
         MoshiConverter.networkMoshi.adapter(UserTokensResponse::class.java)
 
@@ -24,13 +19,6 @@ class UserTokensStorageService(
             Log.error { exception.stackTraceToString() }
             null
         }
-    }
-
-    @Deprecated("")
-    suspend fun getUserTokens(card: CardDTO): List<Currency> {
-        val blockchainNetworks =
-            oldUserTokensRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
-        return blockchainNetworks.flatMap { it.toCurrencies() }
     }
 
     fun saveUserTokens(userId: String, tokens: UserTokensResponse) {
