@@ -1,5 +1,6 @@
 package com.tangem.core.featuretoggle.contract
 
+import androidx.annotation.VisibleForTesting
 import timber.log.Timber
 
 /**
@@ -23,6 +24,11 @@ internal class Version private constructor(value: String) : Comparable<Version> 
         fix = versions.getOrNull(index = FIX_VERSION_POSITION)
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    constructor(major: Int, minor: Int, fix: Int? = null) : this(
+        value = "$major.$minor${if (fix != null) ".$fix" else ""}",
+    )
+
     override fun compareTo(other: Version): Int {
         var result = major.compareTo(other.major)
         if (result == 0) result = minor.compareTo(other.minor)
@@ -41,6 +47,15 @@ internal class Version private constructor(value: String) : Comparable<Version> 
         return getOrNull(index) ?: error("Invalid version")
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getMajorVersion() = major
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getMinorVersion() = minor
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getFixVersion() = fix
+
     companion object {
         private const val MAJOR_VERSION_POSITION = 0
         private const val MINOR_VERSION_POSITION = 1
@@ -55,7 +70,7 @@ internal class Version private constructor(value: String) : Comparable<Version> 
             return try {
                 Version(value)
             } catch (exception: Exception) {
-                Timber.e(exception, "Version %s is null", value)
+                Timber.e(exception, "Invalid version - %s", value)
                 return null
             }
         }

@@ -1,6 +1,6 @@
 package com.tangem.core.featuretoggle.manager
 
-import com.tangem.core.featuretoggle.FeatureToggle
+import androidx.annotation.VisibleForTesting
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
 import com.tangem.core.featuretoggle.version.VersionProvider
@@ -25,5 +25,13 @@ internal class ProdFeatureTogglesManager(
             .associateToggles(currentVersion = versionProvider.get() ?: "")
     }
 
-    override fun isFeatureEnabled(toggle: FeatureToggle): Boolean = featureToggles.any { it.key == toggle.name }
+    override fun isFeatureEnabled(name: String): Boolean = featureToggles.any { it.key == name }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getProdFeatureToggles() = featureToggles
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun setProdFeatureToggles(map: Map<String, Boolean>) {
+        featureToggles = map
+    }
 }
