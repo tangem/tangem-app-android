@@ -7,11 +7,16 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
+    implementation(project(":core:datasource"))
+
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
     implementation(deps.timber)
 
-    implementation(project(":core:datasource"))
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
