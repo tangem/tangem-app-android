@@ -1,7 +1,7 @@
 package com.tangem.core.featuretoggle.manager
 
+import androidx.annotation.VisibleForTesting
 import com.squareup.moshi.JsonAdapter
-import com.tangem.core.featuretoggle.FeatureToggle
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
 import com.tangem.core.featuretoggle.version.VersionProvider
@@ -42,7 +42,7 @@ internal class DevFeatureTogglesManager(
             .toMutableMap()
     }
 
-    override fun isFeatureEnabled(toggle: FeatureToggle): Boolean = featureTogglesMap.any { it.key == toggle.name }
+    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap.any { it.key == name }
 
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 
@@ -50,5 +50,10 @@ internal class DevFeatureTogglesManager(
         featureTogglesMap[name] ?: return
         featureTogglesMap[name] = isEnabled
         appPreferenceStorage.featureToggles = jsonAdapter.toJson(featureTogglesMap)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun setFeatureToggles(map: MutableMap<String, Boolean>) {
+        featureTogglesMap = map
     }
 }
