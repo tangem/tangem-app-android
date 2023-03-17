@@ -101,7 +101,7 @@ internal class SaveWalletMiddleware {
                     .build()
                 ?: return@launch
 
-            provideBiometricUserWalletsListManager()
+            provideLockableUserWalletsListManagerIfNot()
 
             val isFirstSavedWallet = !userWalletsListManager.hasUserWallets
 
@@ -113,8 +113,12 @@ internal class SaveWalletMiddleware {
                 .doOnSuccess {
                     preferencesStorage.shouldSaveUserWallets = true
                     // Enable saving access codes only if this is the first time user save the wallet
-                    preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
-                        preferencesStorage.shouldSaveAccessCodes
+                    if (isFirstSavedWallet) {
+                        preferencesStorage.shouldSaveAccessCodes = true
+                        tangemSdkManager.setAccessCodeRequestPolicy(
+                            useBiometricsForAccessCode = userWallet.hasAccessCode,
+                        )
+                    }
 
                     store.dispatchWithMain(SaveWalletAction.Save.Success)
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
@@ -123,7 +127,7 @@ internal class SaveWalletMiddleware {
         }
     }
 
-    private suspend fun provideBiometricUserWalletsListManager() {
+    private suspend fun provideLockableUserWalletsListManagerIfNot() {
         if (store.state.globalState.userWalletsListManager?.isLockable == true) return
 
         val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
