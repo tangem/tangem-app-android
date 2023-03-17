@@ -1,5 +1,6 @@
 package com.tangem.core.featuretoggle.storage
 
+import androidx.annotation.VisibleForTesting
 import com.squareup.moshi.JsonAdapter
 import com.tangem.core.featuretoggle.storage.LocalFeatureTogglesStorage.Companion.LOCAL_CONFIG_PATH
 import com.tangem.datasource.asset.AssetReader
@@ -28,6 +29,12 @@ internal class LocalFeatureTogglesStorage(
             .onSuccess { featureToggles = it }
             .onFailure { Timber.e(LocalFeatureTogglesStorage::class.java.name, "Failed to parse $LOCAL_CONFIG_PATH") }
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getConfigPath() = LOCAL_CONFIG_PATH
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun getFeatureToggles(): Iterable<FeatureToggle> = featureToggles
 
     private companion object {
         const val LOCAL_CONFIG_PATH: String = "configs/feature_toggles_config"
