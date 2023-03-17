@@ -10,6 +10,7 @@ plugins {
 dependencies {
     /** Core modules */
     implementation(project(":core:analytics"))
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
 
@@ -26,6 +27,9 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
+
+    /** Api */
+    implementation(project(":features:swap:api"))
 
     /** Domain */
     implementation(project(":features:swap:domain"))

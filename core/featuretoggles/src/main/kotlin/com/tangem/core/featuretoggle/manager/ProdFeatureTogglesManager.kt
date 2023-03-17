@@ -25,7 +25,7 @@ internal class ProdFeatureTogglesManager(
             .associateToggles(currentVersion = versionProvider.get() ?: "")
     }
 
-    override fun isFeatureEnabled(name: String): Boolean = featureToggles.any { it.key == name }
+    override fun isFeatureEnabled(name: String): Boolean = featureToggles[name] ?: false
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun getProdFeatureToggles() = featureToggles
