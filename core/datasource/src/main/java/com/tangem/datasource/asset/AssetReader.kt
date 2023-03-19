@@ -9,4 +9,6 @@ interface AssetReader {
 
     /** Read content of json file [fileName] from asset */
     fun readJson(fileName: String): String
+
+    fun writeJson(content: String, fileName: String)
 }

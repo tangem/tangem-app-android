@@ -27,7 +27,6 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.walletConnectInteractor
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -72,7 +71,7 @@ class TapWalletManager {
             null
         }
         scope.launch {
-            walletConnectInteractor.startListening(
+            store.state.daggerGraphState.walletConnectInteractor?.startListening(
                 userWalletId = userWallet.walletId.stringValue,
                 cardId = cardId,
             )

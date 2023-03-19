@@ -4,11 +4,19 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.datasource.di.SdkMoshi
+import com.tangem.tap.domain.walletconnect2.domain.models.SignMessageData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WCBinanceTxConfirmParam
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceCancelOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaSignMessage
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaTransactionRequest
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
 
 enum class WcJrpcMethods(val code: String) {
 
@@ -54,16 +62,14 @@ data class WcEthereumSignMessage(
      */
     val data
         get() = when (type) {
-            WCSignType.MESSAGE -> raw[1]
-            WCSignType.TYPED_MESSAGE -> raw[1]
             WCSignType.PERSONAL_MESSAGE -> raw[0]
+            else -> raw[1]
         }
 
     val address
         get() = when (type) {
-            WCSignType.MESSAGE -> raw[0]
-            WCSignType.TYPED_MESSAGE -> raw[0]
             WCSignType.PERSONAL_MESSAGE -> raw[1]
+            else -> raw[0]
         }
 }
 
@@ -97,7 +103,10 @@ sealed class WcRequest(open val data: WcRequestData) {
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
 }
 
-class WcJrpcRequestsDeserializer(private val moshi: Moshi) {
+@Singleton
+class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi: Moshi) {
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     @Suppress("ComplexMethod", "LongMethod")
     fun deserialize(method: String, params: String): WcRequest {

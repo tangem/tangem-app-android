@@ -2,24 +2,26 @@ package com.tangem.tap.domain.walletconnect2.domain
 
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
-import com.tangem.tap.domain.walletconnect2.data.WalletConnectSessionsRepositoryImpl
 import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.NetworkNamespace
 import com.tangem.tap.domain.walletconnect2.domain.models.Session
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectSession
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaResult
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 class WalletConnectInteractor(
     private val handler: WalletConnectEventsHandler,
     private val walletConnectRepository: WalletConnectRepository,
-    private val sessionsRepository: WalletConnectSessionsRepositoryImpl,
+    private val sessionsRepository: WalletConnectSessionsRepository,
     private val sdkHelper: WalletConnectSdkHelper,
     private val dispatcher: CoroutineDispatcherProvider,
     val blockchainHelper: WcBlockchainHelper,
@@ -138,12 +140,27 @@ class WalletConnectInteractor(
         walletConnectRepository.disconnect(topic)
     }
 
+    fun rejectRequest(topic: String, id: Long) {
+        walletConnectRepository.rejectRequest(topic, id)
+    }
+
     private suspend fun handleRequest(sessionRequest: WalletConnectEvents.SessionRequest) {
-        if (sessionsRepository.loadSessions(userWalletId).none { it.topic == sessionRequest.topic }) {
-            handler.onSessionRequestForWrongUserWallet()
+        val error: WalletConnectError? = when {
+            sessionsRepository.loadSessions(userWalletId).none { it.topic == sessionRequest.topic } -> {
+                WalletConnectError.WrongUserWallet
+            }
+            sessionRequest.request is WcRequest.CustomRequest -> {
+                WalletConnectError.UnsupportedMethod
+            }
+            else -> {
+                null
+            }
+        }
+        if (error != null) {
             walletConnectRepository.rejectRequest(sessionRequest.topic, sessionRequest.id)
             return
         }
+
         when (sessionRequest.request) {
             is WcRequest.BnbCancel -> Unit
             is WcRequest.BnbTxConfirm -> walletConnectRepository.sendRequest(
@@ -165,11 +182,11 @@ class WalletConnectInteractor(
         val currentRequest = this.currentRequest
         if (currentRequest == null || request.topic != currentRequest.topic) return
 
+        val networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId ?: "") ?: return
         val signedHash = when (request) {
             is WcPreparedRequest.BnbTransaction -> sdkHelper.signBnbTransaction(
                 data = request.preparedRequestData.data.data,
-                networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId ?: "")
-                    ?: return,
+                networkId = networkId,
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
@@ -179,25 +196,45 @@ class WalletConnectInteractor(
             )
             is WcPreparedRequest.EthSign -> sdkHelper.signPersonalMessage(
                 hashToSign = request.preparedRequestData.hash,
-                networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId ?: "")
-                    ?: return,
+                networkId = networkId,
+                type = request.preparedRequestData.type,
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
+            is WcPreparedRequest.SignTransaction -> {
+                sdkHelper.signTransaction(
+                    hashToSign = request.preparedRequestData.hashToSign,
+                    networkId = networkId,
+                    type = request.preparedRequestData.type,
+                    derivationPath = request.derivationPath,
+                    cardId = cardId,
+                )
+            }
         }
-
-        Timber.d("Signed hash: $signedHash")
-
         if (signedHash == null) {
             walletConnectRepository.rejectRequest(
                 topic = request.topic,
                 id = request.requestId,
             )
         } else {
+            val result = if (
+                request is WcPreparedRequest.EthSign
+                && (request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.SOLANA_MESSAGE
+                    || request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.POLKADOT_MESSAGE
+                    || request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.TRON_MESSAGE
+                    ) ||
+                request is WcPreparedRequest.SignTransaction &&
+                request.preparedRequestData.type == TransactionType.SOLANA_TX
+            ) {
+                Json.encodeToString(SolanaResult(signature = signedHash))
+            } else {
+                signedHash
+            }
+            Timber.d("Signed hash: $result")
             walletConnectRepository.sendRequest(
                 topic = request.topic,
                 id = request.requestId,
-                result = signedHash,
+                result = result,
             )
         }
     }

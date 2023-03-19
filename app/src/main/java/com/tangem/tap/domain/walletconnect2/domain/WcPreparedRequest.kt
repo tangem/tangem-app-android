@@ -14,6 +14,7 @@ sealed class WcPreparedRequest(
         override val preparedRequestData: WcPersonalSignData,
         topic: String,
         requestId: Long,
+        type: WcEthereumSignMessage.WCSignType,
         derivationPath: String?,
     ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
 

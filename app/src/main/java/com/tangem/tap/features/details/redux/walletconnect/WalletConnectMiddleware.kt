@@ -21,16 +21,17 @@ import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
 import com.tangem.tap.domain.walletconnect.extensions.toWcEthTransaction
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.walletConnect2Repository
-import com.tangem.tap.walletConnectInteractor
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -40,6 +41,11 @@ import timber.log.Timber
 @Suppress("LargeClass")
 class WalletConnectMiddleware {
     private var walletConnectManager = WalletConnectManager()
+    private val walletConnectInteractor: WalletConnectInteractor
+        get() = store.state.daggerGraphState.get(DaggerGraphState::walletConnectInteractor)
+    private val walletConnectRepository: WalletConnectRepository
+        get() = store.state.daggerGraphState.get(DaggerGraphState::walletConnectRepository)
+
     val walletConnectMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
@@ -129,7 +135,7 @@ class WalletConnectMiddleware {
                     '1' -> {
                         walletConnectManager.connect(wcUri = action.wcUri)
                     }
-                    '2' -> walletConnect2Repository.pair(uri = action.wcUri)
+                    '2' -> walletConnectRepository.pair(uri = action.wcUri)
                 }
             }
             is WalletConnectAction.RefuseOpeningSession -> {
@@ -170,6 +176,7 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.RejectRequest -> {
                 walletConnectManager.rejectRequest(action.topic, action.id)
+                walletConnectInteractor.rejectRequest(action.topic, action.id)
             }
             is WalletConnectAction.SendTransaction -> {
                 walletConnectManager.completeTransaction(action.topic)
@@ -319,11 +326,16 @@ class WalletConnectMiddleware {
                 scope.launch { walletConnectInteractor.continueWithRequest(action.sessionRequest) }
             }
             is WalletConnectAction.RejectSessionRequest -> {
+                val message = when (action.error) {
+                    WalletConnectError.UnsupportedMethod -> R.string.wallet_connect_error_wrong_card_selected//todo
+                    WalletConnectError.WrongUserWallet -> R.string.wallet_connect_error_wrong_card_selected
+                    else -> R.string.wallet_connect_error_wrong_card_selected //todo
+                }
                 store.dispatch(
                     GlobalAction.ShowDialog(
                         AppDialog.SimpleOkDialogRes(
                             headerId = R.string.common_warning,
-                            messageId = R.string.wallet_connect_error_wrong_card_selected,
+                            messageId = message,
                         ),
                     ),
                 )

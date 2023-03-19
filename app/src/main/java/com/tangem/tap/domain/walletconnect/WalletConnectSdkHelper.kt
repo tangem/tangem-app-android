@@ -15,14 +15,18 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.extensions.decodeBase58
+import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
+import com.tangem.crypto.CryptoUtils
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -33,6 +37,7 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.TransactionType
 import com.tangem.tap.domain.walletconnect2.domain.WcEthereumSignMessage
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
@@ -46,6 +51,8 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionReque
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
+import io.emeraldpay.polkaj.types.Hash512
+import okio.ByteString.Companion.toByteString
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -127,20 +134,6 @@ class WalletConnectSdkHelper {
         )
         return store.state.walletState.getWalletManager(blockchainNetwork)
     }
-
-    // private fun getWalletManager(session: WalletConnectSession): WalletManager? {
-    //     val factory = store.state.globalState.tapWalletManager.walletManagerFactory
-    //     val publicKey = Wallet.PublicKey(
-    //         session.wallet.walletPublicKey ?: return null,
-    //         session.wallet.derivedPublicKey,
-    //         session.wallet.derivationPath,
-    //     )
-    //     val blockchain = session.wallet.getBlockchainForSession()
-    //     return factory.makeWalletManager(
-    //         blockchain = blockchain,
-    //         publicKey = publicKey,
-    //     )
-    // }
 
     suspend fun completeTransaction(data: WcTransactionData, cardId: String?): String? {
         return when (data.type) {
@@ -242,8 +235,11 @@ class WalletConnectSdkHelper {
         val messageData = when (message.type) {
             WcEthereumSignMessage.WCSignType.MESSAGE,
             WcEthereumSignMessage.WCSignType.PERSONAL_MESSAGE,
+            WcEthereumSignMessage.WCSignType.POLKADOT_MESSAGE,
+            WcEthereumSignMessage.WCSignType.TRON_MESSAGE,
             -> createMessageData(message)
             WcEthereumSignMessage.WCSignType.TYPED_MESSAGE -> EthereumUtils.makeTypedDataHash(message.data)
+            WcEthereumSignMessage.WCSignType.SOLANA_MESSAGE -> message.data.decodeBase58()
         }
 
         val messageString = message.data.hexToAscii()
@@ -257,10 +253,11 @@ class WalletConnectSdkHelper {
             id = id,
         )
         return WcPersonalSignData(
-            hash = messageData,
+            hash = requireNotNull(messageData),
             topic = topic,
             id = id,
             dialogData = dialogData,
+            type = message.type,
         )
     }
 
@@ -298,6 +295,7 @@ class WalletConnectSdkHelper {
     suspend fun signPersonalMessage(
         hashToSign: ByteArray,
         networkId: String,
+        type: WcEthereumSignMessage.WCSignType,
         derivationPath: String?,
         cardId: String?,
     ): String? {
@@ -312,11 +310,62 @@ class WalletConnectSdkHelper {
         return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
-                return EthereumUtils.prepareSignedMessageData(
-                    signedHash = hash,
-                    hashToSign = hashToSign,
-                    publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
+                return when (type) {
+                    WcEthereumSignMessage.WCSignType.SOLANA_MESSAGE -> hash.encodeBase58()
+                    WcEthereumSignMessage.WCSignType.POLKADOT_MESSAGE -> {
+                        Hash512(hash).toString()
+                    }
+                    WcEthereumSignMessage.WCSignType.TRON_MESSAGE ->
+                        hash.toByteString().toString()
+                    else -> EthereumUtils.prepareSignedMessageData(
+                        signedHash = hash,
+                        hashToSign = hashToSign,
+                        publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
+                    )
+                }
+            }
+            is CompletionResult.Failure -> {
+                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
+                Timber.e(result.error.customMessage)
+                null
+            }
+        }
+    }
+
+    suspend fun signTransaction(
+        hashToSign: ByteArray,
+        networkId: String,
+        type: TransactionType,
+        derivationPath: String?,
+        cardId: String?,
+    ): String? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        val wallet = getWalletManager(blockchain, derivationPath)?.wallet ?: return null
+
+        val command = SignHashCommand(
+            hash = hashToSign,
+            walletPublicKey = wallet.publicKey.seedKey,
+            derivationPath = wallet.publicKey.derivationPath,
+        )
+        return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
+            is CompletionResult.Success -> {
+                val hash = result.data.signature
+
+                Timber.e(
+                    "Verify result: " +
+                        "${
+                            CryptoUtils.verify(
+                                wallet.publicKey.blockchainKey,
+                                hashToSign,
+                                hash,
+                                EllipticCurve.Ed25519,
+                            )
+                        }",
                 )
+
+                when (type) {
+                    TransactionType.SOLANA_TX -> hash.encodeBase58()
+                }
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }

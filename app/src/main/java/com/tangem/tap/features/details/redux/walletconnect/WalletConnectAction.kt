@@ -126,7 +126,7 @@ sealed class WalletConnectAction : Action {
 
     data class ShowSessionRequest(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
 
-    object RejectSessionRequest : WalletConnectAction()
+    data class RejectSessionRequest(val error: WalletConnectError) : WalletConnectAction()
 
     object RejectUnsupportedRequest : WalletConnectAction()
 
