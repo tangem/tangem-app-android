@@ -4,7 +4,6 @@ import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
-import com.tangem.tap.domain.walletconnect2.domain.models.solana.toSolanaJTx
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
 
 class WcSessionRequestConverter(
