@@ -8,11 +8,14 @@ import com.tangem.tap.domain.walletconnect2.domain.models.Session
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectSession
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaResult
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 class WalletConnectInteractor(
@@ -194,23 +197,44 @@ class WalletConnectInteractor(
             is WcPreparedRequest.EthSign -> sdkHelper.signPersonalMessage(
                 hashToSign = request.preparedRequestData.hash,
                 networkId = networkId,
+                type = request.preparedRequestData.type,
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
+            is WcPreparedRequest.SignTransaction -> {
+                sdkHelper.signTransaction(
+                    hashToSign = request.preparedRequestData.hashToSign,
+                    networkId = networkId,
+                    type = request.preparedRequestData.type,
+                    derivationPath = request.derivationPath,
+                    cardId = cardId,
+                )
+            }
         }
-
-        Timber.d("Signed hash: $signedHash")
-
         if (signedHash == null) {
             walletConnectRepository.rejectRequest(
                 topic = request.topic,
                 id = request.requestId,
             )
         } else {
+            val result = if (
+                request is WcPreparedRequest.EthSign
+                && (request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.SOLANA_MESSAGE
+                    || request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.POLKADOT_MESSAGE
+                    || request.preparedRequestData.type == WcEthereumSignMessage.WCSignType.TRON_MESSAGE
+                    ) ||
+                request is WcPreparedRequest.SignTransaction &&
+                request.preparedRequestData.type == TransactionType.SOLANA_TX
+            ) {
+                Json.encodeToString(SolanaResult(signature = signedHash))
+            } else {
+                signedHash
+            }
+            Timber.d("Signed hash: $result")
             walletConnectRepository.sendRequest(
                 topic = request.topic,
                 id = request.requestId,
-                result = signedHash,
+                result = result,
             )
         }
     }

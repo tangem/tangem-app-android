@@ -5,10 +5,14 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.datasource.di.SdkMoshi
+import com.tangem.tap.domain.walletconnect2.domain.models.SignMessageData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WCBinanceTxConfirmParam
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceCancelOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaSignMessage
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaTransactionRequest
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
@@ -22,9 +26,20 @@ enum class WcJrpcMethods(val code: String) {
     ETH_SIGN_TYPE_DATA_V4("eth_signTypedData_v4"),
     ETH_SIGN_TRANSACTION("eth_signTransaction"),
     ETH_SEND_TRANSACTION("eth_sendTransaction"),
+
     BNB_SIGN("bnb_sign"),
     BNB_TRANSACTION_CONFIRM("bnb_tx_confirmation"),
-    SIGN_TRANSACTION("trust_signTransaction");
+    SIGN_TRANSACTION("trust_signTransaction"),
+
+    POLKADOT_SIGN_TX("polkadot_signTransaction"),
+    POLKADOT_SIGN_MESSAGE("polkadot_signMessage"),
+
+    TRON_SIGN_TX("tron_signTransaction"),
+    TRON_SIGN_MESSAGE("tron_signMessage"),
+
+    SOLANA_SIGN_TX("solana_signTransaction"),
+    SOLANA_SIGN_MESSAGE("solana_signMessage"),
+    ;
 
     companion object {
         fun fromCode(code: String): WcJrpcMethods? = values().firstOrNull { it.code == code }
@@ -43,7 +58,7 @@ data class WcEthereumSignMessage(
     val type: WCSignType,
 ) : WcRequestData {
     enum class WCSignType {
-        MESSAGE, PERSONAL_MESSAGE, TYPED_MESSAGE
+        MESSAGE, PERSONAL_MESSAGE, TYPED_MESSAGE, SOLANA_MESSAGE, POLKADOT_MESSAGE, TRON_MESSAGE
     }
 
     /**
@@ -97,6 +112,7 @@ sealed class WcRequest(open val data: WcRequestData) {
     data class BnbTxConfirm(override val data: WCBinanceTxConfirmParam) : WcRequest(data)
     data class SignTransaction(override val data: WCSignTransaction) : WcRequest(data)
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
+    data class SolanaSignRequest(override val data: SolanaTransactionRequest) : WcRequest(data)
 }
 
 @Singleton
@@ -169,6 +185,36 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                 ).fromJsonFirstOrNull(params) ?: return customRequest
                 WcRequest.SignTransaction(data = deserializedParams)
             }
+            WcJrpcMethods.POLKADOT_SIGN_TX -> TODO()
+            WcJrpcMethods.POLKADOT_SIGN_MESSAGE -> {
+                val signMessage = Json.decodeFromStringOrNull<SignMessageData>(params) ?: return customRequest
+                val data = WcEthereumSignMessage(
+                    raw = listOf(signMessage.address, signMessage.message),
+                    type = WcEthereumSignMessage.WCSignType.POLKADOT_MESSAGE,
+                )
+                WcRequest.EthSign(data = data)
+            }
+            WcJrpcMethods.TRON_SIGN_TX -> TODO()
+            WcJrpcMethods.TRON_SIGN_MESSAGE -> {
+                val signMessage = Json.decodeFromStringOrNull<SignMessageData>(params) ?: return customRequest
+                val data = WcEthereumSignMessage(
+                    raw = listOf(signMessage.address, signMessage.message),
+                    type = WcEthereumSignMessage.WCSignType.TRON_MESSAGE,
+                )
+                WcRequest.EthSign(data = data)
+            }
+            WcJrpcMethods.SOLANA_SIGN_TX -> {
+                val tx = json.decodeFromStringOrNull<SolanaTransactionRequest>(params) ?: return customRequest
+                WcRequest.SolanaSignRequest(data = tx)
+            }
+            WcJrpcMethods.SOLANA_SIGN_MESSAGE -> {
+                val signMessage = Json.decodeFromStringOrNull<SolanaSignMessage>(params) ?: return customRequest
+                val data = WcEthereumSignMessage(
+                    raw = listOf(signMessage.pubkey, signMessage.message),
+                    type = WcEthereumSignMessage.WCSignType.SOLANA_MESSAGE,
+                )
+                WcRequest.EthSign(data = data)
+            }
         }
     }
 
@@ -194,6 +240,15 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
     private fun <T> JsonAdapter<T>.fromJsonOrNull(data: String): T? {
         return try {
             this.fromJson(data)
+        } catch (e: Exception) {
+            Timber.e(e.message)
+            null
+        }
+    }
+
+    private inline fun <reified T> Json.decodeFromStringOrNull(data: String): T? {
+        return try {
+            this.decodeFromString<T>(data)
         } catch (e: Exception) {
             Timber.e(e.message)
             null

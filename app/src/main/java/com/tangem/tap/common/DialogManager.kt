@@ -13,6 +13,7 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.ChooseNetworkDia
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.SessionProposalDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.SignTransactionDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
@@ -119,6 +120,10 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     preparedData = state.dialog.data,
                     context = context,
                 )
+            is WalletConnectDialog.SignTransactionDialog -> SignTransactionDialog.create(
+                preparedData = state.dialog.data,
+                context = context,
+            )
             is WalletConnectDialog.UnsupportedNetwork ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,

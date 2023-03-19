@@ -119,6 +119,10 @@ sealed class WalletConnectDialog : StateDialog {
     data class BnbTransactionDialog(
         val data: WcPreparedRequest.BnbTransaction,
     ) : WalletConnectDialog()
+
+    data class SignTransactionDialog(
+        val data: WcPreparedRequest.SignTransaction,
+    ) : WalletConnectDialog()
 }
 
 data class WcTransactionData(
