@@ -30,16 +30,12 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
-import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
-import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -66,8 +62,6 @@ private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
-lateinit var walletConnectInteractor: WalletConnectInteractor
-
 // TODO: Move to DI
 val userWalletsListManagerSafe: UserWalletsListManager?
     get() = store.state.globalState.userWalletsListManager
@@ -83,6 +77,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     /** Router for opening tester menu */
     @Inject
     lateinit var testerRouter: TesterRouter
+
+    @Inject
+    lateinit var walletConnectInteractor: WalletConnectInteractor
 
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
@@ -111,16 +108,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             ),
         )
 
-        walletConnectInteractor = WalletConnectInteractor(
-            handler = WalletConnectEventsHandlerImpl(),
-            walletConnectRepository = walletConnect2Repository,
-            sessionsRepository = walletConnectSessionsRepository,
-            sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = TangemWcBlockchainHelper(),
-            dispatcher = AppCoroutineDispatcherProvider(),
-        )
-
-        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter))
+        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter, walletConnectInteractor))
     }
 
     private fun initUserWalletsListManager() {

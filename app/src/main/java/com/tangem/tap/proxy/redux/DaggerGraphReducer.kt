@@ -15,9 +15,12 @@ object DaggerGraphReducer {
             is DaggerGraphAction.SetApplicationDependencies -> state.daggerGraphState.copy(
                 assetReader = action.assetReader,
                 networkConnectionManager = action.networkConnectionManager,
+                walletConnectRepository = action.walletConnectRepository,
+                walletConnectSessionsRepository = action.walletConnectSessionsRepository,
             )
             is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
                 testerRouter = action.testerRouter,
+                walletConnectInteractor = action.walletConnectInteractor,
             )
         }
     }

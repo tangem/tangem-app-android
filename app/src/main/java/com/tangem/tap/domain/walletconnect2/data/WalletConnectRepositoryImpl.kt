@@ -21,10 +21,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class WalletConnectRepositoryImpl(
-    val application: Application,
-    val wcRequestDeserializer: WcJrpcRequestsDeserializer,
+class WalletConnectRepositoryImpl @Inject constructor(
+    private val application: Application,
+    private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
 ) : WalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null

@@ -5,4 +5,8 @@ sealed class WalletConnectError : Exception() {
     data class ApprovalErrorAddNetwork(val networks: List<String>) : WalletConnectError()
     object ApprovalErrorUnsupportedNetwork : WalletConnectError()
     data class ExternalApprovalError(override val message: String?) : WalletConnectError()
+
+    object WrongUserWallet : WalletConnectError()
+
+    object UnsupportedMethod : WalletConnectError()
 }

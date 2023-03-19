@@ -43,8 +43,8 @@ class WalletConnectEventsHandlerImpl : WalletConnectEventsHandler {
         store.dispatchOnMain(WalletConnectAction.ShowSessionRequest(request))
     }
 
-    override fun onSessionRequestForWrongUserWallet() {
-        store.dispatchOnMain(WalletConnectAction.RejectSessionRequest)
+    override fun onRejectSessionRequest(error: WalletConnectError) {
+        store.dispatchOnMain(WalletConnectAction.RejectSessionRequest(error))
     }
 
     override fun onUnsupportedRequest() {

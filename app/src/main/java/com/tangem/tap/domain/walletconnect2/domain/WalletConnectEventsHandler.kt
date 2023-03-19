@@ -6,8 +6,6 @@ import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 
 interface WalletConnectEventsHandler {
     fun onProposalReceived(proposal: WalletConnectEvents.SessionProposal, networksFormatted: String)
-    // val onProposalApproved: () -> Unit,
-    // val onProposalDeclined: () -> Unit,
 
     fun onSessionEstablished()
 
@@ -17,7 +15,7 @@ interface WalletConnectEventsHandler {
 
     fun onSessionRequest(request: WcPreparedRequest)
 
-    fun onSessionRequestForWrongUserWallet()
+    fun onRejectSessionRequest(error: WalletConnectError)
 
     fun onUnsupportedRequest()
 }

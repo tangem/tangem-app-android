@@ -349,6 +349,7 @@ class WalletConnectManager {
                             preparedRequestData = data,
                             topic = session.session.topic,
                             requestId = id,
+                            type = data.type,
                             derivationPath = session.wallet.derivationPath?.rawPath,
                         ),
                     ),
@@ -364,6 +365,7 @@ class WalletConnectManager {
             val hash = WalletConnectSdkHelper().signPersonalMessage(
                 hashToSign = data.hash,
                 networkId = activeData.wallet.blockchain?.toNetworkId() ?: "",
+                type = data.type,
                 derivationPath = activeData.wallet.derivationPath?.rawPath,
                 cardId = cardId,
             )

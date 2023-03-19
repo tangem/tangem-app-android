@@ -20,4 +20,11 @@ internal class AndroidAssetReader @Inject constructor(
             .bufferedReader()
             .use(BufferedReader::readText)
     }
+
+    override fun writeJson(content: String, fileName: String) {
+        context
+            .openFileOutput(fileName, Context.MODE_PRIVATE)
+            .bufferedWriter()
+            .use { it.write(content) }
+    }
 }
