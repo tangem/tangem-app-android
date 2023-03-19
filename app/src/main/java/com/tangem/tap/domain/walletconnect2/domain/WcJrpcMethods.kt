@@ -5,14 +5,10 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.datasource.di.SdkMoshi
-import com.tangem.tap.domain.walletconnect2.domain.models.SignMessageData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WCBinanceTxConfirmParam
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceCancelOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
-import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaSignMessage
-import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaTransactionRequest
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject

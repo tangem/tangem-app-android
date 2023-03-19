@@ -365,7 +365,6 @@ class WalletConnectManager {
             val hash = WalletConnectSdkHelper().signPersonalMessage(
                 hashToSign = data.hash,
                 networkId = activeData.wallet.blockchain?.toNetworkId() ?: "",
-                type = data.type,
                 derivationPath = activeData.wallet.derivationPath?.rawPath,
                 cardId = cardId,
             )
