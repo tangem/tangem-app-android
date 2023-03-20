@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -36,22 +37,26 @@ data class WalletData(
         return exchangeManager.availableForSell(currency)
     }
 
-    fun isAvailableToSwap(swapInteractor: SwapInteractor, isExchangeFeatureOn: Boolean): Boolean {
+    fun isAvailableToSwap(
+        swapFeatureToggleManager: SwapFeatureToggleManager,
+        swapInteractor: SwapInteractor,
+    ): Boolean {
+        val isOptimismEnabled =
+            currency.blockchain.id == Blockchain.Optimism.id && swapFeatureToggleManager.isOptimismSwapEnabled
         return swapInteractor.isAvailableToSwap(currency.blockchain.toNetworkId()) &&
-            currency.blockchain.id != Blockchain.Optimism.id && // disable optimism blockchain for now
-            isExchangeFeatureOn &&
+            isOptimismEnabled &&
             !currency.isCustomCurrency(null)
     }
 
     fun getAvailableActions(
         swapInteractor: SwapInteractor,
         exchangeManager: CurrencyExchangeManager,
-        isExchangeFeatureOn: Boolean,
+        swapFeatureToggleManager: SwapFeatureToggleManager,
     ): Set<CurrencyAction> {
         return setOfNotNull(
             if (isAvailableToBuy(exchangeManager)) CurrencyAction.Buy else null,
             if (isAvailableToSell(exchangeManager)) CurrencyAction.Sell else null,
-            if (isAvailableToSwap(swapInteractor, isExchangeFeatureOn)) CurrencyAction.Swap else null,
+            if (isAvailableToSwap(swapFeatureToggleManager, swapInteractor)) CurrencyAction.Swap else null,
         )
     }
 
