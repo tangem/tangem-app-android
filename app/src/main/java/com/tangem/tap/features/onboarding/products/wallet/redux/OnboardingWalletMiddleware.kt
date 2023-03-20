@@ -415,7 +415,7 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
             card = scanResponse.card,
         ).create()
         store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager))
-        store.dispatchOnMain(OnboardingSaltPayAction.Update(false))
+        store.dispatchOnMain(OnboardingSaltPayAction.Update(withAnalytics = false))
     }
 }
 

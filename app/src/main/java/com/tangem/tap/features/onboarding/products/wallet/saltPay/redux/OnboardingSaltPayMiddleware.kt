@@ -79,7 +79,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.OnSwitchedToSaltPayProcess -> {
-            sendAnalyticsScreenOpened(getState().step, newStep = SaltPayActivationStep.None)
+            sendAnalyticsScreenOpened(SaltPayActivationStep.None, newStep = getState().step)
         }
         is OnboardingSaltPayAction.Update -> {
             handleInProgress = true
