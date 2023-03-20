@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
+    implementation(project(":features:swap:api"))
     implementation(project(":features:swap:presentation"))
     implementation(project(":features:swap:domain"))
     implementation(project(":features:swap:data"))

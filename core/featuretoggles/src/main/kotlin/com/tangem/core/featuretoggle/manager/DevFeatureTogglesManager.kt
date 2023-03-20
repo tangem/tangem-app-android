@@ -42,7 +42,7 @@ internal class DevFeatureTogglesManager(
             .toMutableMap()
     }
 
-    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap.any { it.key == name }
+    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap[name] ?: false
 
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 
