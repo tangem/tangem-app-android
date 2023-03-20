@@ -1,10 +1,6 @@
 [
     {
-        "name": "INACTIVE_TEST_FEATURE_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "ACTIVE2_TEST_FEATURE_ENABLED",
-        "version": "1.0.0"
+        "name": "OPTIMISM_SWAP_FEATURE_ENABLED",
+        "version": "4.3.1"
     }
 ]
