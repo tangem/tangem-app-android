@@ -416,6 +416,7 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
         ).create()
         store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager))
         store.dispatchOnMain(OnboardingSaltPayAction.Update(withAnalytics = false))
+        store.dispatchOnMain(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
     }
 }
 
