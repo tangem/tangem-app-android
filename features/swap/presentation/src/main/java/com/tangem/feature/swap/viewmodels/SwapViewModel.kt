@@ -438,7 +438,7 @@ internal class SwapViewModel @Inject constructor(
 
     companion object {
         private const val INITIAL_AMOUNT = ""
-        private const val UPDATE_DELAY = 10000L
+        private const val UPDATE_DELAY = 1000000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
     }
 }
