@@ -1,6 +1,8 @@
 package com.tangem.tap.features.details.ui.details
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.wallet.R
 
 @Immutable
@@ -11,6 +13,7 @@ data class DetailsScreenState(
     val appCurrency: String,
     val onItemsClick: (SettingsElement) -> Unit,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
+    val showErrorSnackbar: MutableState<EventError> = mutableStateOf(EventError.Empty),
 ) {
     val appNameRes: Int = R.string.tangem_app_name
 }
@@ -38,6 +41,11 @@ data class SocialNetworkLink(
     val network: SocialNetwork,
     val url: String,
 )
+
+sealed class EventError {
+    object Empty : EventError()
+    data class DemoReferralNotAvailable(val onErrorShow: () -> Unit) : EventError()
+}
 
 sealed class SocialNetwork(val id: String, val iconRes: Int) {
     object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)
