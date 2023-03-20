@@ -20,6 +20,7 @@ import coil.size.Scale
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
+import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -55,6 +56,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     @Inject
     lateinit var swapInteractor: SwapInteractor
+
+    @Inject
+    lateinit var swapFeatureToggleManager: SwapFeatureToggleManager
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
 
@@ -170,6 +174,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
 
         walletView.swapInteractor = swapInteractor
+        walletView.swapFeatureToggleManager = swapFeatureToggleManager
 
         walletView.onNewState(state)
 
