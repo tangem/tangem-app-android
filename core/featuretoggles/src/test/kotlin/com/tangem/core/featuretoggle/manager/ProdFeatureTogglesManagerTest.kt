@@ -105,7 +105,7 @@ internal class ProdFeatureTogglesManagerTest {
     @Test
     fun `get feature availability if feature toggle exists`() {
         val featureToggles = mapOf(
-            "INACTIVE_TEST_FEATURE_ENABLED" to false,
+            "INACTIVE_TEST_FEATURE_ENABLED" to true,
             "ACTIVE2_TEST_FEATURE_ENABLED" to true,
         )
         manager.setProdFeatureToggles(featureToggles)
