@@ -22,7 +22,6 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.filters.BasicSignInFilter
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
@@ -187,7 +186,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
 
-        factory.addFilter(BasicSignInFilter())
         factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
 
         val buildData = AnalyticsHandlerBuilder.Data(
