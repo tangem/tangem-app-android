@@ -364,6 +364,10 @@ suspend fun handleBasicAnalyticsEvent() {
         null
     }
 
-    val converterData = BasicEventsSourceData(scanResponse, store.state.walletState, biometricsWalletDataModels)
+    val converterData = BasicEventsSourceData(
+        scanResponse = scanResponse,
+        walletState = store.state.walletState,
+        biometricsWalletDataModels = biometricsWalletDataModels,
+    )
     BasicEventsPreChecker().tryToSend(converterData)
 }
