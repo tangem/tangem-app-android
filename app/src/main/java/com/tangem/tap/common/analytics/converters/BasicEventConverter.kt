@@ -23,7 +23,6 @@ class BasicEventsPreChecker {
     fun tryToSend(converterData: BasicEventsSourceData) {
         if (!isReadyToSend(converterData)) return
 
-        BasicSignInEventConverter().convert(converterData)?.let { Analytics.send(it) }
         BasicTopUpEventConverter().convert(converterData)?.let { Analytics.send(it) }
     }
 
@@ -99,12 +98,8 @@ data class BasicEventsSourceData(
     val walletState: WalletState,
     val biometricsWalletDataModels: List<WalletDataModel>?,
 ) {
-    val batchId: String by lazy { scanResponse.card.batchId }
-
     val userWalletIdStringValue: String? by lazy {
-        UserWalletIdBuilder.scanResponse(scanResponse)
-            .build()
-            ?.stringValue
+        UserWalletIdBuilder.scanResponse(scanResponse).build()?.stringValue
     }
 
     val paramCardCurrency: AnalyticsParam.CardCurrency? by lazy {
@@ -161,21 +156,6 @@ private class BalanceCalculator(
             ?: walletState.walletsDataFromStores.calculateTotalCryptoAmount()
 
         return totalAmount
-    }
-}
-
-class BasicSignInEventConverter : Converter<BasicEventsSourceData, Basic.SignedIn?> {
-
-    override fun convert(value: BasicEventsSourceData): Basic.SignedIn? {
-        if (value.paramCardCurrency == null || value.userWalletIdStringValue == null) return null
-
-        return Basic.SignedIn(
-            state = value.paramCardBalanceState,
-            currency = value.paramCardCurrency!!,
-            batch = value.batchId,
-        ).apply {
-            filterData = value.userWalletIdStringValue
-        }
     }
 }
 
