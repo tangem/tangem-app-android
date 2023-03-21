@@ -58,7 +58,7 @@ sealed class Settings(
     sealed class AppSettings(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Settings("Settings / App Settings", event, params) {
+    ) : Settings(category = "Settings / App Settings", event = event, params = params) {
 
         class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
             event = "Save Wallet Switcher Changed",
