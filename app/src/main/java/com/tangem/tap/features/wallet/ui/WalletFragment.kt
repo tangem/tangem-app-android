@@ -22,9 +22,6 @@ import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
-import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -68,6 +65,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        lifecycle.addObserver(viewModel)
         activity?.lifecycleScope?.launchWhenCreated {
             viewModel.launch()
         }
@@ -76,21 +74,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-
-        val scanResponse = store.state.globalState.scanResponse
-        if (scanResponse != null) {
-            val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
-            val signInType = store.state.signInState.type
-            if (currency != null && signInType != null) {
-                Analytics.send(
-                    Basic.SignedIn(
-                        currency = currency,
-                        batch = scanResponse.card.batchId,
-                        signInType = signInType,
-                    ),
-                )
-            }
-        }
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
@@ -107,7 +90,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onStart() {
         super.onStart()
-        Analytics.send(MainScreen.ScreenOpened())
 
         setStatusBarColor(R.color.background_secondary)
 
