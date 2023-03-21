@@ -329,15 +329,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 }
             }
         }
-        is BackupAction.FinishBackup -> {
-            if (action.withAnalytics) {
-                Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
-            }
-            if (!onboardingWalletState.isSaltPay) {
-                Analytics.send(Onboarding.Finished())
-                finishCardActivation(backupState, card)
-            }
-        }
         is BackupAction.DiscardBackup -> {
             backupService.discardSavedBackup()
         }
@@ -362,13 +353,34 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
-        is BackupAction.DismissBackup -> {
+        is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
-            if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
-            store.dispatch(BackupAction.FinishBackup())
+            if (onboardingWalletState.isSaltPay) return
+
+            Analytics.send(Onboarding.Finished())
+            finishCardActivation(gatherCardIds(backupState, card))
+        }
+        is BackupAction.FinishBackup -> {
+            if (action.withAnalytics) {
+                Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
+            }
+            if (onboardingWalletState.isSaltPay) return
+
+            val notActivatedCardIds = gatherCardIds(backupState, card)
+                .mapNotNull { if (cardActivationIsFinished(it)) null else it }
+
+            // All cardIds may already be activated if the backup was skipped before.
+            if (notActivatedCardIds.isEmpty()) return
+
+            Analytics.send(Onboarding.Finished())
+            finishCardActivation(notActivatedCardIds)
         }
         else -> {}
     }
+}
+
+private fun cardActivationIsFinished(cardId: String): Boolean {
+    return preferencesStorage.usedCardsPrefStorage.isActivationFinished(cardId)
 }
 
 /**
@@ -380,16 +392,19 @@ private fun startCardActivation(scanResponse: ScanResponse) {
 }
 
 /**
- * Standard Wallet cards finish activation at BackupAction.FinishBackup
+ * Standard Wallet cards finish activation at BackupAction.SkipBackup and BackupAction.FinishBackup
  * SaltPay cards finish activation at OnboardingWalletAction.FinishOnboarding
  */
-internal fun finishCardActivation(backupState: BackupState, card: CardDTO?) {
-    (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
-        .distinct()
+internal fun finishCardActivation(cardIds: List<String>) {
+    cardIds.forEach { cardId ->
+        preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
+    }
+}
+
+internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<String> {
+    return (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
         .filterNotNull()
-        .forEach { cardId ->
-            preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-        }
+        .distinct()
 }
 
 /**
@@ -415,7 +430,8 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
             card = scanResponse.card,
         ).create()
         store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager))
-        store.dispatchOnMain(OnboardingSaltPayAction.Update(false))
+        store.dispatchOnMain(OnboardingSaltPayAction.Update(withAnalytics = false))
+        store.dispatchOnMain(OnboardingSaltPayAction.OnSwitchedToSaltPayProcess)
     }
 }
 
