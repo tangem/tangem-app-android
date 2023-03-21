@@ -5,8 +5,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.tangem_sdk_new.storage.AndroidSecureStorage
-import com.tangem.tangem_sdk_new.storage.createEncryptedSharedPreferences
+import com.tangem.sdk.storage.AndroidSecureStorage
+import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager

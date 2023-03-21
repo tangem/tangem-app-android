@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.tangem.tangem_sdk_new.extensions.dpToPx
-import com.tangem.tangem_sdk_new.extensions.pxToDp
+import com.tangem.sdk.extensions.dpToPx
+import com.tangem.sdk.extensions.pxToDp
 
 /**
  * Created by Anton Zhilenkov on 08/06/2022.
