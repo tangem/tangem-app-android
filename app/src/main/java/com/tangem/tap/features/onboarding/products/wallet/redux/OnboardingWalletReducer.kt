@@ -106,6 +106,7 @@ private object BackupReducer {
             } else {
                 state.copy(backupStep = BackupStep.WriteBackupCard(action.cardNumber))
             }
+            is BackupAction.SkipBackup -> state.copy(backupStep = BackupStep.Finished)
             is BackupAction.FinishBackup -> state.copy(backupStep = BackupStep.Finished)
             BackupAction.OnAccessCodeDialogClosed -> state.copy(backupStep = BackupStep.AddBackupCards)
             BackupAction.DiscardBackup -> BackupState()
