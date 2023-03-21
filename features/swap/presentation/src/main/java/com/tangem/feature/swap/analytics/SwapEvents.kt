@@ -15,16 +15,16 @@ sealed class SwapEvents(
     object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
     object ReceiveTokenClicked : SwapEvents(event = "Receive Token Clicked")
     object ChooseTokenScreenOpened : SwapEvents(event = "Choose Token Screen Opened")
-    object SearchTokenClicked : SwapEvents(event = "Search Token Clicked")
+    object SearchTokenClicked : SwapEvents(event = "Searched Token Clicked")
     data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
         event = "Button - Swap",
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
     )
 
-    object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission") // ?
+    object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
     object ButtonPermissionApproveClicked : SwapEvents(event = "Button - Permission Approve")
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
-    object ButtonPermitAndSwapClicked : SwapEvents(event = "Button - Permit and Swap") // ?
+    object ButtonPermitAndSwapClicked : SwapEvents(event = "Button - Permit and Swap")
     object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
     object SwapInProgressScreen : SwapEvents(event = "Swap in Progress Screen Opened")
 }
