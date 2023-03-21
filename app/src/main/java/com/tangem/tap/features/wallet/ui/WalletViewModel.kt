@@ -1,7 +1,13 @@
 package com.tangem.tap.features.wallet.ui
 
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
+import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -18,7 +24,7 @@ import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
 // [REDACTED_TODO_COMMENT]
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListManager?> {
+internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListManager?>, DefaultLifecycleObserver {
     private var observeWalletStoresUpdatesJob: Job? = null
         set(value) {
             field?.cancel()
@@ -38,6 +44,27 @@ internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListMan
         if (state != null) {
             bootstrapSelectedWalletStoresChanges(state)
         }
+    }
+
+    override fun onCreate(owner: LifecycleOwner) {
+        val scanResponse = store.state.globalState.scanResponse
+        if (scanResponse != null) {
+            val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+            val signInType = store.state.signInState.type
+            if (currency != null && signInType != null) {
+                Analytics.send(
+                    Basic.SignedIn(
+                        currency = currency,
+                        batch = scanResponse.card.batchId,
+                        signInType = signInType,
+                    ),
+                )
+            }
+        }
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        Analytics.send(MainScreen.ScreenOpened())
     }
 
     fun launch() {
