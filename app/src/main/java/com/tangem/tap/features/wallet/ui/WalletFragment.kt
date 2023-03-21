@@ -22,7 +22,6 @@ import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -66,6 +65,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        lifecycle.addObserver(viewModel)
         activity?.lifecycleScope?.launchWhenCreated {
             viewModel.launch()
         }
@@ -75,7 +75,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        Analytics.send(MainScreen.ScreenOpened())
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
