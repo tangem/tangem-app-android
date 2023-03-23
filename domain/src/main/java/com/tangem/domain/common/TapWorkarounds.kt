@@ -79,8 +79,7 @@ object TapWorkarounds {
         "Now blockchain is read form files (CardTypesResolver.getBlockchain), " +
             "but for previously saved cards this method is still used",
     )
-    fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
-        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
+    fun CardDTO.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
 
     fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
         return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
