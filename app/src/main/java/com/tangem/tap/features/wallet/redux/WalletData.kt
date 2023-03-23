@@ -41,10 +41,10 @@ data class WalletData(
         swapFeatureToggleManager: SwapFeatureToggleManager,
         swapInteractor: SwapInteractor,
     ): Boolean {
-        val isOptimismEnabled =
-            currency.blockchain.id == Blockchain.Optimism.id && swapFeatureToggleManager.isOptimismSwapEnabled
+        if (currency.blockchain.id == Blockchain.Optimism.id && !swapFeatureToggleManager.isOptimismSwapEnabled) {
+            return false
+        }
         return swapInteractor.isAvailableToSwap(currency.blockchain.toNetworkId()) &&
-            isOptimismEnabled &&
             !currency.isCustomCurrency(null)
     }
 
