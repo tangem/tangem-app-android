@@ -87,11 +87,11 @@ interface WalletCurrenciesManager {
      * Interface definition for a callbacks
      */
     interface Listener {
-        fun willUpdate(userWallet: UserWallet, currency: Currency)
-        fun didUpdate(userWallet: UserWallet, currency: Currency)
-        fun willCurrenciesAdd(userWallet: UserWallet, currenciesToAdd: List<Currency>)
-        fun willCurrenciesRemove(userWallet: UserWallet, currenciesToRemove: List<Currency>)
-        fun willCurrencyRemove(userWallet: UserWallet, currencyToRemove: Currency)
+        fun willUpdate(userWallet: UserWallet, currency: Currency) {}
+        fun didUpdate(userWallet: UserWallet, currency: Currency) {}
+        fun willCurrenciesAdd(userWallet: UserWallet, currenciesToAdd: List<Currency>) {}
+        fun willCurrenciesRemove(userWallet: UserWallet, currenciesToRemove: List<Currency>) {}
+        fun willCurrencyRemove(userWallet: UserWallet, currencyToRemove: Currency) {}
     }
 
     // For provider
