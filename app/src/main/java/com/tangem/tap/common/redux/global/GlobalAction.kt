@@ -7,6 +7,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -88,6 +89,7 @@ sealed class GlobalAction : Action {
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
+    data class SetTopUpController(val topUpController: TopUpController) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
