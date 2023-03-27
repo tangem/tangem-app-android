@@ -22,7 +22,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
+import com.tangem.tap.common.analytics.filters.TopUpFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -158,6 +158,14 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
+        initTopUpController()
+    }
+
+    private fun initTopUpController() {
+        val topUpController = store.state.globalState.topUpController
+        topUpController.walletStoresManagerProvider = { walletStoresManager }
+        topUpController.scanResponseProvider = { store.state.globalState.scanResponse }
+        walletCurrenciesManager.addListener(topUpController)
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -186,7 +194,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
 
-        factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
+        factory.addFilter(TopUpFilter(preferencesStorage.toppedUpWalletStorage))
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
