@@ -7,6 +7,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.copy
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
@@ -17,9 +18,10 @@ import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.persistence.ToppedUpWalletStorage
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
@@ -27,27 +29,18 @@ import timber.log.Timber
 class TopUpController(
     var scanResponseProvider: (() -> ScanResponse?)? = null,
     var walletStoresManagerProvider: (() -> WalletStoresManager)? = null,
+    private val topupWalletStorage: ToppedUpWalletStorage,
 ) : WalletCurrenciesManager.Listener {
 
     private var hadMissedDerivations: Boolean = false
     private val addedCurrencies = mutableListOf<Currency>()
 
-    override fun willUpdate(userWallet: UserWallet, currency: Currency) {
-    }
-
     override fun didUpdate(userWallet: UserWallet, currency: Currency) {
-        tryToNotify()
+        tryToSend()
     }
 
     override fun willCurrenciesAdd(userWallet: UserWallet, currenciesToAdd: List<Currency>) {
         addedCurrencies.addAll(currenciesToAdd.distinct())
-        log("addCurrencies = [${addedCurrencies.joinToString()}]")
-    }
-
-    override fun willCurrenciesRemove(userWallet: UserWallet, currenciesToRemove: List<Currency>) {
-    }
-
-    override fun willCurrencyRemove(userWallet: UserWallet, currencyToRemove: Currency) {
     }
 
     fun walletStoresChanged(walletStores: List<WalletStoreModel>) {
@@ -57,46 +50,34 @@ class TopUpController(
             .filterIsInstance<WalletDataModel.MissedDerivation>()
 
         hadMissedDerivations = missedDerivations.isNotEmpty()
-        log("walletStoresChanged: hadMissedDerivations = [${hadMissedDerivations}]")
     }
 
     fun scanToGetDerivations() {
         hadMissedDerivations = true
-        log("scanAndUpdateCard: hadMissedDerivations = [${hadMissedDerivations}]")
     }
 
     fun addMissingDerivations(blockchains: List<BlockchainNetwork>) {
         hadMissedDerivations = blockchains.isNotEmpty()
-        log("addMissingDerivations: hadMissedDerivations = [${hadMissedDerivations}]")
     }
 
     fun totalBalanceStateChanged(state: ProgressState) {
-        log("totalBalanceStateChanged = [${state.name}]")
-        if (state == ProgressState.Done) {
-            tryToNotify()
-        }
+        if (state == ProgressState.Done) tryToSend()
     }
 
     fun loadDataSuccess() {
-        log("loadDataSuccess")
-        tryToNotify()
+        tryToSend()
     }
 
-    private fun tryToNotify() {
-        if (hadMissedDerivations) {
-            log("tryToNotify: FAILED: derivationsCheckIsScheduled")
-            return
-        }
+    private fun tryToSend() {
+        if (hadMissedDerivations) return
         val scanResponse = scanResponseProvider?.invoke() ?: return
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build() ?: return
         val walletStoresManager = walletStoresManagerProvider?.invoke() ?: return
 
         scope.launch {
             val walletDataModels = walletStoresManager.getSync(userWalletId).flatMap { it.walletsData }
-            if (walletDataModels.isEmpty()) {
-                log("tryToNotify: FAILED: walletDataModels.size = [0]")
-                return@launch
-            }
+            if (walletDataModels.isEmpty()) return@launch
+
             val isCorrectStatus = walletDataModels.any {
                 it.status is WalletDataModel.Loading ||
                     it.status is WalletDataModel.NoAccount ||
@@ -104,39 +85,70 @@ class TopUpController(
                     it.status is WalletDataModel.MissedDerivation ||
                     it.status.isErrorStatus
             }
-            if (isCorrectStatus) {
-                log("tryToNotify: FAILED: by status")
+            if (isCorrectStatus) return@launch
+
+            val isToppedUpInPast = findToppedUpCurrenciesInPast(walletDataModels).isNotEmpty()
+            if (isToppedUpInPast) {
+                val newWalletInfo = ToppedUpWalletStorage.TopupInfo(
+                    walletId = userWalletId.stringValue,
+                    cardBalanceState = AnalyticsParam.CardBalanceState.Full,
+                )
+                topupWalletStorage.save(newWalletInfo)
                 return@launch
             }
-            notify(userWalletId, walletDataModels, scanResponse.cardTypesResolver)
+
+            val cardBalanceState = BalanceCalculator(walletDataModels).calculate().toCardBalanceState()
+            send(userWalletId, cardBalanceState, scanResponse.cardTypesResolver)
         }
     }
 
-    private fun notify(
+    /**
+     * A UserWalletId registration should be after creating wallets
+     */
+    fun registerEmptyWallet(scanResponse: ScanResponse) {
+        UserWalletIdBuilder.scanResponse(scanResponse).build()?.let {
+            topupWalletStorage.save(
+                ToppedUpWalletStorage.TopupInfo(
+                    walletId = it.stringValue,
+                    cardBalanceState = AnalyticsParam.CardBalanceState.Empty,
+                ),
+            )
+        }
+    }
+
+    fun send(
+        scanResponse: ScanResponse,
+        cardBalanceState: AnalyticsParam.CardBalanceState,
+    ) {
+        UserWalletIdBuilder.scanResponse(scanResponse).build()?.let {
+            send(it, cardBalanceState, scanResponse.cardTypesResolver)
+        }
+    }
+
+    fun send(
         userWalletId: UserWalletId,
-        walletDataModels: List<WalletDataModel>,
+        cardBalanceState: AnalyticsParam.CardBalanceState,
         cardTypesResolver: CardTypesResolver,
     ) {
-        val isToppedUpInPast = findToppedUpCurrenciesInPast(walletDataModels).isNotEmpty()
-        log("notify: currencies from manage tokens had toppedUp in the past = [${isToppedUpInPast}]")
-
-        val data = TopUpEventConverter.Data(
-            cardTypesResolver = cardTypesResolver,
-            walletDataModels = walletDataModels,
-            userWalletIdValue = userWalletId.stringValue,
-            isToppedUpInPast = isToppedUpInPast,
-        )
-        val event = TopUpEventConverter().convert(data).guard {
-            log("notify: TopUpEventConverter can't convert a data to an event")
+        val topupInfo = topupWalletStorage.restore(userWalletId.stringValue).guard {
+            val topupInfo = ToppedUpWalletStorage.TopupInfo(
+                walletId = userWalletId.stringValue,
+                cardBalanceState = cardBalanceState,
+            )
+            topupWalletStorage.save(topupInfo)
             return
         }
+        if (topupInfo.isToppedUp) return
 
-        log("notify: Analytics.send(event)")
-        Analytics.send(event)
+        if (!topupInfo.isToppedUp && cardBalanceState.isToppedUp()) {
+            topupWalletStorage.save(topupInfo.copy(cardBalanceState = AnalyticsParam.CardBalanceState.Full))
+            TopUpEventConverter().convert(cardTypesResolver)?.let {
+                Analytics.send(it)
+            }
+        }
     }
 
     private fun findToppedUpCurrenciesInPast(walletDataModels: List<WalletDataModel>): List<WalletDataModel> {
-        log("findToppedUpCurrenciesInPast: added new currencies = [${addedCurrencies.size}]")
         val currenciesToppedUpInPast = addedCurrencies.copy()
             .mapNotNull { currency ->
                 val foundCurrencyModel = walletDataModels
@@ -149,8 +161,35 @@ class TopUpController(
 
         return currenciesToppedUpInPast
     }
+
+    private fun BigDecimal.toCardBalanceState(): AnalyticsParam.CardBalanceState = when {
+        isZero() -> AnalyticsParam.CardBalanceState.Empty
+        else -> AnalyticsParam.CardBalanceState.Full
+    }
+
+    private fun AnalyticsParam.CardBalanceState.isToppedUp(): Boolean = this == AnalyticsParam.CardBalanceState.Full
 }
 
-fun log(log: String) {
-    Timber.d("TopUp: %s", log)
+private interface IBalanceCalculator {
+    fun calculate(): BigDecimal
+}
+
+private class BalanceCalculator(
+    private val walletDataModels: List<WalletDataModel>,
+) : IBalanceCalculator {
+
+    override fun calculate(): BigDecimal {
+        val singleToken = walletDataModels
+            .filter { it.currency.isToken() }
+            .firstOrNull { it.isCardSingleToken }
+
+        val totalAmount = singleToken?.status?.amount
+            ?: walletDataModels.calculateTotalCryptoAmount()
+
+        return totalAmount
+    }
+
+    private fun List<WalletDataModel>.calculateTotalCryptoAmount(): BigDecimal = this
+        .map { it.status.amount }
+        .reduce(BigDecimal::plus)
 }
