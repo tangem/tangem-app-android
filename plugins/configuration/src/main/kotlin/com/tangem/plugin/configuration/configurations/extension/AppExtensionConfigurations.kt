@@ -72,7 +72,9 @@ private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buil
             isDebuggable = true
             isMinifyEnabled = false
         }
-        BuildType.External -> {
+        BuildType.Internal,
+        BuildType.External,
+        -> {
             initWith(extension.buildTypes.getByName(BuildType.Release.id))
             signingConfig = extension.signingConfigs.getByName(BuildType.Debug.id)
         }
