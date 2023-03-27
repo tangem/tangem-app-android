@@ -184,7 +184,7 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
-                store.state.globalState.topUpController.walletStoresChanged(action.walletStores)
+                store.state.globalState.topUpController?.walletStoresChanged(action.walletStores)
                 updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores)
                 findMissedDerivations(action.walletStores)

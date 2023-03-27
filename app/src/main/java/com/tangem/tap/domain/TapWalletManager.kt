@@ -66,7 +66,7 @@ class TapWalletManager {
             .doOnSuccess {
                 Timber.d("Wallet stores fetched for ${userWallet.walletId}")
                 store.dispatchOnMain(WalletAction.LoadData.Success)
-                store.state.globalState.topUpController.loadDataSuccess()
+                store.state.globalState.topUpController?.loadDataSuccess()
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {

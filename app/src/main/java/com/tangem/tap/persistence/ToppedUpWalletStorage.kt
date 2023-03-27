@@ -53,14 +53,14 @@ class ToppedUpWalletStorage(
         }
     }
 
+    data class TopupInfo(
+        val walletId: String,
+        val cardBalanceState: AnalyticsParam.CardBalanceState,
+    ) {
+        val isToppedUp: Boolean = cardBalanceState == AnalyticsParam.CardBalanceState.Full
+    }
+
     companion object {
         private const val KEY = "userWalletsInfo"
-
-        data class TopupInfo(
-            val walletId: String,
-            val cardBalanceState: AnalyticsParam.CardBalanceState,
-        ) {
-            val isToppedUp: Boolean = cardBalanceState == AnalyticsParam.CardBalanceState.Full
-        }
     }
 }
