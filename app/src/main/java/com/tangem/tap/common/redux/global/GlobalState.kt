@@ -29,7 +29,7 @@ data class GlobalState(
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val userCountryCode: String? = null,
     val userWalletsListManager: UserWalletsListManager? = null,
-    val topUpController: TopUpController = TopUpController(),
+    val topUpController: TopUpController? = null,
 ) : StateType
 
 typealias CryptoCurrencyName = String
