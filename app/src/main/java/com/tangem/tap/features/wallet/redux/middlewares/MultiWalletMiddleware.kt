@@ -91,14 +91,14 @@ class MultiWalletMiddleware {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
             }
             is WalletAction.MultiWallet.AddMissingDerivations -> {
-                store.state.globalState.topUpController.addMissingDerivations(action.blockchains)
+                store.state.globalState.topUpController?.addMissingDerivations(action.blockchains)
             }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
                     Timber.e("Unable to scan to get derivations, no user wallet selected")
                     return
                 }
-                store.state.globalState.topUpController.scanToGetDerivations()
+                store.state.globalState.topUpController?.scanToGetDerivations()
                 scanAndUpdateCard(selectedUserWallet, walletState)
             }
             else -> {}
