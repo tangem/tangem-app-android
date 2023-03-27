@@ -8,6 +8,72 @@ internal enum class BuildType(
 ) {
 
     /**
+     * Build type for developers
+     *
+     * Features:
+     * - Env: dev
+     * - Signing config: debug
+     * - Debuggable
+     * - Logs
+     * - Tester menu
+     * - Test action
+     * - Traffic sniffing
+     * */
+    Debug(
+        id = "debug",
+        appIdSuffix = "debug",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.TestActionEnabled(isEnabled = true),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
+        ),
+    ),
+
+    /**
+     * Build type for QA
+     *
+     * Features:
+     * - Env: beta
+     * - Signing config: debug
+     * - Logs
+     * - Tester menu
+     * - Test action
+     * - Traffic sniffing
+     * */
+    Internal(
+        id = "internal",
+        appIdSuffix = "internal",
+        versionSuffix = "internal",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "beta"),
+            BuildConfigField.TestActionEnabled(isEnabled = true),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
+        ),
+    ),
+
+    /**
+     * Build type for QA and business
+     *
+     * Features:
+     * - Env: prod
+     * - Signing config: debug
+     * - Proguard
+     * */
+    External(
+        id = "external",
+        appIdSuffix = "external",
+        versionSuffix = "external",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "prod"),
+            BuildConfigField.TestActionEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = false),
+            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+        ),
+    ),
+
+    /**
      * Production ready build type for clients
      *
      * Features:
@@ -22,51 +88,6 @@ internal enum class BuildType(
             BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
-        ),
-    ),
-
-    /**
-     * Build type for developers
-     *
-     * Features:
-     * - Env: dev
-     * - Signing config: debug
-     * - Debuggable
-     * - Logs
-     * - Tester menu
-     * - Test action
-     * - Traffic sniffing
-     * */
-    Debug(
-        id = "debug",
-        appIdSuffix = "dev",
-        configFields = listOf(
-            BuildConfigField.Environment(value = "dev"),
-            BuildConfigField.TestActionEnabled(isEnabled = true),
-            BuildConfigField.LogEnabled(isEnabled = true),
-            BuildConfigField.TesterMenuAvailability(isEnabled = true),
-        ),
-    ),
-
-    /**
-     * Build type for QA and business
-     *
-     * Features:
-     * - Env: prod
-     * - Signing config: debug
-     * - Tester menu
-     * - Test action
-     * - Proguard
-     * */
-    External(
-        id = "debug_beta",
-        appIdSuffix = "debug",
-        versionSuffix = "debug",
-        configFields = listOf(
-            BuildConfigField.Environment(value = "prod"),
-            BuildConfigField.TestActionEnabled(isEnabled = true),
-            BuildConfigField.LogEnabled(isEnabled = false),
-            BuildConfigField.TesterMenuAvailability(isEnabled = true),
         ),
     ),
 }
