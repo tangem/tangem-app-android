@@ -67,7 +67,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private val totalBalanceWatcher = modelWatcher {
         (WalletState::totalBalance) { totalBalance ->
             totalBalance?.state?.let {
-                store.state.globalState.topUpController.totalBalanceStateChanged(it)
+                store.state.globalState.topUpController?.totalBalanceStateChanged(it)
             }
         }
     }
