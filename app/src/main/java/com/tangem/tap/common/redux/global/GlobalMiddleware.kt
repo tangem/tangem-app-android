@@ -32,6 +32,7 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
+import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.BuildConfig
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -193,6 +194,9 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         )
                     }
             }
+        }
+        is GlobalAction.SetTopUpController -> {
+            walletCurrenciesManager.addListener(action.topUpController)
         }
     }
 }
