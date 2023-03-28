@@ -41,7 +41,7 @@ class WalletConnectRepository(val context: Application) {
                 .hexToUtf8()
             walletConnectAdapter.fromJson(json)!!.map { it.toSession() }
         } catch (exception: Exception) {
-            Timber.e(exception)
+            Timber.w(exception)
             emptyList()
         }
     }
