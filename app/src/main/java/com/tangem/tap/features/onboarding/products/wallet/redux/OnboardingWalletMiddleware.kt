@@ -127,6 +127,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                                 primaryCard = result.data.primaryCard,
                             )
                             onboardingManager.scanResponse = updatedResponse
+                            store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
 
                             val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
                                 DemoHelper.config.demoBlockchains
@@ -145,9 +146,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                             startCardActivation(updatedResponse)
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -190,7 +189,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
-        else -> {}
+        else -> Unit
     }
 }
 
@@ -249,8 +248,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.StartAddingBackupCards)
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
             }
         }
@@ -267,8 +265,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
             }
         }
@@ -308,8 +305,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(1))
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
             }
         }
@@ -324,8 +320,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1))
                         }
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
             }
         }
@@ -375,7 +370,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             Analytics.send(Onboarding.Finished())
             finishCardActivation(notActivatedCardIds)
         }
-        else -> {}
+        else -> Unit
     }
 }
 
