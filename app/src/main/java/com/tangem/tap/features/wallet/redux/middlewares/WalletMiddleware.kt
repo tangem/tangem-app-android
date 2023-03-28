@@ -6,8 +6,6 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.converters.BasicEventsPreChecker
-import com.tangem.tap.common.analytics.converters.BasicEventsSourceData
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -25,7 +23,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -46,7 +43,6 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.userWalletsListManagerSafe
-import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -188,7 +184,7 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
-                store.dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
+                store.state.globalState.topUpController?.walletStoresChanged(action.walletStores)
                 updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores)
                 findMissedDerivations(action.walletStores)
@@ -351,23 +347,4 @@ class WalletMiddleware {
             tokenRate = tokenRate,
         )
     }
-}
-
-suspend fun handleBasicAnalyticsEvent() {
-    val scanResponse = store.state.globalState.scanResponse ?: return
-
-    val biometricsWalletDataModels = if (preferencesStorage.shouldSaveUserWallets) {
-        UserWalletIdBuilder.scanResponse(scanResponse).build()?.let { userWalletId ->
-            walletStoresManager.getSync(userWalletId).map { it.walletsData }.flatten()
-        }
-    } else {
-        null
-    }
-
-    val converterData = BasicEventsSourceData(
-        scanResponse = scanResponse,
-        walletState = store.state.walletState,
-        biometricsWalletDataModels = biometricsWalletDataModels,
-    )
-    BasicEventsPreChecker().tryToSend(converterData)
 }
