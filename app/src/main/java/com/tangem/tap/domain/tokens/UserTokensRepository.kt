@@ -29,27 +29,27 @@ class UserTokensRepository(
 ) {
 
     suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return@withContext emptyList()
+        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
-            return@withContext loadTokensOffline(userId).ifEmpty(::loadDemoCurrencies)
+            return@withContext loadTokensOffline(userWalletId = userWalletId).ifEmpty(::loadDemoCurrencies)
         }
 
-        if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userId)
+        if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userWalletId = userWalletId)
 
-        return@withContext remoteGetUserTokens(userId)
+        return@withContext remoteGetUserTokens(userWalletId = userWalletId)
     }
 
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return@withContext
+        val userWalletId = getUserWalletId(card) ?: return@withContext
         val userTokens = tokens.toUserTokensResponse()
-        remoteSaveUserTokens(userId = userId, userTokens = userTokens)
-        storageService.saveUserTokens(userId = userId, tokens = userTokens)
+        remoteSaveUserTokens(userWalletId = userWalletId, userTokens = userTokens)
+        storageService.saveUserTokens(userWalletId = userWalletId, tokens = userTokens)
     }
 
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return@withContext emptyList()
-        val blockchainNetworks = loadTokensOffline(userId = userId).toBlockchainNetworks()
+        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
+        val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies()::toBlockchainNetworks)
@@ -58,7 +58,9 @@ class UserTokensRepository(
         return@withContext blockchainNetworks
     }
 
-    private fun loadTokensOffline(userId: String): List<Currency> = storageService.getUserTokens(userId) ?: emptyList()
+    private fun loadTokensOffline(userWalletId: String): List<Currency> {
+        return storageService.getUserTokens(userWalletId = userWalletId) ?: emptyList()
+    }
 
     private fun loadDemoCurrencies(): List<Currency> {
         return DemoHelper.config.demoBlockchains
@@ -80,37 +82,37 @@ class UserTokensRepository(
         )
     }
 
-    private suspend fun handleGetUserTokensFailure(userId: String, error: Throwable): List<Currency> {
+    private suspend fun handleGetUserTokensFailure(userWalletId: String, error: Throwable): List<Currency> {
         return when {
             error is TangemSdkError.NetworkError && error.customMessage.contains(NOT_FOUND_HTTP_CODE) -> {
                 storageService
-                    .getUserTokens(userId)
-                    ?.also { remoteSaveUserTokens(userId = userId, userTokens = it.toUserTokensResponse()) }
+                    .getUserTokens(userWalletId)
+                    ?.also { remoteSaveUserTokens(userWalletId = userWalletId, userTokens = it.toUserTokensResponse()) }
                     ?: emptyList()
             }
             else -> {
-                storageService.getUserTokens(userId)?.distinct() ?: emptyList()
+                storageService.getUserTokens(userWalletId)?.distinct() ?: emptyList()
             }
         }
     }
 
-    private suspend fun remoteGetUserTokens(userId: String): List<Currency> {
-        return runCatching { tangemTechApi.getUserTokens(userId) }
+    private suspend fun remoteGetUserTokens(userWalletId: String): List<Currency> {
+        return runCatching { tangemTechApi.getUserTokens(userWalletId) }
             .fold(
                 onSuccess = { response ->
                     response.tokens
                         .mapNotNull(Currency.Companion::fromTokenResponse)
-                        .also { storageService.saveUserTokens(userId, it.toUserTokensResponse()) }
+                        .also { storageService.saveUserTokens(userWalletId, it.toUserTokensResponse()) }
                         .distinct()
                 },
-                onFailure = { handleGetUserTokensFailure(userId = userId, error = it) },
+                onFailure = { handleGetUserTokensFailure(userWalletId = userWalletId, error = it) },
             )
     }
 
-    private suspend fun remoteSaveUserTokens(userId: String, userTokens: UserTokensResponse) {
+    private suspend fun remoteSaveUserTokens(userWalletId: String, userTokens: UserTokensResponse) {
         // it can throw okhttp3.internal.http2.StreamResetException: stream was reset: INTERNAL_ERROR
         // if the /user-tokens endpoint disabled
-        runCatching { tangemTechApi.saveUserTokens(userId, userTokens) }
+        runCatching { tangemTechApi.saveUserTokens(userWalletId, userTokens) }
             .onFailure { Timber.e(it) }
     }
 

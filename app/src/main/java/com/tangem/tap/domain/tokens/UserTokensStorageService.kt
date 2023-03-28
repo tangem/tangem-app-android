@@ -11,9 +11,9 @@ class UserTokensStorageService(private val fileReader: FileReader) {
     private val userTokensAdapter: JsonAdapter<UserTokensResponse> =
         MoshiConverter.networkMoshi.adapter(UserTokensResponse::class.java)
 
-    fun getUserTokens(userId: String): List<Currency>? {
+    fun getUserTokens(userWalletId: String): List<Currency>? {
         return try {
-            val json = fileReader.readFile(getFileNameForUserTokens(userId))
+            val json = fileReader.readFile(getFileNameForUserTokens(userWalletId))
             userTokensAdapter.fromJson(json)?.tokens?.mapNotNull { Currency.fromTokenResponse(it) }
         } catch (exception: Exception) {
             Log.error { exception.stackTraceToString() }
@@ -21,9 +21,9 @@ class UserTokensStorageService(private val fileReader: FileReader) {
         }
     }
 
-    fun saveUserTokens(userId: String, tokens: UserTokensResponse) {
+    fun saveUserTokens(userWalletId: String, tokens: UserTokensResponse) {
         val json = userTokensAdapter.toJson(tokens)
-        fileReader.rewriteFile(json, getFileNameForUserTokens(userId))
+        fileReader.rewriteFile(json, getFileNameForUserTokens(userWalletId))
     }
 
     companion object {
