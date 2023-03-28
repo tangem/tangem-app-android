@@ -69,6 +69,31 @@ interface WalletCurrenciesManager {
         currenciesToRemove: List<Currency>,
     ): CompletionResult<Unit>
 
+    /**
+     * Add a callback [Listener]
+     *
+     * @param listener The callback that will add
+     */
+    fun addListener(listener: Listener)
+
+    /**
+     * Remove a callback [Listener]
+     *
+     * @param listener The callback that will removed
+     */
+    fun removeListener(listener: Listener)
+
+    /**
+     * Interface definition for a callbacks
+     */
+    interface Listener {
+        fun willUpdate(userWallet: UserWallet, currency: Currency) {}
+        fun didUpdate(userWallet: UserWallet, currency: Currency) {}
+        fun willCurrenciesAdd(userWallet: UserWallet, currenciesToAdd: List<Currency>) {}
+        fun willCurrenciesRemove(userWallet: UserWallet, currenciesToRemove: List<Currency>) {}
+        fun willCurrencyRemove(userWallet: UserWallet, currencyToRemove: Currency) {}
+    }
+
     // For provider
     companion object
 }
