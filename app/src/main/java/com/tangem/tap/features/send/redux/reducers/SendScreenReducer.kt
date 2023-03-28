@@ -55,6 +55,7 @@ private class SendReducer : SendInternalReducer {
                 sendState.copy(sendButtonState = IndeterminateProgressButton(action.state))
             }
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.KaspaWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails.CardSdkError -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails.BlockchainSdkError -> sendState.copy(dialog = action)
             is SendAction.Dialog.RequestFeeError -> sendState.copy(dialog = action)

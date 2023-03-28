@@ -60,7 +60,7 @@ class LoadAvailableCoinsService(
         return withContext(dispatchers.io) {
             runCatching {
                 tangemTechApi.getCoins(
-                    networkIds = supportedBlockchains.toSet().map(Blockchain::toNetworkId).joinToString(","),
+                    networkIds = supportedBlockchains.toSet().joinToString(",", transform = Blockchain::toNetworkId),
                     active = true,
                     searchText = searchInput,
                     offset = offset,
