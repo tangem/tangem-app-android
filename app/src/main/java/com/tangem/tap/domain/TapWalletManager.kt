@@ -22,7 +22,6 @@ import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.middlewares.handleBasicAnalyticsEvent
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -67,7 +66,7 @@ class TapWalletManager {
             .doOnSuccess {
                 Timber.d("Wallet stores fetched for ${userWallet.walletId}")
                 store.dispatchOnMain(WalletAction.LoadData.Success)
-                handleBasicAnalyticsEvent()
+                store.state.globalState.topUpController?.loadDataSuccess()
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {
