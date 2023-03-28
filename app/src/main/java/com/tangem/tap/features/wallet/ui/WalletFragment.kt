@@ -17,6 +17,7 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
@@ -62,6 +63,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private var walletView: WalletView = MultiWalletView()
 
     private val viewModel by viewModels<WalletViewModel>()
+
+    private val totalBalanceWatcher = modelWatcher {
+        (WalletState::totalBalance) { totalBalance ->
+            totalBalance?.state?.let {
+                store.state.globalState.topUpController?.totalBalanceStateChanged(it)
+            }
+        }
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -167,6 +176,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }
             else -> {} // we keep the same view unless we scan a card that requires a different view
         }
+        totalBalanceWatcher.invoke(state)
 
         walletView.swapInteractor = swapInteractor
 
