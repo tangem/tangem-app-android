@@ -3,7 +3,7 @@ package com.tangem.tap.persistence
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import timber.log.Timber
 
 /**
@@ -14,23 +14,23 @@ class ToppedUpWalletStorage(
     private val jsonConverter: MoshiJsonConverter,
 ) {
 
-    private val walletList: MutableSet<BasicTopUpFilter.Data> = mutableSetOf()
+    private val walletList: MutableSet<TopupInfo> = mutableSetOf()
 
     init {
         walletList.addAll(restore())
     }
 
-    fun save(userWalletInfo: BasicTopUpFilter.Data): Boolean {
+    fun save(userWalletInfo: TopupInfo): Boolean {
         walletList.removeAll { it.walletId == userWalletInfo.walletId }
         walletList.add(userWalletInfo)
         return save(walletList)
     }
 
-    fun restore(walletId: String): BasicTopUpFilter.Data? {
+    fun restore(walletId: String): TopupInfo? {
         return walletList.firstOrNull { it.walletId == walletId }
     }
 
-    private fun save(userWallets: MutableSet<BasicTopUpFilter.Data>): Boolean {
+    private fun save(userWallets: MutableSet<TopupInfo>): Boolean {
         return try {
             val json = jsonConverter.toJson(userWallets)
             preferences.edit(true) { putString(KEY, json) }
@@ -41,16 +41,23 @@ class ToppedUpWalletStorage(
         }
     }
 
-    private fun restore(): MutableSet<BasicTopUpFilter.Data> {
+    private fun restore(): MutableSet<TopupInfo> {
         val json = preferences.getString(KEY, null) ?: return mutableSetOf()
         return try {
-            val typedList = jsonConverter.typedList(BasicTopUpFilter.Data::class.java)
-            val listData = jsonConverter.fromJson<List<BasicTopUpFilter.Data>>(json, typedList)!!
+            val typedList = jsonConverter.typedList(TopupInfo::class.java)
+            val listData = jsonConverter.fromJson<List<TopupInfo>>(json, typedList)!!
             listData.toMutableSet()
         } catch (ex: Exception) {
             preferences.edit(true) { remove(KEY) }
             mutableSetOf()
         }
+    }
+
+    data class TopupInfo(
+        val walletId: String,
+        val cardBalanceState: AnalyticsParam.CardBalanceState,
+    ) {
+        val isToppedUp: Boolean = cardBalanceState == AnalyticsParam.CardBalanceState.Full
     }
 
     companion object {
