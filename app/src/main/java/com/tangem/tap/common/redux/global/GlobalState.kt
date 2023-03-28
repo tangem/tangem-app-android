@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.StateDialog
@@ -28,6 +29,7 @@ data class GlobalState(
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val userCountryCode: String? = null,
     val userWalletsListManager: UserWalletsListManager? = null,
+    val topUpController: TopUpController? = null,
 ) : StateType
 
 typealias CryptoCurrencyName = String
