@@ -52,7 +52,7 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val potentialPayId = data.toLowerCase()
+        val potentialPayId = data.lowercase()
         if (isPayIdEnabled() && PayIdManager.isPayId(potentialPayId)) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
@@ -113,10 +113,11 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val addressSchemeSplit = if (wallet.blockchain == Blockchain.BitcoinCash) {
-            listOf(address)
-        } else {
-            address.split(":")
+        val addressSchemeSplit = when (wallet.blockchain) {
+            Blockchain.BitcoinCash,
+            Blockchain.Kaspa,
+            -> listOf(address)
+            else -> address.split(":")
         }
         val noSchemeAddress = when (addressSchemeSplit.size) {
             1 -> address // no scheme

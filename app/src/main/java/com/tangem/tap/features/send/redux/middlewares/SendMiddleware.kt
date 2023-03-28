@@ -269,6 +269,18 @@ private fun sendTransaction(
                             // from XLM, XRP, Polkadot
                             dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
                         }
+                        is BlockchainSdkError.Kaspa.UtxoAmountError -> {
+                            dispatch(
+                                SendAction.Dialog.KaspaWarningDialog(
+                                    maxOutputs = error.maxOutputs,
+                                    maxAmount = error.maxAmount,
+                                    onOk = {
+                                        dispatch(AmountAction.SetAmount(error.maxAmount, isUserInput = false))
+                                        dispatch(AmountActionUi.CheckAmountToSend)
+                                    },
+                                ),
+                            )
+                        }
                         else -> {
                             when {
                                 error.customMessage.contains(DemoTransactionSender.ID) -> {
