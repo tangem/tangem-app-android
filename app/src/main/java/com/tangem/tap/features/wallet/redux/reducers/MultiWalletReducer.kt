@@ -15,12 +15,8 @@ class MultiWalletReducer {
                 state.copy(selectedCurrency = action.currency)
             }
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
-            is WalletAction.MultiWallet.ScheduleCheckForMissingDerivation -> state.copy(
-                derivationsCheckIsScheduled = true,
-            )
             is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(
                 missingDerivations = action.blockchains,
-                derivationsCheckIsScheduled = false,
             )
             is WalletAction.MultiWallet.BackupWallet -> state
             is WalletAction.MultiWallet.ScanToGetDerivations -> state.copy(state = ProgressState.Loading)
