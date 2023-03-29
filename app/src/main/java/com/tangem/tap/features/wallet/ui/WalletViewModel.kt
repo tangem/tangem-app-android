@@ -2,11 +2,16 @@ package com.tangem.tap.features.wallet.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.ui.analytics.WalletAnalyticsEventsMapper
 import com.tangem.tap.store
 import com.tangem.tap.walletStoresManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,14 +21,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 // [REDACTED_TODO_COMMENT]
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListManager?> {
+@HiltViewModel
+internal class WalletViewModel @Inject constructor(
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : ViewModel(), StoreSubscriber<UserWalletsListManager?> {
     private var observeWalletStoresUpdatesJob: Job? = null
         set(value) {
             field?.cancel()
             field = value
         }
+
+    private val walletAnalyticsEventsMapper = WalletAnalyticsEventsMapper()
 
     init {
         subscribeToUserWalletsListManagerUpdates()
@@ -46,6 +57,18 @@ internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListMan
             bootstrapSelectedWalletStoresChanges(manager)
         }
         bootstrapShowSaveWalletIfNeeded()
+    }
+
+    fun onBalanceLoaded(totalBalance: TotalBalance?) {
+        if (totalBalance != null) {
+            walletAnalyticsEventsMapper.convert(totalBalance)?.let { balanceParam ->
+                analyticsEventHandler.send(
+                    Basic.BalanceLoaded(
+                        balance = balanceParam,
+                    ),
+                )
+            }
+        }
     }
 
     private fun bootstrapSelectedWalletStoresChanges(manager: UserWalletsListManager) {
