@@ -102,6 +102,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 saltPayAuthToken = configValues.saltPay.credentials.basicAuthToken,
                 nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
                 getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey),
+                kaspaSecondaryApiUrl = configValues.kaspaSecondaryApiUrl,
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
