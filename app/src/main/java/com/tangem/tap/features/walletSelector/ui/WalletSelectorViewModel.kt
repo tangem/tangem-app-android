@@ -54,7 +54,12 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 cancelWalletEditing(userWalletId)
             }
             selectedUserWalletId != userWalletId -> {
-                store.dispatch(WalletSelectorAction.SelectWallet(userWalletId))
+                store.dispatch(
+                    WalletSelectorAction.SelectWallet(
+                        userWalletId = userWalletId,
+                        sendAnalyticsEvent = true,
+                    ),
+                )
             }
         }
     }
