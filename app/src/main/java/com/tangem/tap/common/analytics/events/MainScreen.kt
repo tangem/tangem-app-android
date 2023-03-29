@@ -11,7 +11,6 @@ sealed class MainScreen(
 ) : AnalyticsEvent("Main Screen", event, params) {
 
     class ScreenOpened : MainScreen("Screen opened")
-
     class ButtonScanCard : MainScreen("Button - Scan Card")
     class ButtonMyWallets : MainScreen("Button - My Wallets")
     class ButtonBuy : MainScreen("Button - Buy")
