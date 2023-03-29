@@ -48,7 +48,7 @@ sealed class Token(
 
     class Bought(type: CurrencyType) : Token(
         category = "Token",
-        event = "Token bought",
+        event = "Token Bought",
         params = mapOf("Token" to type.value),
     )
 
