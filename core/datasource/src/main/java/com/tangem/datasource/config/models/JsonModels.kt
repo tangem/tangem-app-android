@@ -35,6 +35,7 @@ class ConfigValueModel(
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
     val swapReferrerAccount: SwapReferrerAccount?,
+    val kaspaSecondaryApiUrl: String,
 )
 
 data class AppsFlyer(
