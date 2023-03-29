@@ -32,7 +32,9 @@ import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogCo
 import com.tangem.tap.features.walletSelector.ui.components.WalletSelectorScreenContent
 import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 import com.tangem.tap.features.walletSelector.ui.model.WarningModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<WalletSelectorScreenState>() {
     private val viewModel by viewModels<WalletSelectorViewModel>()
 
