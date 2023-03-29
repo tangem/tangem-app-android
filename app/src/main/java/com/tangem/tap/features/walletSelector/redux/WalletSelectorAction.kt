@@ -35,6 +35,7 @@ internal sealed interface WalletSelectorAction : Action {
 
     data class SelectWallet(
         val userWalletId: UserWalletId,
+        val sendAnalyticsEvent: Boolean = false,
     ) : WalletSelectorAction
 
     data class RenameWallet(
