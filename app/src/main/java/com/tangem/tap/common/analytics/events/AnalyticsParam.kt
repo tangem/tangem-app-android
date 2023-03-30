@@ -24,6 +24,8 @@ sealed class AnalyticsParam {
     sealed class CardBalanceState(val value: String) {
         object Empty : CardBalanceState("Empty")
         object Full : CardBalanceState("Full")
+        object CustomToken : CardBalanceState("Custom token")
+        object BlockchainError : CardBalanceState("Blockchain error")
         companion object
     }
 
@@ -79,6 +81,7 @@ sealed class AnalyticsParam {
 
     companion object Key {
         const val Source = "Source"
+        const val Balance = "Balance"
         const val Batch = "Batch"
         const val ProductType = "Product Type"
         const val Firmware = "Firmware"
