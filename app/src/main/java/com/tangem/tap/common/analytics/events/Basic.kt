@@ -28,17 +28,21 @@ sealed class Basic(
     )
 
     class SignedIn(
-        state: AnalyticsParam.CardBalanceState,
         currency: AnalyticsParam.CardCurrency,
         batch: String,
+        signInType: SignInType,
     ) : Basic(
         event = "Signed in",
         params = mapOf(
-            "State" to state.value,
             AnalyticsParam.Currency to currency.value,
             AnalyticsParam.Batch to batch,
+            "Sign in type" to signInType.name,
         ),
-    )
+    ) {
+        enum class SignInType {
+            Card, Biometric
+        }
+    }
 
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
