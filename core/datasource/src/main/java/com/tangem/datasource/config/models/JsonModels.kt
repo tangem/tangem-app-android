@@ -1,5 +1,7 @@
 package com.tangem.datasource.config.models
 
+import com.squareup.moshi.Json
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -26,6 +28,7 @@ class ConfigValueModel(
     val bscQuiknodeApiKey: String,
     val nowNodesApiKey: String,
     val getBlockApiKey: String,
+    @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
