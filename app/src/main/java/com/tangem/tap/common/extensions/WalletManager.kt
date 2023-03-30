@@ -16,8 +16,8 @@ import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
-import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -47,7 +47,8 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
 } catch (exception: Exception) {
     Timber.e(exception)
 
-    if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+    val networkConnectionManager = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
+    if (!networkConnectionManager.isOnline) {
         Result.Failure(TapError.NoInternetConnection)
     } else {
         val blockchain = wallet.blockchain
@@ -86,8 +87,6 @@ fun WalletManager?.getAddressData(): AddressData? {
     val addressDataList = wallet.createAddressesData()
     return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
-
-fun WalletManager.getTxHistory(currency: Currency): List<TransactionData> = wallet.getTxHistory(currency)
 
 fun WalletManager.getBlockchainTxHistory(): List<TransactionData> = wallet.getBlockchainTxHistory()
 
