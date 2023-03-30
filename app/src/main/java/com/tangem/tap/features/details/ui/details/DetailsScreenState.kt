@@ -1,6 +1,8 @@
 package com.tangem.tap.features.details.ui.details
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.wallet.R
 
 @Immutable
@@ -11,6 +13,7 @@ data class DetailsScreenState(
     val appCurrency: String,
     val onItemsClick: (SettingsElement) -> Unit,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
+    val showErrorSnackbar: MutableState<EventError> = mutableStateOf(EventError.Empty),
 ) {
     val appNameRes: Int = R.string.tangem_app_name
 }
@@ -29,7 +32,8 @@ enum class SettingsElement(
     AppSettings(R.drawable.ic_settings, R.string.app_settings_title),
     LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
     TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App
-    PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy);
+    PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy),
+    TesterMenu(R.drawable.ic_alert_24, R.string.tester_menu)
 }
 
 @Immutable
@@ -37,6 +41,11 @@ data class SocialNetworkLink(
     val network: SocialNetwork,
     val url: String,
 )
+
+sealed class EventError {
+    object Empty : EventError()
+    data class DemoReferralNotAvailable(val onErrorShow: () -> Unit) : EventError()
+}
 
 sealed class SocialNetwork(val id: String, val iconRes: Int) {
     object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)

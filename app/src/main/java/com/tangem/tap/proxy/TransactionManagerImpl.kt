@@ -4,6 +4,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
@@ -155,56 +156,31 @@ class TransactionManagerImpl(
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         if (walletManager is EthereumWalletManager) {
-            val gasLimit = getGasLimit(
-                evmWalletManager = walletManager,
+            if (walletManager is OptimismWalletManager) {
+                return getFeeForOptimismBlockchain(
+                    walletManager = walletManager,
+                    amount = createAmount(amountToSend, currencyToSend, blockchain),
+                    destinationAddress = destinationAddress,
+                    data = data,
+                )
+            }
+            return getFeeForEthereumBlockchain(
+                walletManager = walletManager,
                 blockchain = blockchain,
-                amount = amountToSend,
+                amountToSend = amountToSend,
                 currency = currencyToSend,
                 destinationAddress = destinationAddress,
                 data = data,
-            ).let {
-                if (increaseBy != null && increaseBy != 0) {
-                    it.multiply(increaseBy.toBigInteger()).divide(BigInteger("100"))
-                } else {
-                    it
-                }
-            }
-            return when (val gasPrice = walletManager.getGasPrice()) {
-                is Result.Success -> {
-                    val fee = gasLimit.multiply(gasPrice.data).toBigDecimal(
-                        scale = blockchain.decimals(),
-                        mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
-                    )
-                    ProxyFee(
-                        gasLimit = gasLimit,
-                        fee = ProxyAmount(
-                            currencySymbol = blockchain.currency,
-                            value = fee,
-                            decimals = blockchain.decimals(),
-                        ),
-                    )
-                }
-                is Result.Failure -> {
-                    error(gasPrice.error.message ?: gasPrice.error.customMessage)
-                }
-            }
+                increaseBy = increaseBy,
+            )
         } else {
-            val fee = (walletManager as? TransactionSender)?.getFee(
-                amount = createAmount(amountToSend, currencyToSend, blockchain),
-                destination = destinationAddress,
-            ) ?: error("Cannot cast to TransactionSender")
-            when (fee) {
-                is Result.Success -> {
-                    // for not EVM blockchains set gasLimit ZERO for now
-                    return ProxyFee(
-                        gasLimit = BigInteger.ZERO,
-                        fee = convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found")),
-                    )
-                }
-                is Result.Failure -> {
-                    error(fee.error.message ?: fee.error.customMessage)
-                }
-            }
+            return getFeeForBlockchain(
+                walletManager = walletManager,
+                amountToSend = amountToSend,
+                currency = currencyToSend,
+                blockchain = blockchain,
+                destinationAddress = destinationAddress,
+            )
         }
     }
 
@@ -215,6 +191,100 @@ class TransactionManagerImpl(
             blockchainId = blockchain.id,
             blockchainCurrency = blockchain.currency,
         )
+    }
+
+    private suspend fun getFeeForBlockchain(
+        walletManager: WalletManager,
+        amountToSend: BigDecimal,
+        currency: Currency,
+        blockchain: Blockchain,
+        destinationAddress: String,
+    ): ProxyFee {
+        val fee = (walletManager as? TransactionSender)?.getFee(
+            amount = createAmount(amountToSend, currency, blockchain),
+            destination = destinationAddress,
+        ) ?: error("Cannot cast to TransactionSender")
+        return when (fee) {
+            is Result.Success -> {
+                // for not EVM blockchains set gasLimit ZERO for now
+                ProxyFee(
+                    gasLimit = BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found")),
+                )
+            }
+            is Result.Failure -> {
+                error(fee.error.message ?: fee.error.customMessage)
+            }
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun getFeeForEthereumBlockchain(
+        walletManager: EthereumWalletManager,
+        blockchain: Blockchain,
+        amountToSend: BigDecimal,
+        currency: Currency,
+        destinationAddress: String,
+        data: String?,
+        increaseBy: Int?,
+    ): ProxyFee {
+        val gasLimit = getGasLimit(
+            evmWalletManager = walletManager,
+            blockchain = blockchain,
+            amount = amountToSend,
+            currency = currency,
+            destinationAddress = destinationAddress,
+            data = data,
+        ).let {
+            if (increaseBy != null && increaseBy != 0) {
+                it.multiply(increaseBy.toBigInteger()).divide(BigInteger("100"))
+            } else {
+                it
+            }
+        }
+        return when (val gasPrice = walletManager.getGasPrice()) {
+            is Result.Success -> {
+                val fee = gasLimit.multiply(gasPrice.data).toBigDecimal(
+                    scale = blockchain.decimals(),
+                    mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+                )
+                ProxyFee(
+                    gasLimit = gasLimit,
+                    fee = ProxyAmount(
+                        currencySymbol = blockchain.currency,
+                        value = fee,
+                        decimals = blockchain.decimals(),
+                    ),
+                )
+            }
+            is Result.Failure -> {
+                error(gasPrice.error.message ?: gasPrice.error.customMessage)
+            }
+        }
+    }
+
+    private suspend fun getFeeForOptimismBlockchain(
+        walletManager: OptimismWalletManager,
+        amount: Amount,
+        destinationAddress: String,
+        data: String?,
+    ): ProxyFee {
+        val fee = if (data.isNullOrEmpty()) {
+            walletManager.getFee(amount, destinationAddress)
+        } else {
+            walletManager.getFee(amount, destinationAddress, data)
+        }
+        when (fee) {
+            is Result.Success -> {
+                return ProxyFee(
+                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.lastOrNull() ?: error("no fee found")),
+                )
+            }
+            is Result.Failure -> {
+                error(fee.error.message ?: fee.error.customMessage)
+            }
+        }
     }
 
     @Suppress("LongParameterList")
