@@ -1,20 +1,15 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
-    kotlin("kapt")
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
+    id("configuration")
 }
 
 dependencies {
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 
     /** Coroutines */
-    implementation(Library.coroutine)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    implementation(deps.kotlin.coroutines)
 }
