@@ -52,6 +52,11 @@ sealed class Token(
         params = mapOf("Token" to type.value),
     )
 
+    object ShowWalletAddress : Token(
+        category = "Token",
+        event = "Button - Show the Wallet Address"
+    )
+
     sealed class Receive(
         event: String,
         params: Map<String, String> = mapOf(),
