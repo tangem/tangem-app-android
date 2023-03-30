@@ -4,13 +4,10 @@ import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
-import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -19,6 +16,7 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
+import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.intentHandler
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -44,10 +42,6 @@ internal class WelcomeMiddleware {
 
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
         when (action) {
-            is WelcomeAction.OnCreate -> {
-                Analytics.eraseContext()
-                Analytics.send(SignIn.ScreenOpened())
-            }
             is WelcomeAction.ProceedWithBiometrics -> {
                 proceedWithBiometrics(state)
             }
@@ -74,9 +68,10 @@ internal class WelcomeMiddleware {
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Error(error))
                 }
                 .doOnSuccess { selectedUserWallet ->
+                    store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Biometric))
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
-                    store.onUserWalletSelected(selectedUserWallet)
+                    store.onUserWalletSelected(userWallet = selectedUserWallet)
 
                     intentHandler.handleWalletConnectLink(state.intent)
                 }
@@ -93,9 +88,10 @@ internal class WelcomeMiddleware {
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
+                    store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
-                    store.onUserWalletSelected(userWallet)
+                    store.onUserWalletSelected(userWallet = userWallet)
 
                     intentHandler.handleWalletConnectLink(state.intent)
                 }
