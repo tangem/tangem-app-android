@@ -1,5 +1,7 @@
 package com.tangem.tap.features.details.ui.details
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -8,6 +10,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
@@ -17,6 +20,9 @@ import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 
 class DetailsViewModel(private val store: Store<AppState>) {
+
+    var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
+        private set
 
     @Suppress("ComplexMethod")
     fun updateState(state: DetailsState): DetailsScreenState {
@@ -39,6 +45,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.AppSettings -> if (state.appSettingsState.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (cardTypesResolver?.isMultiwalletAllowed() != true) it else null
                 SettingsElement.ReferralProgram -> if (cardTypesResolver?.isTangemWallet() == true) it else null
+                SettingsElement.TesterMenu -> if (BuildConfig.TESTER_MENU_ENABLED) it else null
                 else -> it
             }
         }
@@ -94,7 +101,18 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 // TODO: To be available later
             }
             SettingsElement.ReferralProgram -> {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+                if (store.state.detailsState.scanResponse?.let { DemoHelper.isDemoCard(it) } == true) {
+                    detailsScreenState.value.showErrorSnackbar.value = EventError.DemoReferralNotAvailable(
+                        onErrorShow = {
+                            detailsScreenState.value.showErrorSnackbar.value = EventError.Empty
+                        },
+                    )
+                } else {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+                }
+            }
+            SettingsElement.TesterMenu -> {
+                store.state.daggerGraphState.testerRouter?.startTesterScreen()
             }
         }
     }
