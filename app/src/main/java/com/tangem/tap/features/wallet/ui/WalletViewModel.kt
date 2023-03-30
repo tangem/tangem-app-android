@@ -4,15 +4,18 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.ui.analytics.WalletAnalyticsEventsMapper
 import com.tangem.tap.store
 import com.tangem.tap.walletStoresManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,15 +25,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
 // TODO: Kill me, please
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListManager?>, DefaultLifecycleObserver {
+@HiltViewModel
+internal class WalletViewModel @Inject constructor(
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : ViewModel(), StoreSubscriber<UserWalletsListManager?>, DefaultLifecycleObserver {
     private var observeWalletStoresUpdatesJob: Job? = null
         set(value) {
             field?.cancel()
             field = value
         }
+
+    private val walletAnalyticsEventsMapper = WalletAnalyticsEventsMapper()
 
     init {
         subscribeToUserWalletsListManagerUpdates()
@@ -53,7 +62,7 @@ internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListMan
             val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
             val signInType = store.state.signInState.type
             if (currency != null && signInType != null) {
-                Analytics.send(
+                analyticsEventHandler.send(
                     Basic.SignedIn(
                         currency = currency,
                         batch = scanResponse.card.batchId,
@@ -65,7 +74,7 @@ internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListMan
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        Analytics.send(MainScreen.ScreenOpened())
+        analyticsEventHandler.send(MainScreen.ScreenOpened())
     }
 
     fun launch() {
@@ -74,6 +83,18 @@ internal class WalletViewModel : ViewModel(), StoreSubscriber<UserWalletsListMan
             bootstrapSelectedWalletStoresChanges(manager)
         }
         bootstrapShowSaveWalletIfNeeded()
+    }
+
+    fun onBalanceLoaded(totalBalance: TotalBalance?) {
+        if (totalBalance != null) {
+            walletAnalyticsEventsMapper.convert(totalBalance)?.let { balanceParam ->
+                analyticsEventHandler.send(
+                    Basic.BalanceLoaded(
+                        balance = balanceParam,
+                    ),
+                )
+            }
+        }
     }
 
     private fun bootstrapSelectedWalletStoresChanges(manager: UserWalletsListManager) {
