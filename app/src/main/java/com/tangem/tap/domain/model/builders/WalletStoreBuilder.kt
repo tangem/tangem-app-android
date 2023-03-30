@@ -56,7 +56,11 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
     override fun build(): WalletStoreModel {
         val cardDerivationStyle = userWallet.scanResponse.card.derivationStyle
         val blockchainWalletData = blockchainNetwork.getBlockchainWalletData(walletManager, cardDerivationStyle)
-        val tokensWalletsData = blockchainNetwork.getTokensWalletsData(walletManager, cardDerivationStyle)
+        val tokensWalletsData = blockchainNetwork.getTokensWalletsData(
+            walletManager = walletManager,
+            cardDerivationStyle = cardDerivationStyle,
+            primaryToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken(),
+        )
 
         return WalletStoreModel(
             userWalletId = userWallet.walletId,
@@ -78,7 +82,10 @@ private class WalletMangerWalletStoreBuilderImpl(
     override fun build(): WalletStoreModel {
         val wallet = walletManager.wallet
         val blockchainWalletData = wallet.blockchain.toBlockchainWalletData(walletManager)
-        val tokenWalletsData = wallet.getTokens().firstOrNull()?.toTokenWalletData(walletManager)
+        val tokenWalletsData = wallet.getTokens().firstOrNull()?.toTokenWalletData(
+            walletManager = walletManager,
+            primaryToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken(),
+        )
 
         return WalletStoreModel(
             userWalletId = userWallet.walletId,
@@ -115,6 +122,7 @@ private fun BlockchainNetwork.getBlockchainWalletData(
 private fun BlockchainNetwork.getTokensWalletsData(
     walletManager: WalletManager?,
     cardDerivationStyle: DerivationStyle?,
+    primaryToken: Token?,
 ): List<WalletDataModel> {
     return this.tokens
         .map { token ->
@@ -129,7 +137,7 @@ private fun BlockchainNetwork.getTokensWalletsData(
                 walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
                 existentialDeposit = getExistentialDeposit(walletManager),
                 fiatRate = null,
-                isCardSingleToken = walletManager?.cardTokens?.contains(token) ?: false,
+                isCardSingleToken = token == primaryToken,
                 isCustom = currency.isCustomCurrency(cardDerivationStyle),
                 historyTransactions = walletManager?.getTokenTxHistory(token),
             )
@@ -153,7 +161,10 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
     )
 }
 
-private fun Token.toTokenWalletData(walletManager: WalletManager): WalletDataModel {
+private fun Token.toTokenWalletData(
+    walletManager: WalletManager,
+    primaryToken: Token?,
+): WalletDataModel {
     val wallet = walletManager.wallet
     return WalletDataModel(
         currency = Currency.Token(
@@ -165,7 +176,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager): WalletDataMod
         walletAddresses = wallet.createAddressesData(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
-        isCardSingleToken = walletManager.cardTokens.contains(this),
+        isCardSingleToken = this == primaryToken,
         isCustom = false,
         historyTransactions = walletManager.getTokenTxHistory(this),
     )
