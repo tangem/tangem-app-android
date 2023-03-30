@@ -29,3 +29,7 @@ fun <T> MutableList<T>.replaceBy(item: T, predicate: (T) -> Boolean): Boolean {
 fun <T> MutableList<T>.replaceByOrAdd(item: T, predicate: (T) -> Boolean) {
     if (!replaceBy(item, predicate)) add(item)
 }
+
+fun <T> MutableList<T>.copy(): MutableList<T> {
+    return this.map { it }.toMutableList()
+}
