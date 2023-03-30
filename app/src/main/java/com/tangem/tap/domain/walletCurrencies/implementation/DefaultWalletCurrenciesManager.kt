@@ -30,23 +30,31 @@ internal class DefaultWalletCurrenciesManager(
     private val walletManagersRepository: WalletManagersRepository,
     private val appCurrencyProvider: () -> FiatCurrency,
 ) : WalletCurrenciesManager {
+
+    private val listeners = mutableListOf<WalletCurrenciesManager.Listener>()
+
     override suspend fun update(
         userWallet: UserWallet,
         currency: Currency,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        listeners.forEach { it.willUpdate(userWallet, currency) }
         val walletStore = walletStoresRepository.getSync(userWallet.walletId)
             .find {
                 it.blockchain == currency.blockchain &&
                     it.derivationPath?.rawPath == currency.derivationPath
             }
 
-        if (walletStore != null) {
+        val updateResult = if (walletStore == null) {
+            CompletionResult.Success(Unit)
+        } else {
             walletAmountsRepository.updateAmountsForWalletStore(
                 walletStore = walletStore,
                 userWallet = userWallet,
                 fiatCurrency = appCurrencyProvider(),
             )
-        } else CompletionResult.Success(Unit)
+        }
+        listeners.forEach { it.didUpdate(userWallet, currency) }
+        updateResult
     }
 
     override suspend fun addCurrencies(
@@ -55,6 +63,7 @@ internal class DefaultWalletCurrenciesManager(
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val card = userWallet.scanResponse.card
         val currenciesToAddWithMissingBlockchains = currenciesToAdd.addMissingBlockchainsIfNeeded(card)
+        listeners.forEach { it.willCurrenciesAdd(userWallet, currenciesToAddWithMissingBlockchains) }
 
         updateWalletStores(
             userWallet = userWallet,
@@ -77,6 +86,7 @@ internal class DefaultWalletCurrenciesManager(
         userWallet: UserWallet,
         currenciesToRemove: List<Currency>,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        listeners.forEach { it.willCurrenciesRemove(userWallet, currenciesToRemove) }
         val card = userWallet.scanResponse.card
         val remainingCurrencies = getSavedCurrencies(userWallet.walletId)
             .filter { it !in currenciesToRemove }
@@ -96,7 +106,16 @@ internal class DefaultWalletCurrenciesManager(
         userWallet: UserWallet,
         currencyToRemove: Currency,
     ): CompletionResult<Unit> {
+        listeners.forEach { it.willCurrencyRemove(userWallet, currencyToRemove) }
         return removeCurrencies(userWallet, listOf(currencyToRemove))
+    }
+
+    override fun addListener(listener: WalletCurrenciesManager.Listener) {
+        listeners.add(listener)
+    }
+
+    override fun removeListener(listener: WalletCurrenciesManager.Listener) {
+        listeners.remove(listener)
     }
 
     private suspend fun getSavedCurrencies(userWalletId: UserWalletId): List<Currency> {
