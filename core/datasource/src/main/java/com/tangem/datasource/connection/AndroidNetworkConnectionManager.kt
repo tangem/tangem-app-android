@@ -15,7 +15,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -36,9 +35,9 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworkConnectionManager {
 
-    override val connectionStatus: StateFlow<ConnectionStatus> get() = _connectionStatus
+    override val isOnline: Boolean get() = _isOnline.value
 
-    private val _connectionStatus = MutableStateFlow(ConnectionStatus.OFFLINE)
+    private val _isOnline = MutableStateFlow(value = false)
     private val callbacks = NetworkConnectionManagerCallbacks()
     private val receiver = NetworkConnectionBroadcastReceiver()
 
@@ -78,28 +77,26 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
 
             CoroutineScope(SupervisorJob()).launch(dispatchers.io) {
                 try {
-                    val status = getCurrentStatus()
+                    val status = isConnected()
 
-                    _connectionStatus.emit(value = status)
-                    Timber.i("Status changed to $status")
+                    _isOnline.emit(value = status)
+                    Timber.i("Connection status is ${if (status) "ONLINE" else "OFFLINE"}")
                 } finally {
                     pendingResult.finish()
                 }
             }
         }
 
-        private fun getCurrentStatus(): ConnectionStatus {
-            connectivityManager ?: return ConnectionStatus.OFFLINE
+        private fun isConnected(): Boolean {
+            connectivityManager ?: return false
 
-            val isConnected = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                 capabilities != null && capabilities.hasNetworkTransport()
             } else {
                 val networkInfo = connectivityManager.activeNetworkInfo
                 networkInfo != null && networkInfo.isConnectedOrConnecting
             }
-
-            return if (isConnected) ConnectionStatus.ONLINE else ConnectionStatus.OFFLINE
         }
 
         private fun NetworkCapabilities.hasNetworkTransport(): Boolean {

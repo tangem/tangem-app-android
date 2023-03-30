@@ -6,9 +6,9 @@ import android.animation.PropertyValuesHolder
 import android.view.View
 import android.widget.ImageView
 import androidx.core.animation.doOnEnd
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapView
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapViewState
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapView
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapViewState
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 
 class WalletCardsWidget(
     val leapfrogWidget: LeapfrogWidget,
