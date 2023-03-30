@@ -1,7 +1,7 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
-    kotlin("kapt")
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
+    id("configuration")
 }
 
 dependencies {
@@ -11,14 +11,9 @@ dependencies {
     implementation(project(":libs:crypto"))
 
     /** Time */
-    implementation(Library.jodatime)
+    implementation(deps.jodatime)
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 }
