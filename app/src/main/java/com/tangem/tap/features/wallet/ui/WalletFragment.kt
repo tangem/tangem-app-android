@@ -1,6 +1,5 @@
 package com.tangem.tap.features.wallet.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
@@ -10,7 +9,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
@@ -77,17 +75,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        lifecycle.addObserver(viewModel)
-        lifecycleScope.launchWhenCreated {
-            viewModel.launch()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        activity?.lifecycle?.addObserver(viewModel)
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
