@@ -6,8 +6,8 @@ import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidgetState
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidgetState
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.TestLeapfrogFragmentBinding
