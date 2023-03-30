@@ -10,9 +10,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
+import com.tangem.features.tester.api.TesterRouter
 import com.tangem.operations.backup.BackupService
-import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tangem_sdk_new.extensions.initWithBiometrics
+import com.tangem.sdk.extensions.init
+import com.tangem.sdk.extensions.initWithBiometrics
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
@@ -33,6 +34,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -71,6 +73,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var appStateHolder: AppStateHolder
 
+    /** Router for opening tester menu */
+    @Inject
+    lateinit var testerRouter: TesterRouter
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
@@ -97,6 +103,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 GooglePayService(createPaymentsClient(this), this),
             ),
         )
+
+        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter))
     }
 
     private fun initUserWalletsListManager() {
