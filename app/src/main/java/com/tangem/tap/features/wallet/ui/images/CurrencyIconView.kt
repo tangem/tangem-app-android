@@ -8,7 +8,7 @@ import androidx.constraintlayout.utils.widget.ImageFilterView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.sdk.extensions.dpToPx
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.databinding.ViewCurrencyIconBinding
 import kotlin.math.roundToInt
