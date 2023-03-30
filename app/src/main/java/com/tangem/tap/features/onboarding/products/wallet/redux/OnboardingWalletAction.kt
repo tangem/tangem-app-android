@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import android.graphics.Bitmap
 import android.net.Uri
 import org.rekotlin.Action
 
@@ -22,10 +21,9 @@ sealed class OnboardingWalletAction : Action {
 
 sealed class BackupAction : Action {
 
-    object DetermineBackupStep : BackupAction()
     object IntroduceBackup : BackupAction()
     object StartBackup : BackupAction()
-    object DismissBackup : BackupAction()
+    object SkipBackup : BackupAction()
 
     object StartAddingPrimaryCard : BackupAction()
     object ScanPrimaryCard : BackupAction()
@@ -41,13 +39,6 @@ sealed class BackupAction : Action {
         object Success : BackupAction()
     }
 
-    data class LoadBackupCardArtwork(
-        val cardId: CardId,
-        val cardPublicKey: ByteArray,
-    ) : BackupAction() {
-        data class Success(val cardId: CardId, val artwork: Bitmap)
-    }
-
     object FinishAddingBackupCards : BackupAction()
 
     object ShowAccessCodeInfoScreen : BackupAction()
@@ -55,7 +46,6 @@ sealed class BackupAction : Action {
     data class CheckAccessCode(val accessCode: String) : BackupAction()
     data class SetAccessCodeError(val error: AccessCodeError?) : BackupAction()
     data class SaveFirstAccessCode(val accessCode: String) : BackupAction()
-    object ShowReenterAccessCodeScreen : BackupAction()
     data class SaveAccessCodeConfirmation(val accessCodeConfirmation: String) : BackupAction()
     object OnAccessCodeDialogClosed : BackupAction()
 
