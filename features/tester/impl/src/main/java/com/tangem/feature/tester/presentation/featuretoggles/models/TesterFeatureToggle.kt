@@ -8,7 +8,7 @@ package com.tangem.feature.tester.presentation.featuretoggles.models
  *
 [REDACTED_AUTHOR]
  */
-data class TesterFeatureToggle(
+internal data class TesterFeatureToggle(
     val name: String,
-    val isEnabled: Boolean
+    val isEnabled: Boolean,
 )
