@@ -1,8 +1,8 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
-    kotlin("kapt")
-    kotlin("plugin.serialization")
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    id("configuration")
 }
 
 dependencies {
@@ -11,14 +11,9 @@ dependencies {
     implementation(project(":core:utils"))
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 
     /** Other Libraries **/
-    implementation(Library.kotlinSerialization)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    implementation(deps.kotlin.serialization)
 }
