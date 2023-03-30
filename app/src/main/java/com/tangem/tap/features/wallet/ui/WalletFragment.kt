@@ -21,6 +21,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
+import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.Portfolio
@@ -56,6 +57,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     @Inject
     lateinit var swapInteractor: SwapInteractor
 
+    @Inject
+    lateinit var swapFeatureToggleManager: SwapFeatureToggleManager
+
     private lateinit var warningsAdapter: WarningMessagesAdapter
 
     private val binding: FragmentWalletBinding by viewBinding(FragmentWalletBinding::bind)
@@ -67,6 +71,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private val totalBalanceWatcher = modelWatcher {
         (WalletState::totalBalance) { totalBalance ->
             totalBalance?.state?.let {
+                viewModel.onBalanceLoaded(totalBalance)
                 store.state.globalState.topUpController?.totalBalanceStateChanged(it)
             }
         }
@@ -75,7 +80,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onAttach(context: Context) {
         super.onAttach(context)
         lifecycle.addObserver(viewModel)
-        activity?.lifecycleScope?.launchWhenCreated {
+        lifecycleScope.launchWhenCreated {
             viewModel.launch()
         }
     }
@@ -179,6 +184,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         totalBalanceWatcher.invoke(state)
 
         walletView.swapInteractor = swapInteractor
+        walletView.swapFeatureToggleManager = swapFeatureToggleManager
 
         walletView.onNewState(state)
 
@@ -255,10 +261,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         return when (item.itemId) {
             R.id.details_menu -> {
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
-                store.state.globalState.scanResponse?.let { scanNoteResponse ->
+                store.state.globalState.scanResponse?.let { scanResponse ->
                     store.dispatch(
                         DetailsAction.PrepareScreen(
-                            scanResponse = scanNoteResponse,
+                            scanResponse = scanResponse,
                             wallets = store.state.walletState.walletManagers.map { it.wallet },
                         ),
                     )

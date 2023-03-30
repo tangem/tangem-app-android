@@ -1,37 +1,13 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        maven(url = "https://maven.fabric.io/public")
-    }
-
-    dependencies {
-        classpath(ClasspathDependency.AndroidGradlePlugin)
-        classpath(ClasspathDependency.KotlinGradlePlugin)
-        classpath(ClasspathDependency.AndroidMavenGradlePlugin)
-        classpath(ClasspathDependency.GoogleServices)
-        classpath(ClasspathDependency.GoogleFirebaseCrashlytics)
-    }
-}
-
 plugins {
-    id("com.google.dagger.hilt.android") version "2.44" apply false
-    kotlin("plugin.serialization") version Versions.kotlin apply false
-}
-
-allprojects {
-    repositories {
-        google()
-        jcenter() // unable to replace with mavenCentral() due to rekotlin and com.otaliastudios:cameraview
-        mavenLocal()
-        maven("https://nexus.tangem-tech.com/repository/maven-releases/")
-        maven("https://jitpack.io")
-        maven("https://zendesk.jfrog.io/zendesk/repo")
-    }
-}
-
-subprojects {
-    apply(plugin = "detekt-convention")
+    alias(deps.plugins.kotlin.android) apply false
+    alias(deps.plugins.kotlin.jvm) apply false
+    alias(deps.plugins.kotlin.serialization) apply false
+    alias(deps.plugins.kotlin.kapt) apply false
+    alias(deps.plugins.android.application) apply false
+    alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.hilt.android) apply false
+    alias(deps.plugins.google.services) apply false
+    alias(deps.plugins.firebase.crashlytics) apply false
 }
 
 tasks.register("clean", Delete::class) {

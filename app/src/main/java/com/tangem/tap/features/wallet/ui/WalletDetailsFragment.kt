@@ -24,8 +24,9 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.sdk.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.analytics.events.DetailsScreen
@@ -74,6 +75,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     @Inject
     lateinit var swapInteractor: SwapInteractor
+
+    @Inject
+    lateinit var swapFeatureToggleManager: SwapFeatureToggleManager
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
@@ -290,7 +294,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                     WalletAction.DialogAction.ChooseTradeActionDialog(
                         buyAllowed = selectedWallet.isAvailableToBuy(exchangeManager),
                         sellAllowed = selectedWallet.isAvailableToSell(exchangeManager),
-                        swapAllowed = selectedWallet.isAvailableToSwap(swapInteractor, isExchangeServiceFeatureOn),
+                        swapAllowed = selectedWallet.isAvailableToSwap(swapFeatureToggleManager, swapInteractor),
                     ),
                 )
             }
@@ -298,7 +302,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         val actions = selectedWallet.getAvailableActions(
             swapInteractor = swapInteractor,
             exchangeManager = exchangeManager,
-            isExchangeFeatureOn = isExchangeServiceFeatureOn,
+            swapFeatureToggleManager = swapFeatureToggleManager,
         )
         binding.rowButtons.updateButtonsVisibility(
             actions = actions,
