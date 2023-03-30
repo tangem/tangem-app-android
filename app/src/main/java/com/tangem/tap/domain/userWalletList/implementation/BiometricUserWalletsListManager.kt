@@ -183,7 +183,11 @@ internal class BiometricUserWalletsListManager(
         return saveEncryptionKeyIfNotNull(userWallet)
             .flatMap { sensitiveInformationRepository.save(userWallet, encryptionKey = it) }
             .flatMap { publicInformationRepository.save(userWallet) }
-            .map { selectedUserWalletRepository.set(userWallet.walletId) }
+            .map {
+                if (changeSelectedUserWallet) {
+                    selectedUserWalletRepository.set(userWallet.walletId)
+                }
+            }
             .flatMap { loadModels() }
             .doOnSuccess {
                 state.update { prevState ->
@@ -259,7 +263,7 @@ internal class BiometricUserWalletsListManager(
                 }
             }
             .doOnFailure { error ->
-                if (error is UserWalletsListError.InvalidEncryptionKey) {
+                if (error is UserWalletsListError.EncryptionKeyInvalidated) {
                     state.update { prevState ->
                         prevState.copy(
                             hasLockedUserWalletsAfterUnlock = true,
