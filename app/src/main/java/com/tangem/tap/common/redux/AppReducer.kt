@@ -13,6 +13,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWallet
 import com.tangem.tap.features.saveWallet.redux.SaveWalletReducer
 import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.shop.redux.ShopReducer
+import com.tangem.tap.features.signin.redux.SignInReducer
 import com.tangem.tap.features.sprinklr.redux.SprinklrReducer
 import com.tangem.tap.features.tokens.redux.TokensReducer
 import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
@@ -45,6 +46,7 @@ fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder)
         saveWalletState = SaveWalletReducer.reduce(action, state),
         walletSelectorState = WalletSelectorReducer.reduce(action, state),
         sprinklrState = SprinklrReducer.reduce(action, state),
+        signInState = SignInReducer.reduce(action, state),
         daggerGraphState = DaggerGraphReducer.reduce(action, state),
     )
 }

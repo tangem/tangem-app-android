@@ -1,9 +1,13 @@
 package com.tangem.tap.features.wallet.ui
 
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.wallet.models.TotalBalance
@@ -28,7 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel(), StoreSubscriber<UserWalletsListManager?> {
+) : ViewModel(), StoreSubscriber<UserWalletsListManager?>, DefaultLifecycleObserver {
     private var observeWalletStoresUpdatesJob: Job? = null
         set(value) {
             field?.cancel()
@@ -50,6 +54,27 @@ internal class WalletViewModel @Inject constructor(
         if (state != null) {
             bootstrapSelectedWalletStoresChanges(state)
         }
+    }
+
+    override fun onCreate(owner: LifecycleOwner) {
+        val scanResponse = store.state.globalState.scanResponse
+        if (scanResponse != null) {
+            val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+            val signInType = store.state.signInState.type
+            if (currency != null && signInType != null) {
+                analyticsEventHandler.send(
+                    Basic.SignedIn(
+                        currency = currency,
+                        batch = scanResponse.card.batchId,
+                        signInType = signInType,
+                    ),
+                )
+            }
+        }
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        analyticsEventHandler.send(MainScreen.ScreenOpened())
     }
 
     fun launch() {
