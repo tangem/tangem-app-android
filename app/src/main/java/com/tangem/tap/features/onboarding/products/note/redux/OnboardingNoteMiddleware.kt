@@ -97,7 +97,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                     onboardingManager.activationFinished(card.cardId)
                     postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
-                else -> {}
+                else -> Unit
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
@@ -110,11 +110,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
+                            store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
                             store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
                         }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -159,6 +158,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                store.state.globalState.topUpController?.send(scanResponse, AnalyticsParam.CardBalanceState.Full)
                 store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.Done))
             }
         }
