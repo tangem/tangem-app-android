@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Token
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.card.WalletData
-import com.tangem.common.extensions.guard
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isSaltPayVisa
@@ -40,18 +39,14 @@ class TangemCardTypesResolver(
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
             ProductType.SaltPay -> Blockchain.SaltPay
-            ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown // todo restored old logic
             else -> {
-                val blockchainName: String = walletData?.blockchain.guard {
-                    // TODO(hotfix [REDACTED_TASK_KEY], for note bnb, card determined as beacon blockchain, refactor later)
-                    //
-                    // if (productType == ProductType.Note) {
-                    //     return card.getTangemNoteBlockchain() ?: Blockchain.Unknown
-                    // } else {
-                    // }
-                    return Blockchain.Unknown
-                }
-                Blockchain.fromId(blockchainName)
+                val blockchainName: String = walletData?.blockchain
+                    ?: if (productType == ProductType.Note) {
+                        return card.getTangemNoteBlockchain() ?: Blockchain.Unknown
+                    } else {
+                        return Blockchain.Unknown
+                    }
+                Blockchain.fromBlockchainName(blockchainName)
             }
         }
     }
@@ -66,6 +61,21 @@ class TangemCardTypesResolver(
             cardToken.contractAddress,
             cardToken.decimals,
         )
+    }
+}
+
+private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
+    // workaround for BSC (BNB) notes cards
+    return when (blockchainName) {
+        "BINANCE" -> {
+            Blockchain.BSC
+        }
+        "BINANCE/test" -> {
+            Blockchain.BSCTestnet
+        }
+        else -> {
+            Blockchain.fromId(blockchainName)
+        }
     }
 }
 
