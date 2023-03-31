@@ -34,7 +34,7 @@ internal enum class BuildType(
      * Build type for QA
      *
      * Features:
-     * - Env: beta
+     * - Env: dev
      * - Signing config: debug
      * - Logs
      * - Tester menu
@@ -46,7 +46,7 @@ internal enum class BuildType(
         appIdSuffix = "internal",
         versionSuffix = "internal",
         configFields = listOf(
-            BuildConfigField.Environment(value = "beta"),
+            BuildConfigField.Environment(value = "dev"),
             BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
