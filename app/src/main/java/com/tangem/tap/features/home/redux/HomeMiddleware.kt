@@ -6,6 +6,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
@@ -23,6 +24,7 @@ import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
+import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -112,9 +114,10 @@ fun proceedWithScanResponse(scanResponse: ScanResponse) {
                 Timber.e(error, "Unable to save user wallet")
             }
             .doOnSuccess {
-                scope.launch { store.onUserWalletSelected(userWallet) }
+                scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
             }
             .doOnResult {
+                store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
                 navigateTo(AppScreen.Wallet)
             }
     }
