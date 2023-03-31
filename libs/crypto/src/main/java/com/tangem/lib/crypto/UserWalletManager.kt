@@ -40,6 +40,8 @@ interface UserWalletManager {
     @Throws(IllegalStateException::class)
     suspend fun addToken(currency: Currency, derivationPath: String?)
 
+    suspend fun hideAllTokens()
+
     fun refreshWallet()
 
     /**
