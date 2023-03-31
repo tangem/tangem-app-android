@@ -358,7 +358,6 @@
     <string name="swapping_token_list_title">選擇代幣</string>
     <string name="swapping_token_list_your_tokens">您的代幣</string>
     <string name="swapping_token_not_available">無法使用</string>
-    <string name="tangem_app_name">Tangem</string>
     <string name="token_details_hide_alert_hide">隱藏</string>
     <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>
     <string name="token_details_hide_alert_title">隱藏 %s</string>
