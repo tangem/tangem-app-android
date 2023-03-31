@@ -205,6 +205,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     is Result.Success -> {
                         Analytics.send(Onboarding.Twins.SetupFinished())
                         updateScanResponse(result.data)
+                        store.state.globalState.topUpController?.registerEmptyWallet(result.data)
+
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
                             when (twinCardsState.mode) {
@@ -261,9 +263,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
-                scope.launch {
-                    withMainContext { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done)) }
-                }
+                store.state.globalState.topUpController?.send(getScanResponse(), AnalyticsParam.CardBalanceState.Full)
+                store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
             }
         }
         is TwinCardsAction.ShowAddressInfoDialog -> {
