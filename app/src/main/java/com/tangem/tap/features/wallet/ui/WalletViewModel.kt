@@ -17,8 +17,10 @@ import com.tangem.tap.store
 import com.tangem.tap.walletStoresManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -98,11 +100,15 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun bootstrapSelectedWalletStoresChanges(manager: UserWalletsListManager) {
         observeWalletStoresUpdatesJob = manager.selectedUserWallet
             .map { it.walletId }
             .flatMapLatest { selectedUserWalletId ->
                 walletStoresManager.get(selectedUserWalletId)
+            }
+            .debounce { walletStores ->
+                if (walletStores.isNotEmpty()) WALLET_STORES_DEBOUNCE_TIMEOUT else 0
             }
             .onEach { walletStores ->
                 store.dispatch(WalletAction.WalletStoresChanged(walletStores))
@@ -125,5 +131,9 @@ internal class WalletViewModel @Inject constructor(
                 }
                 .select { it.globalState.userWalletsListManager }
         }
+    }
+
+    companion object {
+        private const val WALLET_STORES_DEBOUNCE_TIMEOUT = 100L
     }
 }
