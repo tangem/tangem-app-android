@@ -57,6 +57,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onCreate(owner: LifecycleOwner) {
+        launch()
         val scanResponse = store.state.globalState.scanResponse
         if (scanResponse != null) {
             val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
@@ -77,7 +78,7 @@ internal class WalletViewModel @Inject constructor(
         analyticsEventHandler.send(MainScreen.ScreenOpened())
     }
 
-    fun launch() {
+    private fun launch() {
         val manager = store.state.globalState.userWalletsListManager
         if (manager != null) {
             bootstrapSelectedWalletStoresChanges(manager)
