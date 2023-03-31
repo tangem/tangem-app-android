@@ -24,7 +24,6 @@ import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -73,12 +72,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (WalletState::totalBalance) { totalBalance ->
             totalBalance?.state?.let {
                 viewModel.onBalanceLoaded(totalBalance)
+                store.state.globalState.topUpController?.totalBalanceStateChanged(it)
             }
         }
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        lifecycle.addObserver(viewModel)
         lifecycleScope.launchWhenCreated {
             viewModel.launch()
         }
@@ -88,7 +89,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        Analytics.send(MainScreen.ScreenOpened())
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
