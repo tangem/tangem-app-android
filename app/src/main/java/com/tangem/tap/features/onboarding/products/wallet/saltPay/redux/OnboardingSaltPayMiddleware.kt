@@ -23,6 +23,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.redux.finishCardActivation
+import com.tangem.tap.features.onboarding.products.wallet.redux.gatherCardIds
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.AllSymbolsTheSameFilter
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
@@ -79,7 +80,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.OnSwitchedToSaltPayProcess -> {
-            sendAnalyticsScreenOpened(getState().step, newStep = SaltPayActivationStep.None)
+            sendAnalyticsScreenOpened(SaltPayActivationStep.None, newStep = getState().step)
         }
         is OnboardingSaltPayAction.Update -> {
             handleInProgress = true
@@ -279,10 +280,8 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
                     return
                 }
-                finishCardActivation(
-                    getOnboardingWalletState().backupState,
-                    onboardingManager.scanResponse.card,
-                )
+                val cardIds = gatherCardIds(getOnboardingWalletState().backupState, onboardingManager.scanResponse.card)
+                finishCardActivation(cardIds)
             }
         }
         else -> {
