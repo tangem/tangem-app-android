@@ -227,7 +227,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
             btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
-            btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
+            btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
             btnWalletAlternativeAction.show(state.canSkipBackup && !isSaltPay)
         }
         animator.showBackupIntro(state)
