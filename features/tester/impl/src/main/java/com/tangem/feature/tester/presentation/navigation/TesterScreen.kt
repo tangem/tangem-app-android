@@ -6,5 +6,5 @@ package com.tangem.feature.tester.presentation.navigation
 * [REDACTED_AUTHOR]
  */
 internal enum class TesterScreen {
-    MENU, FEATURE_TOGGLES
+    MENU, FEATURE_TOGGLES, TESTER_ACTIONS
 }
