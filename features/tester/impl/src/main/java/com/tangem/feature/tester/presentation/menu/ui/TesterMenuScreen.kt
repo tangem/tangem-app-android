@@ -54,6 +54,11 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
                 modifier = Modifier.fillMaxWidth(),
                 enabled = false,
             )
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.tester_actions),
+                onClick = state.onTesterActionsClick,
+            )
         }
     }
 }
@@ -66,6 +71,7 @@ private fun PreviewTesterMenuScreen_InLightTheme() {
             state = TesterMenuContentState(
                 onBackClick = {},
                 onFeatureTogglesClick = {},
+                onTesterActionsClick = {},
             ),
         )
     }
@@ -79,6 +85,7 @@ private fun PreviewTesterMenuScreen_InDarkTheme() {
             state = TesterMenuContentState(
                 onBackClick = {},
                 onFeatureTogglesClick = {},
+                onTesterActionsClick = {},
             ),
         )
     }
