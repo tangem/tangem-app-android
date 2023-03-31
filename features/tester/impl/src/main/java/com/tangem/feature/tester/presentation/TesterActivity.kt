@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
+import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
 import com.tangem.feature.tester.presentation.featuretoggles.viewmodels.FeatureTogglesViewModel
 import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
@@ -59,6 +61,7 @@ internal class TesterActivity : ComponentActivity() {
                     state = TesterMenuContentState(
                         onBackClick = innerTesterRouter::back,
                         onFeatureTogglesClick = { innerTesterRouter.open(TesterScreen.FEATURE_TOGGLES) },
+                        onTesterActionsClick = { innerTesterRouter.open(TesterScreen.TESTER_ACTIONS) },
                     ),
                 )
             }
@@ -69,6 +72,14 @@ internal class TesterActivity : ComponentActivity() {
                 }
 
                 FeatureTogglesScreen(state = viewModel.uiState)
+            }
+
+            composable(route = TesterScreen.TESTER_ACTIONS.name) {
+                val viewModel = hiltViewModel<TesterActionsViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+
+                TesterActionsScreen(state = viewModel.uiState)
             }
         }
     }
