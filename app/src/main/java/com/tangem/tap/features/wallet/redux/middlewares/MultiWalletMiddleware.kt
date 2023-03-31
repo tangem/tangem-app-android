@@ -91,13 +91,14 @@ class MultiWalletMiddleware {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
             }
             is WalletAction.MultiWallet.AddMissingDerivations -> {
-                scope.launch { handleBasicAnalyticsEvent() }
+                store.state.globalState.topUpController?.addMissingDerivations(action.blockchains)
             }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
                     Timber.e("Unable to scan to get derivations, no user wallet selected")
                     return
                 }
+                store.state.globalState.topUpController?.scanToGetDerivations()
                 scanAndUpdateCard(selectedUserWallet, walletState)
             }
             else -> {}
@@ -108,7 +109,6 @@ class MultiWalletMiddleware {
         selectedUserWallet: UserWallet,
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
-        dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
         tangemSdkManager.scanProduct(
             cardId = selectedUserWallet.cardId,
             userTokensRepository = userTokensRepository,
