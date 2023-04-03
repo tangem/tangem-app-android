@@ -18,7 +18,10 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
         is OnboardingSaltPayAction -> OnboardingSaltPayReducer.reduce(action, state)
         is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState, state.isSaltPay))
-
+        is OnboardingWalletAction.SetSeedPhraseDependencies -> state.copy(
+            isSeedPhraseSupported = action.isSeedPhraseSupported,
+            seedPhraseStepProvider = action.seedPhraseStepProvider,
+        )
         is OnboardingWalletAction.GetToCreateWalletStep -> OnboardingWalletState(
             step = OnboardingWalletStep.CreateWallet,
         )

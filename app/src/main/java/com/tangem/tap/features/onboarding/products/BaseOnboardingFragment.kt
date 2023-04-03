@@ -3,7 +3,8 @@ package com.tangem.tap.features.onboarding.products
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.MenuProvider
+import androidx.core.view.MenuHost
+import androidx.lifecycle.Lifecycle
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.transitions.HomeToOnboardingTransition
@@ -32,7 +33,9 @@ abstract class BaseOnboardingFragment<T> : BaseStoreFragment(R.layout.fragment_o
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
     }
 
-    override fun loadToolbarMenu(): MenuProvider? = OnboardingMenuProvider()
+    override fun loadToolbarMenu(menuHost: MenuHost) {
+        menuHost.addMenuProvider(OnboardingMenuProvider(), viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
 
     protected fun showConfetti(show: Boolean) = with(binding.vConfetti) {
         lavConfetti.show(show)

@@ -13,6 +13,7 @@ interface CardTypesResolver {
     fun isStart2Coin(): Boolean
 
     fun isMultiwalletAllowed(): Boolean
+    fun isSeedPhraseAllowed():Boolean
 
     fun getBlockchain(): Blockchain
     fun getPrimaryToken(): Token?

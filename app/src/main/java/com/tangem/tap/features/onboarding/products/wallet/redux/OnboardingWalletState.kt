@@ -17,6 +17,8 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val onboardingSaltPayState: OnboardingSaltPayState? = null,
     val isSaltPay: Boolean = false,
+    val isSeedPhraseSupported: Boolean = false,
+    val seedPhraseStepProvider: (() -> Int)? = null,
     val cardArtworkUri: Uri? = null,
     val showConfetti: Boolean = false,
 ) : StateType {
@@ -40,6 +42,9 @@ data class OnboardingWalletState(
     fun getProgressStep(): Int {
         return when {
             step == OnboardingWalletStep.CreateWallet -> 1
+            step == OnboardingWalletStep.SeedPhrase -> {
+                seedPhraseStepProvider?.invoke() ?: 0
+            }
             step == OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
                     BackupStep.InitBackup -> 2
@@ -73,7 +78,7 @@ data class OnboardingWalletState(
 }
 
 enum class OnboardingWalletStep {
-    None, CreateWallet, Backup, SaltPay, Done
+    None, CreateWallet, Backup, SaltPay, SeedPhrase, Done
 }
 
 data class BackupState(

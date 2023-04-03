@@ -65,11 +65,17 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
     val onboardingWalletState = store.state.onboardingWalletState
 
     when (action) {
-        OnboardingWalletAction.Init -> {
+        is OnboardingWalletAction.Init -> {
             ifNotNull(onboardingManager, card) { manager, card ->
                 if (!card.isSaltPay && !manager.isActivationStarted(card.cardId)) {
                     Analytics.send(Onboarding.Started())
                 }
+            }
+            if (scanResponse?.cardTypesResolver?.isSeedPhraseAllowed() == true) {
+                OnboardingWalletAction.SetSeedPhraseDependencies(
+                    isSeedPhraseSupported = true,
+                    seedPhraseStepProvider = action.seedPhraseStepProvider,
+                )
             }
             when {
                 card == null -> {

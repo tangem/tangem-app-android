@@ -36,6 +36,11 @@ class TangemCardTypesResolver(
             (card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
                 card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
 
+    override fun isSeedPhraseAllowed(): Boolean {
+        //FIXME
+        return true
+    }
+
     override fun getBlockchain(): Blockchain {
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin

@@ -16,8 +16,8 @@ import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
+import com.tangem.tap.features.develop.DevelopFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
-import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
@@ -93,7 +93,9 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
 @Suppress("ComplexMethod")
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
-        AppScreen.Home -> HomeFragment()
+        //FIXME
+        AppScreen.Home -> DevelopFragment()
+        // AppScreen.Home -> HomeFragment()
         AppScreen.Shop -> ShopFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
