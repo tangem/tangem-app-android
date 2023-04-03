@@ -141,19 +141,27 @@ private fun TangemTextField(
             },
             trailingIcon = {
                 val iconRes by rememberUpdatedState(
-                    newValue = if (isError) R.drawable.ic_alert_24 else R.drawable.ic_close_24,
+                    newValue = if (isError) {
+                        R.drawable.ic_alert_24
+                    } else if (value.text.isNotEmpty()) {
+                        R.drawable.ic_close_24
+                    } else {
+                        null
+                    },
                 )
-                IconButton(
-                    modifier = Modifier.size(32.dp),
-                    onClick = onClear,
-                    enabled = !isError && enabled,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = iconRes),
-                        tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
-                        contentDescription = "Clear input",
-                    )
+                if (iconRes != null) {
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = onClear,
+                        enabled = !isError && enabled,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(id = iconRes!!),
+                            tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
+                            contentDescription = "Clear input",
+                        )
+                    }
                 }
             },
         )
