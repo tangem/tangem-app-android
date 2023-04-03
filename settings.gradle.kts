@@ -47,6 +47,7 @@ include(":libs:auth")
 // endregion Libs modules
 
 // region Feature modules
+include(":features:onboarding")
 include(":features:referral:data")
 include(":features:referral:domain")
 include(":features:referral:presentation")
