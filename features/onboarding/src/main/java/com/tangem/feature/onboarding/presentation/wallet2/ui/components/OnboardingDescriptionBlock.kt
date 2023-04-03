@@ -9,11 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescription
 
+/**
+ * UI component witch provides single and carousel description for the onboarding process
+ */
 @Composable
 fun OnboardingDescriptionBlock(
     modifier: Modifier = Modifier,
@@ -24,7 +26,7 @@ fun OnboardingDescriptionBlock(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = TangemTheme.dimens.size24),
     ) {
         if (descriptionsList.size == 1) {
             SingleDescription(descriptionsList[0])
@@ -32,6 +34,22 @@ fun OnboardingDescriptionBlock(
             CarouselDescription(descriptionsList)
         }
     }
+}
+
+@Composable
+private fun SingleDescription(description: OnboardingDescription) {
+    Column {
+        if (description.hasTitle()) {
+            DescriptionTitleText(text = description.getTitle(LocalContext.current))
+            SpacerH12()
+        }
+        DescriptionSubTitleText(text = description.getSubTitle(LocalContext.current))
+    }
+}
+
+@Composable
+private fun CarouselDescription(descriptionsList: List<OnboardingDescription>) {
+// [REDACTED_TODO_COMMENT]
 }
 
 @Composable
@@ -55,18 +73,3 @@ private fun DescriptionSubTitleText(text: String) {
         modifier = Modifier.fillMaxWidth(),
     )
 }
-
-@Composable
-private fun SingleDescription(description: OnboardingDescription) {
-    Column {
-        DescriptionTitleText(text = description.getTitle(LocalContext.current))
-        if (description.hasTitle()) SpacerH12()
-        DescriptionSubTitleText(text = description.getSubTitle(LocalContext.current))
-    }
-}
-
-@Composable
-private fun CarouselDescription(descriptionsList: List<OnboardingDescription>) {
-    Box {}
-}
-
