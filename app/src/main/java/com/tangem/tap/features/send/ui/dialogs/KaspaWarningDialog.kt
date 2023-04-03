@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -18,8 +19,10 @@ object KaspaWarningDialog {
                 ),
             )
             setPositiveButton(R.string.common_ok) { _, _ ->
-                store.dispatch(SendAction.Dialog.Hide)
                 dialog.onOk()
+            }
+            setOnDismissListener {
+                store.dispatchDialogHide()
             }
         }
             .create()
