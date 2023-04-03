@@ -1,4 +1,4 @@
-package com.tangem.tap.features.tokens.ui
+package com.tangem.tap.features.tokens.presentation
 
 import android.os.Bundle
 import android.view.Menu
@@ -31,6 +31,7 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentAddTokensBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -40,7 +41,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.StoreSubscriber
 
-class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubscriber<TokensState> {
+@AndroidEntryPoint
+internal class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubscriber<TokensState> {
 
     private val binding: FragmentAddTokensBinding by viewBinding(FragmentAddTokensBinding::bind)
     private var tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState)
@@ -155,18 +157,18 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
         tokensState.value = state
         binding.toolbar.title = getString(toolbarTitle)
     }
-}
 
-fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher = setOnQueryTextListener(
-        object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
+    private fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
+        val watcher = setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean = false
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                trySend(newText ?: "")
-                return false
-            }
-        },
-    )
-    awaitClose { watcher }
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    trySend(newText ?: "")
+                    return false
+                }
+            },
+        )
+        awaitClose { watcher }
+    }
 }
