@@ -50,6 +50,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "dash" -> Blockchain.Dash
         "sxdai" -> Blockchain.SaltPay
         "kaspa" -> Blockchain.Kaspa
+        "the-open-network" -> Blockchain.TON
+        "the-open-network/test" -> Blockchain.TONTestnet
         else -> null
     }
 }
@@ -104,6 +106,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Dash -> "dash"
         Blockchain.SaltPay -> "sxdai"
         Blockchain.Kaspa -> "kaspa"
+        Blockchain.TON -> "the-open-network"
+        Blockchain.TONTestnet -> "the-open-network/test"
     }
 }
 
@@ -138,6 +142,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dash -> "dash"
         Blockchain.SaltPay -> "xdai"
         Blockchain.Kaspa -> "kaspa"
+        Blockchain.TON, Blockchain.TONTestnet -> "the-open-network"
         Blockchain.Unknown -> "unknown"
     }
 }
