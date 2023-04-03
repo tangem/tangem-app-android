@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.res.TangemTheme
 
 /**
 [REDACTED_AUTHOR]
@@ -22,8 +22,8 @@ fun OnboardingActionBlock(
         modifier = Modifier
             .wrapContentSize()
             .padding(
-                top = 8.dp,
-                bottom = 32.dp,
+                top = TangemTheme.dimens.size8,
+                bottom = TangemTheme.dimens.size32,
             ),
     ) {
         Column(
