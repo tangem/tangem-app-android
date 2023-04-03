@@ -153,6 +153,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
+        loadNativeLibraries()
+
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
@@ -199,6 +201,10 @@ class TapApplication : Application(), ImageLoaderFactory {
             context = this,
             logEnabled = LogConfig.imageLoader,
         )
+    }
+
+    private fun loadNativeLibraries() {
+        System.loadLibrary("TrustWalletCore")
     }
 
     private fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
