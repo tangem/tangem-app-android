@@ -53,6 +53,7 @@
     <string name="common_done">Erledigt</string>
     <string name="common_enable">Enable</string>
     <string name="common_error">Fehler</string>
+    <string name="common_import">Import</string>
     <string name="common_no">No</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Primary Card</string>
@@ -132,6 +133,7 @@
     <string name="initial_message_sign_header">Tippen um zu signieren</string>
     <string name="initial_message_tap_header">Legen Sie die Karte an</string>
     <string name="internal_error_wallet_manager_not_found">Internal error: wallet manager not found</string>
+    <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
@@ -172,6 +174,9 @@
     <string name="onboarding_create_wallet_body">Let\'s generate all the keys on your card and create a secure wallet</string>
     <string name="onboarding_create_wallet_button_create_wallet">Create wallet</string>
     <string name="onboarding_create_wallet_header">Create a wallet</string>
+    <string name="onboarding_create_wallet_options_button_options">Other options</string>
+    <string name="onboarding_create_wallet_options_message">Your keys will be securely generated inside the card. No seed phrase or any ability to export and steal them.</string>
+    <string name="onboarding_create_wallet_options_title">Generate keys privately</string>
     <string name="onboarding_done_body">Your card is activated and ready to be used</string>
     <string name="onboarding_done_header">Success!</string>
     <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
@@ -189,6 +194,20 @@
     <string name="onboarding_saltpay_title_no_backup_card">No backup card</string>
     <string name="onboarding_saltpay_title_one_backup_card">Backup card ready</string>
     <string name="onboarding_saltpay_title_prepare_origin">Prepare the SaltPay card</string>
+    <string name="onboarding_seed_button_read_more">Read more about seed phrases</string>
+    <string name="onboarding_seed_generate_message">Write down these 12 words in the order given below and store them in a secret, safe place</string>
+    <string name="onboarding_seed_generate_title">Your recovery phrase</string>
+    <string name="onboarding_seed_import_message">To import your wallet, enter your secret recovery phrase in the field below</string>
+    <string name="onboarding_seed_intro_button_generate">Generate seed phrase</string>
+    <string name="onboarding_seed_intro_button_import">Import wallet</string>
+    <string name="onboarding_seed_intro_message">Seed phrase is a series of words that gives an ability to recover the wallet. Unlike the card generated keys, seed phrase is unprotected and can be copied and stolen. Use this option at your own risk.</string>
+    <string name="onboarding_seed_intro_title">Use seed phrase</string>
+    <string name="onboarding_seed_mnemonic_invalid_checksum">Invalid seed phrase. Please check words order.</string>
+    <string name="onboarding_seed_mnemonic_wrong_words">Invalid seed phrase. Please check your spelling.</string>
+    <string name="onboarding_seed_phrase_intro_legacy">Legacy</string>
+    <string name="onboarding_seed_screenshot_alert">We do not recommend storing the passphrase as a screenshot due to the high risk of loss or hacking</string>
+    <string name="onboarding_seed_user_validation_message">To check whether you’ve written down your seed phrase correctly, please enter the 2nd, 7th and 11th words</string>
+    <string name="onboarding_seed_user_validation_title">So, let’s check</string>
     <string name="onboarding_subtitle_claim">To get started, simply claim wxDAI to your wallet</string>
     <string name="onboarding_subtitle_claim_progress">It will take a few seconds</string>
     <string name="onboarding_subtitle_kyc_retry">Please check your email for further instructions</string>
@@ -339,7 +358,7 @@
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
     <string name="swapping_not_enough_funds_for_fee">Not enough funds for fee in your %1$s wallet to create a transaction. Top up your %2$s wallet first.</string>
-    <string name="swapping_pending_transaction_subtitle">Transaction in progress…</string>
+    <string name="swapping_pending_transaction_subtitle">Transaction in progress...</string>
     <string name="swapping_pending_transaction_title">Waiting</string>
     <string name="swapping_permission_buttons_approve">Approve</string>
     <string name="swapping_permission_header">Give Permission</string>
@@ -353,12 +372,11 @@
     <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_action">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
-    <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product.</string>
+    <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_not_available">not available</string>
-    <string name="tangem_app_name">Tangem</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
@@ -419,6 +437,7 @@
     <string name="wallet_connect_error_timeout">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
     <string name="wallet_connect_error_unsupported_blockchains">Session request contains unsupported blockchains for WalletConnect connection. Unsupported blockchains:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
+    <string name="wallet_connect_error_wrong_card_selected">Wrong card selected in Tangem App</string>
     <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
