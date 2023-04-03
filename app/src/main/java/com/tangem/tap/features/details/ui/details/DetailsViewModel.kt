@@ -10,7 +10,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
@@ -101,15 +100,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 // TODO: To be available later
             }
             SettingsElement.ReferralProgram -> {
-                if (store.state.detailsState.scanResponse?.let { DemoHelper.isDemoCard(it) } == true) {
-                    detailsScreenState.value.showErrorSnackbar.value = EventError.DemoReferralNotAvailable(
-                        onErrorShow = {
-                            detailsScreenState.value.showErrorSnackbar.value = EventError.Empty
-                        },
-                    )
-                } else {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
-                }
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
             }
             SettingsElement.TesterMenu -> {
                 store.state.daggerGraphState.testerRouter?.startTesterScreen()
