@@ -26,7 +26,7 @@ import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
-import com.tangem.tap.features.tokens.ui.AddTokensFragment
+import com.tangem.tap.features.tokens.presentation.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
