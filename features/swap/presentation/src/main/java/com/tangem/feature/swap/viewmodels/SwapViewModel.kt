@@ -359,7 +359,7 @@ internal class SwapViewModel @Inject constructor(
             lastAmount.value = cutValue
             uiState =
                 stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
-            amountDebouncer.debounce(DEBOUNCE_AMOUNT_DELAY, viewModelScope) {
+            amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
                 startLoadingQuotes(fromToken, toToken, lastAmount.value)
             }
         }
