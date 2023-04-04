@@ -12,6 +12,7 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -36,8 +37,11 @@ class TapWalletManager {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean) {
+    suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
         Analytics.setContext(userWallet.scanResponse)
+        if (sendAnalyticsEvent) {
+            Analytics.send(Basic.WalletOpened())
+        }
         val scanResponse = userWallet.scanResponse
         val card = scanResponse.card
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
