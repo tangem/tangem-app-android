@@ -21,23 +21,16 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
-import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesStateHolder
+import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 
 /**
  * Screen with feature toggles list
  *
- * @param stateHolder screen state
+ * @param state screen state
  */
-@Composable
-fun FeatureTogglesScreen(stateHolder: FeatureTogglesStateHolder) {
-    when (stateHolder) {
-        is FeatureTogglesStateHolder.Content -> FeatureTogglesContent(content = stateHolder)
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FeatureTogglesContent(content: FeatureTogglesStateHolder.Content) {
+internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -45,14 +38,14 @@ private fun FeatureTogglesContent(content: FeatureTogglesStateHolder.Content) {
     ) {
         stickyHeader {
             AppBarWithBackButton(
-                onBackClick = content.onBackClicked,
+                onBackClick = state.onBackClick,
                 text = stringResource(id = R.string.feature_toggles),
             )
         }
-        items(content.featureToggles) { featureToggle ->
+        items(state.featureToggles) { featureToggle ->
             FeatureToggleItem(
                 toggle = featureToggle,
-                onCheckedChange = { isChange -> content.onToggleValueChange(featureToggle.name, isChange) },
+                onCheckedChange = { isChange -> state.onToggleValueChange(featureToggle.name, isChange) },
             )
         }
     }
@@ -89,13 +82,13 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggle, onCheckedChange: (Boo
 private fun PreviewFeatureTogglesScreen_InLightTheme() {
     TangemTheme(isDark = false) {
         FeatureTogglesScreen(
-            stateHolder = FeatureTogglesStateHolder.Content(
+            state = FeatureTogglesContentState(
                 featureToggles = listOf(
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
                 ),
                 onToggleValueChange = { _, _ -> },
-                onBackClicked = {},
+                onBackClick = {},
             ),
         )
     }
@@ -106,13 +99,13 @@ private fun PreviewFeatureTogglesScreen_InLightTheme() {
 private fun PreviewFeatureTogglesScreen_InDarkTheme() {
     TangemTheme(isDark = true) {
         FeatureTogglesScreen(
-            stateHolder = FeatureTogglesStateHolder.Content(
+            state = FeatureTogglesContentState(
                 featureToggles = listOf(
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
                 ),
                 onToggleValueChange = { _, _ -> },
-                onBackClicked = {},
+                onBackClick = {},
             ),
         )
     }
