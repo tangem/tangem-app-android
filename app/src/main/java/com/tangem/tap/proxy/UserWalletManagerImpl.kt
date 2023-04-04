@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.doOnFailure
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
@@ -20,6 +21,8 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
+import com.tangem.tap.walletStoresManager
+import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
@@ -115,6 +118,28 @@ class UserWalletManagerImpl(
             userWallet = selectedUserWallet,
             currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
         )
+    }
+
+    override suspend fun hideAllTokens() {
+        val userWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("No user wallets selected")
+            return
+        }
+
+        val currencies = walletStoresManager.get(userWallet.walletId)
+            .firstOrNull()
+            ?.flatMap { walletStore ->
+                walletStore.walletsData.map { it.currency }
+            }
+            .guard {
+                Timber.d("No currencies found")
+                return
+            }
+
+        walletCurrenciesManager.removeCurrencies(userWallet, currenciesToRemove = currencies)
+            .doOnFailure { e ->
+                Timber.e(e, "Unable to delete all currencies")
+            }
     }
 
     override fun getWalletAddress(networkId: String, derivationPath: String?): String {
