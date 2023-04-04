@@ -1,7 +1,7 @@
 package com.tangem.tap.features.demo.di
 
-import com.tangem.datasource.demo.DemoModeData
-import com.tangem.tap.features.demo.DefaultDemoModeData
+import com.tangem.datasource.demo.DemoModeDatasource
+import com.tangem.tap.features.demo.DefaultDemoModeDatasource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +14,5 @@ internal interface DemoModule {
 
     @Binds
     @Singleton
-    fun bindDemoModeHelper(demoModeHelper: DefaultDemoModeData): DemoModeData
+    fun bindDemoModeHelper(demoModeHelper: DefaultDemoModeDatasource): DemoModeDatasource
 }
