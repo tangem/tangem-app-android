@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
@@ -13,6 +15,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
+import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -49,9 +52,10 @@ class DerivationManagerImpl(
             if (scanResponse != null) {
                 deriveMissingBlockchains(
                     scanResponse = scanResponse,
-                    listOf(appCurrency),
+                    currencyList = listOf(appCurrency),
+                    onSuccess = { continuation.resumeWith(Result.success(true)) },
                 ) {
-                    continuation.resumeWith(Result.success(true))
+                    continuation.resumeWith(Result.failure(it))
                 }
             }
         } else {
@@ -84,6 +88,7 @@ class DerivationManagerImpl(
         scanResponse: ScanResponse,
         currencyList: List<com.tangem.tap.features.wallet.models.Currency>,
         onSuccess: (ScanResponse) -> Unit,
+        onFailure: (Exception) -> Unit,
     ) {
         val derivationDataList = listOfNotNull(
             getDerivations(EllipticCurve.Secp256k1, scanResponse, currencyList),
@@ -135,6 +140,7 @@ class DerivationManagerImpl(
                             "Error derivation",
                         ),
                     )
+                    onFailure.invoke(handleTangemError(result.error))
                 }
                 else -> {
                     error("result result is null")
@@ -174,6 +180,19 @@ class DerivationManagerImpl(
         return DerivationData(
             derivations = mapKeyOfWalletPublicKey to toDerive,
         )
+    }
+
+    /**
+     * Simple error handler
+     * for now specifically handle only UserCancelled
+     *
+     * @param error [TangemError]
+     */
+    private fun handleTangemError(error: TangemError): Exception {
+        if (error is TangemSdkError.UserCancelled) {
+            return UserCancelledException()
+        }
+        return IllegalStateException(error.customMessage)
     }
 
     private class DerivationData(
