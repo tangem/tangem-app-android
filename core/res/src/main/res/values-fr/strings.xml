@@ -358,7 +358,6 @@
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_not_available">not available</string>
-    <string name="tangem_app_name">Tangem</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
