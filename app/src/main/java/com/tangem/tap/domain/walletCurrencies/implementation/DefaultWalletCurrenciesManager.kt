@@ -61,6 +61,10 @@ internal class DefaultWalletCurrenciesManager(
         userWallet: UserWallet,
         currenciesToAdd: List<Currency>,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        if (currenciesToAdd.isEmpty()) {
+            return@withContext CompletionResult.Success(Unit)
+        }
+
         val card = userWallet.scanResponse.card
         val currenciesToAddWithMissingBlockchains = currenciesToAdd.addMissingBlockchainsIfNeeded(card)
         listeners.forEach { it.willCurrenciesAdd(userWallet, currenciesToAddWithMissingBlockchains) }
@@ -86,6 +90,10 @@ internal class DefaultWalletCurrenciesManager(
         userWallet: UserWallet,
         currenciesToRemove: List<Currency>,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        if (currenciesToRemove.isEmpty()) {
+            return@withContext CompletionResult.Success(Unit)
+        }
+
         listeners.forEach { it.willCurrenciesRemove(userWallet, currenciesToRemove) }
         val card = userWallet.scanResponse.card
         val remainingCurrencies = getSavedCurrencies(userWallet.walletId)
