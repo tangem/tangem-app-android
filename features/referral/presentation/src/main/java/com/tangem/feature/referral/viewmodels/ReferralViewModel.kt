@@ -11,6 +11,7 @@ import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.models.DiscountType
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.ReferralInfo
+import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
@@ -75,21 +76,25 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     private fun participate() {
-        analyticsEventHandler.send(ReferralEvents.ClickParticipate)
-        uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) { referralInteractor.startReferral() }
-                .onSuccess(::showContent)
-                .onFailure {
-                    if (it is UserCancelledException) {
-                        val lastRefData = lastReferralData.value
-                        if (lastRefData != null) {
-                            showContent(lastRefData)
+        if (referralInteractor.isDemoMode) {
+            showErrorSnackbar(DemoModeException())
+        } else {
+            analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
+            viewModelScope.launch(dispatchers.main) {
+                runCatching(dispatchers.io) { referralInteractor.startReferral() }
+                    .onSuccess(::showContent)
+                    .onFailure {
+                        if (it is UserCancelledException) {
+                            val lastRefData = lastReferralData.value
+                            if (lastRefData != null) {
+                                showContent(lastRefData)
+                            }
+                        } else {
+                            showErrorSnackbar(it)
                         }
-                    } else {
-                        showErrorSnackbar(it)
                     }
-                }
+            }
         }
     }
 
