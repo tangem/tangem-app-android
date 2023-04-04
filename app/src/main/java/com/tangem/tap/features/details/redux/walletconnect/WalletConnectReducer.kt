@@ -3,10 +3,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 import org.rekotlin.Action
 
 object WalletConnectReducer {
-    fun reduce(
-        action: Action,
-        state: WalletConnectState,
-    ): WalletConnectState {
+    fun reduce(action: Action, state: WalletConnectState): WalletConnectState {
         if (action !is WalletConnectAction) return state
 
         return when (action) {

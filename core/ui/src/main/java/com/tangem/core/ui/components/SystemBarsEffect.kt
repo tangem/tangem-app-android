@@ -6,9 +6,7 @@ import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
-fun SystemBarsEffect(
-    block: SystemUiController.() -> Unit,
-) {
+fun SystemBarsEffect(block: SystemUiController.() -> Unit) {
     val systemUiController = rememberSystemUiController()
     SideEffect { block(systemUiController) }
 }

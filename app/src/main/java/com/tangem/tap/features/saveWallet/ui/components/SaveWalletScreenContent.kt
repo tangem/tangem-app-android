@@ -31,11 +31,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
 @Composable
-internal fun SaveWalletScreenContent(
-    showProgress: Boolean,
-    onSaveWalletClick: () -> Unit,
-    onCloseClick: () -> Unit,
-) {
+internal fun SaveWalletScreenContent(showProgress: Boolean, onSaveWalletClick: () -> Unit, onCloseClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Header(onCloseClick = onCloseClick)
         SpacerHHalf()
@@ -89,9 +85,7 @@ private fun Header(onCloseClick: () -> Unit) {
 }
 
 @Composable
-private fun Title(
-    modifier: Modifier = Modifier,
-) {
+private fun Title(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -113,9 +107,7 @@ private fun Title(
 }
 
 @Composable
-private fun Description(
-    modifier: Modifier = Modifier,
-) {
+private fun Description(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
@@ -135,10 +127,7 @@ private fun Description(
 }
 
 @Composable
-private fun Footer(
-    showProgress: Boolean,
-    onSaveWalletClick: () -> Unit,
-) {
+private fun Footer(showProgress: Boolean, onSaveWalletClick: () -> Unit) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -163,11 +152,7 @@ private fun Footer(
 }
 
 @Composable
-private fun DescriptionItem(
-    iconPainter: Painter,
-    title: String,
-    description: String,
-) {
+private fun DescriptionItem(iconPainter: Painter, title: String, description: String) {
     Row(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -197,9 +182,7 @@ private fun DescriptionItem(
 
 // region Preview
 @Composable
-private fun SaveWalletScreenContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun SaveWalletScreenContentSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),

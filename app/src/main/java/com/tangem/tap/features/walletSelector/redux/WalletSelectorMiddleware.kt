@@ -70,7 +70,7 @@ internal class WalletSelectorMiddleware {
                 addWallet()
             }
             is WalletSelectorAction.SelectWallet -> {
-                selectWallet(action.userWalletId, action.sendAnalyticsEvent)
+                selectWallet(action.userWalletId)
             }
             is WalletSelectorAction.RemoveWallets -> {
                 deleteWallets(action.userWalletsIds, state)
@@ -189,7 +189,7 @@ internal class WalletSelectorMiddleware {
             }
     }
 
-    private fun selectWallet(userWalletId: UserWalletId, sendAnalyticsEvent: Boolean) {
+    private fun selectWallet(userWalletId: UserWalletId) {
         scope.launch {
             userWalletsListManager.get(userWalletId)
                 .flatMap { userWallet ->

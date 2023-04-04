@@ -25,11 +25,7 @@ class Debouncer {
 
     private var debounceJob: Job? = null
 
-    fun debounce(
-        waitMs: Long = 300L,
-        coroutineScope: CoroutineScope,
-        destinationFunction: () -> Unit,
-    ) {
+    fun debounce(waitMs: Long = 300L, coroutineScope: CoroutineScope, destinationFunction: () -> Unit) {
         debounceJob?.cancel()
         debounceJob = coroutineScope.launch {
             delay(waitMs)

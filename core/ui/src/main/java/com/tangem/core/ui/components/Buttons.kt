@@ -42,12 +42,7 @@ import com.tangem.core.ui.res.TangemTheme
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=97%3A103&t=TmfD6UBHPg9uYfev-4)
  * */
 @Composable
-fun TextButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
+fun TextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     TangemButton(
         modifier = modifier,
         text = text,
@@ -84,12 +79,7 @@ fun TextButtonIconLeft(
 }
 
 @Composable
-fun WarningTextButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
+fun WarningTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     TangemButton(
         modifier = modifier,
         text = text,
@@ -239,12 +229,7 @@ fun SecondaryButtonIconLeft(
 
 // region Other
 @Composable
-fun SelectorButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
+fun SelectorButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     TangemButton(
         modifier = modifier,
         text = text,
@@ -461,9 +446,7 @@ private open class TangemButtonColors(
 
 // region Preview
 @Composable
-private fun PrimaryButtonSample(
-    modifier: Modifier = Modifier,
-) {
+private fun PrimaryButtonSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
@@ -537,9 +520,7 @@ private fun PrimaryButtonPreview_Dark() {
 }
 
 @Composable
-private fun SecondaryButtonSample(
-    modifier: Modifier = Modifier,
-) {
+private fun SecondaryButtonSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
@@ -613,9 +594,7 @@ private fun SecondaryButtonPreview_Dark() {
 }
 
 @Composable
-private fun TextButtonSample(
-    modifier: Modifier = Modifier,
-) {
+private fun TextButtonSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),

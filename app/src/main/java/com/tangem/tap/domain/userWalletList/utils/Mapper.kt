@@ -50,7 +50,9 @@ internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInfo
 internal fun List<UserWallet>.updateWith(
     walletIdToSensitiveInformation: Map<UserWalletId, UserWalletSensitiveInformation>,
 ): List<UserWallet> {
-    return if (walletIdToSensitiveInformation.isEmpty()) this else {
+    return if (walletIdToSensitiveInformation.isEmpty()) {
+        this
+    } else {
         this.map { wallet ->
             walletIdToSensitiveInformation[wallet.walletId]
                 ?.let(wallet::updateWith)

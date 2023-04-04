@@ -21,11 +21,7 @@ import com.tangem.wallet.R
  * Created by Anton Zhilenkov on 19/04/2022.
  */
 @Composable
-fun AddCustomTokenWarning(
-    warning: ModuleMessage,
-    converter: ModuleMessageConverter,
-    modifier: Modifier = Modifier,
-) {
+fun AddCustomTokenWarning(warning: ModuleMessage, converter: ModuleMessageConverter, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.small,
@@ -39,14 +35,14 @@ fun AddCustomTokenWarning(
                 text = stringResource(id = R.string.common_warning),
                 color = colorResource(id = R.color.white),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             SpacerH8()
             Text(
                 text = converter.convert(warning).message,
                 color = colorResource(id = R.color.white),
                 fontSize = 13.sp,
-                lineHeight = 18.sp
+                lineHeight = 18.sp,
             )
         }
     }

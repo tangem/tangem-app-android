@@ -7,7 +7,9 @@ internal object SaveWalletReducer {
     fun reduce(action: Action, state: AppState): SaveWalletState {
         return if (action is SaveWalletAction) {
             internalReduce(action, state.saveWalletState)
-        } else state.saveWalletState
+        } else {
+            state.saveWalletState
+        }
     }
 
     private fun internalReduce(action: SaveWalletAction, state: SaveWalletState): SaveWalletState {

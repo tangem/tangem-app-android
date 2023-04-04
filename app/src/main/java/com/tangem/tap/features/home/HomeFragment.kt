@@ -33,11 +33,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         store.dispatch(HomeAction.Init)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(inflater.context).apply {
             setContent {
                 BackHandler {

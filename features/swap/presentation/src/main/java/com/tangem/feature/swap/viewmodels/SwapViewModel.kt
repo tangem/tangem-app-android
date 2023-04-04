@@ -159,11 +159,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun loadQuotesTask(
-        fromToken: Currency,
-        toToken: Currency,
-        amount: String,
-    ): PeriodicTask<SwapState> {
+    private fun loadQuotesTask(fromToken: Currency, toToken: Currency, amount: String): PeriodicTask<SwapState> {
         return PeriodicTask(
             UPDATE_DELAY,
             task = {

@@ -15,11 +15,7 @@ import androidx.compose.ui.unit.dp
  * Created by Anton Zhilenkov on 09/04/2022.
  */
 @Composable
-fun ErrorView(
-    text: String,
-    modifier: Modifier = Modifier,
-    style: TextStyle = LocalTextStyle.current,
-) {
+fun ErrorView(text: String, modifier: Modifier = Modifier, style: TextStyle = LocalTextStyle.current) {
     Text(
         text,
         color = MaterialTheme.colors.error,

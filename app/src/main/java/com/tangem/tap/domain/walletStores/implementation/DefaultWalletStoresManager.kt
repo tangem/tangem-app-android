@@ -58,38 +58,35 @@ internal class DefaultWalletStoresManager(
         return walletStoresRepository.clear()
     }
 
-    override suspend fun fetch(
-        userWallets: List<UserWallet>,
-        refresh: Boolean,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        val fiatCurrency = appCurrencyProvider.invoke()
-        val isFiatCurrencyChanged = state.value.fiatCurrency != fiatCurrency
+    override suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean): CompletionResult<Unit> =
+        withContext(Dispatchers.Default) {
+            val fiatCurrency = appCurrencyProvider.invoke()
+            val isFiatCurrencyChanged = state.value.fiatCurrency != fiatCurrency
 
-        state.update { prevState ->
-            prevState.copy(
-                fiatCurrency = fiatCurrency,
-            )
+            state.update { prevState ->
+                prevState.copy(
+                    fiatCurrency = fiatCurrency,
+                )
+            }
+
+            userWallets
+                .mapNotNull { userWallet ->
+                    val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
+                    if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {
+                        fetchWalletsIfNeeded(userWallet)
+                    } else {
+                        null
+                    }
+                }
+                .fold(arrayListOf<UserWallet>()) { acc, data ->
+                    acc.apply { add(data) }
+                }
+                .flatMap {
+                    walletAmountsRepository.updateAmountsForUserWallets(it, fiatCurrency)
+                }
         }
 
-        userWallets
-            .mapNotNull { userWallet ->
-                val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
-                if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {
-                    fetchWalletsIfNeeded(userWallet)
-                } else null
-            }
-            .fold(arrayListOf<UserWallet>()) { acc, data ->
-                acc.apply { add(data) }
-            }
-            .flatMap {
-                walletAmountsRepository.updateAmountsForUserWallets(it, fiatCurrency)
-            }
-    }
-
-    override suspend fun fetch(
-        userWallet: UserWallet,
-        refresh: Boolean,
-    ): CompletionResult<Unit> {
+    override suspend fun fetch(userWallet: UserWallet, refresh: Boolean): CompletionResult<Unit> {
         return fetch(listOf(userWallet), refresh)
     }
 

@@ -42,11 +42,7 @@ class DisclaimerWebViewClient : WebViewClient() {
         loadedUrl = url
     }
 
-    override fun onReceivedError(
-        view: WebView?,
-        resourceRequest: WebResourceRequest?,
-        error: WebResourceError?,
-    ) {
+    override fun onReceivedError(view: WebView?, resourceRequest: WebResourceRequest?, error: WebResourceError?) {
         super.onReceivedError(view, resourceRequest, error)
         error?.let { progressState = ProgressState.Error }
     }

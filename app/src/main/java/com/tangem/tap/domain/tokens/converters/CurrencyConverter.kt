@@ -15,6 +15,6 @@ object CurrencyConverter : Converter<Currency, UserTokensResponse.Token> {
         name = value.currencyName,
         symbol = value.currencySymbol,
         decimals = value.decimals,
-        contractAddress = if (value is Currency.Token) value.token.contractAddress else null
+        contractAddress = if (value is Currency.Token) value.token.contractAddress else null,
     )
 }

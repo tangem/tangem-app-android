@@ -180,7 +180,7 @@ private fun TangemTextField(
 }
 
 private enum class TangemTextFieldSize {
-    Default
+    Default,
 }
 
 @Composable
@@ -305,11 +305,7 @@ internal data class TangemTextFieldColors(
     }
 
     @Composable
-    override fun labelColor(
-        enabled: Boolean,
-        error: Boolean,
-        interactionSource: InteractionSource,
-    ): State<Color> {
+    override fun labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
         val focused by interactionSource.collectIsFocusedAsState()
 
         val targetValue = when {
@@ -347,9 +343,7 @@ internal data class TangemTextFieldColors(
 
 // region Preview
 @Composable
-private fun OutlineTextFieldSample(
-    modifier: Modifier = Modifier,
-) {
+private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)

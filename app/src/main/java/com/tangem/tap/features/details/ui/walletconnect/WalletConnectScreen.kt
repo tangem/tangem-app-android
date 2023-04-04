@@ -65,10 +65,7 @@ fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit
 }
 
 @Composable
-private fun AddSessionFab(
-    onAddSession: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun AddSessionFab(onAddSession: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = onAddSession,
         backgroundColor = colorResource(id = R.color.button_primary),

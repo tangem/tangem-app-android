@@ -54,7 +54,7 @@ sealed class Token(
 
     object ShowWalletAddress : Token(
         category = "Token",
-        event = "Button - Show the Wallet Address"
+        event = "Button - Show the Wallet Address",
     )
 
     sealed class Receive(

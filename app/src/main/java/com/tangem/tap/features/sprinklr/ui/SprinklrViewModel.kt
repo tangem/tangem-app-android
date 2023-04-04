@@ -52,9 +52,11 @@ internal class SprinklrViewModel : ViewModel(), StoreSubscriber<SprinklrState> {
         return if (isExternalUrl(url)) {
             store.dispatchOnMain(NavigationAction.OpenUrl(url))
             this
-        } else when (this) {
-            is WebContent.Url -> copy(url = url)
-            else -> WebContent.Url(url)
+        } else {
+            when (this) {
+                is WebContent.Url -> copy(url = url)
+                else -> WebContent.Url(url)
+            }
         }
     }
 

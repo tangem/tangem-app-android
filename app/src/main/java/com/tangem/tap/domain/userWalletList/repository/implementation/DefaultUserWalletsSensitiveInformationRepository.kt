@@ -148,10 +148,7 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         }
     }
 
-    private suspend fun ByteArray.getIvAndDecrypt(
-        userWalletId: String,
-        encryptionKey: ByteArray,
-    ): ByteArray? {
+    private suspend fun ByteArray.getIvAndDecrypt(userWalletId: String, encryptionKey: ByteArray): ByteArray? {
         return withContext(Dispatchers.Default) {
             val iv = secureStorage.get(StorageKey.SensitiveInformationIv(userWalletId).name)
                 ?: error("IV not found")

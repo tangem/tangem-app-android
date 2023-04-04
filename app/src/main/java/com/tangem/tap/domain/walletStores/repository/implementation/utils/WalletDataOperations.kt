@@ -14,17 +14,13 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import java.math.BigDecimal
 
-internal fun WalletDataModel.updateWithFiatRate(
-    fiatRate: BigDecimal?,
-): WalletDataModel {
+internal fun WalletDataModel.updateWithFiatRate(fiatRate: BigDecimal?): WalletDataModel {
     return this.copy(
         fiatRate = fiatRate,
     )
 }
 
-internal fun List<WalletDataModel>.updateWithFiatRates(
-    fiatRates: Map<String, Double>,
-): List<WalletDataModel> {
+internal fun List<WalletDataModel>.updateWithFiatRates(fiatRates: Map<String, Double>): List<WalletDataModel> {
     return this.map { walletData ->
         val rate = fiatRates[walletData.currency.coinId]?.toBigDecimal()
         walletData.updateWithFiatRate(rate)
@@ -40,9 +36,7 @@ internal fun WalletDataModel.updateWithTxHistory(wallet: Wallet): WalletDataMode
     )
 }
 
-internal fun List<WalletDataModel>.updateWithTxHistories(
-    wallet: Wallet,
-): List<WalletDataModel> {
+internal fun List<WalletDataModel>.updateWithTxHistories(wallet: Wallet): List<WalletDataModel> {
     return this.map { walletData ->
         walletData.updateWithTxHistory(wallet)
     }
@@ -114,10 +108,7 @@ internal fun List<WalletDataModel>.updateWithDemoAmounts(wallet: Wallet): List<W
     }
 }
 
-internal fun WalletDataModel.updateWithError(
-    wallet: Wallet,
-    error: TangemError,
-): WalletDataModel {
+internal fun WalletDataModel.updateWithError(wallet: Wallet, error: TangemError): WalletDataModel {
     return this.copy(
         status = when (error) {
             is BlockchainSdkError.AccountNotFound -> {
@@ -141,18 +132,13 @@ internal fun WalletDataModel.updateWithError(
     )
 }
 
-internal fun List<WalletDataModel>.updateWithError(
-    wallet: Wallet,
-    error: TangemError,
-): List<WalletDataModel> {
+internal fun List<WalletDataModel>.updateWithError(wallet: Wallet, error: TangemError): List<WalletDataModel> {
     return this.map { walletData ->
         walletData.updateWithError(wallet, error)
     }
 }
 
-internal fun WalletDataModel.updateWithSelf(
-    newWalletData: WalletDataModel,
-): WalletDataModel {
+internal fun WalletDataModel.updateWithSelf(newWalletData: WalletDataModel): WalletDataModel {
     val oldWalletData = this
     val oldStatus = oldWalletData.status
     return oldWalletData.copy(
@@ -191,9 +177,7 @@ internal fun List<WalletDataModel>.updateWithUnreachable(): List<WalletDataModel
     }
 }
 
-internal fun List<WalletDataModel>.updateWithSelf(
-    newWalletsData: List<WalletDataModel>,
-): List<WalletDataModel> {
+internal fun List<WalletDataModel>.updateWithSelf(newWalletsData: List<WalletDataModel>): List<WalletDataModel> {
     val oldWalletsData = this
     val updatedWalletsData = arrayListOf<WalletDataModel>()
 

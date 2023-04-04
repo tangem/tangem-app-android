@@ -305,11 +305,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return allowance.error == DataError.NoError && allowance.dataModel != ZERO_BALANCE
     }
 
-    private fun createEmptyAmountState(
-        networkId: String,
-        fromToken: Currency,
-        toToken: Currency,
-    ): SwapState {
+    private fun createEmptyAmountState(networkId: String, fromToken: Currency, toToken: Currency): SwapState {
         val appCurrency = userWalletManager.getUserAppCurrency()
         val fromTokenBalance = cache.getBalanceForToken(networkId, derivationPath, fromToken.symbol)
         val toTokenBalance = cache.getBalanceForToken(networkId, derivationPath, toToken.symbol)
@@ -372,10 +368,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun getFormattedFiatFee(
-        networkId: String,
-        fee: BigDecimal,
-    ): String {
+    private suspend fun getFormattedFiatFee(networkId: String, fee: BigDecimal): String {
         val appCurrency = userWalletManager.getUserAppCurrency()
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
         val rates = repository.getRates(appCurrency.code, listOf(nativeToken.id))

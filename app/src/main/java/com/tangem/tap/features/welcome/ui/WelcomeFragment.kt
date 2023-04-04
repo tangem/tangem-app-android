@@ -45,10 +45,7 @@ internal class WelcomeFragment : ComposeFragment<WelcomeScreenState>() {
     }
 
     @Composable
-    override fun ScreenContent(
-        state: WelcomeScreenState,
-        modifier: Modifier,
-    ) {
+    override fun ScreenContent(state: WelcomeScreenState, modifier: Modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val warning by rememberUpdatedState(newValue = state.warning)

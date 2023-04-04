@@ -106,9 +106,7 @@ class WarningsMiddleware {
         }
     }
 
-    private fun checkIfWarningNeeded(
-        scanResponse: ScanResponse,
-    ): WarningMessage? {
+    private fun checkIfWarningNeeded(scanResponse: ScanResponse): WarningMessage? {
         if (scanResponse.cardTypesResolver.isTangemTwins() || scanResponse.isDemoCard()) return null
 
         if (scanResponse.cardTypesResolver.isMultiwalletAllowed()) {

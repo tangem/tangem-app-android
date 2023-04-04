@@ -19,7 +19,7 @@ fun HangingOverKeyboardView(
     modifier: Modifier = Modifier,
     keyboardState: State<Keyboard>,
     spaceBetweenKeyboard: Dp = 0.dp,
-    content: @Composable (BoxScope.() -> Unit)
+    content: @Composable (BoxScope.() -> Unit),
 ) {
     val padding = remember(keyboardState) {
         when (val state = keyboardState.value) {

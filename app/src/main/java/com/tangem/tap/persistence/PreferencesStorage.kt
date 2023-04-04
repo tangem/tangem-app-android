@@ -158,11 +158,9 @@ class AppRatingLaunchObserver(
         editor.apply()
     }
 
-    private fun userWasInteractWithRating(): Boolean =
-        preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
+    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
 
-    private fun getCounterOfNextShowing(): Int =
-        preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
 
     companion object {
         private const val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"

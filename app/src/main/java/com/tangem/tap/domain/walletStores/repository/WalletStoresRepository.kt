@@ -22,10 +22,7 @@ interface WalletStoresRepository {
 
     suspend fun clear(): CompletionResult<Unit>
 
-    suspend fun storeOrUpdate(
-        userWalletId: UserWalletId,
-        walletStore: WalletStoreModel,
-    ): CompletionResult<Unit>
+    suspend fun storeOrUpdate(userWalletId: UserWalletId, walletStore: WalletStoreModel): CompletionResult<Unit>
 
     companion object
 }

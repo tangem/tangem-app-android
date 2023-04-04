@@ -10,11 +10,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 
 object ChooseNetworkDialog {
-    fun create(
-        session: WalletConnectSession,
-        networks: List<Blockchain>,
-        context: Context,
-    ): AlertDialog {
+    fun create(session: WalletConnectSession, networks: List<Blockchain>, context: Context): AlertDialog {
         return AlertDialog.Builder(context)
             .setTitle(context.getString(R.string.wallet_connect_select_network))
             .setNegativeButton(context.getString(R.string.common_cancel)) { _, _ ->

@@ -24,7 +24,7 @@ enum class IconColorType(val lightColor: Color, val darkColor: Color) {
     INACTIVE(lightColor = Light4, darkColor = Dark4),
     ACCENT(lightColor = Meadow, darkColor = Meadow),
     WARNING(lightColor = Amaranth, darkColor = Amaranth),
-    ATTENTION(lightColor = Tangerine, darkColor = Tangerine)
+    ATTENTION(lightColor = Tangerine, darkColor = Tangerine),
 }
 
 @Composable

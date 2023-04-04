@@ -15,10 +15,7 @@ import com.tangem.wallet.R
  * Created by Anton Zhilenkov on 08/06/2022.
  */
 @Composable
-fun FloatingCardsContent(
-    isPaused: Boolean,
-    stepDuration: Int,
-) {
+fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int) {
     val imageBitmap = asImageBitmap(R.drawable.card_placeholder_wallet)
     val cards = listOf(
         FloatingCard.first(),
@@ -50,12 +47,7 @@ private object FloatingCard {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun Item(
-        isPaused: Boolean,
-        stepDuration: Int,
-        imageBitmap: ImageBitmap,
-        cardValues: CardValues,
-    ) {
+    fun Item(isPaused: Boolean, stepDuration: Int, imageBitmap: ImageBitmap, cardValues: CardValues) {
         Image(
             bitmap = imageBitmap,
             contentDescription = "Floating Tangem card",
