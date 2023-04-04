@@ -42,8 +42,10 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
+import com.tangem.utils.coroutines.ifActive
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -69,6 +71,12 @@ class WalletMiddleware {
 
     private val networkConnectionManager: NetworkConnectionManager
         get() = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
+
+    private var updateWalletStoresJob: Job? = null
+        set(value) {
+            field?.cancel()
+            field = value
+        }
 
     val walletMiddleware: Middleware<AppState> = { _, state ->
         { next ->
@@ -176,11 +184,14 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
-                store.state.globalState.topUpController?.walletStoresChanged(action.walletStores)
-                updateWalletStores(action.walletStores, walletState)
-                fetchTotalFiatBalance(action.walletStores)
-                findMissedDerivations(action.walletStores)
-                tryToShowAppRatingWarning(action.walletStores)
+                // Cancel update job when new wallet stores received
+                updateWalletStoresJob = scope.launch(Dispatchers.Default) {
+                    ifActive { updateWalletStores(action.walletStores, walletState) }
+                    ifActive { fetchTotalFiatBalance(action.walletStores) }
+                    ifActive { findMissedDerivations(action.walletStores) }
+                    ifActive { tryToShowAppRatingWarning(action.walletStores) }
+                    ifActive { store.state.globalState.topUpController?.walletStoresChanged(action.walletStores) }
+                }
             }
             is WalletAction.TotalFiatBalanceChanged -> Unit
             is WalletAction.PopBackToInitialScreen -> {
@@ -197,55 +208,47 @@ class WalletMiddleware {
     }
 
     private fun updateWalletStores(walletsStores: List<WalletStoreModel>, state: WalletState) {
-        scope.launch(Dispatchers.Default) {
-            val reduxWalletStores = walletsStores.mapToReduxModels()
-            if (!state.isMultiwalletAllowed) {
-                findSelectedCurrency(
-                    walletsStores = reduxWalletStores,
-                    currentSelectedCurrency = null,
-                    isMultiWalletAllowed = false,
-                )?.let {
-                    store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
-                }
+        val reduxWalletStores = walletsStores.mapToReduxModels()
+        if (!state.isMultiwalletAllowed) {
+            findSelectedCurrency(
+                walletsStores = reduxWalletStores,
+                currentSelectedCurrency = null,
+                isMultiWalletAllowed = false,
+            )?.let {
+                store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
             }
-            store.dispatchOnMain(
-                WalletAction.WalletStoresChanged.UpdateWalletStores(
-                    reduxWalletStores = reduxWalletStores,
-                ),
-            )
         }
+        store.dispatchOnMain(
+            WalletAction.WalletStoresChanged.UpdateWalletStores(
+                reduxWalletStores = reduxWalletStores,
+            ),
+        )
     }
 
-    private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>) {
-        scope.launch(Dispatchers.Default) {
-            val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)?.mapToReduxModel()
+    private suspend fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>) {
+        val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)?.mapToReduxModel()
 
-            if (totalFiatBalance != null) {
-                store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
-            }
+        if (totalFiatBalance != null) {
+            store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
         }
     }
 
     private fun findMissedDerivations(wallStores: List<WalletStoreModel>) {
-        scope.launch(Dispatchers.Default) {
-            val missedDerivations = wallStores
-                .filter { store ->
-                    store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
-                }
-                .map(WalletStoreModel::blockchainNetwork)
+        val missedDerivations = wallStores
+            .filter { store ->
+                store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
+            }
+            .map(WalletStoreModel::blockchainNetwork)
 
-            store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(missedDerivations))
-        }
+        store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(missedDerivations))
     }
 
     private fun tryToShowAppRatingWarning(walletStores: List<WalletStoreModel>) {
-        scope.launch(Dispatchers.Default) {
-            warningsMiddleware.tryToShowAppRatingWarning(
-                hasNonZeroWallets = walletStores
-                    .flatMap { it.walletsData }
-                    .any { it.status.amount.isGreaterThan(BigDecimal.ZERO) },
-            )
-        }
+        warningsMiddleware.tryToShowAppRatingWarning(
+            hasNonZeroWallets = walletStores
+                .flatMap { it.walletsData }
+                .any { it.status.amount.isGreaterThan(BigDecimal.ZERO) },
+        )
     }
 
     private fun showSaveWalletIfNeeded() {
