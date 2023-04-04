@@ -1,65 +1,35 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
-}
-
-android {
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-        vectorDrawables {
-            useSupportLibrary = true
-        }
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    id("configuration")
 }
 
 dependencies {
     /** AndroidX */
-    implementation(AndroidX.activityCompose)
+    implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(Compose.material)
-    implementation(Compose.ui)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.material)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.navigation)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Core modules */
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:ui"))
+
+    /** Feature Apis */
+    implementation(project(":features:tester:api"))
+
+    /** Other modules */
+    implementation(project(":libs:crypto"))
 }
