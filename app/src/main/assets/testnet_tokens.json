@@ -149,6 +149,17 @@
             ]
         },
         {
+            "id": "the-open-network",
+            "symbol": "TON",
+            "name": "Toncoin",
+            "networks":
+            [
+                {
+                    "networkId": "the-open-network/test"
+                }
+            ]
+        },
+        {
             "id" : "Tangem Coin A-TCA",
             "symbol" : "TCA",
             "name" : "Tangem Coin A",

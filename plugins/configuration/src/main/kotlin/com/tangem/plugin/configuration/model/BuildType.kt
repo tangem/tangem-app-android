@@ -1,0 +1,93 @@
+package com.tangem.plugin.configuration.model
+
+internal enum class BuildType(
+    val id: String,
+    val appIdSuffix: String? = null,
+    val versionSuffix: String? = null,
+    val configFields: List<BuildConfigField>,
+) {
+
+    /**
+     * Build type for developers
+     *
+     * Features:
+     * - Env: dev
+     * - Signing config: debug
+     * - Debuggable
+     * - Logs
+     * - Tester menu
+     * - Test action
+     * - Traffic sniffing
+     * */
+    Debug(
+        id = "debug",
+        appIdSuffix = "debug",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.TestActionEnabled(isEnabled = true),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
+        ),
+    ),
+
+    /**
+     * Build type for QA
+     *
+     * Features:
+     * - Env: dev
+     * - Signing config: debug
+     * - Logs
+     * - Tester menu
+     * - Test action
+     * - Traffic sniffing
+     * */
+    Internal(
+        id = "internal",
+        appIdSuffix = "internal",
+        versionSuffix = "internal",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.TestActionEnabled(isEnabled = true),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
+        ),
+    ),
+
+    /**
+     * Build type for QA and business
+     *
+     * Features:
+     * - Env: prod
+     * - Signing config: debug
+     * - Proguard
+     * */
+    External(
+        id = "external",
+        appIdSuffix = "external",
+        versionSuffix = "external",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "prod"),
+            BuildConfigField.TestActionEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = false),
+            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+        ),
+    ),
+
+    /**
+     * Production ready build type for clients
+     *
+     * Features:
+     * - Env: prod
+     * - Signing config: release
+     * - Proguard
+     * */
+    Release(
+        id = "release",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "prod"),
+            BuildConfigField.TestActionEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = false),
+            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+        ),
+    ),
+}
