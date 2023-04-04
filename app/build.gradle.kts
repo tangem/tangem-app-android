@@ -1,117 +1,20 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    kotlin("kapt")
-    kotlin("plugin.serialization")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
-    id("com.google.dagger.hilt.android")
-}
-
-android {
-    compileSdk = AppConfig.compileSdkVersion
-
-    defaultConfig {
-        applicationId = AppConfig.packageName
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-
-        versionCode = if (project.hasProperty("versionCode")) {
-            (project.property("versionCode") as String).toInt()
-        } else {
-            AppConfig.versionCode
-        }
-
-        versionName = if (project.hasProperty("versionName")) {
-            project.property("versionName") as String
-        } else {
-            AppConfig.versionName
-        }
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildFeatures {
-        compose = true
-        viewBinding = true
-    }
-
-    buildTypes {
-        release {
-            isDebuggable = false
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("prod"),
-                    Field.TestActionEnabled(false),
-                    Field.LogEnabled(false),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-
-        debug {
-            isDebuggable = true
-            isMinifyEnabled = false
-            applicationIdSuffix = ".dev"
-
-            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
-                // disable mapping file uploads (default=true if minifying)
-                mappingFileUploadEnabled = false
-            }
-
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("dev"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-
-        create("debug_beta") {
-            initWith(getByName("release"))
-            versionNameSuffix = "-beta"
-            applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("debug")
-        }
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
-
-    packagingOptions {
-        resources.excludes += "lib/x86_64/darwin/libscrypt.dylib"
-        resources.excludes += "lib/x86_64/freebsd/libscrypt.so"
-        resources.excludes += "lib/x86_64/linux/libscrypt.so"
-        resources.excludes += "META-INF/gradle/incremental.annotation.processors"
-    }
-}
-
-repositories {
-    mavenCentral()
-    maven(url = "https://jitpack.io")
+    alias(deps.plugins.android.application)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.google.services)
+    alias(deps.plugins.hilt.android)
+    alias(deps.plugins.firebase.crashlytics)
+    id("configuration")
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+    implementation(files("libs/walletconnect-1.5.6.aar"))
     implementation(project(":domain"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
     implementation(project(":core:ui"))
     implementation(project(":core:datasource"))
@@ -123,91 +26,93 @@ dependencies {
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
+    implementation(project(":features:swap:api"))
     implementation(project(":features:swap:presentation"))
     implementation(project(":features:swap:domain"))
     implementation(project(":features:swap:data"))
+    implementation(project(":features:tester:api"))
+    implementation(project(":features:tester:impl"))
 
     /** AndroidX libraries */
-    implementation(AndroidX.coreKtx)
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.constraintLayout)
-    implementation(AndroidX.browser)
-    implementation(AndroidX.lifecycleRuntimeKtx)
-    implementation(AndroidX.lifecycleCommonJava8)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(AndroidX.lifecycleLiveDataKtx)
-    implementation(AndroidX.activityCompose)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.androidx.constraintLayout)
+    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.browser)
+    implementation(deps.lifecycle.runtime.ktx)
+    implementation(deps.lifecycle.common.java8)
+    implementation(deps.lifecycle.viewModel.ktx)
 
     /** Compose libraries */
-    implementation(Compose.material)
-    implementation(Compose.animation)
-    implementation(Compose.foundation)
-    implementation(Compose.ui)
-    implementation(Compose.uiTooling)
-    implementation(Compose.coil)
+    implementation(deps.compose.material)
+    implementation(deps.compose.animation)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.shimmer)
 
     /** Firebase libraries */
-    implementation(platform(Firebase.bom))
-    implementation(Firebase.firebaseAnalytics)
-    implementation(Firebase.firebaseCrashlytics)
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.firebase.crashlytics)
 
     /** Tangem libraries */
-    implementation(Tangem.blockchain) {
+    implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(Tangem.cardCore)
-    implementation(Tangem.cardAndroid) {
+    implementation(deps.tangem.card.core)
+    implementation(deps.tangem.card.android) {
         exclude(module = "joda-time")
     }
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Other libraries */
-    implementation(Library.materialComponent)
-    implementation(Library.googlePlayCore)
-    implementation(Library.googlePlayCoreKtx)
-    coreLibraryDesugaring(Library.desugarJdkLibs)
-    implementation(Library.timber)
-    implementation(Library.reKotlin)
-    implementation(Library.zxingQrCore)
-    implementation(Library.zxingQrBarcodeScanner)
-    implementation(Library.otaliastudiosCameraView)
-    implementation(Library.coil)
-    implementation(Library.appsflyer)
-    implementation(Library.amplitude)
-    implementation(Library.kotsonGsonExt)
+    implementation(deps.material)
+    implementation(deps.googlePlay.core)
+    implementation(deps.googlePlay.core.ktx)
+    implementation(deps.googlePlay.services.wallet)
+    coreLibraryDesugaring(deps.desugar)
+    implementation(deps.timber)
+    implementation(deps.reKotlin)
+    implementation(deps.zxing.qrCore)
+    implementation(deps.zxing.qrBarcodeScanner)
+    implementation(deps.otaliastudiosCameraView)
+    implementation(deps.coil)
+    implementation(deps.appsflyer)
+    implementation(deps.amplitude)
+    implementation(deps.kotsonGson)
     //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
-    implementation(Library.zendeskChat)
-    implementation(Library.zendeskMessaging)
-    implementation(Library.spongecastleCryptoCore)
-    implementation(Library.lottie)
-    implementation(Library.shopifyBuySdk) {
+    implementation(deps.retrofit)
+    implementation(deps.retrofit.moshi)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.okHttp)
+    implementation(deps.okHttp.logging)
+    implementation(deps.zendesk.chat)
+    implementation(deps.zendesk.messaging)
+    implementation(deps.spongecastle.core)
+    implementation(deps.lottie)
+    implementation(deps.shopify.buy) {
         exclude(group = "com.shopify.graphql.support")
         exclude(module = "joda-time")
     }
-    implementation(Library.accompanistAppCompatTheme)
-    implementation(Library.accompanistSystemUiController)
-    implementation(Library.accompanistWebView)
-    implementation(Library.xmlShimmer)
-    implementation(Library.viewBindingDelegate)
-    implementation(Library.armadillo)
-    implementation(Library.googlePlayServicesWallet)
-    implementation(Library.composeShimmer)
-    implementation(Library.mviCoreWatcher)
-    implementation(Library.kotlinSerialization)
+    implementation(deps.compose.accompanist.appCompatTheme)
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.accompanist.webView)
+    implementation(deps.xmlShimmer)
+    implementation(deps.viewBindingDelegate)
+    implementation(deps.armadillo)
+    implementation(deps.mviCore.watcher)
+    implementation(deps.kotlin.serialization)
 
     /** Testing libraries */
-    testImplementation(Test.junit)
-    testImplementation(Test.truth)
-    androidTestImplementation(Test.junitAndroidExt)
-    androidTestImplementation(Test.espresso)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.truth)
+    androidTestImplementation(deps.test.junit.android)
+    androidTestImplementation(deps.test.espresso)
 }
