@@ -1,5 +1,7 @@
 package com.tangem.tap.features.details.ui.details
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -17,6 +19,9 @@ import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 
 class DetailsViewModel(private val store: Store<AppState>) {
+
+    var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
+        private set
 
     @Suppress("ComplexMethod")
     fun updateState(state: DetailsState): DetailsScreenState {
@@ -39,6 +44,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.AppSettings -> if (state.appSettingsState.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (cardTypesResolver?.isMultiwalletAllowed() != true) it else null
                 SettingsElement.ReferralProgram -> if (cardTypesResolver?.isTangemWallet() == true) it else null
+                SettingsElement.TesterMenu -> if (BuildConfig.TESTER_MENU_ENABLED) it else null
                 else -> it
             }
         }
@@ -95,6 +101,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
             }
             SettingsElement.ReferralProgram -> {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+            }
+            SettingsElement.TesterMenu -> {
+                store.state.daggerGraphState.testerRouter?.startTesterScreen()
             }
         }
     }
