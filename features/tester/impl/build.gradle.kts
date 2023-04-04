@@ -29,4 +29,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(project(":features:tester:api"))
+
+    /** Other modules */
+    implementation(project(":libs:crypto"))
 }
