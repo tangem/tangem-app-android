@@ -139,6 +139,7 @@ class SingleWalletView : WalletView() {
         isExchangeServiceFeatureEnabled: Boolean,
     ) {
         val swapInteractor = this.swapInteractor ?: return
+        val swapFeatureToggleManager = this.swapFeatureToggleManager ?: return
 
         val exchangeManager = store.state.globalState.exchangeManager
         binding?.rowButtons?.apply {
@@ -158,7 +159,7 @@ class SingleWalletView : WalletView() {
         val actions = walletData.getAvailableActions(
             swapInteractor = swapInteractor,
             exchangeManager = exchangeManager,
-            isExchangeFeatureOn = isExchangeServiceFeatureEnabled,
+            swapFeatureToggleManager = swapFeatureToggleManager,
         )
         binding?.rowButtons?.updateButtonsVisibility(
             actions = actions,
