@@ -21,7 +21,6 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.assetReader
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -32,6 +31,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -85,7 +85,7 @@ class TokensMiddleware {
         val loadCoinsService = LoadAvailableCoinsService(
             tangemTechApi = store.state.domainNetworks.tangemTechService.api,
             dispatchers = AppCoroutineDispatcherProvider(),
-            assetReader = assetReader,
+            assetReader = store.state.daggerGraphState.get(DaggerGraphState::assetReader),
         )
 
         scope.launch {
@@ -264,14 +264,10 @@ class TokensMiddleware {
         val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
         if (toDerive.isEmpty()) return null
 
-        return DerivationData(
-            derivations = mapKeyOfWalletPublicKey to toDerive,
-        )
+        return DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
     }
 
-    private class DerivationData(
-        val derivations: Pair<ByteArrayKey, List<DerivationPath>>,
-    )
+    private class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     private fun submitAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
