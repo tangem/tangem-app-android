@@ -33,6 +33,7 @@ import com.tangem.tap.features.send.redux.states.TransactionExtraError
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.dialogs.KaspaWarningDialog
 import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
@@ -121,6 +122,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             is SendAction.Dialog.TezosWarningDialog -> {
                 if (dialog == null) {
                     dialog = TezosWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.KaspaWarningDialog -> {
+                if (dialog == null) {
+                    dialog = KaspaWarningDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
                 }
             }
