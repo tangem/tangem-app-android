@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.data.ReferralRepositoryImpl
 import com.tangem.feature.referral.domain.ReferralRepository
@@ -21,11 +22,13 @@ class ReferralRepositoryModule {
         tangemTechApi: TangemTechApi,
         referralConverter: ReferralConverter,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        demoModeDatasource: DemoModeDatasource,
     ): ReferralRepository {
         return ReferralRepositoryImpl(
             referralApi = tangemTechApi,
             referralConverter = referralConverter,
             coroutineDispatcher = coroutineDispatcherProvider,
+            demoModeDatasource = demoModeDatasource,
         )
     }
 }

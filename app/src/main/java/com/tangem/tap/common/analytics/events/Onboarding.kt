@@ -71,16 +71,16 @@ sealed class Onboarding(
     class ButtonSetPinCode : Onboarding("Onboarding", "Button - Set PIN Code")
     class CardConnectionScreenOpened : Onboarding("Onboarding", "Card Connection Screen Opened")
     class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
-    class PinCodeSet : Onboarding("Onboarding", "PIN code set")
+    class PinCodeSet : Onboarding("Onboarding", "PIN Code Set")
 
     class KYCScreenOpened : Onboarding("Onboarding", "KYC screen opened")
-    class KYCStarted : Onboarding("Onboarding", "KYC started")
-    class KYCInProgress : Onboarding("Onboarding", "KYC in progress")
-    class KYCRejected : Onboarding("Onboarding", "KYC rejected")
+    class KYCStarted : Onboarding("Onboarding", "KYC Started")
+    class KYCInProgress : Onboarding("Onboarding", "KYC In Progress")
+    class KYCRejected : Onboarding("Onboarding", "KYC Rejected")
 
-    class ClaimScreenOpened : Onboarding("Onboarding", "Claim screen opened")
+    class ClaimScreenOpened : Onboarding("Onboarding", "Claim Screen Opened")
     class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
-    class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim was successfully")
+    class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim Was Successfully")
 
     class ButtonChat : Onboarding("Onboarding", "Button - Chat")
 
