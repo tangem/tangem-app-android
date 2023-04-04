@@ -1,39 +1,76 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        maven(url = "https://maven.fabric.io/public")
-    }
-
-    dependencies {
-        classpath(ClasspathDependency.AndroidGradlePlugin)
-        classpath(ClasspathDependency.KotlinGradlePlugin)
-        classpath(ClasspathDependency.AndroidMavenGradlePlugin)
-        classpath(ClasspathDependency.GoogleServices)
-        classpath(ClasspathDependency.GoogleFirebaseCrashlytics)
-    }
-}
-
 plugins {
-    id("com.google.dagger.hilt.android") version "2.44" apply false
-    kotlin("plugin.serialization") version Versions.kotlin apply false
+    alias(deps.plugins.kotlin.android) apply false
+    alias(deps.plugins.kotlin.jvm) apply false
+    alias(deps.plugins.kotlin.serialization) apply false
+    alias(deps.plugins.kotlin.kapt) apply false
+    alias(deps.plugins.android.application) apply false
+    alias(deps.plugins.android.library) apply false
+    alias(deps.plugins.hilt.android) apply false
+    alias(deps.plugins.google.services) apply false
+    alias(deps.plugins.firebase.crashlytics) apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        jcenter() // unable to replace with mavenCentral() due to rekotlin and com.otaliastudios:cameraview
-        mavenLocal()
-        maven("https://nexus.tangem-tech.com/repository/maven-releases/")
-        maven("https://jitpack.io")
-        maven("https://zendesk.jfrog.io/zendesk/repo")
+val clean by tasks.registering {
+    delete(rootProject.buildDir)
+}
+
+interface Injected {
+    @get:Inject
+    val fs: FileSystemOperations
+}
+
+val assembleInternalQA by tasks.registering {
+    group = "build"
+    description = "Builds internal APK to 'build/outputs' directory"
+
+    val appOutputApkDir = "$projectDir/app/build/outputs/apk/internal"
+    val rootOutputApkDir = "$buildDir/outputs"
+    val injected = objects.newInstance<Injected>()
+
+    dependsOn(":app:assembleInternal")
+
+    doFirst {
+        injected.fs.delete {
+            delete(appOutputApkDir)
+            delete("$rootOutputApkDir/app-internal.apk")
+        }
+    }
+    doLast {
+        injected.fs.copy {
+            from("$appOutputApkDir/app-internal.apk")
+            into(rootOutputApkDir)
+        }
     }
 }
 
-subprojects {
-    apply(plugin = "detekt-convention")
+val assembleExternalQA by tasks.registering {
+    group = "build"
+    description = "Builds external APK to 'build/outputs' directory"
+
+    val appOutputApkDir = "$projectDir/app/build/outputs/apk/external"
+    val rootOutputApkDir = "$buildDir/outputs"
+    val injected = objects.newInstance<Injected>()
+
+    dependsOn(":app:assembleExternal")
+
+    doFirst {
+        injected.fs.delete {
+            delete(appOutputApkDir)
+            delete("$rootOutputApkDir/app-external.apk")
+        }
+    }
+    doLast {
+        injected.fs.copy {
+            from("$appOutputApkDir/app-external.apk")
+            into(rootOutputApkDir)
+        }
+    }
 }
 
-tasks.register("clean", Delete::class) {
-    delete(rootProject.buildDir)
+val assembleQA by tasks.registering {
+    group = "build"
+    description = "Builds internal and external APKs to 'build/outputs' directory"
+
+    dependsOn(assembleInternalQA)
+    dependsOn(assembleExternalQA)
 }
