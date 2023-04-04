@@ -4,7 +4,7 @@ package com.tangem.datasource.demo
  * Data provides for demo cards
  *
  */
-interface DemoModeData {
+interface DemoModeDatasource {
 
     val isDemoModeActive: Boolean
 }
