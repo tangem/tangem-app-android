@@ -37,7 +37,7 @@ Build a signed release APK
 [bundle exec] fastlane android build
 ```
 
-Build debug and release APKs
+Build internal and release APKs
 
 ### android beta
 
