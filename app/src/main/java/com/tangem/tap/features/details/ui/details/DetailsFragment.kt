@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
@@ -20,9 +18,6 @@ import org.rekotlin.StoreSubscriber
 class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     private val detailsViewModel = DetailsViewModel(store)
-
-    private var detailsScreenState: MutableState<DetailsScreenState> =
-        mutableStateOf(detailsViewModel.updateState(store.state.detailsState))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +37,7 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
                 isTransitionGroup = true
                 TangemTheme {
                     DetailsScreen(
-                        state = detailsScreenState.value,
+                        state = detailsViewModel.detailsScreenState.value,
                         onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
                     )
                 }
@@ -66,6 +61,6 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        detailsScreenState.value = detailsViewModel.updateState(state)
+        detailsViewModel.detailsScreenState.value = detailsViewModel.updateState(state)
     }
 }

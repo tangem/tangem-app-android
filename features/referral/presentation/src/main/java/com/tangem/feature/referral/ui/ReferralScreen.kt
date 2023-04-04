@@ -59,6 +59,7 @@ import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoContentState
@@ -385,16 +386,8 @@ private fun BoxScope.ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
             },
         )
 
-        val message = if (errorSnackbar.throwable.cause != null) {
-            String.format(
-                format = stringResource(id = R.string.referral_error_failed_to_load_info_with_reason),
-                errorSnackbar.throwable.cause,
-            )
-        } else {
-            stringResource(id = R.string.referral_error_failed_to_load_info)
-        }
         val actionLabel = stringResource(id = R.string.warning_button_ok)
-
+        val message = getMessageForErrorSnackbar(errorSnackbar)
         SideEffect {
             coroutineScope.launch {
                 val result = snackbarHostState.showSnackbar(
@@ -458,6 +451,25 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
                     duration = SnackbarDuration.Short,
                 )
                 isCopyButtonPressed.value = false
+            }
+        }
+    }
+}
+
+@Composable
+private fun getMessageForErrorSnackbar(errorSnackbar: ErrorSnackbar): String {
+    return when (errorSnackbar.throwable) {
+        is DemoModeException -> {
+            stringResource(id = R.string.alert_demo_feature_disabled)
+        }
+        else -> {
+            if (errorSnackbar.throwable.cause != null) {
+                String.format(
+                    format = stringResource(id = R.string.referral_error_failed_to_load_info_with_reason),
+                    errorSnackbar.throwable.cause,
+                )
+            } else {
+                stringResource(id = R.string.referral_error_failed_to_load_info)
             }
         }
     }
