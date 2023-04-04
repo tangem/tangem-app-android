@@ -5,7 +5,7 @@ import androidx.appcompat.app.AlertDialog
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.module.ModuleMessageConverter
-import com.tangem.tangem_sdk_new.extensions.localizedDescription
+import com.tangem.sdk.extensions.localizedDescription
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.global.GlobalAction

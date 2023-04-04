@@ -70,7 +70,7 @@ internal class WalletSelectorMiddleware {
                 addWallet()
             }
             is WalletSelectorAction.SelectWallet -> {
-                selectWallet(action.userWalletId)
+                selectWallet(action.userWalletId, action.sendAnalyticsEvent)
             }
             is WalletSelectorAction.RemoveWallets -> {
                 deleteWallets(action.userWalletsIds, state)
@@ -189,7 +189,7 @@ internal class WalletSelectorMiddleware {
             }
     }
 
-    private fun selectWallet(userWalletId: UserWalletId) {
+    private fun selectWallet(userWalletId: UserWalletId, sendAnalyticsEvent: Boolean) {
         scope.launch {
             userWalletsListManager.get(userWalletId)
                 .flatMap { userWallet ->
@@ -212,7 +212,10 @@ internal class WalletSelectorMiddleware {
                     val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                     if (selectedUserWallet != null) {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                        store.onUserWalletSelected(selectedUserWallet)
+                        store.onUserWalletSelected(
+                            userWallet = selectedUserWallet,
+                            sendAnalyticsEvent = true,
+                        )
                     }
                 }
         }
@@ -336,7 +339,10 @@ internal class WalletSelectorMiddleware {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                     }
                     currentSelectedWalletId != selectedUserWallet.walletId -> {
-                        store.onUserWalletSelected(selectedUserWallet)
+                        store.onUserWalletSelected(
+                            userWallet = selectedUserWallet,
+                            sendAnalyticsEvent = true,
+                        )
                     }
                 }
             }
