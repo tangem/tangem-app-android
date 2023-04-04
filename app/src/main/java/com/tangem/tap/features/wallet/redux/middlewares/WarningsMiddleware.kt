@@ -2,29 +2,26 @@ package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.SignatureCountValidator
-import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.hasSignedHashes
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
@@ -73,13 +70,6 @@ class WarningsMiddleware {
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
-    }
-
-    fun tryToShowAppRatingWarning(wallet: Wallet) {
-        val nonZeroWalletsCount = wallet.amounts.filter {
-            it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
-        }.size
-        tryToShowAppRatingWarning(hasNonZeroWallets = nonZeroWalletsCount > 0)
     }
 
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
@@ -147,7 +137,9 @@ class WarningsMiddleware {
 
     private fun checkHashesCountOnline() {
         if (store.state.walletState.hashesCountVerified != false) return
-        if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) return
+
+        val networkConnectionManager = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
+        if (!networkConnectionManager.isOnline) return
 
         val scanResponse = store.state.globalState.scanResponse
         val card = scanResponse?.card
