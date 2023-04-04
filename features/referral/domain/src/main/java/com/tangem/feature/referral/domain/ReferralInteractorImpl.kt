@@ -16,6 +16,9 @@ internal class ReferralInteractorImpl(
 
     private val tokensForReferral = mutableListOf<TokenData>()
 
+    override val isDemoMode: Boolean
+        get() = repository.isDemoMode
+
     override suspend fun getReferralStatus(): ReferralData {
         val refStatus = repository.getReferralStatus(userWalletManager.getWalletId())
         saveRefTokens(refStatus.tokens)
