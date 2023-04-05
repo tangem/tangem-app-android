@@ -1,0 +1,82 @@
+package com.tangem.tap.features.tokens.presentation.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.features.tokens.presentation.states.AddTokensNetworkItemState
+
+/**
+[REDACTED_AUTHOR]
+ */
+@Composable
+internal fun BriefNetworksList(
+    isCollapsed: Boolean,
+    networks: List<AddTokensNetworkItemState>,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = isCollapsed,
+        modifier = modifier,
+        enter = fadeIn() + expandVertically(),
+        exit = shrinkVertically() + fadeOut(),
+    ) {
+        if (isCollapsed) {
+            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
+                networks.forEach {
+                    key(it.name) {
+                        BriefNetworkItem(model = it)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+[REDACTED_AUTHOR]
+ */
+@Composable
+internal fun BriefNetworkItem(model: AddTokensNetworkItemState) {
+    Box(modifier = Modifier.size(size = TangemTheme.dimens.size20)) {
+        Image(
+            painter = painterResource(id = model.iconResId),
+            contentDescription = null,
+            modifier = Modifier.size(size = TangemTheme.dimens.size20),
+        )
+
+        if (model.isMainNetwork) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(TangemTheme.dimens.size7)
+                    .clip(CircleShape)
+                    .background(TangemColorPalette.White),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size5)
+                        .clip(CircleShape)
+                        .background(TangemColorPalette.Meadow),
+                )
+            }
+        }
+    }
+}
