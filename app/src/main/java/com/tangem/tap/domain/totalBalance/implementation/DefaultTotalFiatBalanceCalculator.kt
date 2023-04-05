@@ -50,7 +50,7 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
                 is WalletDataModel.SameCurrencyTransactionInProgress,
                 is WalletDataModel.TransactionInProgress,
                 is WalletDataModel.NoAccount,
-                -> if (walletData.isCustom || walletData.fiatRate == null) {
+                -> if (walletData.isCustom && walletData.fiatRate == null) {
                     TotalFiatBalanceStatus.Error
                 } else {
                     TotalFiatBalanceStatus.Loaded
@@ -65,7 +65,7 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
 
     private fun Sequence<WalletDataModel>.calculateTotalFiatAmount(): BigDecimal? {
         return this
-            .filterNot { it.isCustom }
+            .filterNot { it.isCustom && it.fiatRate == null }
             .map { walletData ->
                 walletData.fiatRate
                     ?.takeUnless { walletData.status.isErrorStatus }
