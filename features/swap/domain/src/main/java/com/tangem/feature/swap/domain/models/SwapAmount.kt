@@ -6,7 +6,14 @@ import java.math.BigDecimal
 data class SwapAmount(
     val value: BigDecimal,
     val decimals: Int,
-)
+) {
+
+    companion object {
+        fun zeroSwapAmount(): SwapAmount {
+            return SwapAmount(BigDecimal.ZERO, 0)
+        }
+    }
+}
 
 fun SwapAmount.formatToUIRepresentation(): String {
     return value.toFormattedString(decimals = decimals)
