@@ -45,6 +45,7 @@ dependencies {
     implementation(deps.lifecycle.viewModel.ktx)
 
     /** Compose libraries */
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
