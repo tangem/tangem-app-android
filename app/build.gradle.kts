@@ -48,11 +48,14 @@ dependencies {
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.animation)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.compose.shimmer)
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
