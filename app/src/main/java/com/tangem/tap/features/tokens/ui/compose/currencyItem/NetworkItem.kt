@@ -162,10 +162,7 @@ fun NetworkItem(
 
 @Suppress("MagicNumber")
 @Composable
-private fun prepareNetworkNameSpannableText(
-    blockchain: Blockchain,
-    contractAddress: String?,
-): AnnotatedString {
+private fun prepareNetworkNameSpannableText(blockchain: Blockchain, contractAddress: String?): AnnotatedString {
     val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
     val additionalText =
         if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
