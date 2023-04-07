@@ -7,7 +7,9 @@ internal object WelcomeReducer {
     fun reduce(action: Action, state: AppState): WelcomeState {
         return if (action is WelcomeAction) {
             internalReduce(action, state.welcomeState)
-        } else state.welcomeState
+        } else {
+            state.welcomeState
+        }
     }
 
     private fun internalReduce(action: WelcomeAction, state: WelcomeState): WelcomeState {

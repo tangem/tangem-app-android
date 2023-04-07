@@ -59,8 +59,6 @@ class ForegroundActivityObserver : ActivityResultCaller {
     }
 }
 
-fun ForegroundActivityObserver.withForegroundActivity(
-    block: (Activity) -> Unit
-) {
+fun ForegroundActivityObserver.withForegroundActivity(block: (Activity) -> Unit) {
     foregroundActivity?.let { block(it) }
 }
