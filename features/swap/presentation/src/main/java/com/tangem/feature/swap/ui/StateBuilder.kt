@@ -290,11 +290,7 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun createErrorTransaction(
-        uiState: SwapStateHolder,
-        txState: TxState,
-        onAlertClick: () -> Unit,
-    ): SwapStateHolder {
+    fun createErrorTransaction(uiState: SwapStateHolder, txState: TxState, onAlertClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
                 message = null,
