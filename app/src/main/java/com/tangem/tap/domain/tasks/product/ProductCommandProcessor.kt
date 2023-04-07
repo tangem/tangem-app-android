@@ -8,9 +8,5 @@ import com.tangem.domain.common.CardDTO
 [REDACTED_AUTHOR]
  */
 interface ProductCommandProcessor<T> {
-    fun proceed(
-        card: CardDTO,
-        session: CardSession,
-        callback: (result: CompletionResult<T>) -> Unit,
-    )
+    fun proceed(card: CardDTO, session: CardSession, callback: (result: CompletionResult<T>) -> Unit)
 }
