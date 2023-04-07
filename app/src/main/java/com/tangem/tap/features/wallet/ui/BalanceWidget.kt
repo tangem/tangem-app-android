@@ -152,14 +152,13 @@ class BalanceWidget(
         }
     }
 
-    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) =
-        with(binding.lBalance) {
-            groupBaseCurrency.hide()
-            tvCurrency.text = data.currency
-            tvAmount.text = if (showAmount) data.amountFormatted else ""
-            if (showAmount) {
-                tvFiatAmount.show()
-                tvFiatAmount.text = data.fiatAmountFormatted
-            }
+    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) = with(binding.lBalance) {
+        groupBaseCurrency.hide()
+        tvCurrency.text = data.currency
+        tvAmount.text = if (showAmount) data.amountFormatted else ""
+        if (showAmount) {
+            tvFiatAmount.show()
+            tvFiatAmount.text = data.fiatAmountFormatted
         }
+    }
 }

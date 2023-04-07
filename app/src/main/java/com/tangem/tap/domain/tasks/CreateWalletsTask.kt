@@ -28,7 +28,7 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
     private fun createWallet(
         curve: EllipticCurve,
         session: CardSession,
-        callback: (result: CompletionResult<Card>) -> Unit
+        callback: (result: CompletionResult<Card>) -> Unit,
     ) {
         CreateWalletTask(curve).run(session) { result ->
             when (result) {

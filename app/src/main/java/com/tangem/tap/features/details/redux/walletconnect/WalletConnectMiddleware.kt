@@ -285,11 +285,7 @@ class WalletConnectMiddleware {
         }
     }
 
-    private fun handleScanResponse(
-        scanResponse: ScanResponse,
-        session: WalletConnectSession,
-        blockchain: Blockchain,
-    ) {
+    private fun handleScanResponse(scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain) {
         val card = scanResponse.card
         if (!scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
