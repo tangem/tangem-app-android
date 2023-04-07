@@ -121,11 +121,7 @@ fun TransactionCard(
 }
 
 @Composable
-private fun Header(
-    type: TransactionCardType,
-    balance: String,
-    modifier: Modifier = Modifier,
-) {
+private fun Header(type: TransactionCardType, balance: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -383,9 +379,7 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
 }
 
 @Composable
-private fun TokenImageShimmer(
-    modifier: Modifier = Modifier,
-) {
+private fun TokenImageShimmer(modifier: Modifier = Modifier) {
     Box(modifier = modifier.shimmer()) {
         Box(
             modifier = Modifier

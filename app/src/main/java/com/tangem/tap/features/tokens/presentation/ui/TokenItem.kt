@@ -186,11 +186,7 @@ private fun Subtitle(isExpanded: Boolean, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun ChangeNetworksViewButton(
-    isExpanded: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun ChangeNetworksViewButton(isExpanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(onClick = onClick, modifier = modifier.size(size = TangemTheme.dimens.size46)) {
         AnimatedContent(
             targetState = isExpanded,

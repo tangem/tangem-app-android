@@ -24,7 +24,7 @@ enum class TextColorType(val lightColor: Color, val darkColor: Color) {
     ACCENT(lightColor = Meadow, darkColor = Meadow),
     WARNING(lightColor = Amaranth, darkColor = Amaranth),
     ATTENTION(lightColor = Tangerine, darkColor = Tangerine),
-    CONSTANT_WHITE(lightColor = White, darkColor = White)
+    CONSTANT_WHITE(lightColor = White, darkColor = White),
 }
 
 @Composable
