@@ -8,8 +8,7 @@ import android.net.Uri
 import androidx.annotation.AnyRes
 import androidx.core.content.ContextCompat
 
-fun Context.readFile(fileName: String): String =
-    this.openFileInput(fileName).bufferedReader().readText()
+fun Context.readFile(fileName: String): String = this.openFileInput(fileName).bufferedReader().readText()
 
 fun Context.rewriteFile(content: String, fileName: String) {
     this.openFileOutput(fileName, Context.MODE_PRIVATE).use {
