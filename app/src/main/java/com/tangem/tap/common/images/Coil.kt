@@ -10,10 +10,7 @@ import timber.log.Timber
 
 private const val COIL_LOG_TAG = "COIL"
 
-fun createCoilImageLoader(
-    context: Context,
-    logEnabled: Boolean = false,
-): ImageLoader {
+fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageLoader {
     return ImageLoader.Builder(context)
         .apply {
             if (!logEnabled) return@apply
@@ -27,7 +24,7 @@ fun createCoilImageLoader(
                         }
                             .apply {
                                 level = HttpLoggingInterceptor.Level.BODY
-                            }
+                            },
                     )
                     .build()
             }

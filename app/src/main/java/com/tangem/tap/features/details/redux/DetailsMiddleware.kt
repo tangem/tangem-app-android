@@ -275,10 +275,7 @@ class DetailsMiddleware {
                 }
         }
 
-        private suspend fun toggleSaveWallets(
-            scanResponse: ScanResponse?,
-            enable: Boolean,
-        ): CompletionResult<Unit> {
+        private suspend fun toggleSaveWallets(scanResponse: ScanResponse?, enable: Boolean): CompletionResult<Unit> {
             return if (enable) {
                 saveCurrentWallet(scanResponse, enableAccessCodesSaving = false)
             } else {
