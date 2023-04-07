@@ -66,9 +66,7 @@ internal fun SettingsAlertDialog(
 
 // region Preview
 @Composable
-private fun SettingsAlertDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun SettingsAlertDialogSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
