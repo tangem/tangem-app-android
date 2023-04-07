@@ -10,7 +10,9 @@ internal object WalletSelectorReducer {
     fun reduce(action: Action, state: AppState): WalletSelectorState {
         return if (action is WalletSelectorAction) {
             internalReduce(action, state.walletSelectorState)
-        } else state.walletSelectorState
+        } else {
+            state.walletSelectorState
+        }
     }
 
     @Suppress("ComplexMethod")

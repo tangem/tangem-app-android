@@ -70,7 +70,8 @@ import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
 @AndroidEntryPoint
-class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
+class WalletDetailsFragment :
+    Fragment(R.layout.fragment_wallet_details),
     StoreSubscriber<WalletState> {
 
     @Inject
@@ -496,11 +497,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setStatus(getString(mainMessage), R.color.darkGray4, null)
     }
 
-    private fun TextView.setStatus(
-        text: String,
-        @ColorRes color: Int,
-        @DrawableRes drawable: Int?,
-    ) {
+    private fun TextView.setStatus(text: String, @ColorRes color: Int, @DrawableRes drawable: Int?) {
         this.text = text
         setTextColor(getColor(color))
         setCompoundDrawablesWithIntrinsicBounds(drawable ?: 0, 0, 0, 0)
