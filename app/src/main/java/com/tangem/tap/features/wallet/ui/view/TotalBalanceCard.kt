@@ -101,10 +101,7 @@ internal class TotalBalanceCard @JvmOverloads constructor(
 }
 
 @Composable
-private fun TotalBalanceCardContent(
-    state: TotalBalanceCardState,
-    modifier: Modifier = Modifier,
-) {
+private fun TotalBalanceCardContent(state: TotalBalanceCardState, modifier: Modifier = Modifier) {
     TotalBalanceCardScaffold(
         modifier = modifier,
         title = {
@@ -199,9 +196,7 @@ private fun TotalBalanceCardScaffold(
 }
 
 @Composable
-private fun LoadingAmount(
-    modifier: Modifier = Modifier,
-) {
+private fun LoadingAmount(modifier: Modifier = Modifier) {
     Box(modifier = modifier.shimmer()) {
         Box(
             modifier = Modifier
@@ -216,10 +211,7 @@ private fun LoadingAmount(
 }
 
 @Composable
-private fun LoadedAmount(
-    amount: AnnotatedString,
-    modifier: Modifier = Modifier,
-) {
+private fun LoadedAmount(amount: AnnotatedString, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Text(
             text = amount,
@@ -232,10 +224,7 @@ private fun LoadedAmount(
 }
 
 @Composable
-private fun buildAmountString(
-    amount: BigDecimal?,
-    fiatCurrencySymbol: String,
-): AnnotatedString {
+private fun buildAmountString(amount: BigDecimal?, fiatCurrencySymbol: String): AnnotatedString {
     if (amount == null) return AnnotatedString(text = UNKNOWN_AMOUNT_SIGN)
 
     val format = DecimalFormat.getInstance(Locale.getDefault()) as DecimalFormat
@@ -290,9 +279,7 @@ private sealed interface TotalBalanceCardState {
 
 // region Preview
 @Composable
-private fun TotalBalanceCardContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun TotalBalanceCardContentSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
