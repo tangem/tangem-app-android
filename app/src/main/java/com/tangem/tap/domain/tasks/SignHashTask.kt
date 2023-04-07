@@ -23,11 +23,15 @@ class SignHashTask(
 
             when (response) {
                 is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(TangemSignHashResponse(
-                        response.data.signature,
-                        response.data.totalSignedHashes,
-                        session.environment.card?.wallet(publicKey.seedKey)?.remainingSignatures
-                    )))
+                    callback(
+                        CompletionResult.Success(
+                            TangemSignHashResponse(
+                                response.data.signature,
+                                response.data.totalSignedHashes,
+                                session.environment.card?.wallet(publicKey.seedKey)?.remainingSignatures,
+                            ),
+                        ),
+                    )
                 }
                 is CompletionResult.Failure ->
                     callback(CompletionResult.Failure(response.error))

@@ -37,7 +37,7 @@ class WalletDetailWarningMessagesAdapter :
 }
 
 class WalletDetailsWarningMessageVH(
-    val binding: LayoutWarningCardBinding
+    val binding: LayoutWarningCardBinding,
 ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(warning: WalletWarningDescription) {

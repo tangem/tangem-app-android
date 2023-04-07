@@ -82,9 +82,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         ).also { sendScanResultsToAnalytics(it) }
     }
 
-    suspend fun createProductWallet(
-        scanResponse: ScanResponse,
-    ): CompletionResult<CreateProductWalletTaskResponse> {
+    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.cardTypesResolver),
             scanResponse.card.cardId,
@@ -92,9 +90,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
-    private fun sendScanResultsToAnalytics(
-        result: CompletionResult<ScanResponse>,
-    ) {
+    private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
         if (result is CompletionResult.Failure) {
             (result.error as? TangemSdkError)?.let { error ->
                 Analytics.send(Basic.ScanError(error))
@@ -194,14 +190,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         cardId: String? = null,
         initialMessage: Message? = null,
         accessCode: String? = null,
-    ): CompletionResult<T> =
-        withContext(Dispatchers.Main) {
-            suspendCancellableCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
-                    if (continuation.isActive) continuation.resume(result)
-                }
+    ): CompletionResult<T> = withContext(Dispatchers.Main) {
+        suspendCancellableCoroutine { continuation ->
+            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
+                if (continuation.isActive) continuation.resume(result)
             }
         }
+    }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
         runnable: CardSessionRunnable<T>,
@@ -226,9 +221,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return context.getString(stringResId, *formatArgs)
     }
 
-    fun setAccessCodeRequestPolicy(
-        useBiometricsForAccessCode: Boolean,
-    ) {
+    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
         tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
             UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
         } else {

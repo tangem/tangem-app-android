@@ -18,7 +18,8 @@ import java.util.concurrent.Executors
 /**
 * [REDACTED_AUTHOR]
  */
-interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
+interface GlobalAnalyticsEventHandler :
+    AnalyticsEventHandler,
     AnalyticsHandlerHolder,
     AnalyticsFilterHolder,
     ParamsInterceptorHolder

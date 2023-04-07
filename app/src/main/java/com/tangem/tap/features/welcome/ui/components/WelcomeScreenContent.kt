@@ -91,9 +91,7 @@ internal fun WelcomeScreenContent(
 
 // region Preview
 @Composable
-private fun WelcomeScreenContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun WelcomeScreenContentSample(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),

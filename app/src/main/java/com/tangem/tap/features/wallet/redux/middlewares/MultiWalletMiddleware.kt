@@ -30,10 +30,7 @@ import timber.log.Timber
 
 class MultiWalletMiddleware {
     @Suppress("LongMethod", "ComplexMethod")
-    fun handle(
-        action: WalletAction.MultiWallet,
-        walletState: WalletState?,
-    ) {
+    fun handle(action: WalletAction.MultiWallet, walletState: WalletState?) {
         when (action) {
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.currency != null) {
@@ -105,29 +102,27 @@ class MultiWalletMiddleware {
         }
     }
 
-    private fun scanAndUpdateCard(
-        selectedUserWallet: UserWallet,
-        state: WalletState?,
-    ) = scope.launch(Dispatchers.Default) {
-        tangemSdkManager.scanProduct(
-            cardId = selectedUserWallet.cardId,
-            userTokensRepository = userTokensRepository,
-            additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
-            allowsRequestAccessCodeFromRepository = true,
-        )
-            .flatMap { scanResponse ->
-                userWalletsListManager.update(
-                    userWalletId = selectedUserWallet.walletId,
-                    update = { userWallet ->
-                        userWallet.copy(
-                            scanResponse = scanResponse,
-                        )
-                    },
-                )
-            }
-            .doOnSuccess { updatedUserWallet ->
-                store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
-                store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
-            }
-    }
+    private fun scanAndUpdateCard(selectedUserWallet: UserWallet, state: WalletState?) =
+        scope.launch(Dispatchers.Default) {
+            tangemSdkManager.scanProduct(
+                cardId = selectedUserWallet.cardId,
+                userTokensRepository = userTokensRepository,
+                additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
+                allowsRequestAccessCodeFromRepository = true,
+            )
+                .flatMap { scanResponse ->
+                    userWalletsListManager.update(
+                        userWalletId = selectedUserWallet.walletId,
+                        update = { userWallet ->
+                            userWallet.copy(
+                                scanResponse = scanResponse,
+                            )
+                        },
+                    )
+                }
+                .doOnSuccess { updatedUserWallet ->
+                    store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                    store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
+                }
+        }
 }

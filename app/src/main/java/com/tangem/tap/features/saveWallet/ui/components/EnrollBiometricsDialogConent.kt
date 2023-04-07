@@ -30,9 +30,7 @@ fun EnrollBiometricsDialogContent(dialog: EnrollBiometricsDialog) {
 
 // region Preview
 @Composable
-private fun EnrollBiometricDialogContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun EnrollBiometricDialogContentSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),

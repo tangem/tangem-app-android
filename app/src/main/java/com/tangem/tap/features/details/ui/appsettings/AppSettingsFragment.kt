@@ -30,11 +30,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         viewModel.checkBiometricsStatus()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true

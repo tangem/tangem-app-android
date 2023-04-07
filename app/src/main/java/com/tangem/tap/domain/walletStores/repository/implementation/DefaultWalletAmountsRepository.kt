@@ -160,21 +160,19 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend fun fetchAmountsForUserWallets(
-        userWallets: List<UserWallet>,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        userWallets.map { async { fetchAmountsForUserWallet(it) } }.awaitAll().fold()
-    }
+    private suspend fun fetchAmountsForUserWallets(userWallets: List<UserWallet>): CompletionResult<Unit> =
+        withContext(Dispatchers.Default) {
+            userWallets.map { async { fetchAmountsForUserWallet(it) } }.awaitAll().fold()
+        }
 
-    private suspend fun fetchAmountsForUserWallet(
-        userWallet: UserWallet,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        val userWalletId = userWallet.walletId
-        val scanResponse = userWallet.scanResponse
-        val walletStores = getWalletStores(listOf(userWallet))
+    private suspend fun fetchAmountsForUserWallet(userWallet: UserWallet): CompletionResult<Unit> =
+        withContext(Dispatchers.Default) {
+            val userWalletId = userWallet.walletId
+            val scanResponse = userWallet.scanResponse
+            val walletStores = getWalletStores(listOf(userWallet))
 
-        fetchAmountForWalletStores(userWalletId, scanResponse, walletStores)
-    }
+            fetchAmountForWalletStores(userWalletId, scanResponse, walletStores)
+        }
 
     private suspend fun fetchAmountForWalletStores(
         userWalletId: UserWalletId,
@@ -286,7 +284,9 @@ internal class DefaultWalletAmountsRepository(
                             rent = rentProvider.rentAmount(),
                             exemptionAmount = rentExempt,
                         )
-                    } else null,
+                    } else {
+                        null
+                    },
                 )
             }
             is Failure -> Unit
@@ -295,39 +295,36 @@ internal class DefaultWalletAmountsRepository(
         return CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWalletStoreWithError(
-        walletStore: WalletStoreModel,
-        wallet: Wallet,
-        error: TangemError,
-    ) = withContext(Dispatchers.Default) {
-        Timber.e(
-            error,
-            """
+    private suspend fun updateWalletStoreWithError(walletStore: WalletStoreModel, wallet: Wallet, error: TangemError) =
+        withContext(Dispatchers.Default) {
+            Timber.e(
+                error,
+                """
                 Unable to fetch amounts
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
                 |- Derivation path: ${walletStore.derivationPath?.rawPath}
-            """.trimIndent(),
-        )
+                """.trimIndent(),
+            )
 
-        if (error is BlockchainSdkError) {
-            WalletStoresStorage.update { prevState ->
-                prevState.replaceWalletStore(
-                    walletStoreToUpdate = walletStore,
-                    update = {
-                        it.updateWithError(
-                            wallet = wallet,
-                            error = error,
-                        )
-                    },
-                )
+            if (error is BlockchainSdkError) {
+                WalletStoresStorage.update { prevState ->
+                    prevState.replaceWalletStore(
+                        walletStoreToUpdate = walletStore,
+                        update = {
+                            it.updateWithError(
+                                wallet = wallet,
+                                error = error,
+                            )
+                        },
+                    )
+                }
+
+                CompletionResult.Success(Unit)
+            } else {
+                CompletionResult.Failure(error)
             }
-
-            CompletionResult.Success(Unit)
-        } else {
-            CompletionResult.Failure(error)
         }
-    }
 
     private suspend fun updateWalletStoreWithAmounts(
         walletStore: WalletStoreModel,
@@ -359,53 +356,51 @@ internal class DefaultWalletAmountsRepository(
         CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWalletStoreWithMissedDerivation(
-        walletStore: WalletStoreModel,
-    ) = withContext(Dispatchers.Default) {
-        Timber.e(
-            """
+    private suspend fun updateWalletStoreWithMissedDerivation(walletStore: WalletStoreModel) =
+        withContext(Dispatchers.Default) {
+            Timber.e(
+                """
                 Missed derivation
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
                 |- Derivation path: ${walletStore.derivationPath?.rawPath}
-            """.trimIndent(),
-        )
-
-        WalletStoresStorage.update { prevState ->
-            prevState.replaceWalletStore(
-                walletStoreToUpdate = walletStore,
-                update = {
-                    it.updateWithMissedDerivation()
-                },
+                """.trimIndent(),
             )
+
+            WalletStoresStorage.update { prevState ->
+                prevState.replaceWalletStore(
+                    walletStoreToUpdate = walletStore,
+                    update = {
+                        it.updateWithMissedDerivation()
+                    },
+                )
+            }
+
+            CompletionResult.Success(Unit)
         }
 
-        CompletionResult.Success(Unit)
-    }
-
-    private suspend fun updateWalletStoreWithUnreachable(
-        walletStore: WalletStoreModel,
-    ) = withContext(Dispatchers.Default) {
-        Timber.e(
-            """
+    private suspend fun updateWalletStoreWithUnreachable(walletStore: WalletStoreModel) =
+        withContext(Dispatchers.Default) {
+            Timber.e(
+                """
                 Wallet manager is null
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
                 |- Derivation path: ${walletStore.derivationPath?.rawPath}
-            """.trimIndent(),
-        )
-
-        WalletStoresStorage.update { prevState ->
-            prevState.replaceWalletStore(
-                walletStoreToUpdate = walletStore,
-                update = {
-                    it.updateWithUnreachable()
-                },
+                """.trimIndent(),
             )
-        }
 
-        CompletionResult.Success(Unit)
-    }
+            WalletStoresStorage.update { prevState ->
+                prevState.replaceWalletStore(
+                    walletStoreToUpdate = walletStore,
+                    update = {
+                        it.updateWithUnreachable()
+                    },
+                )
+            }
+
+            CompletionResult.Success(Unit)
+        }
 
     private suspend fun updateWalletStoresWithFiatRates(
         walletStores: List<WalletStoreModel>,
@@ -428,48 +423,44 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend fun updateWalletStoreWithRent(
-        walletStore: WalletStoreModel,
-        rent: WalletStoreModel.WalletRent?,
-    ) = withContext(Dispatchers.Default) {
-        Timber.d(
-            """
+    private suspend fun updateWalletStoreWithRent(walletStore: WalletStoreModel, rent: WalletStoreModel.WalletRent?) =
+        withContext(Dispatchers.Default) {
+            Timber.d(
+                """
                 Fetched wallet rent
                 |- User wallet id: ${walletStore.userWalletId}
                 |- Blockchain: ${walletStore.blockchain}
                 |- Derivation path: ${walletStore.derivationPath?.rawPath}
                 |- Rent: $rent
-            """.trimIndent(),
-        )
+                """.trimIndent(),
+            )
 
-        if (rent != walletStore.walletRent) {
-            WalletStoresStorage.update { prevState ->
-                prevState.replaceWalletStore(
-                    walletStoreToUpdate = walletStore,
-                    update = {
-                        it.updateWithRent(rent)
-                    },
-                )
-            }
-        }
-    }
-
-    private suspend fun updateWalletManagerInStorage(
-        userWalletId: UserWalletId,
-        walletManager: WalletManager,
-    ) = withContext(Dispatchers.Default) {
-        WalletManagerStorage.update { prevManagers ->
-            val newManagersForUserWallet = prevManagers[userWalletId].orEmpty().toMutableList().apply {
-                replaceByOrAdd(walletManager) {
-                    it.wallet.blockchain == walletManager.wallet.blockchain
+            if (rent != walletStore.walletRent) {
+                WalletStoresStorage.update { prevState ->
+                    prevState.replaceWalletStore(
+                        walletStoreToUpdate = walletStore,
+                        update = {
+                            it.updateWithRent(rent)
+                        },
+                    )
                 }
             }
+        }
 
-            prevManagers.apply {
-                set(userWalletId, newManagersForUserWallet)
+    private suspend fun updateWalletManagerInStorage(userWalletId: UserWalletId, walletManager: WalletManager) =
+        withContext(Dispatchers.Default) {
+            WalletManagerStorage.update { prevManagers ->
+                val newManagersForUserWallet = prevManagers[userWalletId].orEmpty().toMutableList().apply {
+                    replaceByOrAdd(walletManager) {
+                        it.wallet.blockchain == walletManager.wallet.blockchain
+                    }
+                }
+
+                prevManagers.apply {
+                    set(userWalletId, newManagersForUserWallet)
+                }
             }
         }
-    }
 
     private suspend fun getWalletStores(userWallets: List<UserWallet>): List<WalletStoreModel> {
         return userWallets.map { it.walletId }.flatMap { userWalletId ->

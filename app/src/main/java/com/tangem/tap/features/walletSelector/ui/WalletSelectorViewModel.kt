@@ -189,10 +189,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
         store.unsubscribe(this)
     }
 
-    private fun createWarningDialogIfNeeded(
-        error: TangemError?,
-        currentDialog: DialogModel?,
-    ): DialogModel? {
+    private fun createWarningDialogIfNeeded(error: TangemError?, currentDialog: DialogModel?): DialogModel? {
         return when (error) {
             is UserWalletsListError.BiometricsAuthenticationLockout -> WarningModel.BiometricsLockoutWarning(
                 isPermanent = error.isPermanent,

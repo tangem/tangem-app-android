@@ -5,6 +5,7 @@ import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.config.models.ShopifyShop
 import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
@@ -12,7 +13,6 @@ import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.data.TotalSum
 import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.shopify.ShopifyService
-import com.tangem.datasource.config.models.ShopifyShop
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -106,11 +106,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 //        }
 //    }
 
-    suspend fun handleGooglePayResult(
-        resultCode: Int,
-        data: Intent?,
-        productType: ProductType,
-    ): Result<Unit> {
+    suspend fun handleGooglePayResult(resultCode: Int, data: Intent?, productType: ProductType): Result<Unit> {
         val result = googlePayService.handleResponseFromGooglePay(resultCode, data)
         result.onSuccess {
             val finalizePaymentResult = completeTokenizedPayment(it, productType)

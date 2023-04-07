@@ -20,10 +20,7 @@ import com.tangem.feature.tester.impl.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun TesterActionsScreen(
-    state: TesterActionsContentState,
-    modifier: Modifier = Modifier,
-) {
+internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -48,11 +45,7 @@ internal fun TesterActionsScreen(
 }
 
 @Composable
-private fun TesterActionItem(
-    progress: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun TesterActionItem(progress: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.padding(all = TangemTheme.dimens.spacing16)) {
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
@@ -65,9 +58,7 @@ private fun TesterActionItem(
 
 // region Preview
 @Composable
-private fun TesterActionsScreenSample(
-    modifier: Modifier = Modifier,
-) {
+private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),

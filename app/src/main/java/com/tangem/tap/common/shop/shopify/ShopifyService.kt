@@ -106,10 +106,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         }
     }
 
-    suspend fun createCheckout(
-        checkoutItems: List<CheckoutItem>,
-        checkoutID: ID? = null,
-    ): Result<Checkout> {
+    suspend fun createCheckout(checkoutItems: List<CheckoutItem>, checkoutID: ID? = null): Result<Checkout> {
         val storefrontLineItems: MutableList<CheckoutLineItemInput> = checkoutItems
             .map { CheckoutLineItemInput(it.quantity, it.id) }.toMutableList()
 
@@ -197,10 +194,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         return runCheckoutMutation(query)
     }
 
-    suspend fun completeWithTokenizedPayment(
-        payment: TokenizedPaymentInputV3,
-        checkoutID: ID,
-    ): Result<Checkout> {
+    suspend fun completeWithTokenizedPayment(payment: TokenizedPaymentInputV3, checkoutID: ID): Result<Checkout> {
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutCompleteWithTokenizedPaymentV3(
@@ -247,25 +241,21 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
     private suspend fun queryAsync(
         query: QueryRootQuery,
         retryHandler: RetryHandler<QueryRoot>,
-    ): GraphCallResult<QueryRoot> =
-        withContext(Dispatchers.IO) {
-            suspendCoroutine { continuation ->
-                client.queryGraph(query).enqueue(retryHandler = retryHandler) { result ->
-                    continuation.resume(result)
-                }
+    ): GraphCallResult<QueryRoot> = withContext(Dispatchers.IO) {
+        suspendCoroutine { continuation ->
+            client.queryGraph(query).enqueue(retryHandler = retryHandler) { result ->
+                continuation.resume(result)
             }
         }
+    }
 
-    private suspend fun queryAsync(
-        query: QueryRootQuery,
-    ): GraphCallResult<QueryRoot> =
-        withContext(Dispatchers.IO) {
-            suspendCoroutine { continuation ->
-                client.queryGraph(query).enqueue { result ->
-                    continuation.resume(result)
-                }
+    private suspend fun queryAsync(query: QueryRootQuery): GraphCallResult<QueryRoot> = withContext(Dispatchers.IO) {
+        suspendCoroutine { continuation ->
+            client.queryGraph(query).enqueue { result ->
+                continuation.resume(result)
             }
         }
+    }
 
     private suspend fun mutationQueryAsync(query: MutationQuery): GraphCallResult<Mutation> =
         withContext(Dispatchers.IO) {
