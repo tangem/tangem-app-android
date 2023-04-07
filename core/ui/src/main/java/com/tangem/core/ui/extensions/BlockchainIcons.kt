@@ -33,6 +33,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.img_optimism_22
         "DASH" -> R.drawable.img_dash_22
         "KAS" -> R.drawable.img_kaspa_22
+        "The-Open-Network", "The-Open-Network/test" -> R.drawable.img_ton_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -72,6 +73,7 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         "kusama" -> R.drawable.img_kusama_22
         "dash" -> R.drawable.img_dash_22
         "kaspa" -> R.drawable.img_kaspa_22
+        "ton" -> R.drawable.img_ton_22
         else -> R.drawable.ic_alert_24
     }
 }
