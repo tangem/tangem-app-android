@@ -168,7 +168,9 @@ data class WalletState(
                 state = walletsData.findProgressState(),
                 error = this.error.takeIf { newProgressState == ProgressState.Error },
             )
-        } else this
+        } else {
+            this
+        }
     }
 
     companion object {
