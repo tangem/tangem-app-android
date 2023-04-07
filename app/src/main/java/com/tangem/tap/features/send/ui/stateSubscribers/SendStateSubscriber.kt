@@ -46,8 +46,8 @@ import com.tangem.wallet.R
 /**
  * Created by Anton Zhilenkov on 31/08/2020.
  */
-class SendStateSubscriber(fragment: BaseStoreFragment) :
-    FragmentStateSubscriber<SendState>(fragment) {
+@Suppress("LargeClass")
+class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
 
     private var dialog: Dialog? = null
 

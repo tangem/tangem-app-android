@@ -154,7 +154,7 @@ class TransactionExtrasReducer : SendInternalReducer {
         sendState: SendState,
         infoState: TransactionExtrasState,
     ): SendState {
-        val result = when(action) {
+        val result = when (action) {
             is TonMemo.HandleUserInput -> {
                 val memo = action.data
                 val input = InputViewValue(memo, true)
