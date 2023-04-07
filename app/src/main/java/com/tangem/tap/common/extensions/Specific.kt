@@ -46,9 +46,7 @@ fun BigDecimal.toFormattedCurrencyString(
     return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatRateString(
-    fiatCurrencyName: String,
-): String {
+fun BigDecimal.toFiatRateString(fiatCurrencyName: String): String {
     val value = this
         .setScale(2, RoundingMode.HALF_UP)
         .formatWithSpaces()
@@ -69,10 +67,7 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
-fun BigDecimal.toFormattedFiatValue(
-    fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false,
-): String {
+fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: String, formatWithSpaces: Boolean = false): String {
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
     return " $fiatValue $fiatCurrencyName"
