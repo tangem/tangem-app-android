@@ -46,8 +46,8 @@ import com.tangem.wallet.R
 /**
 [REDACTED_AUTHOR]
  */
-class SendStateSubscriber(fragment: BaseStoreFragment) :
-    FragmentStateSubscriber<SendState>(fragment) {
+@Suppress("LargeClass")
+class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
 
     private var dialog: Dialog? = null
 
@@ -79,6 +79,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             showView(xlmMemoContainer, infoState.xlmMemo)
             showView(xrpDestinationTagContainer, infoState.xrpDestinationTag)
             showView(binanceMemoContainer, infoState.binanceMemo)
+            showView(tonMemoContainer, infoState.tonMemoState)
 
             infoState.xlmMemo?.let {
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
@@ -113,6 +114,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 }
                 if (!it.viewFieldValue.isFromUserInput) {
                     etBinanceMemo.setText(it.viewFieldValue.value)
+                }
+            }
+            infoState.tonMemoState?.let {
+                if (infoState.tonMemoState.error != null) {
+                    tilTonMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
+                } else {
+                    tilBinanceMemo.error = null
+                }
+                if (!it.viewFieldValue.isFromUserInput) {
+                    etTonMemo.setText(it.viewFieldValue.value)
                 }
             }
         }
