@@ -14,10 +14,7 @@ import com.tangem.tap.preferencesStorage
  */
 object OnboardingSaltPayHelper {
 
-    suspend fun isOnboardingCase(
-        scanResponse: ScanResponse,
-        manager: SaltPayActivationManager,
-    ): Result<Boolean> {
+    suspend fun isOnboardingCase(scanResponse: ScanResponse, manager: SaltPayActivationManager): Result<Boolean> {
         return try {
             val updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
 
@@ -37,14 +34,10 @@ object OnboardingSaltPayHelper {
     }
 
     @Suppress("UnusedPrivateMember")
-    fun testProceedToOnboarding(
-        scanResponse: ScanResponse,
-        manager: SaltPayActivationManager,
-    ): Result<Boolean> = Result.Success(true)
+    fun testProceedToOnboarding(scanResponse: ScanResponse, manager: SaltPayActivationManager): Result<Boolean> =
+        Result.Success(true)
 
     @Suppress("UnusedPrivateMember")
-    fun testProceedToMainScreen(
-        scanResponse: ScanResponse,
-        manager: SaltPayActivationManager,
-    ): Result<Boolean> = Result.Success(false)
+    fun testProceedToMainScreen(scanResponse: ScanResponse, manager: SaltPayActivationManager): Result<Boolean> =
+        Result.Success(false)
 }

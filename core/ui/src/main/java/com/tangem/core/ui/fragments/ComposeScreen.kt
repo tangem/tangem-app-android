@@ -40,8 +40,5 @@ internal interface ComposeScreen<ScreenState> {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun ScreenContent(
-        state: ScreenState,
-        modifier: Modifier,
-    )
+    fun ScreenContent(state: ScreenState, modifier: Modifier)
 }
