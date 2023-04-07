@@ -4,6 +4,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.BlockchainSdkError
@@ -170,6 +171,7 @@ private fun sendTransaction(
     transactionExtras.xrpDestinationTag?.tag?.let {
         txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it))
     }
+    transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
 
     scope.launch {
         val updateWalletResult = walletManager.safeUpdate()
