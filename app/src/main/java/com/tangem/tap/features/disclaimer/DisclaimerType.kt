@@ -13,7 +13,8 @@ import java.util.*
 enum class DisclaimerType {
     Tangem,
     SaltPay,
-    Start2Coin;
+    Start2Coin,
+    ;
 
     companion object {
         fun get(cardDTO: CardDTO): DisclaimerType {

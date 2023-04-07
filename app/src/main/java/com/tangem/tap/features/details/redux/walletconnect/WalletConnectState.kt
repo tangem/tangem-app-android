@@ -123,7 +123,7 @@ data class WcTransactionData(
 
 enum class WcTransactionType {
     EthSignTransaction,
-    EthSendTransaction
+    EthSendTransaction,
 }
 
 data class WcPersonalSignData(
@@ -156,5 +156,5 @@ data class TradeData(
     val price: String,
     val quantity: String,
     val amount: String,
-    val symbol: String
+    val symbol: String,
 )
