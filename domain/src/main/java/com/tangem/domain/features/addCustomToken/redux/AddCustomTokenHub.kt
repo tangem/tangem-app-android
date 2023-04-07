@@ -81,11 +81,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     @Suppress("ComplexMethod")
-    override suspend fun handleAction(
-        action: Action,
-        storeState: DomainState,
-        cancel: ValueCallback<Action>,
-    ) {
+    override suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>) {
         if (action !is AddCustomTokenAction) return
 
         when (action) {
