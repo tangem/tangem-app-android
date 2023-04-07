@@ -32,11 +32,7 @@ interface SwapRepository {
      * @param tokenAddress token you want to exchange
      * @param amount number of tokens is allowed. By default infinite
      */
-    suspend fun dataToApprove(
-        networkId: String,
-        tokenAddress: String,
-        amount: String? = null,
-    ): ApproveModel
+    suspend fun dataToApprove(networkId: String, tokenAddress: String, amount: String? = null): ApproveModel
 
     /**
      * Get the number of tokens that the 1inch router is allowed to spend
