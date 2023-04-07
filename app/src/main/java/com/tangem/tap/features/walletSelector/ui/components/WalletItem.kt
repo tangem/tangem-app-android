@@ -84,11 +84,7 @@ internal fun WalletItem(
 }
 
 @Composable
-private fun WalletCardImage(
-    cardImageUrl: String,
-    isChecked: Boolean,
-    isSelected: Boolean,
-) {
+private fun WalletCardImage(cardImageUrl: String, isChecked: Boolean, isSelected: Boolean) {
     Box(
         modifier = Modifier
             .width(TangemTheme.dimens.size62)
@@ -107,7 +103,9 @@ private fun WalletCardImage(
                     color = tintColor,
                     blendMode = BlendMode.SrcOver,
                 )
-            } else null
+            } else {
+                null
+            }
         }
 
         SubcomposeAsyncImage(
@@ -283,9 +281,7 @@ private fun LoadedTokensInfo(
 }
 
 @Composable
-private fun LockedPlaceholder(
-    modifier: Modifier = Modifier,
-) {
+private fun LockedPlaceholder(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .padding(vertical = TangemTheme.dimens.spacing2)
@@ -309,9 +305,7 @@ private fun LockedPlaceholder(
 }
 
 @Composable
-private fun CardImagePlaceholder(
-    modifier: Modifier = Modifier,
-) {
+private fun CardImagePlaceholder(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
         Image(
             modifier = Modifier.matchParentSize(),
@@ -322,9 +316,7 @@ private fun CardImagePlaceholder(
 }
 
 @Composable
-private fun CardImageShimmer(
-    modifier: Modifier = Modifier,
-) {
+private fun CardImageShimmer(modifier: Modifier = Modifier) {
     Box(modifier = modifier.shimmer()) {
         Box(
             modifier = Modifier
@@ -335,9 +327,7 @@ private fun CardImageShimmer(
 }
 
 @Composable
-private fun SelectedWalletBadge(
-    modifier: Modifier = Modifier,
-) {
+private fun SelectedWalletBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size18)
@@ -357,9 +347,7 @@ private fun SelectedWalletBadge(
 }
 
 @Composable
-private fun CheckedWalletMark(
-    modifier: Modifier = Modifier,
-) {
+private fun CheckedWalletMark(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
