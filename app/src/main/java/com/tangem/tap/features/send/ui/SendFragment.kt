@@ -60,7 +60,6 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -172,6 +171,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 info.binanceMemo?.viewFieldValue?.value != it
             }
             .onEach { store.dispatch(TransactionExtrasAction.BinanceMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
+
+        etTonMemo.inputtedTextAsFlow()
+            .debounce(400)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.tonMemoState?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.TonMemo.HandleUserInput(it)) }
             .launchIn(mainScope)
     }
 
@@ -331,7 +339,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 }
 
-@ExperimentalCoroutinesApi
 fun EditText.inputtedTextAsFlow(): Flow<String> = callbackFlow {
     val watcher = addTextChangedListener { editable -> trySend(editable?.toString() ?: "") }
     awaitClose { removeTextChangedListener(watcher) }
