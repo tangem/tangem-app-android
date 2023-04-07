@@ -92,10 +92,7 @@ private fun getDerivationParams(derivationPath: String?, card: CardDTO): Derivat
     }
 }
 
-fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse,
-    currency: Currency,
-): WalletManager? {
+fun WalletManagerFactory.makeWalletManagerForApp(scanResponse: ScanResponse, currency: Currency): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
         blockchain = currency.blockchain,
@@ -112,9 +109,7 @@ fun WalletManagerFactory.makeWalletManagersForApp(
         .mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
 
-fun WalletManagerFactory.makePrimaryWalletManager(
-    scanResponse: ScanResponse,
-): WalletManager? {
+fun WalletManagerFactory.makePrimaryWalletManager(scanResponse: ScanResponse): WalletManager? {
     val blockchain = if (scanResponse.card.isTestCard) {
         scanResponse.cardTypesResolver.getBlockchain().getTestnetVersion() ?: return null
     } else {
