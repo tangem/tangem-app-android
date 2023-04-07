@@ -18,9 +18,7 @@ import com.tangem.core.ui.res.TangemTheme
  * [Show in Figma](https://www.figma.com/file/17JyRbuUEZ42DluaFEuGQk/Atoms?node-id=135%3A25&t=Jo68S6ilyewVU8MV-4)
  * */
 @Composable
-fun Hand(
-    modifier: Modifier = Modifier,
-) {
+fun Hand(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .padding(vertical = TangemTheme.dimens.spacing8)
@@ -41,9 +39,7 @@ fun Hand(
 
 // region Preview
 @Composable
-private fun HandSample(
-    modifier: Modifier = Modifier,
-) {
+private fun HandSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
