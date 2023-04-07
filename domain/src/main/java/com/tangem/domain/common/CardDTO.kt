@@ -267,7 +267,8 @@ data class CardDTO(
     enum class LinkedTerminalStatus {
         Current,
         Other,
-        None;
+        None,
+        ;
 
         companion object {
             internal fun fromSdkStatus(sdkStatus: Card.LinkedTerminalStatus): LinkedTerminalStatus {
