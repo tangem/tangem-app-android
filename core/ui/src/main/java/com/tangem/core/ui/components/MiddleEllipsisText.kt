@@ -153,21 +153,19 @@ private class BoundCounter(
     private var _nextCharWidth: Float? = null
     private var invalidCharsCount = 0
 
-    fun widthWithNextChar(): Float =
-        width + nextCharWidth()
+    fun widthWithNextChar(): Float = width + nextCharWidth()
 
-    private fun nextCharWidth(): Float =
-        _nextCharWidth ?: run {
-            var boundingBox: Rect
-            // invalidCharsCount fixes this bug: https://issuetracker.google.com/issues/197146630
-            invalidCharsCount--
-            do {
-                boundingBox = textLayoutResult
-                    .getBoundingBox(charPosition(string.count() + ++invalidCharsCount))
-            } while (boundingBox.right == 0f)
-            _nextCharWidth = boundingBox.width
-            boundingBox.width
-        }
+    private fun nextCharWidth(): Float = _nextCharWidth ?: run {
+        var boundingBox: Rect
+        // invalidCharsCount fixes this bug: https://issuetracker.google.com/issues/197146630
+        invalidCharsCount--
+        do {
+            boundingBox = textLayoutResult
+                .getBoundingBox(charPosition(string.count() + ++invalidCharsCount))
+        } while (boundingBox.right == 0f)
+        _nextCharWidth = boundingBox.width
+        boundingBox.width
+    }
 
     fun addNextChar() {
         string += text[charPosition(string.count())]

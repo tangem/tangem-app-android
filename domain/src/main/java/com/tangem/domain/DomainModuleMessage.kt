@@ -52,9 +52,11 @@ sealed class AddCustomTokenError(
         object UnsupportedSolanaToken : Warning()
     }
 
-    data class SelectTokeNetworkError(val networkId: String) : AddCustomTokenError(
-        message = "Unknown network [$networkId] should not be included in the network selection dialog.",
-    ), FbConsumeException
+    data class SelectTokeNetworkError(val networkId: String) :
+        AddCustomTokenError(
+            message = "Unknown network [$networkId] should not be included in the network selection dialog.",
+        ),
+        FbConsumeException
 
     data class UnAppropriateInitialization(
         val of: String,
