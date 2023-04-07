@@ -11,15 +11,13 @@ import java.util.*
 class PayIdManager {
 
     @Suppress("MagicNumber")
-    suspend fun verifyPayId(
-        payId: String,
-        blockchain: Blockchain,
-    ): Result<VerifyPayIdResponse> = withContext(Dispatchers.IO) {
-        val splitPayId = payId.split("\$")
-        val user = splitPayId[0]
-        val baseUrl = "https://${splitPayId[1]}/"
-        return@withContext PayIdVerifyService(baseUrl).verifyAddress(user, blockchain.getPayIdNetwork())
-    }
+    suspend fun verifyPayId(payId: String, blockchain: Blockchain): Result<VerifyPayIdResponse> =
+        withContext(Dispatchers.IO) {
+            val splitPayId = payId.split("\$")
+            val user = splitPayId[0]
+            val baseUrl = "https://${splitPayId[1]}/"
+            return@withContext PayIdVerifyService(baseUrl).verifyAddress(user, blockchain.getPayIdNetwork())
+        }
 
     private fun Blockchain.getPayIdNetwork(): String {
         return when (this) {
@@ -30,8 +28,10 @@ class PayIdManager {
     }
 
     companion object {
-        private val payIdRegExp = ("^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9]" +
-            "(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$").toRegex()
+        private val payIdRegExp = (
+            "^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9]" +
+                "(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$"
+            ).toRegex()
 
         val payIdSupported: EnumSet<Blockchain> = EnumSet.of(
             Blockchain.XRP,
