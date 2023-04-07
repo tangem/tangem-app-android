@@ -12,17 +12,12 @@ class SpaceItemDecoration(
 
     private lateinit var space: Space
 
-    override fun getItemOffsets(
-        outRect: Rect,
-        view: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
-    ) {
+    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         if (state.itemCount == 0) return
         if (!::space.isInitialized) {
             space = Space(
                 view.dpToPx(horizontalSpaceDp).toInt(),
-                view.dpToPx(verticalSpaceDp).toInt()
+                view.dpToPx(verticalSpaceDp).toInt(),
             )
         }
 

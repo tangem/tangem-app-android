@@ -266,9 +266,7 @@ private fun EditWalletsBar(
 
 // region Preview
 @Composable
-private fun WalletSelectorScreenContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun WalletSelectorScreenContentSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(color = TangemTheme.colors.background.primary),
@@ -303,9 +301,7 @@ private fun WalletSelectorScreenContentPreview_Dark() {
 }
 
 @Composable
-private fun WalletSelectorScreenContent_EditWallets_Sample(
-    modifier: Modifier = Modifier,
-) {
+private fun WalletSelectorScreenContent_EditWallets_Sample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
