@@ -24,11 +24,7 @@ import com.tangem.core.ui.res.TangemTheme
  * >Figma component</a>
  */
 @Composable
-fun WarningCard(
-    title: String,
-    description: String,
-    icon: @Composable (() -> Unit)? = null,
-) {
+fun WarningCard(title: String, description: String, icon: @Composable (() -> Unit)? = null) {
     WarningCardSurface(
         content = {
             WarningBody(
@@ -128,10 +124,7 @@ private fun WarningBody(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun WarningCardSurface(
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit,
-) {
+private fun WarningCardSurface(onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(TangemTheme.dimens.size12),
         backgroundColor = TangemTheme.colors.background.primary,

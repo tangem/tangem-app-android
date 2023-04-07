@@ -8,9 +8,7 @@ import retrofit2.http.Path
 interface MercuryoApi {
 
     @GET("{apiVersion}/lib/currencies")
-    suspend fun currencies(
-        @Path("apiVersion") apiVersion: String,
-    ): MercuryoCurrenciesResponse
+    suspend fun currencies(@Path("apiVersion") apiVersion: String): MercuryoCurrenciesResponse
 }
 
 data class MercuryoCurrenciesResponse(
