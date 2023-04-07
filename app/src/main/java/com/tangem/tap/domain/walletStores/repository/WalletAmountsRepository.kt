@@ -24,10 +24,7 @@ interface WalletAmountsRepository {
      * @param userWallet [UserWallet] which will be used to get the list of associated [WalletStoreModel]
      * @param fiatCurrency current app [FiatCurrency]
      * */
-    suspend fun updateAmountsForUserWallet(
-        userWallet: UserWallet,
-        fiatCurrency: FiatCurrency,
-    ): CompletionResult<Unit>
+    suspend fun updateAmountsForUserWallet(userWallet: UserWallet, fiatCurrency: FiatCurrency): CompletionResult<Unit>
 
     suspend fun updateAmountsForWalletStores(
         walletStores: List<WalletStoreModel>,
