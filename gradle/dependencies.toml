@@ -70,13 +70,13 @@ kotlinSerialization = "1.4.1"
 # region Tangem
 tangemBlockchainSdk = "develop-185"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-206"
+tangemCardSdk = "develop-208"
 # tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
 # region Tools
 detektComposeRules = "1.2.2"
-detekt = "1.21.0"
+detekt = "1.22.0"
 # endregion Tools
 
 # region Testing

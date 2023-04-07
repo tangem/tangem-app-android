@@ -125,10 +125,7 @@ internal class DefaultWalletManagersRepository(
         }
     }
 
-    override suspend fun delete(
-        userWalletId: UserWalletId,
-        blockchain: Blockchain,
-    ): CompletionResult<Unit> = catching {
+    override suspend fun delete(userWalletId: UserWalletId, blockchain: Blockchain): CompletionResult<Unit> = catching {
         deleteInternal(userWalletId, blockchain)
     }
 
