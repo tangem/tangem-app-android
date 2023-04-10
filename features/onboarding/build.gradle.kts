@@ -39,6 +39,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
 
