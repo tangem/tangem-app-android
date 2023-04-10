@@ -18,7 +18,6 @@ data class TokensState(
     val currencies: List<Currency> = emptyList(),
     val searchInput: String? = null,
     val allowToAdd: Boolean = true,
-    val derivationStyle: DerivationStyle? = null,
     val scanResponse: ScanResponse? = null,
     val needToLoadMore: Boolean = true,
     val pageToLoad: Int = 0,
@@ -67,19 +66,19 @@ data class TokenWithBlockchain(
 
 fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency> {
     if (supportedBlockchains == null) return this
-    return map {
-        it.copy(
-            contracts =
-            it.contracts.filter {
-                supportedBlockchains.contains(it.blockchain) &&
-                    (it.blockchain.canHandleTokens() || it.address == null)
+
+    return map { currency ->
+        currency.copy(
+            contracts = currency.contracts.filter { contract ->
+                supportedBlockchains.contains(contract.blockchain) &&
+                    (contract.blockchain.canHandleTokens() || contract.address == null)
             },
         )
-    }.filterNot {
-        it.contracts.isNullOrEmpty() && !supportedBlockchains.contains(Blockchain.fromNetworkId(it.id))
+    }.filterNot { currency ->
+        currency.contracts.isEmpty() && !supportedBlockchains.contains(Blockchain.fromNetworkId(currency.id))
     }
 }
 
 enum class LoadCoinsState {
-    LOADING, LOADED, ERROR
+    LOADING, LOADED,
 }
