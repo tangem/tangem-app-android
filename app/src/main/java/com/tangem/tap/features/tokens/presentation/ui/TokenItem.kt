@@ -46,7 +46,7 @@ import com.tangem.wallet.R
  */
 @Composable
 internal fun TokenItem(model: TokenItemState) {
-    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    var isExpanded by rememberSaveable { mutableStateOf(value = false) }
 
     ConstraintLayout(
         modifier = Modifier
@@ -101,7 +101,7 @@ internal fun TokenItem(model: TokenItemState) {
 
         DetailedNetworksList(
             isExpanded = isExpanded,
-            tokenId = (model as? TokenItemState.ManageAccess)?.id,
+            token = model,
             networks = model.networks,
             modifier = Modifier.constrainAs(detailedNetworksList) {
                 top.linkTo(anchor = availableNetworksText.bottom, margin = spacing16)
