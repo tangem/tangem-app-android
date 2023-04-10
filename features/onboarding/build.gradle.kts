@@ -36,9 +36,6 @@ dependencies {
     implementation(deps.compose.shimmer)
 
     implementation(deps.tangem.card.core)
-    // implementation(deps.tangem.card.android) {
-    //     exclude(module = "joda-time")
-    // }
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
