@@ -21,7 +21,7 @@ class DummyWordlist(
 
     private var _wordlist: List<String> = listOf()
 
-    override val wordlist: List<String>
+    override val words: List<String>
         get() = _wordlist
 
     init {
