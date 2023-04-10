@@ -76,6 +76,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.core)
     implementation(deps.googlePlay.core.ktx)
