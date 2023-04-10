@@ -22,7 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,16 +38,15 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.extensions.toPx
-import com.tangem.tap.features.tokens.presentation.states.AddTokensNetworkItemState
-import com.tangem.tap.features.tokens.presentation.states.TokenItemModel
+import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import com.tangem.wallet.R
 
 /**
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun TokenItem(model: TokenItemModel) {
-    var isExpanded by remember { mutableStateOf(false) }
+internal fun TokenItem(model: TokenItemState) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
 
     ConstraintLayout(
         modifier = Modifier
@@ -102,6 +101,7 @@ internal fun TokenItem(model: TokenItemModel) {
 
         DetailedNetworksList(
             isExpanded = isExpanded,
+            tokenId = (model as? TokenItemState.ManageAccess)?.id,
             networks = model.networks,
             modifier = Modifier.constrainAs(detailedNetworksList) {
                 top.linkTo(anchor = availableNetworksText.bottom, margin = spacing16)
@@ -115,7 +115,7 @@ internal fun TokenItem(model: TokenItemModel) {
             onClick = { isExpanded = !isExpanded },
             modifier = Modifier.constrainAs(changeNetworksViewButton) {
                 top.linkTo(parent.top)
-                end.linkTo(anchor = parent.end, margin = spacing16)
+                end.linkTo(anchor = parent.end, margin = spacing6)
                 if (!isExpanded) bottom.linkTo(parent.bottom)
             },
         )
@@ -205,34 +205,9 @@ private fun ChangeNetworksViewButton(isExpanded: Boolean, onClick: () -> Unit, m
 
 @Preview
 @Composable
-private fun Preview_TokenItem_EditAccess() {
+private fun Preview_TokenItem_ManageAccess() {
     TangemTheme {
-        TokenItem(
-            TokenItemModel(
-                name = "Tether (USDT)",
-                iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
-                networks = listOf(
-                    AddTokensNetworkItemState.EditAccess(
-                        name = "Ethereum",
-                        protocolName = "MAIN",
-                        iconResId = R.drawable.ic_eth_no_color,
-                        isMainNetwork = true,
-                        isAdded = true,
-                        networkId = "",
-                        onToggleClick = {},
-                    ),
-                    AddTokensNetworkItemState.EditAccess(
-                        name = "BNB SMART CHAIN",
-                        protocolName = "BEP20",
-                        iconResId = R.drawable.ic_bsc_no_color,
-                        isMainNetwork = false,
-                        isAdded = false,
-                        networkId = "",
-                        onToggleClick = {},
-                    ),
-                ),
-            ),
-        )
+        TokenItem(model = TokenListPreviewData.createManageToken())
     }
 }
 
@@ -240,49 +215,6 @@ private fun Preview_TokenItem_EditAccess() {
 @Composable
 private fun Preview_TokenItem_ReadAccess() {
     TangemTheme {
-        TokenItem(
-            TokenItemModel(
-                name = "Tether (USDT)",
-                iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
-                networks = listOf(
-                    AddTokensNetworkItemState.ReadAccess(
-                        name = "Ethereum",
-                        protocolName = "MAIN",
-                        iconResId = R.drawable.ic_eth_no_color,
-                        isMainNetwork = true,
-                    ),
-                    AddTokensNetworkItemState.ReadAccess(
-                        name = "BNB SMART CHAIN",
-                        protocolName = "BEP20",
-                        iconResId = R.drawable.ic_bsc_no_color,
-                        isMainNetwork = false,
-                    ),
-                ),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TokenItem_EditAccess_LargeNetworkList() {
-    TangemTheme {
-        TokenItem(
-            TokenItemModel(
-                name = "Tether (USDT)",
-                iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
-                networks = List(
-                    size = 15,
-                    init = {
-                        AddTokensNetworkItemState.ReadAccess(
-                            name = if (it % 2 != 0) "Ethereum" else "BNB SMART CHAIN",
-                            protocolName = if (it % 2 != 0) "MAIN" else "BEP20",
-                            iconResId = if (it % 2 != 0) R.drawable.ic_eth_no_color else R.drawable.ic_bsc_no_color,
-                            isMainNetwork = it % 2 != 0,
-                        )
-                    },
-                ),
-            ),
-        )
+        TokenItem(model = TokenListPreviewData.createReadToken())
     }
 }
