@@ -1,12 +1,8 @@
 package com.tangem.tap.features.tokens.presentation.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -16,13 +12,18 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,17 +31,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.tokens.presentation.states.AddTokensToolbarState
-import com.tangem.tap.features.tokens.presentation.states.AddTokensToolbarState.SearchInputField
-import com.tangem.tap.features.tokens.presentation.states.AddTokensToolbarState.Title
+import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState
+import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState.SearchInputField
+import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState.Title
 import com.tangem.wallet.R
+import kotlinx.coroutines.delay
 
 /**
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun AddTokensToolbar(state: AddTokensToolbarState) {
+internal fun AddTokensToolbar(state: TokensListToolbarState) {
     TopAppBar(backgroundColor = TangemTheme.colors.background.secondary) {
         IconButton(onClick = state.onBackButtonClick) {
             Icon(
@@ -50,14 +53,9 @@ internal fun AddTokensToolbar(state: AddTokensToolbarState) {
             )
         }
 
-        val contentModifier = Modifier
-            .weight(1f)
-            .padding(horizontal = TangemTheme.dimens.spacing16)
-            .padding(bottom = TangemTheme.dimens.spacing4)
-
         when (state) {
-            is Title -> TitleContent(state = state, modifier = contentModifier)
-            is SearchInputField -> InputContent(state = state, modifier = contentModifier)
+            is Title -> TitleContent(state = state, modifier = Modifier.weight(1f))
+            is SearchInputField -> InputContent(state = state, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -66,7 +64,7 @@ internal fun AddTokensToolbar(state: AddTokensToolbarState) {
 private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
     Text(
         text = stringResource(id = state.titleResId),
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing26),
         color = TangemTheme.colors.text.primary1,
         maxLines = 1,
         style = TangemTheme.typography.h3,
@@ -80,7 +78,7 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
         )
     }
 
-    if (state is Title.EditAccess) {
+    if (state is Title.ManageAccess) {
         IconButton(onClick = state.onAddCustomTokenClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_plus_24),
@@ -91,12 +89,15 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun InputContent(state: SearchInputField, modifier: Modifier = Modifier) {
+private fun InputContent(state: SearchInputField, modifier: Modifier = Modifier) {
+    val focusRequester = remember { FocusRequester() }
+
     BasicTextField(
         value = state.value,
         onValueChange = state.onValueChange,
-        modifier = modifier,
+        modifier = modifier.focusRequester(focusRequester),
         textStyle = TangemTheme.typography.subtitle1.copy(fontWeight = FontWeight.Normal),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { state.onSearchButtonClick() }),
@@ -104,33 +105,37 @@ fun InputContent(state: SearchInputField, modifier: Modifier = Modifier) {
         maxLines = 1,
         cursorBrush = SolidColor(value = TangemTheme.colors.stroke.secondary),
     ) { innerTextField ->
-        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing6)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = TangemTheme.dimens.spacing6),
-                ) {
-                    Hint(value = state.value)
-                    innerTextField()
-                }
-
-                IconButton(onClick = state.onCleanButtonClick) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_cross_rounded_24),
-                        contentDescription = "Clean entered value",
-                        tint = TangemTheme.colors.icon.secondary,
-                    )
-                }
-            }
-
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height = TangemTheme.dimens.size1)
-                    .background(color = TangemTheme.colors.stroke.primary),
-            )
+                    .weight(1f)
+                    .padding(
+                        start = TangemTheme.dimens.spacing28,
+                        top = TangemTheme.dimens.spacing2,
+                        end = TangemTheme.dimens.spacing16,
+                    ),
+            ) {
+                Hint(value = state.value)
+                innerTextField()
+            }
+
+            IconButton(onClick = state.onCleanButtonClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_cross_rounded_24),
+                    contentDescription = "Clean entered value",
+                    tint = TangemTheme.colors.icon.secondary,
+                )
+            }
         }
+    }
+
+    // This is a hack because Compose can't show the keyboard if the input field is not found.
+    // So first I request focus and make a delay and then show the keyboard.
+    val keyboardManager = LocalSoftwareKeyboardController.current
+    LaunchedEffect(keyboardManager) {
+        focusRequester.requestFocus()
+        delay(timeMillis = 100)
+        keyboardManager?.show()
     }
 }
 
@@ -138,14 +143,14 @@ fun InputContent(state: SearchInputField, modifier: Modifier = Modifier) {
 private fun Hint(value: String) {
     if (value.isBlank()) {
         Row(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_search_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemColorPalette.Dark1,
             )
             Text(
                 text = stringResource(id = R.string.common_search),
@@ -164,7 +169,7 @@ private fun Hint(value: String) {
 private fun Preview_AddTokensToolbar_EditAccess() {
     TangemTheme {
         AddTokensToolbar(
-            state = Title.EditAccess(
+            state = Title.ManageAccess(
                 titleResId = R.string.main_manage_tokens,
                 onBackButtonClick = {},
                 onSearchButtonClick = {},
