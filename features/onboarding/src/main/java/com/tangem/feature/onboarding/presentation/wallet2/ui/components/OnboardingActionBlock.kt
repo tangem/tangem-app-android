@@ -3,7 +3,6 @@ package com.tangem.feature.onboarding.presentation.wallet2.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,9 +17,10 @@ fun OnboardingActionBlock(
     firstActionContent: @Composable (() -> Unit)? = null,
     secondActionContent: @Composable (() -> Unit)? = null,
 ) {
+    if (firstActionContent == null && secondActionContent == null) return
+
     Box(
         modifier = Modifier
-            .wrapContentSize()
             .padding(
                 top = TangemTheme.dimens.size8,
                 bottom = TangemTheme.dimens.size32,
