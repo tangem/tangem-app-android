@@ -148,7 +148,6 @@ class TangemColors internal constructor(
         plain: Color,
         action: Color,
         fade: Color,
-        warning: Color = TangemColorPalette.Flamingo,
     ) {
         var primary by mutableStateOf(primary)
             private set
@@ -160,8 +159,6 @@ class TangemColors internal constructor(
             private set
         var fade by mutableStateOf(fade)
             private set
-        var warning by mutableStateOf(warning)
-            private set
 
         fun update(other: Background) {
             primary = other.primary
@@ -169,7 +166,6 @@ class TangemColors internal constructor(
             plain = other.plain
             action = other.action
             fade = other.fade
-            warning = other.warning
         }
     }
 
