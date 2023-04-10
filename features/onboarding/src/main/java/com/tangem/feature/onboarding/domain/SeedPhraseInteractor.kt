@@ -16,6 +16,6 @@ class DummySeedPhraseInteractor(
 ) : SeedPhraseInteractor, SeedPhraseChecker by seedPhraseChecker {
 
     override suspend fun generateSeedPhrase(): List<String> {
-        return sdkSeedPhraseRepository.getWordList().wordlist
+        return sdkSeedPhraseRepository.getWordList().words
     }
 }
