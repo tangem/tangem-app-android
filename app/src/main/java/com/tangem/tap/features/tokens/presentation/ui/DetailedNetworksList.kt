@@ -5,6 +5,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -18,8 +21,11 @@ import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -28,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.tokens.presentation.states.AddTokensNetworkItemState
-import com.tangem.wallet.R
+import com.tangem.tap.features.tokens.presentation.states.NetworkItemState
+import kotlinx.collections.immutable.ImmutableCollection
 
 /**
 [REDACTED_AUTHOR]
@@ -37,7 +43,8 @@ import com.tangem.wallet.R
 @Composable
 internal fun DetailedNetworksList(
     isExpanded: Boolean,
-    networks: List<AddTokensNetworkItemState>,
+    tokenId: String?,
+    networks: ImmutableCollection<NetworkItemState>,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -46,38 +53,51 @@ internal fun DetailedNetworksList(
         enter = fadeIn() + expandVertically(),
         exit = shrinkVertically() + fadeOut(),
     ) {
-        if (isExpanded) {
-            Column {
-                networks.forEachIndexed { index, network ->
-                    key(network.name) {
-                        DetailedNetworkItem(model = network, isLastItem = networks.lastIndex == index)
-                    }
+        Column {
+            networks.forEachIndexed { index, network ->
+                key(network.name) {
+                    DetailedNetworkItem(model = network, tokenId = tokenId, isLastItem = networks.size - 1 == index)
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DetailedNetworkItem(model: AddTokensNetworkItemState, isLastItem: Boolean) {
+private fun DetailedNetworkItem(model: NetworkItemState, tokenId: String?, isLastItem: Boolean) {
+    val clipboardManager = LocalClipboardManager.current
     val itemHeight = TangemTheme.dimens.size50
+
     Row(
         modifier = Modifier
+            .combinedClickable(
+                enabled = model is NetworkItemState.ManageAccess,
+                onLongClick = {
+                    if (model is NetworkItemState.ManageAccess && model.contractAddress != null) {
+                        clipboardManager.setText(AnnotatedString(text = model.contractAddress))
+                        model.onNetworkClick()
+                    }
+                },
+                onClick = {},
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+            )
             .fillMaxWidth()
             .heightIn(min = itemHeight)
             .padding(start = TangemTheme.dimens.spacing38),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NetworkItemArrow(itemHeight = itemHeight, isLastItem = isLastItem)
-        Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing14))
+        Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing16))
         BriefNetworkItem(model = model)
         Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing6))
         NetworkTitle(model = model)
 
-        if (model is AddTokensNetworkItemState.EditAccess) {
+        if (model is NetworkItemState.ManageAccess) {
             Switch(
                 checked = model.isAdded,
-                onCheckedChange = { model.onToggleClick(model.networkId) },
+                onCheckedChange = { model.onToggleClick(requireNotNull(tokenId), model.networkId) },
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing8),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = TangemColorPalette.Meadow,
@@ -88,7 +108,7 @@ private fun DetailedNetworkItem(model: AddTokensNetworkItemState, isLastItem: Bo
 }
 
 @Composable
-private fun RowScope.NetworkTitle(model: AddTokensNetworkItemState) {
+private fun RowScope.NetworkTitle(model: NetworkItemState) {
     Text(
         modifier = Modifier.weight(1f),
         text = buildAnnotatedString {
@@ -105,7 +125,7 @@ private fun RowScope.NetworkTitle(model: AddTokensNetworkItemState) {
         },
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
-        color = if (model is AddTokensNetworkItemState.EditAccess && model.isAdded) {
+        color = if (model is NetworkItemState.ManageAccess && model.isAdded) {
             TangemColorPalette.Black
         } else {
             TangemColorPalette.Dark2
@@ -115,30 +135,12 @@ private fun RowScope.NetworkTitle(model: AddTokensNetworkItemState) {
 
 @Preview
 @Composable
-private fun Preview_DetailedNetworksList_EditAccess() {
+private fun Preview_DetailedNetworksList_ManageAccess() {
     TangemTheme {
         DetailedNetworksList(
-            networks = listOf(
-                AddTokensNetworkItemState.EditAccess(
-                    name = "ETHEREUM",
-                    protocolName = "MAIN",
-                    iconResId = R.drawable.ic_eth_no_color,
-                    isMainNetwork = true,
-                    isAdded = true,
-                    networkId = "",
-                    onToggleClick = {},
-                ),
-                AddTokensNetworkItemState.EditAccess(
-                    name = "BNB SMART CHAIN",
-                    protocolName = "BEP20",
-                    iconResId = R.drawable.ic_bsc_no_color,
-                    isMainNetwork = false,
-                    isAdded = false,
-                    networkId = "",
-                    onToggleClick = {},
-                ),
-            ),
-            isExpanded = false,
+            isExpanded = true,
+            tokenId = null,
+            networks = TokenListPreviewData.createManageNetworksList(),
         )
     }
 }
@@ -148,21 +150,9 @@ private fun Preview_DetailedNetworksList_EditAccess() {
 private fun Preview_DetailedNetworksList_ReadAccess() {
     TangemTheme {
         DetailedNetworksList(
-            networks = listOf(
-                AddTokensNetworkItemState.ReadAccess(
-                    name = "ETHEREUM",
-                    protocolName = "MAIN",
-                    iconResId = R.drawable.ic_eth_no_color,
-                    isMainNetwork = true,
-                ),
-                AddTokensNetworkItemState.ReadAccess(
-                    name = "BNB SMART CHAIN",
-                    protocolName = "BEP20",
-                    iconResId = R.drawable.ic_bsc_no_color,
-                    isMainNetwork = false,
-                ),
-            ),
-            isExpanded = false,
+            isExpanded = true,
+            tokenId = null,
+            networks = TokenListPreviewData.createReadNetworksList(),
         )
     }
 }
