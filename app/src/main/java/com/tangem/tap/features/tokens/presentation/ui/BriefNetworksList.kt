@@ -1,10 +1,8 @@
 package com.tangem.tap.features.tokens.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.tokens.presentation.states.AddTokensNetworkItemState
+import com.tangem.tap.features.tokens.presentation.states.NetworkItemState
+import kotlinx.collections.immutable.ImmutableCollection
 
 /**
 [REDACTED_AUTHOR]
@@ -28,21 +27,19 @@ import com.tangem.tap.features.tokens.presentation.states.AddTokensNetworkItemSt
 @Composable
 internal fun BriefNetworksList(
     isCollapsed: Boolean,
-    networks: List<AddTokensNetworkItemState>,
+    networks: ImmutableCollection<NetworkItemState>,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = isCollapsed,
         modifier = modifier,
-        enter = fadeIn() + expandVertically(),
-        exit = shrinkVertically() + fadeOut(),
+        enter = fadeIn(),
+        exit = fadeOut(),
     ) {
-        if (isCollapsed) {
-            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
-                networks.forEach {
-                    key(it.name) {
-                        BriefNetworkItem(model = it)
-                    }
+        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
+            networks.forEach {
+                key(NetworkItemState::name) {
+                    BriefNetworkItem(model = it)
                 }
             }
         }
@@ -53,7 +50,7 @@ internal fun BriefNetworksList(
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun BriefNetworkItem(model: AddTokensNetworkItemState) {
+internal fun BriefNetworkItem(model: NetworkItemState) {
     Box(modifier = Modifier.size(size = TangemTheme.dimens.size20)) {
         Image(
             painter = painterResource(id = model.iconResId),
