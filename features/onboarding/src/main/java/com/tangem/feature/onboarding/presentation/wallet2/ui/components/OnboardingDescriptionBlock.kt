@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescription
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * UI component witch provides single and carousel description for the onboarding process
@@ -19,7 +21,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescri
 @Composable
 fun OnboardingDescriptionBlock(
     modifier: Modifier = Modifier,
-    descriptionsList: List<OnboardingDescription> = emptyList(),
+    descriptionsList: ImmutableList<OnboardingDescription> = persistentListOf(),
 ) {
     if (descriptionsList.isEmpty()) return
 
@@ -29,7 +31,7 @@ fun OnboardingDescriptionBlock(
             .padding(horizontal = TangemTheme.dimens.size24),
     ) {
         if (descriptionsList.size == 1) {
-            SingleDescription(descriptionsList[0])
+            Description(descriptionsList[0])
         } else {
             CarouselDescription(descriptionsList)
         }
@@ -37,18 +39,16 @@ fun OnboardingDescriptionBlock(
 }
 
 @Composable
-private fun SingleDescription(description: OnboardingDescription) {
+private fun Description(description: OnboardingDescription) {
     Column {
-        if (description.hasTitle()) {
-            DescriptionTitleText(text = description.getTitle(LocalContext.current))
-            SpacerH12()
-        }
-        DescriptionSubTitleText(text = description.getSubTitle(LocalContext.current))
+        DescriptionTitleText(text = stringResource(id = description.titleRes))
+        SpacerH12()
+        DescriptionSubTitleText(text = stringResource(id = description.subTitleRes))
     }
 }
 
 @Composable
-private fun CarouselDescription(descriptionsList: List<OnboardingDescription>) {
+private fun CarouselDescription(descriptionsList: ImmutableList<OnboardingDescription>) {
     //TODO: implement
 }
 
