@@ -5,13 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.transition.TransitionInflater
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.presentation.ui.AddTokensScreen
-import com.tangem.tap.features.tokens.presentation.viewmodels.AddTokensViewModel
+import com.tangem.tap.features.tokens.presentation.viewmodels.TokensListViewModel
 import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,9 +36,8 @@ internal class TokensListFragment : Fragment() {
             setContent {
                 isTransitionGroup = true
 
-                val viewModel = hiltViewModel<AddTokensViewModel>().apply {
-                    // TODO("[REDACTED_TASK_KEY] subscribe on Redux events")
-                    // subscribeOnReduxEvents(lifecycle = LocalLifecycleOwner.current.lifecycle)
+                val viewModel = hiltViewModel<TokensListViewModel>().apply {
+                    subscribeOnReduxEvents(lifecycle = LocalLifecycleOwner.current.lifecycle)
                 }
 
                 TangemTheme {
