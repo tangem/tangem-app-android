@@ -12,9 +12,7 @@ import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import com.tangem.wallet.R
 
 @Composable
-internal fun BiometricsLockoutWarningContent(
-    warning: WarningModel.BiometricsLockoutWarning,
-) {
+internal fun BiometricsLockoutWarningContent(warning: WarningModel.BiometricsLockoutWarning) {
     BasicDialog(
         title = stringResource(id = R.string.biometric_lockout_warning_title),
         message = stringResource(
@@ -34,9 +32,7 @@ internal fun BiometricsLockoutWarningContent(
 
 // region Preview
 @Composable
-private fun BiometricsLockoutDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun BiometricsLockoutDialogSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         BiometricsLockoutWarningContent(
             warning = WarningModel.BiometricsLockoutWarning(
@@ -64,9 +60,7 @@ private fun BiometricsLockoutDialogPreview_Dark() {
 }
 
 @Composable
-private fun BiometricsLockoutDialog_Permanent_Sample(
-    modifier: Modifier = Modifier,
-) {
+private fun BiometricsLockoutDialog_Permanent_Sample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         BiometricsLockoutWarningContent(
             warning = WarningModel.BiometricsLockoutWarning(
