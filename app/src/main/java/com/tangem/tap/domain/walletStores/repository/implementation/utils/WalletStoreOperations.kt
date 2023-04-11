@@ -29,10 +29,7 @@ internal inline fun HashMap<UserWalletId, List<WalletStoreModel>>.replaceWalletS
     }
 }
 
-internal fun WalletStoreModel.updateWithError(
-    wallet: Wallet,
-    error: TangemError,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithError(wallet: Wallet, error: TangemError): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithError(
             wallet = wallet,
@@ -41,41 +38,31 @@ internal fun WalletStoreModel.updateWithError(
     )
 }
 
-internal fun WalletStoreModel.updateWithTxHistories(
-    wallet: Wallet,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithTxHistories(wallet: Wallet): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithTxHistories(wallet = wallet),
     )
 }
 
-internal fun WalletStoreModel.updateWithAmounts(
-    wallet: Wallet,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithAmounts(wallet: Wallet): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithAmounts(wallet = wallet),
     )
 }
 
-internal fun WalletStoreModel.updateWithDemoAmounts(
-    wallet: Wallet,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithDemoAmounts(wallet: Wallet): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithDemoAmounts(wallet = wallet),
     )
 }
 
-internal fun WalletStoreModel.updateWithFiatRates(
-    rates: Map<String, Double>,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithFiatRates(rates: Map<String, Double>): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithFiatRates(rates),
     )
 }
 
-internal fun WalletStoreModel.updateWithSelf(
-    newWalletStore: WalletStoreModel,
-): WalletStoreModel {
+internal fun WalletStoreModel.updateWithSelf(newWalletStore: WalletStoreModel): WalletStoreModel {
     val oldStore = this
     return oldStore.copy(
         derivationPath = newWalletStore.derivationPath,
