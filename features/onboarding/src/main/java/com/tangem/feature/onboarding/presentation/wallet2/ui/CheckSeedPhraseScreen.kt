@@ -15,8 +15,7 @@ import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButtonIconLeft
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescription
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
+import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 
@@ -25,8 +24,8 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
  */
 @Composable
 fun CheckSeedPhraseScreen(
+    state: CheckSeedPhraseState,
     modifier: Modifier = Modifier,
-    state: CheckSeedPhraseState = CheckSeedPhraseState(),
 ) {
     Column(
         modifier = modifier
@@ -41,30 +40,22 @@ fun CheckSeedPhraseScreen(
                 OnboardingDescriptionBlock(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(
-                            start = TangemTheme.dimens.size16,
-                            top = TangemTheme.dimens.size48,
-                            end = TangemTheme.dimens.size16,
-                        ),
-                    descriptionsList = listOf(
-                        OnboardingDescription(
-// [REDACTED_TODO_COMMENT]
-                            title = "So, let’s check",
-                            subTitle = "To check wether you’ve written down your seed phrase correctly, please enter the 2nd, 7th and 11th words",
-                        ),
-                    ),
-                )
+                        .padding(top = TangemTheme.dimens.size48)
+                        .padding(horizontal = TangemTheme.dimens.size16),
+                ) {
+                    Description(
+                        titleRes = R.string.onboarding_seed_user_validation_title,
+                        subTitleRes = R.string.onboarding_seed_user_validation_message,
+                    )
+                }
             }
             item {
                 CheckSeedPhraseBlock(
                     modifier = Modifier
                         .imePadding()
                         .weight(1f)
-                        .padding(
-                            start = TangemTheme.dimens.size16,
-                            top = TangemTheme.dimens.size20,
-                            end = TangemTheme.dimens.size16,
-                        ),
+                        .padding(top = TangemTheme.dimens.size20)
+                        .padding(horizontal = TangemTheme.dimens.size16),
                     state = state,
                 )
             }
@@ -73,8 +64,7 @@ fun CheckSeedPhraseScreen(
             firstActionContent = {
                 PrimaryButtonIconLeft(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = TangemTheme.dimens.size16),
+                        .fillMaxWidth(),
                     text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
                     icon = painterResource(id = R.drawable.ic_tangem_24),
                     enabled = state.buttonCreateWallet.enabled,
@@ -95,44 +85,22 @@ private fun CheckSeedPhraseBlock(
         OutlineTextField(
             value = state.tvSecondPhrase.textFieldValue,
             onValueChange = state.tvSecondPhrase.onTextFieldValueChanged,
-            label = state.tvSecondPhrase.getLabel(),
+            label = state.tvSecondPhrase.label,
             isError = state.tvSecondPhrase.isError,
         )
 
         OutlineTextField(
             value = state.tvSeventhPhrase.textFieldValue,
             onValueChange = state.tvSeventhPhrase.onTextFieldValueChanged,
-            label = state.tvSeventhPhrase.getLabel(),
+            label = state.tvSeventhPhrase.label,
             isError = state.tvSeventhPhrase.isError,
         )
 
         OutlineTextField(
             value = state.tvEleventhPhrase.textFieldValue,
             onValueChange = state.tvEleventhPhrase.onTextFieldValueChanged,
-            label = state.tvEleventhPhrase.getLabel(),
+            label = state.tvEleventhPhrase.label,
             isError = state.tvEleventhPhrase.isError,
         )
     }
-}
-
-@Composable
-private fun CheckSeedPhraseBlock2(
-    modifier: Modifier = Modifier,
-    state: CheckSeedPhraseState,
-) {
-    Column(modifier) {
-        listOf(state.tvSecondPhrase, state.tvSeventhPhrase, state.tvEleventhPhrase).forEach { field ->
-            OutlineTextField(
-                value = field.textFieldValue,
-                onValueChange = field.onTextFieldValueChanged,
-                label = field.getLabel(),
-                isError = field.isError,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TextFieldState.getLabel(): String? {
-    return labelRes?.let { stringResource(id = it) } ?: label
 }
