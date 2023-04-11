@@ -35,9 +35,8 @@ import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.formatWithSpaces
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.domain.model.TotalFiatBalance
+import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.wallet.R
 import com.valentinilk.shimmer.shimmer
 import java.math.BigDecimal
@@ -52,18 +51,25 @@ internal class TotalBalanceCard @JvmOverloads constructor(
 ) : AbstractComposeView(context, attrs, defStyleAttr) {
     private var state by mutableStateOf<TotalBalanceCardState>(TotalBalanceCardState.Empty)
 
-    var status: TotalBalance? = null
+    var status: TotalFiatBalance? = null
         set(value) {
             if (field == value) return
             field = value
-            updateState(value, onChangeFiatCurrencyClick)
+            updateState(value, fiatCurrency, onChangeFiatCurrencyClick)
         }
 
     var onChangeFiatCurrencyClick: () -> Unit = { /* no-op */ }
         set(value) {
             if (field == value) return
             field = value
-            updateState(status, value)
+            updateState(status, fiatCurrency, value)
+        }
+
+    var fiatCurrency: FiatCurrency = FiatCurrency.Default
+        set(value) {
+            if (field == value) return
+            field = value
+            updateState(status, value, onChangeFiatCurrencyClick)
         }
 
     @Composable
@@ -77,23 +83,21 @@ internal class TotalBalanceCard @JvmOverloads constructor(
         return javaClass.name
     }
 
-    private fun updateState(status: TotalBalance?, onChangeCurrencyClick: () -> Unit) {
-        state = when (status?.state) {
+    private fun updateState(status: TotalFiatBalance?, fiatCurrency: FiatCurrency, onChangeCurrencyClick: () -> Unit) {
+        state = when (status) {
             null -> TotalBalanceCardState.Empty
-            ProgressState.Loading -> TotalBalanceCardState.Loading(
-                fiatCurrency = status.fiatCurrency,
+            is TotalFiatBalance.Error -> TotalBalanceCardState.Failure(
+                amount = status.amount,
+                fiatCurrency = fiatCurrency,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
             )
-            ProgressState.Error -> TotalBalanceCardState.Failure(
-                amount = status.fiatAmount,
-                fiatCurrency = status.fiatCurrency,
+            is TotalFiatBalance.Loading -> TotalBalanceCardState.Loading(
+                fiatCurrency = fiatCurrency,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
             )
-            ProgressState.Refreshing,
-            ProgressState.Done,
-            -> TotalBalanceCardState.Success(
-                amount = status.fiatAmount ?: BigDecimal.ZERO,
-                fiatCurrency = status.fiatCurrency,
+            is TotalFiatBalance.Loaded -> TotalBalanceCardState.Success(
+                amount = status.amount,
+                fiatCurrency = fiatCurrency,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
             )
         }
