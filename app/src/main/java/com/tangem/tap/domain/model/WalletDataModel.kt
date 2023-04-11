@@ -1,10 +1,11 @@
 package com.tangem.tap.domain.model
 
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.tap.domain.model.WalletDataModel.AddressData
 import com.tangem.tap.domain.model.WalletDataModel.Status
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.AddressData
 import java.math.BigDecimal
 
 /**
@@ -21,13 +22,26 @@ import java.math.BigDecimal
 data class WalletDataModel(
     val currency: Currency,
     val status: Status,
-    val walletAddresses: List<AddressData>,
+// [REDACTED_TODO_COMMENT]
+    val walletAddresses: WalletAddresses?,
     val existentialDeposit: BigDecimal?,
     val fiatRate: BigDecimal?,
     val isCardSingleToken: Boolean,
     val isCustom: Boolean,
     val historyTransactions: List<TransactionData>?,
 ) {
+
+    data class WalletAddresses(
+        val selectedAddress: AddressData,
+        val list: List<AddressData>,
+    )
+
+    data class AddressData(
+        val address: String,
+        val type: AddressType,
+        val shareUrl: String,
+        val exploreUrl: String,
+    )
 
     /**
      * Represent current status of currency

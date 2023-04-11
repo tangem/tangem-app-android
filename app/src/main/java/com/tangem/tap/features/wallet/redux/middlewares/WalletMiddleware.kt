@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
@@ -42,6 +43,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletStoresManager
 import com.tangem.utils.coroutines.ifActive
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -204,6 +206,24 @@ class WalletMiddleware {
 
                 store.dispatchOnMain(NavigationAction.PopBackTo(screen))
             }
+            is WalletAction.ChangeSelectedAddress -> {
+                changeSelectedWalletAddress(action.type, walletState)
+            }
+        }
+    }
+
+    private fun changeSelectedWalletAddress(type: AddressType, state: WalletState) {
+        val selectedUserWalletId = userWalletsListManager.selectedUserWalletSync?.walletId.guard {
+            Timber.e("Unable to change selected wallet address, no user wallet selected")
+            return
+        }
+        val selectedCurrency = state.selectedCurrency.guard {
+            Timber.e("Unable to change selected wallet address, no currency selected")
+            return
+        }
+
+        scope.launch(Dispatchers.Default) {
+            walletStoresManager.updateSelectedAddress(selectedUserWalletId, selectedCurrency, type)
         }
     }
 
