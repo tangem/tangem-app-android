@@ -22,7 +22,7 @@ fun CurrencyPlaceholderIcon(id: String) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .background(circleColor, shape = CircleShape)
+            .background(circleColor, shape = CircleShape),
     ) {
         Text(
             text = id.firstOrNull()?.titlecase() ?: "",

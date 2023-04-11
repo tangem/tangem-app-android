@@ -27,11 +27,7 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
         exitTransition = inflater.inflateTransition(android.R.transition.fade)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true

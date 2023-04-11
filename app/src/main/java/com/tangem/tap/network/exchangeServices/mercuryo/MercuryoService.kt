@@ -125,10 +125,7 @@ class MercuryoService(
         return (address + environment.secret).calculateSha512().toHexString().lowercase()
     }
 
-    override fun getSellCryptoReceiptUrl(
-        action: CurrencyExchangeManager.Action,
-        transactionId: String,
-    ): String? = null
+    override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? = null
 
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
         "BNB" -> Blockchain.BSC
