@@ -159,10 +159,7 @@ private fun TangemDialog(
 }
 
 @Composable
-private fun DialogContent(
-    type: DialogType,
-    modifier: Modifier = Modifier,
-) {
+private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
@@ -196,11 +193,7 @@ private fun DialogContent(
 }
 
 @Composable
-private fun DialogButtons(
-    confirmButton: DialogButton,
-    dismissButton: DialogButton?,
-    modifier: Modifier = Modifier,
-) {
+private fun DialogButtons(confirmButton: DialogButton, dismissButton: DialogButton?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(
@@ -315,9 +308,7 @@ private fun Preview_BasicDialog_InDarkTheme() {
 }
 
 @Composable
-private fun WarningBasicDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun WarningBasicDialogSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {
@@ -349,9 +340,7 @@ private fun WarningBasicDialogPreview_Dark() {
 }
 
 @Composable
-private fun TextInputDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun TextInputDialogSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {

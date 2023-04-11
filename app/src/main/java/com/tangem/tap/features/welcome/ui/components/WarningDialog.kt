@@ -12,9 +12,7 @@ import com.tangem.tap.features.welcome.ui.model.WarningModel
 import com.tangem.wallet.R
 
 @Composable
-internal fun WarningDialog(
-    warning: WarningModel?,
-) {
+internal fun WarningDialog(warning: WarningModel?) {
     when (warning) {
         null -> Unit
         is WarningModel.BiometricsLockoutWarning -> {
@@ -50,9 +48,7 @@ internal fun WarningDialog(
 
 // region Preview
 @Composable
-private fun BiometricsLockoutDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun BiometricsLockoutDialogSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         WarningDialog(
             warning = WarningModel.BiometricsLockoutWarning(
@@ -80,9 +76,7 @@ private fun BiometricsLockoutDialogPreview_Dark() {
 }
 
 @Composable
-private fun BiometricsLockoutDialog_Permanent_Sample(
-    modifier: Modifier = Modifier,
-) {
+private fun BiometricsLockoutDialog_Permanent_Sample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         WarningDialog(
             warning = WarningModel.BiometricsLockoutWarning(
@@ -111,9 +105,7 @@ private fun BiometricsLockoutDialog_Permanent_Preview_Dark() {
 
 // region Preview
 @Composable
-private fun KeyInvalidatedWarningSample(
-    modifier: Modifier = Modifier,
-) {
+private fun KeyInvalidatedWarningSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         WarningDialog(warning = WarningModel.KeyInvalidatedWarning(onDismiss = {}))
     }
