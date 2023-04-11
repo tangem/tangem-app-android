@@ -43,8 +43,8 @@ data class ImportSeedPhraseUiAction(
 )
 
 data class TextFieldUiAction(
-    val onFocusChanged: (Boolean) -> Unit,
     val onTextFieldChanged: (TextFieldValue) -> Unit,
+    val onFocusChanged: (Boolean) -> Unit = {},
 )
 
 enum class SeedPhraseField {
