@@ -198,10 +198,7 @@ private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -
 
 @Suppress("MagicNumber")
 @Composable
-private fun TokenIcon(
-    token: TokenToSelect,
-    @DrawableRes iconPlaceholder: Int?,
-) {
+private fun TokenIcon(token: TokenToSelect, @DrawableRes iconPlaceholder: Int?) {
     val data = token.iconUrl.ifEmpty {
         iconPlaceholder
     }
@@ -233,9 +230,7 @@ private fun TokenIcon(
 }
 
 @Composable
-private fun TokenImageShimmer(
-    modifier: Modifier = Modifier,
-) {
+private fun TokenImageShimmer(modifier: Modifier = Modifier) {
     Box(modifier = modifier.shimmer()) {
         Box(
             modifier = Modifier

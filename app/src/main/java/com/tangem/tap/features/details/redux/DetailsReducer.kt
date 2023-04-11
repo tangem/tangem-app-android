@@ -44,9 +44,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     }
 }
 
-private fun handlePrepareScreen(
-    action: DetailsAction.PrepareScreen,
-): DetailsState {
+private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
@@ -64,8 +62,7 @@ private fun handlePrepareCardSettingsScreen(
     card: CardDTO,
     cardTypesResolver: CardTypesResolver,
     state: DetailsState,
-):
-    DetailsState {
+): DetailsState {
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(cardTypesResolver),
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
@@ -112,10 +109,7 @@ private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: Card
     return !isNotAllowed
 }
 
-private fun handleEraseWallet(
-    action: DetailsAction.ResetToFactory,
-    state: DetailsState,
-): DetailsState {
+private fun handleEraseWallet(action: DetailsAction.ResetToFactory, state: DetailsState): DetailsState {
     return when (action) {
         is DetailsAction.ResetToFactory.Confirm ->
             state.copy(cardSettingsState = state.cardSettingsState?.copy(resetConfirmed = action.confirmed))
@@ -123,10 +117,7 @@ private fun handleEraseWallet(
     }
 }
 
-private fun handleSecurityAction(
-    action: DetailsAction.ManageSecurity,
-    state: DetailsState,
-): DetailsState {
+private fun handleSecurityAction(action: DetailsAction.ManageSecurity, state: DetailsState): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SelectOption -> {
             val manageSecurityState = state.cardSettingsState?.manageSecurityState?.copy(
@@ -155,10 +146,7 @@ private fun handleSecurityAction(
     }
 }
 
-private fun handlePrivacyAction(
-    action: DetailsAction.AppSettings,
-    state: DetailsState,
-): DetailsState {
+private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: DetailsState): DetailsState {
     return when (action) {
         is DetailsAction.AppSettings.SwitchPrivacySetting -> state.copy(
             appSettingsState = when (action.setting) {
