@@ -85,7 +85,8 @@ data class WalletData(
             walletWarnings.add(WalletWarning.TransactionInProgress(currency.currencyName))
         }
         if (walletRent != null) {
-            walletWarnings.add(WalletWarning.Rent(walletRent))
+            // TODO: Will be removed in next MR
+            // walletWarnings.add(WalletWarning.Rent(walletRent))
         }
     }
 
