@@ -49,10 +49,7 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun fetch(
-        userWallet: UserWallet,
-        refresh: Boolean = false,
-    ): CompletionResult<Unit>
+    suspend fun fetch(userWallet: UserWallet, refresh: Boolean = false): CompletionResult<Unit>
 
     /**
      * Fetch wallet stores associated with provided [UserWallet]s. Fetched [WalletStoreModel]s updates can be observed
@@ -63,10 +60,7 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun fetch(
-        userWallets: List<UserWallet>,
-        refresh: Boolean = false,
-    ): CompletionResult<Unit>
+    suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean = false): CompletionResult<Unit>
 
     /**
      * Update [WalletStoreModel]s amounts associated with provided [UserWallet]s
@@ -75,9 +69,7 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun updateAmounts(
-        userWallets: List<UserWallet>,
-    ): CompletionResult<Unit>
+    suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit>
 
     // For provider
     companion object
