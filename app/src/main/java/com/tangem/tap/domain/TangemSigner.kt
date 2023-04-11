@@ -53,10 +53,7 @@ class TangemSigner(
         }
     }
 
-    override suspend fun sign(
-        hash: ByteArray,
-        publicKey: Wallet.PublicKey,
-    ): CompletionResult<ByteArray> {
+    override suspend fun sign(hash: ByteArray, publicKey: Wallet.PublicKey): CompletionResult<ByteArray> {
         val result = sign(
             hashes = listOf(hash),
             publicKey = publicKey,
