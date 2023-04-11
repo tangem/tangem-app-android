@@ -71,10 +71,13 @@ interface FragmentOnBackPressedHandler {
 
 @SuppressLint("FragmentBackPressedCallback")
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
-    activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            handler.handleOnBackPressed()
-        }
-    })
+    activity?.onBackPressedDispatcher?.addCallback(
+        this,
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handler.handleOnBackPressed()
+            }
+        },
+    )
     view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener { activity?.onBackPressed() }
 }

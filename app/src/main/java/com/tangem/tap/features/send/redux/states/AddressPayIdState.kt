@@ -108,5 +108,5 @@ data class TonMemoState(
 enum class TransactionExtraError {
     INVALID_DESTINATION_TAG,
     INVALID_XLM_MEMO,
-    INVALID_BINANCE_MEMO
+    INVALID_BINANCE_MEMO,
 }
