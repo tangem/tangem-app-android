@@ -19,7 +19,7 @@ data class WarningMessage(
     val origin: Origin = Origin.Remote,
     @StringRes val buttonTextId: Int? = null,
     val titleFormatArg: String? = null,
-    val messageFormatArg: String? = null
+    val messageFormatArg: String? = null,
 ) {
     val blockchainList: List<Blockchain>? by lazy {
         blockchains?.map { Blockchain.fromId(it.uppercase()) }
@@ -35,7 +35,7 @@ data class WarningMessage(
         Warning,
 
         @Json(name = "info")
-        Info
+        Info,
     }
 
     enum class Type {
@@ -47,7 +47,7 @@ data class WarningMessage(
 
         AppRating,
 
-        TestCard
+        TestCard,
     }
 
     enum class Location {
@@ -55,7 +55,7 @@ data class WarningMessage(
         MainScreen,
 
         @Json(name = "send")
-        SendScreen
+        SendScreen,
     }
 
     enum class Origin {

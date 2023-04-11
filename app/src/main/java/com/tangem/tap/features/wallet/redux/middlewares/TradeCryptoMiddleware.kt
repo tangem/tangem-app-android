@@ -46,10 +46,7 @@ class TradeCryptoMiddleware {
         }
     }
 
-    private fun proceedBuyAction(
-        state: () -> AppState?,
-        action: WalletAction.TradeCryptoAction.Buy,
-    ) {
+    private fun proceedBuyAction(state: () -> AppState?, action: WalletAction.TradeCryptoAction.Buy) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
 
@@ -164,7 +161,7 @@ class TradeCryptoMiddleware {
         val bundle =
             bundleOf(
                 SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
-                SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath
+                SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath,
             )
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
     }

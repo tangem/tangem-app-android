@@ -39,10 +39,7 @@ internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWa
     }
 
     @Composable
-    override fun ScreenContent(
-        state: SaveWalletScreenState,
-        modifier: Modifier,
-    ) {
+    override fun ScreenContent(state: SaveWalletScreenState, modifier: Modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val enrollBiometricsDialog by rememberUpdatedState(newValue = state.enrollBiometricsDialog)
