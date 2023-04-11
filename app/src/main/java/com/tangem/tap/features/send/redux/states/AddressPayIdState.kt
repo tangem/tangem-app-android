@@ -30,6 +30,7 @@ data class TransactionExtrasState(
     val xlmMemo: XlmMemoState? = null,
     val binanceMemo: BinanceMemoState? = null,
     val xrpDestinationTag: XrpDestinationTagState? = null,
+    val tonMemoState: TonMemoState? = null,
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
 }
@@ -97,6 +98,12 @@ data class XrpDestinationTagState(
         const val MAX_NUMBER: Long = 4294967295
     }
 }
+
+data class TonMemoState(
+    val viewFieldValue: InputViewValue = InputViewValue(""),
+    val memo: String? = null,
+    val error: TransactionExtraError? = null,
+)
 
 enum class TransactionExtraError {
     INVALID_DESTINATION_TAG,
