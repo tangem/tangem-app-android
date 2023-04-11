@@ -166,14 +166,10 @@ class WalletBackupAnimator(
 
     private enum class State {
         TreeCards,
-        TwoCards
+        TwoCards,
     }
 
-    private fun BackupCardType.animateAlpha(
-        alpha: Float,
-        duration: Long = 0L,
-        startDelay: Long = 0L,
-    ) {
+    private fun BackupCardType.animateAlpha(alpha: Float, duration: Long = 0L, startDelay: Long = 0L) {
         when (this) {
             ORIGIN -> {
                 cardsWidget.getOriginCardView().animate().apply {
