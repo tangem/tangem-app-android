@@ -47,9 +47,7 @@ internal fun RenameWalletDialogContent(dialog: DialogModel.RenameWalletDialog) {
 
 // region Preview
 @Composable
-private fun RenameWalletDialogContentSample(
-    modifier: Modifier = Modifier,
-) {
+private fun RenameWalletDialogContentSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {

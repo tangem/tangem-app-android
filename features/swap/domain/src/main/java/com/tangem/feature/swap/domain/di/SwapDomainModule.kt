@@ -37,9 +37,7 @@ class SwapDomainModule {
 
     @Provides
     @Singleton
-    fun provideBlockchainInteractor(
-        transactionManager: TransactionManager,
-    ): BlockchainInteractor {
+    fun provideBlockchainInteractor(transactionManager: TransactionManager): BlockchainInteractor {
         return BlockchainInteractorImpl(
             transactionManager = transactionManager,
         )

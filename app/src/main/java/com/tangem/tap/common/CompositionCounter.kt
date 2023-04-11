@@ -4,7 +4,7 @@ import timber.log.Timber
 
 class CompositionCounter(
     val id: String,
-    count: Int = 0
+    count: Int = 0,
 ) {
     var count: Int = count
         private set
@@ -20,7 +20,7 @@ class CompositionCounter(
 class CompositionLogger(
     private val recomposeViewId: String,
     private val tag: String = recomposeViewId,
-    private var turnOnForIds: List<String> = listOf(recomposeViewId)
+    private var turnOnForIds: List<String> = listOf(recomposeViewId),
 ) {
     val count: Int
         get() = compositionCounter.count
