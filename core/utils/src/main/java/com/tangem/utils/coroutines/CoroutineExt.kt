@@ -23,9 +23,7 @@ suspend inline fun ifActive(crossinline block: suspend () -> Unit) = coroutineSc
     }
 }
 
-class Debouncer(
-    val name: String = "Default",
-) {
+class Debouncer {
 
     private var debounceJob: Job? = null
 
