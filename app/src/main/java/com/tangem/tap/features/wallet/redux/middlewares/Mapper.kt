@@ -11,6 +11,7 @@ import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAddresses
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -76,10 +77,15 @@ private fun WalletDataModel.mapToReduxModel(
 
     return WalletData(
         currency = currency,
-        walletAddresses = walletAddresses.getOrNull(0)?.let { selectedAddress ->
+        // TODO: Will be updated in next MR
+        walletAddresses = walletAddresses?.let { addresses ->
             WalletAddresses(
-                selectedAddress = selectedAddress,
-                list = walletAddresses,
+                selectedAddress = with(addresses.selectedAddress) {
+                    AddressData(address, type, shareUrl, exploreUrl)
+                },
+                list = addresses.list.map {
+                    with(it) { AddressData(address, type, shareUrl, exploreUrl) }
+                },
             )
         },
         existentialDepositString = existentialDeposit?.toPlainString(),
