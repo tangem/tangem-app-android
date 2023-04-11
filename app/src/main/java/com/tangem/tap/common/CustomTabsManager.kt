@@ -13,7 +13,7 @@ class CustomTabsManager {
             .setDefaultColorSchemeParams(
                 CustomTabColorSchemeParams.Builder()
                     .setNavigationBarColor(context.getColorCompat(R.color.toolbarColor))
-                    .build()
+                    .build(),
             )
             .build()
         customTabsIntent.launchUrl(context, Uri.parse(url))

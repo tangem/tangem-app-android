@@ -10,7 +10,7 @@ inline fun Transition.addListener(
     crossinline onEnd: (animator: Transition) -> Unit = {},
     crossinline onCancel: (animator: Transition) -> Unit = {},
     crossinline onPause: (animator: Transition) -> Unit = {},
-    crossinline onRepeat: (animator: Transition) -> Unit = {}
+    crossinline onRepeat: (animator: Transition) -> Unit = {},
 ): Transition.TransitionListener {
     val listener = object : Transition.TransitionListener {
         override fun onTransitionStart(transition: Transition) = onStart(transition)
