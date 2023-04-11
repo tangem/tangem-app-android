@@ -11,7 +11,7 @@ data class ScreenState(
     val symbol: ViewStates.TokenField,
     val decimals: ViewStates.TokenField,
     val derivationPath: ViewStates.TokenField,
-    val addButton: ViewStates.AddButton
+    val addButton: ViewStates.AddButton,
 )
 
 sealed class ViewStates {
@@ -22,6 +22,6 @@ sealed class ViewStates {
     ) : ViewStates()
 
     data class AddButton(
-        val isEnabled: Boolean = true
+        val isEnabled: Boolean = true,
     ) : ViewStates()
 }
