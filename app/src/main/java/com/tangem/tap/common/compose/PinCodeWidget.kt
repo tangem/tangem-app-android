@@ -110,10 +110,7 @@ fun PinCodeWidget(
 }
 
 @Composable
-private fun PinElement(
-    config: PinViewConfig,
-    pinSymbol: String,
-) {
+private fun PinElement(config: PinViewConfig, pinSymbol: String) {
     Box(Modifier.padding(config.pinBoxPadding)) {
         Box(config.pinBoxModifier) {
             Text(
