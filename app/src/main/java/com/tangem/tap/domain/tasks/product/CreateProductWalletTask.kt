@@ -267,10 +267,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             }
     }
 
-    private fun getBlockchains(
-        cardId: String,
-        card: CardDTO,
-    ): List<Blockchain> {
+    private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
         return when {
             DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
