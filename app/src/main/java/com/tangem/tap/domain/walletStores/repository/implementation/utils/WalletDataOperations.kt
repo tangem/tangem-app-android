@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletStores.repository.implementation.utils
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.core.TangemError
 import com.tangem.tap.common.extensions.getBlockchainTxHistory
 import com.tangem.tap.common.extensions.getTokenTxHistory
@@ -155,7 +156,6 @@ internal fun WalletDataModel.updateWithSelf(newWalletData: WalletDataModel): Wal
             is WalletDataModel.VerifiedOnline,
             -> newStatus
         },
-        walletAddresses = newWalletData.walletAddresses,
         existentialDeposit = newWalletData.existentialDeposit,
         fiatRate = newWalletData.fiatRate ?: oldWalletData.fiatRate,
     )
@@ -191,6 +191,31 @@ internal fun List<WalletDataModel>.updateWithSelf(newWalletsData: List<WalletDat
     }
 
     return updatedWalletsData
+}
+
+internal fun List<WalletDataModel>.updateSelectedAddress(
+    currency: Currency,
+    addressType: AddressType,
+): List<WalletDataModel> {
+    val index = this.indexOfFirst { it.currency == currency }
+    if (index == -1) return this
+
+    val oldWalletData = this[index]
+    val addresses = oldWalletData.walletAddresses
+        ?: return this
+    val selectedAddress = addresses.list
+        .firstOrNull { it.type == addressType }
+        ?: addresses.selectedAddress
+    val updatedWalletData = oldWalletData.copy(
+        walletAddresses = addresses.copy(
+            selectedAddress = selectedAddress,
+        ),
+    )
+    if (oldWalletData == updatedWalletData) return this
+
+    return this.toMutableList().apply {
+        this[index] = updatedWalletData
+    }
 }
 
 internal fun WalletDataModel.isSameWalletData(other: WalletDataModel): Boolean {
