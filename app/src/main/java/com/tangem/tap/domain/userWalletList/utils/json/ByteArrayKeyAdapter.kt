@@ -9,19 +9,12 @@ import com.tangem.common.extensions.ByteArrayKey
 
 internal class ByteArrayKeyAdapter {
     @ToJson
-    fun toJson(
-        writer: JsonWriter,
-        src: ByteArrayKey,
-        byteArrayAdapter: JsonAdapter<ByteArray>,
-    ) {
+    fun toJson(writer: JsonWriter, src: ByteArrayKey, byteArrayAdapter: JsonAdapter<ByteArray>) {
         byteArrayAdapter.toJson(writer, src.bytes)
     }
 
     @FromJson
-    fun fromJson(
-        reader: JsonReader,
-        byteArrayAdapter: JsonAdapter<ByteArray>,
-    ): ByteArrayKey? {
+    fun fromJson(reader: JsonReader, byteArrayAdapter: JsonAdapter<ByteArray>): ByteArrayKey? {
         return byteArrayAdapter.fromJson(reader)?.let {
             ByteArrayKey(bytes = it)
         }

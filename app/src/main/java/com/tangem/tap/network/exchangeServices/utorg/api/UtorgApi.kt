@@ -12,15 +12,10 @@ import retrofit2.http.Path
 interface UtorgApi {
 
     @POST("api/merchant/{apiVersion}/settings/currency")
-    suspend fun getCurrency(
-        @Path("apiVersion") apiVersion: String,
-    ): UtorgCurrencyResponse
+    suspend fun getCurrency(@Path("apiVersion") apiVersion: String): UtorgCurrencyResponse
 
     @POST("api/merchant/{apiVersion}/settings/successUrl")
-    suspend fun setSuccessUrl(
-        @Path("apiVersion") apiVersion: String,
-        @Body request: RequestSuccessUrl,
-    )
+    suspend fun setSuccessUrl(@Path("apiVersion") apiVersion: String, @Body request: RequestSuccessUrl)
 }
 
 data class RequestSuccessUrl(
