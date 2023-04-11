@@ -63,9 +63,7 @@ internal fun EnrollBiometricsCard(onClick: () -> Unit) {
 
 // region Preview
 @Composable
-private fun EnrollBiometricsCardSample(
-    modifier: Modifier = Modifier,
-) {
+private fun EnrollBiometricsCardSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.background(TangemTheme.colors.background.secondary),
     ) {

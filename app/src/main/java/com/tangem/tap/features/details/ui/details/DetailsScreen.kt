@@ -159,10 +159,7 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
 }
 
 @Composable
-fun TangemSocialAccounts(
-    links: List<SocialNetworkLink>,
-    onSocialNetworkClick: (SocialNetworkLink) -> Unit,
-) {
+fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
     LazyRow(modifier = Modifier.padding(start = 8.dp, end = 8.dp)) {
         items(links) {
             Icon(
