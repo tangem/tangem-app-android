@@ -42,7 +42,9 @@ class DerivationManagerImpl(
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimalCount,
                 )
-            } else null
+            } else {
+                null
+            }
             val blockchainNetwork = BlockchainNetwork(blockchain, card)
             val appCurrency = com.tangem.tap.features.wallet.models.Currency.fromBlockchainNetwork(
                 blockchainNetwork,
