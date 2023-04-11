@@ -22,10 +22,7 @@ interface AnalyticsHandler : AnalyticsEventHandler {
 }
 
 interface ErrorEventHandler {
-    fun send(
-        error: Throwable,
-        params: Map<String, String> = emptyMap(),
-    )
+    fun send(error: Throwable, params: Map<String, String> = emptyMap())
 }
 
 interface AnalyticsHandlerHolder {
