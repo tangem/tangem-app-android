@@ -12,9 +12,7 @@ import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import com.tangem.wallet.R
 
 @Composable
-internal fun KeyInvalidatedWarningContent(
-    warning: WarningModel.KeyInvalidatedWarning,
-) {
+internal fun KeyInvalidatedWarningContent(warning: WarningModel.KeyInvalidatedWarning) {
     BasicDialog(
         title = stringResource(id = R.string.common_attention),
         message = stringResource(id = R.string.key_invalidated_warning_description),
@@ -28,9 +26,7 @@ internal fun KeyInvalidatedWarningContent(
 
 // region Preview
 @Composable
-private fun KeyInvalidatedWarningSample(
-    modifier: Modifier = Modifier,
-) {
+private fun KeyInvalidatedWarningSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         KeyInvalidatedWarningContent(
             warning = WarningModel.KeyInvalidatedWarning(onDismiss = {}),

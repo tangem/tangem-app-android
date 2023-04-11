@@ -10,10 +10,5 @@ interface ReferralRepository {
     suspend fun getReferralStatus(walletId: String): ReferralData
 
     /** Starts user referral program */
-    suspend fun startReferral(
-        walletId: String,
-        networkId: String,
-        tokenId: String,
-        address: String,
-    ): ReferralData
+    suspend fun startReferral(walletId: String, networkId: String, tokenId: String, address: String): ReferralData
 }
