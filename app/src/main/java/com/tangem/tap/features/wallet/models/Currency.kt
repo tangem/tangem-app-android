@@ -58,10 +58,7 @@ sealed interface Currency {
     fun isToken(): Boolean = this is Token
 
     companion object {
-        fun fromBlockchainNetwork(
-            blockchainNetwork: BlockchainNetwork,
-            token: SdkToken? = null,
-        ): Currency {
+        fun fromBlockchainNetwork(blockchainNetwork: BlockchainNetwork, token: SdkToken? = null): Currency {
             return if (token != null) {
                 Token(
                     token = token,
