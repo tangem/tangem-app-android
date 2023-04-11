@@ -108,28 +108,27 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         tvBody.text = ""
     }
 
-    private fun setupCreateWalletState(state: OnboardingNoteState) =
-        with(mainBinding.onboardingActionContainer) {
-            btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener {
-                Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
-                store.dispatch(OnboardingNoteAction.CreateWallet)
-            }
-            btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
-            btnAlternativeAction.setOnClickListener { }
-
-            btnRefreshBalanceWidget.mainView.setOnClickListener(null)
-
-            tvHeader.setText(R.string.onboarding_create_wallet_header)
-            tvBody.setText(R.string.onboarding_create_wallet_body)
-
-            mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-                requireContext().getDrawableCompat(R.drawable.shape_circle),
-            )
-            updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
-
-            btnAlternativeAction.isVisible = false // temporary
+    private fun setupCreateWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
+        btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+            store.dispatch(OnboardingNoteAction.CreateWallet)
         }
+        btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+        btnAlternativeAction.setOnClickListener { }
+
+        btnRefreshBalanceWidget.mainView.setOnClickListener(null)
+
+        tvHeader.setText(R.string.onboarding_create_wallet_header)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
+
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_circle),
+        )
+        updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
+
+        btnAlternativeAction.isVisible = false // temporary
+    }
 
     private fun setupTopUpWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
         if (state.isBuyAllowed) {

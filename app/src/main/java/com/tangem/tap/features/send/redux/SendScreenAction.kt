@@ -77,7 +77,7 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         PAY_ID_NOT_REGISTERED,
         PAY_ID_REQUEST_FAILED,
         ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN,
-        ADDRESS_SAME_AS_WALLET
+        ADDRESS_SAME_AS_WALLET,
     }
 
     data class ChangePasteBtnEnableState(val isEnabled: Boolean) : AddressPayIdVerifyAction()

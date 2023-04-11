@@ -197,18 +197,16 @@ class SaltPayWalletView : WalletView() {
         groupShimmer.show()
     }
 
-    private fun handleTxSuccess(
-        txWidget: LayoutSaltPayTxHistoryBinding,
-        dataList: List<HistoryItemData>,
-    ) = with(txWidget) {
-        Timber.d("handleTxSuccess")
-        groupShimmer.hide()
-        groupEmpty.hide()
-        groupError.hide()
-        // root.beginDelayedTransition()
-        updateTxHistoryWidget(txWidget, dataList)
-        groupSuccess.show()
-    }
+    private fun handleTxSuccess(txWidget: LayoutSaltPayTxHistoryBinding, dataList: List<HistoryItemData>) =
+        with(txWidget) {
+            Timber.d("handleTxSuccess")
+            groupShimmer.hide()
+            groupEmpty.hide()
+            groupError.hide()
+            // root.beginDelayedTransition()
+            updateTxHistoryWidget(txWidget, dataList)
+            groupSuccess.show()
+        }
 
     private fun handleTxEmpty(txWidget: LayoutSaltPayTxHistoryBinding) = with(txWidget) {
         Timber.d("handleTxEmpty")
@@ -230,12 +228,10 @@ class SaltPayWalletView : WalletView() {
         groupError.show()
     }
 
-    private fun updateTxHistoryWidget(
-        txWidget: LayoutSaltPayTxHistoryBinding,
-        dataList: List<HistoryItemData>,
-    ) = with(txWidget) {
-        (rvTxHistory.adapter as TxHistoryAdapter).submitList(dataList)
-    }
+    private fun updateTxHistoryWidget(txWidget: LayoutSaltPayTxHistoryBinding, dataList: List<HistoryItemData>) =
+        with(txWidget) {
+            (rvTxHistory.adapter as TxHistoryAdapter).submitList(dataList)
+        }
 
     override fun onViewDestroy() {
         Timber.d("onViewDestroy")

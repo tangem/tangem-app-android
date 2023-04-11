@@ -210,10 +210,7 @@ fun Wallet.createAddressesData(): List<AddressData> {
     return listOfAddressData
 }
 
-private fun handleCheckSignedHashesActions(
-    action: WalletAction.Warnings,
-    state: WalletState,
-): WalletState {
+private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
         WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
         WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(

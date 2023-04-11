@@ -22,8 +22,7 @@ data class VerifyPayIdResponse(
     val addresses: List<PayIdAddress> = mutableListOf(),
     val payId: String? = null,
 ) {
-    fun getAddressDetails(): PayIdAddressDetails? =
-        if (addresses.isNotEmpty()) addresses[0].addressDetails else null
+    fun getAddressDetails(): PayIdAddressDetails? = if (addresses.isNotEmpty()) addresses[0].addressDetails else null
 }
 
 @JsonClass(generateAdapter = true)

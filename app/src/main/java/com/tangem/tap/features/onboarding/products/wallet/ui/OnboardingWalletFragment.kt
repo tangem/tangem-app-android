@@ -47,8 +47,10 @@ import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import org.rekotlin.StoreSubscriber
 
 @Suppress("LargeClass", "MagicNumber")
-class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
+class OnboardingWalletFragment :
+    BaseFragment(R.layout.fragment_onboarding_wallet),
+    StoreSubscriber<OnboardingWalletState>,
+    FragmentOnBackPressedHandler {
 
     private val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)

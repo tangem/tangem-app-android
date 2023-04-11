@@ -10,7 +10,7 @@ import java.math.RoundingMode
  */
 class CurrencyConverter(
     private val rateValue: BigDecimal,
-    private val decimals: Int
+    private val decimals: Int,
 ) {
     private val roundingMode = RoundingMode.HALF_UP
 

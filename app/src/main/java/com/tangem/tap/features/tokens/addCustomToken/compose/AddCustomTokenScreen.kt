@@ -65,10 +65,7 @@ private class AddCustomTokenScreen // for simple search
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddCustomTokenScreen(
-    state: MutableState<AddCustomTokenState>,
-    closePopupTrigger: ClosePopupTrigger,
-) {
+fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>, closePopupTrigger: ClosePopupTrigger) {
     val selectedTestCase = remember { mutableStateOf(TestCase.ContractAddress) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
@@ -112,10 +109,7 @@ private suspend fun BottomSheetScaffoldState.toggle() {
 }
 
 @Composable
-private fun ScreenContent(
-    state: MutableState<AddCustomTokenState>,
-    closePopupTrigger: ClosePopupTrigger,
-) {
+private fun ScreenContent(state: MutableState<AddCustomTokenState>, closePopupTrigger: ClosePopupTrigger) {
     val scaffoldState = rememberScaffoldState()
 
     Scaffold(
@@ -158,10 +152,7 @@ private fun ScreenContent(
 }
 
 @Composable
-private fun FormFields(
-    state: MutableState<AddCustomTokenState>,
-    closePopupTrigger: ClosePopupTrigger,
-) {
+private fun FormFields(state: MutableState<AddCustomTokenState>, closePopupTrigger: ClosePopupTrigger) {
     val context = LocalContext.current
     val errorConverter = remember { ModuleMessageConverter(context) }
 

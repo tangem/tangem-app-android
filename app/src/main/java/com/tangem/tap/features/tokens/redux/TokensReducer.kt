@@ -37,7 +37,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 addedBlockchains = action.wallets.toNonCustomBlockchains(action.derivationStyle),
                 addedTokens = action.wallets.toNonCustomTokensWithBlockchains(action.derivationStyle),
                 addedWallets = action.wallets,
-                derivationStyle = action.derivationStyle,
             )
         }
         is TokensAction.AllowToAddTokens -> {
