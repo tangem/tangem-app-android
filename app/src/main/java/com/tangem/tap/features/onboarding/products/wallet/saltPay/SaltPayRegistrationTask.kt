@@ -55,10 +55,7 @@ class SaltPayRegistrationTask(
         }
     }
 
-    private fun attestWallet(
-        session: CardSession,
-        callback: CompletionCallback<RegistrationTaskResponse>,
-    ) {
+    private fun attestWallet(session: CardSession, callback: CompletionCallback<RegistrationTaskResponse>) {
         val card = session.environment.card.guard {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
