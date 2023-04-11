@@ -9,9 +9,7 @@ import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletIt
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 
-internal fun List<UserWalletModel>.toUiModels(
-    appCurrency: FiatCurrency,
-): Sequence<UserWalletItem> {
+internal fun List<UserWalletModel>.toUiModels(appCurrency: FiatCurrency): Sequence<UserWalletItem> {
     return this.asSequence().map { userWalletModel ->
         with(userWalletModel) {
             val balance = when (fiatBalance) {
