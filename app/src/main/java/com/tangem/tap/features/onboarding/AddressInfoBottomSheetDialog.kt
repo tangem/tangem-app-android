@@ -12,8 +12,9 @@ import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchShare
 import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
@@ -46,12 +47,12 @@ class AddressInfoBottomSheetDialog(
         showData(data = stateDialog.addressData)
     }
 
-    private fun showData(data: AddressData) = with(binding!!) {
+    private fun showData(data: WalletDataModel.AddressData) = with(binding!!) {
         pseudoToolbar.imvClose.setOnClickListener {
             dismissWithAnimation = true
             cancel()
         }
-        imvQrCode.setImageBitmap(data.qrCode)
+        imvQrCode.setImageBitmap(data.shareUrl.toQrCode())
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
             Analytics.send(Token.Receive.ButtonCopyAddress())

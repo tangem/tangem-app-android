@@ -3,8 +3,8 @@ package com.tangem.tap.features.tokens.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.tokens.Currency
-import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.Action
 
 sealed class TokensAction : Action {
@@ -23,7 +23,7 @@ sealed class TokensAction : Action {
     ) : TokensAction()
 
     data class SetAddedCurrencies(
-        val wallets: List<WalletData>,
+        val wallets: List<WalletDataModel>,
         val derivationStyle: DerivationStyle?,
     ) : TokensAction()
 

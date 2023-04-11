@@ -184,10 +184,6 @@ private fun getExistentialDeposit(walletManager: WalletManager?): BigDecimal? {
 private fun Wallet.getWalletAddresses(): WalletDataModel.WalletAddresses? {
     return this.createAddressesData()
         .takeIf { it.isNotEmpty() }
-        ?.map {
-// [REDACTED_TODO_COMMENT]
-            with(it) { WalletDataModel.AddressData(address, type, shareUrl, exploreUrl) }
-        }
         ?.let { addresses ->
             WalletDataModel.WalletAddresses(
                 list = addresses,
