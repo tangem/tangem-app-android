@@ -76,11 +76,8 @@ class TokensMiddleware {
     private fun handleLoadCurrencies(scanResponse: ScanResponse?, newSearchInput: String? = null) {
         val tokensState = store.state.tokensState
 
-        val isTestcard = scanResponse?.card?.isTestCard ?: false
-
-        val supportedBlockchains: List<Blockchain> =
-            scanResponse?.card?.supportedBlockchains() ?: Blockchain.values().toList()
-                .filter { !it.isTestnet() }
+        val supportedBlockchains: List<Blockchain> = scanResponse?.card?.supportedBlockchains()
+            ?: Blockchain.values().toList().filterNot(Blockchain::isTestnet)
 
         val loadCoinsService = LoadAvailableCoinsService(
             tangemTechApi = store.state.domainNetworks.tangemTechService.api,
@@ -89,34 +86,26 @@ class TokensMiddleware {
         )
 
         scope.launch {
-            val loadCoinsResult = if (newSearchInput == null) {
-                loadCoinsService.getSupportedTokens(
-                    isTestcard,
-                    supportedBlockchains,
-                    tokensState.pageToLoad,
-                    tokensState.searchInput,
-                )
-            } else {
-                loadCoinsService.getSupportedTokens(
-                    isTestNet = isTestcard,
-                    supportedBlockchains = supportedBlockchains,
-                    page = 0,
-                    searchInput = newSearchInput.ifBlank { null },
-                )
-            }
-            when (loadCoinsResult) {
-                is Result.Success -> {
-                    val currencies = loadCoinsResult.data.currencies
-                        .filter(supportedBlockchains.toSet())
-                    store.dispatchOnMain(
+            val result = loadCoinsService.getSupportedTokens(
+                isTestNet = scanResponse?.card?.isTestCard ?: false,
+                supportedBlockchains = supportedBlockchains,
+                page = if (newSearchInput == null) tokensState.pageToLoad else 0,
+                searchInput = if (newSearchInput == null) tokensState.searchInput else newSearchInput.ifBlank { null },
+            )
+
+            store.dispatchOnMain(
+                action = when (result) {
+                    is Result.Success -> {
                         TokensAction.LoadCurrencies.Success(
-                            currencies,
-                            loadCoinsResult.data.moreAvailable,
-                        ),
-                    )
-                }
-                is Result.Failure -> store.dispatchOnMain(TokensAction.LoadCurrencies.Failure)
-            }
+                            currencies = result.data.currencies.filter(supportedBlockchains.toSet()),
+                            loadMore = result.data.moreAvailable,
+                        )
+                    }
+                    is Result.Failure -> {
+                        TokensAction.LoadCurrencies.Failure
+                    }
+                },
+            )
         }
     }
 
