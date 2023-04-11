@@ -31,7 +31,7 @@ open class Throttler<T>(
 }
 
 class ThrottlerWithValues<T, V>(
-    duration: Long
+    duration: Long,
 ) : Throttler<T>(duration), ValuesHolder<T, V> {
 
     private val valuesHolder: MutableMap<T, V?> = mutableMapOf()
