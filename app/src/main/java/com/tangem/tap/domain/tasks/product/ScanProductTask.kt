@@ -52,10 +52,7 @@ class ScanProductTask(
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
-    override fun run(
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<ScanResponse>) -> Unit) {
         val card = this.card ?: session.environment.card.guard {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return

@@ -34,10 +34,7 @@ interface WalletStoreBuilder {
             return BlockchainNetworkWalletStoreBuilderImpl(userWallet, blockchainNetwork)
         }
 
-        operator fun invoke(
-            userWallet: UserWallet,
-            walletManager: WalletManager,
-        ): WalletMangerWalletStoreBuilder {
+        operator fun invoke(userWallet: UserWallet, walletManager: WalletManager): WalletMangerWalletStoreBuilder {
             return WalletMangerWalletStoreBuilderImpl(userWallet, walletManager)
         }
     }
@@ -161,10 +158,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
     )
 }
 
-private fun Token.toTokenWalletData(
-    walletManager: WalletManager,
-    primaryToken: Token?,
-): WalletDataModel {
+private fun Token.toTokenWalletData(walletManager: WalletManager, primaryToken: Token?): WalletDataModel {
     val wallet = walletManager.wallet
     return WalletDataModel(
         currency = Currency.Token(
