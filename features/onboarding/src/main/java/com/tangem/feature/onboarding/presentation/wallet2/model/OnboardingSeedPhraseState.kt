@@ -2,6 +2,8 @@ package com.tangem.feature.onboarding.presentation.wallet2.model
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.feature.onboarding.domain.SeedPhraseError
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
 [REDACTED_AUTHOR]
@@ -22,6 +24,7 @@ enum class OnboardingSeedPhraseStep {
 }
 
 data class IntroState(
+    val cardImageUrl: String? = null,
     val buttonCreateWallet: ButtonState,
     val buttonOtherOptions: ButtonState,
 )
@@ -33,7 +36,7 @@ data class AboutState(
 )
 
 data class YourSeedPhraseState(
-    val mnemonicComponents: List<String> = listOf(),
+    val mnemonicComponents: ImmutableList<String> = persistentListOf(),
     val buttonContinue: ButtonState,
 )
 
