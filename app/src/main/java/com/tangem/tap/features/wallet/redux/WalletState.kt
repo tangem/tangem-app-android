@@ -9,29 +9,30 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.model.TotalFiatBalance
+import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.redux.reducers.findProgressState
-import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
-    val cardId: String = "",
+    val userWallet: UserWallet? = null,
     val state: ProgressState = ProgressState.Done,
     val error: ErrorType? = null,
     val cardImage: Artwork? = null,
     val hashesCountVerified: Boolean? = null,
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
-    val walletsStores: List<WalletStore> = listOf(),
+    val walletsStores: List<WalletStoreModel> = listOf(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
     val selectedCurrency: Currency? = null,
     val isTestnet: Boolean = false,
-    val totalBalance: TotalBalance? = null,
+    val totalBalance: TotalFiatBalance? = null,
     val showBackupWarning: Boolean = false,
     val missingDerivations: List<BlockchainNetwork> = emptyList(),
     val loadingUserTokens: Boolean = false,
@@ -39,10 +40,10 @@ data class WalletState(
     val canSaveUserWallets: Boolean = false,
 ) : StateType {
 
-    val walletsDataFromStores: List<WalletData>
-        get() = walletsStores.map { it.walletsData }.flatten()
+    val walletsDataFromStores: List<WalletDataModel>
+        get() = walletsStores.flatMap { it.walletsData }
 
-    val selectedWalletData: WalletData?
+    val selectedWalletData: WalletDataModel?
         get() = walletsDataFromStores.firstOrNull { it.currency == selectedCurrency }
 
     // if you do not delegate - the application crashes on startup,
@@ -66,7 +67,7 @@ data class WalletState(
     val walletManagers: List<WalletManager>
         get() = walletsStores.mapNotNull { it.walletManager }
 
-    private val primaryWalletStore: WalletStore?
+    private val primaryWalletStore: WalletStoreModel?
         get() = if (isMultiwalletAllowed || walletsStores.isEmpty() || walletsStores.size > 1) {
             null
         } else {
@@ -76,17 +77,15 @@ data class WalletState(
     val primaryWalletManager: WalletManager?
         get() = primaryWalletStore?.walletManager
 
-    val primaryWalletData: WalletData?
-        get() = primaryWalletStore?.walletsData?.firstOrNull()
+    val primaryWalletData: WalletDataModel?
+        get() = primaryWalletStore?.blockchainWalletData
 
-    val primaryTokenData: WalletData?
-        get() = primaryWalletStore?.walletsData?.toMutableList()
-            ?.apply { remove(primaryWalletData) }
-            ?.firstOrNull()
+    val primaryTokenData: WalletDataModel?
+        get() = primaryWalletStore?.walletsData
+            ?.firstOrNull { it.currency !is Currency.Blockchain }
 
     val shouldShowDetails: Boolean =
-        primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWalletData?.currencyData?.status != BalanceStatus.UnknownBlockchain
+        primaryWalletData?.status !is WalletDataModel.Unreachable
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
@@ -94,95 +93,27 @@ data class WalletState(
     }
 
     fun getWalletManager(blockchain: BlockchainNetwork): WalletManager? {
-        return walletsStores.find { it.blockchainNetwork == blockchain }?.walletManager
+        return walletsStores.firstOrNull {
+            it.blockchain == blockchain.blockchain &&
+                it.derivationPath?.rawPath == blockchain.derivationPath
+        }?.walletManager
     }
 
-    fun getWalletData(blockchain: BlockchainNetwork?): WalletData? {
-        if (blockchain == null) return null
-        return walletsDataFromStores.find {
-            it.currency is Currency.Blockchain &&
-                it.currency.blockchain == blockchain.blockchain &&
-                it.currency.derivationPath == blockchain.derivationPath
-        }
-    }
-
-    fun getWalletStore(currency: Currency?): WalletStore? {
+    fun getWalletStore(currency: Currency?): WalletStoreModel? {
         if (currency == null) return null
         return walletsStores.firstOrNull {
-            it.blockchainNetwork.derivationPath == currency.derivationPath &&
-                it.blockchainNetwork.blockchain == currency.blockchain
+            it.blockchain == currency.blockchain &&
+                it.derivationPath?.rawPath == currency.derivationPath
         }
-    }
-
-    private fun getWalletStore(blockchainNetwork: BlockchainNetwork?): WalletStore? {
-        if (blockchainNetwork == null) return null
-        return walletsStores.firstOrNull {
-            it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
-                it.blockchainNetwork.blockchain == blockchainNetwork.blockchain
-        }
-    }
-
-    fun getWalletData(currency: Currency?): WalletData? {
-        if (currency == null) return null
-        return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    fun updateWalletData(walletData: WalletData?): WalletState {
-        if (walletData == null) return this
-        return updateWalletsData(listOf(walletData))
-    }
-
-    private fun updateWalletsData(walletsData: List<WalletData>): WalletState {
-        val walletStores = walletsData
-            .map { BlockchainNetwork(it.currency.blockchain, it.currency.derivationPath, emptyList()) }
-            .distinct().map { getWalletStore(it) }.mapNotNull { it?.updateWallets(walletsData) }
-
-        return updateWalletsStores(walletStores)
-    }
-
-    private fun updateWalletsStores(walletStores: List<WalletStore>): WalletState {
-        val walletStoresMutable = walletStores.toMutableList()
-        val updatedWallets = walletsStores.map { oldWalletStore ->
-            val walletStore = walletStoresMutable.find {
-                it.blockchainNetwork == oldWalletStore.blockchainNetwork
-            }
-            if (walletStore != null) {
-                walletStoresMutable.remove(walletStore)
-                walletStore
-            } else {
-                oldWalletStore
-            }
-        }
-        return copy(walletsStores = updatedWallets + walletStoresMutable)
-            .updateProgressState()
-    }
-
-    private fun updateProgressState(): WalletState {
-        val walletsData = this.walletsStores
-            .flatMap(WalletStore::walletsData)
-
-        return if (walletsData.isNotEmpty()) {
-            val newProgressState = walletsData.findProgressState()
-
-            this.copy(
-                state = walletsData.findProgressState(),
-                error = this.error.takeIf { newProgressState == ProgressState.Error },
-            )
-        } else {
-            this
-        }
-    }
-
-    companion object {
-        const val UNKNOWN_AMOUNT_SIGN = "—"
-        const val ROUGH_SIGN = "≈"
-        const val CAN_BE_LOWER_SIGN = "<"
     }
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
 
-enum class ErrorType { NoInternetConnection }
+enum class ErrorType {
+    NoInternetConnection,
+    UnknownBlockchain,
+}
 
 sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class SendButton(enabled: Boolean) : WalletMainButton(enabled)
