@@ -13,10 +13,7 @@ sealed class TokensAction : Action {
 
     data class AllowToAddTokens(val allow: Boolean) : TokensAction()
 
-    data class LoadCurrencies(
-        val supportedBlockchains: List<Blockchain>? = null,
-        val scanResponse: ScanResponse? = null,
-    ) : TokensAction() {
+    data class LoadCurrencies(val scanResponse: ScanResponse? = null) : TokensAction() {
         data class Success(val currencies: List<Currency>, val loadMore: Boolean) : TokensAction()
         object Failure : TokensAction()
     }
