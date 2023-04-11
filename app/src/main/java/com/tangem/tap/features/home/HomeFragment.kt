@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
@@ -33,11 +34,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         store.dispatch(HomeAction.Init)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(inflater.context).apply {
             setContent {
                 BackHandler {
@@ -53,6 +50,8 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     override fun onStart() {
         super.onStart()
+        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, false) }
+
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
                 oldState.homeState == newState.homeState
