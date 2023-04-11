@@ -21,6 +21,7 @@ fun OnboardingActionBlock(
 
     Box(
         modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.size16)
             .padding(
                 top = TangemTheme.dimens.size8,
                 bottom = TangemTheme.dimens.size32,
