@@ -18,7 +18,7 @@ data class ObsoleteTokenDao(
             contractAddress = contractAddress,
             decimalCount = decimalCount,
             blockchainDao = BlockchainDao.fromBlockchain(blockchain),
-            customIconUrl = customIconUrl
+            customIconUrl = customIconUrl,
         )
     }
 }
