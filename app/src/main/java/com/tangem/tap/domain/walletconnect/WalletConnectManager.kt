@@ -287,11 +287,7 @@ class WalletConnectManager {
         }
     }
 
-    fun signBnb(
-        id: Long,
-        data: ByteArray,
-        sessionData: WCSession,
-    ) {
+    fun signBnb(id: Long, data: ByteArray, sessionData: WCSession) {
         val activeData = sessions[sessionData] ?: return
         scope.launch {
             val hash = WalletConnectSdkHelper().signBnbTransaction(data, activeData, cardId).guard {
@@ -307,11 +303,7 @@ class WalletConnectManager {
         }
     }
 
-    fun handlePersonalSignRequest(
-        message: WCEthereumSignMessage,
-        session: WalletConnectSession,
-        id: Long,
-    ) {
+    fun handlePersonalSignRequest(message: WCEthereumSignMessage, session: WalletConnectSession, id: Long) {
         val activeData = sessions[session.session] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareDataForPersonalSign(

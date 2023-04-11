@@ -1,21 +1,23 @@
 package com.tangem.tap.features.tokens.presentation.states
 
+import kotlinx.collections.immutable.ImmutableList
+
 /**
- * State holder for adding token screen
+ * State holder for screen with list of tokens
  *
 [REDACTED_AUTHOR]
  */
-internal sealed interface AddTokensStateHolder {
+internal sealed interface TokensListStateHolder {
 
     /** Toolbar state */
-    val toolbarState: AddTokensToolbarState
+    val toolbarState: TokensListToolbarState
 
     /**
      * Util function that allow to make a copy
      *
      * @param toolbarState toolbar state
      */
-    fun copySealed(toolbarState: AddTokensToolbarState): AddTokensStateHolder {
+    fun copySealed(toolbarState: TokensListToolbarState): TokensListStateHolder {
         return when (this) {
             is ManageAccess -> copy(toolbarState = toolbarState)
             is Loading -> copy(toolbarState = toolbarState)
@@ -28,7 +30,7 @@ internal sealed interface AddTokensStateHolder {
      *
      * @property toolbarState toolbar state
      */
-    data class Loading(override val toolbarState: AddTokensToolbarState) : AddTokensStateHolder
+    data class Loading(override val toolbarState: TokensListToolbarState) : TokensListStateHolder
 
     /**
      * State screen that is available only for read
@@ -37,9 +39,9 @@ internal sealed interface AddTokensStateHolder {
      * @property tokens       tokens list
      */
     data class ReadAccess(
-        override val toolbarState: AddTokensToolbarState,
-        override val tokens: List<TokenItemModel>,
-    ) : AddTokensStateHolder, TokensListVisibility
+        override val toolbarState: TokensListToolbarState,
+        override val tokens: ImmutableList<TokenItemState.ReadAccess>,
+    ) : TokensListStateHolder, TokensListVisibility
 
     /**
      * State screen that is available for read and edit
@@ -49,8 +51,8 @@ internal sealed interface AddTokensStateHolder {
      * @property onSaveButtonClick callback to be invoked when SaveButton is being clicked
      */
     data class ManageAccess(
-        override val toolbarState: AddTokensToolbarState,
-        override val tokens: List<TokenItemModel>,
+        override val toolbarState: TokensListToolbarState,
+        override val tokens: ImmutableList<TokenItemState.ManageAccess>,
         val onSaveButtonClick: () -> Unit,
-    ) : AddTokensStateHolder, TokensListVisibility
+    ) : TokensListStateHolder, TokensListVisibility
 }

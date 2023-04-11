@@ -33,29 +33,27 @@ internal class DefaultWalletCurrenciesManager(
 
     private val listeners = mutableListOf<WalletCurrenciesManager.Listener>()
 
-    override suspend fun update(
-        userWallet: UserWallet,
-        currency: Currency,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        listeners.forEach { it.willUpdate(userWallet, currency) }
-        val walletStore = walletStoresRepository.getSync(userWallet.walletId)
-            .find {
-                it.blockchain == currency.blockchain &&
-                    it.derivationPath?.rawPath == currency.derivationPath
-            }
+    override suspend fun update(userWallet: UserWallet, currency: Currency): CompletionResult<Unit> =
+        withContext(Dispatchers.Default) {
+            listeners.forEach { it.willUpdate(userWallet, currency) }
+            val walletStore = walletStoresRepository.getSync(userWallet.walletId)
+                .find {
+                    it.blockchain == currency.blockchain &&
+                        it.derivationPath?.rawPath == currency.derivationPath
+                }
 
-        val updateResult = if (walletStore == null) {
-            CompletionResult.Success(Unit)
-        } else {
-            walletAmountsRepository.updateAmountsForWalletStore(
-                walletStore = walletStore,
-                userWallet = userWallet,
-                fiatCurrency = appCurrencyProvider(),
-            )
+            val updateResult = if (walletStore == null) {
+                CompletionResult.Success(Unit)
+            } else {
+                walletAmountsRepository.updateAmountsForWalletStore(
+                    walletStore = walletStore,
+                    userWallet = userWallet,
+                    fiatCurrency = appCurrencyProvider(),
+                )
+            }
+            listeners.forEach { it.didUpdate(userWallet, currency) }
+            updateResult
         }
-        listeners.forEach { it.didUpdate(userWallet, currency) }
-        updateResult
-    }
 
     override suspend fun addCurrencies(
         userWallet: UserWallet,
@@ -110,10 +108,7 @@ internal class DefaultWalletCurrenciesManager(
             }
     }
 
-    override suspend fun removeCurrency(
-        userWallet: UserWallet,
-        currencyToRemove: Currency,
-    ): CompletionResult<Unit> {
+    override suspend fun removeCurrency(userWallet: UserWallet, currencyToRemove: Currency): CompletionResult<Unit> {
         listeners.forEach { it.willCurrencyRemove(userWallet, currencyToRemove) }
         return removeCurrencies(userWallet, listOf(currencyToRemove))
     }

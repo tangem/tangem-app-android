@@ -193,10 +193,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
     }
 }
 
-private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse,
-    backupState: BackupState,
-): ScanResponse {
+private fun updateScanResponseAfterBackup(scanResponse: ScanResponse, backupState: BackupState): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
@@ -412,10 +409,7 @@ private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
 /**
  * SaltPay state maybe not initialized if backup resumed from ResumeFoundUnfinishedBackup action
  */
-private fun initSaltPayOnBackupFinishedIfNeeded(
-    scanResponse: ScanResponse?,
-    state: OnboardingWalletState,
-) {
+private fun initSaltPayOnBackupFinishedIfNeeded(scanResponse: ScanResponse?, state: OnboardingWalletState) {
     if (state.backupState.isInterruptedBackup) return
     if (scanResponse == null) return
 
