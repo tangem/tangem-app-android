@@ -116,10 +116,7 @@ class TopUpController(
         }
     }
 
-    fun send(
-        scanResponse: ScanResponse,
-        cardBalanceState: AnalyticsParam.CardBalanceState,
-    ) {
+    fun send(scanResponse: ScanResponse, cardBalanceState: AnalyticsParam.CardBalanceState) {
         UserWalletIdBuilder.scanResponse(scanResponse).build()?.let {
             send(it, cardBalanceState, scanResponse.cardTypesResolver)
         }
