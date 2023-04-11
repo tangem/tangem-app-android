@@ -65,6 +65,10 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
     sealed class XrpDestinationTag : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : XrpDestinationTag()
     }
+
+    sealed class TonMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : TonMemo()
+    }
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
