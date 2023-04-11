@@ -293,9 +293,7 @@ private fun FeeItem(feeState: FeeState, currency: String) {
 }
 
 @Composable
-private fun SwapWarnings(
-    warnings: List<SwapWarning>,
-) {
+private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.secondary)

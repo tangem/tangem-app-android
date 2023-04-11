@@ -131,9 +131,7 @@ class SaltPayActivationManager(
             .tryExtractError()
     }
 
-    suspend fun sendTransactions(
-        signedTransactions: List<SignedEthereumTransaction>,
-    ): BlockchainResult<List<String>> {
+    suspend fun sendTransactions(signedTransactions: List<SignedEthereumTransaction>): BlockchainResult<List<String>> {
         return gnosisRegistrator.sendTransactions(signedTransactions)
     }
 
@@ -208,13 +206,12 @@ class SaltPayActivationManager(
         )
     }
 
-    private fun makeRegisterKYCRequest(): RegisterKYCRequest =
-        RegisterKYCRequest(
-            cardId = cardId,
-            publicKey = cardPublicKey,
-            kycProvider = "UTORG",
-            kycRefId = kycUrlProvider.kycRefId,
-        )
+    private fun makeRegisterKYCRequest(): RegisterKYCRequest = RegisterKYCRequest(
+        cardId = cardId,
+        publicKey = cardPublicKey,
+        kycProvider = "UTORG",
+        kycRefId = kycUrlProvider.kycRefId,
+    )
 
     companion object {
         fun stub(): SaltPayActivationManager = SaltPayActivationManager(
