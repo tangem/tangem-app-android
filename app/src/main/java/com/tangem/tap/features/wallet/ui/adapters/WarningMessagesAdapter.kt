@@ -40,11 +40,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
     }
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WarningMessage>() {
-        override fun areContentsTheSame(oldItem: WarningMessage, newItem: WarningMessage) =
-            oldItem == newItem
+        override fun areContentsTheSame(oldItem: WarningMessage, newItem: WarningMessage) = oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: WarningMessage, newItem: WarningMessage) =
-            oldItem == newItem
+        override fun areItemsTheSame(oldItem: WarningMessage, newItem: WarningMessage) = oldItem == newItem
     }
 }
 
