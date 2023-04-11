@@ -21,9 +21,7 @@ import com.tangem.domain.redux.domainStore
 [REDACTED_AUTHOR]
  */
 @Composable
-fun ContractAddressTests(
-    onItemClick: VoidCallback,
-) {
+fun ContractAddressTests(onItemClick: VoidCallback) {
     val casesInfo = listOf(
         "USDC on ETH" to "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "BUSD on ETH" to "0x4fabb145d64652a948d72533023f6e7a623c7c53",
@@ -37,9 +35,7 @@ fun ContractAddressTests(
 }
 
 @Composable
-fun SolanaAddressTests(
-    onItemClick: VoidCallback,
-) {
+fun SolanaAddressTests(onItemClick: VoidCallback) {
     val casesInfo = listOf(
         "USDT (full)" to "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
         "USDT (valid - 2/3 of address)" to "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8Ben",
@@ -50,10 +46,7 @@ fun SolanaAddressTests(
 }
 
 @Composable
-private fun CasesListContent(
-    casesList: List<Pair<String, String>>,
-    onItemClick: VoidCallback,
-) {
+private fun CasesListContent(casesList: List<Pair<String, String>>, onItemClick: VoidCallback) {
     LazyColumn(
         content = {
             item {
@@ -96,9 +89,7 @@ fun ResetAllFieldsButton(onItemClick: VoidCallback) {
 }
 
 @Composable
-fun ResetContractAddressButton(
-    onItemClick: VoidCallback,
-) {
+fun ResetContractAddressButton(onItemClick: VoidCallback) {
     ActionButton(
         name = "Set empty address",
         onClick = {
@@ -109,11 +100,7 @@ fun ResetContractAddressButton(
 }
 
 @Composable
-private fun ContractAddressButton(
-    name: String,
-    address: String,
-    onItemClick: VoidCallback,
-) {
+private fun ContractAddressButton(name: String, address: String, onItemClick: VoidCallback) {
     ActionButton(
         modifier = Modifier.fillMaxWidth(),
         name = name,
@@ -125,11 +112,7 @@ private fun ContractAddressButton(
 }
 
 @Composable
-fun ActionButton(
-    name: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ActionButton(name: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         modifier = modifier.padding(horizontal = 8.dp),
         onClick = onClick,

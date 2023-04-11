@@ -73,9 +73,7 @@ internal class DefaultUserWalletsPublicInformationRepository(
     }
 
     @JvmName("saveWithPublicInformation")
-    private suspend fun save(
-        publicInformation: List<UserWalletPublicInformation>,
-    ): CompletionResult<Unit> = catching {
+    private suspend fun save(publicInformation: List<UserWalletPublicInformation>): CompletionResult<Unit> = catching {
         withContext(Dispatchers.IO) {
             publicInformation
                 .let(publicInformationAdapter::toJson)
@@ -85,6 +83,6 @@ internal class DefaultUserWalletsPublicInformationRepository(
     }
 
     private enum class StorageKey {
-        UserWalletPublicInformation
+        UserWalletPublicInformation,
     }
 }
