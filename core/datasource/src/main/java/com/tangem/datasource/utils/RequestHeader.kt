@@ -16,6 +16,6 @@ sealed class RequestHeader(vararg pairs: Pair<String, String>) {
 
     class AuthenticationHeader(authProvider: AuthProvider) : RequestHeader(
         "card_public_key" to authProvider.getCardPublicKey(),
-        "card_id" to authProvider.getCardId()
+        "card_id" to authProvider.getCardId(),
     )
 }

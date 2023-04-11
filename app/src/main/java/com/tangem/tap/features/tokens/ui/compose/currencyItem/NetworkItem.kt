@@ -37,6 +37,7 @@ import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
+import com.tangem.tap.features.tokens.presentation.ui.NetworkItemArrow
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
@@ -76,9 +77,9 @@ fun NetworkItem(
                 .width(78.dp)
                 .padding(start = 38.dp),
         ) {
-            CurrencyItemArrow(
-                rowHeight = rowHeight,
-                isLastArrow = index == size - 1,
+            NetworkItemArrow(
+                itemHeight = rowHeight,
+                isLastItem = index == size - 1,
             )
         }
         Box(
@@ -161,10 +162,7 @@ fun NetworkItem(
 
 @Suppress("MagicNumber")
 @Composable
-private fun prepareNetworkNameSpannableText(
-    blockchain: Blockchain,
-    contractAddress: String?,
-): AnnotatedString {
+private fun prepareNetworkNameSpannableText(blockchain: Blockchain, contractAddress: String?): AnnotatedString {
     val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
     val additionalText =
         if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
