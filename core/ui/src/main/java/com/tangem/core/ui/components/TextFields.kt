@@ -201,7 +201,7 @@ private fun TangemTextFieldSize.toShape(): Shape = when (this) {
     TangemTextFieldSize.Default -> TangemTheme.shapes.roundedCornersSmall2
 }
 
-internal object TangemTextFieldsDefault {
+object TangemTextFieldsDefault {
     val defaultTextFieldColors: TangemTextFieldColors
         @Composable @Stable get() = TangemTextFieldColors(
             textColor = TangemTheme.colors.text.primary1,
@@ -232,7 +232,7 @@ internal object TangemTextFieldsDefault {
 }
 
 @Immutable
-internal data class TangemTextFieldColors(
+data class TangemTextFieldColors(
     private val textColor: Color,
     private val disabledTextColor: Color,
     private val cursorColor: Color,
