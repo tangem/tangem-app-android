@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.Text
@@ -19,18 +18,19 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescription
 import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
+import kotlinx.collections.immutable.ImmutableList
 
 /**
 [REDACTED_AUTHOR]
  */
 @Composable
 fun YourSeedPhraseScreen(
+    state: YourSeedPhraseState,
     modifier: Modifier = Modifier,
-    state: YourSeedPhraseState = YourSeedPhraseState(),
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -40,29 +40,25 @@ fun YourSeedPhraseScreen(
         ) {
             OnboardingDescriptionBlock(
                 modifier = Modifier.align(Alignment.Center),
-                descriptionsList = listOf(
-                    OnboardingDescription(
-                        titleRes = R.string.onboarding_seed_generate_title,
-                        subTitleRes = R.string.onboarding_seed_generate_message,
-                    ),
-                ),
-            )
+            ) {
+                Description(
+                    titleRes = R.string.onboarding_seed_generate_title,
+                    subTitleRes = R.string.onboarding_seed_generate_message,
+                )
+            }
         }
         Box(
             modifier = Modifier.weight(1f),
         ) {
-            PhraseGreedBlock(state.phraseList)
+            PhraseGreedBlock(state.mnemonicComponents)
         }
 
-        Box(
-            modifier = Modifier.wrapContentSize(),
-        ) {
+        Box {
             OnboardingActionBlock(
                 firstActionContent = {
                     PrimaryButton(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.size16),
+                            .fillMaxWidth(),
                         text = stringResource(id = R.string.common_continue),
                         onClick = state.buttonContinue.onClick,
                     )
@@ -73,7 +69,7 @@ fun YourSeedPhraseScreen(
 }
 
 @Composable
-private fun PhraseGreedBlock(phraseList: List<String>) {
+private fun PhraseGreedBlock(phraseList: ImmutableList<String>) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
     ) {
