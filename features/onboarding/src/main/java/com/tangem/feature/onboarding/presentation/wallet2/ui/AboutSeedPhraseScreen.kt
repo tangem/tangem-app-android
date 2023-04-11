@@ -29,7 +29,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.AboutState
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingDescription
+import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 
@@ -38,8 +38,8 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
  */
 @Composable
 fun AboutSeedPhraseScreen(
+    state: AboutState,
     modifier: Modifier = Modifier,
-    state: AboutState = AboutState(),
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -53,14 +53,12 @@ fun AboutSeedPhraseScreen(
             modifier = Modifier.weight(1.2f),
         ) {
             Column {
-                OnboardingDescriptionBlock(
-                    descriptionsList = listOf(
-                        OnboardingDescription(
-                            titleRes = R.string.onboarding_seed_intro_title,
-                            subTitleRes = R.string.onboarding_seed_intro_message,
-                        ),
-                    ),
-                )
+                OnboardingDescriptionBlock {
+                    Description(
+                        titleRes = R.string.onboarding_seed_intro_title,
+                        subTitleRes = R.string.onboarding_seed_intro_message,
+                    )
+                }
                 ReadMoreBlock(state)
             }
         }
@@ -72,8 +70,7 @@ fun AboutSeedPhraseScreen(
                 firstActionContent = {
                     SecondaryButton(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.size16),
+                            .fillMaxWidth(),
                         text = stringResource(id = R.string.onboarding_seed_intro_button_generate),
                         enabled = state.buttonGenerateSeedPhrase.enabled,
                         showProgress = state.buttonGenerateSeedPhrase.showProgress,
@@ -99,25 +96,29 @@ fun AboutSeedPhraseScreen(
 @Composable
 private fun EditIconBlock() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
             modifier = Modifier
-                .size(44.dp),
-            painter = painterResource(id = R.drawable.ic_onboarding_text_edit),
+                .size(TangemTheme.dimens.size44),
+            painter = painterResource(id = R.drawable.ic_onboarding_text_edit_56),
             contentDescription = "Edit icon",
         )
         SpacerH32()
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0x1EE10101)),
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                .background(TangemTheme.colors.icon.warning.copy(alpha = 0.12f)),
         ) {
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(
+                        horizontal = TangemTheme.dimens.size12,
+                        vertical = TangemTheme.dimens.size4,
+                    ),
                 text = stringResource(id = R.string.onboarding_seed_phrase_intro_legacy),
                 color = TangemTheme.colors.text.warning,
                 style = TangemTheme.typography.body1,
@@ -132,22 +133,26 @@ private fun ReadMoreBlock(state: AboutState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
+            .padding(top = TangemTheme.dimens.size16),
     ) {
-        val shape = RoundedCornerShape(24.dp)
+        val shape = TangemTheme.shapes.roundedCornersLarge
         Row(
             modifier = Modifier
                 .align(Alignment.Center)
                 .clip(shape)
-                .border(1.dp, Color.Gray, shape)
+                .border(
+                    width = 1.dp,
+                    color = Color.Gray,
+                    shape = shape,
+                )
                 .clickable(onClick = state.buttonReadMoreAboutSeedPhrase.onClick)
                 .padding(
-                    horizontal = 16.dp,
-                    vertical = 8.dp,
+                    horizontal = TangemTheme.dimens.size16,
+                    vertical = TangemTheme.dimens.size8,
                 ),
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_arrow_top_right),
+                painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
                 contentDescription = "Go away icon",
             )
             SpacerW8()
