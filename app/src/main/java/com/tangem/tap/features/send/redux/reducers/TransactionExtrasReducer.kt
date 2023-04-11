@@ -6,11 +6,13 @@ import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.TransactionExtrasAction.BinanceMemo
 import com.tangem.tap.features.send.redux.TransactionExtrasAction.Prepare
 import com.tangem.tap.features.send.redux.TransactionExtrasAction.Release
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.TonMemo
 import com.tangem.tap.features.send.redux.TransactionExtrasAction.XlmMemo
 import com.tangem.tap.features.send.redux.TransactionExtrasAction.XrpDestinationTag
 import com.tangem.tap.features.send.redux.states.BinanceMemoState
 import com.tangem.tap.features.send.redux.states.InputViewValue
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.TonMemoState
 import com.tangem.tap.features.send.redux.states.TransactionExtraError
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.send.redux.states.XlmMemoState
@@ -28,6 +30,7 @@ class TransactionExtrasReducer : SendInternalReducer {
             is XlmMemo -> handleXlmMemo(action, sendState, sendState.transactionExtrasState)
             is BinanceMemo -> handleBinanceMemo(action, sendState, sendState.transactionExtrasState)
             is XrpDestinationTag -> handleXrpTag(action, sendState, sendState.transactionExtrasState)
+            is TonMemo -> handleTonMemo(action, sendState, sendState.transactionExtrasState)
             else -> sendState
         }
     }
@@ -56,6 +59,7 @@ class TransactionExtrasReducer : SendInternalReducer {
             }
             Blockchain.Stellar -> TransactionExtrasState(xlmMemo = XlmMemoState())
             Blockchain.Binance -> TransactionExtrasState(binanceMemo = BinanceMemoState())
+            Blockchain.TON, Blockchain.TONTestnet -> TransactionExtrasState(tonMemoState = TonMemoState())
             else -> emptyResult
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
@@ -136,6 +140,17 @@ class TransactionExtrasReducer : SendInternalReducer {
                 } else {
                     infoState
                 }
+            }
+        }
+        return updateLastState(sendState.copy(transactionExtrasState = result), result)
+    }
+
+    private fun handleTonMemo(action: TonMemo, sendState: SendState, infoState: TransactionExtrasState): SendState {
+        val result = when (action) {
+            is TonMemo.HandleUserInput -> {
+                val memo = action.data
+                val input = InputViewValue(memo, true)
+                infoState.copy(tonMemoState = TonMemoState(input, memo))
             }
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
