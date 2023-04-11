@@ -40,6 +40,7 @@ dependencies {
     implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
+    implementation(deps.androidx.paging.runtime)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
@@ -56,6 +57,7 @@ dependencies {
     implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.paging)
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
