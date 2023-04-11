@@ -213,10 +213,7 @@ private fun OutlinedProgressTextField(
 }
 
 @Composable
-private fun AnimatedErrorView(
-    errorConverter: ModuleMessageConverter,
-    error: ModuleError? = null,
-) {
+private fun AnimatedErrorView(errorConverter: ModuleMessageConverter, error: ModuleError? = null) {
     AnimatedVisibility(
         visible = error != null,
         enter = fadeIn() + slideInVertically(),

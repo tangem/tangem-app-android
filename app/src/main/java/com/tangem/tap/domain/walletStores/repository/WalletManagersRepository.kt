@@ -17,10 +17,7 @@ interface WalletManagersRepository {
 
     suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit>
 
-    suspend fun delete(
-        userWalletId: UserWalletId,
-        blockchain: Blockchain,
-    ): CompletionResult<Unit>
+    suspend fun delete(userWalletId: UserWalletId, blockchain: Blockchain): CompletionResult<Unit>
 
     companion object
 }
