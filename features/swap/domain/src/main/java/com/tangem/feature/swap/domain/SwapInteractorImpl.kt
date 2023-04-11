@@ -244,7 +244,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return repository.getTangemFee()
     }
 
-    fun getTokenDecimals(token: Currency): Int {
+    private fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
         } else {
@@ -351,15 +351,15 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapStateData = null,
                     formattedFee = null,
                 )
-                return updatePermissionState(
+                val quotesState = updatePermissionState(
                     networkId = networkId,
                     fromToken = fromToken,
                     quotesLoadedState = swapState,
-                ).copy(
-                    preparedSwapConfigState = PreparedSwapConfigState(
+                )
+                return quotesState.copy(
+                    preparedSwapConfigState = quotesState.preparedSwapConfigState.copy(
                         isAllowedToSpend = isAllowedToSpend,
                         isBalanceEnough = isBalanceWithoutFeeEnough,
-                        isFeeEnough = true,
                     ),
                 )
             } else {
@@ -533,7 +533,14 @@ internal class SwapInteractorImpl @Inject constructor(
             decimals = transactionManager.getNativeTokenDecimals(networkId),
             currency = userWalletManager.getNetworkCurrency(networkId),
         ) + feeFiat
+        val isFeeEnough = checkFeeIsEnough(
+            fee = feeData.fee.value,
+            spendAmount = SwapAmount.zeroSwapAmount(),
+            networkId = networkId,
+            fromToken = fromToken,
+        )
         return quotesLoadedState.copy(
+            fee = formattedFee,
             permissionState = PermissionDataState.PermissionReadyForRequest(
                 currency = fromToken.symbol,
                 amount = INFINITY_SYMBOL,
@@ -545,6 +552,9 @@ internal class SwapInteractorImpl @Inject constructor(
                     gasLimit = feeData.gasLimit.toInt(),
                     approveModel = transactionData,
                 ),
+            ),
+            preparedSwapConfigState = quotesLoadedState.preparedSwapConfigState.copy(
+                isFeeEnough = isFeeEnough,
             ),
         )
     }
