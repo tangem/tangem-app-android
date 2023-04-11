@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.presentation.states
 
 /** Toolbar state */
-sealed interface AddTokensToolbarState {
+sealed interface TokensListToolbarState {
 
     /** Callback to be invoked when BackButton is being clicked */
     val onBackButtonClick: () -> Unit
@@ -10,7 +10,7 @@ sealed interface AddTokensToolbarState {
     val onSearchButtonClick: () -> Unit
 
     /** Toolbar state as title */
-    sealed interface Title : AddTokensToolbarState {
+    sealed interface Title : TokensListToolbarState {
 
         /** Toolbar title id from resources */
         val titleResId: Int
@@ -36,7 +36,7 @@ sealed interface AddTokensToolbarState {
          * @property onSearchButtonClick   callback to be invoked when SearchButton is being clicked
          * @property onAddCustomTokenClick callback to be invoked when AddCustomTokenButton is being clicked
          */
-        data class EditAccess(
+        data class ManageAccess(
             override val titleResId: Int,
             override val onBackButtonClick: () -> Unit,
             override val onSearchButtonClick: () -> Unit,
@@ -59,5 +59,5 @@ sealed interface AddTokensToolbarState {
         val value: String,
         val onValueChange: (String) -> Unit,
         val onCleanButtonClick: () -> Unit,
-    ) : AddTokensToolbarState
+    ) : TokensListToolbarState
 }
