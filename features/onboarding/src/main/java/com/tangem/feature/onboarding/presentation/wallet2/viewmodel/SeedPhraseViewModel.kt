@@ -24,7 +24,6 @@ import com.tangem.utils.coroutines.Debouncer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -34,7 +33,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SeedPhraseViewModel @Inject constructor(
-    private val seedPhraseInteractor: SeedPhraseInteractor,
+    private val interactor: SeedPhraseInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel() {
 
@@ -49,20 +48,7 @@ class SeedPhraseViewModel @Inject constructor(
     val currentStep: OnboardingSeedPhraseStep
         get() = uiState.step
 
-    private val textFieldsDebouncers = mutableMapOf<SeedPhraseField, Debouncer>()
-
-    init {
-        prepareCheckYourSeedPhraseTest()
-    }
-
-    // TODO: delete
-    private fun prepareCheckYourSeedPhraseTest() {
-        uiState.copy(step = OnboardingSeedPhraseStep.AboutSeedPhrase)
-        viewModelScope.launchIo {
-            delay(300)
-            buttonGenerateSeedPhraseClick()
-        }
-    }
+    private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
 
     private fun createUiActions(): UiActions = UiActions(
         introActions = IntroUiAction(
@@ -94,8 +80,8 @@ class SeedPhraseViewModel @Inject constructor(
         ),
         importSeedPhraseActions = ImportSeedPhraseUiAction(
             phraseTextFieldAction = TextFieldUiAction(
-                // onFocusChanged = { isFocused -> onFocusChanged(SeedPhraseField.Eleventh, isFocused) },
-                // onTextFieldChanged = { value -> onTextFieldChanged(SeedPhraseField.Eleventh, value) },
+                onFocusChanged = { isFocused ->  /* [REDACTED_TODO_COMMENT] */ },
+                onTextFieldChanged = { value -> /* [REDACTED_TODO_COMMENT] */ },
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
             buttonCreateWalletClick = ::buttonCreateWalletWithSeedPhraseClick,
@@ -119,44 +105,27 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun onTextFieldChanged(field: SeedPhraseField, textFieldValue: TextFieldValue) {
-        uiState = uiBuilder.checkSeedPhrase.updateTextField(uiState, field, textFieldValue)
+        viewModelScope.launchSingle {
+            updateUi { uiBuilder.checkSeedPhrase.updateTextField(uiState, field, textFieldValue) }
 
-        val fieldState = field.getState(uiState)
-        if (fieldState.textFieldValue.text.isEmpty()) {
-            uiState = uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError = false)
-            return
-        }
-
-        viewModelScope.launchIo {
-            val textFieldDebouncer = textFieldsDebouncers[field] ?: Debouncer().apply {
-                textFieldsDebouncers[field] = this
+            val fieldState = field.getState(uiState)
+            if (fieldState.textFieldValue.text.isEmpty()) {
+                updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError = false) }
+                return@launchSingle
             }
-            textFieldDebouncer.debounce(viewModelScope, context = dispatchers.io) {
-                val hasError = !seedPhraseInteractor.isPhraseMatch(
-                    phrase = textFieldValue.text,
-                    source = uiState.yourSeedPhraseState.phraseList,
-                )
+
+            createOrGetDebouncer(field.name).debounce(viewModelScope, context = dispatchers.io) {
+                val hasError = !interactor.wordIsMatch(textFieldValue.text)
                 if (fieldState.isError != hasError) {
-                    withMainContext {
-                        uiState = uiBuilder.checkSeedPhrase.updateTextFieldError(
-                            uiState = uiState,
-                            field = field,
-                            hasError = hasError,
-                        )
-                    }
+                    updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
 
                 val allFieldsWithoutError = SeedPhraseField.values()
-                    .map { it.getState(uiState) }
-                    .all { !it.isError }
+                    .map { field -> field.getState(uiState) }
+                    .all { fieldState -> !fieldState.isError }
 
                 if (uiState.checkSeedPhraseState.buttonCreateWallet.enabled != allFieldsWithoutError) {
-                    withMainContext {
-                        uiState = uiBuilder.checkSeedPhrase.updateCreateWalletButton(
-                            uiState = uiState,
-                            enabled = allFieldsWithoutError,
-                        )
-                    }
+                    updateUi { uiBuilder.checkSeedPhrase.updateCreateWalletButton(uiState, allFieldsWithoutError) }
                 }
             }
         }
@@ -172,7 +141,9 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonOtherOptionsClick() {
-        uiState = uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.AboutSeedPhrase)
+        viewModelScope.launchSingle {
+            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.AboutSeedPhrase) }
+        }
     }
 
     private fun buttonReadMoreAboutSeedPhraseClick() {
@@ -180,25 +151,28 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonGenerateSeedPhraseClick() {
-        viewModelScope.launchIo {
-            withMainContext {
-                uiState = uiBuilder.generateSeedPhrase(uiState)
-            }
-
-            delay(1000)
-            val seedPhraseList = seedPhraseInteractor.generateSeedPhrase()
-            withMainContext {
-                uiState = uiBuilder.seedPhraseGenerated(uiState, seedPhraseList)
-            }
+        viewModelScope.launchSingle {
+            updateUi { uiBuilder.generateMnemonicComponents(uiState) }
+            interactor.generateMnemonic()
+                .onSuccess { mnemonic ->
+                    updateUi { uiBuilder.mnemonicGenerated(uiState, mnemonic.mnemonicComponents) }
+                }
+                .onFailure {
+                    // show error
+                }
         }
     }
 
     private fun buttonImportSeedPhraseClick() {
-        uiState = uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.ImportSeedPhrase)
+        viewModelScope.launchSingle {
+            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.ImportSeedPhrase) }
+        }
     }
 
     private fun buttonContinueClick() {
-        uiState = uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.CheckSeedPhrase)
+        viewModelScope.launchSingle {
+            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.CheckSeedPhrase) }
+        }
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
@@ -210,26 +184,37 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion ButtonClickHandlers
 
     // region Utils
+    /**
+     * Updating the UI with a contract where all copying of objects are called in the Single thread context and
+     * updating the UiState in the main context.
+     */
+    private suspend fun updateUi(updateBlock: suspend () -> OnboardingSeedPhraseState) {
+        withSingleContext {
+            val newState = updateBlock.invoke()
+            withMainContext { uiState = newState }
+        }
+    }
+
+    private fun createOrGetDebouncer(name: String): Debouncer {
+        return textFieldsDebouncers[name] ?: Debouncer(name).apply { textFieldsDebouncers[name] = this }
+    }
+
     private fun SeedPhraseField.getState(uiState: OnboardingSeedPhraseState): TextFieldState = when (this) {
         SeedPhraseField.Second -> uiState.checkSeedPhraseState.tvSecondPhrase
         SeedPhraseField.Seventh -> uiState.checkSeedPhraseState.tvSeventhPhrase
         SeedPhraseField.Eleventh -> uiState.checkSeedPhraseState.tvEleventhPhrase
     }
 
-    private fun CoroutineScope.launchMain(block: suspend CoroutineScope.() -> Unit): Job {
-        return viewModelScope.launch(dispatchers.main, block = block)
-    }
-
-    private fun CoroutineScope.launchIo(block: suspend CoroutineScope.() -> Unit): Job {
-        return viewModelScope.launch(dispatchers.main, block = block)
+    private fun CoroutineScope.launchSingle(block: suspend CoroutineScope.() -> Unit): Job {
+        return viewModelScope.launch(dispatchers.single, block = block)
     }
 
     private suspend fun <T> withMainContext(block: suspend CoroutineScope.() -> T): T {
         return withContext(dispatchers.main, block)
     }
 
-    private suspend fun <T> withIoContext(block: suspend CoroutineScope.() -> T): T {
-        return withContext(dispatchers.io, block)
+    private suspend fun <T> withSingleContext(block: suspend CoroutineScope.() -> T): T {
+        return withContext(dispatchers.single, block)
     }
     // endregion Utils
 }
