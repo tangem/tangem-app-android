@@ -8,13 +8,15 @@ import com.tangem.tap.common.ShimmerData
 import com.tangem.tap.common.ShimmerRecyclerAdapter
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.animateVisibility
-import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.features.wallet.ui.wallet.saltPay.rv.HistoryItemData
@@ -124,16 +126,14 @@ class SaltPayWalletView : WalletView() {
         tvUnreachable.animateVisibility(show = mainProgressState == ProgressState.Error)
         veilBalanceCrypto.animateVisibility(show = mainProgressState != ProgressState.Error)
 
-        if (tokenData.currencyData.fiatAmount == null) {
+        if (tokenData.fiatRate == null) {
             veilBalance.veil()
         } else {
             veilBalance.unVeil()
-            tvBalance.text = tokenData.currencyData.fiatAmount.formatAmountAsSpannedString(
-                currencySymbol = appCurrency.symbol,
-            )
+            tvBalance.text = tokenData.getFormattedFiatAmount(appCurrency)
         }
 
-        tvBalanceCrypto.text = tokenData.currencyData.amountFormatted
+        tvBalanceCrypto.text = tokenData.getFormattedAmount()
 
         tvCurrencyName.text = appCurrency.code
         tvCurrencyName.setOnClickListener {
