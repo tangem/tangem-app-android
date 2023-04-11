@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
@@ -15,7 +14,6 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -110,15 +108,7 @@ class MultiWalletView : WalletView() {
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             Analytics.send(Portfolio.ButtonManageTokens())
-            store.dispatch(
-                TokensAction.LoadCurrencies(
-                    supportedBlockchains = CurrenciesRepository.getBlockchains(
-                        card.firmwareVersion,
-                        card.isTestCard,
-                    ),
-                    scanResponse = store.state.globalState.scanResponse,
-                ),
-            )
+            store.dispatch(TokensAction.LoadCurrencies(scanResponse = store.state.globalState.scanResponse))
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
