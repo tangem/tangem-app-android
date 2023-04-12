@@ -24,10 +24,11 @@ internal data class Token(
     /**
      * Domain model of network for tokens list screen
      *
-     * @property id         network id
-     * @property blockchain blockchain
-     * @property address    address. If address equals null, it means it is the main network of token
-     * @property iconUrl    network icon url
+     * @property id           network id
+     * @property blockchain   blockchain
+     * @property address      address. If address equals null, it means it is the main network of token
+     * @property iconUrl      network icon url
+     * @property decimalCount decimal count
      *
 [REDACTED_AUTHOR]
      */
@@ -36,5 +37,6 @@ internal data class Token(
         val blockchain: Blockchain,
         val address: String?,
         val iconUrl: String,
+        val decimalCount: Int?,
     )
 }
