@@ -11,6 +11,7 @@ internal object MockData {
         id = UserWalletId("wallet_1"),
         balance = UserWalletItem.Balance.Loaded(
             amount = "6781.05 $",
+            showWarning = true,
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
@@ -23,6 +24,7 @@ internal object MockData {
         id = UserWalletId("wallet_4"),
         balance = UserWalletItem.Balance.Loaded(
             amount = "6781.05 $",
+            showWarning = false,
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
