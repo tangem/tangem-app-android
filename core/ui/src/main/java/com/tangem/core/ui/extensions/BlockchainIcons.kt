@@ -75,7 +75,7 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         "dash" -> R.drawable.img_dash_22
         "kaspa" -> R.drawable.img_kaspa_22
         "ton" -> R.drawable.img_ton_22
-        "kava"-> R.drawable.img_kava_22
+        "kava" -> R.drawable.img_kava_22
         else -> R.drawable.ic_alert_24
     }
 }
