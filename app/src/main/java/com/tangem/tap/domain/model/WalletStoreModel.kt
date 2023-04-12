@@ -9,6 +9,7 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import java.math.BigDecimal
 
+// FIXME: Move list of wallet addresses from WalletDataModel to this class
 /**
  * Contains info about the blockchain and its currencies
  *
