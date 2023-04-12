@@ -29,6 +29,7 @@ internal object TestnetTokensConfigConverter : Converter<TestnetTokensConfig, Li
                         blockchain = blockchain,
                         address = network.address,
                         iconUrl = getIconUrl(id = network.id, imageHost = null),
+                        decimalCount = network.decimalCount,
                     )
                 }.orEmpty(),
             )
