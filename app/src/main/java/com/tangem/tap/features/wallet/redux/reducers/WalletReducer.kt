@@ -13,7 +13,6 @@ import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletAddresses
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
@@ -102,21 +101,6 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.TradeCryptoAction -> return newState
-        is WalletAction.ChangeSelectedAddress -> {
-            val walletAddresses = newState.getWalletData(newState.selectedCurrency)?.walletAddresses
-                ?: return newState
-            val address = walletAddresses.list.firstOrNull { it.type == action.type }
-                ?: return newState
-
-            newState = newState.updateWalletData(
-                newState.selectedWalletData?.copy(
-                    walletAddresses = WalletAddresses(
-                        selectedAddress = address,
-                        list = walletAddresses.list,
-                    ),
-                ),
-            )
-        }
         is WalletAction.AppCurrencyAction -> {
             newState = appCurrencyReducer.reduce(action, newState)
         }
