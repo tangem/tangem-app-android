@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.di
 
-import com.tangem.tap.features.tokens.presentation.router.AddTokensRouter
-import com.tangem.tap.features.tokens.presentation.router.DefaultAddTokensRouter
+import com.tangem.tap.features.tokens.presentation.router.DefaultTokensListRouter
+import com.tangem.tap.features.tokens.presentation.router.TokensListRouter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,9 +13,9 @@ import dagger.hilt.android.scopes.ViewModelScoped
  */
 @Module
 @InstallIn(ViewModelComponent::class)
-internal object AddTokensRouterModule {
+internal object TokensListRouterModule {
 
     @Provides
     @ViewModelScoped
-    fun provideAddTokensRouter(): AddTokensRouter = DefaultAddTokensRouter()
+    fun provideTokensListRouter(): TokensListRouter = DefaultTokensListRouter()
 }
