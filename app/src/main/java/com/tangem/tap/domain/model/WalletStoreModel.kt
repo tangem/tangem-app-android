@@ -8,7 +8,7 @@ import com.tangem.tap.domain.model.WalletStoreModel.WalletRent
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import java.math.BigDecimal
-
+// [REDACTED_TODO_COMMENT]
 /**
  * Contains info about the blockchain and its currencies
  *

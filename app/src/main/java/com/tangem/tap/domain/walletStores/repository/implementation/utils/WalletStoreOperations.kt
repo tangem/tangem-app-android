@@ -1,9 +1,11 @@
 package com.tangem.tap.domain.walletStores.repository.implementation.utils
 
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.core.TangemError
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.features.wallet.models.Currency
 import timber.log.Timber
 
 internal inline fun HashMap<UserWalletId, List<WalletStoreModel>>.replaceWalletStore(
@@ -88,6 +90,12 @@ internal fun WalletStoreModel.updateWithUnreachable(): WalletStoreModel {
 internal fun WalletStoreModel.updateWithRent(rent: WalletStoreModel.WalletRent?): WalletStoreModel {
     return this.copy(
         walletRent = rent,
+    )
+}
+
+internal fun WalletStoreModel.updateSelectedAddress(currency: Currency, addressType: AddressType): WalletStoreModel {
+    return this.copy(
+        walletsData = walletsData.updateSelectedAddress(currency, addressType),
     )
 }
 
