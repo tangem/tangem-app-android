@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -18,6 +19,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateSelectedAddress
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import kotlinx.coroutines.Dispatchers
@@ -101,6 +103,21 @@ internal class DefaultWalletStoresManager(
                     )
                 }
             }
+    }
+
+    override suspend fun updateSelectedAddress(
+        userWalletId: UserWalletId,
+        currency: Currency,
+        addressType: AddressType,
+    ): CompletionResult<Unit> {
+        return walletStoresRepository.update(userWalletId) { walletStores ->
+            walletStores
+                .firstOrNull {
+                    it.blockchain == currency.blockchain &&
+                        it.derivationPath?.rawPath == currency.derivationPath
+                }
+                ?.updateSelectedAddress(currency, addressType)
+        }
     }
 
     private suspend fun fetchWalletsIfNeeded(userWallet: UserWallet): CompletionResult<UserWallet> {
