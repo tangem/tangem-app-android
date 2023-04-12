@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.presentation.router
 
-/** Add tokens feature router */
-internal interface AddTokensRouter {
+/** Tokens list feature router */
+internal interface TokensListRouter {
 
     /** Return to last screen */
     fun popBackStack()
