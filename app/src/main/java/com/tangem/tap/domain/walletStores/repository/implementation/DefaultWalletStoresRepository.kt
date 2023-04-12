@@ -69,6 +69,25 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         }
     }
 
+    override suspend fun update(
+        userWalletId: UserWalletId,
+        operation: (List<WalletStoreModel>) -> WalletStoreModel?,
+    ): CompletionResult<Unit> = catching {
+        val walletStores = getSync(userWalletId).toMutableList()
+        val updatedWalletStore = operation(walletStores) ?: return CompletionResult.Success(Unit)
+
+        val index = walletStores.indexOfFirst { it.isSameWalletStore(updatedWalletStore) }
+        if (index == -1 || updatedWalletStore == walletStores[index]) return CompletionResult.Success(Unit)
+
+        walletStores[index] = updatedWalletStore
+
+        walletStoresStorage.update { prevStores ->
+            prevStores.apply {
+                this[userWalletId] = walletStores
+            }
+        }
+    }
+
     private suspend fun HashMap<UserWalletId, List<WalletStoreModel>>.addOrUpdate(
         userWalletId: UserWalletId,
         walletStore: WalletStoreModel,
