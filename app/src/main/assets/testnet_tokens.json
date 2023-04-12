@@ -462,6 +462,17 @@
                     "networkId": "optimistic-ethereum/test"
                 }
             ]
+        },
+        {
+            "id": "kava",
+            "symbol": "KAVA",
+            "name": "Kava EVM",
+            "networks":
+            [
+                {
+                    "networkId": "kava/test"
+                }
+            ]
         }
     ]
 }
