@@ -24,7 +24,7 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
-import com.tangem.tap.features.tokens.presentation.router.AddTokensRouter
+import com.tangem.tap.features.tokens.presentation.router.TokensListRouter
 import com.tangem.tap.features.tokens.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.presentation.states.TokensListStateHolder
@@ -55,7 +55,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class TokensListViewModel @Inject constructor(
-    private val router: AddTokensRouter,
+    private val router: TokensListRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
 ) : ViewModel() {
 
