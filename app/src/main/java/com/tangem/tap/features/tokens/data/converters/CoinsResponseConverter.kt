@@ -29,6 +29,7 @@ internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
                         blockchain = blockchain,
                         address = network.contractAddress,
                         iconUrl = getIconUrl(network.networkId, value.imageHost),
+                        decimalCount = network.decimalCount?.toInt(),
                     )
                 },
             )
