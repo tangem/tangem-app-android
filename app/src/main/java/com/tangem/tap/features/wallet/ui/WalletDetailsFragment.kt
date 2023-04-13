@@ -41,6 +41,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -72,7 +73,6 @@ import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.rekotlin.StoreSubscriber
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -80,7 +80,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class WalletDetailsFragment :
     Fragment(R.layout.fragment_wallet_details),
-    StoreSubscriber<WalletState> {
+    SafeStoreSubscriber<WalletState> {
 
     @Inject
     lateinit var swapInteractor: SwapInteractor
@@ -227,7 +227,7 @@ class WalletDetailsFragment :
         }
     }
 
-    override fun newState(state: WalletState) {
+    override fun newStateOnMain(state: WalletState) {
         if (activity == null || view == null) return
         if (state.selectedWalletData == null) return
         walletStateWatcher.invoke(state)
