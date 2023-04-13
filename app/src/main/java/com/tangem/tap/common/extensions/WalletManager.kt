@@ -12,9 +12,8 @@ import com.tangem.tap.common.TestActions
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -81,7 +80,7 @@ fun WalletManager.getTopUpUrl(): String? {
     )
 }
 
-fun WalletManager?.getAddressData(): AddressData? {
+fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
@@ -98,11 +97,6 @@ fun <T> WalletManager.Companion.stub(): T {
         override val currentHost: String = ""
         override suspend fun update() {}
     } as T
-}
-
-fun Wallet.getTxHistory(currency: Currency): List<TransactionData> {
-    return (currency as? Currency.Token)?.let { this.getTokenTxHistory(it.token) }
-        ?: getBlockchainTxHistory()
 }
 
 fun Wallet.getBlockchainTxHistory(): List<TransactionData> {
