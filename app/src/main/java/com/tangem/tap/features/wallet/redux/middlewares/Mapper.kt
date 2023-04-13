@@ -77,7 +77,7 @@ private fun WalletDataModel.mapToReduxModel(
 
     return WalletData(
         currency = currency,
-        // TODO: Will be updated in next MR
+        // TODO: Will be updated in next MRs
         walletAddresses = walletAddresses?.let { addresses ->
             WalletAddresses(
                 selectedAddress = with(addresses.selectedAddress) {

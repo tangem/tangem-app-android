@@ -41,21 +41,29 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.WalletWarning
-import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
+import com.tangem.tap.features.wallet.ui.utils.assembleWarnings
+import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
+import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToSwap
+import com.tangem.tap.features.wallet.ui.utils.mainButton
+import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.tap.walletCurrenciesManager
@@ -85,31 +93,19 @@ class WalletDetailsFragment :
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
-    private val walletDataWatcher: ModelWatcher<WalletData> = modelWatcher {
-        val addressCardStrategy: DiffStrategy<WalletData> = { old, new ->
-            old.currency != new.currency ||
-                old.walletAddresses?.selectedAddress != new.walletAddresses?.selectedAddress ||
-                old.shouldShowMultipleAddress() != new.shouldShowMultipleAddress()
+    private val walletDataWatcher: ModelWatcher<WalletDataModel> = modelWatcher {
+        val addressCardStrategy: DiffStrategy<WalletDataModel> = { old, new ->
+            old.currency != new.currency || old.walletAddresses != new.walletAddresses
         }
 
-        WalletData::pendingTransactions {
-            showPendingTransactionsIfPresent(it)
-        }
-        WalletData::currency {
+        WalletDataModel::currency {
             handleCurrencyIcon(it)
         }
-        WalletData::currencyData {
-            setupBalanceData(it)
-        }
-        WalletData::walletAddresses { walletAddresses ->
+        WalletDataModel::walletAddresses { walletAddresses ->
             setupCopyAndShareButtons(walletAddresses?.selectedAddress?.address)
         }
-        WalletData::assembleWarnings { warnings ->
-            handleWarnings(warnings)
-        }
-        (WalletData::currencyData or WalletData::currency) { walletData ->
-            setupCurrency(walletData.currencyData, walletData.currency)
-            setupSwipeRefresh(walletData.currencyData, walletData.currency)
+        WalletDataModel::currency { currency ->
+            setupCurrency(currency)
         }
         watch({ it }, addressCardStrategy) { walletData ->
             setupAddressCard(
@@ -121,9 +117,28 @@ class WalletDetailsFragment :
     }
 
     private val walletStateWatcher: ModelWatcher<WalletState> = modelWatcher {
-        WalletState::selectedWalletData { selectedWallet ->
+        val walletDataStrategy: DiffStrategy<WalletState> = { old, new ->
+            new.walletsStores.isNotEmpty() &&
+                new.selectedCurrency != null &&
+                (old.selectedCurrency != new.selectedCurrency || old.walletsStores != new.walletsStores)
+        }
+
+        watch({ it }, walletDataStrategy) { state ->
+            val selectedWallet = state.selectedWalletData
             if (selectedWallet != null) {
+                setupBalanceData(selectedWallet)
+                setupSwipeRefresh(selectedWallet)
                 walletDataWatcher.invoke(selectedWallet)
+
+                val walletStore = state.getWalletStore(state.selectedCurrency)
+                if (walletStore != null) {
+                    handleWarnings(
+                        selectedWallet.assembleWarnings(
+                            blockchainAmount = walletStore.blockchainWalletData.status.amount,
+                            blockchainWalletRent = walletStore.walletRent,
+                        ),
+                    )
+                }
             }
         }
         (WalletState::selectedWalletData or WalletState::isExchangeServiceFeatureOn) { state ->
@@ -234,8 +249,8 @@ class WalletDetailsFragment :
         )
     }
 
-    private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
-        tvCurrencyTitle.text = currencyData.currency
+    private fun setupCurrency(currency: Currency) = with(binding) {
+        tvCurrencyTitle.text = currency.currencyName
 
         if (currency is Currency.Token) {
             tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
@@ -248,16 +263,17 @@ class WalletDetailsFragment :
         }
     }
 
-    private fun setupSwipeRefresh(currencyData: BalanceWidgetData, currency: Currency) {
+    private fun setupSwipeRefresh(walletData: WalletDataModel) {
         binding.srlWalletDetails.setOnRefreshListener {
-            if (currencyData.status != BalanceStatus.Loading && currencyData.status != BalanceStatus.Refreshing) {
+            if (walletData.status !is WalletDataModel.Loading) {
                 Analytics.send(Token.Refreshed())
+                val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync.guard {
+                    Timber.e("Unable to refresh wallet details screen, no user wallet selected")
+                    return@setOnRefreshListener
+                }
+                binding.srlWalletDetails.isRefreshing = true
                 lifecycleScope.launch(Dispatchers.Default) {
-                    val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync.guard {
-                        Timber.e("Unable to refresh wallet details screen, no user wallet selected")
-                        return@launch
-                    }
-                    walletCurrenciesManager.update(selectedUserWallet, currency)
+                    walletCurrenciesManager.update(selectedUserWallet, walletData.currency)
                         .doOnResult {
                             withMainContext {
                                 binding.srlWalletDetails.isRefreshing = false
@@ -266,9 +282,6 @@ class WalletDetailsFragment :
                 }
             }
         }
-
-        binding.srlWalletDetails.isRefreshing = currencyData.status == BalanceStatus.Loading ||
-            currencyData.status == BalanceStatus.Refreshing
     }
 
     private fun setupCopyAndShareButtons(walletAddress: String?) {
@@ -284,7 +297,7 @@ class WalletDetailsFragment :
         }
     }
 
-    private fun setupButtonsRow(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) {
+    private fun setupButtonsRow(selectedWallet: WalletDataModel, isExchangeServiceFeatureOn: Boolean) {
         val exchangeManager = store.state.globalState.exchangeManager
         binding.rowButtons.apply {
             onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
@@ -340,7 +353,7 @@ class WalletDetailsFragment :
 
     private fun setupAddressCard(
         shouldShowMultipleAddress: Boolean,
-        selectedAddress: AddressData?,
+        selectedAddress: WalletDataModel.AddressData?,
         currency: Currency,
     ) = with(binding.lWalletDetails) {
         if (selectedAddress == null) return@with
@@ -371,7 +384,7 @@ class WalletDetailsFragment :
 
     private fun setupAddressTypeChips(
         shouldShowMultipleAddress: Boolean,
-        selectedAddress: AddressData,
+        selectedAddress: WalletDataModel.AddressData,
         currency: Currency,
     ) = with(binding.lWalletDetails) {
         if (shouldShowMultipleAddress && currency is Currency.Blockchain) {
@@ -408,54 +421,58 @@ class WalletDetailsFragment :
         }
     }
 
-    private fun setupBalanceData(data: BalanceWidgetData) = with(binding.lWalletDetails) {
-        when (data.status) {
-            BalanceStatus.Loading -> {
+    private fun setupBalanceData(walletData: WalletDataModel) = with(binding.lWalletDetails) {
+        when (val status = walletData.status) {
+            is WalletDataModel.Loading -> {
                 lBalanceError.root.hide()
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
+                lBalance.tvAmount.text = walletData.getFormattedAmount()
+                lBalance.tvFiatAmount.text = walletData.getFormattedFiatAmount(store.state.globalState.appCurrency)
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
-            BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress,
+            is WalletDataModel.VerifiedOnline,
+            is WalletDataModel.SameCurrencyTransactionInProgress,
+            is WalletDataModel.TransactionInProgress,
             -> {
                 lBalanceError.root.hide()
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amountFormatted
-                lBalance.tvFiatAmount.text = data.fiatAmountFormatted ?: UNKNOWN_AMOUNT_SIGN
-                when (data.status) {
-                    BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {
+                lBalance.tvAmount.text = walletData.getFormattedAmount()
+                lBalance.tvFiatAmount.text = walletData.getFormattedFiatAmount(store.state.globalState.appCurrency)
+                when (status) {
+                    is WalletDataModel.VerifiedOnline,
+                    is WalletDataModel.SameCurrencyTransactionInProgress,
+                    -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
                     }
                     else -> {
                         lBalance.tvStatus.setWarningStatus(R.string.wallet_balance_tx_in_progress)
                     }
                 }
+                showPendingTransactionsIfPresent(status.pendingTransactions)
             }
-            BalanceStatus.Unreachable -> {
+            is WalletDataModel.Unreachable -> {
                 lBalanceError.root.hide()
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
                 lBalance.tvError.setWarningStatus(
                     R.string.wallet_balance_blockchain_unreachable,
-                    data.errorMessage,
+                    status.errorMessage,
                 )
             }
-            BalanceStatus.NoAccount -> {
+            is WalletDataModel.NoAccount -> {
                 lBalance.root.hide()
                 lBalanceError.root.show()
                 lBalanceError.tvErrorTitle.text = getText(R.string.wallet_error_no_account)
                 lBalanceError.tvErrorDescriptions.text =
                     getString(
                         R.string.no_account_generic,
-                        data.amountToCreateAccount,
-                        data.currencySymbol,
+                        status.amountToCreateAccount,
+                        walletData.currency.currencySymbol,
                     )
             }
             else -> {}

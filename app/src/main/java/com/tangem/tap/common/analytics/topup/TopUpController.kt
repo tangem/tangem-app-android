@@ -9,6 +9,7 @@ import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.copy
+import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -17,7 +18,6 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.ToppedUpWalletStorage
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch
@@ -60,8 +60,8 @@ class TopUpController(
         hadMissedDerivations = blockchains.isNotEmpty()
     }
 
-    fun totalBalanceStateChanged(state: ProgressState) {
-        if (state == ProgressState.Done) tryToSend()
+    fun totalBalanceStateChanged(totalFiatBalance: TotalFiatBalance) {
+        if (totalFiatBalance is TotalFiatBalance.Loaded) tryToSend()
     }
 
     fun loadDataSuccess() {
