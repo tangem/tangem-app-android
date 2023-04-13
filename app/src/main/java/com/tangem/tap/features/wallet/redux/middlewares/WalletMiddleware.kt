@@ -32,10 +32,7 @@ import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.getSendableAmounts
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletStore
-import com.tangem.tap.features.wallet.redux.reducers.findSelectedCurrency
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -106,7 +103,7 @@ class WalletMiddleware {
                 scope.launch {
                     when (val result = tangemSdkManager.createWallet(globalState.scanResponse?.card?.cardId)) {
                         is CompletionResult.Success -> {
-                            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                            val selectedUserWallet = walletState.userWallet.guard {
                                 Timber.e("Unable to create wallet, no user wallet selected")
                                 return@launch
                             }
@@ -132,7 +129,7 @@ class WalletMiddleware {
             is WalletAction.LoadData,
             is WalletAction.LoadData.Refresh,
             -> {
-                val selectedWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                val selectedWallet = walletState.userWallet.guard {
                     Timber.e("Unable to load/refresh wallets data, no user wallet selected")
                     return
                 }
@@ -188,7 +185,6 @@ class WalletMiddleware {
             is WalletAction.WalletStoresChanged -> {
                 // Cancel update job when new wallet stores received
                 updateWalletStoresJob = scope.launch(Dispatchers.Default) {
-                    ifActive { updateWalletStores(action.walletStores, walletState) }
                     ifActive { fetchTotalFiatBalance(action.walletStores) }
                     ifActive { findMissedDerivations(action.walletStores) }
                     ifActive { tryToShowAppRatingWarning(action.walletStores) }
@@ -227,26 +223,8 @@ class WalletMiddleware {
         }
     }
 
-    private fun updateWalletStores(walletsStores: List<WalletStoreModel>, state: WalletState) {
-        val reduxWalletStores = walletsStores.mapToReduxModels()
-        if (!state.isMultiwalletAllowed) {
-            findSelectedCurrency(
-                walletsStores = reduxWalletStores,
-                currentSelectedCurrency = null,
-                isMultiWalletAllowed = false,
-            )?.let {
-                store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
-            }
-        }
-        store.dispatchOnMain(
-            WalletAction.WalletStoresChanged.UpdateWalletStores(
-                reduxWalletStores = reduxWalletStores,
-            ),
-        )
-    }
-
     private suspend fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>) {
-        val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)?.mapToReduxModel()
+        val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)
 
         if (totalFiatBalance != null) {
             store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
@@ -300,7 +278,7 @@ class WalletMiddleware {
 
         return if (amount != null) {
             if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, state, selectedWalletData, walletStore)
+                prepareSendActionForToken(amount, selectedWalletData, walletStore)
             } else {
                 PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletStore?.walletManager)
             }
@@ -322,7 +300,6 @@ class WalletMiddleware {
                             ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         prepareSendActionForToken(
                             amount = amountToSend,
-                            state = state,
                             selectedWalletData = selectedWalletData,
                             walletStore = walletStore,
                         )
@@ -346,11 +323,10 @@ class WalletMiddleware {
 
     private fun prepareSendActionForToken(
         amount: Amount,
-        state: WalletState?,
-        selectedWalletData: WalletData?,
-        walletStore: WalletStore?,
+        selectedWalletData: WalletDataModel?,
+        walletStore: WalletStoreModel?,
     ): PrepareSendScreen {
-        val coinRate = state?.getWalletData(walletStore?.blockchainNetwork)?.fiatRate
+        val coinRate = walletStore?.blockchainWalletData?.fiatRate
         val tokenRate = selectedWalletData?.fiatRate
         val coinAmount = walletStore?.walletManager?.wallet?.amounts?.get(AmountType.Coin)
 
