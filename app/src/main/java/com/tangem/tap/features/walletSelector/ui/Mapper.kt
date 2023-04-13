@@ -3,7 +3,7 @@ package com.tangem.tap.features.walletSelector.ui
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.model.TotalFiatBalance
-import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.walletSelector.redux.UserWalletModel
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
