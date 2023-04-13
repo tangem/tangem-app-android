@@ -68,7 +68,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private val totalBalanceWatcher = modelWatcher {
         (WalletState::totalBalance) { totalBalance ->
-            totalBalance?.state?.let {
+            totalBalance?.let {
                 viewModel.onBalanceLoaded(totalBalance)
                 store.state.globalState.topUpController?.totalBalanceStateChanged(it)
             }
@@ -159,8 +159,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 walletView = SaltPayWalletView()
                 walletView.changeWalletView(this, binding)
             }
-            state.isMultiwalletAllowed && state.primaryWalletData?.currencyData?.status != BalanceStatus.EmptyCard &&
-                walletView !is MultiWalletView -> {
+            state.isMultiwalletAllowed && walletView !is MultiWalletView -> {
                 walletView.onViewDestroy()
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
