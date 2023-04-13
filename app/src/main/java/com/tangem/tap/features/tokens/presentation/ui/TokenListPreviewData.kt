@@ -1,5 +1,7 @@
 package com.tangem.tap.features.tokens.presentation.ui
 
+import androidx.compose.runtime.mutableStateOf
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.tokens.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import com.tangem.wallet.R
@@ -11,62 +13,67 @@ import kotlinx.collections.immutable.persistentListOf
  */
 object TokenListPreviewData {
 
-    fun createManageToken(): TokenItemState.ManageAccess {
-        return TokenItemState.ManageAccess(
+    fun createManageToken(): TokenItemState.ManageContent {
+        return TokenItemState.ManageContent(
             name = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createManageNetworksList(),
             id = "",
+            symbol = "",
         )
     }
 
-    fun createReadToken(): TokenItemState.ReadAccess {
-        return TokenItemState.ReadAccess(
+    fun createReadToken(): TokenItemState.ReadContent {
+        return TokenItemState.ReadContent(
             name = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createReadNetworksList(),
         )
     }
 
-    fun createManageNetworksList(): ImmutableList<NetworkItemState.ManageAccess> {
+    fun createManageNetworksList(): ImmutableList<NetworkItemState.ManageContent> {
         return persistentListOf(
-            NetworkItemState.ManageAccess(
+            NetworkItemState.ManageContent(
                 name = "Ethereum",
                 protocolName = "MAIN",
-                iconResId = R.drawable.ic_eth_no_color,
+                iconResId = mutableStateOf(R.drawable.ic_eth_no_color),
                 isMainNetwork = true,
-                isAdded = true,
-                networkId = "",
-                contractAddress = null,
+                isAdded = mutableStateOf(true),
+                id = "",
+                address = null,
                 onToggleClick = { _, _ -> },
                 onNetworkClick = {},
+                decimalCount = null,
+                blockchain = Blockchain.Ethereum,
             ),
-            NetworkItemState.ManageAccess(
+            NetworkItemState.ManageContent(
                 name = "BNB SMART CHAIN",
                 protocolName = "BEP20",
-                iconResId = R.drawable.ic_bsc_no_color,
+                iconResId = mutableStateOf(R.drawable.ic_bsc_no_color),
                 isMainNetwork = false,
-                isAdded = false,
-                networkId = "",
-                contractAddress = null,
+                isAdded = mutableStateOf(false),
+                id = "",
+                address = null,
                 onToggleClick = { _, _ -> },
                 onNetworkClick = {},
+                decimalCount = null,
+                blockchain = Blockchain.BSC,
             ),
         )
     }
 
-    fun createReadNetworksList(): ImmutableList<NetworkItemState.ReadAccess> {
+    fun createReadNetworksList(): ImmutableList<NetworkItemState.ReadContent> {
         return persistentListOf(
-            NetworkItemState.ReadAccess(
+            NetworkItemState.ReadContent(
                 name = "Ethereum",
                 protocolName = "MAIN",
-                iconResId = R.drawable.ic_eth_no_color,
+                iconResId = mutableStateOf(R.drawable.ic_eth_no_color),
                 isMainNetwork = true,
             ),
-            NetworkItemState.ReadAccess(
+            NetworkItemState.ReadContent(
                 name = "BNB SMART CHAIN",
                 protocolName = "BEP20",
-                iconResId = R.drawable.ic_bsc_no_color,
+                iconResId = mutableStateOf(R.drawable.ic_bsc_no_color),
                 isMainNetwork = false,
             ),
         )
