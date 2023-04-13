@@ -1,5 +1,9 @@
 package com.tangem.tap.features.tokens.presentation.states
 
+import androidx.compose.runtime.MutableState
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.features.tokens.redux.ContractAddress
 
 /**
@@ -16,7 +20,7 @@ sealed interface NetworkItemState {
     val protocolName: String
 
     /** Network icon id from resources */
-    val iconResId: Int
+    val iconResId: MutableState<Int>
 
     /** Flag that determines if the network is the main network for the token */
     val isMainNetwork: Boolean
@@ -29,35 +33,51 @@ sealed interface NetworkItemState {
      * @property iconResId     network icon id from resources
      * @property isMainNetwork flag that determines if the network is the main network for the token
      */
-    data class ReadAccess(
+    data class ReadContent(
         override val name: String,
         override val protocolName: String,
-        override val iconResId: Int,
+        override val iconResId: MutableState<Int>,
         override val isMainNetwork: Boolean,
     ) : NetworkItemState
 
     /**
      * Network item state that is available for read and edit
      *
-     * @property name            network name
-     * @property protocolName    network protocol name
-     * @property iconResId       network icon id from resources
-     * @property isMainNetwork   flag that determines if the network is the main network for the token
-     * @property isAdded         flag that determines if the user has saved the token
-     * @property networkId       network id
-     * @property contractAddress contract address
-     * @property onToggleClick   lambda be invoked when switch is been toggled
-     * @property onNetworkClick  lambda be invoked when network item is been clicked
+     * @property name           network name
+     * @property protocolName   network protocol name
+     * @property iconResId      network icon id from resources
+     * @property isMainNetwork  flag that determines if the network is the main network for the token
+     * @property isAdded        flag that determines if the user has saved the token
+     * @property id             network id
+     * @property address        contract address
+     * @property decimalCount   decimal count
+     * @property blockchain     blockchain
+     * @property onToggleClick  lambda be invoked when switch is been toggled
+     * @property onNetworkClick lambda be invoked when network item is been clicked
      */
-    data class ManageAccess(
+    data class ManageContent(
         override val name: String,
         override val protocolName: String,
-        override val iconResId: Int,
+        override val iconResId: MutableState<Int>,
         override val isMainNetwork: Boolean,
-        val isAdded: Boolean,
-        val networkId: String,
-        val contractAddress: ContractAddress?,
-        val onToggleClick: (String, String) -> Unit,
+        val isAdded: MutableState<Boolean>,
+        val id: String,
+        val address: ContractAddress?,
+        val decimalCount: Int?,
+        val blockchain: Blockchain,
+        val onToggleClick: (TokenItemState.ManageContent, ManageContent) -> Unit,
         val onNetworkClick: () -> Unit,
-    ) : NetworkItemState
+    ) : NetworkItemState {
+
+        /**
+         * Change toggle state [isAdded].
+         *
+         * It is a hack that helps us to change element of flow
+         */
+        fun changeToggleState() {
+            val reverseState = !isAdded.value
+            isAdded.value = reverseState
+            iconResId.value = if (reverseState) getActiveIconRes(blockchain.id) else blockchain.getGreyedOutIconRes()
+        }
+    }
 }
