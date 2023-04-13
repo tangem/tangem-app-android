@@ -120,7 +120,7 @@ internal class BiometricUserWalletsListManager(
 
     override suspend fun update(
         userWalletId: UserWalletId,
-        update: (UserWallet) -> UserWallet,
+        update: suspend (UserWallet) -> UserWallet,
     ): CompletionResult<UserWallet> {
         return get(userWalletId)
             .map { storedUserWallet ->
