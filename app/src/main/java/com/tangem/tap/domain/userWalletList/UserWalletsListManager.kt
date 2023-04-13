@@ -55,7 +55,10 @@ interface UserWalletsListManager {
      * @return [CompletionResult.Success] with updated [UserWallet]
      * or [CompletionResult.Failure] with [NoSuchElementException] if [UserWallet] with [userWalletId] not found
      * */
-    suspend fun update(userWalletId: UserWalletId, update: (UserWallet) -> UserWallet): CompletionResult<UserWallet>
+    suspend fun update(
+        userWalletId: UserWalletId,
+        update: suspend (UserWallet) -> UserWallet,
+    ): CompletionResult<UserWallet>
 
     /**
      * Delete saved [UserWallet]s with provided [UserWalletId]s
