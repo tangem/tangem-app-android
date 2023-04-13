@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState
-import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState.SearchInputField
+import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState.InputField
 import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState.Title
 import com.tangem.wallet.R
 import kotlinx.coroutines.delay
@@ -43,7 +43,7 @@ import kotlinx.coroutines.delay
 * [REDACTED_AUTHOR]
  */
 @Composable
-internal fun AddTokensToolbar(state: TokensListToolbarState) {
+internal fun TokensListToolbar(state: TokensListToolbarState) {
     TopAppBar(backgroundColor = TangemTheme.colors.background.secondary) {
         IconButton(onClick = state.onBackButtonClick) {
             Icon(
@@ -55,7 +55,7 @@ internal fun AddTokensToolbar(state: TokensListToolbarState) {
 
         when (state) {
             is Title -> TitleContent(state = state, modifier = Modifier.weight(1f))
-            is SearchInputField -> InputContent(state = state, modifier = Modifier.weight(1f))
+            is InputField -> InputContent(state = state, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -78,7 +78,7 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
         )
     }
 
-    if (state is Title.ManageAccess) {
+    if (state is Title.Manage) {
         IconButton(onClick = state.onAddCustomTokenClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_plus_24),
@@ -91,8 +91,9 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun InputContent(state: SearchInputField, modifier: Modifier = Modifier) {
+private fun InputContent(state: InputField, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     BasicTextField(
         value = state.value,
@@ -100,7 +101,7 @@ private fun InputContent(state: SearchInputField, modifier: Modifier = Modifier)
         modifier = modifier.focusRequester(focusRequester),
         textStyle = TangemTheme.typography.subtitle1.copy(fontWeight = FontWeight.Normal),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { state.onSearchButtonClick() }),
+        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
         singleLine = true,
         maxLines = 1,
         cursorBrush = SolidColor(value = TangemTheme.colors.stroke.secondary),
@@ -168,8 +169,8 @@ private fun Hint(value: String) {
 @Composable
 private fun Preview_AddTokensToolbar_EditAccess() {
     TangemTheme {
-        AddTokensToolbar(
-            state = Title.ManageAccess(
+        TokensListToolbar(
+            state = Title.Manage(
                 titleResId = R.string.main_manage_tokens,
                 onBackButtonClick = {},
                 onSearchButtonClick = {},
@@ -183,8 +184,8 @@ private fun Preview_AddTokensToolbar_EditAccess() {
 @Composable
 private fun Preview_AddTokensToolbar_ReadAccess() {
     TangemTheme {
-        AddTokensToolbar(
-            state = Title.ReadAccess(
+        TokensListToolbar(
+            state = Title.Read(
                 titleResId = R.string.search_tokens_title,
                 onBackButtonClick = {},
                 onSearchButtonClick = {},
@@ -199,10 +200,9 @@ private fun Preview_AddTokensToolbar_SearchInputField() {
     var value by remember { mutableStateOf("") }
 
     TangemTheme {
-        AddTokensToolbar(
-            state = SearchInputField(
+        TokensListToolbar(
+            state = InputField(
                 onBackButtonClick = {},
-                onSearchButtonClick = {},
                 value = value,
                 onValueChange = { value = it },
                 onCleanButtonClick = { value = "" },

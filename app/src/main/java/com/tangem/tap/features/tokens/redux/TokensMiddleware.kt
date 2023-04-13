@@ -113,35 +113,30 @@ class TokensMiddleware {
         val scanResponse = store.state.globalState.scanResponse ?: return@launch
 
         val currentTokens = store.state.tokensState.addedWallets.toNonCustomTokensWithBlockchains(
-            scanResponse.card.derivationStyle,
+            derivationStyle = scanResponse.card.derivationStyle,
         )
         val currentBlockchains = store.state.tokensState.addedWallets.toNonCustomBlockchains(
-            scanResponse.card.derivationStyle,
+            derivationStyle = scanResponse.card.derivationStyle,
         )
 
-        val blockchainsToAdd = action.addedBlockchains.filter { !currentBlockchains.contains(it) }
-        val blockchainsToRemove =
-            currentBlockchains.filter { !action.addedBlockchains.contains(it) }
+        val blockchainsToAdd = action.addedBlockchains.filterNot(currentBlockchains::contains)
+        val blockchainsToRemove = currentBlockchains.filterNot(action.addedBlockchains::contains)
 
-        val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it) }
-        val tokensToRemove = currentTokens.filter { token ->
-            !action.addedTokens.any { it.token == token.token }
-        }
-        val derivationStyle = scanResponse.card.derivationStyle
+        val tokensToAdd = action.addedTokens.filterNot(currentTokens::contains)
+        val tokensToRemove = currentTokens.filterNot { token -> action.addedTokens.any { it.token == token.token } }
 
         removeCurrenciesIfNeeded(
-            convertToCurrencies(
+            currencies = convertToCurrencies(
                 blockchains = blockchainsToRemove,
                 tokens = tokensToRemove,
-                derivationStyle = derivationStyle,
+                derivationStyle = scanResponse.card.derivationStyle,
             ),
         )
 
-        @Suppress("ComplexCondition")
-        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty() &&
-            blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
-        ) {
-            store.dispatchDebugErrorNotification("Nothing to save")
+        val isNothingToDoWithTokens = tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+        val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
+            store.dispatchDebugErrorNotification(message = "Nothing to save")
             store.dispatchOnMain(NavigationAction.PopBackTo())
             return@launch
         }
@@ -149,8 +144,9 @@ class TokensMiddleware {
         val currencyList = convertToCurrencies(
             blockchains = blockchainsToAdd,
             tokens = tokensToAdd,
-            derivationStyle = derivationStyle,
+            derivationStyle = scanResponse.card.derivationStyle,
         )
+
         if (scanResponse.supportsHdWallet()) {
             deriveMissingBlockchains(scanResponse, currencyList) {
                 submitAdd(it, currencyList)
