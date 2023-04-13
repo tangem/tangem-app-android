@@ -28,6 +28,7 @@ import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
@@ -46,11 +47,10 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import dagger.hilt.android.AndroidEntryPoint
-import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
+class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<WalletState> {
 
     @Inject
     lateinit var swapInteractor: SwapInteractor
@@ -148,7 +148,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     @Suppress("ComplexMethod")
-    override fun newState(state: WalletState) {
+    override fun newStateOnMain(state: WalletState) {
         if (activity == null || view == null) return
 
         val isSaltPay = store.state.globalState.scanResponse?.cardTypesResolver?.isSaltPay() == true
