@@ -7,7 +7,6 @@ import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.blockchain.common.Blockchain as SdkBlockchain
 import com.tangem.blockchain.common.Token as SdkToken
 
@@ -85,14 +84,6 @@ sealed interface Currency {
                     derivationPath = customCurrency.derivationPath?.rawPath,
                 )
             }
-        }
-
-        fun fromTokenWithBlockchain(tokenWithBlockchain: TokenWithBlockchain): Token {
-            return Token(
-                token = tokenWithBlockchain.token,
-                blockchain = tokenWithBlockchain.blockchain,
-                derivationPath = null,
-            )
         }
 
         fun fromTokenResponse(tokenBody: UserTokensResponse.Token): Currency? {
