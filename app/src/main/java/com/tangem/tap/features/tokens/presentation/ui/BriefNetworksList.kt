@@ -53,7 +53,7 @@ internal fun BriefNetworksList(
 internal fun BriefNetworkItem(model: NetworkItemState) {
     Box(modifier = Modifier.size(size = TangemTheme.dimens.size20)) {
         Image(
-            painter = painterResource(id = model.iconResId),
+            painter = painterResource(id = model.iconResId.value),
             contentDescription = null,
             modifier = Modifier.size(size = TangemTheme.dimens.size20),
         )
