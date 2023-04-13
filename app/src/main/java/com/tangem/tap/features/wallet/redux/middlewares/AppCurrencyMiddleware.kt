@@ -49,7 +49,7 @@ class AppCurrencyMiddleware(
             runCatching { walletRepository.getCurrencyList() }
                 .onSuccess {
                     val currenciesList = it.currencies
-                    if (currenciesList.isNotEmpty() && !currenciesList.toSet().equals(storedFiatCurrencies.toSet())) {
+                    if (currenciesList.isNotEmpty() && currenciesList.toSet() != storedFiatCurrencies.toSet()) {
                         fiatCurrenciesPrefStorage.save(currenciesList)
                         store.dispatchDialogShow(
                             WalletDialog.CurrencySelectionDialog(
