@@ -113,8 +113,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.UpdateCanSaveUserWallets -> {
+            newState = newState.copy(canSaveUserWallets = action.canSaveUserWallets)
+        }
+        is WalletAction.SetArtworkUrl -> {
             newState = newState.copy(
-                canSaveUserWallets = action.canSaveUserWallets,
+                cardImage = Artwork(artworkId = action.url, artwork = newState.cardImage?.artwork),
             )
         }
         else -> Unit
