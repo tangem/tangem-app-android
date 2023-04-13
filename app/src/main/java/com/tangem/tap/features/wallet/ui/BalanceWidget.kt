@@ -9,33 +9,6 @@ import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.CardBalanceBinding
-import java.math.BigDecimal
-
-enum class BalanceStatus {
-    VerifiedOnline,
-    TransactionInProgress,
-    SameCurrencyTransactionInProgress,
-    Unreachable,
-    Loading,
-    Refreshing,
-    NoAccount,
-    EmptyCard,
-    UnknownBlockchain,
-    MissedDerivation,
-}
-
-data class BalanceWidgetData(
-    val status: BalanceStatus? = null,
-    val currency: String? = null,
-    val currencySymbol: String? = null,
-    val amount: BigDecimal? = null,
-    val amountFormatted: String? = null,
-    val fiatAmount: BigDecimal? = null,
-    val fiatAmountFormatted: String? = null,
-    val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
-    val amountToCreateAccount: String? = null,
-    val errorMessage: String? = null,
-)
 
 class BalanceWidget(
     private val binding: CardBalanceBinding,
@@ -104,19 +77,6 @@ class BalanceWidget(
                 showStatus(R.id.group_error)
                 tvStatusErrorMessage.show(!blockchainWalletData.status.errorMessage.isNullOrBlank())
             }
-            // BalanceStatus.EmptyCard -> with(binding.lBalanceError) {
-            //     binding.lBalance.root.hide()
-            //     binding.lBalanceError.root.show()
-            //     if (isTwinCard) {
-            //         tvErrorTitle.text = fragment.getText(R.string.wallet_error_empty_twin_card)
-            //         tvErrorDescriptions.text =
-            //             fragment.getText(R.string.wallet_error_empty_twin_card_subtitle)
-            //     } else {
-            //         tvErrorTitle.text = fragment.getText(R.string.wallet_error_empty_card)
-            //         tvErrorDescriptions.text =
-            //             fragment.getText(R.string.wallet_error_empty_card_subtitle)
-            //     }
-            // }
             is WalletDataModel.NoAccount -> with(binding.lBalanceError) {
                 binding.lBalance.root.hide()
                 binding.lBalanceError.root.show()
@@ -128,14 +88,6 @@ class BalanceWidget(
                         blockchainWalletData.currency.currencySymbol,
                     )
             }
-            // BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {
-            //     binding.lBalance.root.hide()
-            //     binding.lBalanceError.root.show()
-            //     tvErrorTitle.text =
-            //         fragment.getText(R.string.wallet_error_unsupported_blockchain)
-            //     tvErrorDescriptions.text =
-            //         fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
-            // }
             else -> {}
         }
     }
