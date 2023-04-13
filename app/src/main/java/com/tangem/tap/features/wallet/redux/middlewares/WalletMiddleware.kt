@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -25,6 +26,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.domain.userWalletList.GetCardImageUseCase
 import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -133,6 +135,9 @@ class WalletMiddleware {
                     Timber.e("Unable to load/refresh wallets data, no user wallet selected")
                     return
                 }
+
+                store.dispatch(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
+
                 scope.launch {
                     globalState.tapWalletManager.loadData(
                         userWallet = selectedWallet,
@@ -204,6 +209,23 @@ class WalletMiddleware {
             }
             is WalletAction.ChangeSelectedAddress -> {
                 changeSelectedWalletAddress(action.type, walletState)
+            }
+            is WalletAction.UpdateUserWalletArtwork -> {
+                scope.launch {
+                    userWalletsListManager
+                        .update(
+                            userWalletId = action.walletId,
+                            update = { userWallet ->
+                                userWallet.copy(
+                                    artworkUrl = GetCardImageUseCase().invoke(
+                                        cardId = userWallet.cardId,
+                                        cardPublicKey = userWallet.scanResponse.card.cardPublicKey,
+                                    ),
+                                )
+                            },
+                        )
+                        .doOnSuccess { store.dispatch(WalletAction.SetArtworkUrl(it.artworkUrl)) }
+                }
             }
         }
     }
