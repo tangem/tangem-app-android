@@ -25,24 +25,26 @@ sealed interface TokenItemState {
      * @property iconUrl  token icon url
      * @property networks list of networks that is available for read
      */
-    data class ReadAccess(
+    data class ReadContent(
         override val name: String,
         override val iconUrl: String,
-        override val networks: ImmutableList<NetworkItemState.ReadAccess>,
+        override val networks: ImmutableList<NetworkItemState.ReadContent>,
     ) : TokenItemState
 
     /**
-     * Token item state that is available for read and edit
+     * Token item state that is available for read and manage
      *
      * @property name     token name
      * @property iconUrl  token icon url
      * @property networks list of networks is available for read and edit
      * @property id       token id
+     * @property symbol   token brief name
      */
-    data class ManageAccess(
+    data class ManageContent(
         override val name: String,
         override val iconUrl: String,
-        override val networks: ImmutableList<NetworkItemState.ManageAccess>,
+        override val networks: ImmutableList<NetworkItemState.ManageContent>,
         val id: String,
+        val symbol: String,
     ) : TokenItemState
 }
