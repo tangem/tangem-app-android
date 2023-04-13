@@ -12,58 +12,55 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.extensions.OnBottomReached
 import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState
-import com.tangem.tap.features.tokens.presentation.states.TokensListVisibility
-import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 
 /**
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun AddTokensScreen(stateHolder: TokensListStateHolder) {
+internal fun TokensListScreen(stateHolder: TokensListStateHolder) {
     BackHandler(onBack = stateHolder.toolbarState.onBackButtonClick)
 
     Scaffold(
-        topBar = { AddTokensToolbar(state = stateHolder.toolbarState) },
+        topBar = { TokensListToolbar(state = stateHolder.toolbarState) },
         floatingActionButton = {
-            if (stateHolder is TokensListStateHolder.ManageAccess) {
+            if (stateHolder is TokensListStateHolder.ManageContent) {
                 SaveChangesButton(onClick = stateHolder.onSaveButtonClick)
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) { scaffoldPadding ->
-        // This is a hack because AnimatedContent trigger recomposition if stateHolder content is changed
-        AnimatedVisibility(
-            visible = stateHolder is TokensListVisibility,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            if (stateHolder is TokensListVisibility) {
-                TokensListContent(
-                    stateHolder = stateHolder,
-                    scaffoldPadding = scaffoldPadding,
-                )
-            }
-        }
+        val tokens = stateHolder.tokens.collectAsLazyPagingItems()
+
+        TokensListContent(
+            tokens = tokens,
+            scaffoldPadding = scaffoldPadding,
+        )
+
+        stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
 
         AnimatedVisibility(
             visible = stateHolder is TokensListStateHolder.Loading,
@@ -87,24 +84,24 @@ private fun LoadingContent() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun TokensListContent(stateHolder: TokensListVisibility, scaffoldPadding: PaddingValues) {
-    val state = rememberLazyListState().apply {
-        OnBottomReached(loadMoreThreshold = 40) {
-            store.dispatch(TokensAction.LoadMore(scanResponse = store.state.globalState.scanResponse))
-        }
+private fun TokensListContent(tokens: LazyPagingItems<TokenItemState>, scaffoldPadding: PaddingValues) {
+    val state = rememberLazyListState()
+
+    if (state.isScrollInProgress) {
+        LocalSoftwareKeyboardController.current?.hide()
     }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(scaffoldPadding),
-        state,
+        state = state,
     ) {
-        items(
-            items = stateHolder.tokens,
-            key = TokenItemState::name,
-            itemContent = { TokenItem(model = it) },
-        )
+        items(items = tokens, key = TokenItemState::name) {
+            it?.let { TokenItem(model = it) }
+        }
     }
 }
 
@@ -122,16 +119,18 @@ private fun SaveChangesButton(onClick: () -> Unit) {
 
 @Preview
 @Composable
-private fun Preview_AddTokensScreen_Loading() {
+private fun Preview_TokensListScreen_Loading() {
     TangemTheme {
-        AddTokensScreen(
+        TokensListScreen(
             stateHolder = TokensListStateHolder.Loading(
-                toolbarState = TokensListToolbarState.Title.ManageAccess(
+                toolbarState = TokensListToolbarState.Title.Manage(
                     titleResId = R.string.main_manage_tokens,
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                     onAddCustomTokenClick = {},
                 ),
+                tokens = emptyFlow(),
+                onTokensLoadStateChanged = {},
             ),
         )
     }
@@ -139,21 +138,28 @@ private fun Preview_AddTokensScreen_Loading() {
 
 @Preview
 @Composable
-private fun Preview_AddTokensScreen_ManageAccess() {
+private fun Preview_TokensListScreen_Manage() {
     TangemTheme {
-        AddTokensScreen(
-            stateHolder = TokensListStateHolder.ManageAccess(
-                toolbarState = TokensListToolbarState.Title.ManageAccess(
+        TokensListScreen(
+            stateHolder = TokensListStateHolder.ManageContent(
+                toolbarState = TokensListToolbarState.Title.Manage(
                     titleResId = R.string.main_manage_tokens,
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                     onAddCustomTokenClick = {},
                 ),
-                tokens = persistentListOf(
-                    TokenListPreviewData.createManageToken(),
-                    TokenListPreviewData.createManageToken(),
-                ),
+                tokens = flow {
+                    emit(
+                        PagingData.from(
+                            listOf(
+                                TokenListPreviewData.createManageToken(),
+                                TokenListPreviewData.createManageToken(),
+                            ),
+                        ),
+                    )
+                },
                 onSaveButtonClick = {},
+                onTokensLoadStateChanged = {},
             ),
         )
     }
@@ -161,19 +167,26 @@ private fun Preview_AddTokensScreen_ManageAccess() {
 
 @Preview
 @Composable
-private fun Preview_AddTokensScreen_ReadAccess() {
+private fun Preview_TokensListScreen_Read() {
     TangemTheme {
-        AddTokensScreen(
-            stateHolder = TokensListStateHolder.ReadAccess(
-                toolbarState = TokensListToolbarState.Title.ReadAccess(
+        TokensListScreen(
+            stateHolder = TokensListStateHolder.ReadContent(
+                toolbarState = TokensListToolbarState.Title.Read(
                     titleResId = R.string.search_tokens_title,
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                 ),
-                tokens = persistentListOf(
-                    TokenListPreviewData.createReadToken(),
-                    TokenListPreviewData.createReadToken(),
-                ),
+                tokens = flow {
+                    emit(
+                        PagingData.from(
+                            listOf(
+                                TokenListPreviewData.createManageToken(),
+                                TokenListPreviewData.createManageToken(),
+                            ),
+                        ),
+                    )
+                },
+                onTokensLoadStateChanged = {},
             ),
         )
     }
