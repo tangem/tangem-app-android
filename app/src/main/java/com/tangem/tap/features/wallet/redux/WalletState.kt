@@ -3,9 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -120,20 +118,6 @@ sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class CreateWalletButton(enabled: Boolean) : WalletMainButton(enabled)
 }
 
-data class WalletAddresses(
-    val selectedAddress: AddressData,
-    val list: List<AddressData>,
-)
-
-data class AddressData(
-    val address: String,
-    val type: AddressType,
-    val shareUrl: String,
-    val exploreUrl: String,
-) {
-    val qrCode: Bitmap by lazy { shareUrl.toQrCode() }
-}
-
 data class Artwork(
     val artworkId: String,
     val artwork: Bitmap? = null,
@@ -147,42 +131,5 @@ data class Artwork(
         const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
         const val SALT_PAY_URL = "key_for_switch_url_to_drawableId_of_salt_pay_card"
-    }
-}
-
-data class WalletStore(
-    val walletManager: WalletManager?,
-    val blockchainNetwork: BlockchainNetwork,
-    val walletsData: List<WalletData>,
-) {
-    fun updateWallets(walletDataList: List<WalletData>): WalletStore {
-        val relevantWalletDataList = walletDataList.filter {
-            it.currency.blockchain == blockchainNetwork.blockchain &&
-                it.currency.derivationPath == blockchainNetwork.derivationPath
-        }.toMutableList()
-        val updatedWalletDataList = walletsData.map { walletData ->
-            val matchingWalletData = relevantWalletDataList.find { it.currency == walletData.currency }
-            if (matchingWalletData != null) relevantWalletDataList.remove(matchingWalletData)
-            matchingWalletData ?: walletData
-        }
-        return copy(walletsData = updatedWalletDataList + relevantWalletDataList)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as WalletStore
-
-        if (walletManager != other.walletManager) return false
-        if (blockchainNetwork != other.blockchainNetwork) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = walletManager?.hashCode() ?: 0
-        result = 31 * result + blockchainNetwork.hashCode()
-        return result
     }
 }
