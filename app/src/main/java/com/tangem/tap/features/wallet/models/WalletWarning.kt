@@ -21,5 +21,3 @@ sealed class WalletWarning(val showingPosition: Int) {
 }
 
 data class WalletWarningDescription(val title: String, val message: String)
-
-data class WalletRent(val minRentValue: String, val rentExemptValue: String)
