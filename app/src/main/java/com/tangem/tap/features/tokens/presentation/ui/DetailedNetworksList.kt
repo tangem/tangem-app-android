@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.presentation.states.NetworkItemState
+import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import kotlinx.collections.immutable.ImmutableCollection
 
 /**
@@ -43,7 +44,7 @@ import kotlinx.collections.immutable.ImmutableCollection
 @Composable
 internal fun DetailedNetworksList(
     isExpanded: Boolean,
-    tokenId: String?,
+    token: TokenItemState,
     networks: ImmutableCollection<NetworkItemState>,
     modifier: Modifier = Modifier,
 ) {
@@ -56,7 +57,7 @@ internal fun DetailedNetworksList(
         Column {
             networks.forEachIndexed { index, network ->
                 key(network.name) {
-                    DetailedNetworkItem(model = network, tokenId = tokenId, isLastItem = networks.size - 1 == index)
+                    DetailedNetworkItem(token = token, network = network, isLastItem = networks.size - 1 == index)
                 }
             }
         }
@@ -65,18 +66,18 @@ internal fun DetailedNetworksList(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DetailedNetworkItem(model: NetworkItemState, tokenId: String?, isLastItem: Boolean) {
+private fun DetailedNetworkItem(token: TokenItemState, network: NetworkItemState, isLastItem: Boolean) {
     val clipboardManager = LocalClipboardManager.current
     val itemHeight = TangemTheme.dimens.size50
 
     Row(
         modifier = Modifier
             .combinedClickable(
-                enabled = model is NetworkItemState.ManageAccess,
+                enabled = network is NetworkItemState.ManageContent,
                 onLongClick = {
-                    if (model is NetworkItemState.ManageAccess && model.contractAddress != null) {
-                        clipboardManager.setText(AnnotatedString(text = model.contractAddress))
-                        model.onNetworkClick()
+                    if (network is NetworkItemState.ManageContent && network.address != null) {
+                        clipboardManager.setText(AnnotatedString(text = network.address))
+                        network.onNetworkClick()
                     }
                 },
                 onClick = {},
@@ -90,14 +91,19 @@ private fun DetailedNetworkItem(model: NetworkItemState, tokenId: String?, isLas
     ) {
         NetworkItemArrow(itemHeight = itemHeight, isLastItem = isLastItem)
         Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing16))
-        BriefNetworkItem(model = model)
+        BriefNetworkItem(model = network)
         Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing6))
-        NetworkTitle(model = model)
+        NetworkTitle(model = network)
 
-        if (model is NetworkItemState.ManageAccess) {
+        if (network is NetworkItemState.ManageContent) {
             Switch(
-                checked = model.isAdded,
-                onCheckedChange = { model.onToggleClick(requireNotNull(tokenId), model.networkId) },
+                checked = network.isAdded.value,
+                onCheckedChange = {
+                    network.onToggleClick(
+                        requireNotNull(token as? TokenItemState.ManageContent),
+                        network,
+                    )
+                },
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing8),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = TangemColorPalette.Meadow,
@@ -125,7 +131,7 @@ private fun RowScope.NetworkTitle(model: NetworkItemState) {
         },
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
-        color = if (model is NetworkItemState.ManageAccess && model.isAdded) {
+        color = if (model is NetworkItemState.ManageContent && model.isAdded.value) {
             TangemColorPalette.Black
         } else {
             TangemColorPalette.Dark2
@@ -139,7 +145,7 @@ private fun Preview_DetailedNetworksList_ManageAccess() {
     TangemTheme {
         DetailedNetworksList(
             isExpanded = true,
-            tokenId = null,
+            token = TokenListPreviewData.createManageToken(),
             networks = TokenListPreviewData.createManageNetworksList(),
         )
     }
@@ -151,7 +157,7 @@ private fun Preview_DetailedNetworksList_ReadAccess() {
     TangemTheme {
         DetailedNetworksList(
             isExpanded = true,
-            tokenId = null,
+            token = TokenListPreviewData.createReadToken(),
             networks = TokenListPreviewData.createReadNetworksList(),
         )
     }
