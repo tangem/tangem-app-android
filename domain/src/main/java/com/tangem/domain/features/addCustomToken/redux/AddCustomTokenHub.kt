@@ -420,7 +420,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private fun getDerivationPathFromSelectedBlockchain(
         selectedDerivationBlockchain: Blockchain,
-    ): com.tangem.common.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
+    ): com.tangem.crypto.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
         mainNetwork = Network.getFieldValue(),
         derivationNetwork = selectedDerivationBlockchain,
         derivationStyle = hubState.cardDerivationStyle,
