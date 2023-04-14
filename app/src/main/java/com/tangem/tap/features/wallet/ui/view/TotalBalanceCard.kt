@@ -86,8 +86,7 @@ internal class TotalBalanceCard @JvmOverloads constructor(
     private fun updateState(status: TotalFiatBalance?, fiatCurrency: FiatCurrency, onChangeCurrencyClick: () -> Unit) {
         state = when (status) {
             null -> TotalBalanceCardState.Empty
-            is TotalFiatBalance.Error -> TotalBalanceCardState.Failure(
-                amount = status.amount,
+            is TotalFiatBalance.Failed -> TotalBalanceCardState.Failure(
                 fiatCurrency = fiatCurrency,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
             )
@@ -97,8 +96,9 @@ internal class TotalBalanceCard @JvmOverloads constructor(
             )
             is TotalFiatBalance.Loaded -> TotalBalanceCardState.Success(
                 amount = status.amount,
-                fiatCurrency = fiatCurrency,
+                showWarning = status.isWarning,
                 onChangeFiatCurrencyClick = onChangeCurrencyClick,
+                fiatCurrency = fiatCurrency,
             )
         }
     }
@@ -138,8 +138,8 @@ private fun TotalBalanceCardContent(state: TotalBalanceCardState, modifier: Modi
                 )
             }
         },
-        failureText = {
-            AnimatedVisibility(visible = state is TotalBalanceCardState.Failure) {
+        warningText = {
+            AnimatedVisibility(visible = state.showWarning) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(id = R.string.main_processing_full_amount),
@@ -156,7 +156,7 @@ private fun TotalBalanceCardScaffold(
     title: @Composable () -> Unit,
     amount: @Composable () -> Unit,
     currencySelector: @Composable () -> Unit,
-    failureText: @Composable () -> Unit,
+    warningText: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     amountWeight: Float = 0.8f,
 ) {
@@ -192,7 +192,7 @@ private fun TotalBalanceCardScaffold(
                     horizontal = TangemTheme.dimens.spacing16,
                 ),
             ) {
-                failureText()
+                warningText()
             }
             SpacerH12()
         }
@@ -252,11 +252,13 @@ private fun buildAmountString(amount: BigDecimal?, fiatCurrencySymbol: String): 
 
 private sealed interface TotalBalanceCardState {
     val amount: BigDecimal?
-    val onChangeFiatCurrencyClick: () -> Unit
+    val showWarning: Boolean
     val fiatCurrency: FiatCurrency
+    val onChangeFiatCurrencyClick: () -> Unit
 
     object Empty : TotalBalanceCardState {
         override val amount: BigDecimal? = null
+        override val showWarning: Boolean = false
         override val fiatCurrency: FiatCurrency = FiatCurrency.Default
         override val onChangeFiatCurrencyClick: () -> Unit = { /* no-op */ }
     }
@@ -266,16 +268,20 @@ private sealed interface TotalBalanceCardState {
         override val onChangeFiatCurrencyClick: () -> Unit,
     ) : TotalBalanceCardState {
         override val amount: BigDecimal = BigDecimal.ZERO
+        override val showWarning: Boolean = false
     }
 
     data class Failure(
-        override val amount: BigDecimal?,
         override val fiatCurrency: FiatCurrency,
         override val onChangeFiatCurrencyClick: () -> Unit,
-    ) : TotalBalanceCardState
+    ) : TotalBalanceCardState {
+        override val amount: BigDecimal? = null
+        override val showWarning: Boolean = true
+    }
 
     data class Success(
         override val amount: BigDecimal,
+        override val showWarning: Boolean,
         override val fiatCurrency: FiatCurrency,
         override val onChangeFiatCurrencyClick: () -> Unit,
     ) : TotalBalanceCardState
@@ -297,7 +303,6 @@ private fun TotalBalanceCardContentSample(modifier: Modifier = Modifier) {
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         TotalBalanceCardContent(
             state = TotalBalanceCardState.Failure(
-                amount = BigDecimal("9917.72"),
                 onChangeFiatCurrencyClick = {},
                 fiatCurrency = FiatCurrency("USD", "USD", "$"),
             ),
@@ -306,6 +311,7 @@ private fun TotalBalanceCardContentSample(modifier: Modifier = Modifier) {
         TotalBalanceCardContent(
             state = TotalBalanceCardState.Success(
                 amount = BigDecimal("9917.72"),
+                showWarning = false,
                 onChangeFiatCurrencyClick = {},
                 fiatCurrency = FiatCurrency("USD", "USD", "$"),
             ),
