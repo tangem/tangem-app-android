@@ -15,7 +15,7 @@ import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.shop.redux.ShopReducer
 import com.tangem.tap.features.signin.redux.SignInReducer
 import com.tangem.tap.features.sprinklr.redux.SprinklrReducer
-import com.tangem.tap.features.tokens.redux.TokensReducer
+import com.tangem.tap.features.tokens.legacy.redux.TokensReducer
 import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
