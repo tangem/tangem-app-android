@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -178,18 +179,13 @@ private fun RowScope.TokensInfo(isLocked: Boolean, balance: UserWalletItem.Balan
             LockedPlaceholder()
         } else {
             when (balance) {
-                is UserWalletItem.Balance.Error -> {
+                is UserWalletItem.Balance.Failed,
+                is UserWalletItem.Balance.Loaded,
+                -> {
                     LoadedTokensInfo(
                         balanceAmount = balance.amount,
                         tokensCount = tokensCount,
-                        showWarning = true,
-                    )
-                }
-                is UserWalletItem.Balance.Loaded -> {
-                    LoadedTokensInfo(
-                        balanceAmount = balance.amount,
-                        tokensCount = tokensCount,
-                        showWarning = false,
+                        showWarning = balance.showWarning,
                     )
                 }
                 is UserWalletItem.Balance.Loading -> {
@@ -360,16 +356,23 @@ private fun CheckedWalletMark(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(widthDp = 360, heightDp = 72, showBackground = true)
+// region Preview
 @Composable
-private fun PreviewWalletItem() {
-    TangemTheme {
+@Suppress("LongMethod") // preview
+private fun WalletItemSample(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary),
+    ) {
         WalletItem(
             wallet = MultiCurrencyUserWalletItem(
                 id = UserWalletId(value = null),
                 name = "Tangem Card",
                 imageUrl = "",
-                balance = UserWalletItem.Balance.Loaded("141212121888 BTC"),
+                balance = UserWalletItem.Balance.Loaded(
+                    amount = "1412121218 BTC",
+                    showWarning = false,
+                ),
                 isLocked = false,
                 tokensCount = 2,
                 cardsInWallet = 1,
@@ -379,5 +382,91 @@ private fun PreviewWalletItem() {
             onWalletClick = {},
             onWalletLongClick = {},
         )
+        Divider(modifier = Modifier.padding(vertical = 4.dp))
+        WalletItem(
+            wallet = MultiCurrencyUserWalletItem(
+                id = UserWalletId(value = null),
+                name = "Tangem Card",
+                imageUrl = "",
+                balance = UserWalletItem.Balance.Loaded(
+                    amount = "1412121218 BTC",
+                    showWarning = true,
+                ),
+                isLocked = false,
+                tokensCount = 2,
+                cardsInWallet = 1,
+            ),
+            isSelected = false,
+            isChecked = false,
+            onWalletClick = {},
+            onWalletLongClick = {},
+        )
+        Divider(modifier = Modifier.padding(vertical = 4.dp))
+        WalletItem(
+            wallet = MultiCurrencyUserWalletItem(
+                id = UserWalletId(value = null),
+                name = "Tangem Card",
+                imageUrl = "",
+                balance = UserWalletItem.Balance.Loading,
+                isLocked = true,
+                tokensCount = 2,
+                cardsInWallet = 1,
+            ),
+            isSelected = false,
+            isChecked = false,
+            onWalletClick = {},
+            onWalletLongClick = {},
+        )
+        Divider(modifier = Modifier.padding(vertical = 4.dp))
+        WalletItem(
+            wallet = MultiCurrencyUserWalletItem(
+                id = UserWalletId(value = null),
+                name = "Tangem Card",
+                imageUrl = "",
+                balance = UserWalletItem.Balance.Failed,
+                isLocked = false,
+                tokensCount = 2,
+                cardsInWallet = 1,
+            ),
+            isSelected = true,
+            isChecked = false,
+            onWalletClick = {},
+            onWalletLongClick = {},
+        )
+        Divider(modifier = Modifier.padding(vertical = 4.dp))
+        WalletItem(
+            wallet = SingleCurrencyUserWalletItem(
+                id = UserWalletId(value = null),
+                name = "Tangem Card",
+                imageUrl = "",
+                balance = UserWalletItem.Balance.Loaded(
+                    amount = "141212121888 BTC",
+                    showWarning = false,
+                ),
+                isLocked = false,
+                tokenName = "Bitcoin",
+            ),
+            isSelected = false,
+            isChecked = true,
+            onWalletClick = {},
+            onWalletLongClick = {},
+        )
     }
 }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun WalletItemPreview_Light() {
+    TangemTheme {
+        WalletItemSample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun WalletItemPreview_Dark() {
+    TangemTheme(isDark = true) {
+        WalletItemSample()
+    }
+}
+// endregion Preview
