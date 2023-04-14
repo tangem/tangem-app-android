@@ -14,6 +14,9 @@ internal sealed interface TokensListStateHolder {
     /** Toolbar state */
     val toolbarState: TokensListToolbarState
 
+    /** Loading state */
+    val isLoading: Boolean
+
     /** Tokens list */
     val tokens: Flow<PagingData<TokenItemState>>
 
@@ -24,33 +27,21 @@ internal sealed interface TokensListStateHolder {
      * Util function that allow to make a copy
      *
      * @param toolbarState             toolbar state
+     * @param isLoading                loading state
      * @param tokens                   tokens list
      * @param onTokensLoadStateChanged callback to be invoked when tokens loading state is been changed
      */
     fun copySealed(
         toolbarState: TokensListToolbarState = this.toolbarState,
+        isLoading: Boolean = this.isLoading,
         tokens: Flow<PagingData<TokenItemState>> = this.tokens,
         onTokensLoadStateChanged: (LoadState) -> Unit = this.onTokensLoadStateChanged,
     ): TokensListStateHolder {
         return when (this) {
-            is ManageContent -> copy(toolbarState, tokens, onTokensLoadStateChanged)
-            is Loading -> copy(toolbarState, tokens, onTokensLoadStateChanged)
-            is ReadContent -> copy(toolbarState, tokens, onTokensLoadStateChanged)
+            is ManageContent -> copy(toolbarState, isLoading, tokens, onTokensLoadStateChanged)
+            is ReadContent -> copy(toolbarState, isLoading, tokens, onTokensLoadStateChanged)
         }
     }
-
-    /**
-     * Loading state
-     *
-     * @property toolbarState             toolbar state
-     * @property tokens                   tokens list
-     * @property onTokensLoadStateChanged callback to be invoked when tokens loading state is been changed
-     */
-    data class Loading(
-        override val toolbarState: TokensListToolbarState,
-        override val tokens: Flow<PagingData<TokenItemState>>,
-        override val onTokensLoadStateChanged: (LoadState) -> Unit,
-    ) : TokensListStateHolder
 
     /**
      * State screen that is available only for read
@@ -61,6 +52,7 @@ internal sealed interface TokensListStateHolder {
      */
     data class ReadContent(
         override val toolbarState: TokensListToolbarState,
+        override val isLoading: Boolean,
         override val tokens: Flow<PagingData<TokenItemState>>,
         override val onTokensLoadStateChanged: (LoadState) -> Unit,
     ) : TokensListStateHolder
@@ -75,6 +67,7 @@ internal sealed interface TokensListStateHolder {
      */
     data class ManageContent(
         override val toolbarState: TokensListToolbarState,
+        override val isLoading: Boolean,
         override val tokens: Flow<PagingData<TokenItemState>>,
         override val onTokensLoadStateChanged: (LoadState) -> Unit,
         val onSaveButtonClick: () -> Unit,

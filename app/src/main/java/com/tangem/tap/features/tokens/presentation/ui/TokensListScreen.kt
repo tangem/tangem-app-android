@@ -55,15 +55,12 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder) {
     ) { scaffoldPadding ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
-        TokensListContent(
-            tokens = tokens,
-            scaffoldPadding = scaffoldPadding,
-        )
+        TokensListContent(tokens, scaffoldPadding)
 
         stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
 
         AnimatedVisibility(
-            visible = stateHolder is TokensListStateHolder.Loading,
+            visible = stateHolder.isLoading,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -122,13 +119,14 @@ private fun SaveChangesButton(onClick: () -> Unit) {
 private fun Preview_TokensListScreen_Loading() {
     TangemTheme {
         TokensListScreen(
-            stateHolder = TokensListStateHolder.Loading(
+            stateHolder = TokensListStateHolder.ReadContent(
                 toolbarState = TokensListToolbarState.Title.Manage(
                     titleResId = R.string.main_manage_tokens,
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                     onAddCustomTokenClick = {},
                 ),
+                isLoading = true,
                 tokens = emptyFlow(),
                 onTokensLoadStateChanged = {},
             ),
@@ -148,6 +146,7 @@ private fun Preview_TokensListScreen_Manage() {
                     onSearchButtonClick = {},
                     onAddCustomTokenClick = {},
                 ),
+                isLoading = false,
                 tokens = flow {
                     emit(
                         PagingData.from(
@@ -176,6 +175,7 @@ private fun Preview_TokensListScreen_Read() {
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                 ),
+                isLoading = false,
                 tokens = flow {
                     emit(
                         PagingData.from(
