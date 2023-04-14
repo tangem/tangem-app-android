@@ -94,8 +94,6 @@ object TangemSdkErrorMapper {
             is TangemSdkError.BackupFailedEmptyWallets -> TangemSdkError.BackupFailedEmptyWallets()
             is TangemSdkError.BackupFailedNotEmptyWallets -> TangemSdkError.BackupFailedNotEmptyWallets()
             is TangemSdkError.NoActiveBackup -> TangemSdkError.NoActiveBackup()
-            is TangemSdkError.ResetBackupFailedHasBackupedWallets ->
-                TangemSdkError.ResetBackupFailedHasBackupedWallets()
             is TangemSdkError.BackupServiceInvalidState -> TangemSdkError.BackupServiceInvalidState()
             is TangemSdkError.NoBackupCardForIndex -> TangemSdkError.NoBackupCardForIndex()
             is TangemSdkError.EmptyBackupCards -> TangemSdkError.EmptyBackupCards()
@@ -121,6 +119,10 @@ object TangemSdkErrorMapper {
             is TangemSdkError.InvalidEncryptionKey -> error
             is TangemSdkError.KeyGenerationException -> error
             is TangemSdkError.MnemonicException -> error
+            is TangemSdkError.WalletAlreadyCreated -> error
+            is TangemSdkError.ResetBackupFailedHasBackedUpWallets -> error
+            is TangemSdkError.KeysImportDisabled -> error
+            is TangemSdkError.Underlying -> error
         }
     }
 }

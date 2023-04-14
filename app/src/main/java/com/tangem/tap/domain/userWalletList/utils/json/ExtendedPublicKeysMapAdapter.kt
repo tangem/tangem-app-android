@@ -7,8 +7,8 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.hdWallet.ExtendedPublicKey
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 internal class ExtendedPublicKeysMapAdapter {
