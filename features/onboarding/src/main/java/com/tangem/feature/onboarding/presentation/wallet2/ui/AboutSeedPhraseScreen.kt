@@ -12,17 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerW8
@@ -62,10 +59,7 @@ fun AboutSeedPhraseScreen(
                 ReadMoreBlock(state)
             }
         }
-
-        Box(
-            modifier = Modifier.wrapContentSize(),
-        ) {
+        Box {
             OnboardingActionBlock(
                 firstActionContent = {
                     SecondaryButton(
@@ -105,13 +99,15 @@ private fun EditIconBlock() {
             modifier = Modifier
                 .size(TangemTheme.dimens.size44),
             painter = painterResource(id = R.drawable.ic_onboarding_text_edit_56),
-            contentDescription = "Edit icon",
+            contentDescription = null,
         )
         SpacerH32()
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
-                .background(TangemTheme.colors.icon.warning.copy(alpha = 0.12f)),
+                .background(
+                    color = TangemTheme.colors.icon.warning.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(TangemTheme.dimens.radius8),
+                ),
         ) {
             Text(
                 modifier = Modifier
@@ -141,8 +137,8 @@ private fun ReadMoreBlock(state: AboutState) {
                 .align(Alignment.Center)
                 .clip(shape)
                 .border(
-                    width = 1.dp,
-                    color = Color.Gray,
+                    width = TangemTheme.dimens.size1,
+                    color = TangemTheme.colors.stroke.primary,
                     shape = shape,
                 )
                 .clickable(onClick = state.buttonReadMoreAboutSeedPhrase.onClick)
@@ -153,7 +149,7 @@ private fun ReadMoreBlock(state: AboutState) {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
-                contentDescription = "Go away icon",
+                contentDescription = null,
             )
             SpacerW8()
             Text(
