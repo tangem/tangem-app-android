@@ -20,7 +20,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.tokens.redux.TokensAction
+import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.store
 import org.rekotlin.StoreSubscriber
 

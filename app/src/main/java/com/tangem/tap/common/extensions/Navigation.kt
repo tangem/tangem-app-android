@@ -9,6 +9,7 @@ import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
+import com.tangem.tap.features.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.details.DetailsFragment
@@ -25,9 +26,8 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFra
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
-import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
-import com.tangem.tap.features.tokens.presentation.AddTokensFragment
-import com.tangem.tap.features.tokens.presentation.TokensListFragment
+import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
+import com.tangem.tap.features.tokens.legacy.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
