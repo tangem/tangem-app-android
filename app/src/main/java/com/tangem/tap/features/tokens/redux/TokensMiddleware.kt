@@ -252,7 +252,7 @@ class TokensMiddleware {
         return DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
     }
 
-    private class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
+    class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     private fun submitAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
