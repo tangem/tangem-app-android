@@ -13,12 +13,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.tokens.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.domain.models.Token
 import com.tangem.tap.features.tokens.domain.models.Token.Network
@@ -29,10 +26,7 @@ import com.tangem.tap.features.tokens.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.presentation.states.TokensListToolbarState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
@@ -40,7 +34,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as BlockchainToken
 
@@ -72,15 +68,28 @@ internal class TokensListViewModel @Inject constructor(
     var uiState by mutableStateOf(value = getInitialUiState())
         private set
 
-    private val addedTokenList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
-    private val addedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
+    private val changedTokensList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
+    private val changedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
+
+    private var saveButtonPressed = false
 
     private fun getInitialUiState(): TokensListStateHolder {
-        return TokensListStateHolder.Loading(
-            toolbarState = getInitialToolbarState(),
-            tokens = getInitialTokensList(),
-            onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
-        )
+        return if (args.isManageAccess) {
+            TokensListStateHolder.ManageContent(
+                toolbarState = getInitialToolbarState(),
+                isLoading = true,
+                tokens = getInitialTokensList(),
+                onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
+                onSaveButtonClick = actionsHandler::onSaveButtonClick,
+            )
+        } else {
+            TokensListStateHolder.ReadContent(
+                toolbarState = getInitialToolbarState(),
+                isLoading = true,
+                tokens = getInitialTokensList(),
+                onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
+            )
+        }
     }
 
     private fun getInitialToolbarState(): TokensListToolbarState {
@@ -101,6 +110,8 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {
+        if (searchText.isNotEmpty()) analyticsSender.sendWhenTokenSearched()
+
         return interactor.getTokensList(searchText = searchText).map {
             it.map { token ->
                 if (args.isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
@@ -177,11 +188,11 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun isAdded(address: String?, blockchain: Blockchain?): Boolean {
         return if (address != null) {
-            addedTokenList.any { addedToken ->
+            changedTokensList.any { addedToken ->
                 address == addedToken.token.contractAddress && blockchain == addedToken.blockchain
             }
         } else {
-            addedBlockchainList.contains(blockchain)
+            changedBlockchainList.contains(blockchain)
         }
     }
 
@@ -220,38 +231,23 @@ internal class TokensListViewModel @Inject constructor(
                 updateTokenItem(toggledToken, toggledNetwork)
             }
         }
-// [REDACTED_TODO_COMMENT]
+
         fun onNetworkClick() {
-            store.dispatchNotification(R.string.contract_address_copied_message)
+            router.showAddressCopiedNotification()
         }
 
         fun onTokensLoadStateChanged(state: LoadState) {
-            uiState = when (state) {
-                is LoadState.NotLoading -> {
-                    analyticsSender.sendWhenTokenSearched()
+            uiState = uiState.copySealed(isLoading = state is LoadState.Loading || saveButtonPressed)
+            if (saveButtonPressed) saveButtonPressed = false
+        }
 
-                    if (args.isManageAccess) {
-                        TokensListStateHolder.ManageContent(
-                            toolbarState = uiState.toolbarState,
-                            tokens = uiState.tokens,
-                            onTokensLoadStateChanged = uiState.onTokensLoadStateChanged,
-                            onSaveButtonClick = this::onSaveButtonClick,
-                        )
-                    } else {
-                        TokensListStateHolder.ReadContent(
-                            toolbarState = uiState.toolbarState,
-                            tokens = uiState.tokens,
-                            onTokensLoadStateChanged = uiState.onTokensLoadStateChanged,
-                        )
-                    }
-                }
-                else -> {
-                    TokensListStateHolder.Loading(
-                        toolbarState = uiState.toolbarState,
-                        tokens = uiState.tokens,
-                        onTokensLoadStateChanged = uiState.onTokensLoadStateChanged,
-                    )
-                }
+        fun onSaveButtonClick() {
+            viewModelScope.launch(dispatchers.main) {
+                saveButtonPressed = true
+                analyticsSender.sendWhenSaveButtonClicked()
+                uiState = uiState.copySealed(isLoading = true)
+                withContext(dispatchers.io) { interactor.saveChanges(changedTokensList, changedBlockchainList) }
+                router.popBackStack()
             }
         }
 
@@ -275,38 +271,34 @@ internal class TokensListViewModel @Inject constructor(
         }
 
         private fun updateBlockchainItem(toggledNetwork: NetworkItemState.ManageContent, blockchain: Blockchain) {
-            val isRemoveAction = addedBlockchainList.contains(blockchain)
+            val isRemoveAction = changedBlockchainList.contains(blockchain)
 
             if (isRemoveAction) {
-                val isTokenWithSameBlockchainFound = addedTokenList.any { it.blockchain == blockchain }
+                val isTokenWithSameBlockchainFound = changedTokensList.any { it.blockchain == blockchain }
                 val isAddedOnMainScreen = args.mainScreenBlockchainList.contains(blockchain)
 
                 if (isTokenWithSameBlockchainFound) {
-                    store.dispatchDialogShow(
-                        WalletDialog.TokensAreLinkedDialog(
-                            currencyTitle = blockchain.name,
-                            currencySymbol = blockchain.currency,
-                        ),
+                    router.openUnableHideMainTokenAlert(
+                        tokenName = blockchain.name,
+                        tokenSymbol = blockchain.currency,
                     )
                 } else if (isAddedOnMainScreen) {
-                    store.dispatchDialogShow(
-                        WalletDialog.RemoveWalletDialog(
-                            currencyTitle = blockchain.name,
-                            onOk = {
-                                analyticsSender.sendWhenBlockchainAdded(blockchain)
-                                addedBlockchainList.remove(blockchain)
-                                toggledNetwork.changeToggleState()
-                            },
-                        ),
+                    router.openRemoveWalletAlert(
+                        tokenName = blockchain.name,
+                        onOkClick = {
+                            analyticsSender.sendWhenBlockchainAdded(blockchain)
+                            changedBlockchainList.remove(blockchain)
+                            toggledNetwork.changeToggleState()
+                        },
                     )
                 } else {
                     analyticsSender.sendWhenBlockchainRemoved(blockchain)
-                    addedBlockchainList.remove(blockchain)
+                    changedBlockchainList.remove(blockchain)
                     toggledNetwork.changeToggleState()
                 }
             } else {
                 analyticsSender.sendWhenBlockchainAdded(blockchain)
-                addedBlockchainList.add(blockchain)
+                changedBlockchainList.add(blockchain)
                 toggledNetwork.changeToggleState()
             }
         }
@@ -326,25 +318,23 @@ internal class TokensListViewModel @Inject constructor(
                 blockchain = toggledNetwork.blockchain,
             )
 
-            val isRemoveAction = addedTokenList.contains(token)
+            val isRemoveAction = changedTokensList.contains(token)
 
             if (isRemoveAction) {
                 val isAddedOnMainScreen = args.mainScreenTokenList.contains(token)
 
                 if (isAddedOnMainScreen) {
-                    store.dispatchDialogShow(
-                        WalletDialog.RemoveWalletDialog(
-                            currencyTitle = token.token.name,
-                            onOk = {
-                                analyticsSender.sendWhenTokenRemoved(token.token)
-                                addedTokenList.remove(token)
-                                toggledNetwork.changeToggleState()
-                            },
-                        ),
+                    router.openRemoveWalletAlert(
+                        tokenName = token.token.name,
+                        onOkClick = {
+                            analyticsSender.sendWhenTokenRemoved(token.token)
+                            changedTokensList.remove(token)
+                            toggledNetwork.changeToggleState()
+                        },
                     )
                 } else {
                     analyticsSender.sendWhenTokenRemoved(token.token)
-                    addedTokenList.remove(token)
+                    changedTokensList.remove(token)
                     toggledNetwork.changeToggleState()
                 }
             } else {
@@ -352,23 +342,13 @@ internal class TokensListViewModel @Inject constructor(
                     !(reduxStateHolder.scanResponse?.card?.canHandleToken(token.blockchain) ?: false)
 
                 if (isUnsupportedToken) {
-                    store.dispatchDialogShow(
-                        AppDialog.SimpleOkDialogRes(
-                            headerId = R.string.common_warning,
-                            messageId = R.string.alert_manage_tokens_unsupported_message,
-                        ),
-                    )
+                    router.openUnsupportedSoltanaNetworkAlert()
                 } else {
                     analyticsSender.sendWhenTokenAdded(token.token)
-                    addedTokenList.add(token)
+                    changedTokensList.add(token)
                     toggledNetwork.changeToggleState()
                 }
             }
-        }
-
-        private fun onSaveButtonClick() {
-            analyticsSender.sendWhenSaveButtonClicked()
-            store.dispatch(TokensAction.SaveChanges(addedTokenList, addedBlockchainList))
         }
     }
 
