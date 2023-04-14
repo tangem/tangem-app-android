@@ -108,7 +108,7 @@ internal class WalletSelectorMiddleware {
     ) {
         if (updatedWalletStores.isNotEmpty()) {
             scope.launch(Dispatchers.Default) {
-                val updatedWallets = state.wallets.updateWalletStoresAndCalculateFiatBalance(updatedWalletStores)
+                val updatedWallets = state.wallets.calculateBalanceAndUpdateWalletStores(updatedWalletStores)
                 if (updatedWallets != state.wallets) {
                     store.dispatchOnMain(WalletSelectorAction.BalancesLoaded(updatedWallets))
                 }
@@ -362,17 +362,17 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private suspend fun List<UserWalletModel>.updateWalletStoresAndCalculateFiatBalance(
+    private suspend fun List<UserWalletModel>.calculateBalanceAndUpdateWalletStores(
         walletStores: Map<UserWalletId, List<WalletStoreModel>>,
     ): List<UserWalletModel> {
         return this
             .associateWith { walletStores[it.id] }
             .map { (wallet, walletStores) ->
-                wallet.updateWalletStoresAndCalculateFiatBalance(walletStores)
+                wallet.calculateBalanceAndUpdateWalletStores(walletStores)
             }
     }
 
-    private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
+    private suspend fun UserWalletModel.calculateBalanceAndUpdateWalletStores(
         walletStores: List<WalletStoreModel>?,
     ): UserWalletModel {
         return this.copy(
