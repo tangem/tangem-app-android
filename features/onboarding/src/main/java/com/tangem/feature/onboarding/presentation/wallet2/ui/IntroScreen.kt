@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,9 +50,7 @@ fun IntroScreen(
                 )
             }
         }
-        Box(
-            modifier = Modifier.wrapContentSize(),
-        ) {
+        Box {
             OnboardingActionBlock(
                 firstActionContent = {
                     PrimaryButtonIconLeft(
@@ -98,7 +95,7 @@ private fun CardImageBlock(
                 .build(),
             loading = { CardPlaceHolder(cardImageModifier) },
             error = { CardPlaceHolder(cardImageModifier) },
-            contentDescription = "Tangem Card",
+            contentDescription = null,
         )
     }
 }
@@ -108,7 +105,7 @@ private fun CardPlaceHolder(modifier: Modifier) {
     Image(
         modifier = modifier,
         painter = painterResource(id = R.drawable.card_placeholder_black),
-        contentDescription = "Tangem Card placeholder",
         contentScale = ContentScale.Fit,
+        contentDescription = null,
     )
 }
