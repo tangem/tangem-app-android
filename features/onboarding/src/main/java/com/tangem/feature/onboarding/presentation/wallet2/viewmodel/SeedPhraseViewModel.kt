@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -51,6 +52,7 @@ class SeedPhraseViewModel @Inject constructor(
         get() = uiState.step
 
     private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
+    private var suggestionWordInserted: AtomicBoolean = AtomicBoolean(false)
 
     override fun onCleared() {
         textFieldsDebouncers.forEach { entry -> entry.value.release() }
@@ -138,18 +140,25 @@ class SeedPhraseViewModel @Inject constructor(
             val inputMnemonic = fieldState.textFieldValue.text
 
             when {
+                suggestionWordInserted.getAndSet(false) -> {
+                    validateMnemonic(inputMnemonic)
+                    return@launchSingle
+                }
                 isSameText && !isCursorMoved -> {
                     return@launchSingle
                 }
                 isSameText && isCursorMoved -> {
+                    updateSuggestions(fieldState)
                     return@launchSingle
                 }
             }
 
             val isPasteFromClipboard = textFieldValue.text.length - oldTextFieldValue.text.length > 1
             if (isPasteFromClipboard) {
+                updateSuggestions(fieldState)
                 validateMnemonic(inputMnemonic)
             } else {
+                updateSuggestions(fieldState)
                 val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
                 debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.io) {
                     validateMnemonic(inputMnemonic)
@@ -179,6 +188,15 @@ class SeedPhraseViewModel @Inject constructor(
                 }
                 updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, error) }
             }
+    }
+
+    private suspend fun updateSuggestions(fieldState: TextFieldState) {
+        val suggestions = interactor.getSuggestions(
+            text = fieldState.textFieldValue.text,
+            hasSelection = !fieldState.textFieldValue.selection.collapsed,
+            cursorPosition = fieldState.textFieldValue.selection.end,
+        )
+        updateUi { uiBuilder.importSeedPhrase.updateSuggestions(uiState, suggestions) }
     }
     // endregion ImportSeedPhrase
 
@@ -250,6 +268,22 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
+        viewModelScope.launchSingle {
+            suggestionWordInserted.set(true)
+            val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
+            val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
+            val cursorPosition = textFieldValue.selection.end
+
+            val insertResult = interactor.insertSuggestionWord(
+                text = textFieldValue.text,
+                suggestion = word,
+                cursorPosition = cursorPosition,
+            )
+            updateUi {
+                val mediateState = uiBuilder.importSeedPhrase.insertSuggestionWord(uiState, insertResult)
+                uiBuilder.importSeedPhrase.updateSuggestions(mediateState, emptyList())
+            }
+        }
     }
 
     private fun menuChatClick() {
