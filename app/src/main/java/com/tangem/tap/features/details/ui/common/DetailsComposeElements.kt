@@ -3,18 +3,18 @@ package com.tangem.tap.features.details.ui.common
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -25,7 +25,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.wallet.R
 
 @Composable
@@ -109,26 +111,49 @@ fun EmptyTopBarWithNavigation(
 
 @Composable
 fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    Button(
+    PrimaryButtonIconRight(
+        text = title,
+        enabled = enabled,
         onClick = onClick,
         modifier = modifier
+            .fillMaxWidth(),
+        icon = painterResource(id = R.drawable.ic_tangem_24),
+    )
+}
+
+@Composable
+fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .heightIn(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = colorResource(R.color.button_primary),
-            contentColor = colorResource(R.color.text_primary_2),
-            disabledBackgroundColor = colorResource(R.color.button_disabled),
-            disabledContentColor = colorResource(R.color.text_disabled),
-        ),
+            .selectable(
+                selected = selected,
+                onClick = { onClick() },
+            )
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
-        Text(text = title)
-        Spacer(
-            modifier = Modifier
-                .padding(start = 20.dp, end = 20.dp)
-                .size(8.dp),
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            modifier = Modifier.padding(end = 20.dp),
+            colors = RadioButtonDefaults.colors(
+                unselectedColor = colorResource(id = R.color.icon_secondary),
+                selectedColor = colorResource(id = R.color.icon_accent),
+            ),
         )
-        Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
+
+        Column {
+            Text(
+                text = title,
+                style = TangemTypography.subtitle1,
+                color = colorResource(id = R.color.text_primary_1),
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            Text(
+                text = subtitle,
+                style = TangemTypography.body2,
+                color = colorResource(id = R.color.text_secondary),
+            )
+        }
     }
 }
