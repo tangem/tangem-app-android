@@ -36,6 +36,26 @@ fun CheckSeedPhraseScreen(
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
+            /**
+* [REDACTED_TODO_COMMENT]
+
+            @kozarezvlad kozarezvlad 5 days ago
+            Кажется LazyColumn тут не нужен, ведь всего 2 элемента и они статичны без динамического наполнения, можно просто Column, он полегче в отрисовке
+
+            Member
+            Author
+            @gbixahue gbixahue 4 days ago
+            LazyColumn дает возможность списку скролиться, для удобного ввода, когда открывается клавиатура
+
+            Member
+            @MamaLemon MamaLemon 4 days ago
+            В принципе можно заюзать verticalScroll() у модифаера
+
+            Member
+            Author
+            @gbixahue gbixahue 2 days ago
+            C verticalScroll не работает так, как нужно
+             */
             item {
                 OnboardingDescriptionBlock(
                     modifier = Modifier
