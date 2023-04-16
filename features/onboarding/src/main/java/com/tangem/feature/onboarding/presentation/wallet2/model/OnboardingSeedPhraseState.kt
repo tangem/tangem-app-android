@@ -36,8 +36,13 @@ data class AboutState(
 )
 
 data class YourSeedPhraseState(
-    val mnemonicComponents: ImmutableList<String> = persistentListOf(),
+    val mnemonicGridItems: ImmutableList<MnemonicGridItem> = persistentListOf(),
     val buttonContinue: ButtonState,
+)
+
+data class MnemonicGridItem(
+    val index: Int,
+    val mnemonic: String,
 )
 
 data class CheckSeedPhraseState(
