@@ -36,6 +36,7 @@ fun CheckSeedPhraseScreen(
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
+            
             item {
                 OnboardingDescriptionBlock(
                     modifier = Modifier
