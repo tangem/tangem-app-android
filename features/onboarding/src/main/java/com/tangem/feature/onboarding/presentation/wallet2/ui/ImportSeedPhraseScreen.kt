@@ -95,6 +95,7 @@ private fun PhraseBlock(
             textStyle = TangemTheme.typography.body1,
             singleLine = false,
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
+            
         )
         Box(
             modifier = Modifier
