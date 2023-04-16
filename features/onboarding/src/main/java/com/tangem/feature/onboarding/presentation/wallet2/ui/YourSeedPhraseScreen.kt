@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
+import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
 import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
@@ -50,7 +51,7 @@ fun YourSeedPhraseScreen(
         Box(
             modifier = Modifier.weight(1f),
         ) {
-            PhraseGreedBlock(state.mnemonicComponents)
+            PhraseGreedBlock(state.mnemonicGridItems)
         }
 
         Box {
@@ -69,26 +70,27 @@ fun YourSeedPhraseScreen(
 }
 
 @Composable
-private fun PhraseGreedBlock(phraseList: ImmutableList<String>) {
+private fun PhraseGreedBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
     ) {
         this.items(
-            count = phraseList.size,
+            count = mnemonicGridItems.size,
         ) { index ->
             Row(
                 modifier = Modifier.padding(all = TangemTheme.dimens.size8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val item = mnemonicGridItems[index]
                 SpacerW32()
                 Text(
                     modifier = Modifier.width(TangemTheme.dimens.size40),
-                    text = "${index + 1}.",
+                    text = "${item.index}.",
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                 )
                 Text(
-                    text = phraseList[index],
+                    text = item.mnemonic,
                     style = TangemTheme.typography.button,
                     color = TangemTheme.colors.text.primary1,
                 )
