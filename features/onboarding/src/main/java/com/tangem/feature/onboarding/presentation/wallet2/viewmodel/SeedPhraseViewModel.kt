@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
 import com.tangem.feature.onboarding.presentation.wallet2.model.AboutUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseUiAction
@@ -84,8 +85,7 @@ class SeedPhraseViewModel @Inject constructor(
         ),
         importSeedPhraseActions = ImportSeedPhraseUiAction(
             phraseTextFieldAction = TextFieldUiAction(
-                onFocusChanged = { isFocused ->  /* [REDACTED_TODO_COMMENT] */ },
-                onTextFieldChanged = { value -> /* [REDACTED_TODO_COMMENT] */ },
+                onTextFieldChanged = { value -> onSeedPhraseTextFieldChanged(value) },
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
             buttonCreateWalletClick = ::buttonCreateWalletWithSeedPhraseClick,
@@ -121,6 +121,66 @@ class SeedPhraseViewModel @Inject constructor(
         }
     }
     // endregion CheckSeedPhrase
+
+    // region ImportSeedPhrase
+    private fun onSeedPhraseTextFieldChanged(textFieldValue: TextFieldValue) {
+        viewModelScope.launchSingle {
+            val oldTextFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
+            val isSameText = textFieldValue.text == oldTextFieldValue.text
+            val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
+
+            updateUi {
+                val mediateState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
+                uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
+            }
+
+            val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
+            val inputMnemonic = fieldState.textFieldValue.text
+
+            when {
+                isSameText && !isCursorMoved -> {
+                    return@launchSingle
+                }
+                isSameText && isCursorMoved -> {
+                    return@launchSingle
+                }
+            }
+
+            val isPasteFromClipboard = textFieldValue.text.length - oldTextFieldValue.text.length > 1
+            if (isPasteFromClipboard) {
+                validateMnemonic(inputMnemonic)
+            } else {
+                val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
+                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.io) {
+                    validateMnemonic(inputMnemonic)
+                }
+            }
+        }
+    }
+
+    private suspend fun validateMnemonic(inputMnemonic: String) {
+        if (inputMnemonic.isEmpty() && uiState.importSeedPhraseState.error != null) {
+            updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
+            return
+        }
+
+        interactor.validateMnemonicString(inputMnemonic)
+            .onSuccess {
+                updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
+            }
+            .onFailure {
+                val error = it as? SeedPhraseError ?: return
+
+                val mediateState = when (error) {
+                    is SeedPhraseError.InvalidWords -> {
+                        uiBuilder.importSeedPhrase.updateInvalidWords(uiState, error.words)
+                    }
+                    else -> uiState
+                }
+                updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, error) }
+            }
+    }
+    // endregion ImportSeedPhrase
 
     // region ButtonClickHandlers
     private fun buttonCreateWalletClick() {
@@ -231,4 +291,9 @@ class SeedPhraseViewModel @Inject constructor(
         return withContext(dispatchers.single, block)
     }
     // endregion Utils
+
+    companion object {
+        private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
+        private const val MNEMONIC_DEBOUNCE_DELAY = 700L
+    }
 }
