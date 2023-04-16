@@ -21,6 +21,7 @@ class StateBuilder(
 ) {
 
     val checkSeedPhrase: CheckSeedPhraseStateBuilder = CheckSeedPhraseStateBuilder()
+    val importSeedPhrase: ImportSeedPhraseStateBuilder = ImportSeedPhraseStateBuilder()
 
     fun init(): OnboardingSeedPhraseState = OnboardingSeedPhraseState(
         step = OnboardingSeedPhraseStep.Intro,
