@@ -22,4 +22,5 @@ class TestingCoroutineDispatcherProvider(
     override val main: CoroutineDispatcher = Dispatchers.Unconfined,
     override val io: CoroutineDispatcher = Dispatchers.Unconfined,
     override val single: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),
+    
 ) : CoroutineDispatcherProvider
