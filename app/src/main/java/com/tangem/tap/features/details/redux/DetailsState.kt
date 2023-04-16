@@ -26,12 +26,22 @@ data class CardInfo(
     val hasBackup: Boolean,
 )
 
+/**
+ * @property enabledOnCard whether access code recovery is enabled on card
+ * @property enabledSelection current selected option in app (not saved on card yet)
+ */
+data class AccessCodeRecoveryState(
+    val enabledOnCard: Boolean,
+    val enabledSelection: Boolean,
+)
+
 data class CardSettingsState(
     val cardInfo: CardInfo,
     val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetConfirmed: Boolean = false,
+    val accessCodeRecovery: AccessCodeRecoveryState? = null,
 )
 
 data class ManageSecurityState(
