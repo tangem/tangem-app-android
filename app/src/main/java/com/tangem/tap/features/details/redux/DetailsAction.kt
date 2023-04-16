@@ -29,6 +29,15 @@ sealed class DetailsAction : Action {
     data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
 
+    sealed class AccessCodeRecovery : DetailsAction() {
+        object Open : AccessCodeRecovery()
+        data class SaveChanges(val enabled: Boolean) : AccessCodeRecovery() {
+            data class Success(val enabled: Boolean) : AccessCodeRecovery()
+        }
+
+        data class SelectOption(val enabled: Boolean) : AccessCodeRecovery()
+    }
+
     sealed class ManageSecurity : DetailsAction() {
         object OpenSecurity : ManageSecurity()
         data class SelectOption(val option: SecurityOption) : ManageSecurity()
