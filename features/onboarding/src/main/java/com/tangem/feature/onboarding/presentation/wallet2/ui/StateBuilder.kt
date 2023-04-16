@@ -5,6 +5,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.model.IntroState
+import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseStep
 import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
@@ -111,9 +112,9 @@ class StateBuilder(
 
     fun mnemonicGenerated(
         uiState: OnboardingSeedPhraseState,
-        mnemonicComponents: ImmutableList<String>,
+        mnemonicGridItems: ImmutableList<MnemonicGridItem>,
     ): OnboardingSeedPhraseState {
-        return updateMnemonicComponents(uiState, mnemonicComponents)
+        return updateMnemonicComponents(uiState, mnemonicGridItems)
             .copy(
                 step = OnboardingSeedPhraseStep.YourSeedPhrase,
                 aboutState = uiState.aboutState.copy(
@@ -129,10 +130,10 @@ class StateBuilder(
 
     fun updateMnemonicComponents(
         uiState: OnboardingSeedPhraseState,
-        phraseList: ImmutableList<String>,
+        mnemonicGridItems: ImmutableList<MnemonicGridItem>,
     ): OnboardingSeedPhraseState = uiState.copy(
         yourSeedPhraseState = uiState.yourSeedPhraseState.copy(
-            mnemonicComponents = phraseList,
+            mnemonicGridItems = mnemonicGridItems,
         ),
     )
 }
