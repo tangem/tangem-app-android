@@ -425,7 +425,7 @@ class DetailsMiddleware {
         fun handle(state: DetailsState, action: DetailsAction.AccessCodeRecovery) {
             when (action) {
                 is DetailsAction.AccessCodeRecovery.Open -> {
-                    // store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery)) Todo: next PR
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery))
                 }
                 is DetailsAction.AccessCodeRecovery.SaveChanges -> {
                     scope.launch {
