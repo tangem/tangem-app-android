@@ -51,6 +51,7 @@ class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
     private val managePrivacyMiddleware = ManagePrivacyMiddleware()
+    private val accessCodeRecoveryMiddleware = AccessCodeRecoveryMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
@@ -74,6 +75,7 @@ class DetailsMiddleware {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
             }
+            is DetailsAction.AccessCodeRecovery -> accessCodeRecoveryMiddleware.handle(state, action)
             DetailsAction.ScanCard -> {
                 scope.launch {
                     tangemSdkManager.scanProduct(
@@ -416,6 +418,30 @@ class DetailsMiddleware {
                 context = context,
                 tangemSdkManager = tangemSdkManager,
             )
+        }
+    }
+
+    class AccessCodeRecoveryMiddleware {
+        fun handle(state: DetailsState, action: DetailsAction.AccessCodeRecovery) {
+            when (action) {
+                is DetailsAction.AccessCodeRecovery.Open -> {
+                    // store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery)) Todo: next PR
+                }
+                is DetailsAction.AccessCodeRecovery.SaveChanges -> {
+                    scope.launch {
+                        tangemSdkManager
+                            .setAccessCodeRecoveryEnabled(state.cardSettingsState?.card?.cardId, action.enabled)
+                            .doOnSuccess {
+                                store.dispatchOnMain(NavigationAction.PopBackTo())
+                                store.dispatchOnMain(
+                                    DetailsAction.AccessCodeRecovery.SaveChanges.Success(action.enabled),
+                                )
+                            }
+                    }
+                }
+                is DetailsAction.AccessCodeRecovery.SelectOption -> Unit
+                is DetailsAction.AccessCodeRecovery.SaveChanges.Success -> Unit
+            }
         }
     }
 }
