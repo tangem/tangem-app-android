@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
+import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
 import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
@@ -109,6 +110,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.CardSettings -> CardSettingsFragment()
         AppScreen.AppSettings -> AppSettingsFragment()
         AppScreen.ResetToFactory -> ResetCardFragment()
+        AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> {
             val featureToggles = store.state.daggerGraphState.get(
