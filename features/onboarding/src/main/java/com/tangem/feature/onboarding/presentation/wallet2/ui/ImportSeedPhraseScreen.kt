@@ -17,6 +17,7 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -31,6 +32,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Descript
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.InvalidWordsColorTransformation
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseErrorConverter
 
 /**
 * [REDACTED_AUTHOR]
@@ -120,14 +122,16 @@ private fun PhraseBlock(
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size32),
         ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxSize(),
-                text = "TODO: implement error message",
-                style = TangemTheme.typography.caption.copy(
-                    color = TangemTheme.colors.text.warning,
-                ),
-            )
+            val message = SeedPhraseErrorConverter(LocalContext.current).convert(state.error)
+            if (message != null) {
+                Text(
+                    modifier = Modifier.fillMaxSize(),
+                    text = message,
+                    style = TangemTheme.typography.caption.copy(
+                        color = TangemTheme.colors.text.warning,
+                    ),
+                )
+            }
         }
     }
 }
