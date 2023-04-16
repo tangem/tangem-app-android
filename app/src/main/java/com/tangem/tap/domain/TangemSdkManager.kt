@@ -31,6 +31,7 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
+import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
@@ -168,6 +169,14 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun checkUserCodes(cardId: String?): CompletionResult<CheckUserCodesResponse> {
         return runTaskAsyncReturnOnMain(
             CheckUserCodesCommand(),
+            cardId,
+            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+        )
+    }
+
+    suspend fun setAccessCodeRecoveryEnabled(cardId: String?, enabled: Boolean): CompletionResult<SuccessResponse> {
+        return runTaskAsyncReturnOnMain(
+            SetUserCodeRecoveryAllowedTask(enabled),
             cardId,
             initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
         )
