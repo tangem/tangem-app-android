@@ -11,6 +11,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.AboutUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.model.IntroUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseStep
 import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
@@ -21,7 +22,10 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseUi
 import com.tangem.feature.onboarding.presentation.wallet2.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
+import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -123,7 +127,6 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonCreateWalletWithSeedPhraseClick() {
-        buttonGenerateSeedPhraseClick()
     }
 
     private fun buttonOtherOptionsClick() {
@@ -141,12 +144,37 @@ class SeedPhraseViewModel @Inject constructor(
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
             interactor.generateMnemonic()
                 .onSuccess { mnemonic ->
-                    updateUi { uiBuilder.mnemonicGenerated(uiState, mnemonic.mnemonicComponents) }
+                    val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
+                    updateUi { uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList()) }
                 }
                 .onFailure {
-                    // show error
+// [REDACTED_TODO_COMMENT]
                 }
         }
+    }
+
+    private suspend fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
+        val size = mnemonicComponents.size
+        val splitIndex = if (size.isEven()) size / 2 else size / 2 + 1
+        val leftColumn = mnemonicComponents.subList(0, splitIndex)
+        val rightColumn = mnemonicComponents.subList(splitIndex, size)
+
+        val mnemonicGridItems = mutableListOf<MnemonicGridItem>()
+        for (index in 0 until splitIndex) {
+            if (index <= leftColumn.size) mnemonicGridItems.add(
+                MnemonicGridItem(
+                    index = index + 1,
+                    mnemonic = leftColumn[index],
+                ),
+            )
+            if (index < rightColumn.size) mnemonicGridItems.add(
+                MnemonicGridItem(
+                    index = index + splitIndex + 1,
+                    mnemonic = rightColumn[index],
+                ),
+            )
+        }
+        return mnemonicGridItems.toImmutableList()
     }
 
     private fun buttonImportSeedPhraseClick() {
