@@ -13,16 +13,25 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -55,7 +64,7 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder) {
     ) { scaffoldPadding ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
-        TokensListContent(tokens, scaffoldPadding)
+        TokensListContent(stateHolder.isDifferentAddressesBlockVisible, tokens, scaffoldPadding)
 
         stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
 
@@ -83,7 +92,11 @@ private fun LoadingContent() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun TokensListContent(tokens: LazyPagingItems<TokenItemState>, scaffoldPadding: PaddingValues) {
+private fun TokensListContent(
+    isDifferentAddressesBlockVisible: Boolean,
+    tokens: LazyPagingItems<TokenItemState>,
+    scaffoldPadding: PaddingValues,
+) {
     val state = rememberLazyListState()
 
     if (state.isScrollInProgress) {
@@ -96,9 +109,52 @@ private fun TokensListContent(tokens: LazyPagingItems<TokenItemState>, scaffoldP
             .padding(scaffoldPadding),
         state = state,
     ) {
+        if (isDifferentAddressesBlockVisible) {
+            item { DifferentAddressesWarning() }
+        }
+
         items(items = tokens, key = TokenItemState::name) {
             it?.let { TokenItem(model = it) }
         }
+    }
+}
+
+@OptIn(ExperimentalUnitApi::class)
+@Composable
+private fun DifferentAddressesWarning() {
+    Box(
+        modifier = Modifier
+            .padding(TangemTheme.dimens.spacing16)
+            .background(
+                color = TangemColorPalette.Light1,
+                shape = RoundedCornerShape(TangemTheme.dimens.radius10),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        val text = stringResource(id = R.string.alert_manage_tokens_addresses_message)
+        val firstSpaceIndex = text.indexOf(" ")
+        Text(
+            text = AnnotatedString(
+                text = text,
+                spanStyles = listOf(
+                    AnnotatedString.Range(
+                        SpanStyle(fontWeight = FontWeight.Bold),
+                        start = 0,
+                        end = firstSpaceIndex,
+                    ),
+                ),
+            ),
+            modifier = Modifier.padding(
+                horizontal = TangemTheme.dimens.spacing16,
+                vertical = TangemTheme.dimens.spacing8,
+            ),
+            color = TangemColorPalette.Dark1,
+            textAlign = TextAlign.Start,
+            style = TangemTheme.typography.body2.copy(
+                letterSpacing = TextUnit(value = 0.5f, type = TextUnitType.Sp),
+                lineHeight = TextUnit(value = 25f, type = TextUnitType.Sp),
+            ),
+        )
     }
 }
 
@@ -127,6 +183,7 @@ private fun Preview_TokensListScreen_Loading() {
                     onAddCustomTokenClick = {},
                 ),
                 isLoading = true,
+                isDifferentAddressesBlockVisible = false,
                 tokens = emptyFlow(),
                 onTokensLoadStateChanged = {},
             ),
@@ -147,6 +204,7 @@ private fun Preview_TokensListScreen_Manage() {
                     onAddCustomTokenClick = {},
                 ),
                 isLoading = false,
+                isDifferentAddressesBlockVisible = true,
                 tokens = flow {
                     emit(
                         PagingData.from(
@@ -176,6 +234,7 @@ private fun Preview_TokensListScreen_Read() {
                     onSearchButtonClick = {},
                 ),
                 isLoading = false,
+                isDifferentAddressesBlockVisible = false,
                 tokens = flow {
                     emit(
                         PagingData.from(
