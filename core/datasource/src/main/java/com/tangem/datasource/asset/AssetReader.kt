@@ -9,13 +9,9 @@ import java.io.InputStream
  */
 interface AssetReader {
 
-    /** Read content of json file from asset
-     * @param fileName - name of the file
-     * */
+    /** Read content of json file [fileName] from asset */
     fun readJson(fileName: String): String
 
-    /** Read content of a file [file] from asset as InputStream
-     * @param file - name of the file with extension
-     * */
+    /** Open a file [file] from asset as InputStream */
     fun openFile(file: String): InputStream
 }
