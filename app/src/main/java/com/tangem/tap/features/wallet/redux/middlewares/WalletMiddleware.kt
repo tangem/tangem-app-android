@@ -105,7 +105,7 @@ class WalletMiddleware {
                 scope.launch {
                     when (val result = tangemSdkManager.createWallet(globalState.scanResponse?.card?.cardId)) {
                         is CompletionResult.Success -> {
-                            val selectedUserWallet = walletState.userWallet.guard {
+                            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
                                 Timber.e("Unable to create wallet, no user wallet selected")
                                 return@launch
                             }
@@ -131,7 +131,7 @@ class WalletMiddleware {
             is WalletAction.LoadData,
             is WalletAction.LoadData.Refresh,
             -> {
-                val selectedWallet = walletState.userWallet.guard {
+                val selectedWallet = userWalletsListManager.selectedUserWalletSync.guard {
                     Timber.e("Unable to load/refresh wallets data, no user wallet selected")
                     return
                 }
