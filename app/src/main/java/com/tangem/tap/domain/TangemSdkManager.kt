@@ -18,10 +18,10 @@ import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.map
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.CommandResponse
@@ -240,6 +240,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
+                maxFirmwareVersion = FirmwareVersion(major = 4, minor = 52),
             ),
         )
     }
