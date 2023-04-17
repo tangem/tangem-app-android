@@ -8,6 +8,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -59,6 +60,7 @@ class MultiWalletView : WalletView() {
                     binding = it,
                     totalBalance = walletState.totalBalance,
                     walletsCount = walletState.walletsDataFromStores.size,
+                    appFiatCurrency = store.state.globalState.appCurrency,
                 )
             }
         }
@@ -153,6 +155,7 @@ class MultiWalletView : WalletView() {
         binding: FragmentWalletBinding,
         totalBalance: TotalFiatBalance?,
         walletsCount: Int,
+        appFiatCurrency: FiatCurrency,
     ) = with(binding.lCardTotalBalance) {
         isVisible = walletsCount > 0
 
@@ -160,6 +163,7 @@ class MultiWalletView : WalletView() {
             store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
         status = totalBalance
+        fiatCurrency = appFiatCurrency
     }
 
     private fun handleErrorStates(state: WalletState, binding: FragmentWalletBinding, fragment: WalletFragment) {
