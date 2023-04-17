@@ -36,12 +36,12 @@ internal fun WalletDataModel.getFormattedFiatAmount(
 ): String {
     return this.fiatRate?.let { status.amount.toFiatValue(it) }
         ?.takeIf { !status.isErrorStatus }
-        ?.toFormattedFiatValue(fiatCurrency.symbol)
+        ?.toFormattedFiatValue(fiatCurrencyName = fiatCurrency.symbol, fiatCode = fiatCurrency.code)
         ?: unknownAmountSign
 }
 
 internal fun WalletDataModel.getFormattedFiatRate(fiatCurrency: FiatCurrency, noRateValue: String): String {
-    return fiatRate?.toFiatRateString(fiatCurrency.symbol)
+    return fiatRate?.toFiatRateString(fiatCurrency.symbol, fiatCurrency.code)
         ?: noRateValue
 }
 
