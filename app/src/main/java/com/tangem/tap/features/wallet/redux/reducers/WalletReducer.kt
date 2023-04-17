@@ -73,7 +73,6 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         is WalletAction.UserWalletChanged -> with(action.userWallet) {
             val card = scanResponse.card
             newState = WalletState(
-                userWallet = this,
                 isMultiwalletAllowed = isMultiCurrency,
                 cardImage = Artwork(
                     artworkId = artworkUrl,
