@@ -123,6 +123,7 @@ object TangemSdkErrorMapper {
             is TangemSdkError.ResetBackupFailedHasBackedUpWallets -> error
             is TangemSdkError.KeysImportDisabled -> error
             is TangemSdkError.Underlying -> error
+            is TangemSdkError.UserCodeRecoveryDisabled -> error
         }
     }
 }
