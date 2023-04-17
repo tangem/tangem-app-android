@@ -6,6 +6,7 @@ import com.tangem.common.module.ModuleMessage
 
 /**
 * [REDACTED_AUTHOR]
+ * For each pool of errors, use the codes lying in range 100 (200..299, 300..399, etc)
  */
 abstract class OnboardingModuleError(
     subCode: Int,
@@ -15,9 +16,7 @@ abstract class OnboardingModuleError(
     override val code: Int = ModuleErrorCode.ONBOARDING + subCode
 
     companion object {
-        // base code used for all errors in the module
         internal const val ERROR_CODE_SEED_PHRASE = 100
-//        const val CODE_ANY_OTHER = 200..299, 300..399 etc
     }
 }
 
