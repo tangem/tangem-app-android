@@ -11,6 +11,7 @@ import androidx.paging.map
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
@@ -26,7 +27,9 @@ import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.tap.features.tokens.legacy.redux.TokenWithBlockchain
+import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
@@ -34,9 +37,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as BlockchainToken
 
@@ -71,13 +72,12 @@ internal class TokensListViewModel @Inject constructor(
     private val changedTokensList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
     private val changedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
 
-    private var saveButtonPressed = false
-
     private fun getInitialUiState(): TokensListStateHolder {
         return if (args.isManageAccess) {
             TokensListStateHolder.ManageContent(
                 toolbarState = getInitialToolbarState(),
                 isLoading = true,
+                isDifferentAddressesBlockVisible = isDifferentAddressesBlockVisible(),
                 tokens = getInitialTokensList(),
                 onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
                 onSaveButtonClick = actionsHandler::onSaveButtonClick,
@@ -86,6 +86,7 @@ internal class TokensListViewModel @Inject constructor(
             TokensListStateHolder.ReadContent(
                 toolbarState = getInitialToolbarState(),
                 isLoading = true,
+                isDifferentAddressesBlockVisible = isDifferentAddressesBlockVisible(),
                 tokens = getInitialTokensList(),
                 onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
             )
@@ -107,6 +108,10 @@ internal class TokensListViewModel @Inject constructor(
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
             )
         }
+    }
+
+    private fun isDifferentAddressesBlockVisible(): Boolean {
+        return reduxStateHolder.scanResponse?.card?.useOldStyleDerivation == true
     }
 
     private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {
@@ -237,18 +242,12 @@ internal class TokensListViewModel @Inject constructor(
         }
 
         fun onTokensLoadStateChanged(state: LoadState) {
-            uiState = uiState.copySealed(isLoading = state is LoadState.Loading || saveButtonPressed)
-            if (saveButtonPressed) saveButtonPressed = false
+            uiState = uiState.copySealed(isLoading = state is LoadState.Loading)
         }
 
         fun onSaveButtonClick() {
-            viewModelScope.launch(dispatchers.main) {
-                saveButtonPressed = true
-                analyticsSender.sendWhenSaveButtonClicked()
-                uiState = uiState.copySealed(isLoading = true)
-                withContext(dispatchers.io) { interactor.saveChanges(changedTokensList, changedBlockchainList) }
-                router.popBackStack()
-            }
+            analyticsSender.sendWhenSaveButtonClicked()
+            store.dispatch(TokensAction.SaveChanges(changedTokensList, changedBlockchainList))
         }
 
         private fun onSearchValueChange(newValue: String) {
