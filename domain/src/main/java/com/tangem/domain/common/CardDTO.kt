@@ -105,7 +105,7 @@ data class CardDTO(
             maxWalletsCount = settings.maxWalletsCount,
             isSettingAccessCodeAllowed = settings.isSettingAccessCodeAllowed,
             isSettingPasscodeAllowed = settings.isSettingPasscodeAllowed,
-            isResettingUserCodesAllowed = settings.isResettingUserCodesAllowed,
+            isResettingUserCodesAllowed = settings.isRemovingUserCodesAllowed,
             isLinkedTerminalEnabled = settings.isLinkedTerminalEnabled,
             isBackupAllowed = settings.isBackupAllowed,
             supportedEncryptionModes = settings.supportedEncryptionModes,
