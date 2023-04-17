@@ -8,7 +8,6 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.model.TotalFiatBalance
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -19,7 +18,6 @@ import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
-    val userWallet: UserWallet? = null,
     val state: ProgressState = ProgressState.Done,
     val error: ErrorType? = null,
     val cardImage: Artwork? = null,
