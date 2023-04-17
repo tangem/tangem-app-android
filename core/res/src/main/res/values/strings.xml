@@ -393,7 +393,7 @@
     <string name="user_wallet_list_title">My Wallets</string>
     <string name="user_wallet_list_unlock_all">Unlock all with %s</string>
     <string name="wallet_address_button_create_payid">Create PayString</string>
-    <string name="wallet_address_button_explore">Explore address</string>
+    <string name="wallet_address_button_explore">Transaction history</string>
     <string name="wallet_balance_blockchain_unreachable">Network is unreachable</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
     <string name="wallet_balance_loading">Balance is loading…</string>
