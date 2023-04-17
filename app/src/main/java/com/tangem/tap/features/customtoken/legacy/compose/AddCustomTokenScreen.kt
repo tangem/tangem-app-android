@@ -1,4 +1,4 @@
-package com.tangem.tap.features.addCustomToken.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,8 +52,8 @@ import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
-import com.tangem.tap.features.addCustomToken.compose.test.TestCase
-import com.tangem.tap.features.addCustomToken.compose.test.TestCasesList
+import com.tangem.tap.features.customtoken.legacy.compose.test.TestCase
+import com.tangem.tap.features.customtoken.legacy.compose.test.TestCasesList
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 
