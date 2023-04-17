@@ -15,7 +15,7 @@ internal fun List<UserWalletModel>.toUiModels(appCurrency: FiatCurrency): Sequen
                 is TotalFiatBalance.Failed -> UserWalletItem.Balance.Failed
                 is TotalFiatBalance.Loading -> UserWalletItem.Balance.Loading
                 is TotalFiatBalance.Loaded -> UserWalletItem.Balance.Loaded(
-                    amount = fiatBalance.amount.toFormattedFiatValue(appCurrency.symbol),
+                    amount = fiatBalance.amount.toFormattedFiatValue(appCurrency.symbol, appCurrency.code),
                     showWarning = fiatBalance.isWarning,
                 )
             }
