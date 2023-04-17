@@ -105,7 +105,7 @@ class SeedPhraseViewModel @Inject constructor(
             }
 
             createOrGetDebouncer(field.name).debounce(viewModelScope, context = dispatchers.io) {
-                val hasError = !interactor.wordIsMatch(textFieldValue.text)
+                val hasError = !interactor.isWordMatch(textFieldValue.text)
                 if (fieldState.isError != hasError) {
                     updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
