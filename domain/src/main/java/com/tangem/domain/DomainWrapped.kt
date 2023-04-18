@@ -19,14 +19,14 @@ sealed interface DomainWrapped {
         data class Token(
             val token: com.tangem.blockchain.common.Token,
             override val blockchain: com.tangem.blockchain.common.Blockchain,
-            override val derivationPath: String?
+            override val derivationPath: String?,
         ) : Currency {
             override val currencySymbol = token.symbol
         }
 
         data class Blockchain(
             override val blockchain: com.tangem.blockchain.common.Blockchain,
-            override val derivationPath: String?
+            override val derivationPath: String?,
         ) : Currency {
             override val currencySymbol: String = blockchain.currency
         }
