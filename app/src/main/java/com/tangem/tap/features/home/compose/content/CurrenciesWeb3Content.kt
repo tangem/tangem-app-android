@@ -25,10 +25,7 @@ import com.tangem.tap.features.home.compose.HorizontalSlidingImage
 import com.tangem.wallet.R
 
 @Composable
-fun StoriesCurrenciesContent(
-    paused: Boolean,
-    duration: Int,
-) {
+fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
     val currencyDrawableList = remember {
         listOf(
             R.drawable.currency0,
@@ -72,10 +69,7 @@ fun StoriesCurrenciesContent(
 
 @Suppress("MagicNumber")
 @Composable
-fun StoriesWeb3Content(
-    paused: Boolean,
-    duration: Int,
-) {
+fun StoriesWeb3Content(paused: Boolean, duration: Int) {
     val dappsItemList = remember {
         listOf(
             R.drawable.dapps0,
