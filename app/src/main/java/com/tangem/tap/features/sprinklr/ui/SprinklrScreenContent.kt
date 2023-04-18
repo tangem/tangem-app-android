@@ -10,10 +10,7 @@ import com.tangem.tap.features.sprinklr.ui.webview.SprinklrWebViewClient
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-internal fun SprinklrScreenContent(
-    state: SprinklrScreenState,
-    modifier: Modifier = Modifier,
-) {
+internal fun SprinklrScreenContent(state: SprinklrScreenState, modifier: Modifier = Modifier) {
     WebView(
         modifier = modifier,
         state = rememberWebViewState(url = state.initialUrl),

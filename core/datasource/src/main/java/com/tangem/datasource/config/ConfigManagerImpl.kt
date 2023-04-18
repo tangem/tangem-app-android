@@ -43,11 +43,13 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     override fun resetToDefault(name: String) {
         when (name) {
-            IS_SENDING_TO_PAY_ID_ENABLED -> config =
-                config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
+            IS_SENDING_TO_PAY_ID_ENABLED ->
+                config =
+                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             IS_TOP_UP_ENABLED -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
-            IS_CREATING_TWIN_CARDS_ALLOWED -> config =
-                config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+            IS_CREATING_TWIN_CARDS_ALLOWED ->
+                config =
+                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
 

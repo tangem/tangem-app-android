@@ -38,8 +38,8 @@ import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
 import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletState.Companion.ROUGH_SIGN
-import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.utils.ROUGH_SIGN
+import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.wallet.R
 
@@ -288,104 +288,101 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    private fun handleReceiptState(
-        fg: SendFragment,
-        state: ReceiptState,
-        feeProgressState: ProgressState,
-    ) = with(fg.binding.clReceiptContainer) {
-        val mainLayout = clReceiptContainer as ViewGroup
-        val totalLayout = llTotalContainer.llTotal as ViewGroup
-        val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
+    private fun handleReceiptState(fg: SendFragment, state: ReceiptState, feeProgressState: ProgressState) =
+        with(fg.binding.clReceiptContainer) {
+            val mainLayout = clReceiptContainer as ViewGroup
+            val totalLayout = llTotalContainer.llTotal as ViewGroup
+            val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
 
-        fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
+            fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
 
-        fun roughOrEmpty(value: String): String {
-            return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
-        }
-
-        when (feeProgressState) {
-            ProgressState.Loading -> {
-                tvReceiptFeeValue.hide()
-                pbReceiptFee.show()
+            fun roughOrEmpty(value: String): String {
+                return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
             }
-            ProgressState.Done -> {
-                pbReceiptFee.hide()
-                tvReceiptFeeValue.show()
-            }
-            else -> {}
-        }
 
-        when (state.visibleTypeOfReceipt) {
-            ReceiptLayoutType.FIAT -> {
-                val receipt = state.fiat ?: return
-
-                totalLayout.show(true)
-                totalTokenLayout.show(false)
-                tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
-                tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
-
-                val willSent = getString(
-                    R.string.send_total_subtitle_format,
-                    "${receipt.willSentCrypto} ${receipt.symbols.crypto}",
-                )
-                llTotalContainer.tvWillBeSentValue.update(willSent)
-            }
-            ReceiptLayoutType.CRYPTO -> {
-                val receipt = state.crypto ?: return
-
-                totalLayout.show(true)
-                totalTokenLayout.show(false)
-                tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
-                tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
-                llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
-
-                if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
-                    llTotalContainer.tvWillBeSentValue.hide()
-                } else {
-                    llTotalContainer.tvWillBeSentValue.show()
-                    llTotalContainer.tvWillBeSentValue.update(
-                        getString(
-                            R.string.send_total_subtitle_fiat_format,
-                            "${receipt.willSentFiat} ${receipt.symbols.fiat}",
-                            "${receipt.feeFiat} ${receipt.symbols.fiat}",
-                        ),
-                    )
+            when (feeProgressState) {
+                ProgressState.Loading -> {
+                    tvReceiptFeeValue.hide()
+                    pbReceiptFee.show()
                 }
+                ProgressState.Done -> {
+                    pbReceiptFee.hide()
+                    tvReceiptFeeValue.show()
+                }
+                else -> {}
             }
-            ReceiptLayoutType.TOKEN_FIAT -> {
-                val receipt = state.tokenFiat ?: return
 
-                totalLayout.show(true)
-                totalTokenLayout.show(false)
-                tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
-                tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+            when (state.visibleTypeOfReceipt) {
+                ReceiptLayoutType.FIAT -> {
+                    val receipt = state.fiat ?: return
 
-                val willSent = getString(
-                    R.string.send_total_subtitle_asset_format,
-                    "${receipt.symbols.token ?: ""} ${receipt.willSentToken}",
-                    "${receipt.symbols.crypto} ${receipt.willSentFeeCoin}",
-                )
-                llTotalContainer.tvWillBeSentValue.update(willSent)
-            }
-            ReceiptLayoutType.TOKEN_CRYPTO -> {
-                val receipt = state.tokenCrypto ?: return
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                    tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
-                totalLayout.show(false)
-                totalTokenLayout.show(true)
+                    val willSent = getString(
+                        R.string.send_total_subtitle_format,
+                        "${receipt.willSentCrypto} ${receipt.symbols.crypto}",
+                    )
+                    llTotalContainer.tvWillBeSentValue.update(willSent)
+                }
+                ReceiptLayoutType.CRYPTO -> {
+                    val receipt = state.crypto ?: return
 
-                tvReceiptAmountValue.update("${receipt.amountToken} ${receipt.symbols.token}")
-                tvReceiptFeeValue.update("${receipt.feeCoin} ${receipt.symbols.crypto}")
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
+                    tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
+                    llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
 
-                val willSent = SpannableStringBuilder()
-                    .bold {
-                        append(roughOrEmpty(receipt.totalFiat)).append(" ")
-                        append(receipt.symbols.fiat)
+                    if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
+                        llTotalContainer.tvWillBeSentValue.hide()
+                    } else {
+                        llTotalContainer.tvWillBeSentValue.show()
+                        llTotalContainer.tvWillBeSentValue.update(
+                            getString(
+                                R.string.send_total_subtitle_fiat_format,
+                                "${receipt.willSentFiat} ${receipt.symbols.fiat}",
+                                "${receipt.feeFiat} ${receipt.symbols.fiat}",
+                            ),
+                        )
                     }
-                llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
+                }
+                ReceiptLayoutType.TOKEN_FIAT -> {
+                    val receipt = state.tokenFiat ?: return
+
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                    tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+
+                    val willSent = getString(
+                        R.string.send_total_subtitle_asset_format,
+                        "${receipt.symbols.token ?: ""} ${receipt.willSentToken}",
+                        "${receipt.symbols.crypto} ${receipt.willSentFeeCoin}",
+                    )
+                    llTotalContainer.tvWillBeSentValue.update(willSent)
+                }
+                ReceiptLayoutType.TOKEN_CRYPTO -> {
+                    val receipt = state.tokenCrypto ?: return
+
+                    totalLayout.show(false)
+                    totalTokenLayout.show(true)
+
+                    tvReceiptAmountValue.update("${receipt.amountToken} ${receipt.symbols.token}")
+                    tvReceiptFeeValue.update("${receipt.feeCoin} ${receipt.symbols.crypto}")
+
+                    val willSent = SpannableStringBuilder()
+                        .bold {
+                            append(roughOrEmpty(receipt.totalFiat)).append(" ")
+                            append(receipt.symbols.fiat)
+                        }
+                    llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
+                }
+                else -> {}
             }
-            else -> {}
         }
-    }
 }
