@@ -43,11 +43,7 @@ import com.valentinilk.shimmer.shimmer
  * >Figma component</a>
  */
 @Composable
-fun SmallInfoCard(
-    startText: String,
-    endText: String,
-    isLoading: Boolean = false,
-) {
+fun SmallInfoCard(startText: String, endText: String, isLoading: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         color = TangemTheme.colors.background.primary,
@@ -74,12 +70,7 @@ fun SmallInfoCard(
  * >Figma component</a>
  */
 @Composable
-fun SmallInfoCardWithDisclaimer(
-    startText: String,
-    endText: String,
-    disclaimer: String,
-    isLoading: Boolean = false,
-) {
+fun SmallInfoCardWithDisclaimer(startText: String, endText: String, disclaimer: String, isLoading: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         color = TangemTheme.colors.background.primary,
@@ -106,12 +97,7 @@ fun SmallInfoCardWithDisclaimer(
  * >Figma component</a>
  */
 @Composable
-fun SmallInfoCardWithWarning(
-    startText: String,
-    endText: String,
-    warningText: String,
-    disclaimer: String? = null,
-) {
+fun SmallInfoCardWithWarning(startText: String, endText: String, warningText: String, disclaimer: String? = null) {
     Surface(
         shape = RoundedCornerShape(TangemTheme.dimens.size12),
         color = TangemTheme.colors.background.primary,
@@ -274,12 +260,7 @@ fun IconWithTitleAndDescription(
 // region elements
 
 @Composable
-private fun CardInfoBox(
-    startText: String,
-    endText: String,
-    disclaimer: String?,
-    isLoading: Boolean = false,
-) {
+private fun CardInfoBox(startText: String, endText: String, disclaimer: String?, isLoading: Boolean = false) {
     val isOpened = remember { mutableStateOf(false) }
     Column {
         Row(

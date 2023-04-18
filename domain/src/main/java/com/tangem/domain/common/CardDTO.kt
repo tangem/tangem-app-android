@@ -5,8 +5,8 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.EncryptionMode
-import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.hdWallet.ExtendedPublicKey
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
 import java.util.*
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
@@ -105,7 +105,7 @@ data class CardDTO(
             maxWalletsCount = settings.maxWalletsCount,
             isSettingAccessCodeAllowed = settings.isSettingAccessCodeAllowed,
             isSettingPasscodeAllowed = settings.isSettingPasscodeAllowed,
-            isResettingUserCodesAllowed = settings.isResettingUserCodesAllowed,
+            isResettingUserCodesAllowed = settings.isRemovingUserCodesAllowed,
             isLinkedTerminalEnabled = settings.isLinkedTerminalEnabled,
             isBackupAllowed = settings.isBackupAllowed,
             supportedEncryptionModes = settings.supportedEncryptionModes,
@@ -267,7 +267,8 @@ data class CardDTO(
     enum class LinkedTerminalStatus {
         Current,
         Other,
-        None;
+        None,
+        ;
 
         companion object {
             internal fun fromSdkStatus(sdkStatus: Card.LinkedTerminalStatus): LinkedTerminalStatus {
