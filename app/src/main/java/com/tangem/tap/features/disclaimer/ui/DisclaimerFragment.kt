@@ -2,6 +2,7 @@ package com.tangem.tap.features.disclaimer.ui
 
 import android.os.Bundle
 import android.view.View
+import android.view.View.OVER_SCROLL_NEVER
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.ui.fragments.setStatusBarColor
@@ -50,6 +51,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
             webView.apply {
                 settings.allowFileAccess = false
                 settings.javaScriptEnabled = false
+                overScrollMode = OVER_SCROLL_NEVER
                 webViewClient = this@DisclaimerFragment.webViewClient
             }
             webView.hide()
