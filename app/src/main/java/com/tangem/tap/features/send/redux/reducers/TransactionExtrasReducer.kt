@@ -70,11 +70,7 @@ class TransactionExtrasReducer : SendInternalReducer {
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
     }
 
-    private fun handleXlmMemo(
-        action: XlmMemo,
-        sendState: SendState,
-        infoState: TransactionExtrasState,
-    ): SendState {
+    private fun handleXlmMemo(action: XlmMemo, sendState: SendState, infoState: TransactionExtrasState): SendState {
         fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null, error = null)
 
         val result = when (action) {
@@ -149,11 +145,7 @@ class TransactionExtrasReducer : SendInternalReducer {
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
     }
 
-    private fun handleTonMemo(
-        action: TonMemo,
-        sendState: SendState,
-        infoState: TransactionExtrasState,
-    ): SendState {
+    private fun handleTonMemo(action: TonMemo, sendState: SendState, infoState: TransactionExtrasState): SendState {
         val result = when (action) {
             is TonMemo.HandleUserInput -> {
                 val memo = action.data
