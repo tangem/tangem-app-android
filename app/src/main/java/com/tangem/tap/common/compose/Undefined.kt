@@ -12,16 +12,13 @@ import androidx.compose.ui.unit.sp
  */
 
 @Composable
-fun TitleSubtitle(
-    title: String,
-    subtitle: String
-) {
+fun TitleSubtitle(title: String, subtitle: String) {
     Column {
         Text(text = title)
         Text(
             text = subtitle,
             fontSize = 12.sp,
-            color = Color.Gray
+            color = Color.Gray,
         )
     }
 }
