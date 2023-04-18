@@ -44,7 +44,7 @@ class AmountToSendBottomSheetDialog(
         binding!!.rvAmountsToSend.layoutManager = LinearLayoutManager(context)
         val dividerItemDecoration = DividerItemDecoration(
             ContextThemeWrapper(binding!!.root.context, R.style.AppTheme),
-            DividerItemDecoration.VERTICAL
+            DividerItemDecoration.VERTICAL,
         )
         binding!!.rvAmountsToSend.addItemDecoration(dividerItemDecoration)
 
@@ -61,7 +61,7 @@ class ChooseAmountAdapter : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHo
         val binding = ItemWalletAmountToSendBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
-            false
+            false,
         )
         return AmountViewHolder(binding)
     }
@@ -71,15 +71,10 @@ class ChooseAmountAdapter : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHo
     }
 
     object DiffUtilCallback : DiffUtil.ItemCallback<Amount>() {
-        override fun areContentsTheSame(
-            oldItem: Amount,
-            newItem: Amount
-        ) = oldItem.currencySymbol == newItem.currencySymbol
+        override fun areContentsTheSame(oldItem: Amount, newItem: Amount) =
+            oldItem.currencySymbol == newItem.currencySymbol
 
-        override fun areItemsTheSame(
-            oldItem: Amount,
-            newItem: Amount
-        ) = oldItem == newItem
+        override fun areItemsTheSame(oldItem: Amount, newItem: Amount) = oldItem == newItem
     }
 
     class AmountViewHolder(val binding: ItemWalletAmountToSendBinding) :
