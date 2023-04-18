@@ -9,7 +9,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.mapFailure
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
@@ -125,10 +125,7 @@ internal class DefaultWalletManagersRepository(
         }
     }
 
-    override suspend fun delete(
-        userWalletId: UserWalletId,
-        blockchain: Blockchain,
-    ): CompletionResult<Unit> = catching {
+    override suspend fun delete(userWalletId: UserWalletId, blockchain: Blockchain): CompletionResult<Unit> = catching {
         deleteInternal(userWalletId, blockchain)
     }
 
