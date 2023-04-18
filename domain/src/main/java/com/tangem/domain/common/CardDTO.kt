@@ -23,6 +23,7 @@ data class CardDTO(
     val manufacturer: Manufacturer,
     val issuer: Issuer,
     val settings: Settings,
+    val userSettings: UserSettings?,
     val linkedTerminalStatus: LinkedTerminalStatus,
     val isAccessCodeSet: Boolean,
     val isPasscodeSet: Boolean?,
@@ -39,6 +40,7 @@ data class CardDTO(
         manufacturer = Manufacturer(card.manufacturer),
         issuer = Issuer(card.issuer),
         settings = Settings(card.settings),
+        userSettings = UserSettings(card.userSettings),
         linkedTerminalStatus = LinkedTerminalStatus.fromSdkStatus(card.linkedTerminalStatus),
         isAccessCodeSet = card.isAccessCodeSet,
         isPasscodeSet = card.isPasscodeSet,
@@ -60,6 +62,7 @@ data class CardDTO(
         if (manufacturer != other.manufacturer) return false
         if (issuer != other.issuer) return false
         if (settings != other.settings) return false
+        if (userSettings != other.userSettings) return false
         if (linkedTerminalStatus != other.linkedTerminalStatus) return false
         if (isAccessCodeSet != other.isAccessCodeSet) return false
         if (isPasscodeSet != other.isPasscodeSet) return false
@@ -78,6 +81,7 @@ data class CardDTO(
         result = 31 * result + manufacturer.hashCode()
         result = 31 * result + issuer.hashCode()
         result = 31 * result + settings.hashCode()
+        result = 31 * result + userSettings.hashCode()
         result = 31 * result + linkedTerminalStatus.hashCode()
         result = 31 * result + isAccessCodeSet.hashCode()
         result = 31 * result + (isPasscodeSet?.hashCode() ?: 0)
@@ -111,6 +115,15 @@ data class CardDTO(
             supportedEncryptionModes = settings.supportedEncryptionModes,
             isFilesAllowed = settings.isFilesAllowed,
             isHDWalletAllowed = settings.isHDWalletAllowed,
+        )
+    }
+
+    @JsonClass(generateAdapter = true)
+    data class UserSettings(
+        val isUserCodeRecoveryAllowed: Boolean,
+    ) {
+        constructor(userSettings: com.tangem.common.card.UserSettings) : this(
+            userSettings.isUserCodeRecoveryAllowed,
         )
     }
 
