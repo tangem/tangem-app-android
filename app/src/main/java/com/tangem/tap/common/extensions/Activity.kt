@@ -22,7 +22,7 @@ fun Activity.sendEmail(
     subject: String,
     message: String,
     file: File? = null,
-    onFail: ((Exception) -> Unit)? = null
+    onFail: ((Exception) -> Unit)? = null,
 ) {
     fun createEmailShareIntent(recipient: String, subject: String, text: String, file: File? = null): Intent {
         val builder = ShareCompat.IntentBuilder.from(this)
