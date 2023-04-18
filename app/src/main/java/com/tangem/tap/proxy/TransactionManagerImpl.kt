@@ -397,11 +397,7 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun createAmount(
-        amount: BigDecimal,
-        currency: Currency,
-        blockchain: Blockchain,
-    ): Amount {
+    private fun createAmount(amount: BigDecimal, currency: Currency, blockchain: Blockchain): Amount {
         return when (currency) {
             is Currency.NativeToken -> {
                 Amount(value = amount, blockchain = blockchain)
@@ -412,11 +408,7 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun createAmountForSwap(
-        amount: BigDecimal,
-        currency: Currency?,
-        blockchain: Blockchain,
-    ): Amount {
+    private fun createAmountForSwap(amount: BigDecimal, currency: Currency?, blockchain: Blockchain): Amount {
         return when (currency) {
             is Currency.NativeToken,
             null,

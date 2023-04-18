@@ -106,10 +106,7 @@ fun ResultScreenContent(
 }
 
 @Composable
-fun SuccessImage(
-    resultColor: Color,
-    @DrawableRes icon: Int,
-) {
+fun SuccessImage(resultColor: Color, @DrawableRes icon: Int) {
     Box(
         modifier = Modifier
             .background(
