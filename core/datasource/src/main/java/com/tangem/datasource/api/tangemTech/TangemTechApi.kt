@@ -33,10 +33,7 @@ interface TangemTechApi {
     ): CoinsResponse
 
     @GET("rates")
-    suspend fun getRates(
-        @Query("currencyId") currencyId: String,
-        @Query("coinIds") coinIds: String,
-    ): RatesResponse
+    suspend fun getRates(@Query("currencyId") currencyId: String, @Query("coinIds") coinIds: String): RatesResponse
 
     @GET("currencies")
     suspend fun getCurrencyList(): CurrenciesResponse

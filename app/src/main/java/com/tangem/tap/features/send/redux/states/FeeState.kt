@@ -21,7 +21,7 @@ data class FeeState(
     val controlsLayoutIsVisible: Boolean = false,
     val feeChipGroupIsVisible: Boolean = true,
     val includeFeeSwitcherIsEnabled: Boolean = true,
-    val progressState: ProgressState = ProgressState.Done
+    val progressState: ProgressState = ProgressState.Done,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.FEE
