@@ -40,18 +40,24 @@ dependencies {
     implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
+    implementation(deps.androidx.paging.runtime)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
 
     /** Compose libraries */
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.animation)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.compose.shimmer)
+    implementation(deps.compose.paging)
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
@@ -72,6 +78,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.core)
     implementation(deps.googlePlay.core.ktx)
