@@ -54,7 +54,9 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             cameraPermission == PackageManager.PERMISSION_GRANTED
-        } else true
+        } else {
+            true
+        }
     }
 
     private fun requestPermission() {
