@@ -106,9 +106,7 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private suspend inline fun scanCardInternal(
-        crossinline onCardScanned: suspend (ScanResponse) -> Unit,
-    ) {
+    private suspend inline fun scanCardInternal(crossinline onCardScanned: suspend (ScanResponse) -> Unit) {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
