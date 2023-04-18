@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -18,6 +19,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateSelectedAddress
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import kotlinx.coroutines.Dispatchers
@@ -58,38 +60,35 @@ internal class DefaultWalletStoresManager(
         return walletStoresRepository.clear()
     }
 
-    override suspend fun fetch(
-        userWallets: List<UserWallet>,
-        refresh: Boolean,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        val fiatCurrency = appCurrencyProvider.invoke()
-        val isFiatCurrencyChanged = state.value.fiatCurrency != fiatCurrency
+    override suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean): CompletionResult<Unit> =
+        withContext(Dispatchers.Default) {
+            val fiatCurrency = appCurrencyProvider.invoke()
+            val isFiatCurrencyChanged = state.value.fiatCurrency != fiatCurrency
 
-        state.update { prevState ->
-            prevState.copy(
-                fiatCurrency = fiatCurrency,
-            )
+            state.update { prevState ->
+                prevState.copy(
+                    fiatCurrency = fiatCurrency,
+                )
+            }
+
+            userWallets
+                .mapNotNull { userWallet ->
+                    val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
+                    if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {
+                        fetchWalletsIfNeeded(userWallet)
+                    } else {
+                        null
+                    }
+                }
+                .fold(arrayListOf<UserWallet>()) { acc, data ->
+                    acc.apply { add(data) }
+                }
+                .flatMap {
+                    walletAmountsRepository.updateAmountsForUserWallets(it, fiatCurrency)
+                }
         }
 
-        userWallets
-            .mapNotNull { userWallet ->
-                val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
-                if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {
-                    fetchWalletsIfNeeded(userWallet)
-                } else null
-            }
-            .fold(arrayListOf<UserWallet>()) { acc, data ->
-                acc.apply { add(data) }
-            }
-            .flatMap {
-                walletAmountsRepository.updateAmountsForUserWallets(it, fiatCurrency)
-            }
-    }
-
-    override suspend fun fetch(
-        userWallet: UserWallet,
-        refresh: Boolean,
-    ): CompletionResult<Unit> {
+    override suspend fun fetch(userWallet: UserWallet, refresh: Boolean): CompletionResult<Unit> {
         return fetch(listOf(userWallet), refresh)
     }
 
@@ -104,6 +103,21 @@ internal class DefaultWalletStoresManager(
                     )
                 }
             }
+    }
+
+    override suspend fun updateSelectedAddress(
+        userWalletId: UserWalletId,
+        currency: Currency,
+        addressType: AddressType,
+    ): CompletionResult<Unit> {
+        return walletStoresRepository.update(userWalletId) { walletStores ->
+            walletStores
+                .firstOrNull {
+                    it.blockchain == currency.blockchain &&
+                        it.derivationPath?.rawPath == currency.derivationPath
+                }
+                ?.updateSelectedAddress(currency, addressType)
+        }
     }
 
     private suspend fun fetchWalletsIfNeeded(userWallet: UserWallet): CompletionResult<UserWallet> {
