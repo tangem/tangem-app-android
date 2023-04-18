@@ -22,9 +22,20 @@ interface WalletStoresRepository {
 
     suspend fun clear(): CompletionResult<Unit>
 
-    suspend fun storeOrUpdate(
+    suspend fun storeOrUpdate(userWalletId: UserWalletId, walletStore: WalletStoreModel): CompletionResult<Unit>
+
+    /**
+     * Updates [WalletStoreModel] in storage for user wallet with provided [UserWalletId]
+     *
+     * @param userWalletId [UserWalletId] of user wallet
+     * @param operation Lambda which receives list of [WalletStoreModel] assigned to user wallet with [userWalletId]
+     * and returns updated [WalletStoreModel]. If null returned then do nothing
+     *
+     * @return [CompletionResult] of operation
+     * */
+    suspend fun update(
         userWalletId: UserWalletId,
-        walletStore: WalletStoreModel,
+        operation: (List<WalletStoreModel>) -> WalletStoreModel?,
     ): CompletionResult<Unit>
 
     companion object
