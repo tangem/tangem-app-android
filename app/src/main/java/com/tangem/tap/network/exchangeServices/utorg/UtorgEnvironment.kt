@@ -25,15 +25,13 @@ data class UtorgEnvironment(
         private val STAGE_BASE_URL = Uri.parse("https://app-stage.utorg.pro")
         private const val STAGE_VERSION = "v1"
 
-        fun prod(
-            authProvider: UtorgAuthProvider,
-            apiVersion: String = PROD_VERSION,
-        ): UtorgEnvironment = UtorgEnvironment(
-            baseUri = PROD_BASE_URL,
-            sidValue = authProvider.sidValue,
-            apiVersion = apiVersion,
-            utorgApi = createApi(PROD_BASE_URL, authProvider, false),
-        )
+        fun prod(authProvider: UtorgAuthProvider, apiVersion: String = PROD_VERSION): UtorgEnvironment =
+            UtorgEnvironment(
+                baseUri = PROD_BASE_URL,
+                sidValue = authProvider.sidValue,
+                apiVersion = apiVersion,
+                utorgApi = createApi(PROD_BASE_URL, authProvider, false),
+            )
 
         fun stage(
             authProvider: UtorgAuthProvider,

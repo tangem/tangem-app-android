@@ -25,12 +25,7 @@ fun String?.ellipsizeBeforeSpace(allowedSize: Int): String {
         newString.substring(startIndex until newString.length)
 }
 
-fun String.colorSegment(
-    context: Context,
-    color: Int,
-    startIndex: Int = 0,
-    endIndex: Int = this.length,
-): Spannable {
+fun String.colorSegment(context: Context, color: Int, startIndex: Int = 0, endIndex: Int = this.length): Spannable {
     return this.toSpannable()
         .also { spannable ->
             spannable.setSpan(

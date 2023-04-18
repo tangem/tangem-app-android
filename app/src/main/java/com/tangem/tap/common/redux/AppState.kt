@@ -35,8 +35,8 @@ import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.sprinklr.redux.SprinklrMiddleware
 import com.tangem.tap.features.sprinklr.redux.SprinklrState
-import com.tangem.tap.features.tokens.redux.TokensMiddleware
-import com.tangem.tap.features.tokens.redux.TokensState
+import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
+import com.tangem.tap.features.tokens.legacy.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
