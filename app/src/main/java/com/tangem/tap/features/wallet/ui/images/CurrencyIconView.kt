@@ -47,10 +47,7 @@ class CurrencyIconView @JvmOverloads constructor(
     }
 }
 
-fun CurrencyIconView.load(
-    currency: Currency,
-    derivationStyle: DerivationStyle?,
-) {
+fun CurrencyIconView.load(currency: Currency, derivationStyle: DerivationStyle?) {
     isCustomCurrencyBadgeVisible = currency.isCustomCurrency(derivationStyle)
 
     CurrencyIconRequest(
