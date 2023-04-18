@@ -38,8 +38,8 @@ fun StoriesProgressBar(
                 targetValue = 1f,
                 animationSpec = tween(
                     durationMillis = (stepDuration * (1f - progress.value)).toInt(),
-                    easing = LinearEasing
-                )
+                    easing = LinearEasing,
+                ),
             )
             progress.snapTo(0f)
             onStepFinish()
@@ -57,7 +57,7 @@ fun StoriesProgressBar(
                 modifier = Modifier
                     .height(2.dp)
                     .weight(1f)
-                    .background(Color.White.copy(alpha = 0.4f))
+                    .background(Color.White.copy(alpha = 0.4f)),
             ) {
                 Box(
                     modifier = Modifier
