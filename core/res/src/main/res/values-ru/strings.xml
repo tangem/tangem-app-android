@@ -393,7 +393,7 @@
     <string name="user_wallet_list_title">Мои кошельки</string>
     <string name="user_wallet_list_unlock_all">Разблокировать все с %s</string>
     <string name="wallet_address_button_create_payid">Создать PayString</string>
-    <string name="wallet_address_button_explore">Проверить адрес</string>
+    <string name="wallet_address_button_explore">История транзакций</string>
     <string name="wallet_balance_blockchain_unreachable">Сеть недоступна</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
     <string name="wallet_balance_loading">Баланс загружается…</string>
