@@ -9,7 +9,7 @@ import timber.log.Timber
  */
 class GlobalLayoutStateHandler<T : View>(
     private val view: T,
-    attachImmediately: Boolean = true
+    attachImmediately: Boolean = true,
 ) : ViewTreeObserver.OnGlobalLayoutListener {
 
     var onStateChanged: ((T) -> Unit)? = null
