@@ -26,7 +26,7 @@ data class PendingTransaction(
 
     val currency: String = transactionData.amount.currencySymbol
 
-    fun nullIfUnknown(address: String): String? = if (address == "unknown") null else address
+    private fun nullIfUnknown(address: String): String? = if (address == "unknown") null else address
 }
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
@@ -46,16 +46,8 @@ fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<Pen
     return this.mapNotNull { it.toPendingTransaction(walletAddress) }
 }
 
-fun List<PendingTransaction>.removeUnknownTransactions(): List<PendingTransaction> {
-    return this.filter { it.type != PendingTransactionType.Unknown }
-}
-
 fun List<PendingTransaction>.filterByCoin(): List<PendingTransaction> {
     return this.filter { it.transactionData.amount.type == AmountType.Coin }
-}
-
-fun List<PendingTransaction>.filterByToken(token: Token): List<PendingTransaction> {
-    return this.filter { it.transactionData.amount.currencySymbol == token.symbol }
 }
 
 fun TransactionData.toPendingTransactionForToken(token: Token, walletAddress: String): PendingTransaction? {
@@ -79,10 +71,6 @@ fun Wallet.hasPendingTransactions(): Boolean {
     return getPendingTransactions().isNotEmpty()
 }
 
-fun Wallet.hasPendingTransactions(token: Token): Boolean {
-    return getPendingTransactions(token).isNotEmpty()
-}
-
 fun Wallet.getSendableAmounts(): List<Amount> {
     return amounts.values
         .filter { it.type != AmountType.Reserve }
@@ -93,14 +81,6 @@ fun Wallet.hasSendableAmounts(): Boolean {
     return getSendableAmounts().isNotEmpty()
 }
 
-fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
-    return hasPendingTransactions() || hasSendableAmounts()
-}
-
 fun Wallet.isSendableAmount(type: AmountType): Boolean {
     return amounts[type]?.isAboveZero() == true
-}
-
-fun Wallet.isSendableAmount(token: Token): Boolean {
-    return isSendableAmount(AmountType.Token(token))
 }
