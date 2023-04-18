@@ -81,11 +81,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     @Suppress("ComplexMethod")
-    override suspend fun handleAction(
-        action: Action,
-        storeState: DomainState,
-        cancel: ValueCallback<Action>,
-    ) {
+    override suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>) {
         if (action !is AddCustomTokenAction) return
 
         when (action) {
@@ -424,7 +420,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private fun getDerivationPathFromSelectedBlockchain(
         selectedDerivationBlockchain: Blockchain,
-    ): com.tangem.common.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
+    ): com.tangem.crypto.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
         mainNetwork = Network.getFieldValue(),
         derivationNetwork = selectedDerivationBlockchain,
         derivationStyle = hubState.cardDerivationStyle,

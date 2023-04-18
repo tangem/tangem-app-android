@@ -9,7 +9,7 @@ import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.features.wallet.redux.CurrencyAction
+import com.tangem.tap.features.wallet.ui.utils.CurrencyAction
 import com.tangem.wallet.databinding.ViewWalletDetailsButtonsRowBinding
 
 internal class WalletDetailsButtonsRow @JvmOverloads constructor(
@@ -42,7 +42,7 @@ internal class WalletDetailsButtonsRow @JvmOverloads constructor(
     fun updateButtonsVisibility(
         actions: Set<CurrencyAction>,
         exchangeServiceFeatureOn: Boolean,
-        sendAllowed: Boolean
+        sendAllowed: Boolean,
     ) = with(binding) {
         containerActionButtons.isVisible = exchangeServiceFeatureOn
 

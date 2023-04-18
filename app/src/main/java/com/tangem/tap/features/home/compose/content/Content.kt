@@ -138,10 +138,7 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
 }
 
 @Composable
-private fun SplitContent(
-    topContent: @Composable () -> Unit,
-    bottomContent: @Composable () -> Unit,
-) {
+private fun SplitContent(topContent: @Composable () -> Unit, bottomContent: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -154,11 +151,7 @@ private fun SplitContent(
 }
 
 @Composable
-private fun TopContent(
-    titleText: String,
-    subtitleText: AnnotatedString,
-    isDarkBackground: Boolean,
-) {
+private fun TopContent(titleText: String, subtitleText: AnnotatedString, isDarkBackground: Boolean) {
     SpacerH32()
     StoriesTitleText(
         text = titleText,
@@ -173,10 +166,7 @@ private fun TopContent(
 
 @Suppress("MagicNumber")
 @Composable
-private fun StoriesTitleText(
-    text: String,
-    isDarkBackground: Boolean,
-) {
+private fun StoriesTitleText(text: String, isDarkBackground: Boolean) {
     StoriesTextAnimation(
         slideInDuration = 500,
         slideInDelay = 150,
@@ -215,11 +205,7 @@ private fun StoriesSubtitleText(subtitleText: AnnotatedString) {
 }
 
 @Composable
-private fun StoriesImage(
-    @DrawableRes drawableResId: Int,
-    isDarkBackground: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun StoriesImage(@DrawableRes drawableResId: Int, isDarkBackground: Boolean, modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(id = drawableResId),
         contentDescription = null,
