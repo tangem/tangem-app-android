@@ -20,7 +20,7 @@ class PendingTransactionsAdapter :
         val binding = ItemPendingTransactionBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
-            false
+            false,
         )
         return TransactionsViewHolder(binding)
     }
@@ -30,15 +30,9 @@ class PendingTransactionsAdapter :
     }
 
     object DiffUtilCallback : DiffUtil.ItemCallback<PendingTransaction>() {
-        override fun areContentsTheSame(
-            oldItem: PendingTransaction,
-            newItem: PendingTransaction
-        ) = oldItem == newItem
+        override fun areContentsTheSame(oldItem: PendingTransaction, newItem: PendingTransaction) = oldItem == newItem
 
-        override fun areItemsTheSame(
-            oldItem: PendingTransaction,
-            newItem: PendingTransaction
-        ) = oldItem == newItem
+        override fun areItemsTheSame(oldItem: PendingTransaction, newItem: PendingTransaction) = oldItem == newItem
     }
 
     class TransactionsViewHolder(val binding: ItemPendingTransactionBinding) :

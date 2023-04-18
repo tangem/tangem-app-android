@@ -36,7 +36,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
-import com.tangem.tap.features.tokens.addCustomToken.compose.SelectTokenNetworkDialog
+import com.tangem.tap.features.addCustomToken.compose.SelectTokenNetworkDialog
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
@@ -53,16 +53,22 @@ fun ComposeDialogManager() {
 
     ShowTheDialog(dialogSate)
 
-    LaunchedEffect(key1 = Unit, block = {
-        domainStore.subscribe(subscriber) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.globalState == newState.globalState
-            }.select { it.globalState }
-        }
-    })
-    DisposableEffect(key1 = Unit, effect = {
-        onDispose { domainStore.unsubscribe(subscriber) }
-    })
+    LaunchedEffect(
+        key1 = Unit,
+        block = {
+            domainStore.subscribe(subscriber) { state ->
+                state.skipRepeats { oldState, newState ->
+                    oldState.globalState == newState.globalState
+                }.select { it.globalState }
+            }
+        },
+    )
+    DisposableEffect(
+        key1 = Unit,
+        effect = {
+            onDispose { domainStore.unsubscribe(subscriber) }
+        },
+    )
 }
 
 @Composable
@@ -77,7 +83,7 @@ private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
         is DomainDialog.DialogError -> ErrorDialog(
             title = stringResource(id = R.string.common_error),
             body = errorConverter.convert(dialog.error).message,
-            onDismissRequest
+            onDismissRequest,
         )
         is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
         else -> {}
@@ -97,14 +103,14 @@ fun <T> SimpleDialog(
 ) {
     Dialog(
         properties = DialogProperties(false, false),
-        onDismissRequest = { }
+        onDismissRequest = { },
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         ) {
             Column(
-                modifier = Modifier.padding(22.dp)
+                modifier = Modifier.padding(22.dp),
             ) {
                 DialogTitle(title = title)
                 LazyColumn {
@@ -133,19 +139,15 @@ private fun DialogTitle(title: String) {
         style = LocalTextStyle.provides(
             TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        ).value
+                fontSize = 20.sp,
+            ),
+        ).value,
     )
     SpacerH16()
 }
 
 @Composable
-fun ErrorDialog(
-    title: String,
-    body: String,
-    onDismissRequest: () -> Unit,
-) {
+fun ErrorDialog(title: String, body: String, onDismissRequest: () -> Unit) {
     AlertDialog(
         title = { DialogTitle(title) },
         text = { Text(body) },
@@ -154,6 +156,6 @@ fun ErrorDialog(
             Button(onClick = onDismissRequest) {
                 Text(text = stringResource(id = R.string.common_ok))
             }
-        }
+        },
     )
 }
