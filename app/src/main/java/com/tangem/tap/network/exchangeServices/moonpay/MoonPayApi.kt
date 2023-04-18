@@ -8,14 +8,10 @@ import retrofit2.http.Query
 interface MoonPayApi {
 
     @GET(MOOONPAY_IP_ADDRESS_REQUEST_URL)
-    suspend fun getUserStatus(
-        @Query("apiKey") moonPayApiKey: String,
-    ): MoonPayUserStatus
+    suspend fun getUserStatus(@Query("apiKey") moonPayApiKey: String): MoonPayUserStatus
 
     @GET(MOOONPAY_CURRENCIES_REQUEST_URL)
-    suspend fun getCurrencies(
-        @Query("apiKey") moonPayApiKey: String,
-    ): List<MoonPayCurrencies>
+    suspend fun getCurrencies(@Query("apiKey") moonPayApiKey: String): List<MoonPayCurrencies>
 
     companion object {
         const val MOOONPAY_BASE_URL = "https://api.moonpay.com/"

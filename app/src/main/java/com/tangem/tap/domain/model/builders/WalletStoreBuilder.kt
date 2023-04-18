@@ -4,8 +4,9 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getBlockchainTxHistory
 import com.tangem.tap.common.extensions.getTokenTxHistory
@@ -34,10 +35,7 @@ interface WalletStoreBuilder {
             return BlockchainNetworkWalletStoreBuilderImpl(userWallet, blockchainNetwork)
         }
 
-        operator fun invoke(
-            userWallet: UserWallet,
-            walletManager: WalletManager,
-        ): WalletMangerWalletStoreBuilder {
+        operator fun invoke(userWallet: UserWallet, walletManager: WalletManager): WalletMangerWalletStoreBuilder {
             return WalletMangerWalletStoreBuilderImpl(userWallet, walletManager)
         }
     }
@@ -110,7 +108,7 @@ private fun BlockchainNetwork.getBlockchainWalletData(
     return WalletDataModel(
         currency = currency,
         status = WalletDataModel.Loading,
-        walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
+        walletAddresses = walletManager?.wallet?.getWalletAddresses(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = false,
@@ -134,7 +132,7 @@ private fun BlockchainNetwork.getTokensWalletsData(
             WalletDataModel(
                 currency = currency,
                 status = WalletDataModel.Loading,
-                walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
+                walletAddresses = walletManager?.wallet?.getWalletAddresses(),
                 existentialDeposit = getExistentialDeposit(walletManager),
                 fiatRate = null,
                 isCardSingleToken = token == primaryToken,
@@ -152,7 +150,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
             derivationPath = wallet.publicKey.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
-        walletAddresses = wallet.createAddressesData(),
+        walletAddresses = wallet.getWalletAddresses(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = false,
@@ -161,10 +159,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
     )
 }
 
-private fun Token.toTokenWalletData(
-    walletManager: WalletManager,
-    primaryToken: Token?,
-): WalletDataModel {
+private fun Token.toTokenWalletData(walletManager: WalletManager, primaryToken: Token?): WalletDataModel {
     val wallet = walletManager.wallet
     return WalletDataModel(
         currency = Currency.Token(
@@ -173,7 +168,7 @@ private fun Token.toTokenWalletData(
             derivationPath = wallet.publicKey.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
-        walletAddresses = wallet.createAddressesData(),
+        walletAddresses = wallet.getWalletAddresses(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
         isCardSingleToken = this == primaryToken,
@@ -184,4 +179,15 @@ private fun Token.toTokenWalletData(
 
 private fun getExistentialDeposit(walletManager: WalletManager?): BigDecimal? {
     return (walletManager as? ExistentialDepositProvider)?.getExistentialDeposit()
+}
+
+private fun Wallet.getWalletAddresses(): WalletDataModel.WalletAddresses? {
+    return this.createAddressesData()
+        .takeIf { it.isNotEmpty() }
+        ?.let { addresses ->
+            WalletDataModel.WalletAddresses(
+                list = addresses,
+                selectedAddress = addresses.first(),
+            )
+        }
 }

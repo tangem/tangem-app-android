@@ -16,10 +16,7 @@ interface WalletCurrenciesManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun update(
-        userWallet: UserWallet,
-        currency: Currency,
-    ): CompletionResult<Unit>
+    suspend fun update(userWallet: UserWallet, currency: Currency): CompletionResult<Unit>
 
     /**
      * Add list of [Currency] to [UserWallet].
@@ -32,10 +29,7 @@ interface WalletCurrenciesManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun addCurrencies(
-        userWallet: UserWallet,
-        currenciesToAdd: List<Currency>,
-    ): CompletionResult<Unit>
+    suspend fun addCurrencies(userWallet: UserWallet, currenciesToAdd: List<Currency>): CompletionResult<Unit>
 
     /**
      * Remove [Currency] from [UserWallet]
@@ -48,10 +42,7 @@ interface WalletCurrenciesManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun removeCurrency(
-        userWallet: UserWallet,
-        currencyToRemove: Currency,
-    ): CompletionResult<Unit>
+    suspend fun removeCurrency(userWallet: UserWallet, currencyToRemove: Currency): CompletionResult<Unit>
 
     /**
      * Remove list of [Currency] from [UserWallet]
@@ -64,10 +55,7 @@ interface WalletCurrenciesManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun removeCurrencies(
-        userWallet: UserWallet,
-        currenciesToRemove: List<Currency>,
-    ): CompletionResult<Unit>
+    suspend fun removeCurrencies(userWallet: UserWallet, currenciesToRemove: List<Currency>): CompletionResult<Unit>
 
     /**
      * Add a callback [Listener]

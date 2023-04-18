@@ -1,29 +1,26 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
-import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.CurrenciesRepository
-import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.domain.model.TotalFiatBalance
+import com.tangem.tap.features.tokens.legacy.redux.TokensAction
+import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
-import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
@@ -63,6 +60,7 @@ class MultiWalletView : WalletView() {
                     binding = it,
                     totalBalance = walletState.totalBalance,
                     walletsCount = walletState.walletsDataFromStores.size,
+                    appFiatCurrency = store.state.globalState.appCurrency,
                 )
             }
         }
@@ -110,15 +108,7 @@ class MultiWalletView : WalletView() {
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             Analytics.send(Portfolio.ButtonManageTokens())
-            store.dispatch(
-                TokensAction.LoadCurrencies(
-                    supportedBlockchains = CurrenciesRepository.getBlockchains(
-                        card.firmwareVersion,
-                        card.isTestCard,
-                    ),
-                    scanResponse = store.state.globalState.scanResponse,
-                ),
-            )
+            store.dispatch(TokensAction.LoadCurrencies(scanResponse = store.state.globalState.scanResponse))
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
@@ -143,32 +133,29 @@ class MultiWalletView : WalletView() {
         }
     }
 
-    private fun handleBackupWarning(
-        binding: FragmentWalletBinding,
-        showBackupWarning: Boolean,
-    ) = with(binding.lWalletBackupWarning) {
-        root.isVisible = showBackupWarning
-        root.setOnClickListener {
-            Analytics.send(MainScreen.NoticeBackupYourWalletTapped())
-            store.dispatch(WalletAction.MultiWallet.BackupWallet)
+    private fun handleBackupWarning(binding: FragmentWalletBinding, showBackupWarning: Boolean) =
+        with(binding.lWalletBackupWarning) {
+            root.isVisible = showBackupWarning
+            root.setOnClickListener {
+                Analytics.send(MainScreen.NoticeBackupYourWalletTapped())
+                store.dispatch(WalletAction.MultiWallet.BackupWallet)
+            }
         }
-    }
 
-    private fun handleRescanWarning(
-        binding: FragmentWalletBinding,
-        showRescanWarning: Boolean,
-    ) = with(binding.lWalletRescanWarning) {
-        root.isVisible = showRescanWarning
-        root.setOnClickListener {
-            Analytics.send(MainScreen.NoticeScanYourCardTapped())
-            store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
+    private fun handleRescanWarning(binding: FragmentWalletBinding, showRescanWarning: Boolean) =
+        with(binding.lWalletRescanWarning) {
+            root.isVisible = showRescanWarning
+            root.setOnClickListener {
+                Analytics.send(MainScreen.NoticeScanYourCardTapped())
+                store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
+            }
         }
-    }
 
     private fun handleTotalBalance(
         binding: FragmentWalletBinding,
-        totalBalance: TotalBalance?,
+        totalBalance: TotalFiatBalance?,
         walletsCount: Int,
+        appFiatCurrency: FiatCurrency,
     ) = with(binding.lCardTotalBalance) {
         isVisible = walletsCount > 0
 
@@ -176,31 +163,19 @@ class MultiWalletView : WalletView() {
             store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
         status = totalBalance
+        fiatCurrency = appFiatCurrency
     }
 
-    private fun handleErrorStates(
-        state: WalletState,
-        binding: FragmentWalletBinding,
-        fragment: WalletFragment,
-    ) {
-        when (state.primaryWalletData?.currencyData?.status) {
-            BalanceStatus.EmptyCard -> {
-                showErrorState(
-                    binding,
-                    fragment.getText(R.string.wallet_error_empty_card),
-                    fragment.getString(R.string.wallet_error_empty_card_subtitle),
-                )
-                configureButtonsForEmptyWalletState(binding)
-            }
-            BalanceStatus.UnknownBlockchain -> {
+    private fun handleErrorStates(state: WalletState, binding: FragmentWalletBinding, fragment: WalletFragment) {
+        when (state.error) {
+            ErrorType.UnknownBlockchain -> {
                 showErrorState(
                     binding,
                     fragment.getText(R.string.wallet_error_unsupported_blockchain),
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle),
                 )
             }
-            else -> { /* no-op */
-            }
+            else -> { /* no-op */ }
         }
     }
 
@@ -220,28 +195,8 @@ class MultiWalletView : WalletView() {
         }
     }
 
-    private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
-        with(binding) {
-            rowButtons.btnBuy.hide()
-            rowButtons.btnSell.hide()
-            rowButtons.btnTrade.hide()
-            rowButtons.show()
-
-            rowButtons.btnSend.text = fragment?.getText(R.string.wallet_button_create_wallet)
-            rowButtons.onSendClick = { store.dispatch(WalletAction.CreateWallet) }
-        }
-
     override fun onDestroyFragment() {
         super.onDestroyFragment()
         watcher.clear()
     }
 }
-
-private val WalletDetailsButtonsRow.btnBuy: Button
-    get() = this.findViewById(R.id.btn_buy)
-private val WalletDetailsButtonsRow.btnSell: Button
-    get() = this.findViewById(R.id.btn_sell)
-private val WalletDetailsButtonsRow.btnTrade: Button
-    get() = this.findViewById(R.id.btn_trade)
-private val WalletDetailsButtonsRow.btnSend: Button
-    get() = this.findViewById(R.id.btn_send)

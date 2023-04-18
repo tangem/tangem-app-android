@@ -9,9 +9,11 @@ sealed class DataError {
 fun mapErrors(error: String?): DataError {
     return if (error == null) {
         DataError.NoError
-    } else when (error) {
-        INSUFFICIENT_LIQUIDITY_ERROR -> DataError.InsufficientLiquidity
-        else -> DataError.UnknownError(error)
+    } else {
+        when (error) {
+            INSUFFICIENT_LIQUIDITY_ERROR -> DataError.InsufficientLiquidity
+            else -> DataError.UnknownError(error)
+        }
     }
 }
 

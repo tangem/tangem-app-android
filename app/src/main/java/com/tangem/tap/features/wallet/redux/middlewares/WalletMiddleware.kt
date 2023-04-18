@@ -3,7 +3,9 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -24,6 +26,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.domain.userWalletList.GetCardImageUseCase
 import com.tangem.tap.domain.userWalletList.lockIfLockable
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -31,10 +34,7 @@ import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.getSendableAmounts
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletStore
-import com.tangem.tap.features.wallet.redux.reducers.findSelectedCurrency
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -42,6 +42,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletStoresManager
 import com.tangem.utils.coroutines.ifActive
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -134,6 +135,9 @@ class WalletMiddleware {
                     Timber.e("Unable to load/refresh wallets data, no user wallet selected")
                     return
                 }
+
+                store.dispatch(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
+
                 scope.launch {
                     globalState.tapWalletManager.loadData(
                         userWallet = selectedWallet,
@@ -186,7 +190,6 @@ class WalletMiddleware {
             is WalletAction.WalletStoresChanged -> {
                 // Cancel update job when new wallet stores received
                 updateWalletStoresJob = scope.launch(Dispatchers.Default) {
-                    ifActive { updateWalletStores(action.walletStores, walletState) }
                     ifActive { fetchTotalFiatBalance(action.walletStores) }
                     ifActive { findMissedDerivations(action.walletStores) }
                     ifActive { tryToShowAppRatingWarning(action.walletStores) }
@@ -204,29 +207,46 @@ class WalletMiddleware {
 
                 store.dispatchOnMain(NavigationAction.PopBackTo(screen))
             }
+            is WalletAction.ChangeSelectedAddress -> {
+                changeSelectedWalletAddress(action.type, walletState)
+            }
+            is WalletAction.UpdateUserWalletArtwork -> {
+                scope.launch {
+                    userWalletsListManager
+                        .update(
+                            userWalletId = action.walletId,
+                            update = { userWallet ->
+                                userWallet.copy(
+                                    artworkUrl = GetCardImageUseCase().invoke(
+                                        cardId = userWallet.cardId,
+                                        cardPublicKey = userWallet.scanResponse.card.cardPublicKey,
+                                    ),
+                                )
+                            },
+                        )
+                        .doOnSuccess { store.dispatch(WalletAction.SetArtworkUrl(it.artworkUrl)) }
+                }
+            }
         }
     }
 
-    private fun updateWalletStores(walletsStores: List<WalletStoreModel>, state: WalletState) {
-        val reduxWalletStores = walletsStores.mapToReduxModels()
-        if (!state.isMultiwalletAllowed) {
-            findSelectedCurrency(
-                walletsStores = reduxWalletStores,
-                currentSelectedCurrency = null,
-                isMultiWalletAllowed = false,
-            )?.let {
-                store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it))
-            }
+    private fun changeSelectedWalletAddress(type: AddressType, state: WalletState) {
+        val selectedUserWalletId = userWalletsListManager.selectedUserWalletSync?.walletId.guard {
+            Timber.e("Unable to change selected wallet address, no user wallet selected")
+            return
         }
-        store.dispatchOnMain(
-            WalletAction.WalletStoresChanged.UpdateWalletStores(
-                reduxWalletStores = reduxWalletStores,
-            ),
-        )
+        val selectedCurrency = state.selectedCurrency.guard {
+            Timber.e("Unable to change selected wallet address, no currency selected")
+            return
+        }
+
+        scope.launch(Dispatchers.Default) {
+            walletStoresManager.updateSelectedAddress(selectedUserWalletId, selectedCurrency, type)
+        }
     }
 
     private suspend fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>) {
-        val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)?.mapToReduxModel()
+        val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)
 
         if (totalFiatBalance != null) {
             store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
@@ -280,7 +300,7 @@ class WalletMiddleware {
 
         return if (amount != null) {
             if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, state, selectedWalletData, walletStore)
+                prepareSendActionForToken(amount, selectedWalletData, walletStore)
             } else {
                 PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletStore?.walletManager)
             }
@@ -302,7 +322,6 @@ class WalletMiddleware {
                             ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         prepareSendActionForToken(
                             amount = amountToSend,
-                            state = state,
                             selectedWalletData = selectedWalletData,
                             walletStore = walletStore,
                         )
@@ -326,11 +345,10 @@ class WalletMiddleware {
 
     private fun prepareSendActionForToken(
         amount: Amount,
-        state: WalletState?,
-        selectedWalletData: WalletData?,
-        walletStore: WalletStore?,
+        selectedWalletData: WalletDataModel?,
+        walletStore: WalletStoreModel?,
     ): PrepareSendScreen {
-        val coinRate = state?.getWalletData(walletStore?.blockchainNetwork)?.fiatRate
+        val coinRate = walletStore?.blockchainWalletData?.fiatRate
         val tokenRate = selectedWalletData?.fiatRate
         val coinAmount = walletStore?.walletManager?.wallet?.amounts?.get(AmountType.Coin)
 

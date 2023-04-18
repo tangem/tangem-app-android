@@ -32,8 +32,10 @@ class TangemCardTypesResolver(
 
     override fun isMultiwalletAllowed(): Boolean =
         !isTangemTwins() && !card.isStart2Coin && !isTangemNote() && !isSaltPay() &&
-            (card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
-                card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
+            (
+                card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
+                    card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1
+                )
 
     override fun getBlockchain(): Blockchain {
         return when (productType) {

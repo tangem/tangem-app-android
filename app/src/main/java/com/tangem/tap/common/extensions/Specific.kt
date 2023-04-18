@@ -5,10 +5,12 @@ import android.text.SpannedString
 import android.text.style.RelativeSizeSpan
 import androidx.core.text.buildSpannedString
 import com.tangem.common.extensions.isZero
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.NumberFormat
 import java.util.*
 // [REDACTED_TODO_COMMENT]
 fun BigDecimal.toFormattedString(
@@ -45,9 +47,18 @@ fun BigDecimal.toFormattedCurrencyString(
     return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatRateString(
-    fiatCurrencyName: String,
-): String {
+fun BigDecimal.toFiatRateString(fiatCurrencyName: String, fiatCode: String): String {
+    try {
+        val formatter = NumberFormat.getCurrencyInstance()
+        Currency.getInstance(fiatCode)?.let { currency ->
+            formatter.currency = currency
+            formatter.maximumFractionDigits = 2
+            formatter.roundingMode = RoundingMode.HALF_UP
+            return formatter.format(this)
+        }
+    } catch (e: IllegalArgumentException) {
+        Timber.e(e, "can't parse currency")
+    }
     val value = this
         .setScale(2, RoundingMode.HALF_UP)
         .formatWithSpaces()
@@ -57,10 +68,15 @@ fun BigDecimal.toFiatRateString(
 fun BigDecimal.toFiatString(
     rateValue: BigDecimal,
     fiatCurrencyName: String,
+    fiatCode: String,
     formatWithSpaces: Boolean = false,
 ): String {
     val fiatValue = rateValue.multiply(this)
-    return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
+    return fiatValue.toFormattedFiatValue(
+        fiatCurrencyName = fiatCurrencyName,
+        fiatCode = fiatCode,
+        formatWithSpaces = formatWithSpaces,
+    )
 }
 
 fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
@@ -70,8 +86,20 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
 
 fun BigDecimal.toFormattedFiatValue(
     fiatCurrencyName: String,
+    fiatCode: String,
     formatWithSpaces: Boolean = false,
 ): String {
+    try {
+        val formatter = NumberFormat.getCurrencyInstance()
+        Currency.getInstance(fiatCode)?.let { currency ->
+            formatter.currency = currency
+            formatter.maximumFractionDigits = 2
+            formatter.roundingMode = RoundingMode.HALF_UP
+            return formatter.format(this)
+        }
+    } catch (e: IllegalArgumentException) {
+        Timber.e(e, "can't parse currency")
+    }
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
     return " $fiatValue $fiatCurrencyName"

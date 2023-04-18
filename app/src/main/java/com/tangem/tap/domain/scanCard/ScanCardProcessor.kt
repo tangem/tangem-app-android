@@ -98,10 +98,7 @@ object ScanCardProcessor {
             }
     }
 
-    private fun sendAnalytics(
-        analyticsEvent: AnalyticsEvent?,
-        scanResponse: ScanResponse,
-    ) {
+    private fun sendAnalytics(analyticsEvent: AnalyticsEvent?, scanResponse: ScanResponse) {
         analyticsEvent?.let {
             // this workaround needed to send CardWasScannedEvent without adding a context
             val interceptor = CardContextInterceptor(scanResponse)
@@ -256,10 +253,7 @@ object ScanCardProcessor {
         }
     }
 
-    private suspend inline fun navigateTo(
-        screen: AppScreen,
-        onProgressStateChange: (showProgress: Boolean) -> Unit,
-    ) {
+    private suspend inline fun navigateTo(screen: AppScreen, onProgressStateChange: (showProgress: Boolean) -> Unit) {
         delay(DELAY_SDK_DIALOG_CLOSE)
         store.dispatchOnMain(NavigationAction.NavigateTo(screen))
         onProgressStateChange(false)

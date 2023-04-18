@@ -11,14 +11,19 @@ import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
+import com.tangem.tap.features.wallet.ui.utils.mainButton
+import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
 import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -71,7 +76,7 @@ class SingleWalletView : WalletView() {
         setupTwinCards(state.twinCardsState, binding)
         setupButtons(primaryWalletData, binding, state.isExchangeServiceFeatureOn)
         setupAddressCard(state, binding)
-        showPendingTransactionsIfPresent(primaryWalletData.pendingTransactions)
+        showPendingTransactionsIfPresent(primaryWalletData.status.pendingTransactions)
         setupBalance(state, primaryWalletData)
     }
 
@@ -83,32 +88,30 @@ class SingleWalletView : WalletView() {
         binding?.rvPendingTransaction?.show(knownTransactions.isNotEmpty())
     }
 
-    private fun setupBalance(state: WalletState, primaryWallet: WalletData) {
+    private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
         val fragment = fragment ?: return
         binding?.apply {
             lCardBalance.lBalance.root.show()
             BalanceWidget(
                 binding = this.lCardBalance,
                 fragment = fragment,
-                data = primaryWallet.currencyData,
-                token = state.primaryTokenData?.currencyData,
-                isTwinCard = state.isTangemTwins,
+                blockchainWalletData = primaryWallet,
+                tokenWalletData = state.primaryTokenData,
             ).setup()
         }
     }
 
     private fun setupTwinCards(twinCardsState: TwinCardsState?, binding: FragmentWalletBinding) = with(binding) {
-        twinCardsState?.cardNumber?.let { cardNumber ->
-            tvTwinCardNumber.show()
-            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, 2)
-        }
         if (twinCardsState?.cardNumber == null) {
             tvTwinCardNumber.hide()
+        } else {
+            tvTwinCardNumber.show()
+            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, 2)
         }
     }
 
     private fun setupButtons(
-        walletData: WalletData,
+        walletData: WalletDataModel,
         binding: FragmentWalletBinding,
         isExchangeServiceFeatureEnabled: Boolean,
     ) = with(binding) {
@@ -134,7 +137,7 @@ class SingleWalletView : WalletView() {
     }
 
     private fun setupRowButtons(
-        walletData: WalletData,
+        walletData: WalletDataModel,
         rowButtons: WalletDetailsButtonsRow,
         isExchangeServiceFeatureEnabled: Boolean,
     ) {

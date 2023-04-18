@@ -16,10 +16,7 @@ class FinalizeTwinTask(
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
-    override fun run(
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<ScanResponse>) -> Unit) {
         WriteProtectedIssuerDataTask(twinPublicKey, issuerKeys).run(session) { result ->
             when (result) {
                 is CompletionResult.Success ->

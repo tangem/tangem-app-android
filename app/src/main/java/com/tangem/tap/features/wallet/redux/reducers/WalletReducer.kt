@@ -1,24 +1,18 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletAddresses
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletStore
-import com.tangem.tap.features.wallet.ui.BalanceStatus
-import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
@@ -42,44 +36,15 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         is WalletAction.LoadData.Failure -> {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
-                    val wallets = newState.walletsStores
-                        .map { store ->
-                            store.copy(
-                                walletsData = store.walletsData.map {
-                                    it.copy(
-                                        currencyData = it.currencyData.copy(
-                                            status = BalanceStatus.Unreachable,
-                                        ),
-                                    )
-                                },
-                            )
-                        }
-
                     newState = newState.copy(
                         state = ProgressState.Error,
                         error = ErrorType.NoInternetConnection,
-                        walletsStores = wallets,
                     )
                 }
                 is TapError.UnknownBlockchain -> {
                     newState = newState.copy(
-                        state = ProgressState.Done,
-                        walletsStores = listOf(
-                            WalletStore(
-                                walletManager = null,
-                                blockchainNetwork = BlockchainNetwork(
-                                    Blockchain.Unknown,
-                                    null,
-                                    emptyList(),
-                                ),
-                                walletsData = listOf(
-                                    WalletData(
-                                        currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
-                                        currency = Currency.Blockchain(Blockchain.Unknown, null),
-                                    ),
-                                ),
-                            ),
-                        ),
+                        state = ProgressState.Error,
+                        error = ErrorType.UnknownBlockchain,
                     )
                 }
                 else -> {
@@ -102,28 +67,12 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.TradeCryptoAction -> return newState
-        is WalletAction.ChangeSelectedAddress -> {
-            val walletAddresses = newState.getWalletData(newState.selectedCurrency)?.walletAddresses
-                ?: return newState
-            val address = walletAddresses.list.firstOrNull { it.type == action.type }
-                ?: return newState
-
-            newState = newState.updateWalletData(
-                newState.selectedWalletData?.copy(
-                    walletAddresses = WalletAddresses(
-                        selectedAddress = address,
-                        list = walletAddresses.list,
-                    ),
-                ),
-            )
-        }
         is WalletAction.AppCurrencyAction -> {
             newState = appCurrencyReducer.reduce(action, newState)
         }
         is WalletAction.UserWalletChanged -> with(action.userWallet) {
             val card = scanResponse.card
             newState = WalletState(
-                cardId = card.cardId,
                 isMultiwalletAllowed = isMultiCurrency,
                 cardImage = Artwork(
                     artworkId = artworkUrl,
@@ -142,10 +91,9 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 },
             )
         }
-        is WalletAction.WalletStoresChanged.UpdateWalletStores -> {
+        is WalletAction.WalletStoresChanged -> {
             newState = newState.copy(
-                state = action.reduxWalletStores.flatMap { it.walletsData }.findProgressState(newState.state),
-                walletsStores = action.reduxWalletStores,
+                walletsStores = action.walletStores,
             )
         }
         is WalletAction.TotalFiatBalanceChanged -> {
@@ -164,8 +112,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.UpdateCanSaveUserWallets -> {
+            newState = newState.copy(canSaveUserWallets = action.canSaveUserWallets)
+        }
+        is WalletAction.SetArtworkUrl -> {
             newState = newState.copy(
-                canSaveUserWallets = action.canSaveUserWallets,
+                cardImage = Artwork(artworkId = action.url, artwork = newState.cardImage?.artwork),
             )
         }
         else -> Unit
@@ -175,7 +126,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
 }
 
 fun findSelectedCurrency(
-    walletsStores: List<WalletStore>,
+    walletsStores: List<WalletStoreModel>,
     currentSelectedCurrency: Currency?,
     isMultiWalletAllowed: Boolean,
 ): Currency? = if (isMultiWalletAllowed) {
@@ -191,11 +142,11 @@ private fun CardDTO.findCardsCount(): Int? {
     return (this.backupStatus as? CardDTO.BackupStatus.Active)?.cardCount?.inc()
 }
 
-fun Wallet.createAddressesData(): List<AddressData> {
-    val listOfAddressData = mutableListOf<AddressData>()
+fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
+    val listOfAddressData = mutableListOf<WalletDataModel.AddressData>()
     // put a defaultAddress at the first place
     addresses.forEach {
-        val addressData = AddressData(
+        val addressData = WalletDataModel.AddressData(
             it.value,
             it.type,
             getShareUri(it.value),
@@ -210,10 +161,7 @@ fun Wallet.createAddressesData(): List<AddressData> {
     return listOfAddressData
 }
 
-private fun handleCheckSignedHashesActions(
-    action: WalletAction.Warnings,
-    state: WalletState,
-): WalletState {
+private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
         WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
         WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(

@@ -36,11 +36,7 @@ import com.tangem.wallet.R
 
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 @Composable
-fun FirstStoriesContent(
-    isPaused: Boolean,
-    duration: Int,
-    onHideContent: (Boolean) -> Unit,
-) {
+fun FirstStoriesContent(isPaused: Boolean, duration: Int, onHideContent: (Boolean) -> Unit) {
     val screenState = remember { mutableStateOf(StartingScreenState.INIT) }
     val progress = remember { Animatable(0f) }
 

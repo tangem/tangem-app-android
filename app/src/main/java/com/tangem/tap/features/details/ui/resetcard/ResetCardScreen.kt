@@ -134,9 +134,7 @@ fun ResetCardView(state: ResetCardScreenState) {
 
 // region Preview
 @Composable
-private fun ResetCardScreenSample(
-    modifier: Modifier = Modifier,
-) {
+private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.secondary),

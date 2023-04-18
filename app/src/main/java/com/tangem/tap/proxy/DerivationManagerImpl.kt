@@ -8,7 +8,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -42,7 +42,9 @@ class DerivationManagerImpl(
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimalCount,
                 )
-            } else null
+            } else {
+                null
+            }
             val blockchainNetwork = BlockchainNetwork(blockchain, card)
             val appCurrency = com.tangem.tap.features.wallet.models.Currency.fromBlockchainNetwork(
                 blockchainNetwork,

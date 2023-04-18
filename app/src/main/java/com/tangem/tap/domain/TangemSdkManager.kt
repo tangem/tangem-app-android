@@ -18,10 +18,10 @@ import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.common.map
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.CommandResponse
@@ -82,9 +82,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         ).also { sendScanResultsToAnalytics(it) }
     }
 
-    suspend fun createProductWallet(
-        scanResponse: ScanResponse,
-    ): CompletionResult<CreateProductWalletTaskResponse> {
+    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.cardTypesResolver),
             scanResponse.card.cardId,
@@ -92,9 +90,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
-    private fun sendScanResultsToAnalytics(
-        result: CompletionResult<ScanResponse>,
-    ) {
+    private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
         if (result is CompletionResult.Failure) {
             (result.error as? TangemSdkError)?.let { error ->
                 Analytics.send(Basic.ScanError(error))
@@ -194,14 +190,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         cardId: String? = null,
         initialMessage: Message? = null,
         accessCode: String? = null,
-    ): CompletionResult<T> =
-        withContext(Dispatchers.Main) {
-            suspendCancellableCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
-                    if (continuation.isActive) continuation.resume(result)
-                }
+    ): CompletionResult<T> = withContext(Dispatchers.Main) {
+        suspendCancellableCoroutine { continuation ->
+            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
+                if (continuation.isActive) continuation.resume(result)
             }
         }
+    }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
         runnable: CardSessionRunnable<T>,
@@ -226,9 +221,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return context.getString(stringResId, *formatArgs)
     }
 
-    fun setAccessCodeRequestPolicy(
-        useBiometricsForAccessCode: Boolean,
-    ) {
+    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
         tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
             UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
         } else {
@@ -247,6 +240,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
+                maxFirmwareVersion = FirmwareVersion(major = 4, minor = 52),
             ),
         )
     }

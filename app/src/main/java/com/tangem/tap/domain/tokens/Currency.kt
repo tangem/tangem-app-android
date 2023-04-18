@@ -10,20 +10,20 @@ data class CurrencyFromJson(
     val id: String,
     val name: String,
     val symbol: String,
-    val networks: List<ContractFromJson>? = null
+    val networks: List<ContractFromJson>? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class ContractFromJson(
     val networkId: String,
     val contractAddress: String?,
-    val decimalCount: Int?
+    val decimalCount: Int?,
 )
 
 @JsonClass(generateAdapter = true)
 data class CurrenciesFromJson(
     val imageHost: String?,
-    val coins: List<CurrencyFromJson>
+    val coins: List<CurrencyFromJson>,
 )
 
 fun List<ContractFromJson>.toContracts(): List<Contract> {
@@ -35,7 +35,7 @@ data class Currency(
     val name: String,
     val symbol: String,
     val iconUrl: String,
-    val contracts: List<Contract>
+    val contracts: List<Contract>,
 ) {
 
     companion object {
@@ -45,7 +45,7 @@ data class Currency(
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id, null),
-                contracts = currency.networks?.toContracts() ?: emptyList()
+                contracts = currency.networks?.toContracts() ?: emptyList(),
             )
         }
 
@@ -55,7 +55,7 @@ data class Currency(
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id, imageHost),
-                contracts = currency.networks.mapNotNull { Contract.fromNetwork(it, imageHost) }
+                contracts = currency.networks.mapNotNull { Contract.fromNetwork(it, imageHost) },
             )
         }
     }
@@ -77,7 +77,7 @@ data class Contract(
                 blockchain = blockchain,
                 address = contract.contractAddress,
                 decimalCount = contract.decimalCount,
-                iconUrl = getIconUrl(contract.networkId, null)
+                iconUrl = getIconUrl(contract.networkId, null),
             )
         }
 
@@ -88,7 +88,7 @@ data class Contract(
                 blockchain = blockchain,
                 address = contract.contractAddress,
                 decimalCount = contract.decimalCount?.toInt(),
-                iconUrl = getIconUrl(contract.networkId, imageHost)
+                iconUrl = getIconUrl(contract.networkId, imageHost),
             )
         }
     }

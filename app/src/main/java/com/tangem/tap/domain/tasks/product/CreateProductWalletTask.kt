@@ -10,7 +10,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.map
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.CardTypesResolver
@@ -268,10 +268,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             }
     }
 
-    private fun getBlockchains(
-        cardId: String,
-        card: CardDTO,
-    ): List<Blockchain> {
+    private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
         return when {
             DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)

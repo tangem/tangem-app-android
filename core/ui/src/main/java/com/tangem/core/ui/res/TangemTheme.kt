@@ -68,10 +68,7 @@ object TangemTheme {
 
 @Stable
 @Composable
-private fun materialThemeColors(
-    colors: TangemColors,
-    isDark: Boolean,
-): Colors {
+private fun materialThemeColors(colors: TangemColors, isDark: Boolean): Colors {
     return Colors(
         primary = colors.background.primary,
         primaryVariant = colors.background.secondary,
