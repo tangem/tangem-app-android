@@ -58,7 +58,7 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
 
     override suspend fun update(
         userWalletId: UserWalletId,
-        update: (UserWallet) -> UserWallet,
+        update: suspend (UserWallet) -> UserWallet,
     ): CompletionResult<UserWallet> = catching {
         val wallet = state.value.userWallet
             ?.takeIf { it.walletId == userWalletId }

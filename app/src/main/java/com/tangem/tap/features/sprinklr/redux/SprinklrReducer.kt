@@ -7,7 +7,9 @@ internal object SprinklrReducer {
     fun reduce(action: Action, state: AppState): SprinklrState {
         return if (action is SprinklrAction) {
             internalReduce(action, state.sprinklrState)
-        } else state.sprinklrState
+        } else {
+            state.sprinklrState
+        }
     }
 
     private fun internalReduce(action: SprinklrAction, state: SprinklrState): SprinklrState {

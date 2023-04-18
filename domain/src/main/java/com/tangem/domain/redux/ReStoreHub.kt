@@ -3,7 +3,13 @@ package com.tangem.domain.redux
 import android.webkit.ValueCallback
 import com.tangem.domain.redux.global.DomainGlobalState
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -38,14 +44,14 @@ internal interface ReStoreReducer<State> {
  */
 internal abstract class BaseStoreHub<State>(
     private val name: String,
-    private val dispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+    private val dispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),
 ) : ReStoreHub<DomainState, State> {
 
     val globalState: DomainGlobalState
         get() = domainStore.state.globalState
 
     val hubScope = CoroutineScope(
-        Job() + dispatcher + CoroutineName(name) + FeatureCoroutineExceptionHandler.create(name)
+        Job() + dispatcher + CoroutineName(name) + FeatureCoroutineExceptionHandler.create(name),
     )
 
     private val actionsAndJobs = mutableMapOf<Action, Job>()
