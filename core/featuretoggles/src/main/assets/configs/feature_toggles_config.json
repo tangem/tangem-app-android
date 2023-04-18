@@ -2,5 +2,9 @@
     {
         "name": "OPTIMISM_SWAP_FEATURE_ENABLED",
         "version": "4.3.1"
+    },
+    {
+        "name": "REDESIGNED_TOKEN_LIST_SCREEN_ENABLED",
+        "version": "4.4.0"
     }
 ]

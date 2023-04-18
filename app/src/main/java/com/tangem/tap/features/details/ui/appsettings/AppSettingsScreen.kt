@@ -159,9 +159,7 @@ private fun onCheckedChange(
 
 // region Preview
 @Composable
-private fun AppSettingsScreenSample(
-    modifier: Modifier = Modifier,
-) {
+private fun AppSettingsScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
@@ -199,9 +197,7 @@ private fun AppSettingsScreenPreview_Dark() {
 }
 
 @Composable
-private fun AppSettingsScreen_EnrollBiometrics_Sample(
-    modifier: Modifier = Modifier,
-) {
+private fun AppSettingsScreen_EnrollBiometrics_Sample(modifier: Modifier = Modifier) {
     Column(modifier = modifier.background(TangemTheme.colors.background.primary)) {
         AppSettingsScreen(
             state = AppSettingsScreenState(

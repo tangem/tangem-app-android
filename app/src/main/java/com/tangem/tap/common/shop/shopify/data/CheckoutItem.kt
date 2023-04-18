@@ -4,5 +4,5 @@ import com.shopify.graphql.support.ID
 
 data class CheckoutItem(
     val id: ID,
-    val quantity: Int
+    val quantity: Int,
 )

@@ -102,8 +102,11 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkTokensSpendAllowance(networkId: String, tokenAddress: String, walletAddress: String):
-        AggregatedSwapDataModel<String> {
+    override suspend fun checkTokensSpendAllowance(
+        networkId: String,
+        tokenAddress: String,
+        walletAddress: String,
+    ): AggregatedSwapDataModel<String> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = oneInchErrorsHandler.handleOneInchResponse(

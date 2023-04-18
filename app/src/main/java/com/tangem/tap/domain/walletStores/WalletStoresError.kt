@@ -11,34 +11,29 @@ sealed class WalletStoresError(code: Int) : TangemError(code) {
     override val message: String?
         get() = customMessage
 
-    @Suppress("MagicNumber")
     class FetchFiatRatesError(
         currencies: List<String>,
         override val cause: Throwable?,
-    ) : WalletStoresError(60011) {
+    ) : WalletStoresError(code = 60011) {
         override var customMessage: String = "Failed to fetch fiat rates for currencies $currencies"
     }
 
-    @Suppress("MagicNumber")
-    class UnknownBlockchain : WalletStoresError(60012) {
+    class UnknownBlockchain : WalletStoresError(code = 60012) {
         override var customMessage: String = "Unknown blockchain"
     }
 
-    @Suppress("MagicNumber")
-    object NoInternetConnection : WalletStoresError(60013) {
+    object NoInternetConnection : WalletStoresError(code = 60013) {
         override var customMessage: String = "No internet connection"
     }
 
-    @Suppress("MagicNumber")
-    class WalletManagerNotCreated(blockchain: Blockchain) : WalletStoresError(60014) {
+    class WalletManagerNotCreated(blockchain: Blockchain) : WalletStoresError(code = 60014) {
         override var customMessage: String = "Wallet manager can not be created for $blockchain"
     }
 
-    @Suppress("MagicNumber")
     class UpdateWalletManagerTokensError(
         blockchain: Blockchain,
         override val cause: Throwable,
-    ) : WalletStoresError(600015) {
+    ) : WalletStoresError(code = 600015) {
         override var customMessage: String = "Unable to update wallet manager tokens for currency $blockchain: $cause"
     }
 }

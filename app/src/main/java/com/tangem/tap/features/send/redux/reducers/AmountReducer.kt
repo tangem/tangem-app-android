@@ -41,7 +41,7 @@ class AmountReducer : SendInternalReducer {
                             viewBalanceValue = rescaledBalance.stripZeroPlainString(),
                             mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
                             maxLengthOfAmount = sendState.getDecimals(currency),
-                            cursorAtTheSamePosition = false
+                            cursorAtTheSamePosition = false,
                         )
                     }
                     MainCurrencyType.CRYPTO -> {
@@ -51,7 +51,7 @@ class AmountReducer : SendInternalReducer {
                             viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
                             mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
                             maxLengthOfAmount = sendState.getDecimals(currency),
-                            cursorAtTheSamePosition = false
+                            cursorAtTheSamePosition = false,
                         )
                     }
                 }
@@ -75,7 +75,7 @@ class AmountReducer : SendInternalReducer {
                     viewAmountValue = InputViewValue(viewValue, action.isUserInput),
                     amountToSendCrypto = action.amountCrypto,
                     cursorAtTheSamePosition = true,
-                    error = null
+                    error = null,
                 )
             }
             is AmountAction.SetAmountError -> state.copy(error = action.error)

@@ -83,12 +83,11 @@ fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> U
     }
 }
 
-fun Context.dpToPixels(dp: Int): Int =
-    TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        dp.toFloat(),
-        this.resources.displayMetrics,
-    ).toInt()
+fun Context.dpToPixels(dp: Int): Int = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_DIP,
+    dp.toFloat(),
+    this.resources.displayMetrics,
+).toInt()
 
 tailrec fun Context?.getActivity(): Activity? = this as? Activity
     ?: (this as? ContextWrapper)?.baseContext?.getActivity()
