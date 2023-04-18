@@ -41,8 +41,8 @@ class WalletWarningConverter(
             is WalletWarning.Rent -> {
                 context.getString(
                     R.string.solana_rent_warning,
-                    message.walletRent.minRentValue,
-                    message.walletRent.rentExemptValue,
+                    message.walletRent.rent,
+                    message.walletRent.exemptionAmount,
                 )
             }
         }

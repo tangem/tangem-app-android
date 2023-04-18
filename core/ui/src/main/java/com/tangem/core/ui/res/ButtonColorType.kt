@@ -17,7 +17,7 @@ enum class ButtonColorType(val lightColor: Color, val darkColor: Color) {
     SECONDARY(lightColor = Light2, darkColor = Dark5),
     DISABLED(lightColor = Light2, darkColor = Dark6),
     POSITIVE(lightColor = Meadow, darkColor = Meadow),
-    POSITIVE_DISABLED(lightColor = MagicMint, darkColor = DarkGreen)
+    POSITIVE_DISABLED(lightColor = MagicMint, darkColor = DarkGreen),
 }
 
 @Composable
