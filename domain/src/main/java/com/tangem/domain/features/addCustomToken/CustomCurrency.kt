@@ -3,7 +3,7 @@ package com.tangem.domain.features.addCustomToken
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.form.BaseFieldDataConverter
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState

@@ -25,6 +25,6 @@ internal class DefaultSelectedUserWalletRepository(
     }
 
     private enum class StorageKey {
-        SelectedWalletId
+        SelectedWalletId,
     }
 }
