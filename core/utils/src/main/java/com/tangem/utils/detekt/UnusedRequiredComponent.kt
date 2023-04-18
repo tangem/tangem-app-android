@@ -22,7 +22,7 @@ package com.tangem.utils.detekt
     AnnotationTarget.TYPE,
     AnnotationTarget.EXPRESSION,
     AnnotationTarget.FILE,
-    AnnotationTarget.TYPEALIAS
+    AnnotationTarget.TYPEALIAS,
 )
 @Retention(AnnotationRetention.SOURCE)
 annotation class UnusedRequiredComponent(val description: String)

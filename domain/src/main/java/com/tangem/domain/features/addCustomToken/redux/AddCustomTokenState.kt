@@ -173,7 +173,7 @@ data class AddCustomTokenState(
             mainNetwork: Blockchain,
             derivationNetwork: Blockchain,
             derivationStyle: DerivationStyle?,
-        ): com.tangem.common.hdWallet.DerivationPath? {
+        ): com.tangem.crypto.hdWallet.DerivationPath? {
             // If we allow user to select derivations, we need to provide different derivations
             // (Legacy style derivations).
             // But the mainNetwork derivation depends on whether a user has a card
