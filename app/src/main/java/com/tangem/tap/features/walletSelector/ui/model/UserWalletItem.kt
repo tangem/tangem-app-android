@@ -1,6 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui.model
 
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 
 internal sealed interface UserWalletItem {
     val id: UserWalletId
@@ -9,12 +10,20 @@ internal sealed interface UserWalletItem {
     val balance: Balance
     val isLocked: Boolean
 
-    sealed interface Balance {
-        object Loading : Balance
+    sealed class Balance {
+        open val amount: String = UNKNOWN_AMOUNT_SIGN
+        open val showWarning: Boolean = false
 
-        data class Error(val amount: String) : Balance
+        object Loading : Balance()
 
-        data class Loaded(val amount: String) : Balance
+        object Failed : Balance() {
+            override val showWarning: Boolean = true
+        }
+
+        data class Loaded(
+            override val amount: String,
+            override val showWarning: Boolean,
+        ) : Balance()
     }
 }
 
