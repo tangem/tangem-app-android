@@ -13,11 +13,12 @@ sealed interface TotalFiatBalance {
         override val amount: BigDecimal? = null
     }
 
-    data class Error(
-        override val amount: BigDecimal?,
-    ) : TotalFiatBalance
+    object Failed : TotalFiatBalance {
+        override val amount: BigDecimal? = null
+    }
 
     data class Loaded(
         override val amount: BigDecimal,
+        val isWarning: Boolean,
     ) : TotalFiatBalance
 }
