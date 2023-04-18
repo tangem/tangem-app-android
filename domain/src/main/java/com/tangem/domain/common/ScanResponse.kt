@@ -5,7 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.WalletData
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse

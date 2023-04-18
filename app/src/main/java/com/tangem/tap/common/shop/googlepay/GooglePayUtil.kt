@@ -94,11 +94,7 @@ object GooglePayUtil {
         }
     }
 
-    private fun getTransactionInfo(
-        price: String,
-        countryCode: String,
-        currencyCode: String,
-    ): JSONObject {
+    private fun getTransactionInfo(price: String, countryCode: String, currencyCode: String): JSONObject {
         return JSONObject().apply {
             put("totalPrice", price)
             put("totalPriceStatus", "FINAL")

@@ -17,6 +17,7 @@ androidxConstraintLayout = "2.1.4"
 androidxCore = "1.9.0"
 androidxFragment = "1.5.3"
 androidxLifecycle = "2.5.1"
+androidx-paging = "3.1.1"
 # endregion AndroidX
 
 # region Compose
@@ -27,6 +28,7 @@ compose-material = "1.3.1"
 compose-constraint = "1.0.1"
 compose-navigation = "2.5.3"
 compose-accompanist = "0.28.0"
+compose-paging = "1.0.0-alpha18"
 # endregion Compose
 
 # region Other libraries
@@ -46,6 +48,7 @@ hilt = "2.44"
 hilt-navigation = "1.0.0"
 jodatime = "2.12.1"
 krateSharedPref = "2.0.0"
+kotlin-immutable-collections = "0.3.5"
 kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
 moshi = "1.12.0"
@@ -57,7 +60,7 @@ retrofitMoshiConverter = "2.6.0"
 shopifyBuySdk = "12.0.0"
 spongycastleCryptoCore = "1.58.0.0"
 timber = "4.7.1"
-viewBindingDelegate = "1.5.6"
+viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
 zendeskChat = "3.3.5"
 zendeskMessaging = "5.2.4"
@@ -68,15 +71,15 @@ kotlinSerialization = "1.4.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-189-hotfix-ada-200"
+tangemBlockchainSdk = "develop-203"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-209"
+tangemCardSdk = "develop-218"
 # tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
 # region Tools
 detektComposeRules = "1.2.2"
-detekt = "1.21.0"
+detekt = "1.22.0"
 # endregion Tools
 
 # region Testing
@@ -115,6 +118,7 @@ androidx-browser = { module = "androidx.browser:browser", version.ref = "android
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidxLifecycle" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
@@ -134,6 +138,7 @@ compose-navigation-hilt = { module = "androidx.hilt:hilt-navigation-compose", ve
 compose-accompanist-appCompatTheme = { module = "com.google.accompanist:accompanist-appcompat-theme", version.ref = "compose-accompanist" }
 compose-accompanist-systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "compose-accompanist" }
 compose-accompanist-webView = { module = "com.google.accompanist:accompanist-webview", version.ref = "compose-accompanist" }
+compose-paging = { module = "androidx.paging:paging-compose", version.ref = "compose-paging" }
 # endregion Compose
 
 # region Firebase
@@ -168,6 +173,7 @@ appsflyer = { module = "com.appsflyer:af-android-sdk", version.ref = "appsflyer"
 armadillo = { module = "at.favre.lib:armadillo", version.ref = "armadillo" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
+kotlin-immutable-collections = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlin-immutable-collections" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 googlePlay-core = { module = "com.google.android.play:core", version.ref = "googlePlayCore" }
 googlePlay-core-ktx = { module = "com.google.android.play:core-ktx", version.ref = "googlePlayCoreKtx" }
