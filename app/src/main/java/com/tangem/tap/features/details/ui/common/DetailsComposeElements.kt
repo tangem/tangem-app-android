@@ -76,10 +76,7 @@ fun SettingsScreensScaffold(
 }
 
 @Composable
-fun ScreenTitle(
-    titleRes: Int,
-    modifier: Modifier = Modifier,
-) {
+fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
@@ -111,12 +108,7 @@ fun EmptyTopBarWithNavigation(
 }
 
 @Composable
-fun DetailsMainButton(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
+fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Button(
         onClick = onClick,
         modifier = modifier
