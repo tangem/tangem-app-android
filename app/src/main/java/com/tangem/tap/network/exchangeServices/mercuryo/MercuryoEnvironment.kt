@@ -16,11 +16,7 @@ data class MercuryoEnvironment(
         private const val BASE_URL = "https://api.mercuryo.io/"
         private const val API_VERSION = "v1.6"
 
-        fun prod(
-            widgetId: String,
-            secret: String,
-            apiVersion: String = API_VERSION,
-        ): MercuryoEnvironment {
+        fun prod(widgetId: String, secret: String, apiVersion: String = API_VERSION): MercuryoEnvironment {
             return MercuryoEnvironment(
                 baseUrl = BASE_URL,
                 apiVersion = apiVersion,

@@ -9,6 +9,7 @@ import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
+import com.tangem.tap.features.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.details.DetailsFragment
@@ -25,12 +26,14 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFra
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
-import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
-import com.tangem.tap.features.tokens.presentation.AddTokensFragment
+import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
+import com.tangem.tap.features.tokens.legacy.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
 import com.tangem.wallet.R
 import timber.log.Timber
 
@@ -107,7 +110,12 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.AppSettings -> AppSettingsFragment()
         AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
-        AppScreen.AddTokens -> AddTokensFragment()
+        AppScreen.AddTokens -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::tokensListFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) TokensListFragment() else AddTokensFragment()
+        }
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()

@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -92,10 +92,7 @@ private fun getDerivationParams(derivationPath: String?, card: CardDTO): Derivat
     }
 }
 
-fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse,
-    currency: Currency,
-): WalletManager? {
+fun WalletManagerFactory.makeWalletManagerForApp(scanResponse: ScanResponse, currency: Currency): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
         blockchain = currency.blockchain,
@@ -112,9 +109,7 @@ fun WalletManagerFactory.makeWalletManagersForApp(
         .mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
 
-fun WalletManagerFactory.makePrimaryWalletManager(
-    scanResponse: ScanResponse,
-): WalletManager? {
+fun WalletManagerFactory.makePrimaryWalletManager(scanResponse: ScanResponse): WalletManager? {
     val blockchain = if (scanResponse.card.isTestCard) {
         scanResponse.cardTypesResolver.getBlockchain().getTestnetVersion() ?: return null
     } else {
