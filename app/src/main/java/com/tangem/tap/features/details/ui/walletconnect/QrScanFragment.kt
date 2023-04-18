@@ -25,18 +25,17 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if (!permissionIsGranted()) requestPermission()
 
         scannerView = ZXingScannerView(activity)
@@ -62,11 +61,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode != CameraView.PERMISSION_REQUEST_CODE) return
 
         if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
