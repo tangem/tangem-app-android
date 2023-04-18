@@ -13,10 +13,7 @@ class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRu
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
-    override fun run(
-        session: CardSession,
-        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
-    ) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val card = session.environment.card
         val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {

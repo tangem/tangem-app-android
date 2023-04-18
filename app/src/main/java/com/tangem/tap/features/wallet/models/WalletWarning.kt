@@ -1,5 +1,7 @@
 package com.tangem.tap.features.wallet.models
 
+import com.tangem.tap.domain.model.WalletStoreModel
+
 sealed class WalletWarning(val showingPosition: Int) {
 
     data class ExistentialDeposit(
@@ -15,9 +17,7 @@ sealed class WalletWarning(val showingPosition: Int) {
         val blockchainSymbol: String,
     ) : WalletWarning(showingPosition = 30)
 
-    data class Rent(val walletRent: WalletRent) : WalletWarning(showingPosition = 40)
+    data class Rent(val walletRent: WalletStoreModel.WalletRent) : WalletWarning(showingPosition = 40)
 }
 
 data class WalletWarningDescription(val title: String, val message: String)
-
-data class WalletRent(val minRentValue: String, val rentExemptValue: String)
