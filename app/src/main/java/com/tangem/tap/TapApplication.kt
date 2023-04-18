@@ -49,6 +49,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
+import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
@@ -126,6 +127,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var networkConnectionManager: NetworkConnectionManager
 
+    @Inject
+    lateinit var tokensListFeatureToggles: TokensListFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -174,6 +178,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             action = DaggerGraphAction.SetApplicationDependencies(
                 assetReader = assetReader,
                 networkConnectionManager = networkConnectionManager,
+                tokensListFeatureToggles = tokensListFeatureToggles,
             ),
         )
 

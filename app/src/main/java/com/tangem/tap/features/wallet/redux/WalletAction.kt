@@ -4,15 +4,17 @@ import android.content.Context
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -38,7 +40,6 @@ sealed class WalletAction : Action {
         data class RemoveWallet(val currency: Currency) : MultiWallet()
 
         object BackupWallet : MultiWallet()
-        object ScheduleCheckForMissingDerivation : MultiWallet()
         data class AddMissingDerivations(val blockchains: List<BlockchainNetwork>) : MultiWallet()
         object ScanToGetDerivations : MultiWallet()
     }
@@ -78,7 +79,7 @@ sealed class WalletAction : Action {
     sealed class DialogAction : WalletAction() {
         data class QrCode(
             val currency: Currency,
-            val selectedAddress: AddressData,
+            val selectedAddress: WalletDataModel.AddressData,
         ) : DialogAction()
 
         object SignedHashesMultiWalletDialog : DialogAction()
@@ -127,9 +128,11 @@ sealed class WalletAction : Action {
     }
 
     data class UserWalletChanged(val userWallet: UserWallet) : WalletAction()
-    data class WalletStoresChanged(val walletStores: List<WalletStoreModel>) : WalletAction() {
-        data class UpdateWalletStores(val reduxWalletStores: List<WalletStore>) : WalletAction()
-    }
+    data class WalletStoresChanged(val walletStores: List<WalletStoreModel>) : WalletAction()
 
-    data class TotalFiatBalanceChanged(val balance: TotalBalance) : WalletAction()
+    data class TotalFiatBalanceChanged(val balance: TotalFiatBalance) : WalletAction()
+
+    data class UpdateUserWalletArtwork(val walletId: UserWalletId) : WalletAction()
+
+    data class SetArtworkUrl(val url: String) : WalletAction()
 }
