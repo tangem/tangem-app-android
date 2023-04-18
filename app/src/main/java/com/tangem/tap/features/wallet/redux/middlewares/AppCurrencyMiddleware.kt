@@ -41,7 +41,7 @@ class AppCurrencyMiddleware(
                 WalletDialog.CurrencySelectionDialog(
                     currenciesList = storedFiatCurrencies.mapToUiModel(),
                     currentAppCurrency = appCurrencyProvider.invoke(),
-                )
+                ),
             )
         }
 
@@ -49,13 +49,13 @@ class AppCurrencyMiddleware(
             runCatching { walletRepository.getCurrencyList() }
                 .onSuccess {
                     val currenciesList = it.currencies
-                    if (currenciesList.isNotEmpty() && !currenciesList.toSet().equals(storedFiatCurrencies.toSet())) {
+                    if (currenciesList.isNotEmpty() && currenciesList.toSet() != storedFiatCurrencies.toSet()) {
                         fiatCurrenciesPrefStorage.save(currenciesList)
                         store.dispatchDialogShow(
                             WalletDialog.CurrencySelectionDialog(
                                 currenciesList = currenciesList.mapToUiModel(),
                                 currentAppCurrency = appCurrencyProvider.invoke(),
-                            )
+                            ),
                         )
                     }
                 }
@@ -82,7 +82,7 @@ class AppCurrencyMiddleware(
             FiatCurrency(
                 code = it.code,
                 name = it.name,
-                symbol = it.unit
+                symbol = it.unit,
             )
         }
     }
