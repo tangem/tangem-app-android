@@ -1,9 +1,11 @@
 package com.tangem.tap.domain.walletStores
 
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.features.wallet.models.Currency
 import kotlinx.coroutines.flow.Flow
 
 interface WalletStoresManager {
@@ -22,6 +24,7 @@ interface WalletStoresManager {
      * @return [Flow] with [WalletStoreModel] list
      * */
     fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>>
+
     suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel>
 
     /**
@@ -49,10 +52,7 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun fetch(
-        userWallet: UserWallet,
-        refresh: Boolean = false,
-    ): CompletionResult<Unit>
+    suspend fun fetch(userWallet: UserWallet, refresh: Boolean = false): CompletionResult<Unit>
 
     /**
      * Fetch wallet stores associated with provided [UserWallet]s. Fetched [WalletStoreModel]s updates can be observed
@@ -63,10 +63,7 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun fetch(
-        userWallets: List<UserWallet>,
-        refresh: Boolean = false,
-    ): CompletionResult<Unit>
+    suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean = false): CompletionResult<Unit>
 
     /**
      * Update [WalletStoreModel]s amounts associated with provided [UserWallet]s
@@ -75,8 +72,12 @@ interface WalletStoresManager {
      *
      * @return [CompletionResult] of operation
      * */
-    suspend fun updateAmounts(
-        userWallets: List<UserWallet>,
+    suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit>
+
+    suspend fun updateSelectedAddress(
+        userWalletId: UserWalletId,
+        currency: Currency,
+        addressType: AddressType,
     ): CompletionResult<Unit>
 
     // For provider

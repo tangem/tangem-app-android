@@ -14,7 +14,7 @@ interface RegionProvider {
 }
 
 class RegionService(
-    private val providers: List<RegionProvider>
+    private val providers: List<RegionProvider>,
 ) : RegionProvider {
     override fun getRegion(): String? {
         for (provider in providers) {

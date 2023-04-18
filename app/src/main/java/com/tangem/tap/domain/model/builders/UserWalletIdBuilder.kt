@@ -21,7 +21,9 @@ class UserWalletIdBuilder private constructor(
             } else {
                 publicKey
             }
-        } else null
+        } else {
+            null
+        }
 
         return seed?.let {
             UserWalletId(value = calculateUserWalletId(it))
@@ -34,7 +36,9 @@ class UserWalletIdBuilder private constructor(
 
         return if (keyHash != null) {
             message.calculateHmacSha256(keyHash)
-        } else null
+        } else {
+            null
+        }
     }
 
     companion object {
