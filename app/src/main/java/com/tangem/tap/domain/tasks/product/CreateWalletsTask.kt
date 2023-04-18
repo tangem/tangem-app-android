@@ -13,7 +13,7 @@ import com.tangem.operations.wallet.CreateWalletTask
 [REDACTED_AUTHOR]
  */
 class CreateWalletsResponse(
-    val createWalletResponses: List<CreateWalletResponse>
+    val createWalletResponses: List<CreateWalletResponse>,
 ) : CommandResponse
 
 class CreateWalletsTask(
@@ -35,7 +35,7 @@ class CreateWalletsTask(
     private fun createWallet(
         curve: EllipticCurve,
         session: CardSession,
-        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit
+        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
         CreateWalletTask(curve).run(session) { result ->
             when (result) {
