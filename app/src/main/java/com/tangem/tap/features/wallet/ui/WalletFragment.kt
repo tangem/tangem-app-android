@@ -24,6 +24,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
