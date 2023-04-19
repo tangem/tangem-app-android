@@ -64,4 +64,5 @@ include(":domain:models")
 include(":domain:legacy")
 
 include(":domain:core")
+include(":domain:card")
 // endregion Domain modules
