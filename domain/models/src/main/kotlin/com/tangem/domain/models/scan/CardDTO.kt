@@ -1,4 +1,4 @@
-package com.tangem.domain.common
+package com.tangem.domain.models.scan
 
 import com.squareup.moshi.JsonClass
 import com.tangem.common.card.Card
@@ -8,7 +8,7 @@ import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
-import java.util.*
+import java.util.Date
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
 /**
