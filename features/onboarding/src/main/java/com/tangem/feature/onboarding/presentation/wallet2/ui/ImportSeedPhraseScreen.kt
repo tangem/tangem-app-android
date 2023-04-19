@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -89,6 +90,9 @@ private fun PhraseBlock(
     state: ImportSeedPhraseState,
     modifier: Modifier = Modifier,
 ) {
+    // TODO: replace by TextReference
+    val errorConverter = remember { SeedPhraseErrorConverter() }
+
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -112,7 +116,7 @@ private fun PhraseBlock(
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size32),
         ) {
-            val message = SeedPhraseErrorConverter(LocalContext.current).convert(state.error)
+            val message = errorConverter.convert(LocalContext.current to state.error)
             if (message != null) {
                 Text(
                     modifier = Modifier.fillMaxSize(),
