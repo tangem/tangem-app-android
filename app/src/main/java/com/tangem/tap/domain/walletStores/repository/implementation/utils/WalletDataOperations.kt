@@ -157,6 +157,10 @@ internal fun WalletDataModel.updateWithSelf(newWalletData: WalletDataModel): Wal
             -> newStatus
         },
         existentialDeposit = newWalletData.existentialDeposit,
+        walletAddresses = newWalletData.walletAddresses?.copy(
+            selectedAddress = oldWalletData.walletAddresses?.selectedAddress
+                ?: newWalletData.walletAddresses.selectedAddress,
+        ),
         fiatRate = newWalletData.fiatRate ?: oldWalletData.fiatRate,
     )
 }
