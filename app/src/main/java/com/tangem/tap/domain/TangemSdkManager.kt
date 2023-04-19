@@ -22,9 +22,9 @@ import com.tangem.common.map
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
-import com.tangem.operations.CommandResponse
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -194,7 +194,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             .map { CardDTO(it) }
     }
 
-    suspend fun <T : CommandResponse> runTaskAsync(
+    suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
         cardId: String? = null,
         initialMessage: Message? = null,
@@ -207,7 +207,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         }
     }
 
-    private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
+    private suspend fun <T> runTaskAsyncReturnOnMain(
         runnable: CardSessionRunnable<T>,
         cardId: String? = null,
         initialMessage: Message? = null,
