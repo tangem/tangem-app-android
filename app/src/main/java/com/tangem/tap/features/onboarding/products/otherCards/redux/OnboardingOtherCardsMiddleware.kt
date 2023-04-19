@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.otherCards.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.Onboarding
