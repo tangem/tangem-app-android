@@ -3,7 +3,7 @@ package com.tangem.domain.redux.global
 import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.domain.DomainDialog
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 
 /**
 * [REDACTED_AUTHOR]

@@ -2,8 +2,9 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.ParamsInterceptor
-import com.tangem.domain.common.ProductType
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess

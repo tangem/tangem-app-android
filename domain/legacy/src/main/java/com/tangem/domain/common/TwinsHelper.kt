@@ -1,6 +1,7 @@
 package com.tangem.domain.common
 
 import com.tangem.crypto.CryptoUtils
+import com.tangem.domain.models.scan.CardDTO
 
 object TwinsHelper {
     private val firstCardSeries = listOf("CB61", "CB64")

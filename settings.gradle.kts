@@ -29,7 +29,6 @@ dependencyResolutionManagement {
 }
 
 include(":app")
-include(":domain")
 include(":common")
 
 // region Core modules
@@ -58,3 +57,9 @@ include(":features:swap:presentation")
 include(":features:tester:api")
 include(":features:tester:impl")
 // endregion Feature modules
+
+// region Domain modules
+// [REDACTED_TODO_COMMENT]
+include(":domain:models")
+include(":domain:legacy")
+// endregion Domain modules

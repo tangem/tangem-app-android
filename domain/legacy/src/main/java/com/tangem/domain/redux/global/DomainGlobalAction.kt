@@ -1,7 +1,7 @@
 package com.tangem.domain.redux.global
 
 import com.tangem.domain.DomainDialog
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import org.rekotlin.Action
 
 /**

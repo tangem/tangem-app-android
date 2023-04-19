@@ -1,7 +1,7 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.Wallet
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError

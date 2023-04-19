@@ -3,8 +3,8 @@ package com.tangem.domain.common.extensions
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.models.scan.CardDTO
 
 /**
 * [REDACTED_AUTHOR]
