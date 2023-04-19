@@ -8,12 +8,10 @@ import com.tangem.feature.onboarding.domain.SeedPhraseError
 /**
 [REDACTED_AUTHOR]
  */
-class SeedPhraseErrorConverter(
-    private val context: Context,
-) : ModuleMessageConverter<SeedPhraseError?, String?> {
+class SeedPhraseErrorConverter : ModuleMessageConverter<Pair<Context, SeedPhraseError?>, String?> {
 
-    override fun convert(message: SeedPhraseError?): String? {
-        message ?: return null
+    override fun convert(source: Pair<Context, SeedPhraseError?>): String? {
+        val (context, message) = source
 
         val convertedMessage = when (message) {
             SeedPhraseError.InvalidEntropyLength -> {
