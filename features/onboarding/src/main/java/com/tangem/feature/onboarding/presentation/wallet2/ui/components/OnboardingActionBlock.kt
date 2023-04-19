@@ -10,7 +10,7 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.res.TangemTheme
 
 /**
- * Created by Anton Zhilenkov on 11.03.2023.
+ * @author by Anton Zhilenkov on 11.03.2023.
  */
 @Composable
 fun OnboardingActionBlock(

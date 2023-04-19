@@ -5,7 +5,7 @@ import com.tangem.common.module.ModuleErrorCode
 import com.tangem.common.module.ModuleMessage
 
 /**
- * Created by Anton Zhilenkov on 07.04.2023.
+ * @author by Anton Zhilenkov on 07.04.2023.
  * For each pool of errors, use the codes lying in range 100 (200..299, 300..399, etc)
  */
 abstract class OnboardingModuleError(

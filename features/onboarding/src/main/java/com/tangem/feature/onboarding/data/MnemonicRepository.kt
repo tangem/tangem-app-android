@@ -4,7 +4,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.crypto.bip39.Mnemonic
 
 /**
- * Created by Anton Zhilenkov on 16.03.2023.
+ * @author by Anton Zhilenkov on 16.03.2023.
  */
 interface MnemonicRepository {
 

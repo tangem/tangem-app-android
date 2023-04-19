@@ -14,7 +14,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseSt
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Created by Anton Zhilenkov on 14.03.2023.
+ * @author by Anton Zhilenkov on 14.03.2023.
  */
 class StateBuilder(
     private val uiActions: UiActions,

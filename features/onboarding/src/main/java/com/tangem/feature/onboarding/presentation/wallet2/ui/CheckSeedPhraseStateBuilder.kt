@@ -5,7 +5,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPh
 import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
 
 /**
- * Created by Anton Zhilenkov on 10.04.2023.
+ * @author by Anton Zhilenkov on 10.04.2023.
  */
 class CheckSeedPhraseStateBuilder {
 

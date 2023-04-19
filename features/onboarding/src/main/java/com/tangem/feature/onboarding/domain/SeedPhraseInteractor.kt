@@ -3,7 +3,7 @@ package com.tangem.feature.onboarding.domain
 import com.tangem.crypto.bip39.Mnemonic
 
 /**
- * Created by Anton Zhilenkov on 16.03.2023.
+ * @author by Anton Zhilenkov on 16.03.2023.
  */
 interface SeedPhraseInteractor {
     suspend fun generateMnemonic(): Result<Mnemonic>

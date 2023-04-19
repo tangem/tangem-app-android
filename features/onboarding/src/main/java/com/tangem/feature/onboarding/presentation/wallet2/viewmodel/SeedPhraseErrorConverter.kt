@@ -6,7 +6,7 @@ import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 
 /**
- * Created by Anton Zhilenkov on 06.04.2023.
+ * @author by Anton Zhilenkov on 06.04.2023.
  */
 class SeedPhraseErrorConverter : ModuleMessageConverter<Pair<Context, SeedPhraseError?>, String?> {
 

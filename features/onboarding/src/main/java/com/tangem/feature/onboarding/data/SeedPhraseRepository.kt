@@ -4,7 +4,7 @@ import com.tangem.crypto.bip39.EntropyLength
 import com.tangem.crypto.bip39.Wordlist
 
 /**
- * Created by Anton Zhilenkov on 16.03.2023.
+ * @author by Anton Zhilenkov on 16.03.2023.
  */
 interface SeedPhraseRepository {
     fun getWordList(): Wordlist

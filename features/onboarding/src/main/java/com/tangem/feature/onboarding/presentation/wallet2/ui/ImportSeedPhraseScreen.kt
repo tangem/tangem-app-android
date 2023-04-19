@@ -36,7 +36,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.InvalidWords
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseErrorConverter
 
 /**
- * Created by Anton Zhilenkov on 11.03.2023.
+ * @author by Anton Zhilenkov on 11.03.2023.
  */
 @Composable
 fun ImportSeedPhraseScreen(

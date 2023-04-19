@@ -9,7 +9,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.tangem.utils.extensions.isSingleItem
 
 /**
- * Created by Anton Zhilenkov on 06.04.2023.
+ * @author by Anton Zhilenkov on 06.04.2023.
  */
 class InvalidWordsColorTransformation(
     private val wordsToBrush: Set<String>,

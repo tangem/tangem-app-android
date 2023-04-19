@@ -1,7 +1,7 @@
 package com.tangem.feature.onboarding.presentation.wallet2.model
 
 /**
- * Created by Anton Zhilenkov on 14.03.2023.
+ * @author by Anton Zhilenkov on 14.03.2023.
  */
 data class ButtonState(
     val enabled: Boolean = true,

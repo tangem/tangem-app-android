@@ -26,7 +26,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Created by Anton Zhilenkov on 11.03.2023.
+ * @author by Anton Zhilenkov on 11.03.2023.
  */
 @Composable
 fun YourSeedPhraseScreen(

@@ -6,7 +6,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * Created by Anton Zhilenkov on 14.03.2023.
+ * @author by Anton Zhilenkov on 14.03.2023.
  */
 data class OnboardingSeedPhraseState(
     val step: OnboardingSeedPhraseStep,

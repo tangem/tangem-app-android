@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
- * Created by Anton Zhilenkov on 12.03.2023.
+ * @author by Anton Zhilenkov on 12.03.2023.
  */
 @HiltViewModel
 class SeedPhraseViewModel @Inject constructor(
