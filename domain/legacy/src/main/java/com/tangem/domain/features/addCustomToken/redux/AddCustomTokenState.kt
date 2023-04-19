@@ -6,7 +6,6 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
@@ -36,6 +35,7 @@ import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Symbol
 import com.tangem.domain.features.addCustomToken.TokenBlockchainField
 import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
 import org.rekotlin.Action
