@@ -16,9 +16,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.IntOffset
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconLeft
@@ -29,6 +32,8 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhrase
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.DescriptionSubTitleText
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.InvalidWordsColorTransformation
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseErrorConverter
 
 /**
  * Created by Anton Zhilenkov on 11.03.2023.
@@ -45,7 +50,9 @@ fun ImportSeedPhraseScreen(
             modifier = Modifier.weight(1f),
         ) {
             Column {
-                OnboardingDescriptionBlock(modifier) {
+                OnboardingDescriptionBlock(
+                    modifier = Modifier.padding(top = TangemTheme.dimens.size16),
+                ) {
                     DescriptionSubTitleText(text = stringResource(id = R.string.onboarding_seed_import_message))
                 }
                 PhraseBlock(
@@ -83,6 +90,9 @@ private fun PhraseBlock(
     state: ImportSeedPhraseState,
     modifier: Modifier = Modifier,
 ) {
+    // TODO: replace by TextReference
+    val errorConverter = remember { SeedPhraseErrorConverter() }
+
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -94,6 +104,10 @@ private fun PhraseBlock(
             onValueChange = state.tvSeedPhrase.onTextFieldValueChanged,
             textStyle = TangemTheme.typography.body1,
             singleLine = false,
+            visualTransformation = InvalidWordsColorTransformation(
+                wordsToBrush = state.invalidWords,
+                style = SpanStyle(color = TangemTheme.colors.text.warning),
+            ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
             /**
              * FIXME: PR issue:
@@ -112,14 +126,16 @@ private fun PhraseBlock(
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size32),
         ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxSize(),
-                text = "TODO: implement error message",
-                style = TangemTheme.typography.caption.copy(
-                    color = TangemTheme.colors.text.warning,
-                ),
-            )
+            val message = errorConverter.convert(LocalContext.current to state.error)
+            if (message != null) {
+                Text(
+                    modifier = Modifier.fillMaxSize(),
+                    text = message,
+                    style = TangemTheme.typography.caption.copy(
+                        color = TangemTheme.colors.text.warning,
+                    ),
+                )
+            }
         }
     }
 }
