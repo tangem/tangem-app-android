@@ -9,8 +9,9 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.util.supportsHdWallet
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
