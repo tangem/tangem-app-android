@@ -9,8 +9,9 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
