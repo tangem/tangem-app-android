@@ -34,7 +34,6 @@ import com.tangem.core.ui.components.SpacerW16
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.extensions.formatWithSpaces
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.wallet.R
@@ -42,6 +41,7 @@ import com.valentinilk.shimmer.shimmer
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.util.*
 
 internal class TotalBalanceCard @JvmOverloads constructor(
@@ -231,16 +231,21 @@ private fun LoadedAmount(amount: AnnotatedString, modifier: Modifier = Modifier)
 private fun buildAmountString(amount: BigDecimal?, fiatCurrencySymbol: String): AnnotatedString {
     if (amount == null) return AnnotatedString(text = UNKNOWN_AMOUNT_SIGN)
 
-    val format = DecimalFormat.getInstance(Locale.getDefault()) as DecimalFormat
-    val scaledAmount = amount
-        .setScale(2, RoundingMode.HALF_UP)
-        .formatWithSpaces()
-    val integer = scaledAmount.substringBefore('.')
-    val reminder = scaledAmount.substringAfter('.')
+    val formatter = NumberFormat.getInstance(Locale.getDefault()) as? DecimalFormat
+        ?: return AnnotatedString("${amount.toPlainString()} $fiatCurrencySymbol")
+    val decimalFormat = formatter.apply {
+        maximumFractionDigits = 2
+        minimumFractionDigits = 2
+        isGroupingUsed = true
+        this.roundingMode = RoundingMode.HALF_UP
+    }
+    val scaledAmount = decimalFormat.format(amount)
+    val integer = scaledAmount.substringBefore(decimalFormat.decimalFormatSymbols.decimalSeparator)
+    val reminder = scaledAmount.substringAfter(decimalFormat.decimalFormatSymbols.decimalSeparator)
 
     return buildAnnotatedString {
         append(integer)
-        append(format.decimalFormatSymbols.decimalSeparator)
+        append(decimalFormat.decimalFormatSymbols.decimalSeparator)
         append(
             AnnotatedString(
                 text = "$reminder $fiatCurrencySymbol",
