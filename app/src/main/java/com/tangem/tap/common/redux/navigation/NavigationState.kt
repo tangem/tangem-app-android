@@ -18,7 +18,7 @@ enum class AppScreen(
     OnboardingNote, OnboardingWallet, OnboardingTwins, OnboardingOther,
     Wallet, WalletDetails,
     Send,
-    Details, DetailsSecurity, CardSettings, AppSettings, ResetToFactory,
+    Details, DetailsSecurity, CardSettings, AppSettings, ResetToFactory, AccessCodeRecovery,
     AddTokens, AddCustomToken,
     WalletConnectSessions,
     QrScan,
