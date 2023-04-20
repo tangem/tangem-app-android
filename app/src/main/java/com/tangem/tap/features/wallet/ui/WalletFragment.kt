@@ -7,8 +7,12 @@ import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.mutableStateOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
@@ -19,6 +23,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
@@ -47,6 +52,8 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -57,6 +64,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     @Inject
     lateinit var swapFeatureToggleManager: SwapFeatureToggleManager
+
+    @Inject
+    lateinit var networkConnectionManager: NetworkConnectionManager
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
 
@@ -74,6 +84,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             }
         }
     }
+
+    private val isNetworkConnectionError = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +109,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         super.onStart()
 
         setStatusBarColor(R.color.background_secondary)
+
+        subscribeOnNetworkStateChanging()
 
         store.subscribe(this) { state ->
             state.select { it.walletState }
@@ -194,8 +208,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
-                Analytics.send(Portfolio.Refreshed())
-                store.dispatch(WalletAction.LoadData.Refresh)
+                refreshWalletData()
             }
         }
 
@@ -207,6 +220,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         binding.toolbar.setNavigationIcon(navigationIconRes)
     }
 
+    private fun refreshWalletData() {
+        Analytics.send(Portfolio.Refreshed())
+        store.dispatch(WalletAction.LoadData.Refresh)
+    }
+
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {
         warningsAdapter.submitList(warnings)
         binding.rvWarningMessages.show(warnings.isNotEmpty())
@@ -215,13 +233,17 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
     private fun setupNoInternetHandling(state: WalletState) {
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
+                isNetworkConnectionError.value = true
                 binding.srlWallet.isRefreshing = false
                 (activity as? MainActivity)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
                     buttonTitle = R.string.common_retry,
                 ) { store.dispatch(WalletAction.LoadData) }
+            } else {
+                isNetworkConnectionError.value = false
             }
         } else {
+            isNetworkConnectionError.value = false
             (activity as? MainActivity)?.dismissSnackbar()
         }
     }
@@ -244,6 +266,19 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
                 error(R.drawable.card_placeholder_black)
                 fallback(R.drawable.card_placeholder_black)
             }
+        }
+    }
+
+    private fun subscribeOnNetworkStateChanging() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            networkConnectionManager.isOnlineFlow
+                .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
+                .distinctUntilChanged()
+                .collect { isOnline ->
+                    if (isOnline && isNetworkConnectionError.value) {
+                        refreshWalletData()
+                    }
+                }
         }
     }
 
