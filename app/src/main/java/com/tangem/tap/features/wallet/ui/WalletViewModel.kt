@@ -80,14 +80,6 @@ internal class WalletViewModel @Inject constructor(
         analyticsEventHandler.send(MainScreen.ScreenOpened())
     }
 
-    private fun launch() {
-        val manager = store.state.globalState.userWalletsListManager
-        if (manager != null) {
-            bootstrapSelectedWalletStoresChanges(manager)
-        }
-        bootstrapShowSaveWalletIfNeeded()
-    }
-
     fun onBalanceLoaded(totalBalance: TotalFiatBalance?) {
         if (totalBalance != null) {
             walletAnalyticsEventsMapper.convert(totalBalance)?.let { balanceParam ->
@@ -98,6 +90,14 @@ internal class WalletViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun launch() {
+        val manager = store.state.globalState.userWalletsListManager
+        if (manager != null) {
+            bootstrapSelectedWalletStoresChanges(manager)
+        }
+        bootstrapShowSaveWalletIfNeeded()
     }
 
     @OptIn(FlowPreview::class)
