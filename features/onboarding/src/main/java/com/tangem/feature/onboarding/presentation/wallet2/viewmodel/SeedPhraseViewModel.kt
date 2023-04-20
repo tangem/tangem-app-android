@@ -126,41 +126,34 @@ class SeedPhraseViewModel @Inject constructor(
 
     // region ImportSeedPhrase
     private fun onSeedPhraseTextFieldChanged(textFieldValue: TextFieldValue) {
-        viewModelScope.launchSingle {
-            val oldTextFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
-            val isSameText = textFieldValue.text == oldTextFieldValue.text
-            val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
+        val oldTextFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
+        val isSameText = textFieldValue.text == oldTextFieldValue.text
+        val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
 
-            updateUi {
-                val mediateState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
-                uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
-            }
+        val mediateState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
+        uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
 
-            val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
-            val inputMnemonic = fieldState.textFieldValue.text
+        val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
+        val inputMnemonic = fieldState.textFieldValue.text
 
-            when {
-                suggestionWordInserted.getAndSet(false) -> {
+        val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
+        when {
+            suggestionWordInserted.getAndSet(false) -> {
+                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
                     validateMnemonic(inputMnemonic)
-                    return@launchSingle
-                }
-                isSameText && !isCursorMoved -> {
-                    return@launchSingle
-                }
-                isSameText && isCursorMoved -> {
-                    updateSuggestions(fieldState)
-                    return@launchSingle
                 }
             }
-
-            val isPasteFromClipboard = textFieldValue.text.length - oldTextFieldValue.text.length > 1
-            if (isPasteFromClipboard) {
-                updateSuggestions(fieldState)
-                validateMnemonic(inputMnemonic)
-            } else {
-                updateSuggestions(fieldState)
-                val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
-                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.io) {
+            isSameText && !isCursorMoved -> {
+                // do nothing
+            }
+            isSameText && isCursorMoved -> {
+                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
+                    updateSuggestions(fieldState)
+                }
+            }
+            else -> {
+                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
+                    updateSuggestions(fieldState)
                     validateMnemonic(inputMnemonic)
                 }
             }
