@@ -3,7 +3,7 @@ package com.tangem.tap.features.tokens.legacy.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.model.WalletDataModel
