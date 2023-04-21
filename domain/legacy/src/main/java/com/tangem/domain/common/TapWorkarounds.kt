@@ -3,6 +3,7 @@ package com.tangem.domain.common
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.Card
+import com.tangem.domain.models.scan.CardDTO
 import java.util.*
 
 /**
