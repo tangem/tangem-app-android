@@ -59,6 +59,20 @@ sealed class AnalyticsParam {
         }
     }
 
+    sealed class AccessCodeRecoveryStatus(val value: String) {
+
+        val key: String = "Status"
+
+        object Enabled : AccessCodeRecoveryStatus("Enabled")
+        object Disabled : AccessCodeRecoveryStatus("Disabled")
+
+        companion object {
+            fun from(enabled: Boolean): AccessCodeRecoveryStatus {
+                return if (enabled) Enabled else Disabled
+            }
+        }
+    }
+
     sealed class Error(val value: String) {
         object App : Error("App Error")
         object CardSdk : Error("Card Sdk Error")
