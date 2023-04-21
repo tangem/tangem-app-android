@@ -12,12 +12,14 @@ import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.supportedBlockchains
+import com.tangem.domain.common.util.hasDerivation
+import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE

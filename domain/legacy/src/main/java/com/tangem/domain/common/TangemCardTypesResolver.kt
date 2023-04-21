@@ -11,6 +11,8 @@ import com.tangem.domain.common.TapWorkarounds.isSaltPayVisa
 import com.tangem.domain.common.TapWorkarounds.isSaltPayWallet
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
 
 class TangemCardTypesResolver(
     private val card: CardDTO,
@@ -80,8 +82,4 @@ private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blo
             Blockchain.fromId(blockchainName)
         }
     }
-}
-
-enum class ProductType {
-    Note, Twins, Wallet, SaltPay, Start2Coin
 }
