@@ -183,8 +183,13 @@ class SingleWalletView : WalletView() {
         }
     }
 
+    // FIXME: Move to model watcher
+    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
         val primaryWallet = state.primaryWalletData
+        if (primaryWallet == watchedPrimaryWallet) return@with
+        watchedPrimaryWallet = primaryWallet
+
         if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
             if (primaryWallet.shouldShowMultipleAddress()) {
@@ -211,16 +216,16 @@ class SingleWalletView : WalletView() {
                     ),
                 )
             }
-            setupCardInfo(state)
+            setupCardInfo(primaryWallet)
         } else {
             binding.lAddress.root.hide()
         }
     }
 
-    private fun setupCardInfo(state: WalletState) {
+    private fun setupCardInfo(walletData: WalletDataModel) {
         val textView = binding?.lAddress?.tvInfo
-        val blockchain = state.primaryWalletData?.currency?.blockchain
-        if (textView != null && blockchain != null) {
+        val blockchain = walletData.currency.blockchain
+        if (textView != null) {
             textView.text = textView.getString(
                 id = R.string.address_qr_code_message_format,
                 blockchain.fullName,
