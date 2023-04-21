@@ -426,6 +426,7 @@ class DetailsMiddleware {
         fun handle(state: DetailsState, action: DetailsAction.AccessCodeRecovery) {
             when (action) {
                 is DetailsAction.AccessCodeRecovery.Open -> {
+                    Analytics.send(Settings.CardSettings.AccessCodeRecoveryButton())
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery))
                 }
                 is DetailsAction.AccessCodeRecovery.SaveChanges -> {
@@ -433,6 +434,11 @@ class DetailsMiddleware {
                         tangemSdkManager
                             .setAccessCodeRecoveryEnabled(state.cardSettingsState?.card?.cardId, action.enabled)
                             .doOnSuccess {
+                                Analytics.send(
+                                    Settings.CardSettings.AccessCodeRecoveryChanged(
+                                        AnalyticsParam.AccessCodeRecoveryStatus.from(action.enabled),
+                                    ),
+                                )
                                 store.dispatchOnMain(NavigationAction.PopBackTo())
                                 store.dispatchOnMain(
                                     DetailsAction.AccessCodeRecovery.SaveChanges.Success(action.enabled),
