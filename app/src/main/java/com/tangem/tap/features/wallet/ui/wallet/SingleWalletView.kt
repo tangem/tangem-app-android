@@ -19,15 +19,15 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.ui.BalanceWidget
+import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
+import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
 import com.tangem.tap.features.wallet.ui.utils.mainButton
 import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
-import com.tangem.tap.features.wallet.ui.BalanceWidget
-import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
-import com.tangem.tap.features.wallet.ui.WalletFragment
-import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -87,8 +87,12 @@ class SingleWalletView : WalletView() {
         pendingTransactionAdapter.submitList(knownTransactions)
         binding?.rvPendingTransaction?.show(knownTransactions.isNotEmpty())
     }
-
+// [REDACTED_TODO_COMMENT]
+    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
+        if (watchedPrimaryWallet == primaryWallet) return
+        watchedPrimaryWallet = primaryWallet
+
         val fragment = fragment ?: return
         binding?.apply {
             lCardBalance.lBalance.root.show()
