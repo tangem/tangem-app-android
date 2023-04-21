@@ -473,6 +473,17 @@
                     "networkId": "kava/test"
                 }
             ]
+        },
+        {
+            "id": "ravencoin",
+            "symbol": "RVN",
+            "name": "Ravencoin",
+            "networks":
+            [
+                {
+                    "networkId": "ravencoin/test"
+                }
+            ]
         }
     ]
 }
