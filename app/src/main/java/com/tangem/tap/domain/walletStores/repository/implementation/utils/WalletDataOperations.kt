@@ -213,9 +213,7 @@ internal fun List<WalletDataModel>.updateSelectedAddress(
     }
 }
 
-internal fun WalletDataModel.updateSelectedAddress(
-    addressType: AddressType,
-): WalletDataModel {
+internal fun WalletDataModel.updateSelectedAddress(addressType: AddressType): WalletDataModel {
     val addresses = walletAddresses ?: return this
     val selectedAddress = addresses.list
         .firstOrNull { it.type == addressType }
