@@ -4,7 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
