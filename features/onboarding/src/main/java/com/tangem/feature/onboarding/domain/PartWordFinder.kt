@@ -13,20 +13,12 @@ internal class PartWordFinder {
      */
     fun getLeadPartOfWord(text: String, cursorPosition: Int): String? {
         val charText = text.toCharArray().asList()
-        if (cursorPosition > charText.size || cursorPosition < 0) {
-            // cursorPosition is out of text size
-            return null
-        }
-        if (cursorPosition == 0) {
-            // cursorPosition at start of text
-            return null
-        }
-        if (charText[cursorPosition - 1].isWhitespace()) {
-            // white space to the left of cursorPosition
-            return null
-        }
-        if (charText.size > cursorPosition && charText[cursorPosition].isNotWhitespace()) {
-            // cursorPosition in the middle of a word
+        val cursorIsOutOfTextRange = cursorPosition > charText.size || cursorPosition < 0
+        val cursorAtStartOfText = cursorPosition == 0
+        val hadWhiteSpaceOnLeftOfCursor = charText[cursorPosition - 1].isWhitespace()
+        val cursorInMiddleOfWord = charText.size > cursorPosition && charText[cursorPosition].isNotWhitespace()
+
+        if (cursorIsOutOfTextRange || cursorAtStartOfText || hadWhiteSpaceOnLeftOfCursor || cursorInMiddleOfWord) {
             return null
         }
 
