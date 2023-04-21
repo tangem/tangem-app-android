@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":common"))
     implementation(project(":libs:auth"))
+    implementation(project(":domain:models"))
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {

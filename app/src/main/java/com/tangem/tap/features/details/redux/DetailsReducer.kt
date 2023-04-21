@@ -1,7 +1,8 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
