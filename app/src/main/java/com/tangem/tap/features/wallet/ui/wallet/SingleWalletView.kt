@@ -35,6 +35,10 @@ import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class SingleWalletView : WalletView() {
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
+// [REDACTED_TODO_COMMENT]
+    private var watchedPrimaryWalletForAddressCard: WalletDataModel? = null
+    private var watchedPrimaryWalletForBalance: WalletDataModel? = null
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -87,11 +91,10 @@ class SingleWalletView : WalletView() {
         pendingTransactionAdapter.submitList(knownTransactions)
         binding?.rvPendingTransaction?.show(knownTransactions.isNotEmpty())
     }
-// [REDACTED_TODO_COMMENT]
-    private var watchedPrimaryWallet: WalletDataModel? = null
+
     private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
-        if (watchedPrimaryWallet == primaryWallet) return
-        watchedPrimaryWallet = primaryWallet
+        if (watchedPrimaryWalletForBalance == primaryWallet) return
+        watchedPrimaryWalletForBalance = primaryWallet
 
         val fragment = fragment ?: return
         binding?.apply {
@@ -181,12 +184,11 @@ class SingleWalletView : WalletView() {
             }
         }
     }
-// [REDACTED_TODO_COMMENT]
-    private var watchedPrimaryWallet: WalletDataModel? = null
+
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
         val primaryWallet = state.primaryWalletData
-        if (primaryWallet == watchedPrimaryWallet) return@with
-        watchedPrimaryWallet = primaryWallet
+        if (primaryWallet == watchedPrimaryWalletForAddressCard) return@with
+        watchedPrimaryWalletForAddressCard = primaryWallet
 
         if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
