@@ -1,9 +1,10 @@
 package com.tangem.tap.domain.model.builders
 
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ProductType
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.GetCardImageUseCase
 
