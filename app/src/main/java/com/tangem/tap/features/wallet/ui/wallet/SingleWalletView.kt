@@ -19,15 +19,15 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.ui.BalanceWidget
+import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
+import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
 import com.tangem.tap.features.wallet.ui.utils.mainButton
 import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
-import com.tangem.tap.features.wallet.ui.BalanceWidget
-import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
-import com.tangem.tap.features.wallet.ui.WalletFragment
-import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -88,7 +88,12 @@ class SingleWalletView : WalletView() {
         binding?.rvPendingTransaction?.show(knownTransactions.isNotEmpty())
     }
 
+    // FIXME: Move to model watcher
+    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
+        if (watchedPrimaryWallet == primaryWallet) return
+        watchedPrimaryWallet = primaryWallet
+
         val fragment = fragment ?: return
         binding?.apply {
             lCardBalance.lBalance.root.show()
@@ -178,8 +183,13 @@ class SingleWalletView : WalletView() {
         }
     }
 
+    // FIXME: Move to model watcher
+    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
         val primaryWallet = state.primaryWalletData
+        if (primaryWallet == watchedPrimaryWallet) return@with
+        watchedPrimaryWallet = primaryWallet
+
         if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
             if (primaryWallet.shouldShowMultipleAddress()) {
@@ -206,16 +216,16 @@ class SingleWalletView : WalletView() {
                     ),
                 )
             }
-            setupCardInfo(state)
+            setupCardInfo(primaryWallet)
         } else {
             binding.lAddress.root.hide()
         }
     }
 
-    private fun setupCardInfo(state: WalletState) {
+    private fun setupCardInfo(walletData: WalletDataModel) {
         val textView = binding?.lAddress?.tvInfo
-        val blockchain = state.primaryWalletData?.currency?.blockchain
-        if (textView != null && blockchain != null) {
+        val blockchain = walletData.currency.blockchain
+        if (textView != null) {
             textView.text = textView.getString(
                 id = R.string.address_qr_code_message_format,
                 blockchain.fullName,
