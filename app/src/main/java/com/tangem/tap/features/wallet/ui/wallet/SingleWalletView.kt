@@ -35,6 +35,8 @@ import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class SingleWalletView : WalletView() {
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
+    // FIXME: Move to model watcher
+    private var watchedPrimaryWallet: WalletDataModel? = null
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -88,8 +90,6 @@ class SingleWalletView : WalletView() {
         binding?.rvPendingTransaction?.show(knownTransactions.isNotEmpty())
     }
 
-    // FIXME: Move to model watcher
-    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
         if (watchedPrimaryWallet == primaryWallet) return
         watchedPrimaryWallet = primaryWallet
@@ -183,8 +183,6 @@ class SingleWalletView : WalletView() {
         }
     }
 
-    // FIXME: Move to model watcher
-    private var watchedPrimaryWallet: WalletDataModel? = null
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
         val primaryWallet = state.primaryWalletData
         if (primaryWallet == watchedPrimaryWallet) return@with
