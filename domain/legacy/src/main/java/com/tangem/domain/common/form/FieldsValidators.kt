@@ -16,16 +16,14 @@ import timber.log.Timber
 interface CustomTokenValidator<T> : Validator<T, AddCustomTokenError>
 
 class StringIsEmptyValidator : CustomTokenValidator<String> {
-    override fun validate(data: String?): AddCustomTokenError? = when {
-        data == null || data.isEmpty() -> null
-        else -> AddCustomTokenError.FieldIsNotEmpty
+    override fun validate(data: String?): AddCustomTokenError? {
+        return if (data.isNullOrEmpty()) null else AddCustomTokenError.FieldIsNotEmpty
     }
 }
 
 class StringIsNotEmptyValidator : CustomTokenValidator<String> {
-    override fun validate(data: String?): AddCustomTokenError? = when {
-        data == null || data.isEmpty() -> AddCustomTokenError.FieldIsEmpty
-        else -> null
+    override fun validate(data: String?): AddCustomTokenError? {
+        return if (data.isNullOrEmpty()) AddCustomTokenError.FieldIsEmpty else null
     }
 }
 
@@ -46,12 +44,10 @@ class TokenContractAddressValidator : CustomTokenValidator<String> {
     }
 
     override fun validate(data: String?): AddCustomTokenError? {
-        if (data == null || data.isEmpty()) return AddCustomTokenError.FieldIsEmpty
-
-        return if (getAddressService().validate(data)) {
-            null
-        } else {
-            AddCustomTokenError.InvalidContractAddress
+        return when {
+            data.isNullOrEmpty() -> AddCustomTokenError.FieldIsEmpty
+            getAddressService().validate(data) -> null
+            else -> AddCustomTokenError.InvalidContractAddress
         }
     }
 
@@ -74,9 +70,11 @@ class TokenContractAddressValidator : CustomTokenValidator<String> {
 }
 
 class TokenNetworkValidator : CustomTokenValidator<Blockchain> {
-    override fun validate(data: Blockchain?): AddCustomTokenError? = when (data) {
-        null, Blockchain.Unknown -> AddCustomTokenError.NetworkIsNotSelected
-        else -> null
+    override fun validate(data: Blockchain?): AddCustomTokenError? {
+        return when (data) {
+            null, Blockchain.Unknown -> AddCustomTokenError.NetworkIsNotSelected
+            else -> null
+        }
     }
 }
 
@@ -88,14 +86,14 @@ class TokenSymbolValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? = StringIsNotEmptyValidator().validate(data)
 }
 
-@Suppress("MagicNumber")
 class TokenDecimalsValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? {
         val decimal = data?.toIntOrNull() ?: return AddCustomTokenError.FieldIsEmpty
 
-        return when {
-            decimal > 30 -> AddCustomTokenError.InvalidDecimalsCount
-            else -> null
-        }
+        return if (decimal > INVALID_DECIMALS_COUNT) AddCustomTokenError.InvalidDecimalsCount else null
+    }
+
+    private companion object {
+        const val INVALID_DECIMALS_COUNT = 30
     }
 }

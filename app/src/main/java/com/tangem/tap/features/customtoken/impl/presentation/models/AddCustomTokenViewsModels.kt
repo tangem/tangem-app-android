@@ -3,6 +3,7 @@ package com.tangem.tap.features.customtoken.impl.presentation.models
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.wallet.R
 
@@ -243,20 +244,29 @@ internal sealed interface AddCustomTokenSelectorField {
         /** Title */
         val title: TextReference
 
+        /** Blockchain */
+        val blockchain: Blockchain
+
         /**
          * Menu item with title
          *
-         * @property title title text
+         * @property title      title text
+         * @property blockchain blockchain
          */
-        data class Title(override val title: TextReference) : SelectorItem
+        data class Title(override val title: TextReference, override val blockchain: Blockchain) : SelectorItem
 
         /**
          * Menu item with title ans subtitle
          *
-         * @property title    title text
-         * @property subtitle subtitle text
+         * @property title      title text
+         * @property subtitle   subtitle text
+         * @property blockchain blockchain
          */
-        data class TitleWithSubtitle(override val title: TextReference, val subtitle: TextReference) : SelectorItem
+        data class TitleWithSubtitle(
+            override val title: TextReference,
+            val subtitle: TextReference,
+            override val blockchain: Blockchain,
+        ) : SelectorItem
     }
 }
 
