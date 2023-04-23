@@ -1,4 +1,4 @@
-package com.tangem.feature.onboarding.presentation.wallet2.ui
+package com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders
 
 import com.tangem.feature.onboarding.presentation.wallet2.model.AboutState
 import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
