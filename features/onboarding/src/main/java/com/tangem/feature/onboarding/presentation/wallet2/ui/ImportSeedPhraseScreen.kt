@@ -71,8 +71,7 @@ fun ImportSeedPhraseScreen(
                 firstActionContent = {
                     PrimaryButtonIconLeft(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.size16),
+                            .fillMaxWidth(),
                         text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
                         icon = painterResource(id = R.drawable.ic_tangem_24),
                         enabled = state.buttonCreateWallet.enabled,
