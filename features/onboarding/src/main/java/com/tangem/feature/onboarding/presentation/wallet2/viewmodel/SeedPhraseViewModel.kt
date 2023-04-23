@@ -20,7 +20,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
 import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.model.UiActions
 import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.ui.StateBuilder
+import com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.extensions.isEven
@@ -29,6 +29,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
@@ -213,6 +214,7 @@ class SeedPhraseViewModel @Inject constructor(
     private fun buttonGenerateSeedPhraseClick() {
         viewModelScope.launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
+            delay(300)
             interactor.generateMnemonic()
                 .onSuccess { mnemonic ->
                     val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
