@@ -1,4 +1,4 @@
-package com.tangem.feature.onboarding.presentation.wallet2.ui
+package com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
