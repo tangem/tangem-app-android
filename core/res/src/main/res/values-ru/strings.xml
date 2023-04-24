@@ -59,11 +59,13 @@
     <string name="common_delete">Удалить</string>
     <string name="common_disabled">Отключено</string>
     <string name="common_disconnect">Отключить</string>
+    <string name="common_dislike">Не нравится</string>
     <string name="common_done">Готово</string>
     <string name="common_enable">Включить</string>
     <string name="common_enabled">Включено</string>
     <string name="common_error">Ошибка</string>
     <string name="common_import">Импортировать</string>
+    <string name="common_like">Нравится</string>
     <string name="common_no">Нет</string>
     <string name="common_ok">Ок</string>
     <string name="common_origin_card">Основная карта</string>
@@ -388,12 +390,6 @@
     <string name="swapping_token_list_title">Выберите токен</string>
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
     <string name="swapping_token_not_available">не доступен</string>
-    <plurals name="token_count">
-        <item quantity="one">%d токен</item>
-        <item quantity="few">%d токена</item>
-        <item quantity="many">%d токенов</item>
-        <item quantity="other">%d токенов</item>
-    </plurals>
     <string name="token_details_hide_alert_hide">Скрыть</string>
     <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
     <string name="token_details_hide_alert_title">Скрыть %s</string>
