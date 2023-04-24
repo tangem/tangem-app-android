@@ -1,4 +1,4 @@
-package com.tangem.tap.features.addCustomToken.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
