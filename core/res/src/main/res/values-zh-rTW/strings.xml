@@ -40,10 +40,6 @@
     <string name="card_settings_title">卡片設置</string>
     <string name="chat_bot_name">Tangem 機器人</string>
     <string name="chat_button_title">支援</string>
-    <string name="chat_user_action_rate_user"></string>
-    <string name="chat_user_action_send_log"></string>
-    <string name="chat_user_actions_title"></string>
-    <string name="chat_user_rate_operator_title"></string>
     <string name="common_accept">接受</string>
     <string name="common_add">添加</string>
     <string name="common_attention">注意</string>
@@ -192,7 +188,6 @@
     <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
     <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
     <string name="onboarding_getting_started">開始</string>
-    <string name="onboarding_linking_error_card_with_wallets"></string>
     <string name="onboarding_navbar_kyc_progress">驗證身分</string>
     <string name="onboarding_navbar_kyc_start">KYC</string>
     <string name="onboarding_navbar_pin">PIN 碼</string>
@@ -388,9 +383,6 @@
     <string name="swapping_token_list_title">選擇代幣</string>
     <string name="swapping_token_list_your_tokens">您的代幣</string>
     <string name="swapping_token_not_available">無法使用</string>
-    <plurals name="token_count">
-        <item quantity="other">%d 代幣</item>
-    </plurals>
     <string name="token_details_hide_alert_hide">隱藏</string>
     <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>
     <string name="token_details_hide_alert_title">隱藏 %s</string>
