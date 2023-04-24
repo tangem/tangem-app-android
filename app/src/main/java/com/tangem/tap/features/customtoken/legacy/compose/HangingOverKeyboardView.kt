@@ -1,4 +1,4 @@
-package com.tangem.tap.features.addCustomToken.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
