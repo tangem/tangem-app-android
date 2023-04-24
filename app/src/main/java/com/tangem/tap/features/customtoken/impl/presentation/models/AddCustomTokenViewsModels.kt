@@ -1,6 +1,5 @@
 package com.tangem.tap.features.customtoken.impl.presentation.models
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -10,10 +9,10 @@ import com.tangem.wallet.R
 /**
  * Toolbar model of add custom token screen
  *
- * @property titleResId        title string resource id
+ * @property title             title
  * @property onBackButtonClick lambda be invoked when back button is been pressed
  */
-internal data class AddCustomTokensToolbar(@StringRes val titleResId: Int, val onBackButtonClick: () -> Unit)
+internal data class AddCustomTokensToolbar(val title: TextReference, val onBackButtonClick: () -> Unit)
 
 /**
  * Model of block with fields for testing
@@ -91,9 +90,8 @@ internal sealed interface AddCustomTokenInputField {
     /** Keyboard options */
     val keyboardOptions: KeyboardOptions
 
-    /** Label string resource id */
-    @get:StringRes
-    val labelResId: Int
+    /** Label */
+    val label: TextReference
 
     /** Input availability */
     val isEnabled: Boolean
@@ -123,7 +121,7 @@ internal sealed interface AddCustomTokenInputField {
     ) : AddCustomTokenInputField {
         override val isEnabled = true
         override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val labelResId = R.string.custom_token_contract_address_input_title
+        override val label = TextReference.Res(R.string.custom_token_contract_address_input_title)
         override val placeholder = TextReference.Str(value = "0x0000000000000000000000000000000000000000")
     }
 
@@ -142,7 +140,7 @@ internal sealed interface AddCustomTokenInputField {
         override val isError: Boolean,
     ) : AddCustomTokenInputField {
         override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val labelResId = R.string.custom_token_name_input_title
+        override val label = TextReference.Res(R.string.custom_token_name_input_title)
         override val placeholder = TextReference.Res(id = R.string.custom_token_name_input_placeholder)
         override val isLoading = false
     }
@@ -162,7 +160,7 @@ internal sealed interface AddCustomTokenInputField {
         override val isError: Boolean,
     ) : AddCustomTokenInputField {
         override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val labelResId = R.string.custom_token_token_symbol_input_title
+        override val label = TextReference.Res(R.string.custom_token_token_symbol_input_title)
         override val placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder)
         override val isLoading = false
     }
@@ -182,7 +180,7 @@ internal sealed interface AddCustomTokenInputField {
         override val isError: Boolean,
     ) : AddCustomTokenInputField {
         override val keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
-        override val labelResId = R.string.custom_token_decimals_input_title
+        override val label = TextReference.Res(R.string.custom_token_decimals_input_title)
         override val placeholder = TextReference.Str(value = "8")
         override val isLoading = false
     }
@@ -195,8 +193,7 @@ internal sealed interface AddCustomTokenSelectorField {
     val isEnabled: Boolean
 
     /** Label string resource id */
-    @get:StringRes
-    val labelResId: Int
+    val label: TextReference
 
     /** Selected menu item */
     val selectedItem: SelectorItem
@@ -220,7 +217,7 @@ internal sealed interface AddCustomTokenSelectorField {
         override val onMenuItemClick: (Int) -> Unit,
     ) : AddCustomTokenSelectorField {
         override val isEnabled = true
-        override val labelResId = R.string.custom_token_network_input_title
+        override val label = TextReference.Res(R.string.custom_token_network_input_title)
     }
 
     /**
@@ -237,7 +234,7 @@ internal sealed interface AddCustomTokenSelectorField {
         override val items: List<SelectorItem.TitleWithSubtitle>,
         override val onMenuItemClick: (Int) -> Unit,
     ) : AddCustomTokenSelectorField {
-        override val labelResId = R.string.custom_token_derivation_path_input_title
+        override val label = TextReference.Res(R.string.custom_token_derivation_path_input_title)
     }
 
     /** Base menu item model */
