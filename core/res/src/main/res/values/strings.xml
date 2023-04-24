@@ -59,11 +59,13 @@
     <string name="common_delete">Delete</string>
     <string name="common_disabled">Disabled</string>
     <string name="common_disconnect">Disconnect</string>
+    <string name="common_dislike">Dislike</string>
     <string name="common_done">Done</string>
     <string name="common_enable">Enable</string>
     <string name="common_enabled">Enabled</string>
     <string name="common_error">Error</string>
     <string name="common_import">Import</string>
+    <string name="common_like">Like</string>
     <string name="common_no">No</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Primary Card</string>
@@ -383,15 +385,11 @@
     <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_action">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
-    <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product</string>
+    <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product.</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_not_available">not available</string>
-    <plurals name="token_count">
-        <item quantity="one">%d token</item>
-        <item quantity="other">%d tokens</item>
-    </plurals>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
