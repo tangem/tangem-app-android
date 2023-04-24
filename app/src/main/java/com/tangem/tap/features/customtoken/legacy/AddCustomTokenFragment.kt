@@ -1,4 +1,4 @@
-package com.tangem.tap.features.addCustomToken
+package com.tangem.tap.features.customtoken.legacy
 
 import android.os.Bundle
 import android.view.View
@@ -19,7 +19,7 @@ import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.addCustomToken.compose.AddCustomTokenScreen
+import com.tangem.tap.features.customtoken.legacy.compose.AddCustomTokenScreen
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
