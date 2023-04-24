@@ -1,4 +1,4 @@
-package com.tangem.tap.features.addCustomToken.compose.test
+package com.tangem.tap.features.customtoken.legacy.compose.test
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
