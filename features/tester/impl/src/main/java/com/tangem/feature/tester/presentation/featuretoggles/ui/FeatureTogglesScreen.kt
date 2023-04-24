@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
@@ -62,9 +63,11 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggle, onCheckedChange: (Boo
     ) {
         Text(
             text = toggle.name,
+            modifier = Modifier.weight(1f),
             color = TangemTheme.colors.text.primary1,
+            overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            style = TangemTheme.typography.body1,
+            style = TangemTheme.typography.body2,
         )
         Switch(
             checked = toggle.isEnabled,

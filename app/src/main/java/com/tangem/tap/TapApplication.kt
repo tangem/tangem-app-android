@@ -49,6 +49,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
+import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
@@ -130,6 +131,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var tokensListFeatureToggles: TokensListFeatureToggles
 
+    @Inject
+    lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -179,6 +183,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                 assetReader = assetReader,
                 networkConnectionManager = networkConnectionManager,
                 tokensListFeatureToggles = tokensListFeatureToggles,
+                customTokenFeatureToggles = customTokenFeatureToggles,
             ),
         )
 
