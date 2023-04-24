@@ -16,9 +16,6 @@ object TapWorkarounds {
 
     val CardDTO.isTangemTwins: Boolean
         get() = TwinsHelper.getTwinCardNumber(cardId) != null
-// [REDACTED_TODO_COMMENT]
-    val CardDTO.isTangemNote: Boolean
-        get() = tangemNoteBatches.contains(batchId)
 
     val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
