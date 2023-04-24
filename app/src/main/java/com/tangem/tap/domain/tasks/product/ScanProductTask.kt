@@ -15,16 +15,17 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toByteArray
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
@@ -155,7 +156,7 @@ private class ScanWalletProcessor(
                             CompletionResult.Success(
                                 ScanResponse(
                                     card = card,
-                                    productType = ProductType.Note,
+                                    productType = determineProductTypeForSingleCurrencyWallet(card),
                                     walletData = walletData,
                                 ),
                             ),
@@ -173,6 +174,14 @@ private class ScanWalletProcessor(
                     }
                 }
             }
+        }
+    }
+
+    private fun determineProductTypeForSingleCurrencyWallet(card: CardDTO): ProductType {
+        return if (card.isStart2Coin) {
+            ProductType.Start2Coin
+        } else {
+            ProductType.Note
         }
     }
 
