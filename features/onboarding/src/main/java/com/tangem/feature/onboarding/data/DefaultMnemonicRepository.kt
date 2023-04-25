@@ -1,10 +1,6 @@
 package com.tangem.feature.onboarding.data
 
-import com.tangem.crypto.bip39.BIP39Wordlist
-import com.tangem.crypto.bip39.DefaultMnemonic
-import com.tangem.crypto.bip39.EntropyLength
-import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.crypto.bip39.Wordlist
+import com.tangem.crypto.bip39.*
 import com.tangem.datasource.asset.AssetReader
 
 /**
