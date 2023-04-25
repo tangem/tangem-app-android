@@ -13,7 +13,7 @@ interface DataConverterVisitor<Data, Result> {
 interface FieldDataConverter<Result> : DataConverterVisitor<FieldData, Result>
 
 abstract class BaseFieldDataConverter<Result> : FieldDataConverter<Result> {
-    protected val collectIds: List<FieldId>
+    private val collectIds: List<FieldId>
         get() = getIdToCollect()
 
     protected val collectedData: MutableMap<FieldId, Any?> = mutableMapOf()
@@ -31,7 +31,7 @@ abstract class BaseFieldDataConverter<Result> : FieldDataConverter<Result> {
 
 class FieldToJsonConverter(
     private val fieldsToConvert: List<FieldId> = listOf(),
-    protected val jsonConverter: MoshiJsonConverter,
+    private val jsonConverter: MoshiJsonConverter,
 ) : BaseFieldDataConverter<String>() {
 
     override fun getConvertedData(): String = jsonConverter.toJson(collectedData, "  ")
