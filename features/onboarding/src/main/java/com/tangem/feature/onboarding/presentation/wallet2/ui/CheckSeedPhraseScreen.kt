@@ -1,10 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,11 +18,9 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("ReusedModifierInstance")
 @Composable
-fun CheckSeedPhraseScreen(
-    state: CheckSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+fun CheckSeedPhraseScreen(state: CheckSeedPhraseState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize(),
@@ -78,10 +72,7 @@ fun CheckSeedPhraseScreen(
 }
 
 @Composable
-private fun CheckSeedPhraseBlock(
-    modifier: Modifier = Modifier,
-    state: CheckSeedPhraseState,
-) {
+private fun CheckSeedPhraseBlock(state: CheckSeedPhraseState, modifier: Modifier = Modifier) {
     Column(modifier) {
         OutlineTextField(
             value = state.tvSecondPhrase.textFieldValue,
