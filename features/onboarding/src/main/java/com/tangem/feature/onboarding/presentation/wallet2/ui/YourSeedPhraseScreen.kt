@@ -1,12 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.Text
@@ -29,15 +23,12 @@ import kotlinx.collections.immutable.ImmutableList
 [REDACTED_AUTHOR]
  */
 @Composable
-fun YourSeedPhraseScreen(
-    state: YourSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+fun YourSeedPhraseScreen(state: YourSeedPhraseState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
         Box(
-            modifier = Modifier.weight(0.6f),
+            modifier = Modifier.weight(weight = 0.6f),
         ) {
             OnboardingDescriptionBlock(
                 modifier = Modifier.align(Alignment.Center),
@@ -49,7 +40,7 @@ fun YourSeedPhraseScreen(
             }
         }
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(weight = 1f),
         ) {
             PhraseGreedBlock(state.mnemonicGridItems)
         }
@@ -72,7 +63,7 @@ fun YourSeedPhraseScreen(
 @Composable
 private fun PhraseGreedBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(count = 2),
     ) {
         this.items(
             count = mnemonicGridItems.size,
@@ -95,7 +86,6 @@ private fun PhraseGreedBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>)
                     color = TangemTheme.colors.text.primary1,
                 )
             }
-
         }
     }
 }
