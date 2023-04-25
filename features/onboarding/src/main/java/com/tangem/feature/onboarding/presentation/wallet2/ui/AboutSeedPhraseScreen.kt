@@ -4,14 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -34,20 +27,17 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 [REDACTED_AUTHOR]
  */
 @Composable
-fun AboutSeedPhraseScreen(
-    state: AboutState,
-    modifier: Modifier = Modifier,
-) {
+fun AboutSeedPhraseScreen(state: AboutState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
         Box(
-            modifier = Modifier.weight(0.8f),
+            modifier = Modifier.weight(weight = 0.8f),
         ) {
             EditIconBlock()
         }
         Box(
-            modifier = Modifier.weight(1.2f),
+            modifier = Modifier.weight(weight = 1.2f),
         ) {
             Column {
                 OnboardingDescriptionBlock {
@@ -119,7 +109,6 @@ private fun EditIconBlock() {
                 style = TangemTheme.typography.body1,
             )
         }
-
     }
 }
 
