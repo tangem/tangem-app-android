@@ -15,17 +15,18 @@ object TokenListPreviewData {
 
     fun createManageToken(): TokenItemState.ManageContent {
         return TokenItemState.ManageContent(
-            name = "Tether (USDT)",
+            fullName = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createManageNetworksList(),
             id = "",
+            name = "Tether",
             symbol = "",
         )
     }
 
     fun createReadToken(): TokenItemState.ReadContent {
         return TokenItemState.ReadContent(
-            name = "Tether (USDT)",
+            fullName = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createReadNetworksList(),
         )
