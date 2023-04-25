@@ -65,10 +65,7 @@ class CheckSeedPhraseStateBuilder {
         )
     }
 
-    fun updateCreateWalletButton(
-        uiState: OnboardingSeedPhraseState,
-        enabled: Boolean,
-    ): OnboardingSeedPhraseState {
+    fun updateCreateWalletButton(uiState: OnboardingSeedPhraseState, enabled: Boolean): OnboardingSeedPhraseState {
         return uiState.copy(
             checkSeedPhraseState = uiState.checkSeedPhraseState.copy(
                 buttonCreateWallet = uiState.checkSeedPhraseState.buttonCreateWallet.copy(
