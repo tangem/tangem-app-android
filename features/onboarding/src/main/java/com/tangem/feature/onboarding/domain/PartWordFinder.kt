@@ -18,6 +18,7 @@ internal class PartWordFinder {
         val hadWhiteSpaceOnLeftOfCursor = charText[cursorPosition - 1].isWhitespace()
         val cursorInMiddleOfWord = charText.size > cursorPosition && charText[cursorPosition].isNotWhitespace()
 
+        @Suppress("ComplexCondition")
         if (cursorIsOutOfTextRange || cursorAtStartOfText || hadWhiteSpaceOnLeftOfCursor || cursorInMiddleOfWord) {
             return null
         }
