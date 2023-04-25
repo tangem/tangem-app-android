@@ -62,4 +62,7 @@ include(":features:tester:impl")
 // TODO: Remove, temporary modules
 include(":domain:models")
 include(":domain:legacy")
+
+include(":domain:core")
+include(":domain:card")
 // endregion Domain modules
