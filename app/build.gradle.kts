@@ -24,6 +24,7 @@ dependencies {
     implementation(project(":libs:auth"))
 
     /** Features */
+    implementation(project(":features:onboarding"))
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
