@@ -8,18 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
-import com.tangem.feature.onboarding.presentation.wallet2.model.AboutUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.IntroUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseStep
-import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.UiActions
-import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.*
 import com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -27,11 +16,7 @@ import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -195,9 +180,11 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion ImportSeedPhrase
 
     // region ButtonClickHandlers
+    @Suppress("EmptyFunctionBlock")
     private fun buttonCreateWalletClick() {
     }
 
+    @Suppress("EmptyFunctionBlock")
     private fun buttonCreateWalletWithSeedPhraseClick() {
     }
 
@@ -214,7 +201,7 @@ class SeedPhraseViewModel @Inject constructor(
     private fun buttonGenerateSeedPhraseClick() {
         viewModelScope.launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
-            delay(300)
+            delay(DELAY_GENERATE_SEED_PHRASE)
             interactor.generateMnemonic()
                 .onSuccess { mnemonic ->
                     val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
@@ -234,18 +221,20 @@ class SeedPhraseViewModel @Inject constructor(
 
         val mnemonicGridItems = mutableListOf<MnemonicGridItem>()
         for (index in 0 until splitIndex) {
-            if (index <= leftColumn.size) mnemonicGridItems.add(
-                MnemonicGridItem(
+            if (index <= leftColumn.size) {
+                val item = MnemonicGridItem(
                     index = index + 1,
                     mnemonic = leftColumn[index],
-                ),
-            )
-            if (index < rightColumn.size) mnemonicGridItems.add(
-                MnemonicGridItem(
+                )
+                mnemonicGridItems.add(item)
+            }
+            if (index < rightColumn.size) {
+                val item = MnemonicGridItem(
                     index = index + splitIndex + 1,
                     mnemonic = rightColumn[index],
-                ),
-            )
+                )
+                mnemonicGridItems.add(item)
+            }
         }
         return mnemonicGridItems.toImmutableList()
     }
@@ -324,5 +313,6 @@ class SeedPhraseViewModel @Inject constructor(
     companion object {
         private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
         private const val MNEMONIC_DEBOUNCE_DELAY = 700L
+        private const val DELAY_GENERATE_SEED_PHRASE = 300L
     }
 }
