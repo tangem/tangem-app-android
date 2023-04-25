@@ -62,4 +62,7 @@ include(":features:tester:impl")
 // [REDACTED_TODO_COMMENT]
 include(":domain:models")
 include(":domain:legacy")
+
+include(":domain:core")
+include(":domain:card")
 // endregion Domain modules
