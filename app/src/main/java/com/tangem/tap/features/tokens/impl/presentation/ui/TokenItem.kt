@@ -60,7 +60,7 @@ internal fun TokenItem(model: TokenItemState) {
         val spacing6 = TangemTheme.dimens.spacing6
 
         Icon(
-            name = model.name,
+            name = model.fullName,
             iconUrl = model.iconUrl,
             modifier = Modifier.constrainAs(icon) {
                 top.linkTo(parent.top)
@@ -69,7 +69,7 @@ internal fun TokenItem(model: TokenItemState) {
         )
 
         Title(
-            title = model.name,
+            title = model.fullName,
             modifier = Modifier.constrainAs(title) {
                 top.linkTo(parent.top)
                 start.linkTo(icon.end, margin = spacing16)
