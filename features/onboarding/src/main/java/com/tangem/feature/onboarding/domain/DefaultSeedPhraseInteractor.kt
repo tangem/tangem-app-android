@@ -58,11 +58,7 @@ internal class DefaultSeedPhraseInteractor constructor(
         }
     }
 
-    override suspend fun getSuggestions(
-        text: String,
-        hasSelection: Boolean,
-        cursorPosition: Int,
-    ): List<String> {
+    override suspend fun getSuggestions(text: String, hasSelection: Boolean, cursorPosition: Int): List<String> {
         if (text.isEmpty() || cursorPosition == 0 || hasSelection) return emptyList()
         val word = partWordFinder.getLeadPartOfWord(text, cursorPosition)
             ?: return emptyList()
