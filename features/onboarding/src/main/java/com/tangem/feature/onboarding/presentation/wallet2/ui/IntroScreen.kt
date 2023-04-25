@@ -1,11 +1,7 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,20 +24,17 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 * [REDACTED_AUTHOR]
  */
 @Composable
-fun IntroScreen(
-    state: IntroState,
-    modifier: Modifier = Modifier,
-) {
+fun IntroScreen(state: IntroState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
         Box(
-            modifier = Modifier.weight(1.5f),
+            modifier = Modifier.weight(weight = 1.5f),
         ) {
             CardImageBlock(state.cardImageUrl)
         }
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(weight = 1f),
         ) {
             OnboardingDescriptionBlock {
                 Description(
@@ -79,9 +72,7 @@ fun IntroScreen(
 }
 
 @Composable
-private fun CardImageBlock(
-    cardImageUrl: String? = null,
-) {
+private fun CardImageBlock(cardImageUrl: String? = null) {
     Box(modifier = Modifier.fillMaxSize()) {
         val cardImageModifier = Modifier
             .fillMaxSize()
@@ -101,7 +92,7 @@ private fun CardImageBlock(
 }
 
 @Composable
-private fun CardPlaceHolder(modifier: Modifier) {
+private fun CardPlaceHolder(modifier: Modifier = Modifier) {
     Image(
         modifier = modifier,
         painter = painterResource(id = R.drawable.card_placeholder_black),

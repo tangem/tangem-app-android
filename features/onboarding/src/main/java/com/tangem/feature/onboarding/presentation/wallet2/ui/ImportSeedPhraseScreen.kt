@@ -1,17 +1,7 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -39,10 +29,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseEr
 * [REDACTED_AUTHOR]
  */
 @Composable
-fun ImportSeedPhraseScreen(
-    state: ImportSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
@@ -85,10 +72,7 @@ fun ImportSeedPhraseScreen(
 }
 
 @Composable
-private fun PhraseBlock(
-    state: ImportSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modifier) {
 // [REDACTED_TODO_COMMENT]
     val errorConverter = remember { SeedPhraseErrorConverter() }
 
@@ -108,18 +92,19 @@ private fun PhraseBlock(
                 style = SpanStyle(color = TangemTheme.colors.text.warning),
             ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
-            /**
+        )
+        /**
 * [REDACTED_TODO_COMMENT]
 
-            @MamaLemon MamaLemon 3 days ago
-            А почему мы напрямую здесь юзаем?
+         @MamaLemon MamaLemon 3 days ago
+         А почему мы напрямую здесь юзаем?
 
-            Member
-            Author
-            @gbixahue gbixahue 2 days ago
-            Потому, что здесь используется чистый OutlinedTextField из компоуза, т.к. OutlinedTextField из core не подошел
-             */
-        )
+         Member
+         Author
+         @gbixahue gbixahue 2 days ago
+         Потому, что здесь используется чистый OutlinedTextField из компоуза, т.к. OutlinedTextField из core не подошел
+         */
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -139,14 +124,12 @@ private fun PhraseBlock(
     }
 }
 
+@Suppress("ReusedModifierInstance")
 @Composable
-private fun SuggestionsBlock(
-    state: ImportSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+private fun SuggestionsBlock(state: ImportSeedPhraseState, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        enter = fadeIn() + slideIn(initialOffset = { IntOffset(200, 0) }),
-        exit = slideOut(targetOffset = { IntOffset(-200, 0) }) + fadeOut(),
+        enter = fadeIn() + slideIn(initialOffset = { IntOffset(x = 200, y = 0) }),
+        exit = slideOut(targetOffset = { IntOffset(x = -200, y = 0) }) + fadeOut(),
         visible = state.suggestionsList.isNotEmpty(),
     ) {
         LazyRow(

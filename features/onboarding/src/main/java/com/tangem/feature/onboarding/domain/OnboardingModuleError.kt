@@ -29,13 +29,12 @@ sealed class SeedPhraseError(
     message = message ?: this::class.java.simpleName,
     data = data,
 ) {
-    object InvalidWordCount : SeedPhraseError(0)
-    object InvalidEntropyLength : SeedPhraseError(1)
-    object InvalidWordsFile : SeedPhraseError(2)
-    object InvalidChecksum : SeedPhraseError(3)
-    object MnenmonicCreationFailed : SeedPhraseError(4)
-    object NormalizationFailed : SeedPhraseError(5)
-    object UnsupportedLanguage : SeedPhraseError(6)
-    data class InvalidWords(val words: Set<String>) : SeedPhraseError(7)
+    object InvalidWordCount : SeedPhraseError(subCode = 0)
+    object InvalidEntropyLength : SeedPhraseError(subCode = 1)
+    object InvalidWordsFile : SeedPhraseError(subCode = 2)
+    object InvalidChecksum : SeedPhraseError(subCode = 3)
+    object MnenmonicCreationFailed : SeedPhraseError(subCode = 4)
+    object NormalizationFailed : SeedPhraseError(subCode = 5)
+    object UnsupportedLanguage : SeedPhraseError(subCode = 6)
+    data class InvalidWords(val words: Set<String>) : SeedPhraseError(subCode = 7)
 }
-

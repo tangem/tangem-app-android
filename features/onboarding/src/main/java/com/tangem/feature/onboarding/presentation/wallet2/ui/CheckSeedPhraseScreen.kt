@@ -1,10 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,11 +18,9 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("ReusedModifierInstance")
 @Composable
-fun CheckSeedPhraseScreen(
-    state: CheckSeedPhraseState,
-    modifier: Modifier = Modifier,
-) {
+fun CheckSeedPhraseScreen(state: CheckSeedPhraseState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize(),
@@ -39,22 +33,22 @@ fun CheckSeedPhraseScreen(
             /**
 * [REDACTED_TODO_COMMENT]
 
-            @kozarezvlad kozarezvlad 5 days ago
-            Кажется LazyColumn тут не нужен, ведь всего 2 элемента и они статичны без динамического наполнения, можно просто Column, он полегче в отрисовке
+             @kozarezvlad kozarezvlad 5 days ago
+             Кажется LazyColumn тут не нужен, ведь всего 2 элемента и они статичны без динамического наполнения, можно просто Column, он полегче в отрисовке
 
-            Member
-            Author
-            @gbixahue gbixahue 4 days ago
-            LazyColumn дает возможность списку скролиться, для удобного ввода, когда открывается клавиатура
+             Member
+             Author
+             @gbixahue gbixahue 4 days ago
+             LazyColumn дает возможность списку скролиться, для удобного ввода, когда открывается клавиатура
 
-            Member
-            @MamaLemon MamaLemon 4 days ago
-            В принципе можно заюзать verticalScroll() у модифаера
+             Member
+             @MamaLemon MamaLemon 4 days ago
+             В принципе можно заюзать verticalScroll() у модифаера
 
-            Member
-            Author
-            @gbixahue gbixahue 2 days ago
-            C verticalScroll не работает так, как нужно
+             Member
+             Author
+             @gbixahue gbixahue 2 days ago
+             C verticalScroll не работает так, как нужно
              */
             item {
                 OnboardingDescriptionBlock(
@@ -97,10 +91,7 @@ fun CheckSeedPhraseScreen(
 }
 
 @Composable
-private fun CheckSeedPhraseBlock(
-    modifier: Modifier = Modifier,
-    state: CheckSeedPhraseState,
-) {
+private fun CheckSeedPhraseBlock(state: CheckSeedPhraseState, modifier: Modifier = Modifier) {
     Column(modifier) {
         OutlineTextField(
             value = state.tvSecondPhrase.textFieldValue,

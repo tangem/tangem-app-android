@@ -77,4 +77,3 @@ class InvalidWordsColorTransformation(
         private const val WORD_SEPARATOR = "_$@-*"
     }
 }
-

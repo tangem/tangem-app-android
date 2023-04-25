@@ -19,10 +19,7 @@ import kotlinx.collections.immutable.ImmutableList
  * UI component witch provides single and carousel description for the onboarding process
  */
 @Composable
-fun OnboardingDescriptionBlock(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+fun OnboardingDescriptionBlock(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -33,10 +30,7 @@ fun OnboardingDescriptionBlock(
 }
 
 @Composable
-fun Description(
-    @StringRes titleRes: Int,
-    @StringRes subTitleRes: Int,
-) {
+fun Description(@StringRes titleRes: Int, @StringRes subTitleRes: Int) {
     Column {
         DescriptionTitleText(text = stringResource(id = titleRes))
         SpacerH12()
@@ -44,10 +38,11 @@ fun Description(
     }
 }
 
+@Suppress("UnusedPrivateMember")
 @Composable
 fun OnboardingCarouselDescriptionBlock(
-    modifier: Modifier = Modifier,
     descriptionsList: ImmutableList<DescriptionResource>,
+    modifier: Modifier = Modifier,
 ) {
     OnboardingDescriptionBlock(modifier) {
 // [REDACTED_TODO_COMMENT]
