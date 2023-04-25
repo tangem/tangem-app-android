@@ -159,10 +159,6 @@ data class AddCustomTokenState(
             .getConvertedData()
     }
 
-    fun getNetworks(card: CardDTO, type: CustomTokenType): List<Blockchain> {
-        return getNetworksList(card, type)
-    }
-
     companion object {
 
         /**
