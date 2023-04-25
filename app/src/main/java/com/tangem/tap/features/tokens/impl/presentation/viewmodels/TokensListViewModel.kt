@@ -126,10 +126,11 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createManageTokenContent(token: Token): TokenItemState.ManageContent {
         return TokenItemState.ManageContent(
-            name = getTokenName(token),
+            fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createManageNetworkContent).toImmutableList(),
             id = token.id,
+            name = token.name,
             symbol = token.symbol,
         )
     }
@@ -156,7 +157,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createReadTokenContent(token: Token): TokenItemState.ReadContent {
         return TokenItemState.ReadContent(
-            name = getTokenName(token),
+            fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createReadNetworkContent).toImmutableList(),
         )
@@ -171,7 +172,7 @@ internal class TokensListViewModel @Inject constructor(
         )
     }
 
-    private fun getTokenName(token: Token) = "${token.name} (${token.symbol})"
+    private fun getTokenFullName(token: Token) = "${token.name} (${token.symbol})"
 
     private fun getNetworkProtocolName(network: Network): String {
         return if (network.address == null) {
