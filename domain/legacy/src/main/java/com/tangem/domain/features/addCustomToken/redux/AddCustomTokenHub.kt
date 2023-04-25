@@ -125,7 +125,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     }
                 }
             }
-            else -> {}
+            else -> Unit
         }
     }
 
@@ -532,21 +532,24 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private fun CustomTokenFieldId.validateValue(value: Any): AddCustomTokenError? {
-        val state = hubState
-        val contractAddressValidator: TokenContractAddressValidator = state.getValidator(ContractAddress)
-        val nameValidator: TokenNameValidator = state.getValidator(Name)
-        val symbolValidator: TokenSymbolValidator = state.getValidator(Symbol)
-        val decimalsValidator: TokenDecimalsValidator = state.getValidator(Decimals)
-        val networkValidator: TokenNetworkValidator = state.getValidator(Network)
         return when (this) {
             ContractAddress -> {
+                val contractAddressValidator: TokenContractAddressValidator = hubState.getValidator(ContractAddress)
                 contractAddressValidator.nextValidationFor(Network.getFieldValue())
                 contractAddressValidator.validate(value as String)
             }
-            Network, DerivationPath -> networkValidator.validate(value as Blockchain)
-            Name -> nameValidator.validate(value as String)
-            Symbol -> symbolValidator.validate(value as String)
-            Decimals -> decimalsValidator.validate(value as String)
+            Network, DerivationPath -> {
+                hubState.getValidator<TokenNetworkValidator>(Network).validate(value as Blockchain)
+            }
+            Name -> {
+                hubState.getValidator<TokenNameValidator>(Name).validate(value as String)
+            }
+            Symbol -> {
+                hubState.getValidator<TokenSymbolValidator>(Symbol).validate(value as String)
+            }
+            Decimals -> {
+                hubState.getValidator<TokenDecimalsValidator>(Decimals).validate(value as String)
+            }
         }
     }
 
