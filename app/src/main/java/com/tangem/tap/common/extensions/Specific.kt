@@ -54,7 +54,7 @@ fun BigDecimal.toFiatRateString(fiatCurrencyName: String, fiatCode: String): Str
             formatter.currency = currency
             formatter.maximumFractionDigits = 2
             formatter.roundingMode = RoundingMode.HALF_UP
-            return formatter.format(this)
+            return formatter.format(this).replace(currency.symbol, "$fiatCurrencyName ")
         }
     } catch (e: IllegalArgumentException) {
         Timber.e(e, "can't parse currency")
@@ -95,7 +95,7 @@ fun BigDecimal.toFormattedFiatValue(
             formatter.currency = currency
             formatter.maximumFractionDigits = 2
             formatter.roundingMode = RoundingMode.HALF_UP
-            return formatter.format(this)
+            return formatter.format(this).replace(currency.symbol, "$fiatCurrencyName ")
         }
     } catch (e: IllegalArgumentException) {
         Timber.e(e, "can't parse currency")
