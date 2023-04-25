@@ -1,16 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders
 
-import com.tangem.feature.onboarding.presentation.wallet2.model.AboutState
-import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
-import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.IntroState
-import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseStep
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
-import com.tangem.feature.onboarding.presentation.wallet2.model.UiActions
-import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.model.*
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -89,16 +79,12 @@ class StateBuilder(
         ),
     )
 
-    fun changeStep(
-        uiState: OnboardingSeedPhraseState,
-        step: OnboardingSeedPhraseStep,
-    ): OnboardingSeedPhraseState = uiState.copy(
-        step = step,
-    )
+    fun changeStep(uiState: OnboardingSeedPhraseState, step: OnboardingSeedPhraseStep): OnboardingSeedPhraseState =
+        uiState.copy(
+            step = step,
+        )
 
-    fun generateMnemonicComponents(
-        uiState: OnboardingSeedPhraseState,
-    ): OnboardingSeedPhraseState {
+    fun generateMnemonicComponents(uiState: OnboardingSeedPhraseState): OnboardingSeedPhraseState {
         return uiState.copy(
             aboutState = uiState.aboutState.copy(
                 buttonGenerateSeedPhrase = uiState.aboutState.buttonGenerateSeedPhrase.copy(
