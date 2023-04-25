@@ -22,10 +22,7 @@ class ImportSeedPhraseStateBuilder {
         ),
     )
 
-    fun updateCreateWalletButton(
-        uiState: OnboardingSeedPhraseState,
-        enabled: Boolean,
-    ): OnboardingSeedPhraseState {
+    fun updateCreateWalletButton(uiState: OnboardingSeedPhraseState, enabled: Boolean): OnboardingSeedPhraseState {
         return uiState.copy(
             importSeedPhraseState = uiState.importSeedPhraseState.copy(
                 buttonCreateWallet = uiState.importSeedPhraseState.buttonCreateWallet.copy(
@@ -35,23 +32,19 @@ class ImportSeedPhraseStateBuilder {
         )
     }
 
-    fun updateInvalidWords(
-        uiState: OnboardingSeedPhraseState,
-        invalidWords: Set<String>,
-    ): OnboardingSeedPhraseState = uiState.copy(
-        importSeedPhraseState = uiState.importSeedPhraseState.copy(
-            invalidWords = invalidWords,
-        ),
-    )
+    fun updateInvalidWords(uiState: OnboardingSeedPhraseState, invalidWords: Set<String>): OnboardingSeedPhraseState =
+        uiState.copy(
+            importSeedPhraseState = uiState.importSeedPhraseState.copy(
+                invalidWords = invalidWords,
+            ),
+        )
 
-    fun updateSuggestions(
-        uiState: OnboardingSeedPhraseState,
-        suggestions: List<String>,
-    ): OnboardingSeedPhraseState = uiState.copy(
-        importSeedPhraseState = uiState.importSeedPhraseState.copy(
-            suggestionsList = suggestions,
-        ),
-    )
+    fun updateSuggestions(uiState: OnboardingSeedPhraseState, suggestions: List<String>): OnboardingSeedPhraseState =
+        uiState.copy(
+            importSeedPhraseState = uiState.importSeedPhraseState.copy(
+                suggestionsList = suggestions,
+            ),
+        )
 
     fun insertSuggestionWord(
         uiState: OnboardingSeedPhraseState,
@@ -64,10 +57,7 @@ class ImportSeedPhraseStateBuilder {
         return updateTextField(uiState, newTextFieldValue)
     }
 
-    fun updateError(
-        uiState: OnboardingSeedPhraseState,
-        error: SeedPhraseError?,
-    ): OnboardingSeedPhraseState {
+    fun updateError(uiState: OnboardingSeedPhraseState, error: SeedPhraseError?): OnboardingSeedPhraseState {
         return uiState.copy(
             importSeedPhraseState = uiState.importSeedPhraseState.copy(
                 error = error,
