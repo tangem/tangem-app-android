@@ -1,7 +1,6 @@
 package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
@@ -20,9 +19,7 @@ sealed class AddCustomTokenAction : Action {
         data class SetOnAddTokenCallback(val callback: (CustomCurrency) -> Unit) : AddCustomTokenAction()
     }
 
-    object OnCreate : AddCustomTokenAction() {
-        data class SetDerivationStyle(val derivationStyle: DerivationStyle?) : AddCustomTokenAction()
-    }
+    object OnCreate : AddCustomTokenAction()
 
     object OnDestroy : AddCustomTokenAction()
 
