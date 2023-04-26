@@ -1,15 +1,16 @@
-package com.tangem.tap.persistence
+package com.tangem.data.source.preferences.storage
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
-import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.data.source.preferences.model.DataSourceCurrency
+import com.tangem.data.source.preferences.model.DataSourceFiatCurrency
 
 /**
 [REDACTED_AUTHOR]
  */
-class FiatCurrenciesPrefStorage(
+@Deprecated("Create repository instead")
+class FiatCurrenciesPrefStorage internal constructor(
     private val preferences: SharedPreferences,
     private val converter: MoshiJsonConverter,
 ) {
@@ -20,26 +21,26 @@ class FiatCurrenciesPrefStorage(
         }
     }
 
-    fun getAppCurrency(): FiatCurrency {
+    fun getAppCurrency(): DataSourceFiatCurrency? {
         val json = preferences.getString(APP_CURRENCY_KEY, "")
-        if (json.isNullOrBlank()) return FiatCurrency.Default
+        if (json.isNullOrBlank()) return null
 
-        return converter.fromJson(json) ?: FiatCurrency.Default
+        return converter.fromJson(json)
     }
 
-    fun saveAppCurrency(fiatCurrency: FiatCurrency) {
+    fun saveAppCurrency(fiatCurrency: DataSourceFiatCurrency) {
         val json = converter.toJson(fiatCurrency)
         preferences.edit { putString(APP_CURRENCY_KEY, json) }
     }
 
-    fun save(currencies: List<CurrenciesResponse.Currency>) {
+    fun save(currencies: List<DataSourceCurrency>) {
         val json: String = converter.toJson(currencies)
         return preferences.edit().putString(FIAT_CURRENCIES_KEY, json).apply()
     }
 
-    fun restore(): List<CurrenciesResponse.Currency> {
+    fun restore(): List<DataSourceCurrency> {
         val json = preferences.getString(FIAT_CURRENCIES_KEY, "")
-        val type = converter.typedList(CurrenciesResponse.Currency::class.java)
+        val type = converter.typedList(DataSourceCurrency::class.java)
         if (json.isNullOrBlank()) return emptyList()
 
         return converter.fromJson(json, type) ?: emptyList()
