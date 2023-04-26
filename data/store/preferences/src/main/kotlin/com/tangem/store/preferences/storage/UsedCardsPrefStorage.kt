@@ -1,15 +1,16 @@
-package com.tangem.tap.persistence
+package com.tangem.store.preferences.storage
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.extensions.replaceByOrAdd
-import timber.log.Timber
+import com.tangem.store.preferences.model.UsedCardInfoDM
+import com.tangem.store.preferences.model.UsedCardInfoOldDM
 
 /**
  * Created by Anton Zhilenkov on 17/09/2021.
  */
-class UsedCardsPrefStorage(
+@Deprecated("Create repository instead")
+class UsedCardsPrefStorage internal constructor(
     private val preferences: SharedPreferences,
     private val jsonConverter: MoshiJsonConverter,
 ) {
@@ -26,7 +27,7 @@ class UsedCardsPrefStorage(
     fun scanned(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isScanned = true)
-            ?: UsedCardInfo(cardId, true)
+            ?: UsedCardInfoDM(cardId, true)
 
         save(foundItem, restoredList)
     }
@@ -38,14 +39,14 @@ class UsedCardsPrefStorage(
     fun activationStarted(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = true)
-            ?: UsedCardInfo(cardId, isActivationStarted = true)
+            ?: UsedCardInfoDM(cardId, isActivationStarted = true)
 
         save(foundItem, restoredList)
     }
 
     fun activationFinished(cardId: String) {
         val restoredList = restore()
-        var foundItem = findCardInfo(cardId, restoredList) ?: UsedCardInfo(cardId)
+        var foundItem = findCardInfo(cardId, restoredList) ?: UsedCardInfoDM(cardId)
         foundItem = foundItem.copy(
             isActivationStarted = true,
             isActivationFinished = true,
@@ -67,33 +68,35 @@ class UsedCardsPrefStorage(
         return cardInfo.isActivationStarted && !cardInfo.isActivationFinished
     }
 
-    private fun findCardInfo(cardId: String, list: MutableList<UsedCardInfo>? = null): UsedCardInfo? {
+    private fun findCardInfo(cardId: String, list: MutableList<UsedCardInfoDM>? = null): UsedCardInfoDM? {
         val findInList = list ?: restore()
         return findInList.firstOrNull { it.cardId == cardId }
     }
 
-    private fun save(usedCardInfo: UsedCardInfo?, usedCardsInfo: MutableList<UsedCardInfo>) {
+    private fun save(usedCardInfo: UsedCardInfoDM?, usedCardsInfo: MutableList<UsedCardInfoDM>) {
         val info = usedCardInfo ?: return
 
-        usedCardsInfo.replaceByOrAdd(info) { it.cardId == info.cardId }
+        with(usedCardsInfo) {
+            val index = indexOfFirst { it.cardId == info.cardId }
+            if (index == -1) {
+                add(info)
+            } else {
+                set(index, info)
+            }
+        }
+
         save(usedCardsInfo)
     }
 
-    private fun save(list: MutableList<UsedCardInfo>): Boolean {
-        return try {
-            val json = jsonConverter.toJson(list)
-            preferences.edit { putString(USED_CARDS_INFO_V2, json) }
-            true
-        } catch (ex: Exception) {
-            Timber.e(ex)
-            false
-        }
+    private fun save(list: MutableList<UsedCardInfoDM>) {
+        val json = jsonConverter.toJson(list)
+        preferences.edit { putString(USED_CARDS_INFO_V2, json) }
     }
 
-    private fun restore(): MutableList<UsedCardInfo> {
+    private fun restore(): MutableList<UsedCardInfoDM> {
         val json = preferences.getString(USED_CARDS_INFO_V2, null) ?: return mutableListOf()
         return try {
-            jsonConverter.fromJson(json, jsonConverter.typedList(UsedCardInfo::class.java))!!
+            jsonConverter.fromJson(json, jsonConverter.typedList(UsedCardInfoDM::class.java))!!
         } catch (ex: Exception) {
             preferences.edit(true) { remove(USED_CARDS_INFO_V2) }
             mutableListOf()
@@ -113,7 +116,7 @@ class UsedCardsPrefStorage(
             if (restoredCardsInfo.isEmpty()) return
 
             val newCardsInfo = restoredCardsInfo.map { cardInfo ->
-                UsedCardInfo(
+                UsedCardInfoDM(
                     cardId = cardInfo.cardId,
                     isScanned = cardInfo.isScanned,
                     isActivationStarted = true,
@@ -123,10 +126,10 @@ class UsedCardsPrefStorage(
             storage.save(newCardsInfo)
         }
 
-        private fun restore(): MutableList<UsedCardInfoOld> {
+        private fun restore(): MutableList<UsedCardInfoOldDM> {
             val json = storage.preferences.getString(USED_CARDS_INFO, null) ?: return mutableListOf()
             return try {
-                storage.jsonConverter.fromJson(json, storage.jsonConverter.typedList(UsedCardInfoOld::class.java))!!
+                storage.jsonConverter.fromJson(json, storage.jsonConverter.typedList(UsedCardInfoOldDM::class.java))!!
             } catch (ex: Exception) {
                 mutableListOf()
             } finally {
@@ -134,21 +137,4 @@ class UsedCardsPrefStorage(
             }
         }
     }
-
-    private data class UsedCardInfo(
-        val cardId: String,
-        val isScanned: Boolean = false,
-        val isActivationStarted: Boolean = false,
-        val isActivationFinished: Boolean = false,
-    )
-
-    private data class UsedCardInfoOld(
-        val cardId: String,
-        val isScanned: Boolean = false,
-        val isActivationStarted: Boolean = false,
-    )
-}
-
-private interface Migration {
-    fun migrate()
 }
