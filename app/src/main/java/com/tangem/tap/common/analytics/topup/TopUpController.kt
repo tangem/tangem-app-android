@@ -3,9 +3,11 @@ package com.tangem.tap.common.analytics.topup
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.Analytics
+import com.tangem.data.source.preferences.model.DataSourceTopupInfo
+import com.tangem.data.source.preferences.storage.ToppedUpWalletStorage
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -19,7 +21,6 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.persistence.ToppedUpWalletStorage
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -90,9 +91,9 @@ class TopUpController(
 
             val isToppedUpInPast = findToppedUpCurrenciesInPast(walletDataModels).isNotEmpty()
             if (isToppedUpInPast) {
-                val newWalletInfo = ToppedUpWalletStorage.TopupInfo(
+                val newWalletInfo = DataSourceTopupInfo(
                     walletId = userWalletId.stringValue,
-                    cardBalanceState = AnalyticsParam.CardBalanceState.Full,
+                    cardBalanceState = DataSourceTopupInfo.CardBalanceState.Full,
                 )
                 topupWalletStorage.save(newWalletInfo)
                 return@launch
@@ -109,9 +110,9 @@ class TopUpController(
     fun registerEmptyWallet(scanResponse: ScanResponse) {
         UserWalletIdBuilder.scanResponse(scanResponse).build()?.let {
             topupWalletStorage.save(
-                ToppedUpWalletStorage.TopupInfo(
+                DataSourceTopupInfo(
                     walletId = it.stringValue,
-                    cardBalanceState = AnalyticsParam.CardBalanceState.Empty,
+                    cardBalanceState = DataSourceTopupInfo.CardBalanceState.Empty,
                 ),
             )
         }
@@ -129,17 +130,28 @@ class TopUpController(
         cardTypesResolver: CardTypesResolver,
     ) {
         val topupInfo = topupWalletStorage.restore(userWalletId.stringValue).guard {
-            val topupInfo = ToppedUpWalletStorage.TopupInfo(
+            val topupInfo = DataSourceTopupInfo(
                 walletId = userWalletId.stringValue,
-                cardBalanceState = cardBalanceState,
+                cardBalanceState = when (cardBalanceState) {
+                    AnalyticsParam.CardBalanceState.BlockchainError ->
+                        DataSourceTopupInfo.CardBalanceState.BlockchainError
+                    AnalyticsParam.CardBalanceState.CustomToken ->
+                        DataSourceTopupInfo.CardBalanceState.CustomToken
+                    AnalyticsParam.CardBalanceState.Empty ->
+                        DataSourceTopupInfo.CardBalanceState.Empty
+                    AnalyticsParam.CardBalanceState.Full ->
+                        DataSourceTopupInfo.CardBalanceState.Full
+                },
             )
             topupWalletStorage.save(topupInfo)
             return
         }
-        if (topupInfo.isToppedUp) return
 
-        if (!topupInfo.isToppedUp && cardBalanceState.isToppedUp()) {
-            topupWalletStorage.save(topupInfo.copy(cardBalanceState = AnalyticsParam.CardBalanceState.Full))
+        val isToppedUp = topupInfo.cardBalanceState == DataSourceTopupInfo.CardBalanceState.Full
+        if (isToppedUp) return
+
+        if (cardBalanceState.isToppedUp()) {
+            topupWalletStorage.save(topupInfo.copy(cardBalanceState = DataSourceTopupInfo.CardBalanceState.Full))
             TopUpEventConverter().convert(cardTypesResolver)?.let {
                 Analytics.send(it)
             }
