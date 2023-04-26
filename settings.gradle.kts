@@ -70,4 +70,5 @@ include(":domain:card")
 
 // region Data modules
 include(":data:store:preferences")
+include(":data:source:card")
 // endregion Data modules
