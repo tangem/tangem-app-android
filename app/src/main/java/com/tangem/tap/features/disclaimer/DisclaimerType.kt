@@ -1,11 +1,11 @@
 package com.tangem.tap.features.disclaimer
 
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.tap.persistence.DisclaimerPrefStorage
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
 import com.tangem.tap.preferencesStorage
-import java.util.*
+import java.util.Locale
 
 /**
 [REDACTED_AUTHOR]
