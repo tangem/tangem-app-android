@@ -67,3 +67,7 @@ include(":domain:legacy")
 include(":domain:core")
 include(":domain:card")
 // endregion Domain modules
+
+// region Data modules
+include(":data:store:preferences")
+// endregion Data modules
