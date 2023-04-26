@@ -36,6 +36,7 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
         .add(TangemSdkAdapter.DateAdapter())
         .add(TangemSdkAdapter.DerivationPathAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
+        .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
         .add(KotlinJsonAdapterFactory())
         .build()
 
