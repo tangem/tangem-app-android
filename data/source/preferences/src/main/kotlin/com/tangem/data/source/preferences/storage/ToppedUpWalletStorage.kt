@@ -1,63 +1,55 @@
-package com.tangem.tap.persistence
+package com.tangem.data.source.preferences.storage
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import timber.log.Timber
+import com.tangem.data.source.preferences.model.DataSourceTopupInfo
 
 /**
 [REDACTED_AUTHOR]
  */
-class ToppedUpWalletStorage(
+@Deprecated("Create repository instead")
+class ToppedUpWalletStorage internal constructor(
     private val preferences: SharedPreferences,
     private val jsonConverter: MoshiJsonConverter,
 ) {
 
-    private val walletList: MutableSet<TopupInfo> = mutableSetOf()
+    private val walletList: MutableSet<DataSourceTopupInfo> = mutableSetOf()
 
     init {
         walletList.addAll(restore())
     }
 
-    fun save(userWalletInfo: TopupInfo): Boolean {
+    fun save(userWalletInfo: DataSourceTopupInfo): Boolean {
         walletList.removeAll { it.walletId == userWalletInfo.walletId }
         walletList.add(userWalletInfo)
         return save(walletList)
     }
 
-    fun restore(walletId: String): TopupInfo? {
+    fun restore(walletId: String): DataSourceTopupInfo? {
         return walletList.firstOrNull { it.walletId == walletId }
     }
 
-    private fun save(userWallets: MutableSet<TopupInfo>): Boolean {
+    private fun save(userWallets: MutableSet<DataSourceTopupInfo>): Boolean {
         return try {
             val json = jsonConverter.toJson(userWallets)
             preferences.edit(true) { putString(KEY, json) }
             true
         } catch (ex: Exception) {
-            Timber.e(ex)
             false
         }
     }
 
-    private fun restore(): MutableSet<TopupInfo> {
+    private fun restore(): MutableSet<DataSourceTopupInfo> {
         val json = preferences.getString(KEY, null) ?: return mutableSetOf()
         return try {
-            val typedList = jsonConverter.typedList(TopupInfo::class.java)
-            val listData = jsonConverter.fromJson<List<TopupInfo>>(json, typedList)!!
+            val typedList = jsonConverter.typedList(DataSourceTopupInfo::class.java)
+            val listData = jsonConverter.fromJson<List<DataSourceTopupInfo>>(json, typedList)!!
             listData.toMutableSet()
         } catch (ex: Exception) {
             preferences.edit(true) { remove(KEY) }
             mutableSetOf()
         }
-    }
-
-    data class TopupInfo(
-        val walletId: String,
-        val cardBalanceState: AnalyticsParam.CardBalanceState,
-    ) {
-        val isToppedUp: Boolean = cardBalanceState == AnalyticsParam.CardBalanceState.Full
     }
 
     companion object {
