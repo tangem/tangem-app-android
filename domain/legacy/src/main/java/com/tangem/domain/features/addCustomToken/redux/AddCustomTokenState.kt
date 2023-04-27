@@ -64,8 +64,6 @@ data class AddCustomTokenState(
 
     fun getError(id: FieldId): AddCustomTokenError? = formErrors[id]
 
-    fun hasError(id: FieldId): Boolean = formErrors[id] != null
-
     inline fun <reified T> visitDataConverter(converter: FieldDataConverter<T>): T {
         form.visitDataConverter(converter)
         return converter.getConvertedData()
@@ -116,9 +114,12 @@ data class AddCustomTokenState(
         return network.data.value != Blockchain.Unknown
     }
 
-    fun getCustomTokenType(): CustomTokenType = when {
-        tokensAnyFieldsIsFilled() || tokensFieldsIsFilled() -> CustomTokenType.Token
-        else -> CustomTokenType.Blockchain
+    fun getCustomTokenType(): CustomTokenType {
+        return if (tokensAnyFieldsIsFilled() || tokensFieldsIsFilled()) {
+            CustomTokenType.Token
+        } else {
+            CustomTokenType.Blockchain
+        }
     }
 
     fun gatherUserToken(): CustomCurrency.CustomToken? = try {
@@ -264,7 +265,7 @@ data class AddCustomTokenState(
         private var builder: StringBuilder = StringBuilder()
 
         override fun convert(action: Action, stateHolder: DomainState): String? {
-            val action = action as? AddCustomTokenAction ?: return null
+            if (action !is AddCustomTokenAction) return null
 
             val state = stateHolder.addCustomTokensState
             val fieldConverter =
