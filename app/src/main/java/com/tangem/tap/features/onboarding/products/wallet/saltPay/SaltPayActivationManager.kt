@@ -31,7 +31,7 @@ import com.tangem.datasource.api.paymentology.models.response.RegistrationRespon
 import com.tangem.datasource.api.paymentology.models.response.tryExtractError
 import com.tangem.datasource.config.models.KYCProvider
 import com.tangem.datasource.config.models.SaltPayConfig
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.operations.attestation.AttestWalletKeyResponse
