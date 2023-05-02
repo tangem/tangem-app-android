@@ -17,8 +17,9 @@ import com.tangem.common.flatMapOnFailure
 import com.tangem.common.fold
 import com.tangem.common.map
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd
