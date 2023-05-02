@@ -25,7 +25,7 @@ class FeedbackManager(
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
         feedbackData.prepare(infoHolder)
         foregroundActivityObserver.withForegroundActivity { activity ->
-            val fileLog = if (feedbackData is ScanFailsEmail) createLogFile(activity) else null
+            val fileLog = createLogFile(activity)
             activity.sendEmail(
                 email = getSupportEmail(),
                 subject = activity.getString(feedbackData.subjectResId),
