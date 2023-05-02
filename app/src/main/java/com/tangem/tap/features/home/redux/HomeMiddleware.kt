@@ -5,7 +5,7 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
