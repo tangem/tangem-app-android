@@ -224,7 +224,11 @@ class WalletMiddleware {
                                 )
                             },
                         )
-                        .doOnSuccess { store.dispatch(WalletAction.SetArtworkUrl(it.artworkUrl)) }
+                        .doOnSuccess {
+                            store.dispatch(
+                                WalletAction.SetArtworkUrl(userWalletId = action.walletId, url = it.artworkUrl),
+                            )
+                        }
                 }
             }
         }
