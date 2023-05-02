@@ -32,7 +32,7 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Analytics.send(ManageTokens.CustomToken.ScreenOpened())
+        Analytics.send(ManageTokens.CustomToken.ScreenOpened)
     }
 
     override fun subscribeToStore() {
