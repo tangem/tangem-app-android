@@ -1,8 +1,8 @@
 package com.tangem.tap.proxy
 
 import com.tangem.TangemSdk
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
