@@ -63,26 +63,24 @@ class WalletConnectSdkHelper {
         val wallet = walletManager.wallet
         val balance = wallet.amounts[AmountType.Coin]?.value ?: return null
 
-        val gas = transaction.gas?.hexToBigDecimal()
-            ?: transaction.gasLimit?.hexToBigDecimal()
-            ?: BigDecimal(300000) // Set high gasLimit if not provided
-
         val decimals = wallet.blockchain.decimals()
 
         val value = (transaction.value ?: "0").hexToBigDecimal()
             ?.movePointLeft(decimals) ?: return null
 
+        val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
+
         val gasPrice = transaction.gasPrice?.hexToBigDecimal()
             ?: when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
-                    (result.error as? Throwable)?.let { Timber.e(it) }
+                    (result.error as? Throwable)?.let { Timber.e(it, "getGasPrice failed") }
                     return null
                 }
                 null -> return null
             }
 
-        val fee = (gas * gasPrice).movePointLeft(decimals)
+        val fee = (gasLimit * gasPrice).movePointLeft(decimals)
         val total = value + fee
 
         val transactionData = TransactionData(
@@ -92,7 +90,7 @@ class WalletConnectSdkHelper {
             destinationAddress = transaction.to!!,
             extras = EthereumTransactionExtras(
                 data = transaction.data.removePrefix(HEX_PREFIX).hexToBytes(),
-                gasLimit = gas.toBigInteger(),
+                gasLimit = gasLimit.toBigInteger(),
                 nonce = transaction.nonce?.hexToBigDecimal()?.toBigInteger(),
             ),
         )
@@ -136,6 +134,40 @@ class WalletConnectSdkHelper {
         return when (data.type) {
             WcTransactionType.EthSendTransaction -> sendTransaction(data, cardId)
             WcTransactionType.EthSignTransaction -> signTransaction(data, cardId)
+        }
+    }
+
+    private suspend fun getGasLimitFromTx(
+        value: BigDecimal,
+        walletManager: WalletManager,
+        transaction: WCEthereumTransaction,
+    ): BigDecimal {
+        return transaction.gas?.hexToBigDecimal()
+            ?: transaction.gasLimit?.hexToBigDecimal()
+            ?: getGaLimitFromBlockchain(
+                value = value,
+                walletManager = walletManager,
+                transaction = transaction,
+            )
+    }
+
+    private suspend fun getGaLimitFromBlockchain(
+        value: BigDecimal,
+        walletManager: WalletManager,
+        transaction: WCEthereumTransaction,
+    ): BigDecimal {
+        val gasLimitResult = (walletManager as? EthereumGasLoader)?.getGasLimit(
+            amount = Amount(value, walletManager.wallet.blockchain),
+            destination = transaction.to ?: "",
+            data = transaction.data,
+        )
+        return when (gasLimitResult) {
+            is Result.Success -> gasLimitResult.data.toBigDecimal().multiply(BigDecimal("1.2"))
+            is Result.Failure -> {
+                (gasLimitResult.error as? Throwable)?.let { Timber.e(it, "getGasLimit failed") }
+                BigDecimal(DEFAULT_MAX_GASLIMIT) // Set high gasLimit if not provided
+            }
+            else -> BigDecimal(DEFAULT_MAX_GASLIMIT) // Set high gasLimit if not provided
         }
     }
 
@@ -290,6 +322,7 @@ class WalletConnectSdkHelper {
     companion object {
         private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
         private const val HEX_PREFIX = "0x"
+        private const val DEFAULT_MAX_GASLIMIT = 350000
         fun getBnbResultString(publicKey: String, signature: String): String {
             return "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"
         }
