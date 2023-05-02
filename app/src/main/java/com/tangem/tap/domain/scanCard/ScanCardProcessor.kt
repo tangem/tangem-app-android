@@ -7,8 +7,10 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
