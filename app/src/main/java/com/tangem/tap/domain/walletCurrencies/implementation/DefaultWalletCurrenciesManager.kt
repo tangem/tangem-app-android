@@ -5,7 +5,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.flatMap
 import com.tangem.common.fold
 import com.tangem.common.map
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency

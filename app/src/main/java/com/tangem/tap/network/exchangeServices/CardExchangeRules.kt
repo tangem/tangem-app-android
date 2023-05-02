@@ -1,6 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
