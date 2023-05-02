@@ -29,7 +29,6 @@ dependencyResolutionManagement {
 }
 
 include(":app")
-include(":domain")
 include(":common")
 
 // region Core modules
@@ -47,6 +46,7 @@ include(":libs:auth")
 // endregion Libs modules
 
 // region Feature modules
+include(":features:onboarding")
 include(":features:referral:data")
 include(":features:referral:domain")
 include(":features:referral:presentation")
@@ -58,3 +58,12 @@ include(":features:swap:presentation")
 include(":features:tester:api")
 include(":features:tester:impl")
 // endregion Feature modules
+
+// region Domain modules
+// TODO: Remove, temporary modules
+include(":domain:models")
+include(":domain:legacy")
+
+include(":domain:core")
+include(":domain:card")
+// endregion Domain modules
