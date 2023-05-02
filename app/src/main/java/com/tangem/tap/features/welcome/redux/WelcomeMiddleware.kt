@@ -4,7 +4,7 @@ import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
