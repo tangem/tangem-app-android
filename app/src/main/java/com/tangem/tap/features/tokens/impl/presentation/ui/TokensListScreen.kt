@@ -141,7 +141,7 @@ private fun TokensListContent(
             item { DifferentAddressesWarning() }
         }
 
-        items(items = tokens, key = TokenItemState::name) {
+        items(items = tokens, key = TokenItemState::fullName) {
             it?.let { TokenItem(model = it) }
         }
     }
