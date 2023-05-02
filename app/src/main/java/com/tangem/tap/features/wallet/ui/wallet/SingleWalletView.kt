@@ -5,12 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getQuantityString
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
@@ -23,11 +18,7 @@ import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
-import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
-import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
-import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
-import com.tangem.tap.features.wallet.ui.utils.mainButton
-import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
+import com.tangem.tap.features.wallet.ui.utils.*
 import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -179,6 +170,7 @@ class SingleWalletView : WalletView() {
             swapInteractor = swapInteractor,
             exchangeManager = exchangeManager,
             swapFeatureToggleManager = swapFeatureToggleManager,
+            isSingleWallet = true,
         )
         binding?.rowButtons?.updateButtonsVisibility(
             actions = actions,
