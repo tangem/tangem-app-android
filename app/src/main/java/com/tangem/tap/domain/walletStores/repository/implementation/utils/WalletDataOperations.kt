@@ -157,6 +157,10 @@ internal fun WalletDataModel.updateWithSelf(newWalletData: WalletDataModel): Wal
             -> newStatus
         },
         existentialDeposit = newWalletData.existentialDeposit,
+        walletAddresses = newWalletData.walletAddresses?.copy(
+            selectedAddress = oldWalletData.walletAddresses?.selectedAddress
+                ?: newWalletData.walletAddresses.selectedAddress,
+        ),
         fiatRate = newWalletData.fiatRate ?: oldWalletData.fiatRate,
     )
 }
@@ -201,21 +205,25 @@ internal fun List<WalletDataModel>.updateSelectedAddress(
     if (index == -1) return this
 
     val oldWalletData = this[index]
-    val addresses = oldWalletData.walletAddresses
-        ?: return this
-    val selectedAddress = addresses.list
-        .firstOrNull { it.type == addressType }
-        ?: addresses.selectedAddress
-    val updatedWalletData = oldWalletData.copy(
-        walletAddresses = addresses.copy(
-            selectedAddress = selectedAddress,
-        ),
-    )
+    val updatedWalletData = oldWalletData.updateSelectedAddress(addressType)
     if (oldWalletData == updatedWalletData) return this
 
     return this.toMutableList().apply {
         this[index] = updatedWalletData
     }
+}
+
+internal fun WalletDataModel.updateSelectedAddress(addressType: AddressType): WalletDataModel {
+    val addresses = walletAddresses ?: return this
+    val selectedAddress = addresses.list
+        .firstOrNull { it.type == addressType }
+        ?: addresses.selectedAddress
+
+    return this.copy(
+        walletAddresses = addresses.copy(
+            selectedAddress = selectedAddress,
+        ),
+    )
 }
 
 internal fun WalletDataModel.isSameWalletData(other: WalletDataModel): Boolean {
