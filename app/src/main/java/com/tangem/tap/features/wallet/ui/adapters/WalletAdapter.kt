@@ -14,10 +14,10 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatRate
-import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
@@ -96,9 +96,13 @@ class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHold
                 noRateValue = root.getString(id = R.string.token_item_no_rate),
             )
 
-            cardWallet.setOnClickListener {
-                Analytics.send(Portfolio.TokenTapped())
-                store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet.currency))
+            if (wallet.walletAddresses != null) {
+                cardWallet.setOnClickListener {
+                    Analytics.send(Portfolio.TokenTapped())
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet.currency))
+                }
+            } else {
+                cardWallet.setOnClickListener(null)
             }
         }
     }
