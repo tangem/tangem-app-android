@@ -19,15 +19,15 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.ui.BalanceWidget
+import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
+import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
 import com.tangem.tap.features.wallet.ui.utils.mainButton
 import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
-import com.tangem.tap.features.wallet.ui.BalanceWidget
-import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
-import com.tangem.tap.features.wallet.ui.WalletFragment
-import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -35,6 +35,10 @@ import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class SingleWalletView : WalletView() {
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
+// [REDACTED_TODO_COMMENT]
+    private var watchedPrimaryWalletForAddressCard: WalletDataModel? = null
+    private var watchedPrimaryWalletForBalance: WalletDataModel? = null
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -42,6 +46,8 @@ class SingleWalletView : WalletView() {
     }
 
     private fun showSingleWalletView(binding: FragmentWalletBinding) = with(binding) {
+        watchedPrimaryWalletForAddressCard = null
+        watchedPrimaryWalletForBalance = null
         lSaltPayWallet.root.hide()
         tvTwinCardNumber.hide()
         rvMultiwallet.hide()
@@ -59,6 +65,12 @@ class SingleWalletView : WalletView() {
 
     override fun onViewCreated() {
         setupTransactionsRecyclerView()
+    }
+
+    override fun onDestroyFragment() {
+        super.onDestroyFragment()
+        watchedPrimaryWalletForAddressCard = null
+        watchedPrimaryWalletForBalance = null
     }
 
     private fun setupTransactionsRecyclerView() {
@@ -89,6 +101,9 @@ class SingleWalletView : WalletView() {
     }
 
     private fun setupBalance(state: WalletState, primaryWallet: WalletDataModel) {
+        if (watchedPrimaryWalletForBalance == primaryWallet) return
+        watchedPrimaryWalletForBalance = primaryWallet
+
         val fragment = fragment ?: return
         binding?.apply {
             lCardBalance.lBalance.root.show()
@@ -180,6 +195,9 @@ class SingleWalletView : WalletView() {
 
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
         val primaryWallet = state.primaryWalletData
+        if (primaryWallet == watchedPrimaryWalletForAddressCard) return@with
+        watchedPrimaryWalletForAddressCard = primaryWallet
+
         if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
             if (primaryWallet.shouldShowMultipleAddress()) {
@@ -206,16 +224,16 @@ class SingleWalletView : WalletView() {
                     ),
                 )
             }
-            setupCardInfo(state)
+            setupCardInfo(primaryWallet)
         } else {
             binding.lAddress.root.hide()
         }
     }
 
-    private fun setupCardInfo(state: WalletState) {
+    private fun setupCardInfo(walletData: WalletDataModel) {
         val textView = binding?.lAddress?.tvInfo
-        val blockchain = state.primaryWalletData?.currency?.blockchain
-        if (textView != null && blockchain != null) {
+        val blockchain = walletData.currency.blockchain
+        if (textView != null) {
             textView.text = textView.getString(
                 id = R.string.address_qr_code_message_format,
                 blockchain.fullName,
