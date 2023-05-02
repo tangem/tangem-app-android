@@ -16,6 +16,7 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
         return if (state?.manageSecurityState == null) {
             CardSettingsScreenState(
                 cardDetails = null,
+                accessCodeRecoveryState = null,
                 onElementClick = {},
                 onScanCardClick = {
                     store.dispatch(DetailsAction.ScanCard)
@@ -44,12 +45,15 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
             if (state.card.backupStatus?.isActive == true && state.card.isAccessCodeSet) {
                 cardDetails.add(CardInfo.ChangeAccessCode)
             }
+            if (state.accessCodeRecovery != null) {
+                cardDetails.add(CardInfo.AccessCodeRecovery(state.accessCodeRecovery.enabledOnCard))
+            }
             if (state.resetCardAllowed) {
                 cardDetails.add(CardInfo.ResetToFactorySettings(state.cardInfo))
             }
-
             CardSettingsScreenState(
                 cardDetails = cardDetails,
+                accessCodeRecoveryState = state.accessCodeRecovery,
                 onScanCardClick = { },
                 onElementClick = {
                     handleClickingItem(it)
@@ -71,6 +75,9 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
             is CardInfo.SecurityMode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
                 store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+            }
+            is CardInfo.AccessCodeRecovery -> {
+                store.dispatch(DetailsAction.AccessCodeRecovery.Open)
             }
             else -> {}
         }
