@@ -14,8 +14,8 @@ sealed class UserWalletsListError(code: Int) : TangemError(code) {
         override val messageResId: Int = R.string.user_wallet_list_error_wallet_already_saved
     }
 
-    object InvalidEncryptionKey : UserWalletsListError(code = 60002) {
-        override var customMessage: String = "Invalid encryption key"
+    object EncryptionKeyInvalidated : UserWalletsListError(code = 60002) {
+        override var customMessage: String = "Encryption key invalidated"
     }
 
     data class BiometricsAuthenticationLockout(val isPermanent: Boolean) : UserWalletsListError(code = 60003) {
