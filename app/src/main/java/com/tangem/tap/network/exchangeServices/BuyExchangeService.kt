@@ -1,7 +1,7 @@
 package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.ProductType
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.utorg.UtorgExchangeService
