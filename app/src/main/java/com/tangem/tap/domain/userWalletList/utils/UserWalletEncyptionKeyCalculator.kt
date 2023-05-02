@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.utils
 
 import com.tangem.common.extensions.calculateSha256
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.extensions.calculateHmacSha256
 
 internal val CardDTO.encryptionKey: ByteArray?
