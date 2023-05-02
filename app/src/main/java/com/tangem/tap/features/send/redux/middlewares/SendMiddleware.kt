@@ -16,7 +16,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE

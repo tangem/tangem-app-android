@@ -5,10 +5,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.events.Onboarding
