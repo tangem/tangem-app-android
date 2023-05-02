@@ -342,7 +342,6 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    @Suppress("MagicNumber")
     private suspend fun requestInfoAboutToken(contractAddress: String): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
@@ -354,7 +353,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
         // simulate loading effect. It would be better if the delay would only run if tokenManager.checkAddress()
         // got the result faster than 500ms and the delay would only be the difference between them.
-        delay(500)
+        delay(timeMillis = 500)
 
         val result = tangemTechServiceManager.findToken(contractAddress, selectedNetworkId)
 
@@ -450,7 +449,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         enableDisableTokenDetailFields(false)
     }
 
-    private suspend fun enableDisableTokenDetailFields(isEnabled: Boolean = true) {
+    private suspend fun enableDisableTokenDetailFields(isEnabled: Boolean) {
         val state = hubState
         val action = Screen.UpdateTokenFields(
             listOf(
@@ -590,17 +589,18 @@ private class AddCustomTokenReducer(
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
                 val supportedTokenNetworkIds = card.supportedBlockchains()
-                    .filter { it.canHandleTokens() }
-                    .map { it.toNetworkId() }
+                    .filter(Blockchain::canHandleTokens)
+                    .map(Blockchain::toNetworkId)
+
                 val tangemTechServiceManager = AddCustomTokenService(
                     tangemTechApi = globalState.networkServices.tangemTechService.api,
                     dispatchers = AppCoroutineDispatcherProvider(),
                     supportedTokenNetworkIds = supportedTokenNetworkIds,
                 )
-                val form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain))
+
                 state.copy(
                     cardDerivationStyle = card.derivationStyle,
-                    form = form,
+                    form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain)),
                     tangemTechServiceManager = tangemTechServiceManager,
                     screenState = createInitialScreenState(card.settings.isHDWalletAllowed),
                 )
