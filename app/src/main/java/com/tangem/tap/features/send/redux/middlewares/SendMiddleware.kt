@@ -176,18 +176,29 @@ private fun sendTransaction(
     scope.launch {
         val updateWalletResult = walletManager.safeUpdate()
         if (updateWalletResult is Result.Failure) {
-            when (val error = updateWalletResult.error) {
-                is TapError -> store.dispatchErrorNotification(error)
-                else -> {
-                    val tapError = if (error.message == null) {
-                        TapError.UnknownError
-                    } else {
-                        TapError.CustomError(error.message!!)
+            withMainContext {
+                when (val error = updateWalletResult.error) {
+                    is TapError -> store.dispatchErrorNotification(error)
+                    is BlockchainSdkError -> {
+                        updateFeedbackManagerInfo(
+                            walletManager = walletManager,
+                            amountToSend = amountToSend,
+                            feeAmount = feeAmount,
+                            destinationAddress = destinationAddress,
+                        )
+                        dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error = error))
                     }
-                    store.dispatchErrorNotification(tapError)
+                    else -> {
+                        val tapError = if (error.message == null) {
+                            TapError.UnknownError
+                        } else {
+                            TapError.CustomError(error.message!!)
+                        }
+                        store.dispatchErrorNotification(tapError)
+                    }
                 }
+                dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
             }
-            withMainContext { dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED)) }
             return@launch
         }
 
@@ -250,7 +261,7 @@ private fun sendTransaction(
                     }
                 }
                 is SimpleResult.Failure -> {
-                    store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+                    updateFeedbackManagerInfo(
                         walletManager = walletManager,
                         amountToSend = amountToSend,
                         feeAmount = feeAmount,
@@ -304,6 +315,20 @@ private fun sendTransaction(
             }
         }
     }
+}
+
+private fun updateFeedbackManagerInfo(
+    walletManager: WalletManager,
+    amountToSend: Amount,
+    feeAmount: Amount,
+    destinationAddress: String,
+) {
+    store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+        walletManager = walletManager,
+        amountToSend = amountToSend,
+        feeAmount = feeAmount,
+        destinationAddress = destinationAddress,
+    )
 }
 
 fun createValidateTransactionError(
