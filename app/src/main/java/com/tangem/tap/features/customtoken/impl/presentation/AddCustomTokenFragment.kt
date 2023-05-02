@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.transition.TransitionInflater
@@ -32,7 +33,9 @@ internal class AddCustomTokenFragment : Fragment() {
             setContent {
                 isTransitionGroup = true
 
-                val viewModel = hiltViewModel<AddCustomTokenViewModel>()
+                val viewModel = hiltViewModel<AddCustomTokenViewModel>().apply {
+                    LocalLifecycleOwner.current.lifecycle.addObserver(this)
+                }
 
                 TangemTheme {
                     AddCustomTokenScreen(stateHolder = viewModel.uiState)
