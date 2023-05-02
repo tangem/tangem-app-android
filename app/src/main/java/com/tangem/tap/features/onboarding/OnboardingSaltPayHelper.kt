@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding
 
 import com.tangem.common.services.Result
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError

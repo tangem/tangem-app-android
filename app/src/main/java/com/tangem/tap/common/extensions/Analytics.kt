@@ -1,7 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
 /**
