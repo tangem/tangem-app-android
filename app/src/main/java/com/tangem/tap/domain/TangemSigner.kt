@@ -5,7 +5,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
