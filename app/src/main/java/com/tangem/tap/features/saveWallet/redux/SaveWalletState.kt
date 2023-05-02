@@ -1,7 +1,7 @@
 package com.tangem.tap.features.saveWallet.redux
 
 import com.tangem.common.core.TangemError
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import org.rekotlin.StateType
 
 data class SaveWalletState(

@@ -67,7 +67,7 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
                 isPermanent = error.isPermanent,
                 onDismiss = this::dismissWarning,
             )
-            is UserWalletsListError.InvalidEncryptionKey -> WarningModel.KeyInvalidatedWarning(
+            is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarning,
             )
             else -> null
