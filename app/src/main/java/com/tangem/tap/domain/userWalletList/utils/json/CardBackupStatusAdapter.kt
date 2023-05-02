@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 
 internal class CardBackupStatusAdapter {
     @ToJson
