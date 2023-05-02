@@ -4,9 +4,10 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.SignatureCountValidator
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
