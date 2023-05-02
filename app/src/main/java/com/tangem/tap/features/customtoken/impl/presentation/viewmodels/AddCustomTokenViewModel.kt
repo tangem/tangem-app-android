@@ -3,13 +3,23 @@ package com.tangem.tap.features.customtoken.impl.presentation.viewmodels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
+import com.tangem.tap.common.analytics.events.ManageTokens
+import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TestTokenItem
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TokensCategoryBlock
@@ -24,26 +34,37 @@ import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTok
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactAddressValidator
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
  * ViewModel for add custom token screen
  *
- * @param featureRouter       feature router
- * @property reduxStateHolder redux state holder
+ * @param featureRouter            feature router
+ * @property featureInteractor     feature interactor
+ * @property dispatchers           coroutine dispatchers provider
+ * @property reduxStateHolder      redux state holder
+ * @property analyticsEventHandler analytics event handler
  *
 [REDACTED_AUTHOR]
  */
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     featureRouter: CustomTokenRouter,
+    private val featureInteractor: CustomTokenInteractor,
+    private val dispatchers: AppCoroutineDispatcherProvider,
     private val reduxStateHolder: AppStateHolder,
-) : ViewModel() {
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : ViewModel(), DefaultLifecycleObserver {
 
     private val actionsHandler = ActionsHandler(featureRouter)
     private val testActionsHandler = TestActionsHandler()
@@ -51,6 +72,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
     /** Screen state */
     var uiState by mutableStateOf(getInitialUiState())
         private set
+
+    private var foundTokenId: String? = null
+
+    override fun onCreate(owner: LifecycleOwner) {
+        analyticsEventHandler.send(ManageTokens.CustomToken.ScreenOpened)
+    }
 
     private fun getInitialUiState(): AddCustomTokenStateHolder {
         return if (BuildConfig.TEST_ACTION_ENABLED) {
@@ -72,7 +99,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         TokensCategoryBlock(name = "Common", items = COMMON_TOKENS),
                         TokensCategoryBlock(name = "Solana", items = SOLANA_TOKENS),
                     ),
-                    onTestTokenClick = testActionsHandler::onTestTokenClick,
+                    onTestTokenClick = actionsHandler::onContactAddressValueChange,
                 ),
             )
         } else {
@@ -262,24 +289,66 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         fun onAddCustomTokenClick() {
-            // TODO("[REDACTED_TASK_KEY] Add processing")
+            if (uiState.form.networkSelectorField.selectedItem.blockchain != Blockchain.Unknown) {
+                val selectedNetwork = uiState.form.networkSelectorField.selectedItem.blockchain
+
+                val currency = if (isAnyTokenFieldsFilled() || isAllTokenFieldsFilled()) {
+                    Currency.Token(
+                        token = Token(
+                            name = uiState.form.tokenNameInputField.value,
+                            symbol = uiState.form.tokenSymbolInputField.value,
+                            contractAddress = uiState.form.contractAddressInputField.value,
+                            decimals = uiState.form.decimalsInputField.value.toInt(),
+                            id = foundTokenId,
+                        ),
+                        blockchain = selectedNetwork,
+                        derivationPath = getDerivationPath(
+                            mainNetwork = selectedNetwork,
+                            derivationNetwork = uiState.form.derivationPathSelectorField?.selectedItem?.blockchain,
+                            derivationStyle = reduxStateHolder.scanResponse?.card?.derivationStyle,
+                        )?.rawPath,
+                    )
+                } else {
+                    Currency.Blockchain(
+                        blockchain = selectedNetwork,
+                        derivationPath = getDerivationPath(
+                            mainNetwork = selectedNetwork,
+                            derivationNetwork = uiState.form.derivationPathSelectorField?.selectedItem?.blockchain,
+                            derivationStyle = reduxStateHolder.scanResponse?.card?.derivationStyle,
+                        )?.rawPath,
+                    )
+                }
+
+                sendOnAddTokenButtonClick(currency = currency, address = uiState.form.contractAddressInputField.value)
+
+                viewModelScope.launch(dispatchers.io) {
+                    featureInteractor.saveToken(
+                        currency = currency,
+                        address = uiState.form.contractAddressInputField.value,
+                    )
+                }
+            }
         }
 
         fun onContactAddressValueChange(enteredValue: String) {
             with(uiState.form) {
+                val selectedNetwork = networkSelectorField.selectedItem.blockchain
                 val isValid = ContactAddressValidator.validate(
                     address = enteredValue,
-                    blockchain = networkSelectorField.selectedItem.blockchain,
+                    blockchain = selectedNetwork,
                 )
 
                 when (isValid) {
                     is ContractAddressValidatorResult.Success -> {
                         uiState = uiState.copySealed(
                             form = uiState.form.copy(
-                                contractAddressInputField = contractAddressInputField.copy(isError = false),
+                                contractAddressInputField = contractAddressInputField.copy(
+                                    isError = false,
+                                    isLoading = true,
+                                ),
                             ),
                         )
-                        // TODO("[REDACTED_TASK_KEY] Add loading custom token information")
+                        updateForm(address = enteredValue, selectedNetwork = selectedNetwork)
                     }
 
                     is ContractAddressValidatorResult.Error -> {
@@ -330,17 +399,99 @@ internal class AddCustomTokenViewModel @Inject constructor(
             // TODO("[REDACTED_TASK_KEY] Update floating button")
         }
 
-        private fun isAnotherTokenFieldsFilled(): Boolean {
+        private fun getDerivationPath(
+            mainNetwork: Blockchain,
+            derivationNetwork: Blockchain?,
+            derivationStyle: DerivationStyle?,
+        ): DerivationPath? {
+            val network = if (derivationNetwork == Blockchain.Unknown) mainNetwork else derivationNetwork
+
+            return network?.derivationPath(
+                style = if (derivationNetwork == Blockchain.Unknown) derivationStyle else DerivationStyle.LEGACY,
+            )
+        }
+
+        private fun sendOnAddTokenButtonClick(currency: Currency, address: String) {
+            when (currency) {
+                is Currency.Blockchain -> {
+                    analyticsEventHandler.send(
+                        ManageTokens.CustomToken.TokenWasAdded.Blockchain(
+                            derivationPath = currency.derivationPath,
+                            blockchain = currency.blockchain,
+                        ),
+                    )
+                }
+
+                is Currency.Token -> {
+                    analyticsEventHandler.send(
+                        ManageTokens.CustomToken.TokenWasAdded.Token(
+                            symbol = currency.currencySymbol,
+                            derivationPath = currency.derivationPath,
+                            blockchain = currency.blockchain,
+                            contractAddress = address,
+                        ),
+                    )
+                }
+            }
+        }
+
+        private fun isAnyTokenFieldsFilled(): Boolean {
             return with(uiState.form) {
                 contractAddressInputField.value.isNotEmpty() || tokenNameInputField.value.isNotEmpty() ||
                     tokenSymbolInputField.value.isNotEmpty() || decimalsInputField.value.isNotEmpty()
             }
         }
 
+        private fun isAllTokenFieldsFilled(): Boolean {
+            return with(uiState.form) {
+                contractAddressInputField.value.isNotEmpty() && tokenNameInputField.value.isNotEmpty() &&
+                    tokenSymbolInputField.value.isNotEmpty() && decimalsInputField.value.isNotEmpty()
+            }
+        }
+
+        private fun updateForm(address: String, selectedNetwork: Blockchain) {
+            viewModelScope.launch(dispatchers.main) {
+                runCatching(dispatchers.io) {
+                    featureInteractor.findToken(address = address, blockchain = selectedNetwork)
+                }
+                    .onSuccess { token ->
+                        with(uiState.form) {
+                            uiState = uiState.copySealed(
+                                form = copy(
+                                    contractAddressInputField = contractAddressInputField.copy(isLoading = false),
+                                    networkSelectorField = networkSelectorField.copy(
+                                        selectedItem = createNetworkSelectorItem(
+                                            blockchain = Blockchain.fromNetworkId(token.network.id)
+                                                ?: Blockchain.Unknown,
+                                        ),
+                                    ),
+                                    tokenNameInputField = tokenNameInputField.copy(
+                                        value = token.name,
+                                        isEnabled = false,
+                                    ),
+                                    tokenSymbolInputField = tokenSymbolInputField.copy(
+                                        value = token.symbol,
+                                        isEnabled = false,
+                                    ),
+                                    decimalsInputField = decimalsInputField.copy(
+                                        value = token.network.decimalCount,
+                                        isEnabled = false,
+                                    ),
+                                ),
+                            )
+                        }
+                    }
+                    .onFailure {
+                        foundTokenId = null
+                        Timber.e(it)
+                    }
+            }
+        }
+
         private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
             with(uiState.form) {
                 val isNetworkSelectorFilled = networkSelectorField.selectedItem.blockchain != Blockchain.Unknown
-                val isAnotherTokenFieldsFilled = isAnotherTokenFieldsFilled()
+                val isAnotherTokenFieldsFilled = isAnyTokenFieldsFilled()
 
                 when {
                     isNetworkSelectorFilled && type == AddCustomTokenError.InvalidContractAddress -> {
@@ -431,11 +582,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     ),
                 )
             }
-        }
-
-        @Suppress("UnusedPrivateMember")
-        fun onTestTokenClick(address: String) {
-            // TODO("[REDACTED_TASK_KEY] Add processing")
         }
     }
 
