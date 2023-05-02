@@ -4,8 +4,9 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -16,6 +17,7 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
 import com.tangem.tap.common.extensions.getTopUpUrl
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -135,6 +137,12 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         userWalletsListManager.delete(
                             listOfNotNull(UserWalletIdBuilder.scanResponse(getScanResponse()).build()),
                         )
+                        userWalletsListManager.selectedUserWalletSync?.let { selectedWallet ->
+                            store.onUserWalletSelected(
+                                userWallet = selectedWallet,
+                                sendAnalyticsEvent = false,
+                            )
+                        }
                     }
                 }
                 TwinCardsStep.TopUpWallet -> {
