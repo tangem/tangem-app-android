@@ -8,8 +8,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 
