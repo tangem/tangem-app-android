@@ -3,7 +3,6 @@ package com.tangem.tap.features.customtoken.impl.presentation.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +29,7 @@ import com.tangem.wallet.R
 internal fun AddCustomTokenWarning(description: TextReference, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(TangemTheme.dimens.radius4),
+        shape = TangemTheme.shapes.roundedCornersSmall2,
         backgroundColor = TangemColorPalette.Tangerine,
         contentColor = TangemColorPalette.White,
         elevation = TangemTheme.dimens.elevation4,
