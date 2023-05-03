@@ -1,11 +1,14 @@
 package com.tangem.feature.onboarding.presentation.wallet2.viewmodel
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.CompletionResult
+import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
 import com.tangem.feature.onboarding.presentation.wallet2.model.*
@@ -34,16 +37,46 @@ class SeedPhraseViewModel @Inject constructor(
     var uiState: OnboardingSeedPhraseState by mutableStateOf(uiBuilder.init())
         private set
 
-    val currentStep: OnboardingSeedPhraseStep
-        get() = uiState.step
+    private lateinit var router: SeedPhraseRouter
+    private lateinit var mediator: SeedPhraseMediator
+
+    val currentScreen: SeedPhraseScreen
+        get() = router.currentScreen
+
+    val progress: Int
+        get() = progressByScreen[currentScreen] ?: 0
+
+    val maxProgress: Int by lazy { progressByScreen.maxOfOrNull { it.value } ?: 0 }
+
+    var isFinished: Boolean = false
+        private set
+
+    private val progressByScreen = mapOf(
+        SeedPhraseScreen.Intro to 1,
+        SeedPhraseScreen.AboutSeedPhrase to 2,
+        SeedPhraseScreen.YourSeedPhrase to 3,
+        SeedPhraseScreen.CheckSeedPhrase to 3,
+        SeedPhraseScreen.ImportSeedPhrase to 3,
+    )
 
     private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
     private var suggestionWordInserted: AtomicBoolean = AtomicBoolean(false)
+
+    private var generatedMnemonicComponents: List<String>? = null
+    private var importedMnemonicComponents: List<String>? = null
 
     override fun onCleared() {
         textFieldsDebouncers.forEach { entry -> entry.value.release() }
         textFieldsDebouncers.clear()
         super.onCleared()
+    }
+
+    fun setRouter(router: SeedPhraseRouter) {
+        this.router = router
+    }
+
+    fun setMediator(mediator: SeedPhraseMediator) {
+        this.mediator = mediator
     }
 
     private fun createUiActions(): UiActions = UiActions(
@@ -60,7 +93,7 @@ class SeedPhraseViewModel @Inject constructor(
             buttonContinueClick = ::buttonContinueClick,
         ),
         checkSeedPhraseActions = CheckSeedPhraseUiAction(
-            buttonCreateWalletClick = ::buttonCreateWalletWithSeedPhraseClick,
+            buttonCreateWalletClick = { buttonImportWalletClick(generatedMnemonicComponents) },
             secondTextFieldAction = TextFieldUiAction(
                 onTextFieldChanged = { value -> onTextFieldChanged(SeedPhraseField.Second, value) },
             ),
@@ -76,9 +109,10 @@ class SeedPhraseViewModel @Inject constructor(
                 onTextFieldChanged = { value -> onSeedPhraseTextFieldChanged(value) },
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
-            buttonCreateWalletClick = ::buttonCreateWalletWithSeedPhraseClick,
+            buttonCreateWalletClick = { buttonImportWalletClick(importedMnemonicComponents) },
         ),
         menuChatClick = ::menuChatClick,
+        menuNavigateBackClick = ::menuNavigateBackClick,
     )
 
     // region CheckSeedPhrase
@@ -153,12 +187,14 @@ class SeedPhraseViewModel @Inject constructor(
         }
 
         interactor.validateMnemonicString(inputMnemonic)
-            .onSuccess {
+            .onSuccess { mnemonicComponents ->
+                importedMnemonicComponents = mnemonicComponents
                 updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
             }
             .onFailure {
                 val error = it as? SeedPhraseError ?: return
 
+                importedMnemonicComponents = null
                 val mediateState = when (error) {
                     is SeedPhraseError.InvalidWords -> {
                         uiBuilder.importSeedPhrase.updateInvalidWords(uiState, error.words)
@@ -180,22 +216,46 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion ImportSeedPhrase
 
     // region ButtonClickHandlers
-    @Suppress("EmptyFunctionBlock")
     private fun buttonCreateWalletClick() {
-    }
-
-    @Suppress("EmptyFunctionBlock")
-    private fun buttonCreateWalletWithSeedPhraseClick() {
-    }
-
-    private fun buttonOtherOptionsClick() {
-        viewModelScope.launchSingle {
-            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.AboutSeedPhrase) }
+        viewModelScope.launch(dispatchers.io) {
+            mediator.createWallet(::handleWalletCreationResult)
         }
     }
 
+    private fun buttonImportWalletClick(mnemonicComponents: List<String>?) {
+        mnemonicComponents ?: return
+
+        viewModelScope.launch(dispatchers.io) {
+            mediator.importWallet(mnemonicComponents, ::handleWalletCreationResult)
+        }
+    }
+
+    private fun handleWalletCreationResult(result: CompletionResult<CreateWalletResponse>) {
+        when (result) {
+            is CompletionResult.Success -> {
+                isFinished = true
+            }
+            is CompletionResult.Failure -> {
+                // errors shows on the TangemSdk bottom sheet dialog
+            }
+        }
+        mediator.onWalletCreated(result)
+    }
+
+    private fun menuNavigateBackClick() {
+        router.navigateBack()
+    }
+
+    private fun menuChatClick() {
+        router.openChat()
+    }
+
+    private fun buttonOtherOptionsClick() {
+        router.openScreen(SeedPhraseScreen.AboutSeedPhrase)
+    }
+
     private fun buttonReadMoreAboutSeedPhraseClick() {
-        // TODO: open the about info through a router
+        router.openUri(URI_ABOUT_SEED_PHRASE)
     }
 
     private fun buttonGenerateSeedPhraseClick() {
@@ -204,10 +264,15 @@ class SeedPhraseViewModel @Inject constructor(
             delay(DELAY_GENERATE_SEED_PHRASE)
             interactor.generateMnemonic()
                 .onSuccess { mnemonic ->
+                    generatedMnemonicComponents = mnemonic.mnemonicComponents
                     val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
-                    updateUi { uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList()) }
+                    updateUi {
+                        router.openScreen(SeedPhraseScreen.YourSeedPhrase)
+                        uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList())
+                    }
                 }
                 .onFailure {
+                    generatedMnemonicComponents = null
                     // TODO: show error
                 }
         }
@@ -240,15 +305,11 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonImportSeedPhraseClick() {
-        viewModelScope.launchSingle {
-            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.ImportSeedPhrase) }
-        }
+        router.openScreen(SeedPhraseScreen.ImportSeedPhrase)
     }
 
     private fun buttonContinueClick() {
-        viewModelScope.launchSingle {
-            updateUi { uiBuilder.changeStep(uiState, OnboardingSeedPhraseStep.CheckSeedPhrase) }
-        }
+        router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
@@ -268,10 +329,6 @@ class SeedPhraseViewModel @Inject constructor(
                 uiBuilder.importSeedPhrase.updateSuggestions(mediateState, emptyList())
             }
         }
-    }
-
-    private fun menuChatClick() {
-        // TODO: open the support chat through a router
     }
     // endregion ButtonClickHandlers
 
@@ -311,6 +368,7 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion Utils
 
     companion object {
+        private val URI_ABOUT_SEED_PHRASE = Uri.parse("https://ya.ru")
         private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
         private const val MNEMONIC_DEBOUNCE_DELAY = 700L
         private const val DELAY_GENERATE_SEED_PHRASE = 300L
