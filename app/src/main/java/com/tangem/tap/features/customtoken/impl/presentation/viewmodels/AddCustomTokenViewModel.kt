@@ -66,6 +66,7 @@ import javax.inject.Inject
  *
  * @author Andrew Khokhlov on 19/04/2023
  */
+@Suppress("LargeClass")
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     analyticsEventHandler: AnalyticsEventHandler,
@@ -267,6 +268,295 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
     }
 
+    private fun updateForm(address: String, selectedNetwork: Blockchain) {
+        viewModelScope.launch(dispatchers.main) {
+            runCatching(dispatchers.io) {
+                featureInteractor.findToken(address = address, blockchain = selectedNetwork)
+            }
+                .onSuccess { token ->
+                    foundToken = token
+                    uiState = uiState.copySealed(
+                        form = uiState.form.copy(
+                            contractAddressInputField = uiState.form.contractAddressInputField.copy(
+                                isLoading = false,
+                            ),
+                            networkSelectorField = uiState.form.networkSelectorField.copy(
+                                selectedItem = formStateBuilder.createNetworkSelectorItem(
+                                    blockchain = Blockchain.fromNetworkId(token.network.id)
+                                        ?: Blockchain.Unknown,
+                                ),
+                            ),
+                            tokenNameInputField = uiState.form.tokenNameInputField.copy(
+                                value = token.name,
+                                isEnabled = false,
+                            ),
+                            tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
+                                value = token.symbol,
+                                isEnabled = false,
+                            ),
+                            decimalsInputField = uiState.form.decimalsInputField.copy(
+                                value = token.network.decimalCount,
+                                isEnabled = false,
+                            ),
+                        ),
+                    )
+                }
+                .onFailure {
+                    foundToken = null
+                    uiState = uiState.copySealed(
+                        form = uiState.form.copy(
+                            contractAddressInputField = uiState.form.contractAddressInputField.copy(
+                                isLoading = false,
+                            ),
+                            tokenNameInputField = uiState.form.tokenNameInputField.copy(isEnabled = true),
+                            tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(isEnabled = true),
+                            decimalsInputField = uiState.form.decimalsInputField.copy(isEnabled = true),
+                        ),
+                    )
+                    Timber.e(it)
+                }
+
+            updateDerivationPathSelector()
+            updateWarnings()
+            updateFloatingButton()
+        }
+    }
+
+    private fun updateDerivationPathSelector() {
+        val derivationPathSelectorField = uiState.form.derivationPathSelectorField ?: return
+        val selectedValue = derivationPathSelectorField.selectedItem.blockchain
+        val isSupported = selectedValue.isEvm() || !isDerivationPathSelected()
+
+        uiState = uiState.copySealed(
+            form = uiState.form.copy(
+                derivationPathSelectorField = uiState.form.derivationPathSelectorField?.copy(
+                    isEnabled = if (derivationPathSelectorField.isEnabled != isSupported) {
+                        isSupported
+                    } else {
+                        derivationPathSelectorField.isEnabled
+                    },
+                    selectedItem = if (isDerivationPathSelected() && !isSupported) {
+                        formStateBuilder.createDerivationPathSelectorItem(Blockchain.Unknown)
+                    } else {
+                        derivationPathSelectorField.selectedItem
+                    },
+                ),
+            ),
+        )
+    }
+
+    private fun isDerivationPathSelected(): Boolean {
+        return uiState.form.derivationPathSelectorField?.selectedItem?.blockchain != Blockchain.Unknown
+    }
+
+    private fun updateWarnings() {
+        uiState = uiState.copySealed(
+            warnings = buildSet {
+                when (getCustomTokenType()) {
+                    CustomTokenType.TOKEN -> {
+                        addAll(getTokenWarningSet())
+                    }
+
+                    CustomTokenType.BLOCKCHAIN -> {
+                        if (isCustomTokenAlreadyAdded()) add(AddCustomTokenWarning.TokenAlreadyAdded)
+                        if (isDerivationPathSelected()) add(AddCustomTokenWarning.PotentialScamToken)
+                    }
+                }
+            },
+        )
+    }
+
+    private fun getCustomTokenType(): CustomTokenType {
+        return if (isAnyTokenFieldsFilled() || isAllTokenFieldsFilled()) {
+            CustomTokenType.TOKEN
+        } else {
+            CustomTokenType.BLOCKCHAIN
+        }
+    }
+
+    private fun isAnyTokenFieldsFilled(): Boolean {
+        return with(uiState.form) {
+            contractAddressInputField.value.isNotEmpty() || tokenNameInputField.value.isNotEmpty() ||
+                tokenSymbolInputField.value.isNotEmpty() || decimalsInputField.value.isNotEmpty()
+        }
+    }
+
+    private fun isAllTokenFieldsFilled(): Boolean {
+        return with(uiState.form) {
+            contractAddressInputField.value.isNotEmpty() && tokenNameInputField.value.isNotEmpty() &&
+                tokenSymbolInputField.value.isNotEmpty() && decimalsInputField.value.isNotEmpty()
+        }
+    }
+
+    private fun getTokenWarningSet(): Set<AddCustomTokenWarning> {
+        val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+
+        val isContractAddressFieldEmpty = ContactAddressValidator.validate(
+            address = uiState.form.contractAddressInputField.value,
+            blockchain = networkSelectorValue,
+        ).let {
+            it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FieldIsEmpty
+        }
+
+        val isSupportedToken = if (!isNetworkSelected()) {
+            true
+        } else {
+            reduxStateHolder.scanResponse?.card?.canHandleToken(networkSelectorValue) ?: false
+        }
+
+        return buildSet {
+            if (!isSupportedToken && !isContractAddressFieldEmpty) add(AddCustomTokenWarning.UnsupportedSolanaToken)
+            if (isCustomTokenAlreadyAdded()) add(AddCustomTokenWarning.TokenAlreadyAdded)
+            if (foundToken == null && isAnyTokenFieldsFilled() || foundToken?.isActive == false) {
+                add(AddCustomTokenWarning.PotentialScamToken)
+            }
+        }
+    }
+
+    private fun isNetworkSelected(): Boolean {
+        return uiState.form.networkSelectorField.selectedItem.blockchain != Blockchain.Unknown
+    }
+
+    private fun updateFloatingButton() {
+        if (isCustomTokenAlreadyAdded()) {
+            uiState = uiState.copySealed(
+                warnings = uiState.warnings + AddCustomTokenWarning.TokenAlreadyAdded,
+                floatingButton = uiState.floatingButton.copy(isEnabled = false),
+            )
+            return
+        }
+
+        val state = when {
+            isAllTokenFieldsFilled() && isNetworkSelected() -> {
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val error = ContactAddressValidator.validate(
+                    address = uiState.form.contractAddressInputField.value,
+                    blockchain = networkSelectorValue,
+                )
+                val isSupportedToken = reduxStateHolder.scanResponse?.card
+                    ?.canHandleToken(networkSelectorValue)
+                    ?: false
+
+                uiState.copySealed(
+                    floatingButton = uiState.floatingButton.copy(
+                        isEnabled = error is ContractAddressValidatorResult.Success && isSupportedToken,
+                    ),
+                )
+            }
+
+            isAnyTokenFieldsFilled() -> {
+                uiState.copySealed(floatingButton = uiState.floatingButton.copy(isEnabled = false))
+            }
+
+            else -> {
+                uiState.copySealed(
+                    floatingButton = uiState.floatingButton.copy(
+                        isEnabled = if (isNetworkSelected()) !isBlockchainAlreadyAdded() else false,
+                    ),
+                )
+            }
+        }
+
+        uiState = state.copySealed(
+            warnings = uiState.warnings - AddCustomTokenWarning.TokenAlreadyAdded,
+        )
+    }
+
+    private fun isCustomTokenAlreadyAdded(): Boolean {
+        return when (getCustomTokenType()) {
+            CustomTokenType.TOKEN -> isTokenAlreadyAdded()
+            CustomTokenType.BLOCKCHAIN -> isBlockchainAlreadyAdded()
+        }
+    }
+
+    private fun isTokenAlreadyAdded(): Boolean {
+        return store.state.walletState.walletsStores
+            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
+            .flatten()
+            .filterIsInstance<Currency.Token>()
+            .any { wrappedCurrency ->
+                val contractAddress = uiState.form.contractAddressInputField.value
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val sameId = foundToken?.id == wrappedCurrency.token.id
+                val sameAddress = contractAddress == wrappedCurrency.token.contractAddress
+                val sameBlockchain =
+                    Blockchain.fromNetworkId(networkSelectorValue.toNetworkId()) == wrappedCurrency.blockchain
+                val isSameDerivationPath = getDerivationPath()?.rawPath == wrappedCurrency.derivationPath
+                sameId && sameAddress && sameBlockchain && isSameDerivationPath
+            }
+    }
+
+    private fun isBlockchainAlreadyAdded(): Boolean {
+        return store.state.walletState.walletsStores
+            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
+            .flatten()
+            .filterIsInstance<Currency.Blockchain>()
+            .any {
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                networkSelectorValue == it.blockchain && getDerivationPath()?.rawPath == it.derivationPath
+            }
+    }
+
+    private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
+        when {
+            isNetworkSelected() && type == AddCustomTokenError.InvalidContractAddress -> {
+                val isAnotherTokenFieldsFilled = isAnyTokenFieldsFilled()
+                uiState = uiState.copySealed(
+                    form = uiState.form.copy(
+                        contractAddressInputField = uiState.form.contractAddressInputField.copy(
+                            isError = true,
+                            error = TextReference.Res(
+                                id = R.string.custom_token_creation_error_invalid_contract_address,
+                            ),
+                        ),
+                        tokenNameInputField = uiState.form.tokenNameInputField.copy(
+                            isEnabled = isAnotherTokenFieldsFilled,
+                        ),
+                        tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
+                            isEnabled = isAnotherTokenFieldsFilled,
+                        ),
+                        decimalsInputField = uiState.form.decimalsInputField.copy(
+                            isEnabled = isAnotherTokenFieldsFilled,
+                        ),
+                    ),
+                )
+            }
+
+            !isNetworkSelected() || type == AddCustomTokenError.FieldIsEmpty -> {
+                uiState = uiState.copySealed(
+                    form = uiState.form.copy(
+                        contractAddressInputField = uiState.form.contractAddressInputField.copy(isError = false),
+                        tokenNameInputField = uiState.form.tokenNameInputField.copy(value = "", isEnabled = false),
+                        tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
+                            value = "",
+                            isEnabled = false,
+                        ),
+                        decimalsInputField = uiState.form.decimalsInputField.copy(value = "", isEnabled = false),
+                    ),
+                )
+            }
+
+            else -> Unit
+        }
+    }
+
+    private fun getDerivationPath(): DerivationPath? {
+        val isNotDerivationPathSelected = !isDerivationPathSelected()
+        val network = if (isNotDerivationPathSelected) {
+            uiState.form.networkSelectorField.selectedItem.blockchain
+        } else {
+            uiState.form.derivationPathSelectorField?.selectedItem?.blockchain
+        }
+
+        return network?.derivationPath(
+            style = if (isNotDerivationPathSelected) {
+                reduxStateHolder.scanResponse?.card?.derivationStyle
+            } else {
+                DerivationStyle.LEGACY
+            },
+        )
+    }
+
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
 
         fun onBackButtonClick() {
@@ -391,293 +681,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     .onSuccess { featureRouter.openWalletScreen() }
                     .onFailure(Timber::e)
             }
-        }
-
-        private fun updateForm(address: String, selectedNetwork: Blockchain) {
-            viewModelScope.launch(dispatchers.main) {
-                runCatching(dispatchers.io) {
-                    featureInteractor.findToken(address = address, blockchain = selectedNetwork)
-                }
-                    .onSuccess { token ->
-                        foundToken = token
-                        uiState = uiState.copySealed(
-                            form = uiState.form.copy(
-                                contractAddressInputField = uiState.form.contractAddressInputField.copy(
-                                    isLoading = false,
-                                ),
-                                networkSelectorField = uiState.form.networkSelectorField.copy(
-                                    selectedItem = formStateBuilder.createNetworkSelectorItem(
-                                        blockchain = Blockchain.fromNetworkId(token.network.id)
-                                            ?: Blockchain.Unknown,
-                                    ),
-                                ),
-                                tokenNameInputField = uiState.form.tokenNameInputField.copy(
-                                    value = token.name,
-                                    isEnabled = false,
-                                ),
-                                tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
-                                    value = token.symbol,
-                                    isEnabled = false,
-                                ),
-                                decimalsInputField = uiState.form.decimalsInputField.copy(
-                                    value = token.network.decimalCount,
-                                    isEnabled = false,
-                                ),
-                            ),
-                        )
-                    }
-                    .onFailure {
-                        foundToken = null
-                        uiState = uiState.copySealed(
-                            form = uiState.form.copy(
-                                contractAddressInputField = uiState.form.contractAddressInputField.copy(
-                                    isLoading = false,
-                                ),
-                                tokenNameInputField = uiState.form.tokenNameInputField.copy(isEnabled = true),
-                                tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(isEnabled = true),
-                                decimalsInputField = uiState.form.decimalsInputField.copy(isEnabled = true),
-                            ),
-                        )
-                        Timber.e(it)
-                    }
-
-                updateDerivationPathSelector()
-                updateWarnings()
-                updateFloatingButton()
-            }
-        }
-
-        private fun updateDerivationPathSelector() {
-            val derivationPathSelectorField = uiState.form.derivationPathSelectorField ?: return
-            val selectedValue = derivationPathSelectorField.selectedItem.blockchain
-            val isSupported = selectedValue.isEvm() || !isDerivationPathSelected()
-
-            uiState = uiState.copySealed(
-                form = uiState.form.copy(
-                    derivationPathSelectorField = uiState.form.derivationPathSelectorField?.copy(
-                        isEnabled = if (derivationPathSelectorField.isEnabled != isSupported) {
-                            isSupported
-                        } else {
-                            derivationPathSelectorField.isEnabled
-                        },
-                        selectedItem = if (isDerivationPathSelected() && !isSupported) {
-                            formStateBuilder.createDerivationPathSelectorItem(Blockchain.Unknown)
-                        } else {
-                            derivationPathSelectorField.selectedItem
-                        },
-                    ),
-                ),
-            )
-        }
-
-        private fun isDerivationPathSelected(): Boolean {
-            return uiState.form.derivationPathSelectorField?.selectedItem?.blockchain != Blockchain.Unknown
-        }
-
-        private fun updateWarnings() {
-            val warningsAdd = mutableSetOf<AddCustomTokenWarning>()
-
-            when (getCustomTokenType()) {
-                CustomTokenType.TOKEN -> {
-                    val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-
-                    val isContractAddressFieldEmpty = ContactAddressValidator.validate(
-                        address = uiState.form.contractAddressInputField.value,
-                        blockchain = networkSelectorValue,
-                    ).let {
-                        it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FieldIsEmpty
-                    }
-
-                    val isSupportedToken = if (!isNetworkSelected()) {
-                        true
-                    } else {
-                        reduxStateHolder.scanResponse?.card?.canHandleToken(networkSelectorValue) ?: false
-                    }
-
-                    if (!isSupportedToken && !isContractAddressFieldEmpty) {
-                        warningsAdd.add(AddCustomTokenWarning.UnsupportedSolanaToken)
-                    }
-
-                    if (isCustomTokenAlreadyAdded()) warningsAdd.add(AddCustomTokenWarning.TokenAlreadyAdded)
-
-                    if ((foundToken == null && isAnyTokenFieldsFilled()) || foundToken?.isActive == false) {
-                        warningsAdd.add(AddCustomTokenWarning.PotentialScamToken)
-                    }
-                }
-
-                CustomTokenType.BLOCKCHAIN -> {
-                    if (isCustomTokenAlreadyAdded()) warningsAdd.add(AddCustomTokenWarning.TokenAlreadyAdded)
-                    if (isDerivationPathSelected()) warningsAdd.add(AddCustomTokenWarning.PotentialScamToken)
-                }
-            }
-
-            uiState = uiState.copySealed(warnings = warningsAdd)
-        }
-
-        private fun getCustomTokenType(): CustomTokenType {
-            return if (isAnyTokenFieldsFilled() || isAllTokenFieldsFilled()) {
-                CustomTokenType.TOKEN
-            } else {
-                CustomTokenType.BLOCKCHAIN
-            }
-        }
-
-        private fun isAnyTokenFieldsFilled(): Boolean {
-            return with(uiState.form) {
-                contractAddressInputField.value.isNotEmpty() || tokenNameInputField.value.isNotEmpty() ||
-                    tokenSymbolInputField.value.isNotEmpty() || decimalsInputField.value.isNotEmpty()
-            }
-        }
-
-        private fun isAllTokenFieldsFilled(): Boolean {
-            return with(uiState.form) {
-                contractAddressInputField.value.isNotEmpty() && tokenNameInputField.value.isNotEmpty() &&
-                    tokenSymbolInputField.value.isNotEmpty() && decimalsInputField.value.isNotEmpty()
-            }
-        }
-
-        private fun isNetworkSelected(): Boolean {
-            return uiState.form.networkSelectorField.selectedItem.blockchain != Blockchain.Unknown
-        }
-
-        private fun updateFloatingButton() {
-            if (isCustomTokenAlreadyAdded()) {
-                uiState = uiState.copySealed(
-                    warnings = uiState.warnings + AddCustomTokenWarning.TokenAlreadyAdded,
-                    floatingButton = uiState.floatingButton.copy(isEnabled = false),
-                )
-                return
-            }
-
-            val state = when {
-                isAllTokenFieldsFilled() && isNetworkSelected() -> {
-                    val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                    val error = ContactAddressValidator.validate(
-                        address = uiState.form.contractAddressInputField.value,
-                        blockchain = networkSelectorValue,
-                    )
-                    val isSupportedToken = reduxStateHolder.scanResponse?.card
-                        ?.canHandleToken(networkSelectorValue)
-                        ?: false
-
-                    uiState.copySealed(
-                        floatingButton = uiState.floatingButton.copy(
-                            isEnabled = error is ContractAddressValidatorResult.Success && isSupportedToken,
-                        ),
-                    )
-                }
-
-                isAnyTokenFieldsFilled() -> {
-                    uiState.copySealed(floatingButton = uiState.floatingButton.copy(isEnabled = false))
-                }
-
-                else -> {
-                    uiState.copySealed(
-                        floatingButton = uiState.floatingButton.copy(
-                            isEnabled = if (isNetworkSelected()) !isBlockchainAlreadyAdded() else false,
-                        ),
-                    )
-                }
-            }
-
-            uiState = state.copySealed(
-                warnings = uiState.warnings - AddCustomTokenWarning.TokenAlreadyAdded,
-            )
-        }
-
-        private fun isCustomTokenAlreadyAdded(): Boolean {
-            return when (getCustomTokenType()) {
-                CustomTokenType.TOKEN -> isTokenAlreadyAdded()
-                CustomTokenType.BLOCKCHAIN -> isBlockchainAlreadyAdded()
-            }
-        }
-
-        private fun isTokenAlreadyAdded(): Boolean {
-            return store.state.walletState.walletsStores
-                .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-                .flatten()
-                .filterIsInstance<Currency.Token>()
-                .any { wrappedCurrency ->
-                    val contractAddress = uiState.form.contractAddressInputField.value
-                    val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                    val sameId = foundToken?.id == wrappedCurrency.token.id
-                    val sameAddress = contractAddress == wrappedCurrency.token.contractAddress
-                    val sameBlockchain =
-                        Blockchain.fromNetworkId(networkSelectorValue.toNetworkId()) == wrappedCurrency.blockchain
-                    val isSameDerivationPath = getDerivationPath()?.rawPath == wrappedCurrency.derivationPath
-                    sameId && sameAddress && sameBlockchain && isSameDerivationPath
-                }
-        }
-
-        private fun isBlockchainAlreadyAdded(): Boolean {
-            return store.state.walletState.walletsStores
-                .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-                .flatten()
-                .filterIsInstance<Currency.Blockchain>()
-                .any {
-                    val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                    networkSelectorValue == it.blockchain && getDerivationPath()?.rawPath == it.derivationPath
-                }
-        }
-
-        private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
-            when {
-                isNetworkSelected() && type == AddCustomTokenError.InvalidContractAddress -> {
-                    val isAnotherTokenFieldsFilled = isAnyTokenFieldsFilled()
-                    uiState = uiState.copySealed(
-                        form = uiState.form.copy(
-                            contractAddressInputField = uiState.form.contractAddressInputField.copy(
-                                isError = true,
-                                error = TextReference.Res(
-                                    id = R.string.custom_token_creation_error_invalid_contract_address,
-                                ),
-                            ),
-                            tokenNameInputField = uiState.form.tokenNameInputField.copy(
-                                isEnabled = isAnotherTokenFieldsFilled,
-                            ),
-                            tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
-                                isEnabled = isAnotherTokenFieldsFilled,
-                            ),
-                            decimalsInputField = uiState.form.decimalsInputField.copy(
-                                isEnabled = isAnotherTokenFieldsFilled,
-                            ),
-                        ),
-                    )
-                }
-
-                !isNetworkSelected() || type == AddCustomTokenError.FieldIsEmpty -> {
-                    uiState = uiState.copySealed(
-                        form = uiState.form.copy(
-                            contractAddressInputField = uiState.form.contractAddressInputField.copy(isError = false),
-                            tokenNameInputField = uiState.form.tokenNameInputField.copy(value = "", isEnabled = false),
-                            tokenSymbolInputField = uiState.form.tokenSymbolInputField.copy(
-                                value = "",
-                                isEnabled = false,
-                            ),
-                            decimalsInputField = uiState.form.decimalsInputField.copy(value = "", isEnabled = false),
-                        ),
-                    )
-                }
-
-                else -> Unit
-            }
-        }
-
-        private fun getDerivationPath(): DerivationPath? {
-            val isNotDerivationPathSelected = !isDerivationPathSelected()
-            val network = if (isNotDerivationPathSelected) {
-                uiState.form.networkSelectorField.selectedItem.blockchain
-            } else {
-                uiState.form.derivationPathSelectorField?.selectedItem?.blockchain
-            }
-
-            return network?.derivationPath(
-                style = if (isNotDerivationPathSelected) {
-                    reduxStateHolder.scanResponse?.card?.derivationStyle
-                } else {
-                    DerivationStyle.LEGACY
-                },
-            )
         }
     }
 

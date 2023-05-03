@@ -264,7 +264,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 if (tokenIsSupported) {
                     warningsRemove.add(UnsupportedSolanaToken)
                 } else {
-                    if (ContractAddress.validateValue(ContractAddress.getFieldValue()) == AddCustomTokenError.FieldIsEmpty) {
+                    val validationResult = ContractAddress.validateValue(ContractAddress.getFieldValue())
+                    if (validationResult == AddCustomTokenError.FieldIsEmpty) {
                         warningsRemove.add(UnsupportedSolanaToken)
                     } else {
                         warningsAdd.add(UnsupportedSolanaToken)
