@@ -19,8 +19,8 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
         is OnboardingSaltPayAction -> OnboardingSaltPayReducer.reduce(action, state)
         is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState, state.isSaltPay))
-
-        is OnboardingWalletAction.GetToCreateWalletStep -> OnboardingWalletState(
+        is OnboardingWallet2Action -> OnboardingWallet2Reducer.reduce(action, state)
+        is OnboardingWalletAction.GetToCreateWalletStep -> state.copy(
             step = OnboardingWalletStep.CreateWallet,
         )
         is OnboardingWalletAction.GetToSaltPayStep -> state.copy(
@@ -63,6 +63,17 @@ private object ReducerForGlobalAction {
     }
 
     private fun maxBackupCards(isSaltPay: Boolean): Int = if (isSaltPay) 1 else 2
+}
+
+private object OnboardingWallet2Reducer {
+    fun reduce(action: OnboardingWallet2Action, state: OnboardingWalletState): OnboardingWalletState = when (action) {
+        is OnboardingWallet2Action.SetDependencies -> state.copy(
+            wallet2State = OnboardingWallet2State(
+                maxProgress = action.maxProgress,
+            ),
+        )
+        else -> state
+    }
 }
 
 private object BackupReducer {
