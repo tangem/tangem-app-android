@@ -17,6 +17,7 @@ import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUse
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.json.ByteArrayKeyAdapter
 import com.tangem.tap.domain.userWalletList.utils.json.CardBackupStatusAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.DerivationPathAdapterWithMigration
 import com.tangem.tap.domain.userWalletList.utils.json.ExtendedPublicKeysMapAdapter
 import com.tangem.tap.domain.userWalletList.utils.json.ScanResponseDerivedKeysMapAdapter
 import com.tangem.tap.domain.userWalletList.utils.json.WalletDerivedKeysMapAdapter
@@ -33,8 +34,8 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
         .add(ByteArrayKeyAdapter())
         .add(ExtendedPublicKeysMapAdapter())
         .add(CardBackupStatusAdapter())
+        .add(DerivationPathAdapterWithMigration())
         .add(TangemSdkAdapter.DateAdapter())
-        .add(TangemSdkAdapter.DerivationPathAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
         .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
         .add(KotlinJsonAdapterFactory())
