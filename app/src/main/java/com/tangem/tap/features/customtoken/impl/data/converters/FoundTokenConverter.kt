@@ -16,6 +16,7 @@ object FoundTokenConverter : Converter<CoinsResponse.Coin, FoundToken> {
             id = value.id,
             name = value.name,
             symbol = value.symbol,
+            isActive = value.active,
             network = value.networks.firstOrNull()?.let { network ->
                 FoundToken.Network(
                     id = network.networkId,
