@@ -18,15 +18,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.compose.PinCodeWidget
-import com.tangem.tap.common.extensions.configureSettings
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.getDrawableCompat
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.setDrawable
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.stop
-import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -34,11 +26,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.UtorgWebChromeClient
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.UtorgWebViewClient
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
@@ -56,7 +44,7 @@ import com.tangem.wallet.databinding.LayoutOnboardingMainBinding
 /**
 [REDACTED_AUTHOR]
  */
-internal class OnboardingSaltPayView(
+internal class OnboardingSaltPayStateHandler(
     private val walletFragment: OnboardingWalletFragment,
 ) {
 
