@@ -14,6 +14,7 @@ import org.rekotlin.StateType
  */
 data class OnboardingWalletState(
     val step: OnboardingWalletStep = OnboardingWalletStep.None,
+    val wallet2State: OnboardingWallet2State? = null,
     val backupState: BackupState = BackupState(),
     val onboardingSaltPayState: OnboardingSaltPayState? = null,
     val isSaltPay: Boolean = false,
@@ -31,14 +32,14 @@ data class OnboardingWalletState(
         }
 
     @Suppress("MagicNumber")
-    fun getMaxProgress(): Int = when {
-        isSaltPay -> 12
-        else -> 6
+    fun getMaxProgress(): Int {
+        val baseProgress = if (isSaltPay) 12 else 6
+        return getWallet2Progress() + baseProgress
     }
 
     @Suppress("ComplexMethod", "MagicNumber")
     fun getProgressStep(): Int {
-        return when {
+        val progressByStep = when {
             step == OnboardingWalletStep.CreateWallet -> 1
             step == OnboardingWalletStep.Backup -> {
                 when (backupState.backupStep) {
@@ -69,11 +70,19 @@ data class OnboardingWalletState(
             step == OnboardingWalletStep.Done -> getMaxProgress()
             else -> 1
         }
+
+        return getWallet2Progress() + progressByStep
     }
+
+    private fun getWallet2Progress(): Int = wallet2State?.maxProgress ?: 0
 }
 
+data class OnboardingWallet2State(
+    val maxProgress: Int,
+)
+
 enum class OnboardingWalletStep {
-    None, CreateWallet, Backup, SaltPay, Done
+    None, CreateWallet, SaltPay, Backup, Done
 }
 
 data class BackupState(
