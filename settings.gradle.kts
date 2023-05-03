@@ -57,6 +57,9 @@ include(":features:swap:presentation")
 
 include(":features:tester:api")
 include(":features:tester:impl")
+
+include(":features:wallet:api")
+include(":features:wallet:impl")
 // endregion Feature modules
 
 // region Domain modules
