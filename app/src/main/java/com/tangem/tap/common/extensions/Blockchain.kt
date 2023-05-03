@@ -40,6 +40,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.TON, Blockchain.TONTestnet -> R.drawable.ic_ton_no_color
         Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.ic_kava_no_color
         Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.ic_ravencoin_no_color
+        Blockchain.Cosmos, Blockchain.CosmosTestnet -> R.drawable.ic_cosmos_no_color
         else -> R.drawable.ic_tangem_logo
     }
 }
