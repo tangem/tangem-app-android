@@ -5,11 +5,12 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -75,7 +76,9 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.RestoreAppCurrency -> {
             store.dispatch(
                 GlobalAction.RestoreAppCurrency.Success(
-                    preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency(),
+                    preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
+                        ?.run { FiatCurrency(code, name, symbol) }
+                        ?: FiatCurrency.Default,
                 ),
             )
         }
