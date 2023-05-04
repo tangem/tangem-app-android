@@ -48,6 +48,8 @@ internal class BiometricUserWalletsKeysRepository(
                             UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = true)
                         is TangemSdkError.BiometricCryptographyKeyInvalidated ->
                             UserWalletsListError.EncryptionKeyInvalidated
+                        is TangemSdkError.BiometricsUnavailable ->
+                            UserWalletsListError.BiometricsAuthenticationDisabled
                         else -> error
                     }
                 }
