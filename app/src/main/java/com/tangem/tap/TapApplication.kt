@@ -20,6 +20,7 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
+import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -51,7 +52,6 @@ import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementa
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
-import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
@@ -66,7 +66,7 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var preferencesStorage: PreferencesStorage
+lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 lateinit var userTokensRepository: UserTokensRepository
@@ -134,6 +134,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
 
+    @Inject
+    lateinit var preferencesDataSource: PreferencesDataSource
+
     override fun onCreate() {
         super.onCreate()
 
@@ -161,7 +164,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         DomainLayer.init()
-        preferencesStorage = PreferencesStorage(this)
+        preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -246,7 +249,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initFeedbackManager(
         context: Context,
-        preferencesStorage: PreferencesStorage,
+        preferencesStorage: PreferencesDataSource,
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
