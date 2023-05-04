@@ -11,6 +11,8 @@ dependencies {
     implementation(deps.androidx.activity.compose)
 
     /** Compose */
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.foundation)
     implementation(deps.compose.navigation)
