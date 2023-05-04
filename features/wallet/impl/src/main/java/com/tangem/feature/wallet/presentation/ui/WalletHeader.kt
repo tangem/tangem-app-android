@@ -1,9 +1,7 @@
-package com.tangem.feature.main.presentation.ui
+package com.tangem.feature.wallet.presentation.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
@@ -14,10 +12,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
-import com.valentinilk.shimmer.shimmer
+import com.tangem.feature.wallet.presentation.ui.config.WalletHeaderConfig
+import com.tangem.feature.wallet.presentation.ui.state.BalanceUIState
+
+private const val DOTS = "•••"
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -29,14 +32,19 @@ fun WalletHeaderCard(config: WalletHeaderConfig, modifier: Modifier = Modifier) 
         onClick = config.onClick ?: {},
         enabled = config.onClick != null,
     ) {
-        Row(
+        ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(intrinsicSize = IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = TangemTheme.dimens.spacing12),
         ) {
+            val (balanceBlock, imageItem) = createRefs()
             Column(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                modifier = Modifier.constrainAs(balanceBlock) {
+                    centerVerticallyTo(parent)
+                    start.linkTo(parent.start)
+                    end.linkTo(imageItem.start)
+                    width = Dimension.fillToConstraints
+                },
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
             ) {
                 HeaderWalletName(
@@ -53,11 +61,15 @@ fun WalletHeaderCard(config: WalletHeaderConfig, modifier: Modifier = Modifier) 
                     style = TangemTheme.typography.caption,
                 )
             }
+            val imageWidth = TangemTheme.dimens.size120
             Image(
-                modifier = Modifier
-                    .width(TangemTheme.dimens.size120)
-                    .padding(end = TangemTheme.dimens.spacing18)
-                    .fillMaxHeight(),
+                modifier = Modifier.constrainAs(imageItem) {
+                    centerVerticallyTo(parent)
+                    top.linkTo(parent.top)
+                    end.linkTo(parent.end)
+                    height = Dimension.fillToConstraints
+                    width = Dimension.value(imageWidth)
+                },
                 painter = config.cardImage,
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
@@ -106,20 +118,16 @@ private fun HeaderBalanceTitle(balance: String, balanceState: BalanceUIState) {
             )
         }
         BalanceUIState.LOADING -> {
-            Box(
-                modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens.spacing4)
-                    .size(width = TangemTheme.dimens.size102, height = TangemTheme.dimens.size24)
-                    .shimmer()
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = RoundedCornerShape(TangemTheme.dimens.radius6),
-                    ),
+            ShimmerRectangle(
+                modifier = Modifier.size(
+                    width = TangemTheme.dimens.size102,
+                    height = TangemTheme.dimens.size24,
+                ),
             )
         }
         BalanceUIState.HIDDEN -> {
             Text(
-                text = "•••",
+                text = DOTS,
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.h2,
             )
