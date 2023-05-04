@@ -199,6 +199,10 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
             is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarningDialog,
             )
+            is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
+                onConfirm = { /* [REDACTED_TODO_COMMENT] */ },
+                onDismiss = this::dismissWarningDialog,
+            )
             else -> currentDialog
         }
     }
