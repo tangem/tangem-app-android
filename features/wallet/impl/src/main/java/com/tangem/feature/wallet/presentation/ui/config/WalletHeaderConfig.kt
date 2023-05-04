@@ -1,6 +1,7 @@
-package com.tangem.feature.main.presentation.ui
+package com.tangem.feature.wallet.presentation.ui.config
 
 import androidx.compose.ui.graphics.painter.Painter
+import com.tangem.feature.wallet.presentation.ui.state.BalanceUIState
 
 data class WalletHeaderConfig(
     val walletName: String,
