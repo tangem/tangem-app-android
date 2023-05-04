@@ -3,7 +3,9 @@ package com.tangem.tap.features.tokens.impl.presentation.router
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
@@ -15,15 +17,20 @@ import com.tangem.wallet.R
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultTokensListRouter : TokensListRouter {
+internal class DefaultTokensListRouter(
+    private val customTokenFeatureToggles: CustomTokenFeatureToggles,
+) : TokensListRouter {
 
     override fun popBackStack() {
         store.dispatch(NavigationAction.PopBackTo())
-        store.dispatch(TokensAction.ResetState)
     }
 
     override fun openAddCustomTokenScreen() {
-        store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
+        if (customTokenFeatureToggles.isRedesignedScreenEnabled) {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
+        } else {
+            store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
+        }
     }
 
     override fun showAddressCopiedNotification() {
