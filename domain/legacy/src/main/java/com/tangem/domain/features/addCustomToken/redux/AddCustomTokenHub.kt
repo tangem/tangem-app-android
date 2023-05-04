@@ -251,11 +251,9 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         when (state.getCustomTokenType()) {
             CustomTokenType.Blockchain -> {
                 warningsRemove.add(UnsupportedSolanaToken)
-                if (alreadyAdded) {
-                    warningsAdd.add(TokenAlreadyAdded)
-                } else {
-                    warningsRemove.add(TokenAlreadyAdded)
-                }
+
+                if (alreadyAdded) warningsAdd.add(TokenAlreadyAdded) else warningsRemove.add(TokenAlreadyAdded)
+
                 if (state.derivationPathIsSelected()) {
                     warningsAdd.add(PotentialScamToken)
                 } else {
@@ -266,12 +264,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 if (tokenIsSupported) {
                     warningsRemove.add(UnsupportedSolanaToken)
                 } else {
-                    val error = ContractAddress.validateValue(ContractAddress.getFieldValue())
-                    when (error) {
-                        AddCustomTokenError.FieldIsEmpty -> warningsRemove.add(UnsupportedSolanaToken)
-                        else -> {
-                            warningsAdd.add(UnsupportedSolanaToken)
-                        }
+                    val validationResult = ContractAddress.validateValue(ContractAddress.getFieldValue())
+                    if (validationResult == AddCustomTokenError.FieldIsEmpty) {
+                        warningsRemove.add(UnsupportedSolanaToken)
+                    } else {
+                        warningsAdd.add(UnsupportedSolanaToken)
                     }
                 }
 
@@ -329,12 +326,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             // blockchain
             else -> {
                 if (state.networkIsSelected()) {
-                    val alreadyAdded = isBlockchainPersistIntoAppSavedTokensList()
-                    if (alreadyAdded) {
-                        disableAddButton()
-                    } else {
-                        enableAddButton()
-                    }
+                    if (isBlockchainPersistIntoAppSavedTokensList()) disableAddButton() else enableAddButton()
                 } else {
                     disableAddButton()
                 }
@@ -369,18 +361,18 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         CustomTokenType.Token -> isTokenPersistIntoAppSavedTokensList()
     }
 
-    private fun isTokenPersistIntoAppSavedTokensList(
-        tokenId: String? = hubState.foundToken?.id,
-        tokenContractAddress: String = ContractAddress.getFieldValue(),
-        tokenNetworkId: String = Network.getFieldValue<Blockchain>().toNetworkId(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
-    ): Boolean {
+    private fun isTokenPersistIntoAppSavedTokensList(): Boolean {
         val savedCurrencies = hubState.appSavedCurrencies ?: return false
+
+        val tokenId = hubState.foundToken?.id
+        val tokenContractAddress = ContractAddress.getFieldValue<String>()
+        val tokenNetworkId = Network.getFieldValue<Blockchain>().toNetworkId()
+        val selectedDerivation = DerivationPath.getFieldValue<Blockchain>()
 
         val derivationPath = getDerivationPathFromSelectedBlockchain(selectedDerivation)
         savedCurrencies.forEach { wrappedCurrency ->
             when (wrappedCurrency) {
-                is DomainWrapped.Currency.Blockchain -> {}
+                is DomainWrapped.Currency.Blockchain -> Unit
                 is DomainWrapped.Currency.Token -> {
                     val sameId = tokenId == wrappedCurrency.token.id
                     val sameAddress = tokenContractAddress == wrappedCurrency.token.contractAddress
@@ -396,14 +388,12 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return false
     }
 
-    private fun isBlockchainPersistIntoAppSavedTokensList(
-        selectedNetwork: Blockchain = Network.getFieldValue(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
-    ): Boolean {
-        val state = hubState
-        val savedCurrencies = state.appSavedCurrencies ?: return false
-
+    private fun isBlockchainPersistIntoAppSavedTokensList(): Boolean {
+        val savedCurrencies = hubState.appSavedCurrencies ?: return false
+        val selectedNetwork = Network.getFieldValue<Blockchain>()
+        val selectedDerivation = DerivationPath.getFieldValue<Blockchain>()
         val derivationPath = getDerivationPathFromSelectedBlockchain(selectedDerivation)
+
         savedCurrencies.forEach { wrappedCurrency ->
             when (wrappedCurrency) {
                 is DomainWrapped.Currency.Blockchain -> {
@@ -411,7 +401,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     val isSameDerivationPath = derivationPath?.rawPath == wrappedCurrency.derivationPath
                     if (isSameBlockchain && isSameDerivationPath) return true
                 }
-                is DomainWrapped.Currency.Token -> {}
+
+                is DomainWrapped.Currency.Token -> Unit
             }
         }
         return false
