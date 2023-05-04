@@ -53,7 +53,7 @@ import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeature
 import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
@@ -142,7 +142,14 @@ class TapApplication : Application(), ImageLoaderFactory {
                 appReducer(action, state, appStateHolder)
             },
             middleware = AppState.getMiddleware(),
-            state = AppState(),
+            state = AppState(
+                daggerGraphState = DaggerGraphState(
+                    assetReader = assetReader,
+                    networkConnectionManager = networkConnectionManager,
+                    tokensListFeatureToggles = tokensListFeatureToggles,
+                    customTokenFeatureToggles = customTokenFeatureToggles,
+                ),
+            ),
         )
 
         if (BuildConfig.DEBUG) {
@@ -177,15 +184,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
-
-        store.dispatch(
-            action = DaggerGraphAction.SetApplicationDependencies(
-                assetReader = assetReader,
-                networkConnectionManager = networkConnectionManager,
-                tokensListFeatureToggles = tokensListFeatureToggles,
-                customTokenFeatureToggles = customTokenFeatureToggles,
-            ),
-        )
 
         scope.launch {
             featureTogglesManager.init()
