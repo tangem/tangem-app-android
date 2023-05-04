@@ -9,4 +9,7 @@ internal interface CustomTokenRouter {
 
     /** Return to last screen */
     fun popBackStack()
+
+    /** Open wallet (main) screen */
+    fun openWalletScreen()
 }
