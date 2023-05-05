@@ -10,12 +10,12 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.map
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
@@ -233,17 +233,38 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
         val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+        var isBlockchainsForCurvesExist = false
         createWalletResponse.forEach { response ->
             val blockchainsForCurve = getBlockchains(response.cardId, card).filter {
                 it.getSupportedCurves().contains(response.wallet.curve)
             }
-            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath(card.derivationStyle) }
+            val derivationPaths = blockchainsForCurve.mapNotNull {
+                isBlockchainsForCurvesExist = true
+                it.derivationPath(card.derivationStyle)
+            }
             if (derivationPaths.isNotEmpty()) {
                 map[response.wallet.publicKey.toMapKey()] = derivationPaths
             }
         }
+        val cardEnv = session.environment.card
+        if (cardEnv == null) {
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+            return
+        }
         if (map.isEmpty()) {
-            callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
+            if (isBlockchainsForCurvesExist) {
+                callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
+            } else {
+                // if there is no blockchains to derive, just return success response with empty derivedKeys
+                callback(
+                    CompletionResult.Success(
+                        CreateProductWalletTaskResponse(
+                            card = cardEnv,
+                            primaryCard = primaryCard,
+                        ),
+                    ),
+                )
+            }
             return
         }
 
@@ -254,7 +275,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                         callback(
                             CompletionResult.Success(
                                 CreateProductWalletTaskResponse(
-                                    card = session.environment.card!!,
+                                    card = cardEnv,
                                     derivedKeys = result.data.entries,
                                     primaryCard = primaryCard,
                                 ),
