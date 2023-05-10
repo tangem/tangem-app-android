@@ -1,6 +1,6 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.tangemSdkManager
