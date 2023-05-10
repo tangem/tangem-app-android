@@ -1,7 +1,7 @@
 package com.tangem.tap.features.demo
 
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 
 /**
 [REDACTED_AUTHOR]

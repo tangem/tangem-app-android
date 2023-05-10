@@ -16,7 +16,7 @@ import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.datasource.asset.AssetReader
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
