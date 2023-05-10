@@ -4,6 +4,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.wallet.R
 
 sealed class UserWalletsListError(code: Int) : TangemError(code) {
+
     override val silent: Boolean
         get() = (cause as? TangemError)?.silent == true
 
@@ -14,8 +15,12 @@ sealed class UserWalletsListError(code: Int) : TangemError(code) {
         override val messageResId: Int = R.string.user_wallet_list_error_wallet_already_saved
     }
 
-    object InvalidEncryptionKey : UserWalletsListError(code = 60002) {
-        override var customMessage: String = "Invalid encryption key"
+    object EncryptionKeyInvalidated : UserWalletsListError(code = 60002) {
+        override var customMessage: String = "Encryption key invalidated"
+    }
+
+    object BiometricsAuthenticationDisabled : UserWalletsListError(code = 60005) {
+        override var customMessage: String = "Biometrics authentication disabled"
     }
 
     data class BiometricsAuthenticationLockout(val isPermanent: Boolean) : UserWalletsListError(code = 60003) {
