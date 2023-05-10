@@ -1,16 +1,13 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.*
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -38,6 +35,9 @@ class TapWalletManager {
     }
 
     suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
+        // do nothing if its the same wallet
+        if (store.state.globalState.scanResponse == userWallet.scanResponse) return
+
         Analytics.setContext(userWallet.scanResponse)
         if (sendAnalyticsEvent) {
             Analytics.send(Basic.WalletOpened())
