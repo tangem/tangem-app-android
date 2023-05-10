@@ -72,7 +72,7 @@ arrow = "1.2.0-RC"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-209"
+tangemBlockchainSdk = "release-app_4.5-212"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-229"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
