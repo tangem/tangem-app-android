@@ -45,7 +45,7 @@ object SaltPayWorkaround {
     ) + attachTestWalletCardIds()
 
     val walletCardIdRanges = listOf(
-        CardIdRange("AC05000000000003", "AC05000000023997")!!,
+        CardIdRange("AC05000000000003", "AC05000000015993")!!,
     ) + attachTestWalletCardIdRanges()
 
     fun tokenFrom(blockchain: Blockchain): Token {
