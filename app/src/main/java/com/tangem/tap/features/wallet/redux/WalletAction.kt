@@ -105,9 +105,8 @@ sealed class WalletAction : Action {
 
     sealed class TradeCryptoAction : WalletAction() {
         object Sell : TradeCryptoAction()
-        data class Buy(
-            val checkUserLocation: Boolean = true,
-        ) : TradeCryptoAction()
+
+        data class Buy(val checkUserLocation: Boolean = true) : TradeCryptoAction()
 
         data class FinishSelling(val transactionId: String) : TradeCryptoAction()
         data class SendCrypto(
@@ -134,5 +133,5 @@ sealed class WalletAction : Action {
 
     data class UpdateUserWalletArtwork(val walletId: UserWalletId) : WalletAction()
 
-    data class SetArtworkUrl(val url: String) : WalletAction()
+    data class SetArtworkUrl(val userWalletId: UserWalletId, val url: String) : WalletAction()
 }
