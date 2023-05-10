@@ -55,25 +55,28 @@ sealed class SocialNetwork(val id: String, val iconRes: Int) {
     object GitHub : SocialNetwork("GitHub", R.drawable.ic_github)
     object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube)
     object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin)
+    object Discord : SocialNetwork("Discord", R.drawable.ic_discord)
 }
 
 object TangemSocialAccounts {
     val accountsEn: List<SocialNetworkLink> = listOf(
-        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/TangemCards"),
+        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat"),
         SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
         SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
         SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
+        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/7AqTVyqdGS"),
     )
     val accountsRu: List<SocialNetworkLink> = listOf(
-        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_ru"),
+        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat_ru"),
         SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
         SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
         SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
+        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/7AqTVyqdGS"),
     )
 }
