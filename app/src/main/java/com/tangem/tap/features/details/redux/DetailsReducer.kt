@@ -1,7 +1,8 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
@@ -40,6 +41,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         }
         is DetailsAction.ChangeAppCurrency ->
             detailsState.copy(appCurrency = action.fiatCurrency)
+        is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
         else -> detailsState
     }
 }
@@ -68,6 +70,15 @@ private fun handlePrepareCardSettingsScreen(
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
         card = card,
         resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
+        accessCodeRecovery = if (cardTypesResolver.isWallet2()) {
+            val enabled = card.userSettings?.isUserCodeRecoveryAllowed ?: false
+            AccessCodeRecoveryState(
+                enabledOnCard = enabled,
+                enabledSelection = enabled,
+            )
+        } else {
+            null
+        },
     )
     return state.copy(cardSettingsState = cardSettingsState)
 }
@@ -186,6 +197,34 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,
         -> state
+    }
+}
+
+private fun handleAccessCodeRecoveryAction(
+    action: DetailsAction.AccessCodeRecovery,
+    state: DetailsState,
+): DetailsState {
+    return when (action) {
+        DetailsAction.AccessCodeRecovery.Open -> {
+            val accessCodeRecovery = state.cardSettingsState?.accessCodeRecovery?.copy(
+                enabledSelection = state.cardSettingsState.accessCodeRecovery.enabledOnCard,
+            )
+            state.copy(cardSettingsState = state.cardSettingsState?.copy(accessCodeRecovery = accessCodeRecovery))
+        }
+        is DetailsAction.AccessCodeRecovery.SaveChanges -> state
+        is DetailsAction.AccessCodeRecovery.SelectOption -> {
+            val accessCodeRecovery = state.cardSettingsState?.accessCodeRecovery?.copy(
+                enabledSelection = action.enabled,
+            )
+            state.copy(cardSettingsState = state.cardSettingsState?.copy(accessCodeRecovery = accessCodeRecovery))
+        }
+        is DetailsAction.AccessCodeRecovery.SaveChanges.Success -> {
+            val accessCodeRecovery = state.cardSettingsState?.accessCodeRecovery?.copy(
+                enabledOnCard = action.enabled,
+                enabledSelection = action.enabled,
+            )
+            state.copy(cardSettingsState = state.cardSettingsState?.copy(accessCodeRecovery = accessCodeRecovery))
+        }
     }
 }
 
