@@ -25,6 +25,7 @@ import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.tap.features.walletSelector.ui.components.BiometricsDisabledWarningContent
 import com.tangem.tap.features.walletSelector.ui.components.BiometricsLockoutWarningContent
 import com.tangem.tap.features.walletSelector.ui.components.KeyInvalidatedWarningContent
 import com.tangem.tap.features.walletSelector.ui.components.RemoveWalletDialogContent
@@ -96,6 +97,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
             is DialogModel.RenameWalletDialog -> RenameWalletDialogContent(dialog)
             is WarningModel.BiometricsLockoutWarning -> BiometricsLockoutWarningContent(dialog)
             is WarningModel.KeyInvalidatedWarning -> KeyInvalidatedWarningContent(dialog)
+            is WarningModel.BiometricsDisabledWarning -> BiometricsDisabledWarningContent(dialog)
         }
     }
 }
