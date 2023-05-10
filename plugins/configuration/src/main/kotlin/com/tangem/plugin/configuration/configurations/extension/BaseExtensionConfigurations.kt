@@ -20,6 +20,7 @@ internal fun BaseExtension.configureCompilerOptions() {
 internal fun BaseExtension.configureCompose(project: Project) {
     val useCompose = with(project.path) {
         contains(":ui") ||
+            contains(":onboarding") ||
             contains(":presentation") ||
             contains(":app") || // TODO: [REDACTED_JIRA]
             contains(":tester:impl") // TODO: Rename module
