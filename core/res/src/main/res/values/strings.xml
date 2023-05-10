@@ -27,6 +27,7 @@
     <string name="biometric_lockout_permanent_warning_description">Please scan the card</string>
     <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card</string>
     <string name="biometric_lockout_warning_title">Too many attempts</string>
+    <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
     <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards of this wallet. Note that you will not be able to reset access code on this card as well.</string>
     <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_footer">Disable the ability to reset access code on this card or other cards in this wallet</string>
