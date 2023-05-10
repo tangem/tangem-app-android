@@ -71,7 +71,7 @@ kotlinSerialization = "1.4.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-205-fix-sending-205"
+tangemBlockchainSdk = "develop-205-fix-sending-214"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-221"
 # tangemCardSdk = "0.0.1" # Keep it! - used for local builds
