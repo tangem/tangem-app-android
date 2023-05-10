@@ -27,6 +27,7 @@
     <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту</string>
     <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту</string>
     <string name="biometric_lockout_warning_title">Слишком много попыток</string>
+    <string name="biometric_unavailable_warning">Вы отключили биометрическую аутентификацию на вашем телефоне и не сможете сохранять кошельки в приложении. Для сохранения кошельков, пожалуйста, включите функцию биометрической аутентификации в настройках телефона.</string>
     <string name="card_settings_access_code_recovery_disabled_description">Отключите эту опцию, если не хотите, чтобы эта карта использовалась для сброса кодов доступа на другие карты этого кошелька. Обратите внимание, сброс кода также не будет доступен на этой карте.</string>
     <string name="card_settings_access_code_recovery_enabled_description">Использовать эту карту для сброса кода доступа на других картах в этом кошельке</string>
     <string name="card_settings_access_code_recovery_footer">Отключить возможность сброса кода доступа на этой карте или других картах этого кошелька</string>
