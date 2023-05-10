@@ -70,6 +70,10 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
             is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarning,
             )
+            is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
+                onConfirm = { /* TODO: Will be in next task MR */ },
+                onDismiss = this::dismissWarning,
+            )
             else -> null
         }
     }
