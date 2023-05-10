@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState

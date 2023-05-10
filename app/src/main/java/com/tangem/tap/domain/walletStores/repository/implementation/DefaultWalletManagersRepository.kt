@@ -9,13 +9,14 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.mapFailure
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork

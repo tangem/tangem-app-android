@@ -46,7 +46,10 @@ internal class BiometricUserWalletsKeysRepository(
                             UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = false)
                         is TangemSdkError.BiometricsAuthenticationPermanentLockout ->
                             UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = true)
-                        is TangemSdkError.InvalidEncryptionKey -> UserWalletsListError.InvalidEncryptionKey
+                        is TangemSdkError.BiometricCryptographyKeyInvalidated ->
+                            UserWalletsListError.EncryptionKeyInvalidated
+                        is TangemSdkError.BiometricsUnavailable ->
+                            UserWalletsListError.BiometricsAuthenticationDisabled
                         else -> error
                     }
                 }
@@ -91,28 +94,36 @@ internal class BiometricUserWalletsKeysRepository(
     private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
         return getUserWalletsIds()
             .map { userWalletId ->
-                // This is possible because the Card SDK cipher key has an expiration time
-                // If this operation runs more than that expiration time, the user will have to re-authorize
-                // to receive all keys
+                // It is possible to request multiple user wallet keys from biometric storage because
+                // the biometric cryptography key has an expiration time.
+                // If this operation runs more than that expiration time, then the user will have to re-authorize
+                // to receive all user wallets encryption keys
                 getEncryptionKey(userWalletId)
                     .flatMapOnFailure { error ->
-                        // If key decryption failed then skip it
-                        if (error is TangemSdkError.EncryptionOperationFailed) {
-                            CompletionResult.Success(data = null)
-                        } else {
-                            CompletionResult.Failure(error)
+                        when (error) {
+                            is TangemSdkError.InvalidBiometricCryptographyKey,
+                            is TangemSdkError.BiometricCryptographyOperationFailed,
+                            -> {
+                                // These errors can be skipped as the user has the option to re-save their wallets
+                                // in case they occur
+                                CompletionResult.Success(data = null)
+                            }
+                            else -> CompletionResult.Failure(error)
                         }
                     }
                     .doOnFailure { error ->
                         when (error) {
                             is TangemSdkError.UserCanceledBiometricsAuthentication -> {
-                                // If the user cancels biometric authentication, cancel the request for all keys
+                                // If the user cancels biometric authentication, then cancel operation with error
                                 return CompletionResult.Failure(error)
                             }
-                            is TangemSdkError.InvalidEncryptionKey -> {
-                                if (error.isKeyRegenerated) {
+                            is TangemSdkError.BiometricCryptographyKeyInvalidated -> {
+                                // If the biometric cryptography key was invalidated,
+                                // then delete all user wallets encryption keys and cancel operation with error
+                                getUserWalletsIds().forEach { userWalletId ->
                                     deleteEncryptionKey(userWalletId)
                                 }
+                                return CompletionResult.Failure(error)
                             }
                         }
                     }
