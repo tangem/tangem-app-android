@@ -10,6 +10,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -31,14 +32,6 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userTokensRepository
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -84,6 +77,8 @@ class DetailsMiddleware {
                         allowsRequestAccessCodeFromRepository = true,
                     )
                         .doOnSuccess { scanResponse ->
+                            // if we use biometric, scanResponse in GlobalState is null, and crashes NPE on twin cards
+                            store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
                             val currentUserWalletId = state.scanResponse
                                 ?.let { UserWalletIdBuilder.scanResponse(it).build() }
                             val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse)
