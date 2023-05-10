@@ -43,6 +43,17 @@ internal fun WarningDialog(warning: WarningModel?) {
                 ),
             )
         }
+        is WarningModel.BiometricsDisabledWarning -> {
+            BasicDialog(
+                title = stringResource(id = R.string.common_warning),
+                message = stringResource(id = R.string.biometric_unavailable_warning),
+                onDismissDialog = warning.onDismiss,
+                confirmButton = DialogButton(
+                    title = stringResource(id = R.string.common_ok),
+                    onClick = warning.onConfirm,
+                ),
+            )
+        }
     }
 }
 
@@ -103,7 +114,6 @@ private fun BiometricsLockoutDialog_Permanent_Preview_Dark() {
     }
 }
 
-// region Preview
 @Composable
 private fun KeyInvalidatedWarningSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
@@ -126,5 +136,27 @@ private fun KeyInvalidatedWarningPreview_Dark() {
         KeyInvalidatedWarningSample()
     }
 }
-// endregion Preview
+
+@Composable
+private fun BiometricDisabledWarningSample(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        WarningDialog(warning = WarningModel.BiometricsDisabledWarning(onConfirm = {}, onDismiss = {}))
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun BiometricDisabledWarningPreview_Light() {
+    TangemTheme {
+        BiometricDisabledWarningSample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun BiometricDisabledWarningPreview_Dark() {
+    TangemTheme(isDark = true) {
+        BiometricDisabledWarningSample()
+    }
+}
 // endregion Preview
