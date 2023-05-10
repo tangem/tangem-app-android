@@ -320,7 +320,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     totalTokenLayout.show(false)
                     tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                     tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                    llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update(
+                            "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                        )
+                    }
 
                     val willSent = getString(
                         R.string.send_total_subtitle_format,
@@ -335,7 +339,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     totalTokenLayout.show(false)
                     tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
                     tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
-                    llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
+                    }
 
                     if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
                         llTotalContainer.tvWillBeSentValue.hide()
@@ -357,7 +363,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     totalTokenLayout.show(false)
                     tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                     tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                    llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update(
+                            "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                        )
+                    }
 
                     val willSent = getString(
                         R.string.send_total_subtitle_asset_format,
