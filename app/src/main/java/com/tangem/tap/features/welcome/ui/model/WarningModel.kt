@@ -9,4 +9,9 @@ internal sealed interface WarningModel {
     data class KeyInvalidatedWarning(
         val onDismiss: () -> Unit,
     ) : WarningModel
+
+    data class BiometricsDisabledWarning(
+        val onConfirm: () -> Unit,
+        val onDismiss: () -> Unit,
+    ) : WarningModel
 }
