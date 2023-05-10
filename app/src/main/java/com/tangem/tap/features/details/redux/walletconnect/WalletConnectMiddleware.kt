@@ -4,10 +4,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
