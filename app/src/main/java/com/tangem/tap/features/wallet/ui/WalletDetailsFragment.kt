@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -27,8 +31,16 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.appendIfNotNull
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.model.WalletDataModel
@@ -45,7 +57,15 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
-import com.tangem.tap.features.wallet.ui.utils.*
+import com.tangem.tap.features.wallet.ui.utils.assembleWarnings
+import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
+import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
+import com.tangem.tap.features.wallet.ui.utils.isAvailableToSwap
+import com.tangem.tap.features.wallet.ui.utils.mainButton
+import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.tap.walletCurrenciesManager
@@ -63,9 +83,7 @@ import javax.inject.Inject
  */
 @Suppress("LargeClass", "MagicNumber")
 @AndroidEntryPoint
-class WalletDetailsFragment :
-    Fragment(R.layout.fragment_wallet_details),
-    SafeStoreSubscriber<WalletState> {
+class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeStoreSubscriber<WalletState> {
 
     @Inject
     lateinit var swapInteractor: SwapInteractor
@@ -157,18 +175,6 @@ class WalletDetailsFragment :
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
-    override fun onStart() {
-        super.onStart()
-        store.subscribe(this) { state ->
-            state.select { it.walletState }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
@@ -178,6 +184,16 @@ class WalletDetailsFragment :
         setupButtons()
         setupWarningsRecyclerView()
         setupTestActionButton()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        store.subscribe(this) { state -> state.select(AppState::walletState) }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        store.unsubscribe(this)
     }
 
     override fun onDestroyView() {
@@ -198,18 +214,13 @@ class WalletDetailsFragment :
         rvWarningMessages.addItemDecoration(SpaceItemDecoration.vertical(8f))
     }
 
-    private fun setupButtons() = with(binding) {
-        rowButtons.onSendClick = {
-            store.dispatch(WalletAction.Send())
-        }
+    private fun setupButtons() {
+        binding.rowButtons.onSendClick = { store.dispatch(WalletAction.Send()) }
     }
 
     private fun setupTestActionButton() {
         view?.findViewById<View>(R.id.l_balance)?.let { view ->
-            TestActions.initFor(
-                view = view,
-                actions = TestWallet.solanaRentExemptWarning(),
-            )
+            TestActions.initFor(view = view, actions = TestWallet.solanaRentExemptWarning())
         }
     }
 
@@ -223,10 +234,8 @@ class WalletDetailsFragment :
 
     private fun updateViewMeasurements() {
         val tvFiatAmount = binding.lWalletDetails.lBalance.tvFiatAmount
-        val paddingStart = when (tvFiatAmount.text) {
-            UNKNOWN_AMOUNT_SIGN -> 16f
-            else -> 12f
-        }
+        val paddingStart = if (tvFiatAmount.text == UNKNOWN_AMOUNT_SIGN) 16f else 12f
+
         tvFiatAmount.setPadding(
             tvFiatAmount.dpToPx(paddingStart).toInt(),
             tvFiatAmount.paddingTop,
@@ -259,12 +268,11 @@ class WalletDetailsFragment :
                 }
                 binding.srlWalletDetails.isRefreshing = true
                 lifecycleScope.launch(Dispatchers.Default) {
-                    walletCurrenciesManager.update(selectedUserWallet, walletData.currency)
-                        .doOnResult {
-                            withMainContext {
-                                binding.srlWalletDetails.isRefreshing = false
-                            }
+                    walletCurrenciesManager.update(selectedUserWallet, walletData.currency).doOnResult {
+                        withMainContext {
+                            binding.srlWalletDetails.isRefreshing = false
                         }
+                    }
                 }
             }
         }
@@ -272,14 +280,11 @@ class WalletDetailsFragment :
 
     private fun setupCopyAndShareButtons(walletAddress: String?) {
         binding.lWalletDetails.btnCopy.setOnClickListener {
-            if (walletAddress != null) {
-                store.dispatch(WalletAction.CopyAddress(walletAddress, requireContext()))
-            }
+            if (walletAddress != null) store.dispatch(WalletAction.CopyAddress(walletAddress, requireContext()))
         }
+
         binding.lWalletDetails.btnShare.setOnClickListener {
-            if (walletAddress != null) {
-                store.dispatch(WalletAction.ShareAddress(walletAddress, requireContext()))
-            }
+            if (walletAddress != null) store.dispatch(WalletAction.ShareAddress(walletAddress, requireContext()))
         }
     }
 
@@ -339,9 +344,7 @@ class WalletDetailsFragment :
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
-        val knownTransactions = pendingTransactions.filterNot {
-            it.type == PendingTransactionType.Unknown
-        }
+        val knownTransactions = pendingTransactions.filterNot { it.type == PendingTransactionType.Unknown }
         pendingTransactionAdapter.submitList(knownTransactions)
         binding.rvPendingTransaction.show(knownTransactions.isNotEmpty())
     }
@@ -387,8 +390,7 @@ class WalletDetailsFragment :
             chipGroupAddressType.show()
             chipGroupAddressType.fitChipsByGroupWidth()
 
-            val checkedId =
-                MultipleAddressUiHelper.typeToId(selectedAddress.type)
+            val checkedId = MultipleAddressUiHelper.typeToId(selectedAddress.type)
             if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
             chipGroupAddressType.setOnCheckedChangeListener { _, checkedId ->
@@ -443,11 +445,14 @@ class WalletDetailsFragment :
                     -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
                     }
-                    else -> {
+
+                    is WalletDataModel.TransactionInProgress -> {
                         lBalance.tvStatus.setWarningStatus(R.string.wallet_balance_tx_in_progress)
+                        showPendingTransactionsIfPresent(status.pendingTransactions)
                     }
+
+                    else -> Unit
                 }
-                showPendingTransactionsIfPresent(status.pendingTransactions)
             }
             is WalletDataModel.Unreachable -> {
                 lBalanceError.root.hide()
@@ -470,10 +475,12 @@ class WalletDetailsFragment :
                         walletData.currency.currencySymbol,
                     )
             }
-            else -> {}
+
+            else -> Unit
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_remove -> {
@@ -483,10 +490,15 @@ class WalletDetailsFragment :
                 }
                 false
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    @Deprecated(
+        message = "Deprecated in Java",
+        replaceWith = ReplaceWith("inflater.inflate(R.menu.menu_wallet_details, menu)", "com.tangem.wallet.R"),
+    )
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_wallet_details, menu)
     }
