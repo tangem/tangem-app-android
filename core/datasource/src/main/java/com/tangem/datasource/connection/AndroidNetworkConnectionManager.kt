@@ -15,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -35,11 +36,12 @@ internal class AndroidNetworkConnectionManager @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworkConnectionManager {
 
-    override val isOnline: Boolean get() = _isOnline.value
-
     private val _isOnline = MutableStateFlow(value = false)
     private val callbacks = NetworkConnectionManagerCallbacks()
     private val receiver = NetworkConnectionBroadcastReceiver()
+
+    override val isOnline: Boolean get() = _isOnline.value
+    override val isOnlineFlow: StateFlow<Boolean> = _isOnline
 
     init {
         (context as? Application)?.registerActivityLifecycleCallbacks(callbacks)
