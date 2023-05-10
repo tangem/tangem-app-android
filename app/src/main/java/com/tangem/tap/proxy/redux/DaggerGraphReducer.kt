@@ -16,6 +16,7 @@ object DaggerGraphReducer {
                 assetReader = action.assetReader,
                 networkConnectionManager = action.networkConnectionManager,
                 tokensListFeatureToggles = action.tokensListFeatureToggles,
+                customTokenFeatureToggles = action.customTokenFeatureToggles,
             )
             is DaggerGraphAction.SetActivityDependencies -> state.daggerGraphState.copy(
                 testerRouter = action.testerRouter,
