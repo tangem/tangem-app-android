@@ -36,7 +36,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
-import com.tangem.tap.features.addCustomToken.compose.SelectTokenNetworkDialog
+import com.tangem.tap.features.customtoken.legacy.compose.SelectTokenNetworkDialog
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
