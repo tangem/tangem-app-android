@@ -1,6 +1,6 @@
 package com.tangem.tap.features.disclaimer
 
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.tap.persistence.DisclaimerPrefStorage
