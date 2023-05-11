@@ -56,7 +56,11 @@ internal fun WalletDataModel.isAvailableToSell(exchangeManager: CurrencyExchange
 internal fun WalletDataModel.isAvailableToSwap(
     swapFeatureToggleManager: SwapFeatureToggleManager,
     swapInteractor: SwapInteractor,
+    isSingleWallet: Boolean,
 ): Boolean {
+    if (isSingleWallet) {
+        return false
+    }
     if (currency.blockchain.id == Blockchain.Optimism.id && !swapFeatureToggleManager.isOptimismSwapEnabled) {
         return false
     }
@@ -68,11 +72,12 @@ internal fun WalletDataModel.getAvailableActions(
     swapInteractor: SwapInteractor,
     exchangeManager: CurrencyExchangeManager,
     swapFeatureToggleManager: SwapFeatureToggleManager,
+    isSingleWallet: Boolean,
 ): Set<CurrencyAction> {
     return setOfNotNull(
         if (isAvailableToBuy(exchangeManager)) CurrencyAction.Buy else null,
         if (isAvailableToSell(exchangeManager)) CurrencyAction.Sell else null,
-        if (isAvailableToSwap(swapFeatureToggleManager, swapInteractor)) CurrencyAction.Swap else null,
+        if (isAvailableToSwap(swapFeatureToggleManager, swapInteractor, isSingleWallet)) CurrencyAction.Swap else null,
     )
 }
 

@@ -10,4 +10,5 @@ object ModuleErrorCode {
     const val NETWORK = 20000
     const val DOMAIN = 30000
     const val SALT_PAY = 40000
+    const val ONBOARDING = 50000
 }

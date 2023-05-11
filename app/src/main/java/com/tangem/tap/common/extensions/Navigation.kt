@@ -9,9 +9,10 @@ import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
-import com.tangem.tap.features.addCustomToken.AddCustomTokenFragment
+import com.tangem.tap.features.customtoken.legacy.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
+import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
 import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
@@ -36,6 +37,7 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import timber.log.Timber
+import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment as RedesignedAddCustomTokenFragment
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
@@ -109,6 +111,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.CardSettings -> CardSettingsFragment()
         AppScreen.AppSettings -> AppSettingsFragment()
         AppScreen.ResetToFactory -> ResetCardFragment()
+        AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> {
             val featureToggles = store.state.daggerGraphState.get(
@@ -116,7 +119,16 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             )
             if (featureToggles.isRedesignedScreenEnabled) TokensListFragment() else AddTokensFragment()
         }
-        AppScreen.AddCustomToken -> AddCustomTokenFragment()
+        AppScreen.AddCustomToken -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::customTokenFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                RedesignedAddCustomTokenFragment()
+            } else {
+                AddCustomTokenFragment()
+            }
+        }
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()

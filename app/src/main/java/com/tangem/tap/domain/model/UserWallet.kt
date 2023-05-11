@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.model
 
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 
 /**

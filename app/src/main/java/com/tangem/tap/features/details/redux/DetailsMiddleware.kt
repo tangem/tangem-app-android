@@ -7,8 +7,9 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -51,6 +52,7 @@ class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
     private val managePrivacyMiddleware = ManagePrivacyMiddleware()
+    private val accessCodeRecoveryMiddleware = AccessCodeRecoveryMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
@@ -74,6 +76,7 @@ class DetailsMiddleware {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
             }
+            is DetailsAction.AccessCodeRecovery -> accessCodeRecoveryMiddleware.handle(state, action)
             DetailsAction.ScanCard -> {
                 scope.launch {
                     tangemSdkManager.scanProduct(
@@ -416,6 +419,36 @@ class DetailsMiddleware {
                 context = context,
                 tangemSdkManager = tangemSdkManager,
             )
+        }
+    }
+
+    class AccessCodeRecoveryMiddleware {
+        fun handle(state: DetailsState, action: DetailsAction.AccessCodeRecovery) {
+            when (action) {
+                is DetailsAction.AccessCodeRecovery.Open -> {
+                    Analytics.send(Settings.CardSettings.AccessCodeRecoveryButton())
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AccessCodeRecovery))
+                }
+                is DetailsAction.AccessCodeRecovery.SaveChanges -> {
+                    scope.launch {
+                        tangemSdkManager
+                            .setAccessCodeRecoveryEnabled(state.cardSettingsState?.card?.cardId, action.enabled)
+                            .doOnSuccess {
+                                Analytics.send(
+                                    Settings.CardSettings.AccessCodeRecoveryChanged(
+                                        AnalyticsParam.AccessCodeRecoveryStatus.from(action.enabled),
+                                    ),
+                                )
+                                store.dispatchOnMain(NavigationAction.PopBackTo())
+                                store.dispatchOnMain(
+                                    DetailsAction.AccessCodeRecovery.SaveChanges.Success(action.enabled),
+                                )
+                            }
+                    }
+                }
+                is DetailsAction.AccessCodeRecovery.SelectOption -> Unit
+                is DetailsAction.AccessCodeRecovery.SaveChanges.Success -> Unit
+            }
         }
     }
 }

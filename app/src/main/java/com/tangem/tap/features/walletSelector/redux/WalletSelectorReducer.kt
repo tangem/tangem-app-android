@@ -1,6 +1,7 @@
 package com.tangem.tap.features.walletSelector.redux
 
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet

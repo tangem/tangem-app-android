@@ -11,7 +11,8 @@ plugins {
 
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
-    implementation(project(":domain"))
+    implementation(project(":domain:legacy"))
+    implementation(project(":domain:models"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
     implementation(project(":core:featuretoggles"))
@@ -23,6 +24,7 @@ dependencies {
     implementation(project(":libs:auth"))
 
     /** Features */
+    implementation(project(":features:onboarding"))
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))

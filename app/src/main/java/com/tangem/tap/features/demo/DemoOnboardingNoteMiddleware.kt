@@ -1,7 +1,7 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.demo.DemoConfig
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager

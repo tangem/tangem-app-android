@@ -120,6 +120,7 @@ fun CardSettings(state: CardSettingsScreenState) {
                 is CardInfo.SignedHashes -> 14.dp
                 is CardInfo.SecurityMode -> 16.dp
                 is CardInfo.ChangeAccessCode -> 16.dp
+                is CardInfo.AccessCodeRecovery -> 16.dp
                 is CardInfo.ResetToFactorySettings -> 28.dp
             }
             val paddingTop = when (it) {
@@ -128,6 +129,7 @@ fun CardSettings(state: CardSettingsScreenState) {
                 is CardInfo.SignedHashes -> 12.dp
                 is CardInfo.SecurityMode -> 14.dp
                 is CardInfo.ChangeAccessCode -> 16.dp
+                is CardInfo.AccessCodeRecovery -> 16.dp
                 is CardInfo.ResetToFactorySettings -> 16.dp
             }
             Column(

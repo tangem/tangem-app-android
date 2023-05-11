@@ -1,8 +1,8 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.StateType
@@ -26,12 +26,22 @@ data class CardInfo(
     val hasBackup: Boolean,
 )
 
+/**
+ * @property enabledOnCard whether access code recovery is enabled on card
+ * @property enabledSelection current selected option in app (not saved on card yet)
+ */
+data class AccessCodeRecoveryState(
+    val enabledOnCard: Boolean,
+    val enabledSelection: Boolean,
+)
+
 data class CardSettingsState(
     val cardInfo: CardInfo,
     val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetConfirmed: Boolean = false,
+    val accessCodeRecovery: AccessCodeRecoveryState? = null,
 )
 
 data class ManageSecurityState(

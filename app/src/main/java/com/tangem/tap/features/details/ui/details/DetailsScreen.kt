@@ -160,7 +160,10 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
 
 @Composable
 fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
-    LazyRow(modifier = Modifier.padding(start = 8.dp, end = 8.dp)) {
+    LazyRow(
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         items(links) {
             Icon(
                 painter = painterResource(id = it.network.iconRes),

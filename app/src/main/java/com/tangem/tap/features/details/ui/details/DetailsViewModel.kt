@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.details
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo

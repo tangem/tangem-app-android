@@ -53,6 +53,13 @@ sealed class Settings(
             params = mapOf("Mode" to mode.value),
             error = error,
         )
+
+        class AccessCodeRecoveryButton : CardSettings("Button - Access Code Recovery")
+
+        class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
+            event = "Access Code Recovery Changed",
+            params = mapOf(status.key to status.value),
+        )
     }
 
     sealed class AppSettings(

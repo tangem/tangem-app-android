@@ -4,8 +4,9 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.copy
