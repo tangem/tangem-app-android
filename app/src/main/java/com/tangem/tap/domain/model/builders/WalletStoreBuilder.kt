@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.extensions.getBlockchainTxHistory
 import com.tangem.tap.common.extensions.getTokenTxHistory
 import com.tangem.tap.domain.model.UserWallet
