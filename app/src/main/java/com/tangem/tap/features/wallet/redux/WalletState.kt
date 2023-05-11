@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.util.cardTypesResolver
@@ -16,6 +17,7 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import org.rekotlin.StateType
+import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
@@ -103,6 +105,9 @@ data class WalletState(
                 it.derivationPath?.rawPath == currency.derivationPath
         }
     }
+
+    fun getBlockchainAmount(currency: Currency): BigDecimal =
+        getWalletManager(currency)?.wallet?.amounts?.get(AmountType.Coin)?.value ?: BigDecimal.ZERO
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
@@ -114,7 +119,6 @@ enum class ErrorType {
 
 sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class SendButton(enabled: Boolean) : WalletMainButton(enabled)
-    class CreateWalletButton(enabled: Boolean) : WalletMainButton(enabled)
 }
 
 data class Artwork(
