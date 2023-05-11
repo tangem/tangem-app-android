@@ -55,6 +55,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
@@ -128,7 +129,8 @@ class WalletDetailsFragment :
         (WalletState::selectedWalletData or WalletState::isExchangeServiceFeatureOn) { state ->
             val selectedWallet = state.selectedWalletData
             if (selectedWallet != null) {
-                setupButtonsRow(selectedWallet, state.isExchangeServiceFeatureOn)
+                val blockchainAmount: BigDecimal = state.getBlockchainAmount(selectedWallet.currency)
+                setupButtonsRow(selectedWallet, state.isExchangeServiceFeatureOn, blockchainAmount)
             }
         }
         (WalletState::state or WalletState::error) { state ->
@@ -281,7 +283,11 @@ class WalletDetailsFragment :
         }
     }
 
-    private fun setupButtonsRow(selectedWallet: WalletDataModel, isExchangeServiceFeatureOn: Boolean) {
+    private fun setupButtonsRow(
+        selectedWallet: WalletDataModel,
+        isExchangeServiceFeatureOn: Boolean,
+        blockchainAmount: BigDecimal,
+    ) {
         val exchangeManager = store.state.globalState.exchangeManager
         binding.rowButtons.apply {
             onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
@@ -310,7 +316,7 @@ class WalletDetailsFragment :
         binding.rowButtons.updateButtonsVisibility(
             actions = actions,
             exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
-            sendAllowed = selectedWallet.mainButton.enabled,
+            sendAllowed = selectedWallet.mainButton(blockchainAmount).enabled,
         )
     }
 
