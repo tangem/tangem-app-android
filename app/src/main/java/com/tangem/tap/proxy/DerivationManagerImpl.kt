@@ -107,8 +107,8 @@ class DerivationManagerImpl(
             val selectedUserWallet = appStateHolder.userWalletsListManager?.selectedUserWalletSync
 
             val result = appStateHolder.tangemSdkManager?.derivePublicKeys(
-                scanResponse.card.cardId,
-                derivations,
+                cardId = null, // always ignore cardId in derive task
+                derivations = derivations,
             )
             when (result) {
                 is CompletionResult.Success -> {
