@@ -1,4 +1,4 @@
-package com.tangem.tap.common.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
