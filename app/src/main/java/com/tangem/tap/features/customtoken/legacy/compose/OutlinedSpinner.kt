@@ -1,9 +1,10 @@
-package com.tangem.tap.common.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -12,6 +13,7 @@ import androidx.core.os.postDelayed
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.form.Field
+import com.tangem.tap.common.compose.TangemTextFieldsDefault
 import com.tangem.tap.common.extensions.ValueCallback
 
 /**
@@ -20,7 +22,7 @@ import com.tangem.tap.common.extensions.ValueCallback
 @Suppress("MagicNumber")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun <T> OutlinedSpinner(
+internal fun <T> OutlinedSpinner(
     label: String,
     itemList: List<T>,
     selectedItem: Field.Data<T>,
@@ -71,15 +73,11 @@ fun <T> OutlinedSpinner(
         )
 
         if (isEnabled) {
-            ExposedDropdownMenu(
-                expanded = rIsExpanded.value,
-                onDismissRequest = onDismissRequest,
-            ) {
+            ExposedDropdownMenu(expanded = rIsExpanded.value, onDismissRequest = onDismissRequest) {
                 itemList.forEach { item ->
-                    DropdownMenuItem(onClick = { onDropDownItemSelectedInternal(item) }) {
-                        when (dropdownItemView) {
-                            null -> Text(textFieldConverter(item))
-                            else -> dropdownItemView(item)
+                    key(item) {
+                        DropdownMenuItem(onClick = { onDropDownItemSelectedInternal(item) }) {
+                            if (dropdownItemView == null) Text(textFieldConverter(item)) else dropdownItemView(item)
                         }
                     }
                 }
@@ -91,7 +89,6 @@ fun <T> OutlinedSpinner(
 class ClosePopupTrigger {
     var close: () -> Unit = {}
     var onCloseComplete: () -> Unit = {}
-    var isTriggered = false
 }
 
 @Preview

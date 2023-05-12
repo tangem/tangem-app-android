@@ -49,8 +49,6 @@ import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.AddCustomTokenWarning
-import com.tangem.tap.common.compose.ClosePopupTrigger
-import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.customtoken.legacy.compose.test.TestCase
 import com.tangem.tap.features.customtoken.legacy.compose.test.TestCasesList
