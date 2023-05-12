@@ -5,6 +5,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,12 +24,12 @@ class TangemSigner(
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
         return suspendCancellableCoroutine { continuation ->
-            val cardId = if (card.backupStatus?.isActive == true) null else card.cardId
-
+            val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
             val task = SignHashesTask(hashes, publicKey)
+
             tangemSdk.startSessionWithRunnable(
                 runnable = task,
-                cardId = cardId,
+                cardId = card.cardId.takeIf { isCardNotBackedUp },
                 initialMessage = initialMessage,
                 accessCode = accessCode,
             ) { result ->
