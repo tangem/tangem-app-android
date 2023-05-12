@@ -31,6 +31,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -316,21 +317,23 @@ class TokensMiddleware {
             }
         }
 
-        val addedCurrencies = store.state.walletState.walletsStores.map { walletStore ->
-            walletStore.walletsData.map { walletData -> walletData.currency }
-        }.flatten().map {
-            when (it) {
-                is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
-                    it.blockchain,
-                    it.derivationPath,
-                )
-                is Currency.Token -> DomainWrapped.Currency.Token(
-                    it.token,
-                    it.blockchain,
-                    it.derivationPath,
-                )
+        val addedCurrencies = store.state.walletState.walletsStores
+            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
+            .flatten()
+            .map { currency ->
+                when (currency) {
+                    is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
+                        currency.blockchain,
+                        currency.derivationPath,
+                    )
+
+                    is Currency.Token -> DomainWrapped.Currency.Token(
+                        currency.token,
+                        currency.blockchain,
+                        currency.derivationPath,
+                    )
+                }
             }
-        }
         domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
         domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(onAddCustomToken))
         store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
