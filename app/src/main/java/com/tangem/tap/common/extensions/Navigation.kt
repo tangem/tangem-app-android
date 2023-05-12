@@ -5,6 +5,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -45,24 +46,35 @@ fun FragmentActivity.openFragment(
     bundle: Bundle? = null,
     fgShareTransition: FragmentShareTransition? = null,
 ) {
-    val transaction = this.supportFragmentManager.beginTransaction()
-    val fragment = fragmentFactory(screen)
-    fragment.arguments = bundle
-    fgShareTransition?.apply {
-        fragment.sharedElementEnterTransition = enterTransitionSet
-        fragment.sharedElementReturnTransition = exitTransitionSet
-        transaction.setReorderingAllowed(true)
-        shareElements.forEach { shareElement ->
-            shareElement.wView.get()?.let { view ->
-                transaction.addSharedElement(view, shareElement.elementName)
+    val transaction = supportFragmentManager.beginTransaction().apply {
+        setReorderingAllowed(true)
+    }
+
+    val fragment = fragmentFactory(screen).apply {
+        arguments = bundle
+
+        if (fgShareTransition != null) {
+            sharedElementEnterTransition = fgShareTransition.enterTransitionSet
+            sharedElementReturnTransition = fgShareTransition.exitTransitionSet
+            fgShareTransition.shareElements.forEach { shareElement ->
+                shareElement.wView.get()?.let { view ->
+                    transaction.addSharedElement(view, shareElement.elementName)
+                }
             }
         }
     }
+
     if (screen.isDialogFragment) {
-        (fragment as DialogFragment).show(transaction, screen.name)
-        if (addToBackstack) {
-            transaction.addToBackStack(screen.name)
+        val dialogFragment = requireNotNull(fragment as? DialogFragment) {
+            "If screen.isDialogFragment == true then fragment must be a DialogFragment"
         }
+
+        dialogFragment.showAllowingStateLoss(
+            fragmentManager = supportFragmentManager,
+            baseTransaction = transaction,
+            tag = screen.name,
+            addToBackstack = addToBackstack,
+        )
     } else {
         transaction.replace(R.id.fragment_container, fragment, screen.name)
         if (addToBackstack) {
@@ -70,6 +82,29 @@ fun FragmentActivity.openFragment(
         }
         transaction.commitAllowingStateLoss()
     }
+}
+
+private fun DialogFragment.showAllowingStateLoss(
+    fragmentManager: FragmentManager,
+    baseTransaction: FragmentTransaction,
+    tag: String,
+    addToBackstack: Boolean,
+) {
+    runCatching {
+        if (addToBackstack) baseTransaction.addToBackStack(tag)
+        show(baseTransaction, tag)
+    }
+        .onFailure { throwable ->
+            if (throwable is IllegalStateException) {
+                val transaction = fragmentManager.beginTransaction()
+                transaction.add(this, tag)
+                if (addToBackstack) transaction.addToBackStack(tag)
+
+                transaction.commitAllowingStateLoss()
+            } else {
+                Timber.e(throwable)
+            }
+        }
 }
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
@@ -119,6 +154,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             )
             if (featureToggles.isRedesignedScreenEnabled) TokensListFragment() else AddTokensFragment()
         }
+
         AppScreen.AddCustomToken -> {
             val featureToggles = store.state.daggerGraphState.get(
                 getDependency = DaggerGraphState::customTokenFeatureToggles,
@@ -129,6 +165,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
                 AddCustomTokenFragment()
             }
         }
+
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()

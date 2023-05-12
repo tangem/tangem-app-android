@@ -19,9 +19,6 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
@@ -29,6 +26,9 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
