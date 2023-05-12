@@ -18,10 +18,9 @@ import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import java.math.BigDecimal
 
-internal val WalletDataModel.mainButton: WalletMainButton
-    get() = WalletMainButton.SendButton(
-        enabled = !status.amount.isZero() && status.pendingTransactions.isEmpty(),
-    )
+internal fun WalletDataModel.mainButton(blockchainAmount: BigDecimal): WalletMainButton = WalletMainButton.SendButton(
+    enabled = !isEmptyAmount && status.pendingTransactions.isEmpty() && !blockchainAmount.isZero(),
+)
 
 internal fun WalletDataModel.getFormattedAmount(): String {
     return status.amount.toFormattedCurrencyString(
