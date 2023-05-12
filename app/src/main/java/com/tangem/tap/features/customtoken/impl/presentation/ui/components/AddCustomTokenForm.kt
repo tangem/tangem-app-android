@@ -1,6 +1,10 @@
 package com.tangem.tap.features.customtoken.impl.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +18,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ExposedDropdownMenuBox
 import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -26,13 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.blockchain.common.Blockchain
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTextFieldsDefault
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.tap.features.customtoken.impl.presentation.ui.AddCustomTokenPreviewData
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 
 /**
@@ -68,7 +74,37 @@ internal fun AddCustomTokenForm(model: AddCustomTokenForm) {
 
 @Composable
 private fun InputField(model: AddCustomTokenInputField) {
+    Column {
+        val isError = (model as? AddCustomTokenInputField.ContactAddress)?.isError ?: false
+
+        TextField(model, isError)
+
+        (model as? AddCustomTokenInputField.ContactAddress)?.error?.resolveReference()?.let {
+            AnimatedVisibility(
+                visible = isError,
+                enter = fadeIn() + slideInVertically(),
+                exit = slideOutVertically() + fadeOut(),
+            ) {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colors.error,
+                    style = TangemTheme.typography.body2,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TextField(model: AddCustomTokenInputField, isError: Boolean) {
     Box {
+        val isEnabled = when (model) {
+            is AddCustomTokenInputField.ContactAddress -> true
+            is AddCustomTokenInputField.Decimals -> model.isEnabled
+            is AddCustomTokenInputField.TokenName -> model.isEnabled
+            is AddCustomTokenInputField.TokenSymbol -> model.isEnabled
+        }
+
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = model.value,
@@ -79,8 +115,8 @@ private fun InputField(model: AddCustomTokenInputField) {
                     text = model.label.resolveReference(),
                     style = TangemTheme.typography.caption,
                     color = TangemTextFieldsDefault.defaultTextFieldColors.labelColor(
-                        enabled = model.isEnabled,
-                        error = model.isError,
+                        enabled = isEnabled,
+                        error = isError,
                         interactionSource = remember { MutableInteractionSource() },
                     ).value,
                 )
@@ -90,20 +126,20 @@ private fun InputField(model: AddCustomTokenInputField) {
                     text = model.placeholder.resolveReference(),
                     style = TangemTheme.typography.body1,
                     color = TangemTextFieldsDefault.defaultTextFieldColors
-                        .placeholderColor(enabled = model.isEnabled)
+                        .placeholderColor(enabled = isEnabled)
                         .value,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             },
             singleLine = true,
-            enabled = model.isEnabled,
-            isError = model.isError,
+            enabled = isEnabled,
+            isError = isError,
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
         )
 
         AnimatedVisibility(
-            visible = model.isLoading,
+            visible = (model as? AddCustomTokenInputField.ContactAddress)?.isLoading ?: false,
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
@@ -124,6 +160,7 @@ private fun SelectorField(model: AddCustomTokenSelectorField) {
         expanded = isExpanded,
         onExpandedChange = { isExpanded = !isExpanded },
     ) {
+        val isEnabled = (model as? AddCustomTokenSelectorField.DerivationPath)?.isEnabled ?: true
         OutlinedTextField(
             value = when (val item = model.selectedItem) {
                 is AddCustomTokenSelectorField.SelectorItem.Title -> item.title
@@ -132,14 +169,14 @@ private fun SelectorField(model: AddCustomTokenSelectorField) {
             modifier = Modifier.fillMaxWidth(),
             onValueChange = {},
             readOnly = true,
-            enabled = model.isEnabled,
+            enabled = isEnabled,
             label = { Text(text = model.label.resolveReference()) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
         )
 
         ExposedDropdownMenu(
-            expanded = isExpanded && model.isEnabled,
+            expanded = isExpanded && isEnabled,
             onDismissRequest = { isExpanded = false },
         ) {
             FocusRequester
@@ -173,44 +210,18 @@ private fun SelectorField(model: AddCustomTokenSelectorField) {
 
 @Preview
 @Composable
-private fun Preview_AddCustomTokenForm() {
+private fun Preview_AddCustomTokenForm(@PreviewParameter(AddCustomTokenFormProvider::class) model: AddCustomTokenForm) {
     TangemTheme {
-        AddCustomTokenForm(
-            AddCustomTokenForm(
-                contractAddressInputField = AddCustomTokenInputField.ContactAddress(
-                    value = "",
-                    onValueChange = {},
-                    isError = false,
-                    isLoading = false,
-                ),
-                networkSelectorField = AddCustomTokenSelectorField.Network(
-                    selectedItem = AddCustomTokenSelectorField.SelectorItem.Title(
-                        title = TextReference.Str(value = "Avalanche"),
-                        blockchain = Blockchain.Avalanche,
-                    ),
-                    items = listOf(),
-                    onMenuItemClick = {},
-                ),
-                tokenNameInputField = AddCustomTokenInputField.TokenName(
-                    value = "",
-                    onValueChange = {},
-                    isEnabled = false,
-                    isError = false,
-                ),
-                tokenSymbolInputField = AddCustomTokenInputField.TokenSymbol(
-                    value = "",
-                    onValueChange = {},
-                    isEnabled = false,
-                    isError = false,
-                ),
-                decimalsInputField = AddCustomTokenInputField.Decimals(
-                    value = "",
-                    onValueChange = {},
-                    isEnabled = false,
-                    isError = false,
-                ),
-                derivationPathSelectorField = null,
-            ),
-        )
+        AddCustomTokenForm(model)
     }
 }
+
+private class AddCustomTokenFormProvider : CollectionPreviewParameterProvider<AddCustomTokenForm>(
+    collection = listOf(
+        AddCustomTokenPreviewData.createDefaultForm(),
+        AddCustomTokenPreviewData.createDefaultForm().copy(derivationPathSelectorField = null),
+        AddCustomTokenPreviewData.createDefaultForm().let { form ->
+            form.copy(contractAddressInputField = form.contractAddressInputField.copy(isLoading = true))
+        },
+    ),
+)
