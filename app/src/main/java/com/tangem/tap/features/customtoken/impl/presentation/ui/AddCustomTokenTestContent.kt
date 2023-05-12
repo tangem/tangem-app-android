@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,33 +20,33 @@ import androidx.compose.material.FabPosition
 import androidx.compose.material.Text
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TestTokenItem
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenTestBlock
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokensToolbar
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenFloatingButton
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenForm
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenToolbar
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.wallet.R
+import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenWarnings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -74,6 +75,7 @@ internal fun AddCustomTokenTestContent(state: AddCustomTokenStateHolder.TestCont
         },
     )
 
+    var floatingButtonHeight by remember { mutableStateOf(0.dp) }
     BottomSheetScaffold(
         sheetContent = {
             SheetContent(
@@ -95,7 +97,16 @@ internal fun AddCustomTokenTestContent(state: AddCustomTokenStateHolder.TestCont
                 },
             )
         },
-        floatingActionButton = { AddCustomTokenFloatingButton(model = state.floatingButton) },
+        floatingActionButton = {
+            val density = LocalDensity.current
+            val verticalPadding = TangemTheme.dimens.spacing32
+            AddCustomTokenFloatingButton(
+                model = state.floatingButton,
+                modifier = Modifier.onSizeChanged {
+                    floatingButtonHeight = with(density) { it.height.toDp() + verticalPadding }
+                },
+            )
+        },
         floatingActionButtonPosition = FabPosition.Center,
         sheetBackgroundColor = TangemTheme.colors.background.secondary,
         sheetPeekHeight = TangemTheme.dimens.size0,
@@ -104,15 +115,19 @@ internal fun AddCustomTokenTestContent(state: AddCustomTokenStateHolder.TestCont
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(it),
+                .padding(paddingValues = it)
+                .padding(bottom = floatingButtonHeight)
+                .fillMaxSize(),
         ) {
             TestBlock(
-                model = state.testBlock,
+                state.testBlock,
                 coroutineScope,
                 bottomSheetScaffoldState,
             )
 
             AddCustomTokenForm(model = state.form)
+
+            AddCustomTokenWarnings(warnings = state.warnings)
         }
     }
 }
@@ -243,69 +258,10 @@ private fun TestBlock(
     }
 }
 
-@Preview(showSystemUi = true)
+@Preview
 @Composable
 private fun Preview_AddCustomTokenTestContent() {
     TangemTheme {
-        AddCustomTokenTestContent(
-            state = AddCustomTokenStateHolder.TestContent(
-                onBackButtonClick = {},
-                toolbar = AddCustomTokensToolbar(
-                    title = TextReference.Res(R.string.add_custom_token_title),
-                    onBackButtonClick = {},
-                ),
-                form = com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm(
-                    contractAddressInputField = AddCustomTokenInputField.ContactAddress(
-                        value = "",
-                        onValueChange = {},
-                        isError = false,
-                        isLoading = false,
-                    ),
-                    networkSelectorField = AddCustomTokenSelectorField.Network(
-                        selectedItem = AddCustomTokenSelectorField.SelectorItem.Title(
-                            title = TextReference.Str(value = "Avalanche"),
-                            blockchain = Blockchain.Avalanche,
-                        ),
-                        items = listOf(),
-                        onMenuItemClick = {},
-                    ),
-                    tokenNameInputField = AddCustomTokenInputField.TokenName(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    tokenSymbolInputField = AddCustomTokenInputField.TokenSymbol(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    decimalsInputField = AddCustomTokenInputField.Decimals(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    derivationPathSelectorField = null,
-                ),
-                warnings = listOf(),
-                floatingButton = AddCustomTokenFloatingButton(
-                    isEnabled = false,
-                    onClick = {},
-                ),
-                testBlock = AddCustomTokenTestBlock(
-                    chooseTokenButtonText = "Choose token",
-                    clearButtonText = "Clear address",
-                    resetButtonText = "Reset",
-                    onClearAddressButtonClick = {},
-                    onResetButtonClick = {},
-                ),
-                bottomSheet = AddCustomTokenChooseTokenBottomSheet(
-                    categoriesBlocks = listOf(),
-                    onTestTokenClick = {},
-                ),
-            ),
-        )
+        AddCustomTokenTestContent(state = AddCustomTokenPreviewData.createTestContent())
     }
 }
