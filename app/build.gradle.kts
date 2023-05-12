@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
+    implementation(project(":data:source:preferences"))
 
     /** Features */
     implementation(project(":features:onboarding"))
