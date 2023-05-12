@@ -12,7 +12,6 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
@@ -175,15 +174,10 @@ class SingleWalletView : WalletView() {
         binding?.rowButtons?.updateButtonsVisibility(
             actions = actions,
             exchangeServiceFeatureOn = isExchangeServiceFeatureEnabled,
-            sendAllowed = walletData.mainButton.enabled,
+            sendAllowed = walletData.mainButton(walletData.status.amount).enabled,
         )
 
-        rowButtons.onSendClick = {
-            when (walletData.mainButton) {
-                is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
-                is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
-            }
-        }
+        rowButtons.onSendClick = { store.dispatch(WalletAction.Send()) }
     }
 
     private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
