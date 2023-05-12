@@ -3,7 +3,6 @@ package com.tangem.tap.features.customtoken.legacy.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.tangem.domain.DomainDialog
-import com.tangem.tap.common.compose.SimpleDialog
 import com.tangem.tap.common.compose.TitleSubtitle
 import com.tangem.wallet.R
 
