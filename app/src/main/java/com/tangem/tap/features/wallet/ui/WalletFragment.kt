@@ -239,7 +239,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
                 (activity as? MainActivity)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
                     buttonTitle = R.string.common_retry,
-                ) { store.dispatch(WalletAction.LoadData) }
+                )
+                // because was added logic of autoupdate mainscreen data, remove retry
+// [REDACTED_TODO_COMMENT]
+                // { store.dispatch(WalletAction.LoadData) }
             } else {
                 isNetworkConnectionError.value = false
             }
