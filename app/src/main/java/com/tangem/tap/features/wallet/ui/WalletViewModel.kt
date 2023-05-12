@@ -105,14 +105,12 @@ internal class WalletViewModel @Inject constructor(
     private fun bootstrapSelectedWalletStoresChanges(manager: UserWalletsListManager) {
         observeWalletStoresUpdatesJob = manager.selectedUserWallet
             .map { it.walletId }
-            .flatMapLatest { selectedUserWalletId ->
-                walletStoresManager.get(selectedUserWalletId)
-            }
+            .flatMapLatest(walletStoresManager::get)
             .debounce { walletStores ->
                 if (walletStores.isNotEmpty()) WALLET_STORES_DEBOUNCE_TIMEOUT else 0
             }
             .onEach { walletStores ->
-                store.dispatch(WalletAction.WalletStoresChanged(walletStores))
+                store.dispatchOnMain(WalletAction.WalletStoresChanged(walletStores))
             }
             .launchIn(viewModelScope)
     }
