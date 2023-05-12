@@ -54,16 +54,6 @@ internal class BiometricUserWalletsListManager(
         get() = keysRepository.hasSavedEncryptionKeys()
 
     override suspend fun unlock(): CompletionResult<UserWallet> {
-        // Occurs when user has locked user wallets after unlocking with biometry
-        // e.g. after biometric storage master key invalidation
-        if (state.value.hasLockedUserWalletsAfterUnlock) {
-            return CompletionResult.Failure(
-                error = UserWalletsListError.UnableToUnlockUserWallets(
-                    cause = IllegalStateException("Permanently locked"),
-                ),
-            )
-        }
-
         return unlockWithBiometryInternal()
             .mapFailure { error ->
                 if (error is UserWalletsListError) {
@@ -216,10 +206,7 @@ internal class BiometricUserWalletsListManager(
             .map {
                 state.update { prevState ->
                     val hasLockedUserWallets = prevState.userWallets.any { it.isLocked }
-                    prevState.copy(
-                        isLocked = hasLockedUserWallets,
-                        hasLockedUserWalletsAfterUnlock = hasLockedUserWallets,
-                    )
+                    prevState.copy(isLocked = hasLockedUserWallets)
                 }
             }
     }
@@ -258,15 +245,6 @@ internal class BiometricUserWalletsListManager(
                                 prevSelectedWalletId = prevState.selectedUserWalletId,
                                 userWallets = wallets,
                             ),
-                        )
-                    }
-                }
-            }
-            .doOnFailure { error ->
-                if (error is UserWalletsListError.EncryptionKeyInvalidated) {
-                    state.update { prevState ->
-                        prevState.copy(
-                            hasLockedUserWalletsAfterUnlock = true,
                         )
                     }
                 }
@@ -334,6 +312,5 @@ internal class BiometricUserWalletsListManager(
         val userWallets: List<UserWallet> = emptyList(),
         val selectedUserWalletId: UserWalletId? = null,
         val isLocked: Boolean = true,
-        val hasLockedUserWalletsAfterUnlock: Boolean = false,
     )
 }
