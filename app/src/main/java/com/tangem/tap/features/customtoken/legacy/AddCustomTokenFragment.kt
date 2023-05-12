@@ -15,11 +15,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.analytics.events.ManageTokens
-import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.customtoken.legacy.compose.AddCustomTokenScreen
+import com.tangem.tap.features.customtoken.legacy.compose.ClosePopupTrigger
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
