@@ -1,4 +1,4 @@
-package com.tangem.tap.common.compose
+package com.tangem.tap.features.customtoken.legacy.compose
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -31,17 +31,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
-import com.tangem.tap.features.customtoken.legacy.compose.SelectTokenNetworkDialog
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 @Composable
-fun ComposeDialogManager() {
+internal fun ComposeDialogManager() {
     val dialogSate = remember { mutableStateOf<DomainDialog?>(null) }
     val subscriber = remember {
         object : StoreSubscriber<DomainGlobalState> {
@@ -94,27 +95,22 @@ private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
  * Dialog with single item selection
  */
 @Composable
-fun <T> SimpleDialog(
+fun SimpleDialog(
     title: String,
-    items: List<T>,
-    onSelect: (T) -> Unit,
+    items: List<CoinsResponse.Coin.Network>,
+    onSelect: (CoinsResponse.Coin.Network) -> Unit,
     onDismissRequest: () -> Unit,
-    itemContent: @Composable (T) -> Unit,
+    itemContent: @Composable (CoinsResponse.Coin.Network) -> Unit,
 ) {
     Dialog(
-        properties = DialogProperties(false, false),
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         onDismissRequest = { },
     ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-        ) {
-            Column(
-                modifier = Modifier.padding(22.dp),
-            ) {
+        Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
+            Column(modifier = Modifier.padding(TangemTheme.dimens.spacing22)) {
                 DialogTitle(title = title)
                 LazyColumn {
-                    items(items) { item ->
+                    items(items = items, key = CoinsResponse.Coin.Network::networkId) { item ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
