@@ -1,4 +1,4 @@
-package com.tangem.tap.persistence
+package com.tangem.data.source.preferences.storage
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
@@ -6,7 +6,8 @@ import androidx.core.content.edit
 /**
 [REDACTED_AUTHOR]
  */
-class DisclaimerPrefStorage(
+@Deprecated("Create repository instead")
+class DisclaimerPrefStorage internal constructor(
     private val preferences: SharedPreferences,
 ) {
 
