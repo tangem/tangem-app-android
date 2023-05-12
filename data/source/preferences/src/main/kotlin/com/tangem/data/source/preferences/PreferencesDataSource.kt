@@ -1,14 +1,21 @@
-package com.tangem.tap.persistence
+package com.tangem.data.source.preferences
 
-import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.common.BigDecimalAdapter
-import java.util.*
+import com.tangem.data.source.preferences.adapters.BigDecimalAdapter
+import com.tangem.data.source.preferences.adapters.CardBalanceStateAdapter
+import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
+import com.tangem.data.source.preferences.storage.FiatCurrenciesPrefStorage
+import com.tangem.data.source.preferences.storage.ToppedUpWalletStorage
+import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
+import javax.inject.Inject
 
-class PreferencesStorage(applicationContext: Application) {
+// 🔥FIXME: Only logic to work with preferences must be here, must be separated to repositories
+// TODO: Replace shared preferences with DataStore
+@Deprecated("Create repository instead")
+class PreferencesDataSource @Inject internal constructor(applicationContext: Context) {
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
@@ -73,8 +80,6 @@ class PreferencesStorage(applicationContext: Application) {
             putBoolean(OPEN_WELCOME_ON_RESUME_KEY, value)
         }
 
-    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
-
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
     }
@@ -82,6 +87,8 @@ class PreferencesStorage(applicationContext: Application) {
     fun wasTwinsOnboardingShown(): Boolean {
         return preferences.getBoolean(TWINS_ONBOARDING_SHOWN_KEY, false)
     }
+
+    private fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     private fun incrementLaunchCounter() {
         var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
@@ -99,73 +106,5 @@ class PreferencesStorage(applicationContext: Application) {
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
         private const val APPLICATION_STOPPED_KEY = "applicationStopped"
         private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"
-    }
-}
-
-class AppRatingLaunchObserver(
-    private val preferences: SharedPreferences,
-    private val launchCounts: Int,
-) {
-
-    private val deferShowing = 20
-    private val firstShowing = 3
-    private var fundsFoundDate: Calendar? = null
-
-    init {
-        val msWhenFundsWasFound = preferences.getLong(K_FUNDS_FOUND_DATE, FUNDS_FOUND_DATE_UNDEFINED)
-        if (msWhenFundsWasFound != FUNDS_FOUND_DATE_UNDEFINED) {
-            fundsFoundDate = Calendar.getInstance().apply { timeInMillis = msWhenFundsWasFound }
-        }
-    }
-
-    fun foundWalletWithFunds() {
-        if (fundsFoundDate != null) return
-
-        fundsFoundDate = Calendar.getInstance()
-        preferences.edit(true) {
-            putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
-            putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, launchCounts + firstShowing)
-        }
-    }
-
-    @Suppress("MagicNumber")
-    fun isReadyToShow(): Boolean {
-        val fundsDate = fundsFoundDate ?: return false
-
-        if (!userWasInteractWithRating()) {
-            val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
-            val diffInDays = diff / (1000 * 60 * 60 * 24)
-            return launchCounts >= getCounterOfNextShowing() && diffInDays >= firstShowing
-        }
-
-        val nextShowing = getCounterOfNextShowing()
-        return launchCounts >= nextShowing
-    }
-
-    fun applyDelayedShowing() {
-        updateNextShowing(launchCounts + deferShowing)
-    }
-
-    @Suppress("MagicNumber")
-    fun setNeverToShow() {
-        updateNextShowing(999999999)
-    }
-
-    private fun updateNextShowing(at: Int) {
-        val editor = preferences.edit()
-        editor.putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, at)
-        editor.putBoolean(K_USER_WAS_INTERACT_WITH_RATING, true)
-        editor.apply()
-    }
-
-    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
-
-    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
-
-    companion object {
-        private const val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
-        private const val K_FUNDS_FOUND_DATE = "fundsFoundDate"
-        private const val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
-        private const val FUNDS_FOUND_DATE_UNDEFINED = -1L
     }
 }
