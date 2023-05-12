@@ -18,4 +18,6 @@ internal sealed interface WelcomeAction : Action {
     data class HandleIntentIfNeeded(val intent: Intent?) : WelcomeAction
 
     object CloseError : WelcomeAction
+
+    object ClearUserWallets : WelcomeAction
 }
