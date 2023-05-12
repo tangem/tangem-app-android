@@ -1,16 +1,16 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
 import com.tangem.wallet.R
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
 [REDACTED_AUTHOR]
  */
 class WarningMessagesManager {
 
-    private val warningsList: MutableList<WarningMessage> = mutableListOf()
+    private val warningsList = CopyOnWriteArrayList<WarningMessage>()
 
     fun addWarning(warning: WarningMessage) {
         if (findWarning(warning) == null) {
@@ -19,36 +19,27 @@ class WarningMessagesManager {
         }
     }
 
-    fun getWarnings(
-        location: WarningMessage.Location,
-        forBlockchains: List<Blockchain> = emptyList(),
-    ): List<WarningMessage> {
-        return warningsList
-            .filter { !it.isHidden && it.location.contains(location) }
-            .filter {
-                val list = it.blockchainList
-                when {
-                    list == null -> true
-                    list.containsAny(forBlockchains) -> true
-                    else -> false
-                }
-            }
+    fun getWarnings(location: WarningMessage.Location, blockchains: List<Blockchain>): List<WarningMessage> {
+        return warningsList.filter { message ->
+            val messageBlockchains = message.blockchainList
+            val isCorrespondingMessageBlockchains = messageBlockchains == null ||
+                messageBlockchains.any(blockchains::contains)
+            val isCorrespondingMessageLocation = message.location.contains(location)
+
+            !message.isHidden && isCorrespondingMessageLocation && isCorrespondingMessageBlockchains
+        }
     }
 
     fun hideWarning(warning: WarningMessage): Boolean {
-        val foundWarning = findWarning(warning)
-        return when {
-            foundWarning == null -> false
-            foundWarning.type == WarningMessage.Type.Temporary ||
-                foundWarning.type == WarningMessage.Type.AppRating -> {
-                if (foundWarning.isHidden) {
-                    false
-                } else {
-                    foundWarning.isHidden = true
-                    true
-                }
-            }
-            else -> false
+        val foundWarning = findWarning(warning) ?: return false
+        val isCorrectType = foundWarning.type == WarningMessage.Type.Temporary ||
+            foundWarning.type == WarningMessage.Type.AppRating
+
+        return if (!foundWarning.isHidden && isCorrectType) {
+            foundWarning.isHidden = true
+            true
+        } else {
+            false
         }
     }
 
@@ -72,31 +63,31 @@ class WarningMessagesManager {
     companion object {
         const val REMAINING_SIGNATURES_WARNING = 10
 
-        fun devCardWarning(): WarningMessage = WarningMessage(
-            "",
-            "",
+        val devCardWarning = WarningMessage(
+            title = "",
+            message = "",
             type = WarningMessage.Type.Permanent,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
-            null,
-            R.string.common_warning,
-            R.string.alert_developer_card,
-            WarningMessage.Origin.Local,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.common_warning,
+            messageResId = R.string.alert_developer_card,
+            origin = WarningMessage.Origin.Local,
         )
 
-        fun alreadySignedHashesWarning(): WarningMessage = WarningMessage(
-            "",
-            "",
+        val alreadySignedHashesWarning = WarningMessage(
+            title = "",
+            message = "",
             type = WarningMessage.Type.Temporary,
             priority = WarningMessage.Priority.Info,
-            listOf(WarningMessage.Location.MainScreen),
-            null,
-            R.string.common_warning,
-            R.string.alert_card_signed_transactions,
-            WarningMessage.Origin.Local,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.common_warning,
+            messageResId = R.string.alert_card_signed_transactions,
+            origin = WarningMessage.Origin.Local,
         )
 
-        fun signedHashesMultiWalletWarning(): WarningMessage = WarningMessage(
+        val signedHashesMultiWalletWarning = WarningMessage(
             title = "",
             message = "",
             type = WarningMessage.Type.Temporary,
@@ -110,69 +101,71 @@ class WarningMessagesManager {
             titleFormatArg = "\u26A0",
         )
 
-        fun appRatingWarning(): WarningMessage = WarningMessage(
-            "",
-            "",
-            WarningMessage.Type.AppRating,
-            WarningMessage.Priority.Info,
-            listOf(WarningMessage.Location.MainScreen),
-            null,
-            R.string.warning_rate_app_title,
-            R.string.warning_rate_app_message,
-            WarningMessage.Origin.Local,
+        val appRatingWarning = WarningMessage(
+            title = "",
+            message = "",
+            type = WarningMessage.Type.AppRating,
+            priority = WarningMessage.Priority.Info,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.warning_rate_app_title,
+            messageResId = R.string.warning_rate_app_message,
+            origin = WarningMessage.Origin.Local,
         )
 
-        fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
-            return warning.messageResId == R.string.alert_card_signed_transactions
-        }
-
-        fun onlineVerificationFailed(): WarningMessage = WarningMessage(
-            "",
-            "",
-            type = WarningMessage.Type.Permanent,
-            priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
-            null,
-            R.string.warning_failed_to_verify_card_title,
-            R.string.warning_failed_to_verify_card_message,
-            WarningMessage.Origin.Local,
-        )
-
-        fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage = WarningMessage(
+        val onlineVerificationFailed = WarningMessage(
             title = "",
             message = "",
             type = WarningMessage.Type.Permanent,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
+            location = listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
-            titleResId = R.string.common_warning,
-            messageResId = R.string.warning_low_signatures_format,
+            titleResId = R.string.warning_failed_to_verify_card_title,
+            messageResId = R.string.warning_failed_to_verify_card_message,
             origin = WarningMessage.Origin.Local,
-            messageFormatArg = remainingSignatures.toString(),
         )
 
-        fun testCardWarning(): WarningMessage = WarningMessage(
-            "",
-            "",
+        val testCardWarning = WarningMessage(
+            title = "",
+            message = "",
             type = WarningMessage.Type.TestCard,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen, WarningMessage.Location.SendScreen),
-            null,
-            R.string.common_warning,
-            R.string.warning_testnet_card_message,
-            WarningMessage.Origin.Local,
+            location = listOf(WarningMessage.Location.MainScreen, WarningMessage.Location.SendScreen),
+            blockchains = null,
+            titleResId = R.string.common_warning,
+            messageResId = R.string.warning_testnet_card_message,
+            origin = WarningMessage.Origin.Local,
         )
 
-        fun demoCardWarning(): WarningMessage = WarningMessage(
-            "",
-            "",
+        val demoCardWarning = WarningMessage(
+            title = "",
+            message = "",
             type = WarningMessage.Type.Permanent,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
-            null,
-            R.string.common_warning,
-            R.string.alert_demo_message,
-            WarningMessage.Origin.Local,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.common_warning,
+            messageResId = R.string.alert_demo_message,
+            origin = WarningMessage.Origin.Local,
         )
+
+        fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage {
+            return WarningMessage(
+                title = "",
+                message = "",
+                type = WarningMessage.Type.Permanent,
+                priority = WarningMessage.Priority.Critical,
+                location = listOf(WarningMessage.Location.MainScreen),
+                blockchains = null,
+                titleResId = R.string.common_warning,
+                messageResId = R.string.warning_low_signatures_format,
+                origin = WarningMessage.Origin.Local,
+                messageFormatArg = remainingSignatures.toString(),
+            )
+        }
+
+        fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
+            return warning.messageResId == R.string.alert_card_signed_transactions
+        }
     }
 }
