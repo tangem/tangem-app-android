@@ -10,9 +10,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.reactive.asFlow
-import javax.inject.Inject
 
-class RealInternetConnectionManager @Inject constructor(): NetworkConnectionManager {
+internal class RealInternetConnectionManager : NetworkConnectionManager {
 
     private val scope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("RealInternetConnectionManager"))

@@ -2,19 +2,19 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.connection.RealInternetConnectionManager
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface NetworkConnectionModule {
+internal class NetworkConnectionModule {
 
-    @Binds
+    @Provides
     @Singleton
-    fun bindNetworkConnectionManager(
-        realInternetConnectionManager: RealInternetConnectionManager,
-    ): NetworkConnectionManager
+    fun provideNetworkConnectionManager(): NetworkConnectionManager {
+        return RealInternetConnectionManager()
+    }
 }
