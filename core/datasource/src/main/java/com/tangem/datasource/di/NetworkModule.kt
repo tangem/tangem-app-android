@@ -6,7 +6,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.allowLogging
-import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +21,7 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): TangemTechApi {
+    fun provideTangemTechApi(@NetworkMoshi moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .baseUrl(PROD_TANGEM_TECH_BASE_URL)
@@ -30,7 +29,8 @@ class NetworkModule {
                 OkHttpClient.Builder()
                     .addHeaders(
                         CacheControlHeader,
-                        AuthenticationHeader(authProvider),
+                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
+                        // AuthenticationHeader(authProvider),
                     )
                     .allowLogging()
                     .build(),
