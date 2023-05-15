@@ -14,7 +14,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
@@ -36,12 +35,6 @@ class TapWalletManager {
     }
 
     suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
-        // do nothing if its the same wallet
-        store.state.globalState.scanResponse?.let {
-            val userWalletId = UserWalletIdBuilder.scanResponse(it).build()
-            if (userWalletId == userWallet.walletId) return
-        }
-
         Analytics.setContext(userWallet.scanResponse)
         if (sendAnalyticsEvent) {
             Analytics.send(Basic.WalletOpened())
