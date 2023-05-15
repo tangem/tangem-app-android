@@ -12,6 +12,10 @@ dependencies {
     implementation(project(":core:datasource"))
     implementation(project(":core:utils"))
     implementation(project(":features:referral:domain"))
+    
+
+    /** Libs */
+    implementation(project(":libs:auth"))
 
     /** Time */
     implementation(deps.jodatime)
