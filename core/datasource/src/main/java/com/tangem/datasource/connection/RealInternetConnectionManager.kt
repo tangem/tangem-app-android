@@ -14,7 +14,9 @@ import kotlinx.coroutines.reactive.asFlow
 internal class RealInternetConnectionManager : NetworkConnectionManager {
 
     private val scope =
-        CoroutineScope(SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("RealInternetConnectionManager"))
+        CoroutineScope(
+            SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("RealInternetConnectionManager"),
+        )
 
     override val isOnlineFlow: StateFlow<Boolean> = ReactiveNetwork
         .observeInternetConnectivity()
