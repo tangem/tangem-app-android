@@ -6,6 +6,7 @@ import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
+import com.tangem.lib.auth.AuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -15,6 +16,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val demoModeDatasource: DemoModeDatasource,
+    private val authProvider: AuthProvider,
 ) : ReferralRepository {
 
     override val isDemoMode: Boolean
@@ -22,7 +24,13 @@ internal class ReferralRepositoryImpl @Inject constructor(
 
     override suspend fun getReferralStatus(walletId: String): ReferralData {
         return withContext(coroutineDispatcher.io) {
-            referralConverter.convert(referralApi.getReferralStatus(walletId))
+            referralConverter.convert(
+                referralApi.getReferralStatus(
+                    cardPublicKey = authProvider.getCardPublicKey(),
+                    cardId = authProvider.getCardId(),
+                    walletId = walletId,
+                ),
+            )
         }
     }
 
@@ -35,7 +43,9 @@ internal class ReferralRepositoryImpl @Inject constructor(
         return withContext(coroutineDispatcher.io) {
             referralConverter.convert(
                 referralApi.startReferral(
-                    StartReferralBody(
+                    cardPublicKey = authProvider.getCardPublicKey(),
+                    cardId = authProvider.getCardId(),
+                    startReferralBody = StartReferralBody(
                         walletId = walletId,
                         networkId = networkId,
                         tokenId = tokenId,
