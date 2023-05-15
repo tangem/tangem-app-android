@@ -7,17 +7,10 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getTopUpUrl
-import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -36,10 +29,6 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -130,20 +119,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     Analytics.send(Onboarding.Twins.ScreenOpened())
                     preferencesStorage.saveTwinsOnboardingShown()
                 }
-                TwinCardsStep.CreateFirstWallet -> {
+                is TwinCardsStep.CreateFirstWallet -> {
                     Analytics.send(Onboarding.CreateWallet.ScreenOpened())
                     Analytics.send(Onboarding.Twins.SetupStarted())
-                    scope.launch {
-                        userWalletsListManager.delete(
-                            listOfNotNull(UserWalletIdBuilder.scanResponse(getScanResponse()).build()),
-                        )
-                        userWalletsListManager.selectedUserWalletSync?.let { selectedWallet ->
-                            store.onUserWalletSelected(
-                                userWallet = selectedWallet,
-                                sendAnalyticsEvent = false,
-                            )
-                        }
-                    }
                 }
                 TwinCardsStep.TopUpWallet -> {
                     Analytics.send(Onboarding.Topup.ScreenOpened())
@@ -170,6 +148,12 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             scope.launch {
                 when (val result = manager.createFirstWallet(action.initialMessage)) {
                     is CompletionResult.Success -> {
+                        // remove wallet only after first step of retwin
+                        scope.launch {
+                            userWalletsListManager.delete(
+                                listOfNotNull(UserWalletIdBuilder.scanResponse(getScanResponse()).build()),
+                            )
+                        }
                         Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                         startCardActivation(result.data.cardId)
                         delay(DELAY_SDK_DIALOG_CLOSE)
