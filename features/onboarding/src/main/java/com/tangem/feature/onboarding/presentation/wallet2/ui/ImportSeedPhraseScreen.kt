@@ -93,7 +93,6 @@ private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modif
             ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
         )
-        
 
         Box(
             modifier = Modifier
