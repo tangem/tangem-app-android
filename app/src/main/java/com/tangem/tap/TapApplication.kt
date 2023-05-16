@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
@@ -20,7 +21,6 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -51,7 +51,6 @@ import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
@@ -129,9 +128,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     lateinit var networkConnectionManager: NetworkConnectionManager
 
     @Inject
-    lateinit var tokensListFeatureToggles: TokensListFeatureToggles
-
-    @Inject
     lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
 
     @Inject
@@ -149,7 +145,6 @@ class TapApplication : Application(), ImageLoaderFactory {
                 daggerGraphState = DaggerGraphState(
                     assetReader = assetReader,
                     networkConnectionManager = networkConnectionManager,
-                    tokensListFeatureToggles = tokensListFeatureToggles,
                     customTokenFeatureToggles = customTokenFeatureToggles,
                 ),
             ),
