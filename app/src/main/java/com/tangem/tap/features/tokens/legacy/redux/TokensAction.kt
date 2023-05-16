@@ -2,37 +2,22 @@ package com.tangem.tap.features.tokens.legacy.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.model.WalletDataModel
-import com.tangem.tap.domain.tokens.Currency
 import org.rekotlin.Action
 
-sealed class TokensAction : Action {
+sealed interface TokensAction : Action {
 
-    object ResetState : TokensAction()
+    /** Single way to pass data to the screen */
+    sealed interface SetArgs : TokensAction {
 
-    data class AllowToAddTokens(val allow: Boolean) : TokensAction()
+        data class ManageAccess(val wallets: List<WalletDataModel>, val derivationStyle: DerivationStyle?) : SetArgs
 
-    data class LoadCurrencies(val scanResponse: ScanResponse? = null) : TokensAction() {
-        data class Success(val currencies: List<Currency>, val loadMore: Boolean) : TokensAction()
-        object Failure : TokensAction()
+        object ReadAccess : SetArgs
     }
 
-    data class LoadMore(
-        val scanResponse: ScanResponse? = null,
-    ) : TokensAction()
+    // TODO: [REDACTED_TASK_KEY] Remove this action
+    data class SaveChanges(val tokens: List<TokenWithBlockchain>, val blockchains: List<Blockchain>) : TokensAction
 
-    data class SetAddedCurrencies(
-        val wallets: List<WalletDataModel>,
-        val derivationStyle: DerivationStyle?,
-    ) : TokensAction()
-
-    data class SaveChanges(
-        val addedTokens: List<TokenWithBlockchain>,
-        val addedBlockchains: List<Blockchain>,
-    ) : TokensAction()
-
-    object PrepareAndNavigateToAddCustomToken : TokensAction()
-
-    data class SetSearchInput(val searchInput: String) : TokensAction()
+    // TODO: Remove this action in 4.7 release
+    object PrepareAndNavigateToAddCustomToken : TokensAction
 }
