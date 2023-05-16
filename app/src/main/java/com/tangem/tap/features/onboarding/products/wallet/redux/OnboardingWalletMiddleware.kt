@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
@@ -195,6 +196,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> AppState?) {
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager
@@ -207,6 +209,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
                 store.dispatch(OnboardingWallet2Action.SetDependencies(action.maxProgress))
             }
         }
+
         is OnboardingWallet2Action.CreateWallet -> {
             scanResponse ?: return
             scope.launch {
@@ -219,6 +222,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
                         )
                         CompletionResult.Success(response)
                     }
+
                     is CompletionResult.Failure -> {
                         CompletionResult.Failure(result.error)
                     }
@@ -228,9 +232,35 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
                 }
             }
         }
+
         is OnboardingWallet2Action.ImportWallet -> {
-            // TODO: implement
+            scanResponse ?: return
+            scope.launch {
+                val mediateResult = when (
+                    val result = tangemSdkManager.importWallet(
+                        scanResponse = scanResponse,
+                        mnemonic = action.mnemonicComponents.joinToString(" "),
+                    )
+                ) {
+                    is CompletionResult.Success -> {
+                        val response = CreateWalletResponse(
+                            card = result.data.card,
+                            derivedKeys = result.data.derivedKeys,
+                            primaryCard = result.data.primaryCard,
+                        )
+                        CompletionResult.Success(response)
+                    }
+
+                    is CompletionResult.Failure -> {
+                        CompletionResult.Failure(result.error)
+                    }
+                }
+                withMainContext {
+                    action.callback(mediateResult)
+                }
+            }
         }
+
         is OnboardingWallet2Action.WalletWasCreated -> {
             val result = when (val mediateResult = action.result) {
                 is CompletionResult.Success -> {
@@ -241,12 +271,14 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
                     )
                     CompletionResult.Success(response)
                 }
+
                 is CompletionResult.Failure -> {
                     CompletionResult.Failure(mediateResult.error)
                 }
             }
             store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
         }
+
         else -> Unit
     }
 }
@@ -320,7 +352,18 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
-                    is CompletionResult.Failure -> Unit
+
+                    is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.BackupFailedNotEmptyWallets &&
+                            onboardingWalletState.wallet2State != null
+                        ) {
+                            store.dispatchOnMain(
+                                GlobalAction.ShowDialog(
+                                    BackupDialog.ResetBackupCard,
+                                ),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -425,6 +468,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             Analytics.send(Onboarding.Finished())
             finishCardActivation(notActivatedCardIds)
         }
+
+        is BackupAction.ResetBackupCard -> {
+            scope.launch { tangemSdkManager.resetToFactorySettings() }
+        }
+
         else -> Unit
     }
 }
