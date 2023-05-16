@@ -5,22 +5,14 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.CardFilter
-import com.tangem.common.CompletionResult
-import com.tangem.common.SuccessResponse
-import com.tangem.common.UserCode
-import com.tangem.common.UserCodeType
+import com.tangem.common.*
 import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.common.core.CardSessionRunnable
-import com.tangem.common.core.Config
-import com.tangem.common.core.TangemSdkError
-import com.tangem.common.core.UserCodeRequestPolicy
+import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.map
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -45,6 +37,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
+@Suppress("TooManyFunctions")
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
     private val userCodeRepository by lazy {
@@ -91,6 +84,21 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
+    suspend fun importWallet(
+        scanResponse: ScanResponse,
+        mnemonic: String,
+    ): CompletionResult<CreateProductWalletTaskResponse> {
+        return when (val seedResult = DefaultMnemonic(mnemonic, tangemSdk.wordlist).generateSeed()) {
+            is CompletionResult.Success -> runTaskAsync(
+                CreateProductWalletTask(scanResponse.cardTypesResolver, seedResult.data),
+                scanResponse.card.cardId,
+                Message(context.getString(R.string.initial_message_create_wallet_body)),
+            )
+
+            is CompletionResult.Failure -> CompletionResult.Failure(seedResult.error)
+        }
+    }
+
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
         if (result is CompletionResult.Failure) {
             (result.error as? TangemSdkError)?.let { error ->
@@ -115,7 +123,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
-    suspend fun resetToFactorySettings(cardId: String): CompletionResult<CardDTO> {
+    suspend fun resetToFactorySettings(cardId: String? = null): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
             runnable = ResetToFactorySettingsTask(),
             cardId = cardId,
@@ -249,7 +257,6 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 4, minor = 52),
             ),
         )
     }
