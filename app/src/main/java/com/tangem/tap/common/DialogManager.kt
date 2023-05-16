@@ -25,6 +25,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPay
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBackupCardsDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ResetBackupCardDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
@@ -131,6 +132,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
+            is BackupDialog.ResetBackupCard -> ResetBackupCardDialog.create(context)
             is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
             is SaltPayDialog.Activation.PutVisaCard -> PutVisaCardDialog.create(context)
             is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)

@@ -18,6 +18,12 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:res"))
 
+    /** Tangem libraries */
+    implementation(deps.tangem.card.core)
+    implementation(deps.tangem.card.android) {
+        exclude(module = "joda-time")
+    }
+
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.appCompat)
