@@ -12,7 +12,7 @@ import com.tangem.tap.store
  */
 class TokensListArgs {
     /** Tokens list screen mode */
-    val isManageAccess: Boolean get() = store.state.tokensState.allowToAdd
+    val isManageAccess: Boolean get() = store.state.tokensState.isManageAccess
 
     /** Tokens list that accessible from the main screen */
     val mainScreenTokenList: List<TokenWithBlockchain> get() = store.state.tokensState.addedTokens
