@@ -26,8 +26,9 @@ class TangemCardTypesResolver(
         card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable &&
         !card.isSaltPay
 
-    // override fun isWallet2(): Boolean = card.firmwareVersion >= FirmwareVersion.KeysImportAvailable
-    override fun isWallet2(): Boolean = true
+    override fun isWallet2(): Boolean =
+        card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+
     override fun isSaltPay(): Boolean = productType == ProductType.SaltPay
     override fun isSaltPayVisa(): Boolean = card.isSaltPayVisa
     override fun isSaltPayWallet(): Boolean = card.isSaltPayWallet
