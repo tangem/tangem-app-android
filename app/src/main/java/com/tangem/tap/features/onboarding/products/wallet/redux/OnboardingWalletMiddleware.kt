@@ -12,8 +12,10 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -215,6 +217,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
             scope.launch {
                 val mediateResult = when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
                     is CompletionResult.Success -> {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
@@ -243,6 +246,11 @@ private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> Ap
                     )
                 ) {
                     is CompletionResult.Success -> {
+                        val creationType = when (action.seedPhraseSource) {
+                            SeedPhraseSource.IMPORTED -> AnalyticsParam.WalletCreationType.SeedImport
+                            SeedPhraseSource.GENERATED -> AnalyticsParam.WalletCreationType.NewSeed
+                        }
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully(creationType))
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
