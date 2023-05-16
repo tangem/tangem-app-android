@@ -11,7 +11,17 @@ import com.tangem.common.CompletionResult
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
-import com.tangem.feature.onboarding.presentation.wallet2.model.*
+import com.tangem.feature.onboarding.presentation.wallet2.model.AboutUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.IntroUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
+import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
+import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
+import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.model.UiActions
+import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseUiAction
 import com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -19,7 +29,16 @@ import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -40,11 +59,11 @@ class SeedPhraseViewModel @Inject constructor(
     private lateinit var router: SeedPhraseRouter
     private lateinit var mediator: SeedPhraseMediator
 
-    val currentScreen: SeedPhraseScreen
+    val currentScreen: StateFlow<SeedPhraseScreen>
         get() = router.currentScreen
 
-    val progress: Int
-        get() = progressByScreen[currentScreen] ?: 0
+    val progress: Flow<Int>
+        get() = currentScreen.map { progressByScreen[it] ?: 0 }
 
     val maxProgress: Int by lazy { progressByScreen.maxOfOrNull { it.value } ?: 0 }
 
@@ -150,8 +169,8 @@ class SeedPhraseViewModel @Inject constructor(
         val isSameText = textFieldValue.text == oldTextFieldValue.text
         val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
 
-        val mediateState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
-        uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
+        uiState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
+        // uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
 
         val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
         val inputMnemonic = fieldState.textFieldValue.text
@@ -182,16 +201,21 @@ class SeedPhraseViewModel @Inject constructor(
 
     private suspend fun validateMnemonic(inputMnemonic: String) {
         if (inputMnemonic.isEmpty() && uiState.importSeedPhraseState.error != null) {
-            updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
+            updateUi {
+                uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = false)
+                uiBuilder.importSeedPhrase.updateError(uiState, null)
+            }
             return
         }
 
         interactor.validateMnemonicString(inputMnemonic)
             .onSuccess { mnemonicComponents ->
                 importedMnemonicComponents = mnemonicComponents
+                uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = true)
                 updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
             }
             .onFailure {
+                uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = false)
                 val error = it as? SeedPhraseError ?: return
 
                 importedMnemonicComponents = null
@@ -199,6 +223,7 @@ class SeedPhraseViewModel @Inject constructor(
                     is SeedPhraseError.InvalidWords -> {
                         uiBuilder.importSeedPhrase.updateInvalidWords(uiState, error.words)
                     }
+
                     else -> uiState
                 }
                 updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, error) }
@@ -266,6 +291,7 @@ class SeedPhraseViewModel @Inject constructor(
                 .onSuccess { mnemonic ->
                     generatedMnemonicComponents = mnemonic.mnemonicComponents
                     val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
+                    setScreenshotsEnabled()
                     updateUi {
                         router.openScreen(SeedPhraseScreen.YourSeedPhrase)
                         uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList())
@@ -276,6 +302,13 @@ class SeedPhraseViewModel @Inject constructor(
                     // TODO: show error
                 }
         }
+    }
+
+    private fun setScreenshotsEnabled() {
+        router.currentScreen.onEach {
+            val allowScreenshots = it != SeedPhraseScreen.YourSeedPhrase
+            mediator.allowScreenshots(allowScreenshots)
+        }.launchIn(viewModelScope)
     }
 
     private suspend fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
@@ -310,6 +343,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonContinueClick() {
         router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
+        mediator.allowScreenshots(true)
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
@@ -368,7 +402,8 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion Utils
 
     companion object {
-        private val URI_ABOUT_SEED_PHRASE = Uri.parse("https://ya.ru")
+        private val URI_ABOUT_SEED_PHRASE =
+            Uri.parse("https://tangem.com/ru/blog/post/seed-phrase-a-risky-solution/")
         private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
         private const val MNEMONIC_DEBOUNCE_DELAY = 700L
         private const val DELAY_GENERATE_SEED_PHRASE = 300L
