@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
 [REDACTED_AUTHOR]
@@ -14,15 +16,21 @@ class SeedPhraseRouter(
     private val onOpenUriClick: (Uri) -> Unit,
 ) {
 
-    var currentScreen by mutableStateOf(SeedPhraseScreen.Intro)
+    private val _currentScreen = MutableStateFlow(SeedPhraseScreen.Intro)
+
+    val currentScreen: StateFlow<SeedPhraseScreen>
+        get() = _currentScreen
+
+    var currentScreenState by mutableStateOf(SeedPhraseScreen.Intro)
         private set
 
     fun navigateBack() {
-        currentScreen = when (currentScreen) {
+        _currentScreen.value = when (_currentScreen.value) {
             SeedPhraseScreen.Intro -> {
                 onBack.invoke()
                 return
             }
+
             SeedPhraseScreen.AboutSeedPhrase -> SeedPhraseScreen.Intro
             SeedPhraseScreen.YourSeedPhrase -> SeedPhraseScreen.AboutSeedPhrase
             SeedPhraseScreen.CheckSeedPhrase -> SeedPhraseScreen.YourSeedPhrase
@@ -31,7 +39,7 @@ class SeedPhraseRouter(
     }
 
     fun openScreen(screen: SeedPhraseScreen) {
-        currentScreen = screen
+        _currentScreen.value = screen
     }
 
     fun openChat() {
