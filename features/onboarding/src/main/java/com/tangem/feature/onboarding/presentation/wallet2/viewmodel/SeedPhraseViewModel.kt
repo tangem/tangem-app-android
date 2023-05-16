@@ -8,20 +8,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.CompletionResult
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
-import com.tangem.feature.onboarding.presentation.wallet2.model.AboutUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.IntroUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
-import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
-import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
-import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldUiAction
-import com.tangem.feature.onboarding.presentation.wallet2.model.UiActions
-import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseUiAction
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.OnboardingSeedButtonOtherOptions
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseEvents
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.feature.onboarding.presentation.wallet2.model.*
 import com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -29,29 +23,23 @@ import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 @HiltViewModel
 class SeedPhraseViewModel @Inject constructor(
     private val interactor: SeedPhraseInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
-    private var uiBuilder = StateBuilder(createUiActions())
+    private var uiBuilder = StateBuilder(uiActions = createUiActions())
 
     var uiState: OnboardingSeedPhraseState by mutableStateOf(uiBuilder.init())
         private set
@@ -92,6 +80,35 @@ class SeedPhraseViewModel @Inject constructor(
 
     fun setRouter(router: SeedPhraseRouter) {
         this.router = router
+        subscribeToScreenChanges()
+    }
+
+    private fun subscribeToScreenChanges() {
+        router.currentScreen.onEach { screen ->
+            when (screen) {
+                SeedPhraseScreen.Intro -> {
+                    analyticsEventHandler.send(SeedPhraseEvents.IntroScreenOpened)
+                }
+
+                SeedPhraseScreen.AboutSeedPhrase -> {
+                    mediator.allowScreenshots(true)
+                }
+
+                SeedPhraseScreen.YourSeedPhrase -> {
+                    analyticsEventHandler.send(SeedPhraseEvents.GenerationScreenOpened)
+                    mediator.allowScreenshots(false)
+                }
+
+                SeedPhraseScreen.CheckSeedPhrase -> {
+                    analyticsEventHandler.send(SeedPhraseEvents.CheckingScreenOpened)
+                    mediator.allowScreenshots(true)
+                }
+
+                SeedPhraseScreen.ImportSeedPhrase -> {
+                    analyticsEventHandler.send(SeedPhraseEvents.ImportScreenOpened)
+                }
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun setMediator(mediator: SeedPhraseMediator) {
@@ -112,7 +129,9 @@ class SeedPhraseViewModel @Inject constructor(
             buttonContinueClick = ::buttonContinueClick,
         ),
         checkSeedPhraseActions = CheckSeedPhraseUiAction(
-            buttonCreateWalletClick = { buttonImportWalletClick(generatedMnemonicComponents) },
+            buttonCreateWalletClick = {
+                buttonImportWalletClick(generatedMnemonicComponents, SeedPhraseSource.GENERATED)
+            },
             secondTextFieldAction = TextFieldUiAction(
                 onTextFieldChanged = { value -> onTextFieldChanged(SeedPhraseField.Second, value) },
             ),
@@ -128,7 +147,9 @@ class SeedPhraseViewModel @Inject constructor(
                 onTextFieldChanged = { value -> onSeedPhraseTextFieldChanged(value) },
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
-            buttonCreateWalletClick = { buttonImportWalletClick(importedMnemonicComponents) },
+            buttonCreateWalletClick = {
+                buttonImportWalletClick(importedMnemonicComponents, SeedPhraseSource.IMPORTED)
+            },
         ),
         menuChatClick = ::menuChatClick,
         menuNavigateBackClick = ::menuNavigateBackClick,
@@ -246,11 +267,12 @@ class SeedPhraseViewModel @Inject constructor(
         }
     }
 
-    private fun buttonImportWalletClick(mnemonicComponents: List<String>?) {
+    private fun buttonImportWalletClick(mnemonicComponents: List<String>?, seedPhraseSource: SeedPhraseSource) {
+        analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
         mnemonicComponents ?: return
 
         viewModelScope.launch(dispatchers.io) {
-            mediator.importWallet(mnemonicComponents, ::handleWalletCreationResult)
+            mediator.importWallet(mnemonicComponents, seedPhraseSource, ::handleWalletCreationResult)
         }
     }
 
@@ -259,6 +281,7 @@ class SeedPhraseViewModel @Inject constructor(
             is CompletionResult.Success -> {
                 isFinished = true
             }
+
             is CompletionResult.Failure -> {
                 // errors shows on the TangemSdk bottom sheet dialog
             }
@@ -275,14 +298,17 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonOtherOptionsClick() {
+        analyticsEventHandler.send(OnboardingSeedButtonOtherOptions)
         router.openScreen(SeedPhraseScreen.AboutSeedPhrase)
     }
 
     private fun buttonReadMoreAboutSeedPhraseClick() {
+        analyticsEventHandler.send(SeedPhraseEvents.ButtonReadMore)
         router.openUri(URI_ABOUT_SEED_PHRASE)
     }
 
     private fun buttonGenerateSeedPhraseClick() {
+        analyticsEventHandler.send(SeedPhraseEvents.ButtonGenerateSeedPhrase)
         viewModelScope.launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
             delay(DELAY_GENERATE_SEED_PHRASE)
@@ -290,7 +316,6 @@ class SeedPhraseViewModel @Inject constructor(
                 .onSuccess { mnemonic ->
                     generatedMnemonicComponents = mnemonic.mnemonicComponents
                     val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
-                    setScreenshotsEnabled()
                     updateUi {
                         router.openScreen(SeedPhraseScreen.YourSeedPhrase)
                         uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList())
@@ -301,13 +326,6 @@ class SeedPhraseViewModel @Inject constructor(
                     // TODO: show error
                 }
         }
-    }
-
-    private fun setScreenshotsEnabled() {
-        router.currentScreen.onEach {
-            val allowScreenshots = it != SeedPhraseScreen.YourSeedPhrase
-            mediator.allowScreenshots(allowScreenshots)
-        }.launchIn(viewModelScope)
     }
 
     private suspend fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
@@ -337,12 +355,13 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonImportSeedPhraseClick() {
+        analyticsEventHandler.send(SeedPhraseEvents.ButtonImportWallet)
         router.openScreen(SeedPhraseScreen.ImportSeedPhrase)
     }
 
     private fun buttonContinueClick() {
+        analyticsEventHandler.send(SeedPhraseEvents.CheckingScreenOpened)
         router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
-        mediator.allowScreenshots(true)
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
