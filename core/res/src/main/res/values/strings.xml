@@ -182,6 +182,7 @@
     <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
     <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
     <string name="onboarding_getting_started">Getting started</string>
+    <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. Do you want to reset it and use the card for a new wallet?</string>
     <string name="onboarding_navbar_kyc_progress">Verify your identity</string>
     <string name="onboarding_navbar_kyc_start">KYC</string>
     <string name="onboarding_navbar_pin">Pin code</string>
