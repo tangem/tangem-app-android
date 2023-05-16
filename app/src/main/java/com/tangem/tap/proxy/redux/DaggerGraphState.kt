@@ -4,14 +4,12 @@ import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
 import org.rekotlin.StateType
 
 data class DaggerGraphState(
     val assetReader: AssetReader? = null,
     val testerRouter: TesterRouter? = null,
     val networkConnectionManager: NetworkConnectionManager? = null,
-    val tokensListFeatureToggles: TokensListFeatureToggles? = null,
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
 ) : StateType {
 
