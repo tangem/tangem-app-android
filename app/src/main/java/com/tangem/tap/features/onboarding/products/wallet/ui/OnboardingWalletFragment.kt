@@ -22,6 +22,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.core.analytics.Analytics
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
@@ -495,9 +496,10 @@ class OnboardingWalletFragment :
 
             override fun importWallet(
                 mnemonicComponents: List<String>,
+                seedPhraseSource: SeedPhraseSource,
                 callback: (CompletionResult<CreateWalletResponse>) -> Unit,
             ) {
-                store.dispatch(OnboardingWallet2Action.ImportWallet(mnemonicComponents, callback))
+                store.dispatch(OnboardingWallet2Action.ImportWallet(mnemonicComponents, seedPhraseSource, callback))
             }
 
             override fun allowScreenshots(allow: Boolean) {
