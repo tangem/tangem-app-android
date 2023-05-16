@@ -88,4 +88,6 @@ sealed class BackupAction : Action {
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
+
+    object ResetBackupCard : BackupAction()
 }
