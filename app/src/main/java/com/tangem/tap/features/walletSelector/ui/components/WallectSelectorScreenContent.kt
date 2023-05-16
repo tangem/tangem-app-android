@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -174,8 +173,8 @@ private fun Footer(
     Column(
         modifier = Modifier
             .padding(
-                top = dimensionResource(id = R.dimen.spacing24),
-                bottom = dimensionResource(id = R.dimen.spacing16),
+                top = TangemTheme.dimens.spacing24,
+                bottom = TangemTheme.dimens.spacing16,
             )
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
