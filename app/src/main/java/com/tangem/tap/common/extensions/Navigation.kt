@@ -29,7 +29,6 @@ import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
-import com.tangem.tap.features.tokens.legacy.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
@@ -148,12 +147,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
-        AppScreen.AddTokens -> {
-            val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::tokensListFeatureToggles,
-            )
-            if (featureToggles.isRedesignedScreenEnabled) TokensListFragment() else AddTokensFragment()
-        }
+        AppScreen.AddTokens -> TokensListFragment()
 
         AppScreen.AddCustomToken -> {
             val featureToggles = store.state.daggerGraphState.get(
