@@ -11,4 +11,6 @@ interface SeedPhraseMediator {
     fun importWallet(mnemonicComponents: List<String>, callback: (CompletionResult<CreateWalletResponse>) -> Unit)
 
     fun onWalletCreated(result: CompletionResult<CreateWalletResponse>)
+
+    fun allowScreenshots(allow: Boolean)
 }
