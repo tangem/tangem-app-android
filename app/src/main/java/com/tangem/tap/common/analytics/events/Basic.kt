@@ -14,7 +14,7 @@ sealed class Basic(
     class BalanceLoaded(balance: AnalyticsParam.CardBalanceState) : Basic(
         event = "Balance Loaded",
         params = mapOf(
-            AnalyticsParam.Balance to balance.value,
+            AnalyticsParam.BALANCE to balance.value,
         ),
     )
 
@@ -23,7 +23,7 @@ sealed class Basic(
     ) : Basic(
         event = "Card Was Scanned",
         params = mapOf(
-            AnalyticsParam.Source to source.value,
+            AnalyticsParam.SOURCE to source.value,
         ),
     )
 
@@ -34,8 +34,8 @@ sealed class Basic(
     ) : Basic(
         event = "Signed in",
         params = mapOf(
-            AnalyticsParam.Currency to currency.value,
-            AnalyticsParam.Batch to batch,
+            AnalyticsParam.CURRENCY to currency.value,
+            AnalyticsParam.BATCH to batch,
             "Sign in type" to signInType.name,
         ),
     ) {
@@ -46,12 +46,12 @@ sealed class Basic(
 
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
-        params = mapOf(AnalyticsParam.Currency to currency.value),
+        params = mapOf(AnalyticsParam.CURRENCY to currency.value),
     )
 
     class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom) : Basic(
         event = "Transaction sent",
-        params = mapOf(AnalyticsParam.Source to sentFrom.value),
+        params = mapOf(AnalyticsParam.SOURCE to sentFrom.value),
     )
 
     class ScanError(error: Throwable) : Basic(
