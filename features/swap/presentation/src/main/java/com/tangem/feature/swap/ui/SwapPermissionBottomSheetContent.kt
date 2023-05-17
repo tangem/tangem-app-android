@@ -6,9 +6,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -25,9 +23,7 @@ import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
-    val isPermissionAlertShow = remember {
-        mutableStateOf(false)
-    }
+    var isPermissionAlertShow by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -48,7 +44,7 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
             )
             IconButton(
                 modifier = Modifier.align(Alignment.CenterEnd),
-                onClick = { isPermissionAlertShow.value = true },
+                onClick = { isPermissionAlertShow = true },
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_question_24),
@@ -96,11 +92,11 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
         SpacerH16()
 
         // region dialog
-        if (isPermissionAlertShow.value) {
+        if (isPermissionAlertShow) {
             BasicDialog(
                 message = stringResource(id = R.string.swapping_approve_information_text),
                 title = stringResource(id = R.string.swapping_approve_information_title),
-                confirmButton = DialogButton { isPermissionAlertShow.value = false },
+                confirmButton = DialogButton { isPermissionAlertShow = false },
                 onDismissDialog = {},
             )
         }
