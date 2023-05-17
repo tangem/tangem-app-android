@@ -15,7 +15,7 @@ import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.persistence.UsedCardsPrefStorage
+import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
 import timber.log.Timber
 import java.math.BigDecimal
 

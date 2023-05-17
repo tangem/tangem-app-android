@@ -7,8 +7,8 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MyWallets
@@ -80,6 +80,12 @@ internal class WalletSelectorMiddleware {
             }
             is WalletSelectorAction.ChangeAppCurrency -> {
                 refreshUserWalletsAmounts()
+            }
+            is WalletSelectorAction.ClearUserWallets -> scope.launch {
+                clearUserWallets()
+                    .doOnFailure { e ->
+                        Timber.e(e, "Unable to clear user wallets")
+                    }
             }
             is WalletSelectorAction.AddWallet.Success,
             is WalletSelectorAction.AddWallet.Error,
