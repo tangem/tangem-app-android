@@ -95,6 +95,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         is WalletAction.WalletStoresChanged -> {
             newState = newState.copy(
                 walletsStores = action.walletStores,
+                selectedCurrency = findSelectedCurrency(
+                    walletsStores = action.walletStores,
+                    currentSelectedCurrency = newState.selectedCurrency,
+                    isMultiWalletAllowed = newState.isMultiwalletAllowed,
+                ),
             )
         }
         is WalletAction.TotalFiatBalanceChanged -> {
@@ -103,14 +108,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.LoadData.Success -> {
-            newState = newState.copy(
-                state = ProgressState.Done,
-                selectedCurrency = findSelectedCurrency(
-                    walletsStores = newState.walletsStores,
-                    currentSelectedCurrency = newState.selectedCurrency,
-                    isMultiWalletAllowed = newState.isMultiwalletAllowed,
-                ),
-            )
+            newState = newState.copy(state = ProgressState.Done)
         }
         is WalletAction.UpdateCanSaveUserWallets -> {
             newState = newState.copy(canSaveUserWallets = action.canSaveUserWallets)
