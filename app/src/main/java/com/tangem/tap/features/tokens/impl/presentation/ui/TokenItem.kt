@@ -139,6 +139,7 @@ private fun Icon(name: String, iconUrl: String, modifier: Modifier = Modifier) {
     )
 }
 
+// TODO(use CurrencyPlaceholderIcon here?)
 @Composable
 private fun PlaceholderIcon(name: String, modifier: Modifier = Modifier) {
     Box(

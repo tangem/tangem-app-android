@@ -31,7 +31,7 @@ class WarningsMiddleware {
             is WalletAction.Warnings.CheckIfNeeded -> {
                 showCardWarningsIfNeeded(globalState)
                 val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
-                if (readyToShow) addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
+                if (readyToShow) addWarningMessage(warning = WarningMessagesManager.appRatingWarning, autoUpdate = true)
             }
             is WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline -> checkHashesCountOnline()
             is WalletAction.Warnings.CheckHashesCount.SaveCardId -> {
@@ -69,7 +69,7 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
+            addWarningMessage(WarningMessagesManager.appRatingWarning, true)
         }
     }
 
@@ -78,21 +78,21 @@ class WarningsMiddleware {
             val card = scanResponse.card
             globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
             if (card.isTestCard) {
-                addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
+                addWarningMessage(WarningMessagesManager.testCardWarning, autoUpdate = true)
                 return@let
             }
 
             showWarningLowRemainingSignaturesIfNeeded(card)
             if (card.firmwareVersion.type != FirmwareVersion.FirmwareType.Release) {
-                addWarningMessage(WarningMessagesManager.devCardWarning())
+                addWarningMessage(WarningMessagesManager.devCardWarning)
             } else if (!preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) {
                 checkIfWarningNeeded(scanResponse)?.let { warning -> addWarningMessage(warning) }
             }
             if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release && !globalState.cardVerifiedOnline) {
-                addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
+                addWarningMessage(WarningMessagesManager.onlineVerificationFailed)
             }
             if (scanResponse.isDemoCard()) {
-                addWarningMessage(WarningMessagesManager.demoCardWarning())
+                addWarningMessage(WarningMessagesManager.demoCardWarning)
             }
             setWarningMessages()
         }
@@ -113,7 +113,7 @@ class WarningsMiddleware {
         if (scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             val isBackupForbidden = with(scanResponse.card.settings) { !(isBackupAllowed || isHDWalletAllowed) }
             return if (scanResponse.card.hasSignedHashes() && isBackupForbidden) {
-                WarningMessagesManager.signedHashesMultiWalletWarning()
+                WarningMessagesManager.signedHashesMultiWalletWarning
             } else {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                 null
@@ -123,7 +123,7 @@ class WarningsMiddleware {
         val validator = store.state.walletState.walletManagers.firstOrNull() as? SignatureCountValidator
         return if (validator == null) {
             if (scanResponse.card.hasSignedHashes()) {
-                WarningMessagesManager.alreadySignedHashesWarning()
+                WarningMessagesManager.alreadySignedHashesWarning
             } else {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                 null
@@ -161,9 +161,9 @@ class WarningsMiddleware {
                     }
                     is SimpleResult.Failure ->
                         if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning, true)
                         } else if (signedHashes > 0) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning, true)
                         }
                     null -> Unit
                 }

@@ -8,13 +8,10 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
-import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -31,132 +28,77 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
+import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
-import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
 
-@Suppress("LargeClass")
-class TokensMiddleware {
+object TokensMiddleware {
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
                 when (action) {
-                    is TokensAction.LoadCurrencies -> handleLoadCurrencies(action.scanResponse)
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
                     is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken()
-                    is TokensAction.SetSearchInput -> {
-                        Analytics.send(ManageTokens.TokenSearched())
-                        handleLoadCurrencies(
-                            scanResponse = store.state.globalState.scanResponse,
-                            newSearchInput = action.searchInput,
-                        )
-                    }
-                    is TokensAction.LoadMore -> {
-                        if (store.state.tokensState.needToLoadMore &&
-                            store.state.tokensState.currencies.isNotEmpty()
-                        ) {
-                            handleLoadCurrencies(action.scanResponse)
-                        }
-                    }
                 }
                 next(action)
             }
         }
     }
 
-    private fun handleLoadCurrencies(scanResponse: ScanResponse?, newSearchInput: String? = null) {
-        val tokensState = store.state.tokensState
-
-        val supportedBlockchains: List<Blockchain> = scanResponse?.card?.supportedBlockchains()
-            ?: Blockchain.values().toList().filterNot(Blockchain::isTestnet)
-
-        val loadCoinsService = LoadAvailableCoinsService(
-            tangemTechApi = store.state.domainNetworks.tangemTechService.api,
-            dispatchers = AppCoroutineDispatcherProvider(),
-            assetReader = store.state.daggerGraphState.get(DaggerGraphState::assetReader),
-        )
-
+    private fun handleSaveChanges(action: TokensAction.SaveChanges) {
         scope.launch {
-            val result = loadCoinsService.getSupportedTokens(
-                isTestNet = scanResponse?.card?.isTestCard ?: false,
-                supportedBlockchains = supportedBlockchains,
-                page = if (newSearchInput == null) tokensState.pageToLoad else 0,
-                searchInput = if (newSearchInput == null) tokensState.searchInput else newSearchInput.ifBlank { null },
+            val scanResponse = store.state.globalState.scanResponse ?: return@launch
+
+            val currentTokens = store.state.tokensState.addedTokens
+            val currentBlockchains = store.state.tokensState.addedBlockchains
+
+            val blockchainsToAdd = action.blockchains.filterNot(currentBlockchains::contains)
+            val blockchainsToRemove =
+                store.state.tokensState.addedBlockchains.filterNot(action.blockchains::contains)
+
+            val tokensToAdd = action.tokens.filterNot(currentTokens::contains)
+            val tokensToRemove = currentTokens.filterNot { token -> action.tokens.any { it.token == token.token } }
+
+            removeCurrenciesIfNeeded(
+                currencies = convertToCurrencies(
+                    blockchains = blockchainsToRemove,
+                    tokens = tokensToRemove,
+                    derivationStyle = scanResponse.card.derivationStyle,
+                ),
             )
 
-            store.dispatchOnMain(
-                action = when (result) {
-                    is Result.Success -> {
-                        TokensAction.LoadCurrencies.Success(
-                            currencies = result.data.currencies.filter(supportedBlockchains.toSet()),
-                            loadMore = result.data.moreAvailable,
-                        )
-                    }
-                    is Result.Failure -> {
-                        TokensAction.LoadCurrencies.Failure
-                    }
-                },
-            )
-        }
-    }
+            val isNothingToDoWithTokens = tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+            val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+            if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
+                store.dispatchDebugErrorNotification(message = "Nothing to save")
+                store.dispatchOnMain(NavigationAction.PopBackTo())
+                return@launch
+            }
 
-    private fun handleSaveChanges(action: TokensAction.SaveChanges) = scope.launch {
-        val scanResponse = store.state.globalState.scanResponse ?: return@launch
-
-        val currentTokens = store.state.tokensState.addedWallets.toNonCustomTokensWithBlockchains(
-            derivationStyle = scanResponse.card.derivationStyle,
-        )
-        val currentBlockchains = store.state.tokensState.addedWallets.toNonCustomBlockchains(
-            derivationStyle = scanResponse.card.derivationStyle,
-        )
-
-        val blockchainsToAdd = action.addedBlockchains.filterNot(currentBlockchains::contains)
-        val blockchainsToRemove = currentBlockchains.filterNot(action.addedBlockchains::contains)
-
-        val tokensToAdd = action.addedTokens.filterNot(currentTokens::contains)
-        val tokensToRemove = currentTokens.filterNot { token -> action.addedTokens.any { it.token == token.token } }
-
-        removeCurrenciesIfNeeded(
-            currencies = convertToCurrencies(
-                blockchains = blockchainsToRemove,
-                tokens = tokensToRemove,
+            val currencyList = convertToCurrencies(
+                blockchains = blockchainsToAdd,
+                tokens = tokensToAdd,
                 derivationStyle = scanResponse.card.derivationStyle,
-            ),
-        )
+            )
 
-        val isNothingToDoWithTokens = tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
-        val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
-        if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
-            store.dispatchDebugErrorNotification(message = "Nothing to save")
-            store.dispatchOnMain(NavigationAction.PopBackTo())
-            return@launch
-        }
-
-        val currencyList = convertToCurrencies(
-            blockchains = blockchainsToAdd,
-            tokens = tokensToAdd,
-            derivationStyle = scanResponse.card.derivationStyle,
-        )
-
-        if (scanResponse.supportsHdWallet()) {
-            deriveMissingBlockchains(scanResponse, currencyList) {
-                submitAdd(it, currencyList)
+            if (scanResponse.supportsHdWallet()) {
+                deriveMissingBlockchains(scanResponse, currencyList) {
+                    submitAdd(it, currencyList)
+                    store.dispatchOnMain(NavigationAction.PopBackTo())
+                }
+            } else {
+                submitAdd(scanResponse, currencyList)
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             }
-        } else {
-            submitAdd(scanResponse, currencyList)
-            store.dispatchOnMain(NavigationAction.PopBackTo())
         }
     }
 
@@ -316,21 +258,23 @@ class TokensMiddleware {
             }
         }
 
-        val addedCurrencies = store.state.walletState.walletsStores.map { walletStore ->
-            walletStore.walletsData.map { walletData -> walletData.currency }
-        }.flatten().map {
-            when (it) {
-                is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
-                    it.blockchain,
-                    it.derivationPath,
-                )
-                is Currency.Token -> DomainWrapped.Currency.Token(
-                    it.token,
-                    it.blockchain,
-                    it.derivationPath,
-                )
+        val addedCurrencies = store.state.walletState.walletsStores
+            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
+            .flatten()
+            .map { currency ->
+                when (currency) {
+                    is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
+                        currency.blockchain,
+                        currency.derivationPath,
+                    )
+
+                    is Currency.Token -> DomainWrapped.Currency.Token(
+                        currency.token,
+                        currency.blockchain,
+                        currency.derivationPath,
+                    )
+                }
             }
-        }
         domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
         domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(onAddCustomToken))
         store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
