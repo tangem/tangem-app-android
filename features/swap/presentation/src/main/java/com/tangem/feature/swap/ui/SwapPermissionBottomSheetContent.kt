@@ -1,27 +1,19 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.MiddleEllipsisText
-import com.tangem.core.ui.components.PrimaryButtonIconRight
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SpacerH10
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH28
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.ApprovePermissionButton
@@ -31,6 +23,7 @@ import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
+    var isPermissionAlertShow by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -42,11 +35,23 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
 
         SpacerH10()
 
-        Text(
-            text = stringResource(id = R.string.swapping_permission_header),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.subtitle1,
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = stringResource(id = R.string.swapping_permission_header),
+                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography.subtitle1,
+            )
+            IconButton(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                onClick = { isPermissionAlertShow = true },
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_question_24),
+                    contentDescription = null,
+                )
+            }
+        }
 
         SpacerH10()
 
@@ -85,6 +90,16 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
         )
 
         SpacerH16()
+
+        // region dialog
+        if (isPermissionAlertShow) {
+            BasicDialog(
+                message = stringResource(id = R.string.swapping_approve_information_text),
+                title = stringResource(id = R.string.swapping_approve_information_title),
+                confirmButton = DialogButton { isPermissionAlertShow = false },
+                onDismissDialog = {},
+            )
+        }
     }
 }
 
