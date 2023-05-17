@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,7 +47,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -55,7 +55,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.VerticalSpacer
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -162,18 +164,18 @@ private fun Header() {
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing32)
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.size200)),
+                .height(TangemTheme.dimens.size200),
         )
-        VerticalSpacer(spaceResId = R.dimen.spacing24)
+        SpacerH24()
         Text(
             text = stringResource(id = R.string.referral_title),
-            modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing50)),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing50),
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             maxLines = 2,
             style = TangemTheme.typography.h2,
         )
-        VerticalSpacer(spaceResId = R.dimen.spacing16)
+        SpacerH16()
     }
 }
 
@@ -196,17 +198,19 @@ private fun ReferralInfo(
                 onShareClick = stateHolder.analytics.onShareClicked,
             )
         }
+
         is ReferralInfoState.NonParticipantContent -> {
             Conditions(state = state)
-            VerticalSpacer(spaceResId = R.dimen.spacing44)
+            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing44))
             NonParticipateBottomBlock(
                 onAgreementClick = onAgreementClick,
                 onParticipateClick = state.onParticipateClicked,
             )
         }
+
         is ReferralInfoState.Loading -> {
             LoadingCondition(iconResId = R.drawable.ic_tether_28)
-            VerticalSpacer(spaceResId = R.dimen.spacing32)
+            SpacerH32()
             LoadingCondition(iconResId = R.drawable.ic_discount_28)
         }
     }
@@ -215,7 +219,7 @@ private fun ReferralInfo(
 @Composable
 private fun Conditions(state: ReferralInfoContentState) {
     ConditionForYou(state = state)
-    VerticalSpacer(spaceResId = R.dimen.spacing32)
+    SpacerH32()
     ConditionForYourFriend(discount = state.discount)
 }
 
@@ -228,6 +232,7 @@ private fun ConditionForYou(state: ReferralInfoContentState) {
                 networkName = state.networkName,
                 address = state.address,
             )
+
             is ReferralInfoState.NonParticipantContent -> InfoForYou(
                 award = state.award,
                 networkName = state.networkName,
@@ -418,7 +423,7 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = (width - snackbarWidth).div(2), bottom = dimensionResource(R.dimen.spacing12))
+                .padding(start = (width - snackbarWidth).div(2), bottom = TangemTheme.dimens.spacing12)
                 .fillMaxWidth(),
             snackbar = {
                 Box(
@@ -462,6 +467,7 @@ private fun getMessageForErrorSnackbar(errorSnackbar: ErrorSnackbar): String {
         is DemoModeException -> {
             stringResource(id = R.string.alert_demo_feature_disabled)
         }
+
         else -> {
             if (errorSnackbar.throwable.cause != null) {
                 String.format(

@@ -2,10 +2,8 @@ package com.tangem.core.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -14,7 +12,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -158,7 +155,7 @@ fun PrimaryStartIconButton(
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
             )
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
+            SpacerW8()
             Text(text = text)
         },
     )
@@ -191,7 +188,7 @@ fun PrimaryEndIconButton(
         onClick = onClick,
         content = {
             Text(text = text)
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
+            SpacerW8()
             Icon(
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
@@ -211,7 +208,7 @@ private fun PrimaryButtonRow(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.size48)),
+            .height(TangemTheme.dimens.size48),
         enabled = enabled,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         colors = ButtonDefaults.buttonColors(
