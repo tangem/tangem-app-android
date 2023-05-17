@@ -49,8 +49,6 @@ import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.AddCustomTokenWarning
-import com.tangem.tap.common.compose.ClosePopupTrigger
-import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.customtoken.legacy.compose.test.TestCase
 import com.tangem.tap.features.customtoken.legacy.compose.test.TestCasesList
@@ -174,12 +172,14 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
     Column {
         warnings.forEachIndexed { index, item ->
             val modifier = when (index) {
-                0 -> Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp)
-                warnings.lastIndex -> Modifier.padding(16.dp, 8.dp, 16.dp, 16.dp)
-                else -> Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp)
+                0 -> Modifier.padding(vertical = 0.dp)
+                warnings.lastIndex -> Modifier.padding(top = 8.dp, bottom = 16.dp)
+                else -> Modifier.padding(top = 8.dp, bottom = 0.dp)
             }
             AddCustomTokenWarning(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .fillMaxWidth(),
                 warning = item,
                 converter = warningConverter,
             )
