@@ -34,7 +34,6 @@ sealed class WalletAction : Action {
     sealed class MultiWallet : WalletAction() {
 
         data class SelectWallet(val currency: Currency?) : MultiWallet()
-        data class SetSingleWalletCurrency(val currency: Currency?) : MultiWallet()
 
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(val currency: Currency) : MultiWallet()
