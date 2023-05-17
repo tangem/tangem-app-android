@@ -46,7 +46,7 @@ class UserTokensRepository(
         remoteSaveUserTokens(userWalletId = userWalletId, userTokens = userTokens)
         storageService.saveUserTokens(userWalletId = userWalletId, tokens = userTokens)
     }
-
+// [REDACTED_TODO_COMMENT]
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
         val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
         val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
@@ -61,7 +61,7 @@ class UserTokensRepository(
     private fun loadTokensOffline(userWalletId: String): List<Currency> {
         return storageService.getUserTokens(userWalletId = userWalletId) ?: emptyList()
     }
-
+// [REDACTED_TODO_COMMENT]
     private fun loadDemoCurrencies(): List<Currency> {
         return DemoHelper.config.demoBlockchains
             .map { blockchain ->
