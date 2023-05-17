@@ -353,6 +353,8 @@
     <string name="story_meet_title">Meet\nTangem</string>
     <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
     <string name="story_web3_title">DeFi Compatible</string>
+    <string name="swapping_approve_information_text">Approvals are considered an industry standard across all decentralized exchanges and protect your wallet from being accessed by a smart contract without your permission. By design, smart contracts can\'t access your tokens unless you approve access from your end. By \"unlocking\" your tokens, you are give permission to the 1inch smart contract to spend your assets. The miners of the network are compensated with a gas fee (paid by you) to record this action on the blockchain. Once permission has been granted you will be able to swap your token.</string>
+    <string name="swapping_approve_information_title">Approve</string>
     <string name="swapping_error_wrapper">Error: %s</string>
     <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_give_permission">Give Permission</string>
