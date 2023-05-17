@@ -1,16 +1,15 @@
 package com.tangem.domain.card
 
+import arrow.core.Either
 import arrow.core.EitherNel
 import arrow.core.flatMap
-import arrow.core.toEitherNel
 import com.tangem.TangemSdk
 import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.domain.card.model.ScanCardParams
 import com.tangem.domain.card.repository.ScanCardRepository
+import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ChainProcessor
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import javax.inject.Inject
 
 /**
  * Use case responsible for scanning a card and returning a [ScanResponse] object.
@@ -18,7 +17,7 @@ import javax.inject.Inject
  * @property tangemSdk An instance of [TangemSdk] to configure the display format of the card ID.
  * @constructor Create a new instance of [ScanCardUseCase] with the given dependencies.
  */
-class ScanCardUseCase @Inject internal constructor(
+class ScanCardUseCase(
     private val scanCardRepository: ScanCardRepository,
     private val tangemSdk: TangemSdk,
 ) {
@@ -32,23 +31,31 @@ class ScanCardUseCase @Inject internal constructor(
 
     /**
      * Scan a card and return a [ScanResponse] object.
-     * @param params An instance of [ScanCardParams] to configure the scan process.
+     * @param cardId an optional card ID to scan. If null, can scan any card present.
+     * Defaults to null.
+     * @param allowRequestAccessCodeFromStorage whether to prompt the user for an access code if needed.
+     * Defaults to false.
+     * @param afterScanChains An array of chains that should be executed after a successful card scan operation.
+     * Defaults to an empty array.
      * @return A [EitherNel] object with either a non-empty list of [ScanCardException] or a [ScanResponse].
      */
-    suspend operator fun invoke(params: ScanCardParams = ScanCardParams()): EitherNel<ScanCardException, ScanResponse> {
+    suspend operator fun invoke(
+        cardId: String? = null,
+        allowRequestAccessCodeFromStorage: Boolean = false,
+        afterScanChains: Array<Chain<ScanCardException.ChainException, ScanResponse>> = emptyArray(),
+    ): Either<ScanCardException, ScanResponse> {
         resetCardIdDisplayFormat()
-        scanChainProcessor.addChains(*params.afterScanChains)
+        scanChainProcessor.addChains(afterScanChains)
 
         return scanCardRepository.scanCard(
-            cardId = params.cardId,
-            allowRequestAccessCodeFromRepository = params.allowRequestAccessCodeFromRepository,
+            cardId = cardId,
+            allowRequestAccessCodeFromStorage = allowRequestAccessCodeFromStorage,
         )
             .onRight { scanResponse ->
                 updateCardIdDisplayFormat(scanResponse.productType)
             }
-            .toEitherNel()
-            .flatMap { scanResponse ->
-                scanChainProcessor.launchChains(initial = scanResponse)
+            .flatMap { response ->
+                scanChainProcessor.launchChains(initial = response)
             }
     }
 
