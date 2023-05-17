@@ -10,15 +10,15 @@ import com.tangem.domain.models.scan.ScanResponse
 interface ScanCardRepository {
 
     /**
-     * Scans the card with the given [cardId] and returns a [ScanResponse]. If [allowRequestAccessCodeFromRepository]
-     * is true, the repository may prompt the user for an access code.
+     * Scans the card with the given [cardId] and returns a [ScanResponse]
      *
      * @param cardId an optional card ID to scan. If null, the repository should scan any card present.
-     * @param allowRequestAccessCodeFromRepository whether to prompt the user for an access code if needed.
+     * @param allowRequestAccessCodeFromStorage whether the access code can be requested from
+     * internal storage during the scan process
      * @return an [Either] that contains a [ScanCardException] in case of an error or a [ScanResponse].
      */
     suspend fun scanCard(
         cardId: String?,
-        allowRequestAccessCodeFromRepository: Boolean,
+        allowRequestAccessCodeFromStorage: Boolean,
     ): Either<ScanCardException, ScanResponse>
 }
