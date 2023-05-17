@@ -350,6 +350,8 @@
     <string name="story_meet_title">認識Tangem</string>
     <string name="story_web3_description">交易、購買NFT、自由穿梭於100+去中心化服務</string>
     <string name="story_web3_title">兼容DeFi</string>
+    <string name="swapping_approve_information_text">批准被視為所有去中心化交易所的行業標準，並保護您的錢包在未經您許可的情況下不被智能合約訪問。按照設計，智能合約無法訪問您的代幣，除非您從您的終端批准訪問。通過“解鎖”您的代幣，您將獲得 1inch 智能合約使用您的資產的權限。網絡的礦工將獲得Gas Fee（由您支付）作為補償，以在區塊鏈上記錄此操作。一旦獲得許可，您就可以交易您的代幣。</string>
+    <string name="swapping_approve_information_title">批准</string>
     <string name="swapping_error_wrapper">錯誤： %s</string>
     <string name="swapping_generic_error">有錯誤。請再試一遍</string>
     <string name="swapping_give_permission">賦予權限</string>
