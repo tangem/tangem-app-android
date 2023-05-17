@@ -484,6 +484,17 @@
                     "networkId": "ravencoin/test"
                 }
             ]
+        },
+        {
+            "id": "cosmos",
+            "symbol": "ATOM",
+            "name": "Cosmos Hub",
+            "networks":
+            [
+                {
+                    "networkId": "cosmos/test"
+                }
+            ]
         }
     ]
 }
