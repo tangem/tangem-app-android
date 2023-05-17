@@ -138,7 +138,7 @@ private fun Icon(name: String, iconUrl: String, modifier: Modifier = Modifier) {
         error = { PlaceholderIcon(name = name, modifier = iconModifier) },
     )
 }
-
+// [REDACTED_TODO_COMMENT]
 @Composable
 private fun PlaceholderIcon(name: String, modifier: Modifier = Modifier) {
     Box(
