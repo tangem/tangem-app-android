@@ -35,14 +35,14 @@ class ScanCardUseCase(
      * Defaults to null.
      * @param allowRequestAccessCodeFromStorage whether to prompt the user for an access code if needed.
      * Defaults to false.
-     * @param afterScanChains An array of chains that should be executed after a successful card scan operation.
+     * @param afterScanChains A list of chains that should be executed after a successful card scan operation.
      * Defaults to an empty array.
      * @return A [EitherNel] object with either a non-empty list of [ScanCardException] or a [ScanResponse].
      */
     suspend operator fun invoke(
         cardId: String? = null,
         allowRequestAccessCodeFromStorage: Boolean = false,
-        afterScanChains: Array<Chain<ScanCardException.ChainException, ScanResponse>> = emptyArray(),
+        afterScanChains: List<Chain<ScanCardException.ChainException, ScanResponse>> = emptyList(),
     ): Either<ScanCardException, ScanResponse> {
         resetCardIdDisplayFormat()
         scanChainProcessor.addChains(afterScanChains)
