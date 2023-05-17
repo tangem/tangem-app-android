@@ -13,7 +13,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -41,15 +40,15 @@ fun AppBarWithBackButton(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth()
-            .padding(all = dimensionResource(R.dimen.spacing16)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing16)),
+            .padding(all = TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(iconRes ?: R.drawable.ic_back_24),
             contentDescription = null,
             modifier = Modifier
-                .size(size = dimensionResource(R.dimen.size24))
+                .size(size = TangemTheme.dimens.size24)
                 .clickable { onBackClick() },
             tint = TangemTheme.colors.icon.primary1,
         )
