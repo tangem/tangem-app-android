@@ -1,6 +1,6 @@
 package com.tangem.tap.features.disclaimer
 
-import com.tangem.tap.persistence.DisclaimerPrefStorage
+import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
 
 /**
 [REDACTED_AUTHOR]
