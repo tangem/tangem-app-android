@@ -101,7 +101,7 @@ data class AppState(
                 SendMiddleware().sendMiddleware,
                 DetailsMiddleware().detailsMiddleware,
                 DisclaimerMiddleware().disclaimerMiddleware,
-                TokensMiddleware().tokensMiddleware,
+                TokensMiddleware.tokensMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 ShopMiddleware().shopMiddleware,
