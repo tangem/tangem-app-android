@@ -1,18 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
-import com.tangem.datasource.api.tangemTech.models.CoinsResponse
-import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
-import com.tangem.datasource.api.tangemTech.models.GeoResponse
-import com.tangem.datasource.api.tangemTech.models.RatesResponse
-import com.tangem.datasource.api.tangemTech.models.ReferralResponse
-import com.tangem.datasource.api.tangemTech.models.StartReferralBody
-import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-import retrofit2.http.Query
+import com.tangem.datasource.api.tangemTech.models.*
+import retrofit2.http.*
 
 /**
  * Interface of Tangem Tech API
@@ -49,9 +38,17 @@ interface TangemTechApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
-    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
+    suspend fun getReferralStatus(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Path("walletId") walletId: String,
+    ): ReferralResponse
 
     /** Make user referral, requires [StartReferralBody] */
     @POST("referral")
-    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ReferralResponse
+    suspend fun startReferral(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Body startReferralBody: StartReferralBody,
+    ): ReferralResponse
 }
