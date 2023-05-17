@@ -8,6 +8,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -21,12 +22,6 @@ import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.signin.redux.SignInAction
-import com.tangem.tap.intentHandler
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
