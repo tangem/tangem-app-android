@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
@@ -46,11 +45,8 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     }
 
     @Composable
-    override fun provideState(): State<WalletSelectorScreenState> {
-        return viewModel.state.collectAsState()
-    }
+    override fun provideState(): State<WalletSelectorScreenState> = viewModel.state.collectAsState()
 
-    @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     override fun ScreenContent(state: WalletSelectorScreenState, modifier: Modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
