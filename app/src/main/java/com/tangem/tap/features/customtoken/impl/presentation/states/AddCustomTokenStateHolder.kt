@@ -4,8 +4,8 @@ import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTok
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenTestBlock
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenWarning
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokensToolbar
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
 
 /**
  * State holder of add custom token screen
@@ -24,7 +24,7 @@ internal sealed interface AddCustomTokenStateHolder {
     val form: AddCustomTokenForm
 
     /** Warnings */
-    val warnings: List<TextReference>
+    val warnings: Set<AddCustomTokenWarning>
 
     /** Floating button model */
     val floatingButton: AddCustomTokenFloatingButton
@@ -42,7 +42,7 @@ internal sealed interface AddCustomTokenStateHolder {
         onBackButtonClick: () -> Unit = this.onBackButtonClick,
         toolbar: AddCustomTokensToolbar = this.toolbar,
         form: AddCustomTokenForm = this.form,
-        warnings: List<TextReference> = this.warnings,
+        warnings: Set<AddCustomTokenWarning> = this.warnings,
         floatingButton: AddCustomTokenFloatingButton = this.floatingButton,
     ): AddCustomTokenStateHolder {
         return when (this) {
@@ -64,7 +64,7 @@ internal sealed interface AddCustomTokenStateHolder {
         override val onBackButtonClick: () -> Unit,
         override val toolbar: AddCustomTokensToolbar,
         override val form: AddCustomTokenForm,
-        override val warnings: List<TextReference>,
+        override val warnings: Set<AddCustomTokenWarning>,
         override val floatingButton: AddCustomTokenFloatingButton,
     ) : AddCustomTokenStateHolder
 
@@ -83,7 +83,7 @@ internal sealed interface AddCustomTokenStateHolder {
         override val onBackButtonClick: () -> Unit,
         override val toolbar: AddCustomTokensToolbar,
         override val form: AddCustomTokenForm,
-        override val warnings: List<TextReference>,
+        override val warnings: Set<AddCustomTokenWarning>,
         override val floatingButton: AddCustomTokenFloatingButton,
         val testBlock: AddCustomTokenTestBlock,
         val bottomSheet: AddCustomTokenChooseTokenBottomSheet,
