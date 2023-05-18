@@ -8,11 +8,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.userWalletsListManager
 import org.rekotlin.Action
@@ -166,10 +162,6 @@ fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
 
 private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
-        WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
-        WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(
-            hashesCountVerified = false,
-        )
         is WalletAction.Warnings.Set -> state.copy(mainWarningsList = action.warningList)
         else -> state
     }
