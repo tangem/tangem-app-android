@@ -52,6 +52,8 @@ class WarningMessagesManager {
         warningsList.removeBy { it.messageResId == messageRes }
     }
 
+    fun containsWarning(warning: WarningMessage) = warning in warningsList
+
     private fun sortByPriority() {
         warningsList.sortBy { it.priority.ordinal }
     }
