@@ -11,9 +11,6 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.SelectWallet -> {
                 state.copy(selectedCurrency = action.currency)
             }
-            is WalletAction.MultiWallet.SetSingleWalletCurrency -> {
-                state.copy(selectedCurrency = action.currency)
-            }
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
             is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(
                 missingDerivations = action.blockchains,
