@@ -33,7 +33,8 @@ class WarningsMiddleware {
                 val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
                 if (readyToShow) addWarningMessage(warning = WarningMessagesManager.appRatingWarning, autoUpdate = true)
             }
-            is WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline -> checkHashesCountOnline()
+
+            is WalletAction.Warnings.CheckHashesCount.VerifyOnlineIfNeeded -> checkHashesCountOnlineIfNeeded()
             is WalletAction.Warnings.CheckHashesCount.SaveCardId -> {
                 val cardId = globalState?.scanResponse?.card?.cardId
                 cardId?.let { preferencesStorage.usedCardsPrefStorage.scanned(it) }
@@ -57,8 +58,6 @@ class WarningsMiddleware {
             }
             is WalletAction.Warnings.AppRating,
             is WalletAction.Warnings.CheckHashesCount,
-            is WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount,
-            is WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline,
             is WalletAction.Warnings.Set,
             -> Unit
         }
@@ -120,22 +119,18 @@ class WarningsMiddleware {
             }
         }
 
-        val validator = store.state.walletState.walletManagers.firstOrNull() as? SignatureCountValidator
-        return if (validator == null) {
-            if (scanResponse.card.hasSignedHashes()) {
-                WarningMessagesManager.alreadySignedHashesWarning
-            } else {
-                store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
-                null
-            }
+        return if (scanResponse.card.hasSignedHashes()) {
+            WarningMessagesManager.alreadySignedHashesWarning
         } else {
-            store.dispatch(WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline)
+            store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
             null
         }
     }
 
-    private fun checkHashesCountOnline() {
-        if (store.state.walletState.hashesCountVerified != false) return
+    private fun checkHashesCountOnlineIfNeeded() {
+        val alreadySignedHashesWarning = WarningMessagesManager.alreadySignedHashesWarning
+        val manager = store.state.globalState.warningManager ?: return
+        if (manager.containsWarning(alreadySignedHashesWarning)) return
 
         val networkConnectionManager = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
         if (!networkConnectionManager.isOnline) return
@@ -156,14 +151,13 @@ class WarningsMiddleware {
             withContext(Dispatchers.Main) {
                 when (result) {
                     SimpleResult.Success -> {
-                        store.dispatch(WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount)
                         store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     }
                     is SimpleResult.Failure ->
                         if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning, true)
+                            addWarningMessage(alreadySignedHashesWarning, true)
                         } else if (signedHashes > 0) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning, true)
+                            addWarningMessage(alreadySignedHashesWarning, true)
                         }
                     null -> Unit
                 }
