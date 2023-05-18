@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -78,7 +77,7 @@ fun Content(state: DetailsScreenState) {
             Spacer(modifier = Modifier.size(12.dp))
             Text(
                 text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
-                style = TangemTypography.caption,
+                style = TangemTheme.typography.caption,
                 color = colorResource(id = R.color.text_tertiary),
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
             )
@@ -111,13 +110,13 @@ fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
             Text(
                 text = stringResource(id = R.string.wallet_connect_title),
                 modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
-                style = TangemTypography.headline3,
+                style = TangemTheme.typography.h3,
                 color = colorResource(id = R.color.text_primary_1),
             )
             Text(
                 text = stringResource(id = R.string.wallet_connect_subtitle),
                 modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
-                style = TangemTypography.body1,
+                style = TangemTheme.typography.body1,
                 color = colorResource(id = R.color.text_secondary),
             )
         }
@@ -144,13 +143,13 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
             Text(
                 text = stringResource(id = item.titleRes),
                 modifier = Modifier,
-                style = TangemTypography.subtitle1,
+                style = TangemTheme.typography.subtitle1,
                 color = colorResource(id = R.color.text_primary_1),
             )
             if (item == SettingsElement.AppCurrency) {
                 Text(
                     text = appCurrency,
-                    style = TangemTypography.body2,
+                    style = TangemTheme.typography.body2,
                     color = colorResource(id = R.color.text_secondary),
                 )
             }
