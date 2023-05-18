@@ -16,7 +16,8 @@ import com.tangem.feature.learn2earn.presentation.ui.state.MainScreenState
 internal fun Learn2earnDialogs(dialog: MainScreenState.Dialog?) {
     when (dialog) {
         is MainScreenState.Dialog.Claimed -> ClaimedDialog(dialog)
-        is MainScreenState.Dialog.PromoCodeNotRegistered -> PromoCodeNotRegisteredDialog(dialog)
+        // TODO: https://tangem.slack.com/archives/C01HARKDLQ0/p1691421861756069
+        // is MainScreenState.Dialog.PromoCodeNotRegistered -> PromoCodeNotRegisteredDialog(dialog)
         is MainScreenState.Dialog.Error -> ErrorDialog(dialog)
         else -> Unit
     }
@@ -41,30 +42,30 @@ private fun ClaimedDialog(dialog: MainScreenState.Dialog.Claimed) {
     )
 }
 
-@Composable
-private fun PromoCodeNotRegisteredDialog(dialog: MainScreenState.Dialog.PromoCodeNotRegistered) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(id = R.string.common_error))
-        },
-        text = {
-            Text(text = stringResource(id = R.string.main_promotion_no_purchase))
-        },
-        dismissButton = {
-            TextButton(
-                text = stringResource(id = R.string.common_cancel),
-                onClick = dialog.onCancel,
-            )
-        },
-        confirmButton = {
-            TextButton(
-                text = stringResource(id = R.string.common_buy),
-                onClick = dialog.onOk,
-            )
-        },
-        onDismissRequest = dialog.onDismissRequest,
-    )
-}
+// @Composable
+// private fun PromoCodeNotRegisteredDialog(dialog: MainScreenState.Dialog.PromoCodeNotRegistered) {
+//     AlertDialog(
+//         title = {
+//             Text(text = stringResource(id = R.string.common_error))
+//         },
+//         text = {
+//             Text(text = stringResource(id = R.string.main_promotion_no_purchase))
+//         },
+//         dismissButton = {
+//             TextButton(
+//                 text = stringResource(id = R.string.common_cancel),
+//                 onClick = dialog.onCancel,
+//             )
+//         },
+//         confirmButton = {
+//             TextButton(
+//                 text = stringResource(id = R.string.common_buy),
+//                 onClick = dialog.onOk,
+//             )
+//         },
+//         onDismissRequest = dialog.onDismissRequest,
+//     )
+// }
 
 @Composable
 private fun ErrorDialog(dialog: MainScreenState.Dialog.Error) {
