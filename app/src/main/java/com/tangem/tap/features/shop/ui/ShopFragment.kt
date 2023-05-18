@@ -15,7 +15,6 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.extensions.getQuantityString
-import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.shop.domain.models.ProductState
@@ -153,11 +152,12 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
         animateProductSelection(state.selectedProduct)
         handlePriceState(state)
         handlePromoCodeState(state)
-        if (shopifyFeatureToggleManager.isDynamicSalesProductsEnabled) {
-            handleNotificationBlock(state)
-        } else {
-            handleOrderingDelayBlock(isVisible = state.isOrderingDelayBlockVisible)
-        }
+        // TODO: https://tangem.slack.com/archives/C01HARKDLQ0/p1691421861756069
+        // if (shopifyFeatureToggleManager.isDynamicSalesProductsEnabled) {
+        //     handleNotificationBlock(state)
+        // } else {
+        //     handleOrderingDelayBlock(isVisible = state.isOrderingDelayBlockVisible)
+        // }
         handleButtonsState(state)
     }
 
@@ -198,20 +198,20 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
         pbPromoCode.show(state.promoCodeLoading)
     }
 
-    private fun handleOrderingDelayBlock(isVisible: Boolean) {
-        if (isVisible) binding.tvSoldOutDesc.show() else binding.tvSoldOutDesc.hide()
-    }
-
-    private fun handleNotificationBlock(state: ShopState) {
-        if (isVisible) {
-            binding.tvSoldOutDesc.show()
-            getSelectedSalesProduct(state)?.notification?.let { notification ->
-                binding.tvSoldOutDesc.text = notification.description
-            }
-        } else {
-            binding.tvSoldOutDesc.hide()
-        }
-    }
+    // private fun handleOrderingDelayBlock(isVisible: Boolean) {
+    //     if (isVisible) binding.tvSoldOutDesc.show() else binding.tvSoldOutDesc.hide()
+    // }
+    //
+    // private fun handleNotificationBlock(state: ShopState) {
+    //     if (isVisible) {
+    //         binding.tvSoldOutDesc.show()
+    //         getSelectedSalesProduct(state)?.notification?.let { notification ->
+    //             binding.tvSoldOutDesc.text = notification.description
+    //         }
+    //     } else {
+    //         binding.tvSoldOutDesc.hide()
+    //     }
+    // }
 
     private fun handleButtonsState(state: ShopState) = with(binding) {
         btnPayGooglePay.root.show(state.isGooglePayAvailable)
