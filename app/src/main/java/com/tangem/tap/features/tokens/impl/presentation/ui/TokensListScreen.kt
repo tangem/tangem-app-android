@@ -234,7 +234,7 @@ private fun Preview_TokensListScreen_Read() {
         TokensListScreen(
             stateHolder = TokensListStateHolder.ReadContent(
                 toolbarState = TokensListToolbarState.Title.Read(
-                    titleResId = R.string.search_tokens_title,
+                    titleResId = R.string.common_search_tokens,
                     onBackButtonClick = {},
                     onSearchButtonClick = {},
                 ),
