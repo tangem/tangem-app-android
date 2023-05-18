@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="add_custom_token_title">添加自定義代幣</string>
+    <string name="add_tokens_title">管理代幣</string>
     <string name="address_qr_code_message_format">僅將 %1$s (%2$s) 從 %3$s 網絡發送到此地址。使用其他代幣和網絡可能會導致資金損失</string>
+    <string name="alert_app_feedback_sent_message">謝謝您的反饋</string>
+    <string name="alert_app_feedback_sent_title">成功送出</string>
     <string name="alert_button_request_support">請求支持</string>
     <string name="alert_button_send_feedback">發送反饋</string>
     <string name="alert_card_signed_transactions">此卡過去已經充值並簽署過交易。如果您從不受信任的來源收到此卡，請考慮立即提取所有資金。如果是您的卡，則無需擔心</string>
     <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
     <string name="alert_demo_message">您正在展示模式。所有資產皆不是真的</string>
     <string name="alert_developer_card">您掃描的卡是開發卡。不要用它作為付款方式</string>
+    <string name="alert_failed_to_send_email_title">發送電子郵件失敗</string>
     <string name="alert_failed_to_send_transaction_message">原因：%s</string>
     <string name="alert_failed_to_send_transaction_title">無法發送交易</string>
     <string name="alert_manage_tokens_addresses_message">請注意代幣在不同的網路有不同的地址。請再次檢查正確的地址</string>
@@ -32,14 +36,22 @@
     </plurals>
     <string name="card_settings_access_code_recovery_disabled_description">如果您不希望使用此卡重置此錢包中其他卡上的訪問密碼，請禁用此選項。請注意，這也會阻止您重置此卡上的訪問密碼。</string>
     <string name="card_settings_access_code_recovery_enabled_description">允許您使用此卡重置此錢包中其他卡上的訪問密碼</string>
+    <string name="card_settings_access_code_recovery_footer">禁用重置此卡或此錢包中其他卡上的訪問密碼的功能</string>
     <string name="card_settings_access_code_recovery_title">恢復訪問密碼</string>
+    <string name="card_settings_action_sheet_reset">重置</string>
+    <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
     <string name="card_settings_reset_card_to_factory">回復至原廠設置</string>
     <string name="card_settings_security_mode">安全模式</string>
+    <string name="card_settings_security_mode_footer">選定的應用程序保護方法</string>
     <string name="card_settings_title">卡片設置</string>
     <string name="chat_bot_name">Tangem 機器人</string>
     <string name="chat_button_title">支援</string>
+    <string name="chat_user_action_rate_user">請評價</string>
+    <string name="chat_user_action_send_log">發送logs</string>
+    <string name="chat_user_actions_title">請選擇一個操作</string>
+    <string name="chat_user_rate_agent_title">請評價我們的服務</string>
     <string name="common_accept">接受</string>
     <string name="common_add">添加</string>
     <string name="common_attention">注意</string>
@@ -50,6 +62,7 @@
     <string name="common_camera_denied_alert_message">您尚未授予相機訪問權限，請更改您的隱私設置</string>
     <string name="common_cancel">刪除</string>
     <string name="common_close">關閉</string>
+    <string name="common_continue">繼續</string>
     <string name="common_copy">複製</string>
     <string name="common_copy_address">複製地址</string>
     <string name="common_create">創造</string>
@@ -59,7 +72,9 @@
     <string name="common_done">完成</string>
     <string name="common_enable">允許</string>
     <string name="common_enabled">啟用</string>
+    <string name="common_error">錯誤</string>
     <string name="common_exchange">交易</string>
+    <string name="common_import">導入</string>
     <string name="common_like">喜歡</string>
     <string name="common_no">否</string>
     <string name="common_ok">OK</string>
@@ -67,6 +82,8 @@
     <string name="common_reject">拒絕</string>
     <string name="common_save_changes">保存設置</string>
     <string name="common_search">搜索</string>
+    <string name="common_search_tokens">搜尋代幣</string>
+    <string name="common_select_action">選擇</string>
     <string name="common_sell">銷售</string>
     <string name="common_send">發送</string>
     <string name="common_server_unavailable">伺服器不可用，請稍後在試</string>
@@ -84,6 +101,7 @@
     <string name="common_yes">是</string>
     <string name="contract_address_copied_message">已複製代幣地址</string>
     <string name="currency_subtitle_expanded">支持的網路</string>
+    <string name="custom_token_add_token">添加代幣</string>
     <string name="custom_token_contract_address_input_title">代幣地址</string>
     <string name="custom_token_creation_error_invalid_contract_address">無效地址</string>
     <string name="custom_token_creation_error_invalid_derivation_path">衍生路徑錯誤</string>
@@ -135,10 +153,13 @@
     <string name="feedback_subject_support_tangem">Tangem反饋</string>
     <string name="feedback_subject_tx_failed">無法發送交易</string>
     <string name="home_button_order">訂購</string>
+    <string name="home_button_scan">掃描卡片</string>
     <string name="initial_message_change_access_code_body">要更改訪問密碼，請完全按照上圖所示連接手機和卡片</string>
     <string name="initial_message_change_passcode_body">要更改密碼，請完全按照上圖所示連接手機和卡</string>
     <string name="initial_message_create_wallet_body">要創建錢包，請完全按照上圖所示連接手機和卡</string>
+    <string name="initial_message_purge_wallet_body">要重置為出廠設置，請完全按照上圖所示連接手機和卡片</string>
     <string name="initial_message_scan_header">點擊掃描</string>
+    <string name="initial_message_sign_body">要簽名，請完全按照上圖所示連接手機和卡</string>
     <string name="initial_message_sign_header">點擊簽名</string>
     <string name="initial_message_tap_header">點按卡片</string>
     <string name="internal_error_wallet_manager_not_found">內部錯誤：找不到錢包管理器</string>
@@ -188,7 +209,7 @@
     <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
     <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
     <string name="onboarding_getting_started">開始</string>
-    <string name="onboarding_linking_error_card_with_wallets">您要添加的卡上已經創建了另一個錢包。你想重置它並將卡用於新錢包嗎</string>
+    <string name="onboarding_linking_error_card_with_wallets">您要添加的卡上已經創建了另一個錢包。你想重置它並將卡用於新錢包嗎？</string>
     <string name="onboarding_navbar_pin">PIN 碼</string>
     <string name="onboarding_navbar_register_wallet">連接</string>
     <string name="onboarding_navbar_title_creating_backup">創建備份</string>
@@ -210,7 +231,7 @@
     <string name="onboarding_subtitle_no_backup_cards">要開始備份過程，最多可添加兩張備份卡。</string>
     <string name="onboarding_subtitle_one_backup_card">您可以再添加一張卡或完成備份過程</string>
     <string name="onboarding_subtitle_scan_backup_card_format">準備編號為 %s 的備份卡</string>
-    <string name="onboarding_subtitle_scan_origin_card">準備主卡</string>
+    <string name="onboarding_subtitle_scan_primary">掃描主卡以啟動備份過程</string>
     <string name="onboarding_subtitle_scan_primary_card_format">準備編號為 %s 的主卡</string>
     <string name="onboarding_subtitle_success_claim">恭喜！ 您的第一張支付加密卡已啟用！</string>
     <string name="onboarding_subtitle_success_tangem_wallet_onboarding">您的錢包卡已配置完畢，可以使用了</string>
@@ -228,7 +249,7 @@
     <string name="onboarding_top_up_body_no_account_error">要開始，只需為錢包充值超過 %1$s %2$s</string>
     <string name="onboarding_top_up_button_but_crypto">購買加密貨幣</string>
     <string name="onboarding_top_up_button_show_wallet_address">顯示錢包地址</string>
-    <string name="onboarding_top_up_header">充值你的錢包</string>
+    <string name="onboarding_topup_title">啟動錢包</string>
     <string name="onboarding_twin_exit_warning">結對過程已部分完成。你現在不能退出</string>
     <string name="onboarding_twins_interrupt_warning">如果創建錢包的過程以任何方式中斷，您將得重新開始</string>
     <string name="onboarding_wallet_info_subtitle_first">您最多可以額外備份兩張空白的 Tangem冷錢包</string>
@@ -247,7 +268,6 @@
     <string name="referral_point_currencies_description_suffix">對於你的朋友在你的 %1$s 網絡地址%2$s上購買的每個錢包</string>
     <string name="referral_point_currencies_title">你</string>
     <string name="referral_point_discount_description_prefix">得到</string>
-    <string name="referral_point_discount_description_suffix">當在 tangem.com購買卡片</string>
     <string name="referral_point_discount_description_value">%s 折扣</string>
     <string name="referral_point_discount_title">你的朋友</string>
     <string name="referral_promo_code_copied">個人促銷碼已複製!</string>
@@ -280,7 +300,6 @@
     <string name="scan_card_settings_button">掃描卡片</string>
     <string name="scan_card_settings_message">掃描卡片以更改其設置。這些更改只會影響您掃描過的卡，不會影響綁定到您錢包的其他卡。</string>
     <string name="scan_card_settings_title">準備好您的卡!</string>
-    <string name="search_tokens_title">搜尋代幣</string>
     <string name="send_amount_label">數量</string>
     <string name="send_destination_hint_address">地址</string>
     <string name="send_error_address_same_as_wallet">地址與錢包地址相同</string>
@@ -367,9 +386,6 @@
     <string name="token_details_unable_hide_alert_message">%1$s 代幣是 %2$s 網絡上的主要貨幣，只要列表中還有該網絡上的其他代幣，它就無法被隱藏。</string>
     <string name="token_details_unable_hide_alert_title">無法隱藏 %s</string>
     <string name="token_item_no_rate">無費用</string>
-    <plurals name="tokens_count">
-        <item quantity="other">%d 代幣</item>
-    </plurals>
     <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
     <string name="transaction_history_error_failed_to_load">無法加載交易</string>
     <string name="transaction_history_tx_in_progress">進行中…</string>
@@ -383,6 +399,7 @@
     <string name="twins_recreate_title_preparing">準備卡片</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">這個動作是不可逆的。您將無法訪問舊錢包</string>
+    <string name="twins_scan_twin_with_number">將您的 iPhone 靠近編號為 %s 的雙胞胎卡</string>
     <string name="user_wallet_list_add_button">添加新錢包</string>
     <string name="user_wallet_list_delete_prompt">您確定要刪除此錢包?</string>
     <string name="user_wallet_list_editing_count">已選擇 %d</string>
@@ -402,6 +419,7 @@
     <string name="wallet_balance_tx_in_progress">交易進行中</string>
     <string name="wallet_balance_verified">檢視餘額</string>
     <string name="wallet_button_actions">動作</string>
+    <string name="wallet_choice_wallet_option_title">選擇錢包選項</string>
     <string name="wallet_choose_trade_action">您想要購買或賣出交易貨幣?</string>
     <string name="wallet_connect_alert_sign_message">請求籤署消息。%s</string>
     <string name="wallet_connect_bnb_sign_message">Dapp %1$s，請求\n簽署 BNB 交易。\n%2$s</string>
@@ -423,7 +441,10 @@
     <string name="wallet_connect_generic_error_with_code">我們遇到了未知錯誤。錯誤代碼：%d。如果問題仍然存在-請隨時聯繫我們的支持人員</string>
     <string name="wallet_connect_message_signed">消息已成功簽名並發送至Dapp</string>
     <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
+    <string name="wallet_connect_no_sessions_message">沒有已連結的WalletConnect</string>
+    <string name="wallet_connect_no_sessions_title">Ooops, 沒有連接</string>
     <string name="wallet_connect_paste_from_clipboard">從剪貼板貼上</string>
+    <string name="wallet_connect_personal_sign_message">給 %1$s 的消息：%2$s</string>
     <string name="wallet_connect_request_session_start">請求開始會話\n%1$s\n\n網絡： %2$s\n\n網址：%3$s</string>
     <string name="wallet_connect_same_wcuri">無法完成執行，您已經使用此參數建立了 WalletConnect 連接</string>
     <string name="wallet_connect_scan_new_code">掃描新密碼</string>
@@ -431,6 +452,8 @@
     <string name="wallet_connect_scanner_error_unsupported_network">不支持此網絡。請選擇其他網絡</string>
     <string name="wallet_connect_select_network">選擇網路</string>
     <string name="wallet_connect_service_no_chain_id">Dapp 沒有提供必要的數據來建立 WalletConnect 連接</string>
+    <string name="wallet_connect_session_not_found">找不到請求的連接</string>
+    <string name="wallet_connect_sessions_title">WalletConnect 連接</string>
     <string name="wallet_connect_subtitle">連結到Dapps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">交易已成功簽署並發送至 Dapp</string>
