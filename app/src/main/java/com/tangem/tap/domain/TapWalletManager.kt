@@ -15,6 +15,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.model.UserWallet
@@ -94,6 +95,7 @@ class TapWalletManager(
                 Timber.d("Wallet stores fetched for ${userWallet.walletId}")
                 store.dispatchOnMain(WalletAction.LoadData.Success)
                 store.state.globalState.topUpController?.loadDataSuccess()
+                store.dispatchWithMain(WalletAction.Warnings.CheckHashesCount.VerifyOnlineIfNeeded)
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {
