@@ -24,7 +24,6 @@ data class WalletState(
     val state: ProgressState = ProgressState.Done,
     val error: ErrorType? = null,
     val cardImage: Artwork? = null,
-    val hashesCountVerified: Boolean? = null,
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
     val walletsStores: List<WalletStoreModel> = listOf(),
     val isMultiwalletAllowed: Boolean = false,
