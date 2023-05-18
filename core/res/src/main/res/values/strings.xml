@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="add_custom_token_title">Add custom token</string>
+    <string name="add_tokens_title">Manage tokens</string>
     <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
+    <string name="alert_app_feedback_sent_message">Thank you for your feedback</string>
+    <string name="alert_app_feedback_sent_title">Sent successfully</string>
     <string name="alert_button_request_support">Request support</string>
     <string name="alert_button_send_feedback">Send feedback</string>
     <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source. If it\'s your card, there is nothing to worry about.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_developer_card">The card you scanned is a development card. Don\'t accept it as a payment.</string>
+    <string name="alert_failed_to_send_email_title">Failed to send the email</string>
     <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
     <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
     <string name="alert_manage_tokens_addresses_message">Note that tokens on different networks have different addresses. Double check that your address matches the network when you transfer funds.</string>
@@ -34,14 +38,22 @@
     </plurals>
     <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
     <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
+    <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_title">Access code recovery</string>
+    <string name="card_settings_action_sheet_reset">Reset</string>
+    <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
     <string name="card_settings_security_mode">Security Mode</string>
+    <string name="card_settings_security_mode_footer">Selected application protection method</string>
     <string name="card_settings_title">Card Settings</string>
     <string name="chat_bot_name">Tangem Bot</string>
     <string name="chat_button_title">Support</string>
+    <string name="chat_user_action_rate_user">Rate agent</string>
+    <string name="chat_user_action_send_log">Send logs</string>
+    <string name="chat_user_actions_title">Please select an action</string>
+    <string name="chat_user_rate_agent_title">Please, rate the work of the agent</string>
     <string name="common_accept">Accept</string>
     <string name="common_add">Add</string>
     <string name="common_apply">Apply</string>
@@ -54,6 +66,7 @@
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
+    <string name="common_continue">Continue</string>
     <string name="common_copy">Copy</string>
     <string name="common_copy_address">Copy address</string>
     <string name="common_create">Create</string>
@@ -63,13 +76,18 @@
     <string name="common_done">Done</string>
     <string name="common_enable">Enable</string>
     <string name="common_enabled">Enabled</string>
+    <string name="common_error">Error</string>
     <string name="common_exchange">Exchange</string>
     <string name="common_explore_transaction_history">Explore transaction history</string>
     <string name="common_explorer">Explorer</string>
+    <string name="common_generate_addresses">Generate addresses</string>
+    <string name="common_import">Import</string>
     <string name="common_learn_and_earn">Learn &amp; Earn</string>
     <string name="common_like">Like</string>
+    <string name="common_locked">Locked</string>
     <string name="common_main_network">Main network</string>
     <string name="common_no">No</string>
+    <string name="common_no_address">No address</string>
     <string name="common_no_data">No data</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Primary Card</string>
@@ -78,7 +96,9 @@
     <string name="common_reload">Reload</string>
     <string name="common_save_changes">Save changes</string>
     <string name="common_search">Search</string>
+    <string name="common_search_tokens">Search tokens</string>
     <string name="common_seed_phrase">Seed phrase</string>
+    <string name="common_select_action">Select action</string>
     <string name="common_sell">Sell</string>
     <string name="common_send">Send</string>
     <string name="common_server_unavailable">The server is not available, please try again later</string>
@@ -98,6 +118,7 @@
     <string name="common_yes">Yes</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
     <string name="currency_subtitle_expanded">Available networks</string>
+    <string name="custom_token_add_token">Add token</string>
     <string name="custom_token_contract_address_input_title">Contract address</string>
     <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
     <string name="custom_token_creation_error_invalid_derivation_path">Derivation path is invalid</string>
@@ -137,7 +158,6 @@
     <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
     <string name="disclaimer_title">Terms of Service</string>
     <string name="error_update_app">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
-    <string name="error_wrong_card_type">This application is not designed to work with this card or needs to be updated</string>
     <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
     <string name="exchange_receive_view_header">You Receive</string>
     <string name="exchange_send_view_header">You Send</string>
@@ -152,10 +172,13 @@
     <string name="feedback_subject_support_tangem">Tangem feedback</string>
     <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
     <string name="home_button_order">Order</string>
+    <string name="home_button_scan">Scan card</string>
     <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
+    <string name="initial_message_purge_wallet_body">To reset to factory settings tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_scan_header">Tap to scan</string>
+    <string name="initial_message_sign_body">To sign tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_sign_header">Tap to sign</string>
     <string name="initial_message_tap_header">Tap the card</string>
     <string name="internal_error_wallet_manager_not_found">Internal error: wallet manager not found</string>
@@ -172,10 +195,14 @@
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 48 hours</string>
-    <string name="main_promotion_no_purchase">There was no purchase of a wallet using your promo code, which means you cannot receive a bonus. Buy Tangem wallet, scan it in the app, and get the bonus.</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_tokens">Tokens</string>
+    <plurals name="main_warning_missing_derivation_description">
+        <item quantity="one">You need to generate address for %d new network using your card</item>
+        <item quantity="other">You need to generate addresses for %d new networks using your card</item>
+    </plurals>
+    <string name="main_warning_missing_derivation_title">Some addresses are missing</string>
     <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
     <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
@@ -235,7 +262,7 @@
     <string name="onboarding_subtitle_no_backup_cards">To start the backup process add up to two backup cards.</string>
     <string name="onboarding_subtitle_one_backup_card">You can add one more card or finalize the backup process</string>
     <string name="onboarding_subtitle_scan_backup_card_format">Prepare the backup card with number %s</string>
-    <string name="onboarding_subtitle_scan_origin_card">Prepare the primary card</string>
+    <string name="onboarding_subtitle_scan_primary">Scan the primary card to start the backup process.</string>
     <string name="onboarding_subtitle_scan_primary_card_format">Prepare the primary card with number %s</string>
     <string name="onboarding_subtitle_success_claim">Congratulations! Your first payment crypto card has been activated!</string>
     <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Your wallet card is configured and ready for use.</string>
@@ -253,7 +280,7 @@
     <string name="onboarding_top_up_body_no_account_error">To get started, simply top up the wallet with more than %1$s %2$s</string>
     <string name="onboarding_top_up_button_but_crypto">Buy crypto</string>
     <string name="onboarding_top_up_button_show_wallet_address">Show the wallet\'s address</string>
-    <string name="onboarding_top_up_header">Top up your wallet</string>
+    <string name="onboarding_topup_title">Activate a wallet</string>
     <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
     <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over</string>
     <string name="onboarding_wallet_info_subtitle_first">You can backup your keys up to two other blank Tangem Wallet cards.</string>
@@ -274,12 +301,21 @@
     <string name="referral_button_participate">Participate</string>
     <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
+    <string name="referral_expected_awards">Upcoming payments</string>
     <string name="referral_friends_bought_title">Your friends bought</string>
+    <string name="referral_less">Less</string>
+    <string name="referral_more">More</string>
+    <string name="referral_no_expected_awards">No upcoming payments</string>
+    <plurals name="referral_number_of_wallets">
+        <item quantity="one">for %d wallet</item>
+        <item quantity="other">for %d wallets</item>
+    </plurals>
+    <string name="referral_point_currencies_description">Will get ^^%1$s^^ for each wallet bought by your friend on your %2$s network address %3$s ^^30 days after^^ that</string>
     <string name="referral_point_currencies_description_prefix">Will get</string>
     <string name="referral_point_currencies_description_suffix">for each wallet bought by your friend on your %1$s network address%2$s</string>
     <string name="referral_point_currencies_title">You</string>
     <string name="referral_point_discount_description_prefix">Will get a</string>
-    <string name="referral_point_discount_description_suffix">when buying a card on tangem.com</string>
+    <string name="referral_point_discount_description_suffix">when buying a wallet on tangem.com</string>
     <string name="referral_point_discount_description_value">%s discount</string>
     <string name="referral_point_discount_title">Your friend</string>
     <string name="referral_promo_code_copied">Personal code copied!</string>
@@ -313,7 +349,6 @@
     <string name="scan_card_settings_button">Scan Card</string>
     <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you\'ve scanned and will not affect other cards tied to your wallet.</string>
     <string name="scan_card_settings_title">Get your card ready!</string>
-    <string name="search_tokens_title">Search tokens</string>
     <string name="send_amount_label">Amount</string>
     <string name="send_destination_hint_address">Address</string>
     <string name="send_error_address_same_as_wallet">Address is the same as wallet address</string>
@@ -339,7 +374,7 @@
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Other payment methods</string>
-    <string name="shop_sold_out_description">Due to the high volume of orders we are receiving shipping may be delayed up to 5 weeks depending on your location</string>
+    <string name="shop_pre_order_now">Pre-order now</string>
     <string name="shop_total">Total</string>
     <string name="solana_rent_warning">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
@@ -409,10 +444,6 @@
     <string name="token_details_unable_hide_alert_message">The %1$s token is the main currency on the %2$s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
     <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
     <string name="token_item_no_rate">No rate</string>
-    <plurals name="tokens_count">
-        <item quantity="one">%d token</item>
-        <item quantity="other">%d tokens</item>
-    </plurals>
     <string name="transaction_history_contract_address">contract: %s</string>
     <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
     <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
@@ -430,6 +461,7 @@
     <string name="twins_recreate_title_preparing">Preparing card</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
+    <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
     <string name="user_wallet_list_add_button">Add new wallet</string>
     <string name="user_wallet_list_delete_prompt">Are you sure you want to delete this wallet?</string>
     <string name="user_wallet_list_editing_count">%d selected</string>
@@ -449,6 +481,7 @@
     <string name="wallet_balance_tx_in_progress">Transaction is in progress…</string>
     <string name="wallet_balance_verified">Verified Balance</string>
     <string name="wallet_button_actions">Actions</string>
+    <string name="wallet_choice_wallet_option_title">Choose wallet option</string>
     <string name="wallet_choose_trade_action">Do you want to buy or sell crypto?</string>
     <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
     <string name="wallet_connect_bnb_sign_message">Dapp %1$s, requesting to\nsign BNB transaction.\n\n%2$s</string>
@@ -470,7 +503,10 @@
     <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
     <string name="wallet_connect_message_signed">The message has been successfully signed and sent to the Dapp</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
+    <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
+    <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>
     <string name="wallet_connect_paste_from_clipboard">Paste from clipboard</string>
+    <string name="wallet_connect_personal_sign_message">Message for %1$s:\n%2$s</string>
     <string name="wallet_connect_request_session_start">Request to start a session for\n%1$s\n\nNETWORK: %2$s\n\nURL: %3$s</string>
     <string name="wallet_connect_same_wcuri">The operation couldn\'t be completed.\n\nYou have already established a WalletConnect session with this parameters.</string>
     <string name="wallet_connect_scan_new_code">Scan new code</string>
@@ -478,6 +514,8 @@
     <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
     <string name="wallet_connect_select_network">Select network</string>
     <string name="wallet_connect_service_no_chain_id">Dapp didn\'t provide essential data to establish WalletConnect session</string>
+    <string name="wallet_connect_session_not_found">Failed to find session for request</string>
+    <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
     <string name="wallet_connect_subtitle">Connect to Dapps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">The transaction has been successfully signed and sent to the Dapp</string>
