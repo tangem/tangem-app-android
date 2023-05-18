@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingBottom="16dp"
-        android:text="Select"
+        android:text="@string/wallet_choice_wallet_option_title"
         android:textSize="14sp"
         android:textStyle="bold" />
 
