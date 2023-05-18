@@ -45,9 +45,11 @@ sealed class WalletAction : Action {
 
     sealed class Warnings : WalletAction() {
         object CheckHashesCount : Warnings() {
-            object CheckHashesCountOnline : Warnings()
-            object NeedToCheckHashesCountOnline : Warnings()
-            object ConfirmHashesCount : Warnings()
+
+            /**
+             * Start online verification of signed hashes for single currency wallets if the warning not displayed
+             * */
+            object VerifyOnlineIfNeeded : Warnings()
             object SaveCardId : Warnings()
         }
 
