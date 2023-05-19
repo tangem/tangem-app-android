@@ -369,11 +369,15 @@
     <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
     <string name="swapping_pending_transaction_title">Подождите</string>
     <string name="swapping_permission_buttons_approve">Подтвердить</string>
+    <string name="swapping_permission_current_transaction">Текущая транзакция</string>
+    <string name="swapping_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
     <string name="swapping_permission_header">Дать разрешение</string>
+    <string name="swapping_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
     <string name="swapping_permission_rows_amount">Количество %s</string>
     <string name="swapping_permission_rows_spender">Отправитель</string>
     <string name="swapping_permission_rows_your_wallet">Ваш кошелек</string>
     <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
+    <string name="swapping_permission_unlimited">Безлимитно</string>
     <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
     <string name="swapping_success_view_title">В процессе</string>
     <string name="swapping_swap">Обмен</string>
