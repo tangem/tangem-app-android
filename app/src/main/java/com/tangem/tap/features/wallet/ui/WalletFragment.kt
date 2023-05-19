@@ -279,16 +279,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
                 .distinctUntilChanged()
                 .collect { isOnline ->
-                    if (isOnline) {
-                        (activity as? MainActivity)?.dismissSnackbar()
-                    } else {
-                        isNetworkConnectionError.value = true
-                        binding.srlWallet.isRefreshing = false
-                        (activity as? MainActivity)?.showSnackbar(
-                            text = R.string.wallet_notification_no_internet,
-                            buttonTitle = R.string.common_retry,
-                        )
-                    }
                     if (isOnline && isNetworkConnectionError.value) {
                         refreshWalletData()
                     }
