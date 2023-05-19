@@ -13,4 +13,5 @@ data class UiActions(
     val onMaxAmountSelected: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
     val hidePermissionBottomSheet: () -> Unit,
+    val onChangeApproveType: (ApproveType) -> Unit,
 )
