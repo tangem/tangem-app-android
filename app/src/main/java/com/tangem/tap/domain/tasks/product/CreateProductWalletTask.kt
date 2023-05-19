@@ -138,7 +138,8 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val curves = card.getCurvesForNonCreatedWallets()
+        val walletsOnCard = card.wallets.map { it.curve }.toSet()
+        val curves = card.supportedCurves.intersect(CURVES_FOR_WALLETS).subtract(walletsOnCard).toList()
 
         if (curves.isEmpty()) {
             val createWalletResponses = card.wallets.map { wallet ->
@@ -158,7 +159,6 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                         callback = callback,
                     )
                 }
-
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
                 }
@@ -294,5 +294,9 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
             else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
         }
+    }
+
+    private companion object {
+        val CURVES_FOR_WALLETS = listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
     }
 }
