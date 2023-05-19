@@ -1,23 +1,14 @@
 package com.tangem.feature.onboarding.api
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.onboarding.presentation.wallet2.ui.AboutSeedPhraseScreen
-import com.tangem.feature.onboarding.presentation.wallet2.ui.CheckSeedPhraseScreen
-import com.tangem.feature.onboarding.presentation.wallet2.ui.ImportSeedPhraseScreen
-import com.tangem.feature.onboarding.presentation.wallet2.ui.IntroScreen
-import com.tangem.feature.onboarding.presentation.wallet2.ui.YourSeedPhraseScreen
+import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.ui.*
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseScreen
-import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
 
 /**
 [REDACTED_AUTHOR]
@@ -25,19 +16,19 @@ import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseVi
 class OnboardingSeedPhrase : OnboardingSeedPhraseApi {
 
     @Composable
-    override fun ScreenContent(viewModel: SeedPhraseViewModel, maxProgress: Int) {
-        BackHandler(onBack = viewModel.uiState.onBackClick)
+    override fun ScreenContent(uiState: OnboardingSeedPhraseState, subScreen: SeedPhraseScreen, progress: Float) {
+        BackHandler(onBack = uiState.onBackClick)
         TangemTheme {
             Column {
-                ProgressIndicator(viewModel.progress.collectAsState(0).value, maxProgress)
-                Content(viewModel)
+                ProgressIndicator(progress)
+                Content(subScreen, uiState)
             }
         }
     }
 }
 
 @Composable
-private fun ProgressIndicator(progress: Int, maxProgress: Int) {
+private fun ProgressIndicator(progress: Float) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,38 +41,38 @@ private fun ProgressIndicator(progress: Int, maxProgress: Int) {
                 .padding(horizontal = TangemTheme.dimens.size16),
             color = TangemTheme.colors.background.action,
             backgroundColor = TangemTheme.colors.background.action.copy(alpha = 0.081f),
-            progress = progress.toFloat() / maxProgress,
+            progress = progress,
         )
     }
 }
 
 @Composable
-private fun Content(viewModel: SeedPhraseViewModel) {
-    when (viewModel.currentScreen.collectAsState().value) {
+private fun Content(screen: SeedPhraseScreen, uiState: OnboardingSeedPhraseState) {
+    when (screen) {
         SeedPhraseScreen.Intro -> {
             IntroScreen(
-                state = viewModel.uiState.introState,
+                state = uiState.introState,
             )
         }
 
         SeedPhraseScreen.AboutSeedPhrase -> {
             AboutSeedPhraseScreen(
-                state = viewModel.uiState.aboutState,
+                state = uiState.aboutState,
             )
         }
         SeedPhraseScreen.YourSeedPhrase -> {
             YourSeedPhraseScreen(
-                state = viewModel.uiState.yourSeedPhraseState,
+                state = uiState.yourSeedPhraseState,
             )
         }
         SeedPhraseScreen.CheckSeedPhrase -> {
             CheckSeedPhraseScreen(
-                state = viewModel.uiState.checkSeedPhraseState,
+                state = uiState.checkSeedPhraseState,
             )
         }
         SeedPhraseScreen.ImportSeedPhrase -> {
             ImportSeedPhraseScreen(
-                state = viewModel.uiState.importSeedPhraseState,
+                state = uiState.importSeedPhraseState,
             )
         }
     }
