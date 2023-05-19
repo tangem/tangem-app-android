@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
     <domain-config>
         <domain includeSubdomains="true">api.tangem.com</domain>
         <trust-anchors>
@@ -7,6 +8,4 @@
             <certificates src="system" />
         </trust-anchors>
     </domain-config>
-
-    <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
