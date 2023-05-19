@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -105,7 +105,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         Spacer(modifier = Modifier.size(24.dp))
         Text(
             text = stringResource(id = R.string.wallet_connect_subtitle),
-            style = TangemTypography.body2,
+            style = TangemTheme.typography.body2,
             color = colorResource(id = R.color.text_tertiary),
         )
     }
@@ -138,7 +138,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
             ) {
                 Text(
                     text = session.description,
-                    style = TangemTypography.subtitle1,
+                    style = TangemTheme.typography.subtitle1,
                     color = colorResource(id = R.color.text_primary_1),
                     modifier = Modifier.weight(1f),
                 )
