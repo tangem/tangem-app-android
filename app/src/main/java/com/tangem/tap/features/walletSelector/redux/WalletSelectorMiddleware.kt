@@ -1,18 +1,16 @@
 package com.tangem.tap.features.walletSelector.redux
 
-import com.tangem.common.CompletionResult
+import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
-import com.tangem.common.flatMap
-import com.tangem.common.map
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -25,14 +23,6 @@ import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.totalFiatBalanceCalculator
-import com.tangem.tap.userTokensRepository
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
@@ -81,11 +71,8 @@ internal class WalletSelectorMiddleware {
             is WalletSelectorAction.ChangeAppCurrency -> {
                 refreshUserWalletsAmounts()
             }
-            is WalletSelectorAction.ClearUserWallets -> scope.launch {
-                clearUserWallets()
-                    .doOnFailure { e ->
-                        Timber.e(e, "Unable to clear user wallets")
-                    }
+            is WalletSelectorAction.ClearUserWallets -> {
+                disableUserWalletsSaving()
             }
             is WalletSelectorAction.AddWallet.Success,
             is WalletSelectorAction.AddWallet.Error,
@@ -272,7 +259,7 @@ internal class WalletSelectorMiddleware {
 
         scope.launch {
             when (userWalletsIds.size) {
-                state.wallets.size -> clearUserWallets()
+                state.wallets.size -> clearUserWalletsAndPopBackToHomeScreen()
                 else -> deleteUserWallets(
                     userWalletsIds = userWalletsIds,
                     currentSelectedWalletId = state.selectedWalletId,
@@ -318,16 +305,37 @@ internal class WalletSelectorMiddleware {
         }
     }
 
+    private fun disableUserWalletsSaving() = scope.launch {
+        clearUserWallets()
+            .map {
+                preferencesStorage.shouldSaveUserWallets = false
+                preferencesStorage.shouldSaveAccessCodes = false
+            }
+            .doOnSuccess {
+                store.dispatchWithMain(WalletSelectorAction.CloseError)
+                popBackToHome()
+            }
+            .doOnFailure { e ->
+                Timber.e(e, "Unable to clear user wallets")
+            }
+    }
+
+    private suspend fun clearUserWalletsAndPopBackToHomeScreen(): CompletionResult<Unit> {
+        return clearUserWallets()
+            .doOnSuccess { popBackToHome() }
+    }
+
     private suspend fun clearUserWallets(): CompletionResult<Unit> {
         return userWalletsListManager.clear()
             .flatMap { walletStoresManager.clear() }
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
-            .doOnSuccess {
-                // !!! Workaround !!!
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                delay(timeMillis = 280)
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
-            }
+    }
+
+    private suspend fun popBackToHome() {
+        // !!! Workaround !!!
+        store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+        delay(timeMillis = 280)
+        store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
     }
 
     private suspend fun deleteUserWallets(
