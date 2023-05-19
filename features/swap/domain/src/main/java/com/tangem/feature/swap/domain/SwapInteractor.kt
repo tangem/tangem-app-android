@@ -2,12 +2,8 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.SwapStateData
-import com.tangem.feature.swap.domain.models.ui.TokensDataState
-import com.tangem.feature.swap.domain.models.ui.TxState
+import com.tangem.feature.swap.domain.models.domain.SwapApproveType
+import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
 
@@ -46,12 +42,16 @@ interface SwapInteractor {
      * @param networkId network in which selected token
      * @param approveData tx data to give approve, it loaded from 1inch in findBestQuote if needed
      * @param forTokenContractAddress token contract address for which needs permission
+     * @param fromToken which token will be swapping
+     * @param approveType unlimited or tx amount approve
      */
     @Throws(IllegalStateException::class)
     suspend fun givePermissionToSwap(
         networkId: String,
         approveData: RequestApproveStateData,
         forTokenContractAddress: String,
+        fromToken: Currency,
+        approveType: SwapApproveType,
     ): TxState
 
     /**
