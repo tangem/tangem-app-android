@@ -170,7 +170,6 @@ class SeedPhraseViewModel @Inject constructor(
         val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
 
         uiState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
-        // uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(mediateState, enabled = false)
 
         val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
         val inputMnemonic = fieldState.textFieldValue.text
@@ -201,9 +200,9 @@ class SeedPhraseViewModel @Inject constructor(
 
     private suspend fun validateMnemonic(inputMnemonic: String) {
         if (inputMnemonic.isEmpty() && uiState.importSeedPhraseState.error != null) {
+            val mediateState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = false)
             updateUi {
-                uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = false)
-                uiBuilder.importSeedPhrase.updateError(uiState, null)
+                uiBuilder.importSeedPhrase.updateError(mediateState, null)
             }
             return
         }
@@ -211,8 +210,8 @@ class SeedPhraseViewModel @Inject constructor(
         interactor.validateMnemonicString(inputMnemonic)
             .onSuccess { mnemonicComponents ->
                 importedMnemonicComponents = mnemonicComponents
-                uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = true)
-                updateUi { uiBuilder.importSeedPhrase.updateError(uiState, null) }
+                val mediateState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = true)
+                updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, null) }
             }
             .onFailure {
                 uiState = uiBuilder.importSeedPhrase.updateCreateWalletButton(uiState, enabled = false)
