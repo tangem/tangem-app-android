@@ -365,11 +365,15 @@
     <string name="swapping_pending_transaction_subtitle">Transaction in progress...</string>
     <string name="swapping_pending_transaction_title">Waiting</string>
     <string name="swapping_permission_buttons_approve">Approve</string>
+    <string name="swapping_permission_current_transaction">Current transaction</string>
+    <string name="swapping_permission_fee_footer">The token approval network fee will be charged to confirm that you are the one allowing your token to be used for the exchange.</string>
     <string name="swapping_permission_header">Give Permission</string>
+    <string name="swapping_permission_policy_type_footer">Specify the approve limit for the selected token</string>
     <string name="swapping_permission_rows_amount">Amount %s</string>
     <string name="swapping_permission_rows_spender">Spender</string>
     <string name="swapping_permission_rows_your_wallet">Your Wallet</string>
     <string name="swapping_permission_subheader">To continue you need to allow 1inch smart contracts to use your %s</string>
+    <string name="swapping_permission_unlimited">Unlimited</string>
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
     <string name="swapping_swap">Swap</string>
