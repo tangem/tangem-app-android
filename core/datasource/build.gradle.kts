@@ -22,7 +22,6 @@ dependencies {
 
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.coroutines.reactive)
 
     /** Logging */
     implementation(deps.timber)
@@ -35,7 +34,6 @@ dependencies {
     implementation(deps.okHttp.logging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
-    implementation(deps.reactive.network)
 
     /** Time */
     implementation(deps.jodatime)
