@@ -6,19 +6,9 @@ import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
+import com.tangem.feature.swap.domain.models.domain.SwapApproveType
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
-import com.tangem.feature.swap.domain.models.ui.AmountFormatter
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.feature.swap.domain.models.ui.PreselectTokens
-import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.SwapStateData
-import com.tangem.feature.swap.domain.models.ui.TokenBalanceData
-import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TokenWithBalance
-import com.tangem.feature.swap.domain.models.ui.TokensDataState
-import com.tangem.feature.swap.domain.models.ui.TxState
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
@@ -120,13 +110,20 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         approveData: RequestApproveStateData,
         forTokenContractAddress: String,
+        fromToken: Currency,
+        approveType: SwapApproveType,
     ): TxState {
+        val dataToSign = if (approveType == SwapApproveType.UNLIMITED) {
+            repository.dataToApprove(networkId, getTokenAddress(fromToken)).data
+        } else {
+            approveData.approveModel.data
+        }
         val result = transactionManager.sendApproveTransaction(
             networkId = networkId,
             feeAmount = approveData.fee,
             gasLimit = approveData.gasLimit,
             destinationAddress = approveData.approveModel.toAddress,
-            dataToSign = approveData.approveModel.data,
+            dataToSign = dataToSign,
             derivationPath = derivationPath,
         )
         return when (result) {
@@ -354,6 +351,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 val quotesState = updatePermissionState(
                     networkId = networkId,
                     fromToken = fromToken,
+                    swapAmount = amount,
                     quotesLoadedState = swapState,
                 )
                 return quotesState.copy(
@@ -503,6 +501,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun updatePermissionState(
         networkId: String,
         fromToken: Currency,
+        swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
     ): SwapState.QuotesLoadedState {
         // if token balance ZERO not show permission state to avoid user to spend money for fee
@@ -517,7 +516,12 @@ internal class SwapInteractorImpl @Inject constructor(
                 permissionState = PermissionDataState.PermissionLoading,
             )
         }
-        val transactionData = repository.dataToApprove(networkId, getTokenAddress(fromToken))
+        // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
+        val transactionData = repository.dataToApprove(
+            networkId = networkId,
+            tokenAddress = getTokenAddress(fromToken),
+            amount = swapAmount.toStringWithRightOffset(),
+        )
         val feeData = transactionManager.getFee(
             networkId = networkId,
             amountToSend = BigDecimal.ZERO,
