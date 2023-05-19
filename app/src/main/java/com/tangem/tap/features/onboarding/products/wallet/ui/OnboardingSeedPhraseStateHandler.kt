@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
+import androidx.compose.runtime.collectAsState
 import com.tangem.feature.onboarding.api.OnboardingSeedPhrase
 import com.tangem.feature.onboarding.api.OnboardingSeedPhraseApi
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
@@ -12,19 +13,22 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWallet
 [REDACTED_AUTHOR]
  */
 internal class OnboardingSeedPhraseStateHandler(
-    private val walletFragment: OnboardingWalletFragment,
     private val onboardingSeedPhraseApi: OnboardingSeedPhraseApi = OnboardingSeedPhrase(),
 ) {
 
-    fun newState(state: OnboardingWalletState, seedPhraseViewModel: SeedPhraseViewModel) {
+    fun newState(
+        walletFragment: OnboardingWalletFragment,
+        state: OnboardingWalletState,
+        seedPhraseViewModel: SeedPhraseViewModel,
+    ) {
         if (state.step == OnboardingWalletStep.CreateWallet && !seedPhraseViewModel.isFinished) {
-            switchToWallet2SeedPhraseOnboarding(state, seedPhraseViewModel)
+            switchToWallet2SeedPhraseOnboarding(walletFragment, seedPhraseViewModel, state.getMaxProgress())
         } else {
-            switchToWalletOnboarding(state)
+            switchToWalletOnboarding(walletFragment, state)
         }
     }
 
-    private fun switchToWalletOnboarding(state: OnboardingWalletState) {
+    private fun switchToWalletOnboarding(walletFragment: OnboardingWalletFragment, state: OnboardingWalletState) {
         walletFragment.bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
         walletFragment.pbBinding.pbState.show()
         walletFragment.binding.onboardingWalletContainer.show()
@@ -32,16 +36,18 @@ internal class OnboardingSeedPhraseStateHandler(
     }
 
     private fun switchToWallet2SeedPhraseOnboarding(
-        state: OnboardingWalletState,
-        seedPhraseViewModel: SeedPhraseViewModel,
+        walletFragment: OnboardingWalletFragment,
+        viewModel: SeedPhraseViewModel,
+        onboardingWalletMaxProgress: Int,
     ) {
         walletFragment.pbBinding.pbState.hide()
         walletFragment.binding.onboardingWalletContainer.hide()
         walletFragment.bindingSeedPhrase.onboardingSeedPhraseContainer.show()
         walletFragment.bindingSeedPhrase.onboardingSeedPhraseContainer.setContent {
             onboardingSeedPhraseApi.ScreenContent(
-                viewModel = seedPhraseViewModel,
-                maxProgress = state.getMaxProgress(),
+                uiState = viewModel.uiState,
+                subScreen = viewModel.currentScreen.collectAsState().value,
+                progress = viewModel.progress.collectAsState(0).value.toFloat() / onboardingWalletMaxProgress,
             )
         }
     }
