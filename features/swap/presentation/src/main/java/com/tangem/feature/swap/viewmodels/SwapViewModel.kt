@@ -13,13 +13,11 @@ import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.SwapStateData
-import com.tangem.feature.swap.domain.models.ui.TxState
+import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.toDomainApproveType
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -272,9 +270,17 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.givePermissionToSwap(
                     networkId = dataState.networkId,
-                    approveData = dataState.approveDataModel!!,
+                    approveData = requireNotNull(dataState.approveDataModel) {
+                        Timber.e("dataState.approveDataModel might not be null")
+                    },
                     forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
                         ?: "",
+                    fromToken = requireNotNull(dataState.fromCurrency) {
+                        Timber.e("dataState.fromCurrency might not be null")
+                    },
+                    approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {
+                        Timber.e("uiState.permissionState should be SwapPermissionState.ReadyForRequest")
+                    }.approveType.toDomainApproveType(),
                 )
             }
                 .onSuccess {
@@ -282,9 +288,7 @@ internal class SwapViewModel @Inject constructor(
                         is TxState.TxSent -> {
                             uiState = stateBuilder.loadingPermissionState(uiState)
                         }
-                        is TxState.UserCancelled -> {
-                            /* no-op */
-                        }
+                        is TxState.UserCancelled -> Unit
                         else -> {
                             uiState = stateBuilder.createErrorTransaction(uiState, it) {
                                 uiState = stateBuilder.clearAlert(uiState)
@@ -428,6 +432,9 @@ internal class SwapViewModel @Inject constructor(
                 if (focused) {
                     analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
                 }
+            },
+            onChangeApproveType = { approveType ->
+                uiState = stateBuilder.updateApproveType(uiState, approveType)
             },
         )
     }
