@@ -12,18 +12,7 @@ import com.tangem.feature.swap.domain.models.ui.FoundTokensState
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TxState
-import com.tangem.feature.swap.models.ApprovePermissionButton
-import com.tangem.feature.swap.models.CancelPermissionButton
-import com.tangem.feature.swap.models.FeeState
-import com.tangem.feature.swap.models.GenericWarningType
-import com.tangem.feature.swap.models.SwapButton
-import com.tangem.feature.swap.models.SwapCardData
-import com.tangem.feature.swap.models.SwapPermissionState
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.SwapSuccessStateHolder
-import com.tangem.feature.swap.models.SwapWarning
-import com.tangem.feature.swap.models.TransactionCardType
-import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.*
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -160,7 +149,12 @@ internal class StateBuilder(val actions: UiActions) {
             ),
             networkCurrency = quoteModel.networkCurrency,
             warnings = warnings,
-            permissionState = convertPermissionState(quoteModel.permissionState, actions.onGivePermissionClick),
+            permissionState = convertPermissionState(
+                lastPermissionState = uiStateHolder.permissionState,
+                permissionDataState = quoteModel.permissionState,
+                onGivePermissionClick = actions.onGivePermissionClick,
+                onChangeApproveType = actions.onChangeApproveType,
+            ),
             fee = feeState,
             swapButton = SwapButton(
                 enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend &&
@@ -234,9 +228,16 @@ internal class StateBuilder(val actions: UiActions) {
     }
 
     private fun convertPermissionState(
+        lastPermissionState: SwapPermissionState,
         permissionDataState: PermissionDataState,
         onGivePermissionClick: () -> Unit,
+        onChangeApproveType: (ApproveType) -> Unit,
     ): SwapPermissionState {
+        val approveType = if (lastPermissionState is SwapPermissionState.ReadyForRequest) {
+            lastPermissionState.approveType
+        } else {
+            ApproveType.UNLIMITED
+        }
         return when (permissionDataState) {
             PermissionDataState.Empty -> SwapPermissionState.Empty
             PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
@@ -244,6 +245,7 @@ internal class StateBuilder(val actions: UiActions) {
             is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
                 currency = permissionDataState.currency,
                 amount = permissionDataState.amount,
+                approveType = approveType,
                 walletAddress = getShortAddressValue(permissionDataState.walletAddress),
                 spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
                 fee = permissionDataState.fee,
@@ -254,6 +256,7 @@ internal class StateBuilder(val actions: UiActions) {
                 cancelButton = CancelPermissionButton(
                     enabled = true,
                 ),
+                onChangeApproveType = onChangeApproveType,
             )
         }
     }
@@ -267,6 +270,18 @@ internal class StateBuilder(val actions: UiActions) {
                 ),
             ),
         )
+    }
+
+    fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
+        return if (uiState.permissionState is SwapPermissionState.ReadyForRequest) {
+            uiState.copy(
+                permissionState = uiState.permissionState.copy(
+                    approveType = approveType,
+                ),
+            )
+        } else {
+            uiState
+        }
     }
 
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
