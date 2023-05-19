@@ -28,24 +28,14 @@ import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseVi
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.inflate
-import com.tangem.tap.common.extensions.resourceUri
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.OnboardingMenuProvider
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWallet2Action
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.ui.OnboardingSaltPayStateHandler
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
@@ -73,7 +63,7 @@ class OnboardingWalletFragment :
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
     internal val bindingSaltPay: LayoutOnboardingSaltpayBinding by lazy { binding.onboardingSaltpayContainer }
 
-    private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler(this)
+    private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
     private val saltPayStateHandler: OnboardingSaltPayStateHandler = OnboardingSaltPayStateHandler(this)
@@ -189,7 +179,7 @@ class OnboardingWalletFragment :
 
         when {
             state.wallet2State != null -> {
-                seedPhraseStateHandler.newState(state, seedPhraseViewModel)
+                seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
             }
             state.isSaltPay -> {
                 saltPayStateHandler.newState(state)
