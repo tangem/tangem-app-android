@@ -56,6 +56,7 @@ private data class CreateWalletResponse(
 
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
+    private val seed: ByteArray? = null,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -74,7 +75,8 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemNote() -> CreateWalletTangemNote(cardTypesResolver)
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
-            else -> CreateWalletTangemWallet()
+
+            else -> CreateWalletTangemWallet(seed)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -129,7 +131,9 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
     }
 }
 
-private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWalletTaskResponse> {
+private class CreateWalletTangemWallet(
+    private val seed: ByteArray?,
+) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
     private var primaryCard: PrimaryCard? = null
 
@@ -149,7 +153,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             return
         }
 
-        CreateWalletsTask(curves).run(session) { result ->
+        CreateWalletsTask(curves, seed).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     proceedWithCreatedWallets(
