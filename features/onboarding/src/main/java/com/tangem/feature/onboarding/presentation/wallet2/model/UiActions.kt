@@ -12,6 +12,7 @@ data class UiActions(
     val checkSeedPhraseActions: CheckSeedPhraseUiAction,
     val importSeedPhraseActions: ImportSeedPhraseUiAction,
     val menuChatClick: () -> Unit,
+    val menuNavigateBackClick: () -> Unit,
 )
 
 data class IntroUiAction(
