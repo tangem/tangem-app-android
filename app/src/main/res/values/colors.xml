@@ -45,10 +45,9 @@
 
     <color name="all_colors_azure">#007AFF</color>
 
-
+    <color name="background_action">#000000</color>
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
-
 
 
     <color name="button_disabled">#EBEBEB</color>

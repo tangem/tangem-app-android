@@ -40,6 +40,14 @@ object OnboardingHelper {
                     cardInfoStorage.isActivationInProgress(cardId)
                 }
             }
+
+            response.cardTypesResolver.isWallet2() -> {
+                val emptyWallets = response.card.wallets.isEmpty()
+                val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
+                val backupNotActive = response.card.backupStatus?.isActive != true
+                emptyWallets || activationInProgress || backupNotActive
+            }
+
             response.card.wallets.isNotEmpty() -> cardInfoStorage.isActivationInProgress(cardId)
             else -> true
         }
