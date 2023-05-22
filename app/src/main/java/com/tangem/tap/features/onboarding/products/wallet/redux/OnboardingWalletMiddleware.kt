@@ -3,15 +3,17 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.operations.backup.BackupService
-import com.tangem.tap.backupService
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -20,6 +22,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -29,12 +32,6 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivat
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -47,7 +44,10 @@ object OnboardingWalletMiddleware {
 private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
-            handleWalletAction(action, state, dispatch)
+            when (action) {
+                is OnboardingWallet2Action -> handleWallet2Action(action, state)
+                else -> handleWalletAction(action, state, dispatch)
+            }
             next(action)
         }
     }
@@ -114,42 +114,44 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             }
         }
         is OnboardingWalletAction.CreateWallet -> {
+            scanResponse ?: return
             scope.launch {
-                scanResponse ?: return@launch
                 val result = tangemSdkManager.createProductWallet(scanResponse)
-                withMainContext {
-                    when (result) {
-                        is CompletionResult.Success -> {
-                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
-                            // here we must use updated scanResponse after createWallet & derivation
-                            val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
-                                card = result.data.card,
-                                derivedKeys = result.data.derivedKeys,
-                                primaryCard = result.data.primaryCard,
-                            )
-                            onboardingManager.scanResponse = updatedResponse
-                            store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
+                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+            }
+        }
+        is OnboardingWalletAction.WalletWasCreated -> {
+            scanResponse ?: return
+            when (val result = action.result) {
+                is CompletionResult.Success -> {
+                    Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    // here we must use updated scanResponse after createWallet & derivation
+                    val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
+                        card = result.data.card,
+                        derivedKeys = result.data.derivedKeys,
+                        primaryCard = result.data.primaryCard,
+                    )
+                    onboardingManager.scanResponse = updatedResponse
+                    store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
 
-                            val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
-                                DemoHelper.config.demoBlockchains
-                            } else {
-                                listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-                            }.map { blockchain ->
-                                BlockchainNetwork(blockchain, result.data.card)
-                            }
-
-                            scope.launch {
-                                userTokensRepository.saveUserTokens(
-                                    card = result.data.card,
-                                    tokens = blockchainNetworks.toCurrencies(),
-                                )
-                            }
-                            startCardActivation(updatedResponse)
-                            store.dispatch(OnboardingWalletAction.ResumeBackup)
-                        }
-                        is CompletionResult.Failure -> Unit
+                    val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
+                        DemoHelper.config.demoBlockchains
+                    } else {
+                        listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                    }.map { blockchain ->
+                        BlockchainNetwork(blockchain, result.data.card)
                     }
+
+                    scope.launch {
+                        userTokensRepository.saveUserTokens(
+                            card = result.data.card,
+                            tokens = blockchainNetworks.toCurrencies(),
+                        )
+                    }
+                    startCardActivation(updatedResponse)
+                    store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
+                is CompletionResult.Failure -> Unit
             }
         }
         OnboardingWalletAction.FinishOnboarding -> {
@@ -190,6 +192,93 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
+        else -> Unit
+    }
+}
+
+@Suppress("LongMethod", "ComplexMethod")
+private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> AppState?) {
+    val globalState = store.state.globalState
+    val onboardingManager = globalState.onboardingState.onboardingManager
+
+    val scanResponse = onboardingManager?.scanResponse
+
+    when (action) {
+        is OnboardingWallet2Action.Init -> {
+            if (scanResponse?.cardTypesResolver?.isWallet2() == true) {
+                store.dispatch(OnboardingWallet2Action.SetDependencies(action.maxProgress))
+            }
+        }
+
+        is OnboardingWallet2Action.CreateWallet -> {
+            scanResponse ?: return
+            scope.launch {
+                val mediateResult = when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
+                    is CompletionResult.Success -> {
+                        val response = CreateWalletResponse(
+                            card = result.data.card,
+                            derivedKeys = result.data.derivedKeys,
+                            primaryCard = result.data.primaryCard,
+                        )
+                        CompletionResult.Success(response)
+                    }
+
+                    is CompletionResult.Failure -> {
+                        CompletionResult.Failure(result.error)
+                    }
+                }
+                withMainContext {
+                    action.callback(mediateResult)
+                }
+            }
+        }
+
+        is OnboardingWallet2Action.ImportWallet -> {
+            scanResponse ?: return
+            scope.launch {
+                val mediateResult = when (
+                    val result = tangemSdkManager.importWallet(
+                        scanResponse = scanResponse,
+                        mnemonic = action.mnemonicComponents.joinToString(" "),
+                    )
+                ) {
+                    is CompletionResult.Success -> {
+                        val response = CreateWalletResponse(
+                            card = result.data.card,
+                            derivedKeys = result.data.derivedKeys,
+                            primaryCard = result.data.primaryCard,
+                        )
+                        CompletionResult.Success(response)
+                    }
+
+                    is CompletionResult.Failure -> {
+                        CompletionResult.Failure(result.error)
+                    }
+                }
+                withMainContext {
+                    action.callback(mediateResult)
+                }
+            }
+        }
+
+        is OnboardingWallet2Action.WalletWasCreated -> {
+            val result = when (val mediateResult = action.result) {
+                is CompletionResult.Success -> {
+                    val response = CreateProductWalletTaskResponse(
+                        card = mediateResult.data.card,
+                        derivedKeys = mediateResult.data.derivedKeys,
+                        primaryCard = mediateResult.data.primaryCard,
+                    )
+                    CompletionResult.Success(response)
+                }
+
+                is CompletionResult.Failure -> {
+                    CompletionResult.Failure(mediateResult.error)
+                }
+            }
+            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+        }
+
         else -> Unit
     }
 }
@@ -263,7 +352,18 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
-                    is CompletionResult.Failure -> Unit
+
+                    is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.BackupFailedNotEmptyWallets &&
+                            onboardingWalletState.wallet2State != null
+                        ) {
+                            store.dispatchOnMain(
+                                GlobalAction.ShowDialog(
+                                    BackupDialog.ResetBackupCard,
+                                ),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -368,6 +468,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             Analytics.send(Onboarding.Finished())
             finishCardActivation(notActivatedCardIds)
         }
+
+        is BackupAction.ResetBackupCard -> {
+            scope.launch { tangemSdkManager.resetToFactorySettings() }
+        }
+
         else -> Unit
     }
 }

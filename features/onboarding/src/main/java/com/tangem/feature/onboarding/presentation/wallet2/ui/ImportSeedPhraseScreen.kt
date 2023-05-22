@@ -93,17 +93,6 @@ private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modif
             ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors,
         )
-        /**
-* [REDACTED_TODO_COMMENT]
-
-         @MamaLemon MamaLemon 3 days ago
-         А почему мы напрямую здесь юзаем?
-
-         Member
-         Author
-         @gbixahue gbixahue 2 days ago
-         Потому, что здесь используется чистый OutlinedTextField из компоуза, т.к. OutlinedTextField из core не подошел
-         */
 
         Box(
             modifier = Modifier
