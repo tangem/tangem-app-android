@@ -57,4 +57,6 @@ internal sealed interface WalletSelectorAction : Action {
     ) : WalletSelectorAction
 
     object CloseError : WalletSelectorAction
+
+    object ClearUserWallets : WalletSelectorAction
 }

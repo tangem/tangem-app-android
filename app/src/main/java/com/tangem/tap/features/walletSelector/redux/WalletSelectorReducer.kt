@@ -59,6 +59,7 @@ internal object WalletSelectorReducer {
             is WalletSelectorAction.SelectWallet,
             is WalletSelectorAction.RemoveWallets,
             is WalletSelectorAction.RenameWallet,
+            is WalletSelectorAction.ClearUserWallets,
             -> state
         }
     }
