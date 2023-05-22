@@ -1,20 +1,16 @@
 package com.tangem.feature.onboarding.data
 
-import com.tangem.crypto.bip39.*
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.crypto.bip39.DefaultMnemonic
+import com.tangem.crypto.bip39.EntropyLength
+import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.crypto.bip39.Wordlist
 
 /**
 [REDACTED_AUTHOR]
  */
 internal class DefaultMnemonicRepository(
-    private val assetReader: AssetReader,
+    private val bip39Wordlist: Wordlist,
 ) : MnemonicRepository {
-
-    // TODO: change initialization after adding it to the sdk
-    private val bip39Wordlist: Wordlist by lazy {
-        assetReader.openFile(MNEMONIC_FILE_NAME)
-            .use { BIP39Wordlist(it) }
-    }
 
     private val bip39Words: Set<String> by lazy { bip39Wordlist.words.toHashSet() }
 
@@ -25,8 +21,4 @@ internal class DefaultMnemonicRepository(
     }
 
     override fun createMnemonic(mnemonicString: String): Mnemonic = DefaultMnemonic(mnemonicString, bip39Wordlist)
-
-    companion object {
-        private const val MNEMONIC_FILE_NAME = "mnemonic/mnemonic_dictionary_en.txt"
-    }
 }
