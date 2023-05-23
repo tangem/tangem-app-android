@@ -1,7 +1,7 @@
 package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.ProxyFee
+import com.tangem.lib.crypto.models.ProxyFees
 import com.tangem.lib.crypto.models.ProxyNetworkInfo
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import java.math.BigDecimal
@@ -55,7 +55,7 @@ interface TransactionManager {
         increaseBy: Int?,
         data: String?,
         derivationPath: String?,
-    ): ProxyFee
+    ): ProxyFees
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenDecimals(networkId: String): Int
