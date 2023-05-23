@@ -2,17 +2,20 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.states.Item
+import com.tangem.core.ui.components.states.SelectableItemsState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.isNonNative
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.TxState
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -119,11 +122,7 @@ internal class StateBuilder(val actions: UiActions) {
         if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
             warnings.add(SwapWarning.HighPriceImpact((quoteModel.priceImpact * HUNDRED_PERCENTS).toInt()))
         }
-        val feeState = if (quoteModel.preparedSwapConfigState.isFeeEnough) {
-            FeeState.Loaded(tangemFee = quoteModel.tangemFee, fee = quoteModel.fee ?: "")
-        } else {
-            FeeState.NotEnoughFundsWarning(tangemFee = quoteModel.tangemFee, fee = quoteModel.fee ?: "")
-        }
+        val feeState = createFeeState(quoteModel, uiStateHolder)
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
@@ -227,38 +226,10 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    private fun convertPermissionState(
-        lastPermissionState: SwapPermissionState,
-        permissionDataState: PermissionDataState,
-        onGivePermissionClick: () -> Unit,
-        onChangeApproveType: (ApproveType) -> Unit,
-    ): SwapPermissionState {
-        val approveType = if (lastPermissionState is SwapPermissionState.ReadyForRequest) {
-            lastPermissionState.approveType
-        } else {
-            ApproveType.UNLIMITED
-        }
-        return when (permissionDataState) {
-            PermissionDataState.Empty -> SwapPermissionState.Empty
-            PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
-            PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
-            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
-                currency = permissionDataState.currency,
-                amount = permissionDataState.amount,
-                approveType = approveType,
-                walletAddress = getShortAddressValue(permissionDataState.walletAddress),
-                spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
-                fee = permissionDataState.fee,
-                approveButton = ApprovePermissionButton(
-                    enabled = true,
-                    onClick = onGivePermissionClick,
-                ),
-                cancelButton = CancelPermissionButton(
-                    enabled = true,
-                ),
-                onChangeApproveType = onChangeApproveType,
-            )
-        }
+    fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
+        return uiState.copy(
+            updateInProgress = true,
+        )
     }
 
     fun updateSwapAmount(uiState: SwapStateHolder, amount: String): SwapStateHolder {
@@ -282,6 +253,64 @@ internal class StateBuilder(val actions: UiActions) {
         } else {
             uiState
         }
+    }
+
+    fun updateFeeSelectedItem(uiState: SwapStateHolder, item: Item<TxFee>): SwapStateHolder {
+        val newSelectedItem = item.copy(
+            startText = TextReference.Res(R.string.send_network_fee_title),
+        )
+        return when (val fee = uiState.fee) {
+            is FeeState.Loaded -> {
+                val newState = fee.state?.copy(
+                    selectedItem = newSelectedItem,
+                    items = selectNewItem(fee.state.items, item),
+                )
+                uiState.copy(
+                    fee = fee.copy(state = newState),
+                )
+            }
+            is FeeState.NotEnoughFundsWarning -> {
+                val newState = fee.state?.copy(
+                    selectedItem = newSelectedItem,
+                    items = selectNewItem(fee.state.items, item),
+                )
+                uiState.copy(
+                    fee = fee.copy(state = newState),
+                )
+            }
+            else -> uiState
+        }
+    }
+
+    private fun createFeeState(quoteModel: SwapState.QuotesLoadedState, uiStateHolder: SwapStateHolder): FeeState {
+        val previousFeeState = when (val stateFee = uiStateHolder.fee) {
+            is FeeState.Loaded -> stateFee.state
+            is FeeState.NotEnoughFundsWarning -> stateFee.state
+            else -> null
+        }
+        return if (quoteModel.preparedSwapConfigState.isFeeEnough) {
+            FeeState.Loaded(
+                tangemFee = quoteModel.tangemFee,
+                state = createSelectFeeState(quoteModel.swapDataModel?.fee, previousFeeState),
+                onSelectItem = actions.onSelectItemFee,
+            )
+        } else {
+            FeeState.NotEnoughFundsWarning(
+                tangemFee = quoteModel.tangemFee,
+                state = createSelectFeeState(quoteModel.swapDataModel?.fee, previousFeeState),
+                onSelectItem = actions.onSelectItemFee,
+            )
+        }
+    }
+
+    private fun selectNewItem(items: ImmutableList<Item<TxFee>>, selectItem: Item<TxFee>): ImmutableList<Item<TxFee>> {
+        return items.map {
+            if (it.id == selectItem.id) {
+                it.copy(isSelected = true)
+            } else {
+                it.copy(isSelected = false)
+            }
+        }.toImmutableList()
     }
 
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
@@ -356,6 +385,103 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
+    private fun convertPermissionState(
+        lastPermissionState: SwapPermissionState,
+        permissionDataState: PermissionDataState,
+        onGivePermissionClick: () -> Unit,
+        onChangeApproveType: (ApproveType) -> Unit,
+    ): SwapPermissionState {
+        val approveType = if (lastPermissionState is SwapPermissionState.ReadyForRequest) {
+            lastPermissionState.approveType
+        } else {
+            ApproveType.UNLIMITED
+        }
+        return when (permissionDataState) {
+            PermissionDataState.Empty -> SwapPermissionState.Empty
+            PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
+            PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
+            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
+                currency = permissionDataState.currency,
+                amount = permissionDataState.amount,
+                approveType = approveType,
+                walletAddress = getShortAddressValue(permissionDataState.walletAddress),
+                spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
+                fee = permissionDataState.fee,
+                approveButton = ApprovePermissionButton(
+                    enabled = true,
+                    onClick = onGivePermissionClick,
+                ),
+                cancelButton = CancelPermissionButton(
+                    enabled = true,
+                ),
+                onChangeApproveType = onChangeApproveType,
+            )
+        }
+    }
+
+    private fun createSelectFeeState(
+        fee: TxFeeState?,
+        previousState: SelectableItemsState<TxFee>?,
+    ): SelectableItemsState<TxFee>? {
+        if (fee == null) return null
+        if (previousState == null) {
+            val selectedItemId = 0
+            // by default preselect normal
+            val preselectedItem = Item(
+                id = selectedItemId,
+                startText = TextReference.Res(R.string.send_network_fee_title),
+                endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
+                isSelected = true,
+                data = fee.normalFee,
+            )
+            val feeItems = mutableListOf<Item<TxFee>>()
+            val normalFeeItem = Item(
+                id = selectedItemId,
+                startText = TextReference.Res(R.string.send_fee_picker_normal),
+                endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
+                isSelected = true,
+                data = fee.normalFee,
+            )
+            val priorityFeeItem = Item(
+                id = 1,
+                startText = TextReference.Res(R.string.send_fee_picker_priority),
+                endText = TextReference.Str(fee.priorityFee.feeCryptoFormatted + fee.priorityFee.feeFiatFormatted),
+                isSelected = false,
+                data = fee.priorityFee,
+            )
+            feeItems.add(normalFeeItem)
+            feeItems.add(priorityFeeItem)
+            return SelectableItemsState(
+                selectedItem = preselectedItem,
+                items = feeItems.toImmutableList(),
+            )
+        } else {
+            val normalFeeItem =
+                requireNotNull(previousState.items.firstOrNull()) { "in previousState there are 2 items" }
+                    .copy(
+                        endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
+                    )
+            val priorityFeeItem =
+                requireNotNull(previousState.items.getOrNull(1)) { "in previousState there are 2 items" }
+                    .copy(
+                        endText = TextReference.Str(
+                            fee.priorityFee.feeCryptoFormatted + fee.priorityFee.feeFiatFormatted,
+                        ),
+                    )
+            val selectedEndText = if (normalFeeItem.isSelected) {
+                normalFeeItem.endText
+            } else {
+                priorityFeeItem.endText
+            }
+            return previousState.copy(
+                selectedItem = previousState.selectedItem.copy(
+                    endText = selectedEndText,
+                ),
+                items = listOf(normalFeeItem, priorityFeeItem).toImmutableList(),
+            )
+        }
+    }
+
     private fun getShortAddressValue(fullAddress: String): String {
         check(fullAddress.length > ADDRESS_MIN_LENGTH) { "Invalid address" }
         val firstAddressPart = fullAddress.substring(startIndex = 0, endIndex = ADDRESS_FIRST_PART_LENGTH)
@@ -364,12 +490,6 @@ internal class StateBuilder(val actions: UiActions) {
             endIndex = fullAddress.length,
         )
         return "$firstAddressPart...$secondAddressPart"
-    }
-
-    fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
-        return uiState.copy(
-            updateInProgress = true,
-        )
     }
 
     private companion object {
