@@ -65,12 +65,12 @@ class DefaultCustomTokenInteractor(
                     )
                 },
             )
-
-            submitAdd(
-                scanResponse = requireNotNull(reduxStateHolder.scanResponse),
-                currency = currency,
-            )
         }
+
+        submitAdd(
+            scanResponse = requireNotNull(reduxStateHolder.scanResponse),
+            currency = currency,
+        )
     }
 
     private fun submitAdd(scanResponse: ScanResponse, currency: Currency) {
