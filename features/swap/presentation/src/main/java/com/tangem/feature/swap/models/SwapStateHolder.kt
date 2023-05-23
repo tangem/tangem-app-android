@@ -1,6 +1,9 @@
 package com.tangem.feature.swap.models
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.states.Item
+import com.tangem.core.ui.components.states.SelectableItemsState
+import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class SwapStateHolder(
     val sendCardData: SwapCardData,
@@ -54,12 +57,17 @@ sealed class FeeState(open val tangemFee: Double) {
 
     data class Loaded(
         override val tangemFee: Double,
-        val fee: String = "",
+        val state: SelectableItemsState<TxFee>?,
+        val onSelectItem: (Item<TxFee>) -> Unit,
     ) : FeeState(tangemFee)
 
     object Loading : FeeState(0.0)
 
-    data class NotEnoughFundsWarning(override val tangemFee: Double, val fee: String) : FeeState(tangemFee)
+    data class NotEnoughFundsWarning(
+        override val tangemFee: Double,
+        val state: SelectableItemsState<TxFee>?,
+        val onSelectItem: (Item<TxFee>) -> Unit,
+    ) : FeeState(tangemFee)
 }
 
 sealed interface TransactionCardType {
