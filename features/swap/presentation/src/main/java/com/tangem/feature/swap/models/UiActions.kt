@@ -1,5 +1,8 @@
 package com.tangem.feature.swap.models
 
+import com.tangem.core.ui.components.states.Item
+import com.tangem.feature.swap.domain.models.ui.TxFee
+
 data class UiActions(
     val onSearchEntered: (String) -> Unit,
     val onSearchFocusChange: (Boolean) -> Unit,
@@ -14,4 +17,5 @@ data class UiActions(
     val openPermissionBottomSheet: () -> Unit,
     val hidePermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
+    val onSelectItemFee: (Item<TxFee>) -> Unit,
 )

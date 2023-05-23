@@ -66,7 +66,7 @@ sealed class CardInfo(
         clickable = true,
     )
 }
-
+// [REDACTED_TODO_COMMENT]
 sealed interface TextReference {
     class Res(@StringRes val id: Int, val formatArgs: List<Any> = emptyList()) : TextReference {
         constructor(@StringRes id: Int, vararg formatArgs: Any) : this(id, formatArgs.toList())

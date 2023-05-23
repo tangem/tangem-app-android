@@ -80,8 +80,10 @@ interface SwapInteractor {
      * @param currencyToSend [Currency]
      * @param currencyToGet [Currency]
      * @param amountToSwap amount to swap
+     * @param fee for tx
      * @return [TxState]
      */
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
         networkId: String,
@@ -89,6 +91,7 @@ interface SwapInteractor {
         currencyToSend: Currency,
         currencyToGet: Currency,
         amountToSwap: String,
+        fee: TxFee,
     ): TxState
 
     /**
