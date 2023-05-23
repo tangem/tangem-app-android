@@ -1,25 +1,10 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,31 +17,19 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.tangem.core.ui.components.CardWithIcon
-import com.tangem.core.ui.components.Keyboard
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.PrimaryButtonIconRight
-import com.tangem.core.ui.components.RefreshableWaringCard
-import com.tangem.core.ui.components.SimpleOkDialog
-import com.tangem.core.ui.components.SmallInfoCard
-import com.tangem.core.ui.components.SmallInfoCardWithDisclaimer
-import com.tangem.core.ui.components.SmallInfoCardWithWarning
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.WarningCard
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.components.states.Item
+import com.tangem.core.ui.components.states.SelectableItemsState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.swap.models.FeeState
-import com.tangem.feature.swap.models.GenericWarningType
-import com.tangem.feature.swap.models.SwapButton
-import com.tangem.feature.swap.models.SwapCardData
-import com.tangem.feature.swap.models.SwapPermissionState
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.SwapWarning
-import com.tangem.feature.swap.models.TransactionCardType
+import com.tangem.feature.swap.domain.models.ui.TxFee
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 
 @Suppress("LongMethod")
 @Composable
@@ -255,12 +228,11 @@ private fun FeeItem(feeState: FeeState, currency: String) {
     val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
     when (feeState) {
         is FeeState.Loaded -> {
-            if (feeState.fee.isNotEmpty()) {
-                SmallInfoCardWithDisclaimer(
-                    startText = titleString,
-                    endText = feeState.fee,
+            if (feeState.state != null) {
+                SelectableInfoCard(
+                    state = feeState.state,
                     disclaimer = disclaimer,
-                    isLoading = false,
+                    onSelect = feeState.onSelectItem,
                 )
             }
         }
@@ -273,16 +245,16 @@ private fun FeeItem(feeState: FeeState, currency: String) {
             )
         }
         is FeeState.NotEnoughFundsWarning -> {
-            if (feeState.fee.isNotEmpty()) {
-                SmallInfoCardWithWarning(
-                    startText = titleString,
-                    endText = feeState.fee,
-                    disclaimer = disclaimer,
+            if (feeState.state != null) {
+                SelectableInfoCardWithWarning(
+                    state = feeState.state,
                     warningText = stringResource(
                         id = R.string.swapping_not_enough_funds_for_fee,
                         currency,
                         currency,
                     ),
+                    disclaimer = disclaimer,
+                    onSelect = feeState.onSelectItem,
                 )
             }
         }
@@ -411,11 +383,56 @@ private val receiveCard = SwapCardData(
     coinId = "",
 )
 
+val stateSelectable = SelectableItemsState<TxFee>(
+    selectedItem = Item(
+        0,
+        TextReference.Str("Balance"),
+        TextReference.Str("0.4405434 BTC"),
+        true,
+        TxFee(
+            feeValue = BigDecimal.ZERO,
+            gasLimit = 0,
+            feeFiatFormatted = "",
+            feeCryptoFormatted = "",
+        ),
+    ),
+    items = listOf(
+        Item(
+            0,
+            TextReference.Str("Normal"),
+            TextReference.Str("0.4405434 BTC"),
+            true,
+            TxFee(
+                feeValue = BigDecimal.ZERO,
+                gasLimit = 0,
+                feeFiatFormatted = "",
+                feeCryptoFormatted = "",
+            ),
+        ),
+        Item(
+            1,
+            TextReference.Str("Priority"),
+            TextReference.Str("0.46 BTC"),
+            false,
+            TxFee(
+                feeValue = BigDecimal.ZERO,
+                gasLimit = 0,
+                feeFiatFormatted = "",
+                feeCryptoFormatted = "",
+            ),
+        ),
+    ).toImmutableList(),
+)
+
 private val state = SwapStateHolder(
     networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)", tangemFee = 0.0),
+    fee = FeeState.Loaded(
+        tangemFee = 0.0,
+        state = stateSelectable,
+        onSelectItem = {},
+    ),
     warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
