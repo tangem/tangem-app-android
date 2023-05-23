@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.material)
     implementation(deps.compose.shimmer)
+    implementation(deps.kotlin.immutable.collections)
 
     implementation(project(":core:res"))
 }
