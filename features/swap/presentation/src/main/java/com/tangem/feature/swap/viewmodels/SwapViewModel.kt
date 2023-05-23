@@ -228,6 +228,7 @@ internal class SwapViewModel @Inject constructor(
                     currencyToSend = requireNotNull(dataState.fromCurrency),
                     currencyToGet = requireNotNull(dataState.toCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
+                    fee = requireNotNull(dataState.selectedFee),
                 )
             }
                 .onSuccess {
@@ -435,6 +436,10 @@ internal class SwapViewModel @Inject constructor(
             },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
+            },
+            onSelectItemFee = { feeItem ->
+                dataState = dataState.copy(selectedFee = feeItem.data)
+                uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem)
             },
         )
     }
