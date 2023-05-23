@@ -17,26 +17,14 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.isSupportedInApp
-import com.tangem.domain.common.extensions.supportedBlockchains
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.extensions.*
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet
+import com.tangem.tap.features.customtoken.impl.presentation.models.*
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TestTokenItem
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TokensCategoryBlock
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField.SelectorItem
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenTestBlock
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenWarning
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokensToolbar
-import com.tangem.tap.features.customtoken.impl.presentation.models.CustomTokenType
 import com.tangem.tap.features.customtoken.impl.presentation.routers.CustomTokenRouter
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactAddressValidator
@@ -262,7 +250,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         private fun getDerivationPathsSelectorItems(): List<SelectorItem.TitleWithSubtitle> {
             val defaultDerivationPath = createDerivationPathSelectorItem(Blockchain.Unknown)
             return listOf(defaultDerivationPath) + Blockchain.values()
-                .filter { blockchain -> blockchain.isEvm() && blockchain.isSupportedInApp() }
+                .filter { blockchain -> blockchain.isEvm() && blockchain.isSupportedInApp() && !blockchain.isTestnet() }
                 .sortedBy(Blockchain::fullName)
                 .map(::createDerivationPathSelectorItem)
         }
@@ -323,23 +311,10 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun updateDerivationPathSelector() {
-        val derivationPathSelectorField = uiState.form.derivationPathSelectorField ?: return
-        val selectedValue = derivationPathSelectorField.selectedItem.blockchain
-        val isSupported = selectedValue.isEvm() || !isDerivationPathSelected()
-
         uiState = uiState.copySealed(
             form = uiState.form.copy(
                 derivationPathSelectorField = uiState.form.derivationPathSelectorField?.copy(
-                    isEnabled = if (derivationPathSelectorField.isEnabled != isSupported) {
-                        isSupported
-                    } else {
-                        derivationPathSelectorField.isEnabled
-                    },
-                    selectedItem = if (isDerivationPathSelected() && !isSupported) {
-                        formStateBuilder.createDerivationPathSelectorItem(Blockchain.Unknown)
-                    } else {
-                        derivationPathSelectorField.selectedItem
-                    },
+                    isEnabled = uiState.form.networkSelectorField.selectedItem.blockchain.isEvm(),
                 ),
             ),
         )
@@ -645,38 +620,39 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     ),
                 ),
             )
+            updateFloatingButton()
         }
 
         fun onAddCustomTokenClick() {
             if (!isNetworkSelected()) return
 
-            viewModelScope.launch(dispatchers.main) {
-                val address = uiState.form.contractAddressInputField.value
-                val currency = when (getCustomTokenType()) {
-                    CustomTokenType.TOKEN -> {
-                        Currency.Token(
-                            token = Token(
-                                name = uiState.form.tokenNameInputField.value,
-                                symbol = uiState.form.tokenSymbolInputField.value,
-                                contractAddress = address,
-                                decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
-                                id = foundToken?.id,
-                            ),
-                            blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
-                            derivationPath = getDerivationPath()?.rawPath,
-                        )
-                    }
-
-                    CustomTokenType.BLOCKCHAIN -> {
-                        Currency.Blockchain(
-                            blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
-                            derivationPath = getDerivationPath()?.rawPath,
-                        )
-                    }
+            val address = uiState.form.contractAddressInputField.value
+            val currency = when (getCustomTokenType()) {
+                CustomTokenType.TOKEN -> {
+                    Currency.Token(
+                        token = Token(
+                            name = uiState.form.tokenNameInputField.value,
+                            symbol = uiState.form.tokenSymbolInputField.value,
+                            contractAddress = address,
+                            decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
+                            id = foundToken?.id,
+                        ),
+                        blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        derivationPath = getDerivationPath()?.rawPath,
+                    )
                 }
 
-                analyticsSender.sendWhenAddTokenButtonClicked(currency, address)
+                CustomTokenType.BLOCKCHAIN -> {
+                    Currency.Blockchain(
+                        blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        derivationPath = getDerivationPath()?.rawPath,
+                    )
+                }
+            }
 
+            analyticsSender.sendWhenAddTokenButtonClicked(currency, address)
+
+            viewModelScope.launch(dispatchers.main) {
                 runCatching(dispatchers.io) { featureInteractor.saveToken(currency, address) }
                     .onSuccess { featureRouter.openWalletScreen() }
                     .onFailure(Timber::e)
