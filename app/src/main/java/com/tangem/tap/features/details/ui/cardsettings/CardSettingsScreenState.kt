@@ -67,6 +67,7 @@ sealed class CardInfo(
     )
 }
 
+// TODO("Remove and use the same from coreUI")
 sealed interface TextReference {
     class Res(@StringRes val id: Int, val formatArgs: List<Any> = emptyList()) : TextReference {
         constructor(@StringRes id: Int, vararg formatArgs: Any) : this(id, formatArgs.toList())
