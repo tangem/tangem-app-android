@@ -148,7 +148,7 @@ class TransactionExtrasReducer : SendInternalReducer {
     private fun handleCosmosMemo(
         action: CosmosMemo,
         sendState: SendState,
-        infoState: TransactionExtrasState
+        infoState: TransactionExtrasState,
     ): SendState {
         val result = when (action) {
             is CosmosMemo.HandleUserInput -> {
