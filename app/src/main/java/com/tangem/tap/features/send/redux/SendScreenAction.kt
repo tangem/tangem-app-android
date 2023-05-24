@@ -69,6 +69,10 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
     sealed class TonMemo : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : TonMemo()
     }
+
+    sealed class CosmosMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : CosmosMemo()
+    }
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
