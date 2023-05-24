@@ -10,12 +10,19 @@ plugins {
 dependencies {
     /** Core modules */
     implementation(project(":common"))
+    implementation(project(":domain:models"))
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:datasource"))
     implementation(project(":core:analytics"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":core:res"))
+
+    /** Tangem libraries */
+    implementation(deps.tangem.card.core)
+    implementation(deps.tangem.card.android) {
+        exclude(module = "joda-time")
+    }
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

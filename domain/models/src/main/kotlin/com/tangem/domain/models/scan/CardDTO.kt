@@ -8,7 +8,7 @@ import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
-import java.util.Date
+import java.util.*
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
 /**
@@ -103,6 +103,7 @@ data class CardDTO(
         val supportedEncryptionModes: List<EncryptionMode>,
         val isFilesAllowed: Boolean,
         val isHDWalletAllowed: Boolean,
+        val isKeysImportAllowed: Boolean,
     ) {
         constructor(settings: Card.Settings) : this(
             securityDelay = settings.securityDelay,
@@ -115,6 +116,7 @@ data class CardDTO(
             supportedEncryptionModes = settings.supportedEncryptionModes,
             isFilesAllowed = settings.isFilesAllowed,
             isHDWalletAllowed = settings.isHDWalletAllowed,
+            isKeysImportAllowed = settings.isKeysImportAllowed,
         )
     }
 
