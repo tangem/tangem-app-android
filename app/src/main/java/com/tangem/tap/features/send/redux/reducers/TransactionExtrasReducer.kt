@@ -48,7 +48,10 @@ class TransactionExtrasReducer : SendInternalReducer {
             Blockchain.Stellar -> TransactionExtrasState(xlmMemo = XlmMemoState())
             Blockchain.Binance -> TransactionExtrasState(binanceMemo = BinanceMemoState())
             Blockchain.TON, Blockchain.TONTestnet -> TransactionExtrasState(tonMemoState = TonMemoState())
-            Blockchain.Cosmos -> TransactionExtrasState(cosmosMemoState = CosmosMemoState())
+            Blockchain.Cosmos,
+            Blockchain.TerraV1,
+            Blockchain.TerraV2,
+            -> TransactionExtrasState(cosmosMemoState = CosmosMemoState())
             else -> emptyResult
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
