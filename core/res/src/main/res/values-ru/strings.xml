@@ -338,11 +338,11 @@
     <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
     <string name="send_validation_invalid_address">Неверный адрес</string>
     <string name="shop_buy_now">Купить сейчас</string>
-    <string name="shop_free">Бесплатно</string>
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Другие способы оплаты</string>
-    <string name="shop_shipping">Доставка</string>
+    <string name="shop_pre_order_now">Сделать предзаказ</string>
+    <string name="shop_sold_out_description_prefix">Все распродано, но не огорчайтесь! Мы уже производим новые партии Tangem Wallet. Чтобы получить ваш кошелек скорее, оформите предзаказ сейчас. Отправка заказов начнется</string>
     <string name="shop_total">Итого</string>
     <string name="solana_rent_warning">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
