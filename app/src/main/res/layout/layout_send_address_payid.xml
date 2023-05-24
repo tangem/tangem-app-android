@@ -259,6 +259,37 @@
 
         </FrameLayout>
 
+        <FrameLayout
+            android:id="@+id/cosmosMemoContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCosmosMemo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/send_extras_hint_memo"
+                app:boxBackgroundColor="@color/backgroundLightGray"
+                app:errorIconDrawable="@null">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCosmosMemo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/backgroundLightGray"
+                    android:ellipsize="end"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:singleLine="true"
+                    android:textSize="16sp"
+                    tools:text="Ton memo" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </FrameLayout>
+
     </LinearLayout>
 
 </LinearLayout>
