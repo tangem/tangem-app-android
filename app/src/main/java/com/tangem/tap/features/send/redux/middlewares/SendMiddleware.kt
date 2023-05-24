@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -171,6 +172,7 @@ private fun sendTransaction(
     transactionExtras.xrpDestinationTag?.tag?.let {
         txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it))
     }
+    transactionExtras.cosmosMemoState?.memo?.let { txData = txData.copy(extras = CosmosTransactionExtras(it)) }
     transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
 
     scope.launch {
