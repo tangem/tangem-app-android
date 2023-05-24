@@ -149,6 +149,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     private fun setupTransactionExtrasLayout() = with(binding.lSendAddressPayid) {
+        // TODO: AND-3619
         etXlmMemo.inputtedTextAsFlow()
             .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter {
