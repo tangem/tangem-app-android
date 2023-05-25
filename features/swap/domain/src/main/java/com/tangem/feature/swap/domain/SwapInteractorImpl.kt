@@ -154,7 +154,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken))
         val fromTokenAddress = getTokenAddress(fromToken)
         val toTokenAddress = getTokenAddress(toToken)
-        val isAllowedToSpend = checkAllowance(networkId, fromTokenAddress)
+        val isAllowedToSpend = isAllowedToSpend(networkId, fromTokenAddress, amount)
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             transactionManager.updateWalletManager(networkId, derivationPath)
@@ -295,13 +295,14 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun checkAllowance(networkId: String, fromTokenAddress: String): Boolean {
+    private suspend fun isAllowedToSpend(networkId: String, fromTokenAddress: String, amount: SwapAmount): Boolean {
         val allowance = repository.checkTokensSpendAllowance(
             networkId = networkId,
             tokenAddress = fromTokenAddress,
             walletAddress = userWalletManager.getWalletAddress(networkId, derivationPath),
         )
-        return allowance.error == DataError.NoError && allowance.dataModel != ZERO_BALANCE
+        val allowanceAmount = allowance.dataModel?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        return allowance.error == DataError.NoError && allowanceAmount >= amount.value.movePointRight(amount.decimals)
     }
 
     private fun createEmptyAmountState(networkId: String, fromToken: Currency, toToken: Currency): SwapState {
