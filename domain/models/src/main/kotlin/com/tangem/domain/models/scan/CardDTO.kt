@@ -103,7 +103,7 @@ data class CardDTO(
         val supportedEncryptionModes: List<EncryptionMode>,
         val isFilesAllowed: Boolean,
         val isHDWalletAllowed: Boolean,
-        val isKeysImportAllowed: Boolean,
+        val isKeysImportAllowed: Boolean = false,
     ) {
         constructor(settings: Card.Settings) : this(
             securityDelay = settings.securityDelay,
