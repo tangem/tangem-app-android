@@ -184,7 +184,11 @@ internal class SwapViewModel @Inject constructor(
                             uiStateHolder = uiState,
                             quoteModel = swapState,
                             fromToken = fromToken,
-                        )
+                        ) { updatedFee ->
+                            dataState = dataState.copy(
+                                selectedFee = updatedFee,
+                            )
+                        }
                     }
                     is SwapState.EmptyAmountState -> {
                         uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -213,6 +217,7 @@ internal class SwapViewModel @Inject constructor(
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
+                selectedFee = swapDataModel?.fee?.normalFee,
             )
         }
     }
