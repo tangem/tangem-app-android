@@ -575,8 +575,10 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun proxyFeesToFeeState(networkId: String, proxyFees: ProxyFees): TxFeeState {
-        val normalFeeValue = proxyFees.normalFee.fee.value
-        val priorityFeeValue = proxyFees.priorityFee.fee.value
+        val normalFeeValue = proxyFees.minFee.fee.value // in swap for normal use min fee
+        val normalFeeGas = proxyFees.minFee.gasLimit.toInt()
+        val priorityFeeValue = proxyFees.normalFee.fee.value // in swap for priority use normal fee
+        val priorityFeeGas = proxyFees.normalFee.gasLimit.toInt()
         val feesFiat = getFormattedFiatFees(networkId, normalFeeValue, priorityFeeValue)
         val normalFiatFee = requireNotNull(feesFiat.getOrNull(0)) { "feesFiat item 0 couldn't be null" }
         val priorityFiatFee = requireNotNull(feesFiat.getOrNull(1)) { "feesFiat item 1 couldn't be null" }
@@ -593,13 +595,13 @@ internal class SwapInteractorImpl @Inject constructor(
         return TxFeeState(
             normalFee = TxFee(
                 feeValue = normalFeeValue,
-                gasLimit = proxyFees.normalFee.gasLimit.toInt(),
+                gasLimit = normalFeeGas,
                 feeFiatFormatted = normalFiatFee,
                 feeCryptoFormatted = normalCryptoFee,
             ),
             priorityFee = TxFee(
                 feeValue = priorityFeeValue,
-                gasLimit = proxyFees.priorityFee.gasLimit.toInt(),
+                gasLimit = priorityFeeGas,
                 feeFiatFormatted = priorityFiatFee,
                 feeCryptoFormatted = priorityCryptoFee,
             ),
