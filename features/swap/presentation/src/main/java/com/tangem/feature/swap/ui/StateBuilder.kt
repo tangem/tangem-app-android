@@ -103,10 +103,20 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
+    /**
+     * Create quotes loaded state
+     *
+     * @param uiStateHolder whole screen state
+     * @param quoteModel data model
+     * @param fromToken token data to swap
+     * @param onFeeSetup callback for reset fee after auto update
+     * @return updated whole screen state
+     */
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: Currency,
+        onFeeSetup: (TxFee) -> Unit,
     ): SwapStateHolder {
         val warnings = mutableListOf<SwapWarning>()
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
@@ -122,7 +132,7 @@ internal class StateBuilder(val actions: UiActions) {
         if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
             warnings.add(SwapWarning.HighPriceImpact((quoteModel.priceImpact * HUNDRED_PERCENTS).toInt()))
         }
-        val feeState = createFeeState(quoteModel, uiStateHolder)
+        val feeState = createFeeState(quoteModel, uiStateHolder, onFeeSetup)
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
@@ -282,22 +292,31 @@ internal class StateBuilder(val actions: UiActions) {
         }
     }
 
-    private fun createFeeState(quoteModel: SwapState.QuotesLoadedState, uiStateHolder: SwapStateHolder): FeeState {
+    private fun createFeeState(
+        quoteModel: SwapState.QuotesLoadedState,
+        uiStateHolder: SwapStateHolder,
+        onFeeSetup: (TxFee) -> Unit,
+    ): FeeState {
         val previousFeeState = when (val stateFee = uiStateHolder.fee) {
             is FeeState.Loaded -> stateFee.state
             is FeeState.NotEnoughFundsWarning -> stateFee.state
             else -> null
         }
+        val selectFeeState = createSelectFeeState(
+            fee = quoteModel.swapDataModel?.fee,
+            previousState = previousFeeState,
+            onFeeSetup = onFeeSetup,
+        )
         return if (quoteModel.preparedSwapConfigState.isFeeEnough) {
             FeeState.Loaded(
                 tangemFee = quoteModel.tangemFee,
-                state = createSelectFeeState(quoteModel.swapDataModel?.fee, previousFeeState),
+                state = selectFeeState,
                 onSelectItem = actions.onSelectItemFee,
             )
         } else {
             FeeState.NotEnoughFundsWarning(
                 tangemFee = quoteModel.tangemFee,
-                state = createSelectFeeState(quoteModel.swapDataModel?.fee, previousFeeState),
+                state = selectFeeState,
                 onSelectItem = actions.onSelectItemFee,
             )
         }
@@ -422,9 +441,11 @@ internal class StateBuilder(val actions: UiActions) {
     private fun createSelectFeeState(
         fee: TxFeeState?,
         previousState: SelectableItemsState<TxFee>?,
+        onFeeSetup: (TxFee) -> Unit,
     ): SelectableItemsState<TxFee>? {
         if (fee == null) return null
         if (previousState == null) {
+            onFeeSetup.invoke(fee.normalFee) // if there is no previous state, setup normal fee by default
             val selectedItemId = 0
             // by default preselect normal
             val preselectedItem = Item(
@@ -469,8 +490,10 @@ internal class StateBuilder(val actions: UiActions) {
                         ),
                     )
             val selectedEndText = if (normalFeeItem.isSelected) {
+                onFeeSetup.invoke(fee.normalFee)
                 normalFeeItem.endText
             } else {
+                onFeeSetup.invoke(fee.priorityFee)
                 priorityFeeItem.endText
             }
             return previousState.copy(
