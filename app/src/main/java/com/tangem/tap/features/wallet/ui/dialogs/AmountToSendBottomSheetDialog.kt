@@ -5,11 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.common.extensions.toFormattedString
@@ -55,7 +51,7 @@ class AmountToSendBottomSheetDialog(
     }
 }
 
-class ChooseAmountAdapter : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
+private class ChooseAmountAdapter : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmountViewHolder {
         val binding = ItemWalletAmountToSendBinding.inflate(
