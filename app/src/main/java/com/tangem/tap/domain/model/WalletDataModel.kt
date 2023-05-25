@@ -79,6 +79,7 @@ data class WalletDataModel(
 
     data class Unreachable(
         override val errorMessage: String?,
+        override val amount: BigDecimal = BigDecimal.ZERO,
     ) : Status() {
         override val isErrorStatus: Boolean = true
     }

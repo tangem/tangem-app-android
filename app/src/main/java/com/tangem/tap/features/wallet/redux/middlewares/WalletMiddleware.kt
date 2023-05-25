@@ -191,17 +191,18 @@ class WalletMiddleware {
                             selectedWalletData = selectedWalletData,
                         )
                     } else {
-                        if (sendableAmounts.size != 1) {
+                        val isSingleAmount = sendableAmounts.size == 1
+                        if (isSingleAmount) {
+                            makeInitSendStateActionByAmount(
+                                amount = sendableAmounts.first(),
+                                walletStore = walletStore,
+                                walletManager = walletManager,
+                                selectedWalletData = selectedWalletData,
+                            )
+                        } else {
                             store.dispatch(WalletAction.DialogAction.ChooseCurrency(sendableAmounts))
                             return
                         }
-
-                        makeInitSendStateActionByAmount(
-                            amount = sendableAmounts.first(),
-                            walletStore = walletStore,
-                            walletManager = walletManager,
-                            selectedWalletData = selectedWalletData,
-                        )
                     }
                 } else {
                     // action.amount received from the ChooseCurrency dialog
