@@ -40,7 +40,6 @@ sealed class PermissionDataState {
         val amount: String,
         val walletAddress: String,
         val spenderAddress: String,
-        val fee: String,
         val requestApproveData: RequestApproveStateData,
     ) : PermissionDataState()
 
@@ -59,8 +58,7 @@ data class TokenSwapInfo(
 )
 
 data class RequestApproveStateData(
-    val fee: BigDecimal,
-    val gasLimit: Int,
+    val fee: TxFeeState,
     val approveModel: ApproveModel,
 )
 
