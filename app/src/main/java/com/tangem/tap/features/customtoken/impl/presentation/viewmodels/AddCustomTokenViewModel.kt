@@ -18,6 +18,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.*
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
@@ -198,6 +199,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     (blockchain.isEvm() || blockchain.canHandleTokens()) &&
                         reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
                 }
+                .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
         }
 
@@ -321,7 +323,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isDerivationPathSelected(): Boolean {
-        return uiState.form.derivationPathSelectorField?.selectedItem?.blockchain != Blockchain.Unknown
+        return with(uiState.form.derivationPathSelectorField?.selectedItem?.blockchain) {
+            this != null && this != Blockchain.Unknown
+        }
     }
 
     private fun updateWarnings() {
@@ -516,20 +520,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun getDerivationPath(): DerivationPath? {
-        val isNotDerivationPathSelected = !isDerivationPathSelected()
-        val network = if (isNotDerivationPathSelected) {
-            uiState.form.networkSelectorField.selectedItem.blockchain
+        val derivationStyle = if (!isDerivationPathSelected()) {
+            reduxStateHolder.scanResponse?.card?.derivationStyle
         } else {
-            uiState.form.derivationPathSelectorField?.selectedItem?.blockchain
+            DerivationStyle.LEGACY
         }
 
-        return network?.derivationPath(
-            style = if (isNotDerivationPathSelected) {
-                reduxStateHolder.scanResponse?.card?.derivationStyle
-            } else {
-                DerivationStyle.LEGACY
-            },
-        )
+        return when (val derivationNetwork = uiState.form.derivationPathSelectorField?.selectedItem?.blockchain) {
+            Blockchain.Unknown -> uiState.form.networkSelectorField.selectedItem.blockchain
+            else -> derivationNetwork
+        }?.derivationPath(derivationStyle)
     }
 
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
@@ -626,34 +626,32 @@ internal class AddCustomTokenViewModel @Inject constructor(
         fun onAddCustomTokenClick() {
             if (!isNetworkSelected()) return
 
-            val address = uiState.form.contractAddressInputField.value
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
-                    Currency.Token(
+                    CustomCurrency.CustomToken(
                         token = Token(
                             name = uiState.form.tokenNameInputField.value,
                             symbol = uiState.form.tokenSymbolInputField.value,
-                            contractAddress = address,
+                            contractAddress = uiState.form.contractAddressInputField.value,
                             decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
                             id = foundToken?.id,
                         ),
-                        blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
-                        derivationPath = getDerivationPath()?.rawPath,
+                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        derivationPath = getDerivationPath(),
                     )
                 }
-
                 CustomTokenType.BLOCKCHAIN -> {
-                    Currency.Blockchain(
-                        blockchain = uiState.form.networkSelectorField.selectedItem.blockchain,
-                        derivationPath = getDerivationPath()?.rawPath,
+                    CustomCurrency.CustomBlockchain(
+                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        derivationPath = getDerivationPath(),
                     )
                 }
             }
 
-            analyticsSender.sendWhenAddTokenButtonClicked(currency, address)
+            analyticsSender.sendWhenAddTokenButtonClicked(currency)
 
-            viewModelScope.launch(dispatchers.main) {
-                runCatching(dispatchers.io) { featureInteractor.saveToken(currency, address) }
+            viewModelScope.launch(dispatchers.io) {
+                runCatching { featureInteractor.saveToken(currency) }
                     .onSuccess { featureRouter.openWalletScreen() }
                     .onFailure(Timber::e)
             }
