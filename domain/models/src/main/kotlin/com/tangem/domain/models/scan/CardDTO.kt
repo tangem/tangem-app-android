@@ -310,8 +310,8 @@ data class CardDTO(
             internal fun fromSdkStatus(sdkStatus: Card.BackupStatus?): BackupStatus? {
                 return when (sdkStatus) {
                     is Card.BackupStatus.NoBackup -> NoBackup
-                    is Card.BackupStatus.CardLinked -> CardLinked(sdkStatus.cardCount)
-                    is Card.BackupStatus.Active -> Active(sdkStatus.cardCount)
+                    is Card.BackupStatus.CardLinked -> CardLinked(sdkStatus.cardsCount)
+                    is Card.BackupStatus.Active -> Active(sdkStatus.cardsCount)
                     null -> null
                 }
             }
