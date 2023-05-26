@@ -13,6 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.ApproveType
@@ -123,7 +125,7 @@ private fun ApprovalBottomSheetInfo(data: SwapPermissionState.ReadyForRequest) {
         )
         SpacerH24()
         DividerBottomSheet()
-        FeeItem(fee = data.fee)
+        FeeItem(fee = data.fee.resolveReference())
         SubtitleItem(
             subtitle = stringResource(id = R.string.swapping_permission_fee_footer),
             modifier = Modifier.fillMaxWidth(),
@@ -303,7 +305,7 @@ private val previewData = SwapPermissionState.ReadyForRequest(
     amount = "∞",
     walletAddress = "",
     spenderAddress = "",
-    fee = "2,14$",
+    fee = TextReference.Str("2,14$"),
     approveType = ApproveType.UNLIMITED,
     approveButton = ApprovePermissionButton(true) {},
     cancelButton = CancelPermissionButton(true),
