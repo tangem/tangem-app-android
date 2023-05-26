@@ -5,6 +5,7 @@ import com.tangem.feature.swap.domain.converters.CryptoCurrencyConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapApproveType
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
@@ -107,29 +108,23 @@ internal class SwapInteractorImpl @Inject constructor(
             ?: loadedTokens.firstOrNull { it.token.id == id }?.token
     }
 
-    override suspend fun givePermissionToSwap(
-        networkId: String,
-        approveData: RequestApproveStateData,
-        forTokenContractAddress: String,
-        fromToken: Currency,
-        approveType: SwapApproveType,
-    ): TxState {
-        val dataToSign = if (approveType == SwapApproveType.UNLIMITED) {
-            repository.dataToApprove(networkId, getTokenAddress(fromToken)).data
+    override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
+        val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
+            repository.dataToApprove(networkId, getTokenAddress(permissionOptions.fromToken)).data
         } else {
-            approveData.approveModel.data
+            permissionOptions.approveData.approveModel.data
         }
         val result = transactionManager.sendApproveTransaction(
             networkId = networkId,
-            feeAmount = approveData.fee,
-            gasLimit = approveData.gasLimit,
-            destinationAddress = approveData.approveModel.toAddress,
+            feeAmount = permissionOptions.txFee.feeValue,
+            gasLimit = permissionOptions.txFee.gasLimit,
+            destinationAddress = permissionOptions.approveData.approveModel.toAddress,
             dataToSign = dataToSign,
             derivationPath = derivationPath,
         )
         return when (result) {
             is SendTxResult.Success -> {
-                allowPermissionsHandler.addAddressToInProgress(forTokenContractAddress)
+                allowPermissionsHandler.addAddressToInProgress(permissionOptions.forTokenContractAddress)
                 TxState.TxSent(txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath) ?: "")
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
@@ -414,7 +409,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 val isBalanceIncludeFeeEnough =
                     isBalanceEnough(networkId, fromToken, amount, txFeeState.priorityFee.feeValue)
                 val isFeeEnough = checkFeeIsEnough(
-                    fee = txFeeState.priorityFee.feeValue,
+                    fee = txFeeState.normalFee.feeValue,
                     spendAmount = amount,
                     networkId = networkId,
                     fromToken = fromToken,
@@ -527,12 +522,7 @@ internal class SwapInteractorImpl @Inject constructor(
             data = transactionData.data,
             derivationPath = derivationPath,
         )
-        val feeFiat = getFormattedFiatFees(networkId, feeData.normalFee.fee.value)
-        val formattedFee = amountFormatter.formatBigDecimalAmountToUI(
-            amount = feeData.normalFee.fee.value,
-            decimals = transactionManager.getNativeTokenDecimals(networkId),
-            currency = userWalletManager.getNetworkCurrency(networkId),
-        ) + (feeFiat.firstOrNull() ?: "")
+        val feeState = proxyFeesToFeeState(networkId, feeData)
         val isFeeEnough = checkFeeIsEnough(
             fee = feeData.normalFee.fee.value,
             spendAmount = SwapAmount.zeroSwapAmount(),
@@ -545,10 +535,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 amount = INFINITY_SYMBOL,
                 walletAddress = getWalletAddress(networkId),
                 spenderAddress = transactionData.toAddress,
-                fee = formattedFee,
                 requestApproveData = RequestApproveStateData(
-                    fee = feeData.normalFee.fee.value,
-                    gasLimit = feeData.normalFee.gasLimit.toInt(),
+                    fee = feeState,
                     approveModel = transactionData,
                 ),
             ),
