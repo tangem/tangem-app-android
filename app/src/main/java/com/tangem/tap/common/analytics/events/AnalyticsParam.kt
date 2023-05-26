@@ -93,15 +93,22 @@ sealed class AnalyticsParam {
         object Sell : TxSentFrom("Sell")
     }
 
+    sealed class WalletCreationType(val value: String) {
+        object PrivateKey : WalletCreationType("Private key")
+        object NewSeed : WalletCreationType("New seed")
+        object SeedImport : WalletCreationType("Seed import")
+    }
+
     companion object Key {
-        const val Source = "Source"
-        const val Balance = "Balance"
-        const val Batch = "Batch"
-        const val ProductType = "Product Type"
-        const val Firmware = "Firmware"
-        const val Currency = "Currency"
-        const val ErrorDescription = "Error Description"
-        const val ErrorCode = "Error Code"
-        const val ErrorKey = "Error Key"
+        const val SOURCE = "Source"
+        const val BALANCE = "Balance"
+        const val BATCH = "Batch"
+        const val PRODUCT_TYPE = "Product Type"
+        const val FIRMWARE = "Firmware"
+        const val CURRENCY = "Currency"
+        const val ERROR_DESCRIPTION = "Error Description"
+        const val ERROR_CODE = "Error Code"
+        const val ERROR_KEY = "Error Key"
+        const val CREATION_TYPE = "Creation type"
     }
 }
