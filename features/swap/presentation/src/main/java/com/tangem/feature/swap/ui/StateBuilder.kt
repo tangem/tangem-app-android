@@ -161,6 +161,7 @@ internal class StateBuilder(val actions: UiActions) {
             permissionState = convertPermissionState(
                 lastPermissionState = uiStateHolder.permissionState,
                 permissionDataState = quoteModel.permissionState,
+                feeState = feeState,
                 onGivePermissionClick = actions.onGivePermissionClick,
                 onChangeApproveType = actions.onChangeApproveType,
             ),
@@ -269,6 +270,14 @@ internal class StateBuilder(val actions: UiActions) {
         val newSelectedItem = item.copy(
             startText = TextReference.Res(R.string.send_network_fee_title),
         )
+        val permissionState = uiState.permissionState
+        val newPermissionState = if (permissionState is SwapPermissionState.ReadyForRequest) {
+            permissionState.copy(
+                fee = newSelectedItem.endText,
+            )
+        } else {
+            permissionState
+        }
         return when (val fee = uiState.fee) {
             is FeeState.Loaded -> {
                 val newState = fee.state?.copy(
@@ -277,6 +286,7 @@ internal class StateBuilder(val actions: UiActions) {
                 )
                 uiState.copy(
                     fee = fee.copy(state = newState),
+                    permissionState = newPermissionState,
                 )
             }
             is FeeState.NotEnoughFundsWarning -> {
@@ -286,6 +296,7 @@ internal class StateBuilder(val actions: UiActions) {
                 )
                 uiState.copy(
                     fee = fee.copy(state = newState),
+                    permissionState = newPermissionState,
                 )
             }
             else -> uiState
@@ -302,8 +313,14 @@ internal class StateBuilder(val actions: UiActions) {
             is FeeState.NotEnoughFundsWarning -> stateFee.state
             else -> null
         }
+        val permissionState = quoteModel.permissionState
+        val feeState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
+            permissionState.requestApproveData.fee
+        } else {
+            quoteModel.swapDataModel?.fee
+        }
         val selectFeeState = createSelectFeeState(
-            fee = quoteModel.swapDataModel?.fee,
+            fee = feeState,
             previousState = previousFeeState,
             onFeeSetup = onFeeSetup,
         )
@@ -407,6 +424,7 @@ internal class StateBuilder(val actions: UiActions) {
     private fun convertPermissionState(
         lastPermissionState: SwapPermissionState,
         permissionDataState: PermissionDataState,
+        feeState: FeeState,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
     ): SwapPermissionState {
@@ -414,6 +432,10 @@ internal class StateBuilder(val actions: UiActions) {
             lastPermissionState.approveType
         } else {
             ApproveType.UNLIMITED
+        }
+        val fee = when (feeState) {
+            is FeeSelectState -> feeState.state?.selectedItem?.endText
+            else -> null
         }
         return when (permissionDataState) {
             PermissionDataState.Empty -> SwapPermissionState.Empty
@@ -425,7 +447,7 @@ internal class StateBuilder(val actions: UiActions) {
                 approveType = approveType,
                 walletAddress = getShortAddressValue(permissionDataState.walletAddress),
                 spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
-                fee = permissionDataState.fee,
+                fee = fee ?: TextReference.Str(""),
                 approveButton = ApprovePermissionButton(
                     enabled = true,
                     onClick = onGivePermissionClick,
