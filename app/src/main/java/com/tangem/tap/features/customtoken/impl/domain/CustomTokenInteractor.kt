@@ -1,8 +1,8 @@
 package com.tangem.tap.features.customtoken.impl.domain
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
-import com.tangem.tap.features.wallet.models.Currency
 
 /**
  * Custom token interactor
@@ -14,6 +14,6 @@ interface CustomTokenInteractor {
     /** Find token by [address] and [blockchain] */
     suspend fun findToken(address: String, blockchain: Blockchain): FoundToken
 
-    /** Save token [currency] with contact address [address] */
-    suspend fun saveToken(currency: Currency, address: String)
+    /** Save token [customCurrency] */
+    suspend fun saveToken(customCurrency: CustomCurrency)
 }
