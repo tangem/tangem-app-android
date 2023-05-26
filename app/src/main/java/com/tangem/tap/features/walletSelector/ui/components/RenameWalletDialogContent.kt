@@ -1,11 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -26,7 +22,7 @@ internal fun RenameWalletDialogContent(dialog: DialogModel.RenameWalletDialog) {
     TextInputDialog(
         fieldValue = value,
         confirmButton = DialogButton(
-            title = stringResource(id = R.string.common_save),
+            title = stringResource(id = R.string.common_ok),
             enabled = value.text.isNotEmpty() && value.text != dialog.currentName,
             onClick = { dialog.onConfirm(value.text) },
         ),
