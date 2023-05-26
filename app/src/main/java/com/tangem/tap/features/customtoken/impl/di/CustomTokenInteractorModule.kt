@@ -1,7 +1,6 @@
 package com.tangem.tap.features.customtoken.impl.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.lib.crypto.DerivationManager
 import com.tangem.tap.features.customtoken.impl.data.DefaultCustomTokenRepository
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.DefaultCustomTokenInteractor
@@ -26,7 +25,6 @@ internal object CustomTokenInteractorModule {
         tangemTechApi: TangemTechApi,
         appCoroutineDispatcherProvider: AppCoroutineDispatcherProvider,
         reduxStateHolder: AppStateHolder,
-        derivationManager: DerivationManager,
     ): CustomTokenInteractor {
         return DefaultCustomTokenInteractor(
             featureRepository = DefaultCustomTokenRepository(
@@ -34,7 +32,6 @@ internal object CustomTokenInteractorModule {
                 dispatchers = appCoroutineDispatcherProvider,
                 reduxStateHolder = reduxStateHolder,
             ),
-            derivationManager = derivationManager,
             reduxStateHolder = reduxStateHolder,
         )
     }
