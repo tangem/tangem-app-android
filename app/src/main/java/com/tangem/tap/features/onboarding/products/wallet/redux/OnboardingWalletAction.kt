@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.net.Uri
 import com.tangem.common.CompletionResult
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import org.rekotlin.Action
 
@@ -37,6 +38,7 @@ sealed class OnboardingWallet2Action : OnboardingWalletAction() {
 
     data class ImportWallet(
         val mnemonicComponents: List<String>,
+        val seedPhraseSource: SeedPhraseSource,
         val callback: (CompletionResult<CreateWalletResponse>) -> Unit,
     ) : OnboardingWallet2Action()
 
