@@ -75,7 +75,7 @@ reactiveNetwork = "3.0.8"
 # region Tangem
 tangemBlockchainSdk = "develop-222"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-242"
+tangemCardSdk = "develop-248"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
