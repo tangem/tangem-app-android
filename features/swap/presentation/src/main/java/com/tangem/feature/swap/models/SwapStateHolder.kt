@@ -57,17 +57,21 @@ sealed class FeeState(open val tangemFee: Double) {
 
     data class Loaded(
         override val tangemFee: Double,
-        val state: SelectableItemsState<TxFee>?,
+        override val state: SelectableItemsState<TxFee>?,
         val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee)
+    ) : FeeState(tangemFee), FeeSelectState
 
     object Loading : FeeState(0.0)
 
     data class NotEnoughFundsWarning(
         override val tangemFee: Double,
-        val state: SelectableItemsState<TxFee>?,
+        override val state: SelectableItemsState<TxFee>?,
         val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee)
+    ) : FeeState(tangemFee), FeeSelectState
+}
+
+sealed interface FeeSelectState {
+    val state: SelectableItemsState<TxFee>?
 }
 
 sealed interface TransactionCardType {
