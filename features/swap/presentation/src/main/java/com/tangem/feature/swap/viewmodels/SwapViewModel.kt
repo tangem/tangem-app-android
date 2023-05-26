@@ -12,6 +12,7 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapPermissionState
@@ -276,17 +277,22 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.givePermissionToSwap(
                     networkId = dataState.networkId,
-                    approveData = requireNotNull(dataState.approveDataModel) {
-                        Timber.e("dataState.approveDataModel might not be null")
-                    },
-                    forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
-                        ?: "",
-                    fromToken = requireNotNull(dataState.fromCurrency) {
-                        Timber.e("dataState.fromCurrency might not be null")
-                    },
-                    approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {
-                        Timber.e("uiState.permissionState should be SwapPermissionState.ReadyForRequest")
-                    }.approveType.toDomainApproveType(),
+                    permissionOptions = PermissionOptions(
+                        approveData = requireNotNull(dataState.approveDataModel) {
+                            "dataState.approveDataModel might not be null"
+                        },
+                        forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
+                            ?: "",
+                        fromToken = requireNotNull(dataState.fromCurrency) {
+                            "dataState.fromCurrency might not be null"
+                        },
+                        approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {
+                            "uiState.permissionState should be SwapPermissionState.ReadyForRequest"
+                        }.approveType.toDomainApproveType(),
+                        txFee = requireNotNull(dataState.selectedFee) {
+                            "dataState.selectedFee shouldn't be null"
+                        },
+                    ),
                 )
             }
                 .onSuccess {
