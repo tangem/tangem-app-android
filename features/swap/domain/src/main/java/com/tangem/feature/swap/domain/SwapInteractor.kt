@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.SwapApproveType
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
@@ -40,19 +40,10 @@ interface SwapInteractor {
      * Gives permission to swap, this starts scan card process
      *
      * @param networkId network in which selected token
-     * @param approveData tx data to give approve, it loaded from 1inch in findBestQuote if needed
-     * @param forTokenContractAddress token contract address for which needs permission
-     * @param fromToken which token will be swapping
-     * @param approveType unlimited or tx amount approve
+     * @param permissionOptions data to give permissions
      */
     @Throws(IllegalStateException::class)
-    suspend fun givePermissionToSwap(
-        networkId: String,
-        approveData: RequestApproveStateData,
-        forTokenContractAddress: String,
-        fromToken: Currency,
-        approveType: SwapApproveType,
-    ): TxState
+    suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState
 
     /**
      * Find best quote for given tokens to swap
