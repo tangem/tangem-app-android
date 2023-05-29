@@ -1,8 +1,6 @@
 package com.tangem.tap.features.customtoken.impl.presentation.models
 
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.wallet.R
@@ -94,106 +92,94 @@ internal sealed interface AddCustomTokenInputField {
     /** Label */
     val label: TextReference
 
-    /** Input availability */
-    val isEnabled: Boolean
-
-    /** Flag that determine if current value has error */
-    val isError: Boolean
-
     /** Placeholder (hint) */
     val placeholder: TextReference
-
-    /** Flag that determine the processing of current value */
-    val isLoading: Boolean
 
     /**
      * Input field model to enter the contract address
      *
-     * @property value         current value
-     * @property onValueChange lambda be invoked when value is been changed
-     * @property isError       flag that determine if current value has error
-     * @property isLoading     flag that determine the processing of current value
+     * @property value           current value
+     * @property onValueChange   lambda be invoked when value is been changed
+     * @property keyboardOptions keyboard options
+     * @property label           label
+     * @property placeholder     placeholder (hint)
+     * @property isLoading       flag that determine the processing of current value
+     * @property isError         flag that determine if current value has error
+     * @property error           error description
      */
     data class ContactAddress(
         override val value: String,
         override val onValueChange: (String) -> Unit,
-        override val isError: Boolean,
-        override val isLoading: Boolean,
-    ) : AddCustomTokenInputField {
-        override val isEnabled = true
-        override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val label = TextReference.Res(R.string.custom_token_contract_address_input_title)
-        override val placeholder = TextReference.Str(value = "0x0000000000000000000000000000000000000000")
-    }
+        override val keyboardOptions: KeyboardOptions,
+        override val label: TextReference,
+        override val placeholder: TextReference,
+        val isLoading: Boolean,
+        val isError: Boolean,
+        val error: TextReference? = null,
+    ) : AddCustomTokenInputField
 
     /**
      * Input field model to enter the token name
      *
-     * @property value         current value
-     * @property onValueChange lambda be invoked when value is been changed
-     * @property isEnabled     input availability
-     * @property isError       flag that determine if current value has error
+     * @property value           current value
+     * @property onValueChange   lambda be invoked when value is been changed
+     * @property keyboardOptions keyboard options
+     * @property label           label
+     * @property placeholder     placeholder (hint)
+     * @property isEnabled       input availability
      */
     data class TokenName(
         override val value: String,
         override val onValueChange: (String) -> Unit,
-        override val isEnabled: Boolean,
-        override val isError: Boolean,
-    ) : AddCustomTokenInputField {
-        override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val label = TextReference.Res(R.string.custom_token_name_input_title)
-        override val placeholder = TextReference.Res(id = R.string.custom_token_name_input_placeholder)
-        override val isLoading = false
-    }
+        override val keyboardOptions: KeyboardOptions,
+        override val label: TextReference,
+        override val placeholder: TextReference,
+        val isEnabled: Boolean,
+    ) : AddCustomTokenInputField
 
     /**
      * Input field model to enter the token symbol
      *
-     * @property value         current value
-     * @property onValueChange lambda be invoked when value is been changed
-     * @property isEnabled     input availability
-     * @property isError       flag that determine if current value has error
+     * @property value           current value
+     * @property onValueChange   lambda be invoked when value is been changed
+     * @property keyboardOptions keyboard options
+     * @property label           label
+     * @property placeholder     placeholder (hint)
+     * @property isEnabled       input availability
      */
     data class TokenSymbol(
         override val value: String,
         override val onValueChange: (String) -> Unit,
-        override val isEnabled: Boolean,
-        override val isError: Boolean,
-    ) : AddCustomTokenInputField {
-        override val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-        override val label = TextReference.Res(R.string.custom_token_token_symbol_input_title)
-        override val placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder)
-        override val isLoading = false
-    }
+        override val keyboardOptions: KeyboardOptions,
+        override val label: TextReference,
+        override val placeholder: TextReference,
+        val isEnabled: Boolean,
+    ) : AddCustomTokenInputField
 
     /**
      * Input field model to enter the token decimals
      *
-     * @property value         current value
-     * @property onValueChange lambda be invoked when value is been changed
-     * @property isEnabled     input availability
-     * @property isError       flag that determine if current value has error
+     * @property value           current value
+     * @property onValueChange   lambda be invoked when value is been changed
+     * @property keyboardOptions keyboard options
+     * @property label           label
+     * @property placeholder     placeholder (hint)
+     * @property isEnabled       input availability
      */
     data class Decimals(
         override val value: String,
         override val onValueChange: (String) -> Unit,
-        override val isEnabled: Boolean,
-        override val isError: Boolean,
-    ) : AddCustomTokenInputField {
-        override val keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
-        override val label = TextReference.Res(R.string.custom_token_decimals_input_title)
-        override val placeholder = TextReference.Str(value = "8")
-        override val isLoading = false
-    }
+        override val keyboardOptions: KeyboardOptions,
+        override val label: TextReference,
+        override val placeholder: TextReference,
+        val isEnabled: Boolean,
+    ) : AddCustomTokenInputField
 }
 
 /** Base selector field model of add custom token screen */
 internal sealed interface AddCustomTokenSelectorField {
 
-    /** Selection availability */
-    val isEnabled: Boolean
-
-    /** Label string resource id */
+    /** Label */
     val label: TextReference
 
     /** Selected menu item */
@@ -208,35 +194,34 @@ internal sealed interface AddCustomTokenSelectorField {
     /**
      * Network selector model
      *
+     * @property label           label
      * @property selectedItem    selected menu item
      * @property items           menu items
      * @property onMenuItemClick lambda be invoked when menu item is been selected
      */
     data class Network(
+        override val label: TextReference,
         override val selectedItem: SelectorItem.Title,
         override val items: List<SelectorItem.Title>,
         override val onMenuItemClick: (Int) -> Unit,
-    ) : AddCustomTokenSelectorField {
-        override val isEnabled = true
-        override val label = TextReference.Res(R.string.custom_token_network_input_title)
-    }
+    ) : AddCustomTokenSelectorField
 
     /**
      * Derivation path selector model
      *
-     * @property isEnabled       selection availability
+     * @property label           label
      * @property selectedItem    selected menu item
      * @property items           menu items
      * @property onMenuItemClick lambda be invoked when menu item is been selected
+     * @property isEnabled       selection availability
      */
     data class DerivationPath(
-        override val isEnabled: Boolean,
+        override val label: TextReference,
         override val selectedItem: SelectorItem.TitleWithSubtitle,
         override val items: List<SelectorItem.TitleWithSubtitle>,
         override val onMenuItemClick: (Int) -> Unit,
-    ) : AddCustomTokenSelectorField {
-        override val label = TextReference.Res(R.string.custom_token_derivation_path_input_title)
-    }
+        val isEnabled: Boolean,
+    ) : AddCustomTokenSelectorField
 
     /** Base menu item model */
     sealed interface SelectorItem {
@@ -259,15 +244,38 @@ internal sealed interface AddCustomTokenSelectorField {
          * Menu item with title ans subtitle
          *
          * @property title      title text
-         * @property subtitle   subtitle text
          * @property blockchain blockchain
+         * @property subtitle   subtitle text
          */
         data class TitleWithSubtitle(
             override val title: TextReference,
-            val subtitle: TextReference,
             override val blockchain: Blockchain,
+            val subtitle: TextReference,
         ) : SelectorItem
     }
+}
+
+/**
+ * Warning model of add custom token screen
+ *
+ * @property description warning description
+ */
+internal sealed class AddCustomTokenWarning(val description: TextReference) {
+
+    /** Potential scam warning */
+    object PotentialScamToken : AddCustomTokenWarning(
+        description = TextReference.Res(R.string.custom_token_validation_error_not_found),
+    )
+
+    /** Token already added warning */
+    object TokenAlreadyAdded : AddCustomTokenWarning(
+        description = TextReference.Res(R.string.custom_token_validation_error_already_added),
+    )
+
+    /** Unsupported Solana token warning */
+    object UnsupportedSolanaToken : AddCustomTokenWarning(
+        description = TextReference.Res(R.string.alert_manage_tokens_unsupported_message),
+    )
 }
 
 /**

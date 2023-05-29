@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
-import com.tangem.tap.features.tokens.legacy.redux.ContractAddress
 
 /**
  * Network item state
@@ -62,7 +61,7 @@ sealed interface NetworkItemState {
         override val isMainNetwork: Boolean,
         val isAdded: MutableState<Boolean>,
         val id: String,
-        val address: ContractAddress?,
+        val address: String?,
         val decimalCount: Int?,
         val blockchain: Blockchain,
         val onToggleClick: (TokenItemState.ManageContent, ManageContent) -> Unit,

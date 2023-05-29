@@ -3,7 +3,6 @@ package com.tangem.tap.domain.tasks.product
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
@@ -19,9 +18,6 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
@@ -29,8 +25,9 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.operations.PreflightReadMode
-import com.tangem.operations.PreflightReadTask
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
@@ -39,7 +36,6 @@ import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
-import com.tangem.tap.domain.extensions.isFirmwareMultiwalletAllowed
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
@@ -114,7 +110,7 @@ private class ScanWalletProcessor(
             return
         }
 
-        createMissingWalletsIfNeeded(card, session, callback)
+        startLinkingForBackupIfNeeded(card, session, callback)
     }
 
     private fun readFile(
@@ -122,7 +118,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val funToContinue = { createMissingWalletsIfNeeded(card, session, callback) }
+        val funToContinue = { startLinkingForBackupIfNeeded(card, session, callback) }
 
         ReadFilesTask(fileName = "blockchainInfo", walletPublicKey = null).run(session) { result ->
 
@@ -182,45 +178,6 @@ private class ScanWalletProcessor(
             ProductType.Start2Coin
         } else {
             ProductType.Note
-        }
-    }
-
-    private fun createMissingWalletsIfNeeded(
-        card: CardDTO,
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
-        if (card.wallets.isNotEmpty() && card.backupStatus?.isActive == true) {
-            startLinkingForBackupIfNeeded(card, session, callback)
-            return
-        }
-
-        if (card.wallets.isEmpty() || !card.isFirmwareMultiwalletAllowed) {
-            startLinkingForBackupIfNeeded(card, session, callback)
-            return
-        }
-
-        val curvesToCreate = card.getCurvesForNonCreatedWallets()
-        if (curvesToCreate.isEmpty()) {
-            startLinkingForBackupIfNeeded(card, session, callback)
-            return
-        }
-
-        CreateWalletsTask(curvesToCreate).run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    PreflightReadTask(
-                        readMode = PreflightReadMode.FullCardRead,
-                        cardId = card.cardId,
-                    ).run(session) { readResult ->
-                        when (readResult) {
-                            is CompletionResult.Success -> startLinkingForBackupIfNeeded(card, session, callback)
-                            is CompletionResult.Failure -> callback(CompletionResult.Failure(readResult.error))
-                        }
-                    }
-                }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-            }
         }
     }
 
@@ -424,10 +381,4 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
             }
         }
     }
-}
-
-fun CardDTO.getCurvesForNonCreatedWallets(): List<EllipticCurve> {
-    val curvesPresent = wallets.map { it.curve }.toSet()
-    val curvesForNonCreatedWallets = supportedCurves.subtract(curvesPresent + EllipticCurve.Secp256r1)
-    return curvesForNonCreatedWallets.toList()
 }
