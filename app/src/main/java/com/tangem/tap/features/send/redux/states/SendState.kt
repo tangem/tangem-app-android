@@ -91,7 +91,7 @@ data class SendState(
     fun getButtonState(): ButtonState = if (isReadyToSend()) ButtonState.ENABLED else ButtonState.DISABLED
 
     fun getTotalAmountToSend(value: BigDecimal = amountState.amountToSendCrypto): BigDecimal {
-        val needToExtractFee = amountState.isCoinAmount() && feeState.feeIsIncluded
+        val needToExtractFee = amountState.canIncludeFee() && feeState.feeIsIncluded
         return if (needToExtractFee) value.minus(feeState.getCurrentFeeValue()) else value
     }
 
@@ -135,13 +135,16 @@ data class AmountState(
     val decimalSeparator: String = ".",
     val error: TapError? = null,
     val inputIsEnabled: Boolean = true,
+    private val feePaidInCurrencyNetworkCurrency: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.AMOUNT
 
     fun isReady(): Boolean = error == null && !amountToSendCrypto.isZero()
 
-    fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
+    private fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
+
+    fun canIncludeFee(): Boolean = isCoinAmount() || feePaidInCurrencyNetworkCurrency
 
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
         return if (!canSwitched) {
