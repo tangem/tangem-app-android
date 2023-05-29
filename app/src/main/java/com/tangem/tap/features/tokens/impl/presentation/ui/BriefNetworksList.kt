@@ -37,9 +37,9 @@ internal fun BriefNetworksList(
         exit = fadeOut(),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
-            networks.forEach {
-                key(NetworkItemState::name) {
-                    BriefNetworkItem(model = it)
+            networks.forEach { network ->
+                key(network.name + network.protocolName) {
+                    BriefNetworkItem(model = network)
                 }
             }
         }

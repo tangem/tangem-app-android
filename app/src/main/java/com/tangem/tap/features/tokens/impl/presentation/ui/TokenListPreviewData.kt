@@ -26,6 +26,7 @@ object TokenListPreviewData {
 
     fun createReadToken(): TokenItemState.ReadContent {
         return TokenItemState.ReadContent(
+            id = "1",
             fullName = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createReadNetworksList(),
