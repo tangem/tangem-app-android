@@ -82,7 +82,7 @@ class AmountMiddleware {
         val sendState = appState?.sendState ?: return
 
         dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
-        if (sendState.amountState.isCoinAmount()) {
+        if (sendState.amountState.canIncludeFee()) {
             dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true))
             dispatch(FeeActionUi.ChangeIncludeFee(true))
         }
