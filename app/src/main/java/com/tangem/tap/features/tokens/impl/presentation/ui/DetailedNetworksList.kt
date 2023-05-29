@@ -1,21 +1,10 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
@@ -56,7 +45,7 @@ internal fun DetailedNetworksList(
     ) {
         Column {
             networks.forEachIndexed { index, network ->
-                key(network.name) {
+                key(network.name + network.protocolName) {
                     DetailedNetworkItem(token = token, network = network, isLastItem = networks.size - 1 == index)
                 }
             }
