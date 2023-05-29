@@ -19,7 +19,7 @@ internal fun BiometricsDisabledWarningContent(warning: WarningModel.BiometricsDi
         onDismissDialog = warning.onDismiss,
         confirmButton = DialogButton(
             title = stringResource(id = R.string.common_ok),
-            onClick = warning.onDismiss,
+            onClick = warning.onConfirm,
         ),
     )
 }
