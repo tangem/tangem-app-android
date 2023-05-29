@@ -21,7 +21,12 @@ sealed class Onboarding(
 
         class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
         class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
-        class WalletCreatedSuccessfully : CreateWallet("Wallet Created Successfully")
+        class WalletCreatedSuccessfully(
+            creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.PrivateKey,
+        ) : CreateWallet(
+            event = "Wallet Created Successfully",
+            params = mapOf(AnalyticsParam.CREATION_TYPE to creationType.value),
+        )
     }
 
     sealed class Backup(
@@ -51,7 +56,7 @@ sealed class Onboarding(
 
         class ButtonBuyCrypto(currency: AnalyticsParam.CurrencyType) : Topup(
             event = "Button - Buy Crypto",
-            params = mapOf(AnalyticsParam.Currency to currency.value),
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
         )
 
         class ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
