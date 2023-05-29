@@ -123,7 +123,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
-    suspend fun resetToFactorySettings(cardId: String? = null): CompletionResult<CardDTO> {
+    suspend fun resetToFactorySettings(cardId: String): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
             runnable = ResetToFactorySettingsTask(),
             cardId = cardId,
