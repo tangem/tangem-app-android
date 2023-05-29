@@ -199,26 +199,50 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             binding.toolbar.inflateMenu(R.menu.menu_wallet)
         }
 
-        setupNoInternetHandling(state)
         setupCardImage(state, isSaltPay)
 
         if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
 
-        binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
-        binding.srlWallet.setOnRefreshListener {
-            if (state.state != ProgressState.Loading &&
-                state.state != ProgressState.Refreshing
-            ) {
+        setupPullToRefreshLayout(state)
+
+        binding.toolbar.setNavigationIcon(
+            if (state.canSaveUserWallets) R.drawable.ic_wallet_24 else R.drawable.ic_tap_card_24,
+        )
+    }
+
+    private fun setupPullToRefreshLayout(state: WalletState) {
+        setupErrorPullToRefreshState(state)
+
+        binding.pullToRefreshLayout.isRefreshing = state.state == ProgressState.Refreshing
+
+        binding.pullToRefreshLayout.setOnRefreshListener {
+            if (state.state != ProgressState.Loading && state.state != ProgressState.Refreshing) {
                 refreshWalletData()
             }
         }
+    }
 
-        val navigationIconRes = if (state.canSaveUserWallets) {
-            R.drawable.ic_wallet_24
+    private fun setupErrorPullToRefreshState(state: WalletState) {
+        if (state.state == ProgressState.Error) {
+            when (state.error) {
+                ErrorType.NoInternetConnection -> {
+                    isNetworkConnectionError.value = true
+                    binding.pullToRefreshLayout.isRefreshing = false
+
+                    (activity as? MainActivity)?.showSnackbar(
+                        text = R.string.wallet_notification_no_internet,
+                        buttonTitle = R.string.common_retry,
+                    )
+                    // because was added logic of autoupdate mainscreen data, remove retry
+                    // TODO("remove comment after release 4.6")
+                    // { store.dispatch(WalletAction.LoadData) }
+                }
+                else -> isNetworkConnectionError.value = false
+            }
         } else {
-            R.drawable.ic_tap_card_24
+            isNetworkConnectionError.value = false
+            (activity as? MainActivity)?.dismissSnackbar()
         }
-        binding.toolbar.setNavigationIcon(navigationIconRes)
     }
 
     private fun refreshWalletData() {
@@ -229,27 +253,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {
         warningsAdapter.submitList(warnings)
         binding.rvWarningMessages.show(warnings.isNotEmpty())
-    }
-
-    private fun setupNoInternetHandling(state: WalletState) {
-        if (state.state == ProgressState.Error) {
-            if (state.error == ErrorType.NoInternetConnection) {
-                isNetworkConnectionError.value = true
-                binding.srlWallet.isRefreshing = false
-                (activity as? MainActivity)?.showSnackbar(
-                    text = R.string.wallet_notification_no_internet,
-                    buttonTitle = R.string.common_retry,
-                )
-                // because was added logic of autoupdate mainscreen data, remove retry
-                // TODO("remove comment after release 4.6")
-                // { store.dispatch(WalletAction.LoadData) }
-            } else {
-                isNetworkConnectionError.value = false
-            }
-        } else {
-            isNetworkConnectionError.value = false
-            (activity as? MainActivity)?.dismissSnackbar()
-        }
     }
 
     private fun setupCardImage(state: WalletState, isSaltPay: Boolean) {
@@ -283,7 +286,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
                         (activity as? MainActivity)?.dismissSnackbar()
                     } else {
                         isNetworkConnectionError.value = true
-                        binding.srlWallet.isRefreshing = false
+                        binding.pullToRefreshLayout.isRefreshing = false
                         (activity as? MainActivity)?.showSnackbar(
                             text = R.string.wallet_notification_no_internet,
                             buttonTitle = R.string.common_retry,
@@ -316,6 +319,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         }
     }
 
+    @Deprecated(
+        message = "Deprecated in Java",
+        replaceWith = ReplaceWith(
+            "if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)",
+            "com.tangem.tap.store",
+            "com.tangem.wallet.R",
+        ),
+    )
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
     }
