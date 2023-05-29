@@ -7,33 +7,15 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.SimpleAlertDialog
 import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.ChooseNetworkDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.InterruptOnboardingDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.NoFundsForActivationDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.PutVisaCardDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.RegistrationErrorDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBackupCardsDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ResetBackupCardDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.*
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.RussianCardholdersWarningBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
+import com.tangem.tap.features.wallet.ui.dialogs.*
 import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -132,7 +114,10 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
-            is BackupDialog.ResetBackupCard -> ResetBackupCardDialog.create(context)
+            is BackupDialog.ResetBackupCard -> ResetBackupCardDialog.create(
+                context = context,
+                cardId = state.dialog.cardId,
+            )
             is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
             is SaltPayDialog.Activation.PutVisaCard -> PutVisaCardDialog.create(context)
             is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
