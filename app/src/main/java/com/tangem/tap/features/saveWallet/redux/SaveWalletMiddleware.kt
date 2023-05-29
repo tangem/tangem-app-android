@@ -120,9 +120,16 @@ internal class SaveWalletMiddleware {
                         )
                     }
 
+                    val savedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                        Timber.e("User wallet is not saved")
+                        return@launch
+                    }
                     store.dispatchWithMain(SaveWalletAction.Save.Success)
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
+                    store.dispatchWithMain(
+                        action = WalletAction.MultiWallet.CheckForBackupWarning(savedUserWallet.scanResponse.card),
+                    )
                 }
         }
     }
