@@ -1,36 +1,31 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.MiddleEllipsisText
-import com.tangem.core.ui.components.PrimaryButtonIconRight
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SpacerH10
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH28
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.ApprovePermissionButton
+import com.tangem.feature.swap.models.ApproveType
 import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
+    var isPermissionAlertShow by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -42,11 +37,23 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
 
         SpacerH10()
 
-        Text(
-            text = stringResource(id = R.string.swapping_permission_header),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.subtitle1,
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = stringResource(id = R.string.swapping_permission_header),
+                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography.subtitle1,
+            )
+            IconButton(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                onClick = { isPermissionAlertShow = true },
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_question_24),
+                    contentDescription = null,
+                )
+            }
+        }
 
         SpacerH10()
 
@@ -85,6 +92,16 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
         )
 
         SpacerH16()
+
+        // region dialog
+        if (isPermissionAlertShow) {
+            BasicDialog(
+                message = stringResource(id = R.string.swapping_approve_information_text),
+                title = stringResource(id = R.string.swapping_approve_information_title),
+                confirmButton = DialogButton { isPermissionAlertShow = false },
+                onDismissDialog = {},
+            )
+        }
     }
 }
 
@@ -93,20 +110,26 @@ private fun ApprovalBottomSheetInfo(data: SwapPermissionState.ReadyForRequest) {
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
-            .fillMaxWidth()
-            .padding(
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing16,
-            ),
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AmountItem(currency = data.currency, amount = data.amount)
+        AmountItem(
+            currency = data.currency,
+            approveType = data.approveType,
+            onChangeApproveType = data.onChangeApproveType,
+            approveItems = data.approveItems,
+        )
+        SubtitleItem(
+            subtitle = stringResource(id = R.string.swapping_permission_policy_type_footer),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SpacerH24()
         DividerBottomSheet()
-        WalletAddressItem(walletAddress = data.walletAddress)
-        DividerBottomSheet()
-        SpenderItem(spenderAddress = data.spenderAddress)
-        DividerBottomSheet()
-        FeeItem(fee = data.fee)
+        FeeItem(fee = data.fee.resolveReference())
+        SubtitleItem(
+            subtitle = stringResource(id = R.string.swapping_permission_fee_footer),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -123,7 +146,7 @@ private fun InformationItem(subtitle: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(vertical = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -144,27 +167,95 @@ private fun InformationItem(subtitle: String, value: String) {
 }
 
 @Composable
-private fun AmountItem(currency: String, amount: String) {
-    InformationItem(
-        subtitle = stringResource(id = R.string.swapping_permission_rows_amount, currency),
-        value = amount,
-    )
+private fun AmountItem(
+    currency: String,
+    approveType: ApproveType,
+    approveItems: ImmutableList<ApproveType>,
+    onChangeApproveType: (ApproveType) -> Unit,
+) {
+    var isExpandSelector by remember {
+        mutableStateOf(false)
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(id = R.string.swapping_permission_rows_amount, currency),
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.subtitle1,
+            maxLines = 1,
+        )
+        Box {
+            SelectorItem(
+                getTitleForApproveType(approveType = approveType),
+            ) {
+                isExpandSelector = true
+            }
+            DropdownSelector(
+                isExpanded = isExpandSelector,
+                onDismiss = { isExpandSelector = false },
+                onItemClick = { approveType ->
+                    isExpandSelector = false
+                    onChangeApproveType.invoke(approveType)
+                },
+                items = approveItems,
+            )
+        }
+    }
 }
 
 @Composable
-private fun WalletAddressItem(walletAddress: String) {
-    InformationItem(
-        subtitle = stringResource(id = R.string.swapping_permission_rows_your_wallet),
-        value = walletAddress,
-    )
+private fun SelectorItem(title: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.clickable { onClick() },
+    ) {
+        Text(
+            text = title,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.body1,
+            maxLines = 1,
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_chevron_24),
+            tint = TangemTheme.colors.icon.primary1,
+            contentDescription = null,
+        )
+    }
 }
 
 @Composable
-private fun SpenderItem(spenderAddress: String) {
-    InformationItem(
-        subtitle = stringResource(id = R.string.swapping_permission_rows_spender),
-        value = spenderAddress,
-    )
+private fun DropdownSelector(
+    isExpanded: Boolean,
+    onDismiss: () -> Unit,
+    onItemClick: (ApproveType) -> Unit,
+    items: ImmutableList<ApproveType>,
+) {
+    DropdownMenu(
+        expanded = isExpanded,
+        onDismissRequest = onDismiss,
+        modifier = Modifier
+            .wrapContentSize()
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        items.forEach { item ->
+            DropdownMenuItem(
+                onClick = {
+                    onItemClick.invoke(item)
+                },
+            ) {
+                Text(
+                    text = getTitleForApproveType(approveType = item),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.body1,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -173,6 +264,22 @@ private fun FeeItem(fee: String) {
         subtitle = stringResource(id = R.string.send_fee_label),
         value = fee,
     )
+}
+
+@Composable
+private fun SubtitleItem(subtitle: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = subtitle,
+        color = TangemTheme.colors.text.secondary,
+        style = TangemTheme.typography.body2,
+    )
+}
+
+@Composable
+private fun getTitleForApproveType(approveType: ApproveType): String = when (approveType) {
+    ApproveType.LIMITED -> stringResource(id = R.string.swapping_permission_current_transaction)
+    ApproveType.UNLIMITED -> stringResource(id = R.string.swapping_permission_unlimited)
 }
 
 // region preview
@@ -198,9 +305,11 @@ private val previewData = SwapPermissionState.ReadyForRequest(
     amount = "∞",
     walletAddress = "",
     spenderAddress = "",
-    fee = "2,14$",
+    fee = TextReference.Str("2,14$"),
+    approveType = ApproveType.UNLIMITED,
     approveButton = ApprovePermissionButton(true) {},
     cancelButton = CancelPermissionButton(true),
+    onChangeApproveType = { ApproveType.UNLIMITED },
 )
 
 //endregion preview
