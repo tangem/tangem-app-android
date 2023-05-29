@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
@@ -34,7 +35,6 @@ sealed class WalletAction : Action {
     sealed class MultiWallet : WalletAction() {
 
         data class SelectWallet(val currency: Currency?) : MultiWallet()
-        data class SetSingleWalletCurrency(val currency: Currency?) : MultiWallet()
 
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(val currency: Currency) : MultiWallet()
@@ -42,13 +42,22 @@ sealed class WalletAction : Action {
         object BackupWallet : MultiWallet()
         data class AddMissingDerivations(val blockchains: List<BlockchainNetwork>) : MultiWallet()
         object ScanToGetDerivations : MultiWallet()
+
+        /**
+         * Display warning if card has no backup
+         *
+         * @param card card to check status
+         * */
+        data class CheckForBackupWarning(val card: CardDTO) : MultiWallet()
     }
 
     sealed class Warnings : WalletAction() {
         object CheckHashesCount : Warnings() {
-            object CheckHashesCountOnline : Warnings()
-            object NeedToCheckHashesCountOnline : Warnings()
-            object ConfirmHashesCount : Warnings()
+
+            /**
+             * Start online verification of signed hashes for single currency wallets if the warning not displayed
+             * */
+            object VerifyOnlineIfNeeded : Warnings()
             object SaveCardId : Warnings()
         }
 
