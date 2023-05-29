@@ -60,6 +60,7 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -69,9 +70,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.text.DecimalFormatSymbols
 
+private const val EDIT_TEXT_INPUT_DEBOUNCE = 400L
+
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(FlowPreview::class)
 class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     lateinit var sendBtn: ViewStateWidget
@@ -115,16 +119,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
     }
 
-    @Suppress("MagicNumber")
     private fun setupAddressOrPayIdLayout() = with(binding.lSendAddressPayid) {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
         store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
-        etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
+        etAddressOrPayId.setOnFocusChangeListener { _, hasFocus ->
             store.dispatch(TruncateOrRestore(!hasFocus))
         }
         etAddressOrPayId.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
             .onEach {
                 store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
@@ -146,8 +149,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     private fun setupTransactionExtrasLayout() = with(binding.lSendAddressPayid) {
+        // TODO: [REDACTED_TASK_KEY]
         etXlmMemo.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter {
                 val info = store.state.sendState.transactionExtrasState
                 info.xlmMemo?.viewFieldValue?.value != it
@@ -156,7 +160,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(mainScope)
 
         etDestinationTag.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter {
                 val info = store.state.sendState.transactionExtrasState
                 info.xrpDestinationTag?.viewFieldValue?.value != it
@@ -165,7 +169,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(mainScope)
 
         etBinanceMemo.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter {
                 val info = store.state.sendState.transactionExtrasState
                 info.binanceMemo?.viewFieldValue?.value != it
@@ -174,12 +178,21 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(mainScope)
 
         etTonMemo.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter {
                 val info = store.state.sendState.transactionExtrasState
                 info.tonMemoState?.viewFieldValue?.value != it
             }
             .onEach { store.dispatch(TransactionExtrasAction.TonMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
+
+        etCosmosMemo.inputtedTextAsFlow()
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.cosmosMemoState?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.CosmosMemo.HandleUserInput(it)) }
             .launchIn(mainScope)
     }
 
@@ -234,7 +247,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
 
         etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789,.")
-        etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
+        etAmountToSend.setOnFocusChangeListener { _, hasFocus ->
             snackbarControlledByChangingFocus = true
             if (hasFocus) {
                 etAmountToSend.postDelayed(200) {
@@ -257,7 +270,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
 
         etAmountToSend.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
             .filter { store.state.sendState.amountState.viewAmountValue.value != it && it.isNotEmpty() }
             .onEach { store.dispatch(AmountActionUi.HandleUserInput(it)) }
             .launchIn(mainScope)
@@ -273,13 +286,13 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             store.dispatch(ToggleControlsVisibility)
         }
         chipGroup.check(FeeUiHelper.toId(FeeType.NORMAL))
-        chipGroup.setOnCheckedChangeListener { group, checkedId ->
+        chipGroup.setOnCheckedChangeListener { _, checkedId ->
             if (checkedId == -1) return@setOnCheckedChangeListener
 
             store.dispatch(ChangeSelectedFee(FeeUiHelper.toType(checkedId)))
             store.dispatch(CheckAmountToSend)
         }
-        swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
+        swIncludeFee.setOnCheckedChangeListener { _, isChecked ->
             store.dispatch(ChangeIncludeFee(isChecked))
             store.dispatch(CheckAmountToSend)
         }

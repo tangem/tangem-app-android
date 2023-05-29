@@ -10,12 +10,9 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.with
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -24,18 +21,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.extensions.toPx
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
@@ -134,25 +130,9 @@ private fun Icon(name: String, iconUrl: String, modifier: Modifier = Modifier) {
             .crossfade(enable = true)
             .build(),
         contentDescription = null,
-        loading = { PlaceholderIcon(name = name, modifier = iconModifier) },
-        error = { PlaceholderIcon(name = name, modifier = iconModifier) },
+        loading = { CurrencyPlaceholderIcon(id = name, modifier = iconModifier) },
+        error = { CurrencyPlaceholderIcon(id = name, modifier = iconModifier) },
     )
-}
-
-@Composable
-private fun PlaceholderIcon(name: String, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.background(TangemTheme.colors.icon.primary1, shape = CircleShape),
-    ) {
-        Text(
-            text = name.firstOrNull()?.titlecase() ?: "",
-            color = TangemTheme.colors.icon.primary2,
-            maxLines = 1,
-            // FIXME("Incorrect typography. Replace with typography from design system")
-            style = TangemTheme.typography.h3.copy(fontWeight = FontWeight.Bold),
-        )
-    }
 }
 
 @Composable
