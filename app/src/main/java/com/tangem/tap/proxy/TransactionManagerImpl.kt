@@ -5,14 +5,7 @@ import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TransactionExtras
-import com.tangem.blockchain.common.TransactionSender
-import com.tangem.blockchain.common.TransactionSigner
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.isNetworkError
@@ -21,10 +14,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
-import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyFee
-import com.tangem.lib.crypto.models.ProxyNetworkInfo
+import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
@@ -152,7 +142,7 @@ class TransactionManagerImpl(
         increaseBy: Int?,
         data: String?,
         derivationPath: String?,
-    ): ProxyFee {
+    ): ProxyFees {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         if (walletManager is EthereumWalletManager) {
@@ -199,7 +189,7 @@ class TransactionManagerImpl(
         currency: Currency,
         blockchain: Blockchain,
         destinationAddress: String,
-    ): ProxyFee {
+    ): ProxyFees {
         val fee = (walletManager as? TransactionSender)?.getFee(
             amount = createAmount(amountToSend, currency, blockchain),
             destination = destinationAddress,
@@ -207,9 +197,23 @@ class TransactionManagerImpl(
         return when (fee) {
             is Result.Success -> {
                 // for not EVM blockchains set gasLimit ZERO for now
-                ProxyFee(
+                val firstFee = fee.data.firstOrNull() ?: error("no fee found")
+                val minFee = ProxyFee(
                     gasLimit = BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found")),
+                    fee = convertToProxyAmount(amount = firstFee),
+                )
+                val normalFee = ProxyFee(
+                    gasLimit = BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.getOrNull(index = 1) ?: firstFee),
+                )
+                val priorityFee = ProxyFee(
+                    gasLimit = BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.getOrNull(index = 2) ?: firstFee),
+                )
+                ProxyFees(
+                    minFee = minFee,
+                    normalFee = normalFee,
+                    priorityFee = priorityFee,
                 )
             }
             is Result.Failure -> {
@@ -227,7 +231,7 @@ class TransactionManagerImpl(
         destinationAddress: String,
         data: String?,
         increaseBy: Int?,
-    ): ProxyFee {
+    ): ProxyFees {
         val gasLimit = getGasLimit(
             evmWalletManager = walletManager,
             blockchain = blockchain,
@@ -235,27 +239,10 @@ class TransactionManagerImpl(
             currency = currency,
             destinationAddress = destinationAddress,
             data = data,
-        ).let {
-            if (increaseBy != null && increaseBy != 0) {
-                it.multiply(increaseBy.toBigInteger()).divide(BigInteger("100"))
-            } else {
-                it
-            }
-        }
+        ).increaseBigIntegerByPercents(increaseBy)
         return when (val gasPrice = walletManager.getGasPrice()) {
             is Result.Success -> {
-                val fee = gasLimit.multiply(gasPrice.data).toBigDecimal(
-                    scale = blockchain.decimals(),
-                    mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
-                )
-                ProxyFee(
-                    gasLimit = gasLimit,
-                    fee = ProxyAmount(
-                        currencySymbol = blockchain.currency,
-                        value = fee,
-                        decimals = blockchain.decimals(),
-                    ),
-                )
+                createProxyFees(gasPrice = gasPrice.data, gasLimit = gasLimit, blockchain = blockchain)
             }
             is Result.Failure -> {
                 error(gasPrice.error.message ?: gasPrice.error.customMessage)
@@ -268,17 +255,31 @@ class TransactionManagerImpl(
         amount: Amount,
         destinationAddress: String,
         data: String?,
-    ): ProxyFee {
+    ): ProxyFees {
         val fee = if (data.isNullOrEmpty()) {
             walletManager.getFee(amount, destinationAddress)
         } else {
             walletManager.getFee(amount, destinationAddress, data)
         }
-        when (fee) {
+        return when (fee) {
             is Result.Success -> {
-                return ProxyFee(
+                val minFee = fee.data.firstOrNull() ?: error("no fee found")
+                val minProxyFee = ProxyFee(
                     gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.lastOrNull() ?: error("no fee found")),
+                    fee = convertToProxyAmount(minFee),
+                )
+                val normalProxyFee = ProxyFee(
+                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.getOrNull(index = 1) ?: minFee),
+                )
+                val priorityProxyFee = ProxyFee(
+                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    fee = convertToProxyAmount(fee.data.lastOrNull() ?: minFee),
+                )
+                ProxyFees(
+                    minFee = minProxyFee,
+                    normalFee = normalProxyFee,
+                    priorityFee = priorityProxyFee,
                 )
             }
             is Result.Failure -> {
@@ -397,6 +398,59 @@ class TransactionManagerImpl(
         }
     }
 
+    /**
+     * Create proxy fees
+     *
+     * @param gasPrice min fee gasPrice
+     * @param gasLimit
+     * @param blockchain
+     */
+    private fun createProxyFees(gasPrice: BigInteger, gasLimit: BigInteger, blockchain: Blockchain): ProxyFees {
+        val gasPriceNormal = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE)
+        val gasPricePriority = gasPrice.increaseBigIntegerByPercents(MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE)
+        val feeMin = gasLimit.multiply(gasPrice).toBigDecimal(
+            scale = blockchain.decimals(),
+            mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+        )
+        val feeNormal = gasLimit.multiply(gasPriceNormal).toBigDecimal(
+            scale = blockchain.decimals(),
+            mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+        )
+        val feePriority = gasLimit.multiply(gasPricePriority).toBigDecimal(
+            scale = blockchain.decimals(),
+            mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
+        )
+        val minFee = ProxyFee(
+            gasLimit = gasLimit,
+            fee = ProxyAmount(
+                currencySymbol = blockchain.currency,
+                value = feeMin,
+                decimals = blockchain.decimals(),
+            ),
+        )
+        val normalFee = ProxyFee(
+            gasLimit = gasLimit,
+            fee = ProxyAmount(
+                currencySymbol = blockchain.currency,
+                value = feeNormal,
+                decimals = blockchain.decimals(),
+            ),
+        )
+        val priorityFee = ProxyFee(
+            gasLimit = gasLimit,
+            fee = ProxyAmount(
+                currencySymbol = blockchain.currency,
+                value = feePriority,
+                decimals = blockchain.decimals(),
+            ),
+        )
+        return ProxyFees(
+            minFee = minFee,
+            normalFee = normalFee,
+            priorityFee = priorityFee,
+        )
+    }
+
     private fun createAmount(amount: BigDecimal, currency: Currency, blockchain: Blockchain): Amount {
         return when (currency) {
             is Currency.NativeToken -> {
@@ -445,8 +499,24 @@ class TransactionManagerImpl(
         )
     }
 
+    /**
+     * Increase big integer by percents
+     *
+     * @param percents in format 150 -> 50%
+     * @return increased value
+     */
+    private fun BigInteger.increaseBigIntegerByPercents(percents: Int?): BigInteger {
+        return if (percents != null && percents != 0) {
+            this.multiply(percents.toBigInteger()).divide(BigInteger("100"))
+        } else {
+            this
+        }
+    }
+
     companion object {
         private const val HEX_PREFIX = "0x"
         private const val USER_CANCELLED_ERROR_CODE = 50002
+        private const val MULTIPLIER_GAS_PRICE_FOR_NORMAL_FEE = 150 // 50%
+        private const val MULTIPLIER_GAS_PRICE_FOR_PRIORITY_FEE = 200 // 50%
     }
 }
