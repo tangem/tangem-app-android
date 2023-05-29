@@ -21,7 +21,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
@@ -41,7 +40,6 @@ import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.common.extensions.cardImageData
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
@@ -136,7 +134,6 @@ private fun WalletCardImage(cardImageUrl: String, isChecked: Boolean, isSelected
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun RowScope.WalletInfo(wallet: UserWalletItem, isSelected: Boolean) {
     Column(
@@ -149,7 +146,7 @@ private fun RowScope.WalletInfo(wallet: UserWalletItem, isSelected: Boolean) {
             color = if (isSelected) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            style = TangemTypography.subtitle1,
+            style = TangemTheme.typography.subtitle1,
         )
         SpacerH2()
         Text(
@@ -227,7 +224,6 @@ private fun LoadingTokensInfo(isMultiCurrencyWallet: Boolean) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun LoadedTokensInfo(
     balanceAmount: String,
