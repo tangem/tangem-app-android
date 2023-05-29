@@ -52,42 +52,36 @@ internal fun List<WalletDataModel>.updateWithAmounts(wallet: Wallet): List<Walle
 internal fun WalletDataModel.updateWithAmount(wallet: Wallet): WalletDataModel {
     val pendingTransactions = wallet.getPendingTransactions()
     return this.copy(
-        status = when (val currency = this.currency) {
+        status = when (currency) {
             is Currency.Blockchain -> {
                 val amount = wallet.fundsAvailable(AmountType.Coin)
                 if (pendingTransactions.isEmpty()) {
-                    WalletDataModel.VerifiedOnline(
-                        amount = amount,
-                    )
+                    WalletDataModel.VerifiedOnline(amount)
                 } else {
-                    WalletDataModel.TransactionInProgress(
-                        amount = amount,
-                        pendingTransactions = pendingTransactions,
-                    )
+                    WalletDataModel.TransactionInProgress(amount, pendingTransactions)
                 }
             }
+
             is Currency.Token -> {
                 val token = currency.token
                 val amount = wallet.fundsAvailable(AmountType.Token(token))
-                val hasTokenPendingTransactions = pendingTransactions
-                    .any { it.transactionData.amount.currencySymbol == token.symbol }
+                val hasTokenPendingTransactions = pendingTransactions.any {
+                    it.transactionData.amount.currencySymbol == token.symbol
+                }
+
                 when {
                     hasTokenPendingTransactions -> {
-                        WalletDataModel.TransactionInProgress(
-                            amount = amount,
-                            pendingTransactions = pendingTransactions,
-                        )
+                        WalletDataModel.TransactionInProgress(amount, pendingTransactions)
                     }
+
                     pendingTransactions.isNotEmpty() -> {
-                        WalletDataModel.SameCurrencyTransactionInProgress(
-                            amount = amount,
-                            pendingTransactions = pendingTransactions,
-                        )
+                        // FIXME: Necessary to avoid passing pending transactions
+                        //  because SameCurrencyTransactionInProgress didn't use it. It used only to define main button
+                        //  availability. UI layer turned off pending transaction visibility for this state.
+                        WalletDataModel.SameCurrencyTransactionInProgress(amount, pendingTransactions)
                     }
                     else -> {
-                        WalletDataModel.VerifiedOnline(
-                            amount = amount,
-                        )
+                        WalletDataModel.VerifiedOnline(amount)
                     }
                 }
             }
