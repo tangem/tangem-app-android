@@ -17,8 +17,6 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTo
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenSymbolChanged
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.BlockchainSpinner
-import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.OutlinedTextFieldWidget
 import com.tangem.tap.common.compose.TitleSubtitle
 import com.tangem.wallet.R
