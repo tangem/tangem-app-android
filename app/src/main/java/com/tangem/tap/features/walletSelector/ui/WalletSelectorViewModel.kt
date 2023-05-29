@@ -200,11 +200,15 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 onDismiss = this::dismissWarningDialog,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
-                onConfirm = { /* [REDACTED_TODO_COMMENT] */ },
+                onConfirm = this::clearUserWallets,
                 onDismiss = this::dismissWarningDialog,
             )
             else -> currentDialog
         }
+    }
+
+    private fun clearUserWallets() {
+        store.dispatch(WalletSelectorAction.ClearUserWallets)
     }
 
     private fun dismissWarningDialog() {
