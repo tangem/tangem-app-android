@@ -39,6 +39,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "cosmos", "cosmos/test" -> R.drawable.img_cosmos_22
         "terra", "terra-luna" -> R.drawable.img_terra_22
         "terra-2", "terra-luna-2" -> R.drawable.img_terra2_22
+        "cronos" -> R.drawable.img_cronos_22
         else -> R.drawable.ic_alert_24
     }
 }
