@@ -12,14 +12,13 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.SwapStateData
-import com.tangem.feature.swap.domain.models.ui.TxState
+import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.toDomainApproveType
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -186,7 +185,11 @@ internal class SwapViewModel @Inject constructor(
                             uiStateHolder = uiState,
                             quoteModel = swapState,
                             fromToken = fromToken,
-                        )
+                        ) { updatedFee ->
+                            dataState = dataState.copy(
+                                selectedFee = updatedFee,
+                            )
+                        }
                     }
                     is SwapState.EmptyAmountState -> {
                         uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -215,6 +218,7 @@ internal class SwapViewModel @Inject constructor(
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
+                selectedFee = swapDataModel?.fee?.normalFee,
             )
         }
     }
@@ -230,6 +234,7 @@ internal class SwapViewModel @Inject constructor(
                     currencyToSend = requireNotNull(dataState.fromCurrency),
                     currencyToGet = requireNotNull(dataState.toCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
+                    fee = requireNotNull(dataState.selectedFee),
                 )
             }
                 .onSuccess {
@@ -272,9 +277,22 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.givePermissionToSwap(
                     networkId = dataState.networkId,
-                    approveData = dataState.approveDataModel!!,
-                    forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
-                        ?: "",
+                    permissionOptions = PermissionOptions(
+                        approveData = requireNotNull(dataState.approveDataModel) {
+                            "dataState.approveDataModel might not be null"
+                        },
+                        forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
+                            ?: "",
+                        fromToken = requireNotNull(dataState.fromCurrency) {
+                            "dataState.fromCurrency might not be null"
+                        },
+                        approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {
+                            "uiState.permissionState should be SwapPermissionState.ReadyForRequest"
+                        }.approveType.toDomainApproveType(),
+                        txFee = requireNotNull(dataState.selectedFee) {
+                            "dataState.selectedFee shouldn't be null"
+                        },
+                    ),
                 )
             }
                 .onSuccess {
@@ -282,9 +300,7 @@ internal class SwapViewModel @Inject constructor(
                         is TxState.TxSent -> {
                             uiState = stateBuilder.loadingPermissionState(uiState)
                         }
-                        is TxState.UserCancelled -> {
-                            /* no-op */
-                        }
+                        is TxState.UserCancelled -> Unit
                         else -> {
                             uiState = stateBuilder.createErrorTransaction(uiState, it) {
                                 uiState = stateBuilder.clearAlert(uiState)
@@ -428,6 +444,13 @@ internal class SwapViewModel @Inject constructor(
                 if (focused) {
                     analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
                 }
+            },
+            onChangeApproveType = { approveType ->
+                uiState = stateBuilder.updateApproveType(uiState, approveType)
+            },
+            onSelectItemFee = { feeItem ->
+                dataState = dataState.copy(selectedFee = feeItem.data)
+                uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem)
             },
         )
     }
