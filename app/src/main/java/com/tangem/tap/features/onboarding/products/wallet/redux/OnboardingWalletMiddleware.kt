@@ -362,12 +362,13 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
 
                     is CompletionResult.Failure -> {
-                        if (result.error is TangemSdkError.BackupFailedNotEmptyWallets &&
+                        val error = result.error
+                        if (error is TangemSdkError.BackupFailedNotEmptyWallets &&
                             onboardingWalletState.wallet2State != null
                         ) {
                             store.dispatchOnMain(
                                 GlobalAction.ShowDialog(
-                                    BackupDialog.ResetBackupCard,
+                                    BackupDialog.ResetBackupCard(error.cardId),
                                 ),
                             )
                         }
@@ -478,7 +479,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
 
         is BackupAction.ResetBackupCard -> {
-            scope.launch { tangemSdkManager.resetToFactorySettings() }
+            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId) }
         }
 
         else -> Unit
