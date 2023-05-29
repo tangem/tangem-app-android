@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getTextColor
@@ -85,12 +86,26 @@ class CurrencyIconRequest(
         crossinline onError: (Blockchain) -> Unit = {},
     ) {
         currencyImageView.loadIcon(
-            data = if (getLocalImage) getActiveIconRes(blockchain.id) else getIconUrl(blockchain.toNetworkId()),
+            data = getBlockchainIconData(blockchain),
             placeholderRes = getActiveIconRes(blockchain.id),
             onStart = { onStart(blockchain) },
             onSuccess = { onSuccess(blockchain) },
             onError = { onError(blockchain) },
         )
+    }
+
+    private fun getBlockchainIconData(blockchain: Blockchain): Any {
+        return if (getLocalImage) {
+            when (blockchain) {
+                Blockchain.TerraV1, Blockchain.TerraV2 -> getActiveIconRes(blockchain.toCoinId())
+                else -> getActiveIconRes(blockchain.id)
+            }
+        } else {
+            when (blockchain) {
+                Blockchain.TerraV1, Blockchain.TerraV2 -> getIconUrl(blockchain.toCoinId())
+                else -> getIconUrl(blockchain.toNetworkId())
+            }
+        }
     }
 
     private inline fun loadTokenIconBase(

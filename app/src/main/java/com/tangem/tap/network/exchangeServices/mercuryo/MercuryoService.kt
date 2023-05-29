@@ -11,56 +11,20 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
 [REDACTED_AUTHOR]
  */
-class MercuryoService(
-    private val environment: MercuryoEnvironment,
-) : ExchangeService {
+internal class MercuryoService(private val environment: MercuryoEnvironment) : ExchangeService {
 
     private val api: MercuryoApi = environment.mercuryoApi
 
-    private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
-    private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
+    private val blockchainsAvailableToBuy = CopyOnWriteArrayList<Blockchain>()
+    private val tokensAvailableToBuy = ConcurrentHashMap<String, List<Blockchain>>()
 
     override fun featureIsSwitchedOn(): Boolean = true
-
-    @Suppress("NestedBlockDepth")
-    override suspend fun update() {
-        when (val result = performRequest { api.currencies(environment.apiVersion) }) {
-            is Result.Success -> {
-                val response = result.data
-                if (response.status == RESPONSE_SUCCESS_STATUS_CODE) {
-                    // all currencies which can be bought
-                    val currenciesAvailableToBy = response.data.crypto
-                    // tokens which can be bought only from specific blockchain network
-                    val supportedTokensWithNetwork = response.data.config.base
-
-                    currenciesAvailableToBy.forEach { currencyName ->
-                        val blockchain = blockchainFromCurrencyName(currencyName)
-                        if (blockchain == null) {
-                            // suppose its a token
-                            supportedTokensWithNetwork[currencyName]?.let {
-                                blockchainFromCurrencyName(it)
-                            }?.let { blockchainNetwork ->
-                                val supportedInBlockchainsNetwork = tokensAvailableToBy[currencyName]
-                                    ?: mutableListOf()
-                                supportedInBlockchainsNetwork.add(blockchainNetwork)
-                                tokensAvailableToBy[currencyName] = supportedInBlockchainsNetwork
-                            }
-                        } else {
-                            blockchainsAvailableToBuy.add(blockchain)
-                        }
-                    }
-                }
-            }
-            is Result.Failure -> {
-                blockchainsAvailableToBuy.clear()
-                tokensAvailableToBy.clear()
-            }
-        }
-    }
 
     override fun isBuyAllowed(): Boolean = true
 
@@ -83,19 +47,31 @@ class MercuryoService(
                 when {
                     blockchain.isTestnet() -> blockchain.getTestnetTopUpUrl() != null
                     unsupportedBlockchains.contains(blockchain) -> false
-                    else -> {
-                        blockchainsAvailableToBuy.contains(currency.blockchain)
-                    }
+                    else -> blockchainsAvailableToBuy.contains(blockchain)
                 }
             }
+
             is Currency.Token -> {
-                val supportedInBlockchains = tokensAvailableToBy[currency.currencySymbol] ?: return false
-                supportedInBlockchains.contains(currency.blockchain)
+                val supportedInBlockchains = tokensAvailableToBuy[currency.currencySymbol] ?: return false
+                supportedInBlockchains.contains(blockchain)
             }
         }
     }
 
     override fun availableForSell(currency: Currency): Boolean = false
+
+    override suspend fun update() {
+        val result = performRequest { api.currencies(environment.apiVersion) }
+        when {
+            result is Result.Success && result.data.status == RESPONSE_SUCCESS_STATUS_CODE -> {
+                handleSuccessfullyUpdatedData(data = result.data.data)
+            }
+            result is Result.Failure -> {
+                blockchainsAvailableToBuy.clear()
+                tokensAvailableToBuy.clear()
+            }
+        }
+    }
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
@@ -117,24 +93,40 @@ class MercuryoService(
             .appendQueryParameter("fix_currency", "true")
             .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
 
-        val url = builder.build().toString()
-        return url
-    }
-
-    private fun signature(address: String): String {
-        return (address + environment.secret).calculateSha512().toHexString().lowercase()
+        return builder.build().toString()
     }
 
     override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? = null
 
-    private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
-        "BNB" -> Blockchain.BSC
-        "ETH" -> Blockchain.Ethereum
-        "ADA" -> Blockchain.CardanoShelley
-        else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
+    private fun handleSuccessfullyUpdatedData(data: MercuryoCurrenciesResponse.Data) {
+        data.crypto.forEach { currencyName ->
+            val blockchain = blockchainFromCurrencyName(currencyName)
+            if (blockchain == null) {
+                val specificBlockchain = data.config.base[currencyName]?.let(::blockchainFromCurrencyName)
+                if (specificBlockchain != null) {
+                    tokensAvailableToBuy.set(
+                        key = currencyName,
+                        value = tokensAvailableToBuy[currencyName].orEmpty() + specificBlockchain,
+                    )
+                }
+            } else {
+                blockchainsAvailableToBuy.add(blockchain)
+            }
+        }
     }
 
-    companion object {
-        private const val RESPONSE_SUCCESS_STATUS_CODE = 200
+    private fun blockchainFromCurrencyName(currencyName: String): Blockchain? {
+        return when (currencyName) {
+            "BNB" -> Blockchain.BSC
+            "ETH" -> Blockchain.Ethereum
+            "ADA" -> Blockchain.CardanoShelley
+            else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
+        }
+    }
+
+    private fun signature(address: String) = (address + environment.secret).calculateSha512().toHexString().lowercase()
+
+    private companion object {
+        const val RESPONSE_SUCCESS_STATUS_CODE = 200
     }
 }
