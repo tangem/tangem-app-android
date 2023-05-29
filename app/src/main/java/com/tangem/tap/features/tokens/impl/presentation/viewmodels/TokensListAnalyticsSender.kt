@@ -9,6 +9,10 @@ import com.tangem.tap.common.analytics.events.ManageTokens
 /** Analytics sender for tokens list screen */
 class TokensListAnalyticsSender(private val analyticsEventHandler: AnalyticsEventHandler) {
 
+    fun sendWhenScreenOpened() {
+        analyticsEventHandler.send(event = ManageTokens.ScreenOpened())
+    }
+
     fun sendWhenTokenAdded(token: Token) {
         analyticsEventHandler.send(
             event = ManageTokens.TokenSwitcherChanged(
