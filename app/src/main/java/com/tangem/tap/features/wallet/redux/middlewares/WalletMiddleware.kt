@@ -9,17 +9,12 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.copyToClipboard
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.dispatchToastNotification
-import com.tangem.tap.common.extensions.isGreaterThan
-import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -35,14 +30,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.getSendableAmounts
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.totalFiatBalanceCalculator
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletStoresManager
 import com.tangem.utils.coroutines.ifActive
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -136,14 +124,14 @@ class WalletMiddleware {
                     return
                 }
 
-                store.dispatch(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
-
                 scope.launch {
                     globalState.tapWalletManager.loadData(
                         userWallet = selectedWallet,
                         refresh = action is WalletAction.LoadData.Refresh,
                     )
                 }
+
+                store.dispatchOnMain(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
             }
             is WalletAction.CopyAddress -> {
                 Analytics.send(Token.Receive.ButtonCopyAddress())
