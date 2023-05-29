@@ -3,6 +3,8 @@ package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
@@ -59,7 +61,7 @@ internal class TokensListViewModel @Inject constructor(
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val reduxStateHolder: AppStateHolder,
     analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel() {
+) : ViewModel(), DefaultLifecycleObserver {
 
     private val args = TokensListArgs()
     private val analyticsSender = TokensListAnalyticsSender(analyticsEventHandler)
@@ -71,6 +73,10 @@ internal class TokensListViewModel @Inject constructor(
 
     private val changedTokensList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
     private val changedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
+
+    override fun onCreate(owner: LifecycleOwner) {
+        if (args.isManageAccess) analyticsSender.sendWhenScreenOpened()
+    }
 
     private fun getInitialUiState(): TokensListStateHolder {
         return if (args.isManageAccess) {
@@ -157,6 +163,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createReadTokenContent(token: Token): TokenItemState.ReadContent {
         return TokenItemState.ReadContent(
+            id = token.id,
             fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createReadNetworkContent).toImmutableList(),
