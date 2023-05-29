@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
  * Temporary wrapper for the buy services. Service switches based on selected product type.
  * Just now - UtorgService used only for the SaltPay cards
  */
-class BuyExchangeService(
+internal class BuyExchangeService(
     private val productTypeProvider: () -> ProductType?,
     private val mercuryoService: MercuryoService,
     private val utorgService: UtorgExchangeService,

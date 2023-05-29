@@ -57,6 +57,9 @@ include(":features:swap:presentation")
 
 include(":features:tester:api")
 include(":features:tester:impl")
+
+include(":features:wallet:api")
+include(":features:wallet:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -67,3 +70,7 @@ include(":domain:legacy")
 include(":domain:core")
 include(":domain:card")
 // endregion Domain modules
+
+// region Data modules
+include(":data:source:preferences")
+// endregion Data modules

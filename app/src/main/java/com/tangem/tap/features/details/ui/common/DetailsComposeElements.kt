@@ -27,7 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.wallet.R
 
 @Composable
@@ -145,13 +144,13 @@ fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean
         Column {
             Text(
                 text = title,
-                style = TangemTypography.subtitle1,
+                style = TangemTheme.typography.subtitle1,
                 color = colorResource(id = R.color.text_primary_1),
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = subtitle,
-                style = TangemTypography.body2,
+                style = TangemTheme.typography.body2,
                 color = colorResource(id = R.color.text_secondary),
             )
         }

@@ -3,11 +3,15 @@ package com.tangem.tap.features.welcome.redux
 import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
+import com.tangem.common.flatMap
+import com.tangem.common.map
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -51,6 +55,9 @@ internal class WelcomeMiddleware {
             is WelcomeAction.HandleIntentIfNeeded -> {
                 handleInitialIntent(action.intent)
             }
+            is WelcomeAction.ClearUserWallets -> {
+                disableUserWalletsSaving()
+            }
             is WelcomeAction.ProceedWithBiometrics.Error,
             is WelcomeAction.ProceedWithCard.Error,
             is WelcomeAction.ProceedWithBiometrics.Success,
@@ -60,22 +67,37 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private fun proceedWithBiometrics(state: WelcomeState) {
-        scope.launch {
-            userWalletsListManager.unlockIfLockable()
-                .doOnFailure { error ->
-                    Timber.e(error, "Unable to unlock user wallets with biometrics")
-                    store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Error(error))
-                }
-                .doOnSuccess { selectedUserWallet ->
-                    store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Biometric))
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
-                    store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
-                    store.onUserWalletSelected(userWallet = selectedUserWallet)
+    private fun disableUserWalletsSaving() = scope.launch {
+        userWalletsListManager.clear()
+            .flatMap { tangemSdkManager.clearSavedUserCodes() }
+            .map {
+                preferencesStorage.shouldSaveUserWallets = false
+                preferencesStorage.shouldSaveAccessCodes = false
+            }
+            .doOnFailure { e ->
+                Timber.e(e, "Unable to clear user wallets")
+            }
+            .doOnResult {
+                // !!! Workaround !!!
+                store.dispatchWithMain(WelcomeAction.CloseError)
+                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
+            }
+    }
 
-                    intentHandler.handleWalletConnectLink(state.intent)
-                }
-        }
+    private fun proceedWithBiometrics(state: WelcomeState) = scope.launch {
+        userWalletsListManager.unlockIfLockable()
+            .doOnFailure { error ->
+                Timber.e(error, "Unable to unlock user wallets with biometrics")
+                store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Error(error))
+            }
+            .doOnSuccess { selectedUserWallet ->
+                store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Biometric))
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
+                store.onUserWalletSelected(userWallet = selectedUserWallet)
+
+                intentHandler.handleWalletConnectLink(state.intent)
+            }
     }
 
     private fun proceedWithCard(state: WelcomeState) = scope.launch {
