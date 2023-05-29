@@ -2,19 +2,19 @@ package com.tangem.tap.common.chat
 
 import android.content.Context
 import android.os.Build
-import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.datasource.config.models.ChatConfig
-import com.tangem.tap.common.chat.opener.ChatOpener
 import com.tangem.datasource.config.models.SprinklrConfig
 import com.tangem.datasource.config.models.ZendeskConfig
+import com.tangem.data.source.preferences.PreferencesDataSource
+import com.tangem.tap.ForegroundActivityObserver
+import com.tangem.tap.common.chat.opener.ChatOpener
 import com.tangem.tap.common.chat.opener.implementation.SprinklrChatOpener
 import com.tangem.tap.common.chat.opener.implementation.ZendeskChatOpener
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.persistence.PreferencesStorage
 import org.rekotlin.Store
 
 class ChatManager(
-    private val preferencesStorage: PreferencesStorage,
+    private val preferencesStorage: PreferencesDataSource,
     private val foregroundActivityObserver: ForegroundActivityObserver,
     private val store: Store<AppState>,
 ) {

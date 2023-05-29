@@ -31,6 +31,7 @@ data class TransactionExtrasState(
     val binanceMemo: BinanceMemoState? = null,
     val xrpDestinationTag: XrpDestinationTagState? = null,
     val tonMemoState: TonMemoState? = null,
+    val cosmosMemoState: CosmosMemoState? = null,
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
 }
@@ -100,6 +101,11 @@ data class XrpDestinationTagState(
 }
 
 data class TonMemoState(
+    val viewFieldValue: InputViewValue = InputViewValue(""),
+    val memo: String? = null,
+    val error: TransactionExtraError? = null,
+)
+data class CosmosMemoState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val memo: String? = null,
     val error: TransactionExtraError? = null,
