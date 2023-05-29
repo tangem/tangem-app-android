@@ -122,5 +122,5 @@ sealed class BackupDialog : StateDialog {
     object BackupInProgress : BackupDialog()
     object UnfinishedBackupFound : BackupDialog()
     object ConfirmDiscardingBackup : BackupDialog()
-    object ResetBackupCard : BackupDialog()
+    data class ResetBackupCard(val cardId: String) : BackupDialog()
 }
