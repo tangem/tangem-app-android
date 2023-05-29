@@ -14,7 +14,6 @@ class StateBuilder(
     val importSeedPhrase: ImportSeedPhraseStateBuilder = ImportSeedPhraseStateBuilder()
 
     fun init(): OnboardingSeedPhraseState = OnboardingSeedPhraseState(
-        step = OnboardingSeedPhraseStep.Intro,
         introState = IntroState(
             buttonCreateWallet = ButtonState(
                 onClick = uiActions.introActions.buttonCreateWalletClick,
@@ -77,12 +76,8 @@ class StateBuilder(
         menuButtonChat = ButtonState(
             onClick = uiActions.menuChatClick,
         ),
+        onBackClick = uiActions.menuNavigateBackClick,
     )
-
-    fun changeStep(uiState: OnboardingSeedPhraseState, step: OnboardingSeedPhraseStep): OnboardingSeedPhraseState =
-        uiState.copy(
-            step = step,
-        )
 
     fun generateMnemonicComponents(uiState: OnboardingSeedPhraseState): OnboardingSeedPhraseState {
         return uiState.copy(
@@ -103,7 +98,6 @@ class StateBuilder(
     ): OnboardingSeedPhraseState {
         return updateMnemonicComponents(uiState, mnemonicGridItems)
             .copy(
-                step = OnboardingSeedPhraseStep.YourSeedPhrase,
                 aboutState = uiState.aboutState.copy(
                     buttonGenerateSeedPhrase = uiState.aboutState.buttonGenerateSeedPhrase.copy(
                         showProgress = false,

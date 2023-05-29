@@ -168,7 +168,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/size48"
+                    android:layout_height="48dp"
                     android:background="@drawable/shape_rectangle_rounded_4">
 
                     <EditText
@@ -209,7 +209,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/size48"
+                    android:layout_height="48dp"
                     android:background="@drawable/shape_rectangle_rounded_4">
 
                     <TextView
@@ -268,9 +268,9 @@
                     android:id="@+id/tv_sold_out_desc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing14"
+                    android:layout_marginTop="14dp"
                     android:background="@drawable/shape_rectangle_rounded_4"
-                    android:padding="@dimen/spacing16"
+                    android:padding="16dp"
                     android:text="@string/shop_sold_out_description_prefix"
                     android:textColor="@color/text_tertiary"
                     android:textSize="16sp" />
