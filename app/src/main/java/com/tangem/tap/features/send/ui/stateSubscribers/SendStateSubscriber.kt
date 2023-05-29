@@ -80,6 +80,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             showView(xrpDestinationTagContainer, infoState.xrpDestinationTag)
             showView(binanceMemoContainer, infoState.binanceMemo)
             showView(tonMemoContainer, infoState.tonMemoState)
+            showView(cosmosMemoContainer, infoState.cosmosMemoState)
 
             infoState.xlmMemo?.let {
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
@@ -124,6 +125,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 }
                 if (!it.viewFieldValue.isFromUserInput) {
                     etTonMemo.setText(it.viewFieldValue.value)
+                }
+            }
+            infoState.cosmosMemoState?.let {
+                if (infoState.cosmosMemoState.error != null) {
+                    tilCosmosMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
+                } else {
+                    tilBinanceMemo.error = null
+                }
+                if (!it.viewFieldValue.isFromUserInput) {
+                    etCosmosMemo.setText(it.viewFieldValue.value)
                 }
             }
         }
