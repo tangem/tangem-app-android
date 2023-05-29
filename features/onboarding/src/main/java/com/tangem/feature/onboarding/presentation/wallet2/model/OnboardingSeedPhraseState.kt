@@ -9,19 +9,14 @@ import kotlinx.collections.immutable.persistentListOf
 [REDACTED_AUTHOR]
  */
 data class OnboardingSeedPhraseState(
-    val step: OnboardingSeedPhraseStep,
     val introState: IntroState,
     val aboutState: AboutState,
     val yourSeedPhraseState: YourSeedPhraseState,
     val checkSeedPhraseState: CheckSeedPhraseState,
     val importSeedPhraseState: ImportSeedPhraseState,
     val menuButtonChat: ButtonState,
-    val isOnboardingFinished: Boolean = false,
+    val onBackClick: () -> Unit,
 )
-
-enum class OnboardingSeedPhraseStep {
-    Intro, AboutSeedPhrase, YourSeedPhrase, CheckSeedPhrase, ImportSeedPhrase
-}
 
 data class IntroState(
     val cardImageUrl: String? = null,
