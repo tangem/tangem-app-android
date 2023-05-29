@@ -6,7 +6,6 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.analytics.events.MainScreen
-import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getQuantityString
@@ -108,16 +107,13 @@ class MultiWalletView : WalletView() {
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             Analytics.send(Portfolio.ButtonManageTokens())
-            store.dispatch(TokensAction.LoadCurrencies(scanResponse = store.state.globalState.scanResponse))
-            store.dispatch(TokensAction.AllowToAddTokens(true))
+
             store.dispatch(
-                TokensAction.SetAddedCurrencies(
+                TokensAction.SetArgs.ManageAccess(
                     wallets = state.walletsDataFromStores,
                     derivationStyle = card.derivationStyle,
                 ),
             )
-
-            Analytics.send(ManageTokens.ScreenOpened())
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
@@ -175,7 +171,8 @@ class MultiWalletView : WalletView() {
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle),
                 )
             }
-            else -> { /* no-op */ }
+
+            else -> Unit
         }
     }
 
