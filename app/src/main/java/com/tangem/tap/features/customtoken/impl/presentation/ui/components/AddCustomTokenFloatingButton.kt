@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.PrimaryButtonIconLeft
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
@@ -16,14 +18,15 @@ import com.tangem.wallet.R
 /**
  * Add custom token floating button. Attached above the keyboard.
  *
- * @param model button model
+ * @param model    button model
+ * @param modifier modifier
  *
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton) {
+internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton, modifier: Modifier = Modifier) {
     PrimaryButtonIconLeft(
-        modifier = Modifier
+        modifier = modifier
             .imePadding()
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
@@ -36,16 +39,17 @@ internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton) {
 
 @Preview
 @Composable
-private fun Preview_AddCustomTokenFloatingButton_Enabled() {
+private fun Preview_AddCustomTokenFloatingButton(
+    @PreviewParameter(AddCustomTokenFloatingButtonProvider::class) model: AddCustomTokenFloatingButton,
+) {
     TangemTheme {
-        AddCustomTokenFloatingButton(model = AddCustomTokenFloatingButton(isEnabled = true, onClick = {}))
+        AddCustomTokenFloatingButton(model)
     }
 }
 
-@Preview
-@Composable
-private fun Preview_AddCustomTokenFloatingButton_Disabled() {
-    TangemTheme {
-        AddCustomTokenFloatingButton(model = AddCustomTokenFloatingButton(isEnabled = false, onClick = {}))
-    }
-}
+private class AddCustomTokenFloatingButtonProvider : CollectionPreviewParameterProvider<AddCustomTokenFloatingButton>(
+    listOf(
+        AddCustomTokenFloatingButton(isEnabled = true, onClick = {}),
+        AddCustomTokenFloatingButton(isEnabled = false, onClick = {}),
+    ),
+)

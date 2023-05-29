@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
@@ -50,10 +51,8 @@ import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.tokens.api.featuretoggles.TokensListFeatureToggles
-import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.redux.DaggerGraphAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
@@ -66,7 +65,7 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var preferencesStorage: PreferencesStorage
+lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 lateinit var userTokensRepository: UserTokensRepository
@@ -129,10 +128,10 @@ class TapApplication : Application(), ImageLoaderFactory {
     lateinit var networkConnectionManager: NetworkConnectionManager
 
     @Inject
-    lateinit var tokensListFeatureToggles: TokensListFeatureToggles
+    lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
 
     @Inject
-    lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
+    lateinit var preferencesDataSource: PreferencesDataSource
 
     override fun onCreate() {
         super.onCreate()
@@ -142,7 +141,13 @@ class TapApplication : Application(), ImageLoaderFactory {
                 appReducer(action, state, appStateHolder)
             },
             middleware = AppState.getMiddleware(),
-            state = AppState(),
+            state = AppState(
+                daggerGraphState = DaggerGraphState(
+                    assetReader = assetReader,
+                    networkConnectionManager = networkConnectionManager,
+                    customTokenFeatureToggles = customTokenFeatureToggles,
+                ),
+            ),
         )
 
         if (BuildConfig.DEBUG) {
@@ -154,7 +159,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         DomainLayer.init()
-        preferencesStorage = PreferencesStorage(this)
+        preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -177,15 +182,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
-
-        store.dispatch(
-            action = DaggerGraphAction.SetApplicationDependencies(
-                assetReader = assetReader,
-                networkConnectionManager = networkConnectionManager,
-                tokensListFeatureToggles = tokensListFeatureToggles,
-                customTokenFeatureToggles = customTokenFeatureToggles,
-            ),
-        )
 
         scope.launch {
             featureTogglesManager.init()
@@ -248,7 +244,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initFeedbackManager(
         context: Context,
-        preferencesStorage: PreferencesStorage,
+        preferencesStorage: PreferencesDataSource,
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
