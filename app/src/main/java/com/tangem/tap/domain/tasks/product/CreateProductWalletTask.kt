@@ -10,12 +10,12 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.common.map
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
@@ -56,6 +56,7 @@ private data class CreateWalletResponse(
 
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
+    private val seed: ByteArray? = null,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -74,7 +75,8 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemNote() -> CreateWalletTangemNote(cardTypesResolver)
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
-            else -> CreateWalletTangemWallet()
+
+            else -> CreateWalletTangemWallet(seed)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -129,7 +131,9 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
     }
 }
 
-private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWalletTaskResponse> {
+private class CreateWalletTangemWallet(
+    private val seed: ByteArray?,
+) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
     private var primaryCard: PrimaryCard? = null
 
@@ -138,7 +142,8 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val curves = card.getCurvesForNonCreatedWallets()
+        val walletsOnCard = card.wallets.map { it.curve }.toSet()
+        val curves = card.supportedCurves.intersect(CURVES_FOR_WALLETS).subtract(walletsOnCard).toList()
 
         if (curves.isEmpty()) {
             val createWalletResponses = card.wallets.map { wallet ->
@@ -148,7 +153,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             return
         }
 
-        CreateWalletsTask(curves).run(session) { result ->
+        CreateWalletsTask(curves, seed).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     proceedWithCreatedWallets(
@@ -158,7 +163,6 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                         callback = callback,
                     )
                 }
-
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
                 }
@@ -233,17 +237,38 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
         val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+        var isBlockchainsForCurvesExist = false
         createWalletResponse.forEach { response ->
             val blockchainsForCurve = getBlockchains(response.cardId, card).filter {
                 it.getSupportedCurves().contains(response.wallet.curve)
             }
-            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath(card.derivationStyle) }
+            val derivationPaths = blockchainsForCurve.mapNotNull {
+                isBlockchainsForCurvesExist = true
+                it.derivationPath(card.derivationStyle)
+            }
             if (derivationPaths.isNotEmpty()) {
                 map[response.wallet.publicKey.toMapKey()] = derivationPaths
             }
         }
+        val cardEnv = session.environment.card
+        if (cardEnv == null) {
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+            return
+        }
         if (map.isEmpty()) {
-            callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
+            if (isBlockchainsForCurvesExist) {
+                callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
+            } else {
+                // if there is no blockchains to derive, just return success response with empty derivedKeys
+                callback(
+                    CompletionResult.Success(
+                        CreateProductWalletTaskResponse(
+                            card = cardEnv,
+                            primaryCard = primaryCard,
+                        ),
+                    ),
+                )
+            }
             return
         }
 
@@ -254,7 +279,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                         callback(
                             CompletionResult.Success(
                                 CreateProductWalletTaskResponse(
-                                    card = session.environment.card!!,
+                                    card = cardEnv,
                                     derivedKeys = result.data.entries,
                                     primaryCard = primaryCard,
                                 ),
@@ -273,5 +298,9 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
             else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
         }
+    }
+
+    private companion object {
+        val CURVES_FOR_WALLETS = listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
     }
 }

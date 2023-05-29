@@ -9,6 +9,7 @@ data class TangemShapes internal constructor(
     val roundedCornersSmall: Shape,
     val roundedCornersSmall2: Shape,
     val roundedCornersMedium: Shape,
+    val roundedCornersXMedium: Shape,
     val roundedCornersLarge: Shape,
     val bottomSheet: Shape,
 ) {
@@ -16,6 +17,7 @@ data class TangemShapes internal constructor(
         roundedCornersSmall = RoundedCornerShape(size = dimens.radius2),
         roundedCornersSmall2 = RoundedCornerShape(size = dimens.radius4),
         roundedCornersMedium = RoundedCornerShape(size = dimens.radius12),
+        roundedCornersXMedium = RoundedCornerShape(size = dimens.radius16),
         roundedCornersLarge = RoundedCornerShape(size = dimens.radius28),
         bottomSheet = RoundedCornerShape(
             topStart = dimens.radius16,
