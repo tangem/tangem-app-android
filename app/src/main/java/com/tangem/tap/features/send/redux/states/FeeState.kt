@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.states
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.features.wallet.redux.ProgressState
 import java.math.BigDecimal
 
@@ -13,7 +14,7 @@ enum class FeeType {
 
 data class FeeState(
     val selectedFeeType: FeeType = FeeType.NORMAL,
-    val feeList: List<Amount>? = null,
+    val feeList: TransactionFee? = null,
     val currentFee: Amount? = null,
     val feeIsIncluded: Boolean = false,
     val feeIsApproximate: Boolean = false,
