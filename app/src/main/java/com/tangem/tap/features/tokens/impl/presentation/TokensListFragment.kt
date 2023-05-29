@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,7 +36,9 @@ internal class TokensListFragment : Fragment() {
             setContent {
                 isTransitionGroup = true
 
-                val viewModel = hiltViewModel<TokensListViewModel>()
+                val viewModel = hiltViewModel<TokensListViewModel>().apply {
+                    LocalLifecycleOwner.current.lifecycle.addObserver(this)
+                }
 
                 TangemTheme {
                     TokensListScreen(stateHolder = viewModel.uiState)
