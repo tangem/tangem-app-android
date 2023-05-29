@@ -1,6 +1,10 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
@@ -11,6 +15,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.model.UserWallet
@@ -24,17 +29,39 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.walletStoresManager
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class TapWalletManager {
-    val walletManagerFactory: WalletManagerFactory
-        by lazy { WalletManagerFactory(blockchainSdkConfig) }
+class TapWalletManager(
+    private val dispatchers: CoroutineDispatcherProvider = AppCoroutineDispatcherProvider(),
+) {
 
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
+    private var loadUserWalletDataJob: Job? = null
+        set(value) {
+            field?.cancel()
+            field = value
+        }
+
+    val walletManagerFactory: WalletManagerFactory
+        by lazy { WalletManagerFactory(blockchainSdkConfig) }
+
     suspend fun onWalletSelected(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
+        // If a previous job was running, it gets cancelled before the new one starts,
+        // ensuring that only one job is active at any given time.
+        loadUserWalletDataJob = CoroutineScope(dispatchers.io)
+            .launch { loadUserWalletData(userWallet, refresh, sendAnalyticsEvent) }
+            .also { it.join() }
+    }
+
+    private suspend fun loadUserWalletData(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
         Analytics.setContext(userWallet.scanResponse)
         if (sendAnalyticsEvent) {
             Analytics.send(Basic.WalletOpened())
@@ -68,6 +95,7 @@ class TapWalletManager {
                 Timber.d("Wallet stores fetched for ${userWallet.walletId}")
                 store.dispatchOnMain(WalletAction.LoadData.Success)
                 store.state.globalState.topUpController?.loadDataSuccess()
+                store.dispatchWithMain(WalletAction.Warnings.CheckHashesCount.VerifyOnlineIfNeeded)
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {

@@ -1,13 +1,12 @@
 package com.tangem.domain
 
-import com.tangem.blockchain.common.DerivationStyle
-
 /**
 [REDACTED_AUTHOR]
  * Provides a temporary copies of the app module classes, data structures, etc.
  */
 // TODO: refactoring: : after refactoring they should be unwrapped and moved
 // to appropriate parts of module
+@Deprecated("After refactoring they should be unwrapped and moved to appropriate parts of module")
 sealed interface DomainWrapped {
 
     // Mirror reflection ot the com.tangem.tap.features.wallet.redux.Currency
@@ -29,11 +28,6 @@ sealed interface DomainWrapped {
             override val derivationPath: String?,
         ) : Currency {
             override val currencySymbol: String = blockchain.currency
-        }
-
-        fun isCustomCurrency(derivationStyle: DerivationStyle?): Boolean {
-            if (derivationPath == null || derivationStyle == null) return false
-            return derivationPath != blockchain.derivationPath(derivationStyle)?.rawPath
         }
     }
 }
