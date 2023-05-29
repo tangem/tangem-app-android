@@ -1,13 +1,22 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
+import com.tangem.common.CompletionResult
+import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
     object GetToSaltPayStep : OnboardingWalletAction()
+
     object CreateWallet : OnboardingWalletAction()
+    data class WalletWasCreated(
+        val result: CompletionResult<CreateProductWalletTaskResponse>,
+    ) : OnboardingWalletAction()
+
     object Done : OnboardingWalletAction()
     object FinishOnboarding : OnboardingWalletAction()
 
@@ -17,6 +26,25 @@ sealed class OnboardingWalletAction : Action {
     class SetArtworkUrl(val artworkUri: Uri?) : OnboardingWalletAction()
 
     object OnBackPressed : OnboardingWalletAction()
+}
+
+sealed class OnboardingWallet2Action : OnboardingWalletAction() {
+    data class Init(val maxProgress: Int) : OnboardingWallet2Action()
+    data class SetDependencies(val maxProgress: Int) : OnboardingWallet2Action()
+
+    data class CreateWallet(
+        val callback: (CompletionResult<CreateWalletResponse>) -> Unit,
+    ) : OnboardingWallet2Action()
+
+    data class ImportWallet(
+        val mnemonicComponents: List<String>,
+        val seedPhraseSource: SeedPhraseSource,
+        val callback: (CompletionResult<CreateWalletResponse>) -> Unit,
+    ) : OnboardingWallet2Action()
+
+    data class WalletWasCreated(
+        val result: CompletionResult<CreateWalletResponse>,
+    ) : OnboardingWallet2Action()
 }
 
 sealed class BackupAction : Action {
@@ -62,4 +90,6 @@ sealed class BackupAction : Action {
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
+
+    data class ResetBackupCard(val cardId: String) : BackupAction()
 }
