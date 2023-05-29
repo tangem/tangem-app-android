@@ -9,6 +9,9 @@ import kotlinx.collections.immutable.ImmutableList
  */
 sealed interface TokenItemState {
 
+    /** Token id */
+    val id: String
+
     /** Token full name (name with symbol) */
     val fullName: String
 
@@ -21,11 +24,13 @@ sealed interface TokenItemState {
     /**
      * Token item state that is available for read
      *
-     * @property fullName     token name
+     * @property id       token id
+     * @property fullName token name
      * @property iconUrl  token icon url
      * @property networks list of networks that is available for read
      */
     data class ReadContent(
+        override val id: String,
         override val fullName: String,
         override val iconUrl: String,
         override val networks: ImmutableList<NetworkItemState.ReadContent>,
@@ -34,18 +39,18 @@ sealed interface TokenItemState {
     /**
      * Token item state that is available for read and manage
      *
+     * @property id       token id
      * @property fullName     token name
      * @property iconUrl  token icon url
      * @property networks list of networks is available for read and edit
-     * @property id       token id
      * @property name     token name
      * @property symbol   token brief name
      */
     data class ManageContent(
+        override val id: String,
         override val fullName: String,
         override val iconUrl: String,
         override val networks: ImmutableList<NetworkItemState.ManageContent>,
-        val id: String,
         val name: String,
         val symbol: String,
     ) : TokenItemState
