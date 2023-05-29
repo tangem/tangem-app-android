@@ -9,22 +9,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.blockchain.common.Blockchain
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField
-import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokensToolbar
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenFloatingButton
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenForm
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenToolbar
-import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenWarning
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.wallet.R
+import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenWarnings
 
 /**
  * Add custom token content
@@ -37,6 +36,7 @@ import com.tangem.wallet.R
 internal fun AddCustomTokenContent(state: AddCustomTokenStateHolder.Content) {
     BackHandler(onBack = state.onBackButtonClick)
 
+    var floatingButtonHeight by remember { mutableStateOf(0.dp) }
     Scaffold(
         topBar = {
             AddCustomTokenToolbar(
@@ -44,78 +44,36 @@ internal fun AddCustomTokenContent(state: AddCustomTokenStateHolder.Content) {
                 onBackButtonClick = state.toolbar.onBackButtonClick,
             )
         },
-        floatingActionButton = { AddCustomTokenFloatingButton(model = state.floatingButton) },
+        floatingActionButton = {
+            val density = LocalDensity.current
+            val verticalPadding = TangemTheme.dimens.spacing32
+            AddCustomTokenFloatingButton(
+                model = state.floatingButton,
+                modifier = Modifier.onSizeChanged {
+                    floatingButtonHeight = with(density) { it.height.toDp() + verticalPadding }
+                },
+            )
+        },
         floatingActionButtonPosition = FabPosition.Center,
     ) {
         Column(
             modifier = Modifier
+                .verticalScroll(rememberScrollState())
                 .padding(paddingValues = it)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .padding(bottom = floatingButtonHeight)
+                .fillMaxSize(),
         ) {
             AddCustomTokenForm(model = state.form)
 
-            state.warnings.forEach { description ->
-                key(description) {
-                    AddCustomTokenWarning(description)
-                }
-            }
+            AddCustomTokenWarnings(warnings = state.warnings)
         }
     }
 }
 
-@Preview(showSystemUi = true)
+@Preview
 @Composable
 private fun Preview_AddCustomTokenContent() {
     TangemTheme {
-        AddCustomTokenContent(
-            state = AddCustomTokenStateHolder.Content(
-                onBackButtonClick = {},
-                toolbar = AddCustomTokensToolbar(
-                    title = TextReference.Res(R.string.add_custom_token_title),
-                    onBackButtonClick = {},
-                ),
-                form = com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm(
-                    contractAddressInputField = AddCustomTokenInputField.ContactAddress(
-                        value = "",
-                        onValueChange = {},
-                        isError = false,
-                        isLoading = false,
-                    ),
-                    networkSelectorField = AddCustomTokenSelectorField.Network(
-                        selectedItem = AddCustomTokenSelectorField.SelectorItem.Title(
-                            title = TextReference.Str("Avalanche"),
-                            blockchain = Blockchain.Avalanche,
-                        ),
-                        items = listOf(),
-                        onMenuItemClick = {},
-                    ),
-                    tokenNameInputField = AddCustomTokenInputField.TokenName(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    tokenSymbolInputField = AddCustomTokenInputField.TokenSymbol(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    decimalsInputField = AddCustomTokenInputField.Decimals(
-                        value = "",
-                        onValueChange = {},
-                        isEnabled = false,
-                        isError = false,
-                    ),
-                    derivationPathSelectorField = null,
-                ),
-                warnings = listOf(),
-                floatingButton = AddCustomTokenFloatingButton(
-                    isEnabled = false,
-                    onClick = {},
-                ),
-            ),
-        )
+        AddCustomTokenContent(state = AddCustomTokenPreviewData.createContent())
     }
 }

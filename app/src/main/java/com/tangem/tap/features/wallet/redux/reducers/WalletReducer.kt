@@ -8,11 +8,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.userWalletsListManager
 import org.rekotlin.Action
@@ -95,6 +91,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         is WalletAction.WalletStoresChanged -> {
             newState = newState.copy(
                 walletsStores = action.walletStores,
+                selectedCurrency = findSelectedCurrency(
+                    walletsStores = action.walletStores,
+                    currentSelectedCurrency = newState.selectedCurrency,
+                    isMultiWalletAllowed = newState.isMultiwalletAllowed,
+                ),
             )
         }
         is WalletAction.TotalFiatBalanceChanged -> {
@@ -103,14 +104,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.LoadData.Success -> {
-            newState = newState.copy(
-                state = ProgressState.Done,
-                selectedCurrency = findSelectedCurrency(
-                    walletsStores = newState.walletsStores,
-                    currentSelectedCurrency = newState.selectedCurrency,
-                    isMultiWalletAllowed = newState.isMultiwalletAllowed,
-                ),
-            )
+            newState = newState.copy(state = ProgressState.Done)
         }
         is WalletAction.UpdateCanSaveUserWallets -> {
             newState = newState.copy(canSaveUserWallets = action.canSaveUserWallets)
@@ -168,10 +162,6 @@ fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
 
 private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
-        WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
-        WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(
-            hashesCountVerified = false,
-        )
         is WalletAction.Warnings.Set -> state.copy(mainWarningsList = action.warningList)
         else -> state
     }
