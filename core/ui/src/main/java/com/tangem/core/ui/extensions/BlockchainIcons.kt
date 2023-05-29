@@ -36,6 +36,10 @@ fun getActiveIconRes(blockchainId: String): Int {
         "The-Open-Network", "The-Open-Network/test" -> R.drawable.img_ton_22
         "KAVA", "KAVA/test" -> R.drawable.img_kava_22
         "ravencoin", "ravencoin/test" -> R.drawable.img_ravencoin_22
+        "cosmos", "cosmos/test" -> R.drawable.img_cosmos_22
+        "terra", "terra-luna" -> R.drawable.img_terra_22
+        "terra-2", "terra-luna-2" -> R.drawable.img_terra2_22
+        "cronos" -> R.drawable.img_cronos_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -78,6 +82,8 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         "ton" -> R.drawable.img_ton_22
         "kava" -> R.drawable.img_kava_22
         "ravencoin" -> R.drawable.img_ravencoin_22
+        "terra" -> R.drawable.img_terra_22
+        "terra-2" -> R.drawable.img_terra2_22
         else -> R.drawable.ic_alert_24
     }
 }

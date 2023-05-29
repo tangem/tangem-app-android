@@ -1,11 +1,14 @@
 package com.tangem.feature.onboarding.data.di
 
-import com.tangem.datasource.asset.AssetReader
+import android.content.Context
+import com.tangem.crypto.bip39.Wordlist
 import com.tangem.feature.onboarding.data.DefaultMnemonicRepository
 import com.tangem.feature.onboarding.data.MnemonicRepository
+import com.tangem.sdk.extensions.getWordlist
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -15,7 +18,7 @@ class OnboardingDataModule {
 
     @Provides
     @Singleton
-    fun provideSeedPhraseSdkRepository(assetReader: AssetReader): MnemonicRepository {
-        return DefaultMnemonicRepository(assetReader)
+    fun provideSeedPhraseSdkRepository(@ApplicationContext context: Context): MnemonicRepository {
+        return DefaultMnemonicRepository(Wordlist.getWordlist(context))
     }
 }
