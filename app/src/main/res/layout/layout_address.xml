@@ -109,7 +109,8 @@
                     android:layout_gravity="center"
                     android:background="?selectableItemBackgroundBorderless"
                     android:padding="5dp"
-                    app:srcCompat="@drawable/ic_copy" />
+                    app:srcCompat="@drawable/ic_copy"
+                    android:importantForAccessibility="no" />
 
             </FrameLayout>
 
@@ -133,7 +134,8 @@
                     android:layout_gravity="center"
                     android:background="?selectableItemBackgroundBorderless"
                     android:padding="2dp"
-                    app:srcCompat="@drawable/ic_qr_code_show" />
+                    app:srcCompat="@drawable/ic_qr_code_show"
+                    android:importantForAccessibility="no" />
 
             </FrameLayout>
 
@@ -142,7 +144,7 @@
                 style="@style/TextViewOnboarding.Body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/spacing16"
+                android:layout_margin="@dimen/layout_address_info_margin"
                 android:textAlignment="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_explore"
@@ -166,7 +168,8 @@
                 android:src="@drawable/ic_payid"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/tv_create_payid"
