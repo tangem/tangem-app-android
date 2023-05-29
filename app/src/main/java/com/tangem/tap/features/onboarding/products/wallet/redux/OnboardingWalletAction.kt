@@ -91,5 +91,5 @@ sealed class BackupAction : Action {
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
 
-    object ResetBackupCard : BackupAction()
+    data class ResetBackupCard(val cardId: String) : BackupAction()
 }
