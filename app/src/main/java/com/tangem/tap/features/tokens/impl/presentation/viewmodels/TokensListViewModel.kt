@@ -163,6 +163,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private fun createReadTokenContent(token: Token): TokenItemState.ReadContent {
         return TokenItemState.ReadContent(
+            id = token.id,
             fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createReadNetworkContent).toImmutableList(),
