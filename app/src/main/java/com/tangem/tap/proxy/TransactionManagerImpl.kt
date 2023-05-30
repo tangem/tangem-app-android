@@ -200,9 +200,10 @@ class TransactionManagerImpl(
                 // for not EVM blockchains set gasLimit ZERO for now
                 when (fee.data) {
                     is TransactionFee.Single -> {
+                        val amount = (fee.data as TransactionFee.Single).value
                         val singleFee = ProxyFee(
                             gasLimit = BigInteger.ZERO,
-                            fee = convertToProxyAmount(amount = (fee.data as TransactionFee.Single).value),
+                            fee = convertToProxyAmount(amount = amount),
                         )
                         ProxyFees(
                             minFee = singleFee,
