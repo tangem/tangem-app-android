@@ -41,6 +41,7 @@ class FeeReducer : SendInternalReducer {
     }
 
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
+
         val result = when (action) {
             is FeeAction.RequestFee -> {
                 state.copy(progressState = ProgressState.Loading)
@@ -54,8 +55,7 @@ class FeeReducer : SendInternalReducer {
                 )
             }
             is FeeAction.FeeCalculation.SetFeeResult -> {
-                val fees = action.fee
-                when (fees) {
+                when (val fees = action.fee) {
                     is TransactionFee.Single -> {
                         val feeType = FeeType.SINGLE
                         val currentFee = createValueOfFeeAmount(feeType, fees)
@@ -120,4 +120,6 @@ class FeeReducer : SendInternalReducer {
     private fun getCurrentFeeType(state: FeeState): FeeType {
         return if (state.selectedFeeType == FeeType.SINGLE) FeeType.NORMAL else state.selectedFeeType
     }
+
+ 
 }
