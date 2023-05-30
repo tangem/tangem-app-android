@@ -214,7 +214,8 @@ class GnosisRegistrator(
                         Result.Failure(BlockchainSdkError.FailedToLoadFee)
                     }
                     is TransactionFee.Choosable -> {
-                        Result.Success((data as TransactionFee.Choosable).normal)
+                        val normalFee = (data as TransactionFee.Choosable).normal
+                        Result.Success(normalFee)
                     }
                 }
             }
