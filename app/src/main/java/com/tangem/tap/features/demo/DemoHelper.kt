@@ -89,9 +89,9 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         val blockchain = walletManager.wallet.blockchain
         return Result.Success(
             TransactionFee.Choosable(
-                minimum = Amount(0.0001.toBigDecimal(), blockchain),
-                normal = Amount(0.0002.toBigDecimal(), blockchain),
-                priority = Amount(0.0003.toBigDecimal(), blockchain)
+                minimum = Amount(minimumFee, blockchain),
+                normal = Amount(normalFee, blockchain),
+                priority = Amount(priorityFee, blockchain)
             )
         )
     }
@@ -121,5 +121,9 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
 
     companion object {
         val ID = DemoTransactionSender::class.java.simpleName
+
+        private val minimumFee = 0.0001.toBigDecimal()
+        private val normalFee = 0.0002.toBigDecimal()
+        private val priorityFee = 0.0003.toBigDecimal()
     }
 }
