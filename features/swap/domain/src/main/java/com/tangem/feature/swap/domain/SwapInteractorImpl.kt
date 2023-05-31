@@ -682,7 +682,7 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val DEFAULT_SLIPPAGE = 2
         private const val ZERO_BALANCE = "0"
         private const val DEFAULT_BLOCKCHAIN_INCH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-        private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.4
+        private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.0 // if need to increase fee when check isEnough
         private const val INCREASE_GAS_LIMIT_BY = 125 // 25%
         private const val USDT_SYMBOL = "USDT"
         private const val USDC_SYMBOL = "USDC"
