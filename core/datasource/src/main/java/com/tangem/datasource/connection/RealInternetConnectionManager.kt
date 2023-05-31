@@ -25,7 +25,7 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
         .observeInternetConnectivity(
             InternetObservingSettings.builder()
                 .interval(PING_INTERVAL)
-                .build()
+                .build(),
         )
         .toFlowable(BackpressureStrategy.LATEST)
         .asFlow()
