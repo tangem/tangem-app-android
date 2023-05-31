@@ -10,10 +10,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
+import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.extensions.init
-import com.tangem.sdk.extensions.initWithBiometrics
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
@@ -77,6 +77,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var testerRouter: TesterRouter
 
+    @Inject
+    lateinit var injectedTangemSdk: TangemSdk
+
+    @Inject
+    lateinit var injectedTangemSdkManager: TangemSdkManager
+
+    @Inject
+    lateinit var scanCardUseCase: ScanCardUseCase
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
@@ -89,8 +98,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = TangemSdk.initWithBiometrics(this, TangemSdkManager.config)
-        tangemSdkManager = TangemSdkManager(tangemSdk, this)
+        tangemSdk = injectedTangemSdk
+        tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         appStateHolder.tangemSdk = tangemSdk
         backupService = BackupService.init(tangemSdk, this)
@@ -104,7 +113,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             ),
         )
 
-        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter))
+        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter, scanCardUseCase))
     }
 
     private fun initUserWalletsListManager() {
