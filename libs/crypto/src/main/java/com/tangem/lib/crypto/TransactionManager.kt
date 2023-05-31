@@ -1,8 +1,6 @@
 package com.tangem.lib.crypto
 
-import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.ProxyFees
-import com.tangem.lib.crypto.models.ProxyNetworkInfo
+import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import java.math.BigDecimal
 
@@ -11,26 +9,25 @@ interface TransactionManager {
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun sendApproveTransaction(
-        networkId: String,
-        feeAmount: BigDecimal,
-        gasLimit: Int,
-        destinationAddress: String,
-        dataToSign: String,
+        txData: ApproveTxData,
         derivationPath: String?,
+        analyticsData: AnalyticsData,
     ): SendTxResult
 
-    @Suppress("LongParameterList")
+    /**
+     * Send transaction
+     *
+     * @param txData data to build a tx
+     * @param derivationPath for select right walletManager
+     * @param analyticsData data for send analytics event
+     * @return result of transaction
+     */
     @Throws(IllegalStateException::class)
     suspend fun sendTransaction(
-        networkId: String,
-        amountToSend: BigDecimal,
-        feeAmount: BigDecimal,
-        gasLimit: Int,
-        destinationAddress: String,
-        dataToSign: String,
+        txData: SwapTxData,
         isSwap: Boolean,
-        currencyToSend: Currency,
         derivationPath: String?,
+        analyticsData: AnalyticsData,
     ): SendTxResult
 
     /**
