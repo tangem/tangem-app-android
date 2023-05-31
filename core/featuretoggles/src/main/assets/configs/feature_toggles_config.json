@@ -5,6 +5,10 @@
     },
     {
         "name": "REDESIGNED_CUSTOM_TOKEN_SCREEN_ENABLED",
-        "version": "4.6.0"
+        "version": "4.7.0"
+    },
+    {
+        "name": "NEW_CARD_SCANNING_ENABLED",
+        "version": "4.7.0"
     }
 ]
