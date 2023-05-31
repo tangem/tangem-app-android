@@ -3,9 +3,11 @@ package com.tangem.tap.features.home.redux
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
@@ -25,11 +27,6 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -80,6 +77,7 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     tangemSdkManager.setAccessCodeRequestPolicy(
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
     )
+
     ScanCardProcessor.scan(
         analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
@@ -93,6 +91,7 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
             store.dispatch(HomeAction.ScanInProgress(scanInProgress))
         },
         onFailure = {
+            Timber.e(it, "Unable to scan card")
             changeButtonState(ButtonState.ENABLED)
         },
         onSuccess = { scanResponse ->
@@ -101,26 +100,23 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     )
 }
 
-fun proceedWithScanResponse(scanResponse: ScanResponse) {
-    scope.launch {
-        val userWallet = UserWalletBuilder(scanResponse).build()
-        if (userWallet == null) {
-            Timber.e("User wallet not created")
-            return@launch
-        }
-
-        userWalletsListManager.save(userWallet)
-            .doOnFailure { error ->
-                Timber.e(error, "Unable to save user wallet")
-            }
-            .doOnSuccess {
-                scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
-            }
-            .doOnResult {
-                store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
-                navigateTo(AppScreen.Wallet)
-            }
+private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
+    val userWallet = UserWalletBuilder(scanResponse).build().guard {
+        Timber.e("User wallet not created")
+        return@launch
     }
+
+    userWalletsListManager.save(userWallet)
+        .doOnFailure { error ->
+            Timber.e(error, "Unable to save user wallet")
+        }
+        .doOnSuccess {
+            scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
+        }
+        .doOnResult {
+            store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
+            navigateTo(AppScreen.Wallet)
+        }
 }
 
 private suspend fun navigateTo(appScreen: AppScreen) {
