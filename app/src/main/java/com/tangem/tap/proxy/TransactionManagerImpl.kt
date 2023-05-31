@@ -279,33 +279,20 @@ class TransactionManagerImpl(
         return when (fee) {
             is Result.Success -> {
                 val choosableFee = fee.data
-                ProxyFees(
-                    minFee = ProxyFee(
-                        gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                        fee = convertToProxyAmount(choosableFee.minimum),
-                    ),
-                    normalFee = ProxyFee(
-                        gasLimit = BigInteger.ZERO,
-                        fee = convertToProxyAmount(amount = choosableFee.normal),
-                    ),
-                    priorityFee = ProxyFee(
-                        gasLimit = BigInteger.ZERO,
-                        fee = convertToProxyAmount(amount = choosableFee.priority),
-                    )
-                )
 
                 val minProxyFee = ProxyFee(
                     gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.minimum),
+                    fee = convertToProxyAmount(amount = choosableFee.minimum),
                 )
                 val normalProxyFee = ProxyFee(
                     gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.normal),
+                    fee = convertToProxyAmount(amount = choosableFee.normal),
                 )
                 val priorityProxyFee = ProxyFee(
                     gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.priority),
+                    fee = convertToProxyAmount(amount = choosableFee.priority),
                 )
+                
                 ProxyFees(
                     minFee = minProxyFee,
                     normalFee = normalProxyFee,
