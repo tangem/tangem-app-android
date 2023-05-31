@@ -51,7 +51,17 @@ sealed class Basic(
 
     class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom) : Basic(
         event = "Transaction sent",
-        params = mapOf(AnalyticsParam.SOURCE to sentFrom.value),
+        params = buildMap {
+            this[AnalyticsParam.SOURCE] = sentFrom.value
+            if (sentFrom is AnalyticsParam.TxData) {
+                this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
+                this[AnalyticsParam.TOKEN] = sentFrom.token
+                this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
+            }
+            if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
+                this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
+            }
+        },
     )
 
     class ScanError(error: Throwable) : Basic(
