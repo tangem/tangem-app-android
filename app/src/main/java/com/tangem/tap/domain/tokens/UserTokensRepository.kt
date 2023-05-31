@@ -47,6 +47,7 @@ class UserTokensRepository(
         storageService.saveUserTokens(userWalletId = userWalletId, tokens = userTokens)
     }
 
+    // FIXME: Move to data layer
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
         val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
         val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
@@ -62,6 +63,7 @@ class UserTokensRepository(
         return storageService.getUserTokens(userWalletId = userWalletId) ?: emptyList()
     }
 
+    // FIXME: Move to user wallet config
     private fun loadDemoCurrencies(): List<Currency> {
         return DemoHelper.config.demoBlockchains
             .map { blockchain ->
