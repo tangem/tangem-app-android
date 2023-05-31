@@ -1,6 +1,7 @@
 package com.tangem.datasource.connection
 
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
+import com.github.pwittchen.reactivenetwork.library.rx2.internet.observing.InternetObservingSettings
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import io.reactivex.BackpressureStrategy
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.reactive.asFlow
 
+private const val PING_INTERVAL = 5_000
+
 internal class RealInternetConnectionManager : NetworkConnectionManager {
 
     private val scope =
@@ -19,10 +22,14 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
         )
 
     override val isOnlineFlow: StateFlow<Boolean> = ReactiveNetwork
-        .observeInternetConnectivity()
+        .observeInternetConnectivity(
+            InternetObservingSettings.builder()
+                .interval(PING_INTERVAL)
+                .build()
+        )
         .toFlowable(BackpressureStrategy.LATEST)
         .asFlow()
-        .stateIn(scope, SharingStarted.Eagerly, initialValue = false)
+        .stateIn(scope, SharingStarted.Lazily, initialValue = false)
 
     override val isOnline: Boolean
         get() = isOnlineFlow.value
