@@ -217,7 +217,7 @@ internal class WalletSelectorMiddleware {
     private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
         Analytics.send(MyWallets.Button.WalletUnlockTapped())
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
-        return tangemSdkManager.scanProduct(userTokensRepository)
+        return ScanCardProcessor.scan()
             .map { scanResponse ->
                 val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
                 if (scannedUserWalletId == userWallet.walletId) {
