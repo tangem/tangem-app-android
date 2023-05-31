@@ -21,6 +21,7 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -133,6 +134,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var preferencesDataSource: PreferencesDataSource
 
+    @Inject
+    lateinit var walletFeatureToggles: WalletFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -146,6 +150,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     assetReader = assetReader,
                     networkConnectionManager = networkConnectionManager,
                     customTokenFeatureToggles = customTokenFeatureToggles,
+                    walletFeatureToggles = walletFeatureToggles,
                 ),
             ),
         )
