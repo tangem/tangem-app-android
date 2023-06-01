@@ -12,6 +12,7 @@
     <string name="common_done">Exécuté</string>
     <string name="common_ok">OK</string>
     <string name="common_save_changes">Sauvegarder les modifications</string>
+    <string name="common_send">Envoyer</string>
     <string name="common_success">Avec succès</string>
     <string name="details_manage_security_access_code">Code d\'accès</string>
     <string name="details_manage_security_access_code_description">Vous devrez entrer le mot de passe correct avant de scanner la carte</string>
@@ -48,7 +49,6 @@
     <string name="send_fee_picker_priority">Priorité</string>
     <string name="send_max_amount_label">Somme maximale</string>
     <string name="send_network_fee_title">Commissions du réseau</string>
-    <string name="send_title">Envoyer</string>
     <string name="send_total_label">Total</string>
     <string name="send_total_subtitle_asset_format">Sera envoyé %1$s et %2$s</string>
     <string name="send_total_subtitle_fiat_format">≈ %1$s (incl. les commissions : %2$s)</string>
@@ -61,7 +61,6 @@
     <string name="wallet_balance_loading">Solde est en cours de téléchargement…</string>
     <string name="wallet_balance_tx_in_progress">Transaction en cours…</string>
     <string name="wallet_balance_verified">Solde confirmé</string>
-    <string name="wallet_button_send">Envoyer</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_error_no_account">Compte n\'est pas créé</string>
     <string name="wallet_error_unsupported_blockchain">Cette carte n\'est pas prise en charge</string>
