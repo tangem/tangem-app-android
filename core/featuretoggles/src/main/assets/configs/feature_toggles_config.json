@@ -10,5 +10,9 @@
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
         "version": "4.7.0"
+    },
+    {
+        "name": "REDESIGNED_WALLET_SCREEN_ENABLED",
+        "version": "undefined"
     }
 ]
