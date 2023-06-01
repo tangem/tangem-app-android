@@ -8,9 +8,11 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Wallet fragment
@@ -18,7 +20,16 @@ import dagger.hilt.android.AndroidEntryPoint
 [REDACTED_AUTHOR]
  */
 @AndroidEntryPoint
-class WalletFragment : Fragment() {
+internal class WalletFragment : Fragment() {
+
+    /** Feature router */
+    @Inject
+    internal lateinit var walletRouter: WalletRouter
+
+    private val _walletRouter: InnerWalletRouter
+        get() = requireNotNull(walletRouter as? InnerWalletRouter) {
+            "_walletRouter should be instance of InnerWalletRouter"
+        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
@@ -31,11 +42,14 @@ class WalletFragment : Fragment() {
         return ComposeView(inflater.context).apply {
             setContent {
                 isTransitionGroup = true
-
-                TangemTheme {
-                    // TODO: [REDACTED_TASK_KEY] Call WalletScreen
-                }
+                _walletRouter.Initialize()
             }
         }
+    }
+
+    companion object {
+
+        /** Create wallet fragment instance */
+        fun create(): WalletFragment = WalletFragment()
     }
 }
