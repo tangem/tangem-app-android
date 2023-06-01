@@ -1,8 +1,6 @@
-package com.tangem.feature.wallet.presentation.ui.config
+package com.tangem.feature.wallet.presentation.state
 
 import androidx.annotation.DrawableRes
-import com.tangem.feature.wallet.presentation.ui.state.TokenOptionsUIState
-import com.tangem.feature.wallet.presentation.ui.state.TokenUIState
 
 /**
  * Token config
@@ -18,7 +16,7 @@ import com.tangem.feature.wallet.presentation.ui.state.TokenUIState
  * @property tokenOptionsUIState state for token options like 'unreachable', 'hidden' etc
  * @property hasPending pending tx in blockchain
  */
-data class TokenV2Config(
+internal data class TokenV2Config(
     val name: String,
     val amount: String,
     val fiatAmount: String,
