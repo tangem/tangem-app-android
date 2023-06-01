@@ -15,6 +15,7 @@ dependencies {
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.ui)
@@ -32,5 +33,4 @@ dependencies {
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
-
 }
