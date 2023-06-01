@@ -33,7 +33,6 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import timber.log.Timber
-import com.tangem.feature.wallet.presentation.WalletFragment as RedesignedWalletFragment
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment as RedesignedAddCustomTokenFragment
 
 fun FragmentActivity.openFragment(
@@ -140,7 +139,9 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
                 getDependency = DaggerGraphState::walletFeatureToggles,
             )
             if (featureToggles.isRedesignedScreenEnabled) {
-                RedesignedWalletFragment()
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::walletRouter)
+                    .getEntryFragment()
             } else {
                 WalletFragment()
             }

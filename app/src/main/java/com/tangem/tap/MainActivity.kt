@@ -12,6 +12,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
+import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
@@ -85,6 +86,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var scanCardUseCase: ScanCardUseCase
 
+    @Inject
+    lateinit var walletRouter: WalletRouter
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
@@ -112,7 +116,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             ),
         )
 
-        store.dispatch(DaggerGraphAction.SetActivityDependencies(testerRouter, scanCardUseCase))
+        store.dispatch(
+            DaggerGraphAction.SetActivityDependencies(
+                testerRouter = testerRouter,
+                scanCardUseCase = scanCardUseCase,
+                walletRouter = walletRouter,
+            ),
+        )
     }
 
     private fun initUserWalletsListManager() {
