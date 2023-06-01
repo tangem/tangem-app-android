@@ -5,10 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,20 +20,16 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
-import com.tangem.feature.wallet.presentation.ui.config.PriceChange
-import com.tangem.feature.wallet.presentation.ui.config.PriceChangeType
-import com.tangem.feature.wallet.presentation.ui.config.TokenV2Config
-import com.tangem.feature.wallet.presentation.ui.state.TokenOptionsUIState
-import com.tangem.feature.wallet.presentation.ui.state.TokenUIState
+import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.state.*
 
 private const val DOTS = "•••"
 
 @Composable
-fun TokenItemV2(config: TokenV2Config) {
+internal fun TokenItemV2(config: TokenV2Config) {
     when (config.tokenUIState) {
         TokenUIState.LOADED -> LoadedTokenState(config)
         TokenUIState.LOADING -> LoadingTokenState()
@@ -167,7 +162,6 @@ private fun LoadingTokenState() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun BaseSurface(onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
     Surface(
@@ -224,12 +218,15 @@ private fun TokenFiatPercentageBlock(fiatAmount: String, priceChange: PriceChang
         ) {
             val iconChangeArrow: Int
             val changeTextColor: Color
-            if (priceChange.type == PriceChangeType.UP) {
-                iconChangeArrow = R.drawable.img_arrow_up_8
-                changeTextColor = TangemTheme.colors.text.accent
-            } else {
-                iconChangeArrow = R.drawable.img_arrow_down_8
-                changeTextColor = TangemTheme.colors.text.warning
+            when (priceChange.type) {
+                PriceChangeType.UP -> {
+                    iconChangeArrow = R.drawable.img_arrow_up_8
+                    changeTextColor = TangemTheme.colors.text.accent
+                }
+                PriceChangeType.DOWN -> {
+                    iconChangeArrow = R.drawable.img_arrow_down_8
+                    changeTextColor = TangemTheme.colors.text.warning
+                }
             }
             Image(
                 modifier = Modifier.align(Alignment.CenterVertically),
