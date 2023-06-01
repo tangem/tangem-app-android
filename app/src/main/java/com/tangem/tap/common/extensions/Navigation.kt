@@ -1,11 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import android.os.Bundle
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
+import androidx.fragment.app.*
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -37,6 +33,7 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import timber.log.Timber
+import com.tangem.feature.wallet.presentation.WalletFragment as RedesignedWalletFragment
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment as RedesignedAddCustomTokenFragment
 
 fun FragmentActivity.openFragment(
@@ -138,7 +135,16 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
         AppScreen.OnboardingTwins -> TwinsCardsFragment()
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
-        AppScreen.Wallet -> WalletFragment()
+        AppScreen.Wallet -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::walletFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                RedesignedWalletFragment()
+            } else {
+                WalletFragment()
+            }
+        }
         AppScreen.Send -> SendFragment()
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsSecurity -> SecurityModeFragment()
