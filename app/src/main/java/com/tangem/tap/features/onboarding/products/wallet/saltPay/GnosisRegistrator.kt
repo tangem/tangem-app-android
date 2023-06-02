@@ -215,7 +215,7 @@ class GnosisRegistrator(
                     }
                     is TransactionFee.Choosable -> {
                         val normalFee = (data as TransactionFee.Choosable).normal
-                        Result.Success(normalFee)
+                        Result.Success(normalFee.amount)
                     }
                 }
             }

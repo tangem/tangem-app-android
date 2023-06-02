@@ -102,14 +102,14 @@ class FeeReducer : SendInternalReducer {
     private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Amount {
         return when (transactionFee) {
             is TransactionFee.Single -> {
-                transactionFee.normal
+                transactionFee.normal.amount
             }
             is TransactionFee.Choosable -> {
                 when (feeType) {
-                    FeeType.SINGLE -> transactionFee.normal
-                    FeeType.LOW -> transactionFee.minimum
-                    FeeType.NORMAL -> transactionFee.normal
-                    FeeType.PRIORITY -> transactionFee.priority
+                    FeeType.SINGLE -> transactionFee.normal.amount
+                    FeeType.LOW -> transactionFee.minimum.amount
+                    FeeType.NORMAL -> transactionFee.normal.amount
+                    FeeType.PRIORITY -> transactionFee.priority.amount
                 }
             }
         }
