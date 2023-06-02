@@ -8,6 +8,7 @@ import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
@@ -27,17 +28,21 @@ class FeeReducer : SendInternalReducer {
                 state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
             }
             is FeeActionUi.ChangeSelectedFee -> {
-                state.feeList?.let {
+                state.fees?.let {
                     val currentFee = createValueOfFeeAmount(action.feeType, it)
                     state.copy(
                         selectedFeeType = action.feeType,
                         currentFee = currentFee,
                     )
                 } ?: state
+                //  TODO?
             }
             is FeeActionUi.ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
         }
-        return updateLastState(sendState.copy(feeState = result), result)
+        return updateLastState(sendState.copy(
+            feeState = result,
+            transactionExtrasState = TransactionExtrasState()
+        ), result)
     }
 
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
@@ -62,7 +67,7 @@ class FeeReducer : SendInternalReducer {
 
                         state.copy(
                             selectedFeeType = feeType,
-                            feeList = fees,
+                            fees = fees,
                             currentFee = currentFee,
                             feeIsApproximate = isFeeApproximate(sendState),
                         )
@@ -73,7 +78,7 @@ class FeeReducer : SendInternalReducer {
 
                         state.copy(
                             selectedFeeType = feeType,
-                            feeList = fees,
+                            fees = fees,
                             currentFee = currentFee,
                             feeIsApproximate = isFeeApproximate(sendState),
                         )
@@ -84,7 +89,7 @@ class FeeReducer : SendInternalReducer {
             }
             FeeAction.FeeCalculation.ClearResult -> {
                 state.copy(
-                    feeList = null,
+                    fees = null,
                     currentFee = null,
                     progressState = ProgressState.Done,
                 )
