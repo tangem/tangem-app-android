@@ -14,7 +14,7 @@ enum class FeeType {
 
 data class FeeState(
     val selectedFeeType: FeeType = FeeType.NORMAL,
-    val feeList: TransactionFee? = null,
+    val fees: TransactionFee? = null,
     val currentFee: Amount? = null,
     val feeIsIncluded: Boolean = false,
     val feeIsApproximate: Boolean = false,
