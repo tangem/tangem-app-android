@@ -74,3 +74,29 @@ val assembleQA by tasks.registering {
     dependsOn(assembleInternalQA)
     dependsOn(assembleExternalQA)
 }
+
+val generateComposeMetrics by tasks.registering {
+    group = "other"
+    description = "Build external APK and generates compose metrics to 'build/compose-metrics' directory"
+
+    val outputDir = "${buildDir.absolutePath}/compose_metrics"
+
+    subprojects {
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+            compilerOptions {
+                // Metrics
+                freeCompilerArgs.addAll(
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDir",
+                )
+                // Reports
+                freeCompilerArgs.addAll(
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDir",
+                )
+            }
+        }
+    }
+
+    finalizedBy(assembleExternalQA)
+}
