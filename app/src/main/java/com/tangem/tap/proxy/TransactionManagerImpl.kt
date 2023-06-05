@@ -6,6 +6,8 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.transaction.EthereumFeeExtras
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -99,7 +101,7 @@ class TransactionManagerImpl(
     ): SendTxResult {
         val txData = walletManager.createTransaction(
             amount = amount,
-            fee = Amount(value = feeAmount, blockchain = blockchain),
+            fee = Fee(Amount(value = feeAmount, blockchain = blockchain)),
             destination = destinationAddress,
         ).copy(hash = dataToSign, extras = createExtras(walletManager, gasLimit, dataToSign))
 
@@ -281,15 +283,15 @@ class TransactionManagerImpl(
                 val choosableFee = fee.data
 
                 val minProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    gasLimit = (choosableFee.minimum.extras as EthereumFeeExtras).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                 )
                 val normalProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    gasLimit = (choosableFee.normal.extras as EthereumFeeExtras).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                 )
                 val priorityProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
+                    gasLimit = (choosableFee.priority.extras as EthereumFeeExtras).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                 )
                 
