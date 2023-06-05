@@ -4,6 +4,7 @@ import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.github.pwittchen.reactivenetwork.library.rx2.internet.observing.InternetObservingSettings
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import io.reactivex.BackpressureStrategy
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,6 +22,14 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
             SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("RealInternetConnectionManager"),
         )
 
+    private val initialNetworkResult: Boolean by lazy {
+        ReactiveNetwork
+            .checkInternetConnectivity()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .blockingGet()
+    }
+
     override val isOnlineFlow: StateFlow<Boolean> = ReactiveNetwork
         .observeInternetConnectivity(
             InternetObservingSettings.builder()
@@ -29,7 +38,7 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
         )
         .toFlowable(BackpressureStrategy.LATEST)
         .asFlow()
-        .stateIn(scope, SharingStarted.Lazily, initialValue = false)
+        .stateIn(scope, SharingStarted.Lazily, initialValue = initialNetworkResult)
 
     override val isOnline: Boolean
         get() = isOnlineFlow.value
