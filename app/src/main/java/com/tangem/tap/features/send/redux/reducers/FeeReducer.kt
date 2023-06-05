@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
@@ -99,17 +100,17 @@ class FeeReducer : SendInternalReducer {
         return updateLastState(sendState.copy(feeState = result), result)
     }
 
-    private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Amount {
+    private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Fee {
         return when (transactionFee) {
             is TransactionFee.Single -> {
-                transactionFee.normal.amount
+                transactionFee.normal
             }
             is TransactionFee.Choosable -> {
                 when (feeType) {
-                    FeeType.SINGLE -> transactionFee.normal.amount
-                    FeeType.LOW -> transactionFee.minimum.amount
-                    FeeType.NORMAL -> transactionFee.normal.amount
-                    FeeType.PRIORITY -> transactionFee.priority.amount
+                    FeeType.SINGLE -> transactionFee.normal
+                    FeeType.LOW -> transactionFee.minimum
+                    FeeType.NORMAL -> transactionFee.normal
+                    FeeType.PRIORITY -> transactionFee.priority
                 }
             }
         }
