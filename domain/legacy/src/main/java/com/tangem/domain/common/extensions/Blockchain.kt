@@ -177,4 +177,5 @@ fun Blockchain.isSupportedInApp(): Boolean {
 
 private val excludedBlockchains = listOf(
     Blockchain.SaltPay,
+    Blockchain.Unknown,
 )
