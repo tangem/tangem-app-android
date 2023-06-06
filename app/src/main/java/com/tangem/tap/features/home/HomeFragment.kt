@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
-import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -37,11 +37,10 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(inflater.context).apply {
             setContent {
-                BackHandler {
-                    requireActivity().finish()
-                }
-
-                AppCompatTheme {
+                TangemTheme {
+                    BackHandler {
+                        requireActivity().finish()
+                    }
                     ScreenContent()
                 }
             }
