@@ -19,7 +19,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -237,10 +236,8 @@ private fun sendTransaction(
             dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
             tangemSdk.config.linkedTerminal = linkedTerminalState
 
-            val currencyType = AnalyticsParam.CurrencyType.Amount(amountToSend)
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    Analytics.send(Token.Send.TransactionSent(currencyType))
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
@@ -272,8 +269,6 @@ private fun sendTransaction(
                         destinationAddress = destinationAddress,
                     )
                     val error = sendResult.error as? BlockchainSdkError ?: return@withMainContext
-
-                    Analytics.send(Token.Send.TransactionSent(currencyType, error))
 
                     when (error) {
                         is BlockchainSdkError.WrappedTangemError -> {
