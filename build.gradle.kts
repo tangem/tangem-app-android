@@ -79,20 +79,19 @@ val generateComposeMetrics by tasks.registering {
     group = "other"
     description = "Build external APK and generates compose metrics to 'build/compose-metrics' directory"
 
-    val outputDir = "${buildDir.absolutePath}/compose_metrics"
-
     subprojects {
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             compilerOptions {
+                val outputDirectory = "${project.buildDir.absolutePath}/compose_metrics"
                 // Metrics
                 freeCompilerArgs.addAll(
                     "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDir",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDirectory",
                 )
                 // Reports
                 freeCompilerArgs.addAll(
                     "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDir",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDirectory",
                 )
             }
         }
