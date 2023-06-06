@@ -1,12 +1,12 @@
-package com.tangem.feature.wallet.presentation.viewmodels
+package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.ui.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.properties.Delegates
