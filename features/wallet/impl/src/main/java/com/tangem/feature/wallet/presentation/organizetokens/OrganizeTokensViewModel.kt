@@ -4,16 +4,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder.DragConfig
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder.HeaderConfig
-import com.tangem.feature.wallet.presentation.organizetokens.utils.checkCanMoveHeaderOver
-import com.tangem.feature.wallet.presentation.organizetokens.utils.checkCanMoveTokenOver
-import com.tangem.feature.wallet.presentation.organizetokens.utils.findItemsToMove
-import com.tangem.feature.wallet.presentation.organizetokens.utils.moveItem
+import com.tangem.feature.wallet.presentation.organizetokens.utils.*
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.burnoutcrew.reorderable.ItemPosition
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -22,9 +22,8 @@ import kotlin.properties.Delegates
 @HiltViewModel
 internal class OrganizeTokensViewModel @Inject constructor() : ViewModel() {
 
-    // TODO: Move to domain
     @Volatile
-    private var groupIdToTokens: Map<String, List<DraggableItem.Token>>? = null
+    private var movingItem: DraggableItem? = null
 
     var router: InnerWalletRouter by Delegates.notNull()
 
@@ -38,8 +37,8 @@ internal class OrganizeTokensViewModel @Inject constructor() : ViewModel() {
         dragConfig = DragConfig(
             onItemDragged = this::moveItem,
             canDragItemOver = this::checkCanMoveItemOver,
-            onItemDragEnd = this::expandGroups,
-            onDragStart = this::collapseGroup,
+            onItemDragEnd = this::endMoving,
+            onDragStart = this::startMoving,
         ),
         header = HeaderConfig(
             onSortByBalanceClick = { /* no-op */ },
@@ -78,46 +77,42 @@ internal class OrganizeTokensViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun collapseGroup(item: DraggableItem) {
-        if (!groupIdToTokens.isNullOrEmpty() || item is DraggableItem.Token) return
+    private fun startMoving(movingItem: DraggableItem) = viewModelScope.launch(Dispatchers.Default) {
+        if (this@OrganizeTokensViewModel.movingItem != null) return@launch
+        this@OrganizeTokensViewModel.movingItem = movingItem
 
-        val itemsState = uiState.itemsState as? OrganizeTokensListState.GroupedByNetwork ?: return
-        groupIdToTokens = itemsState.items
-            .asSequence()
-            .filterIsInstance<DraggableItem.Token>()
-            .groupBy(DraggableItem.Token::groupId)
-
-        uiState = uiState.copy(
-            itemsState = itemsState.updateItems { items ->
-                items.filterNot { it is DraggableItem.Token && it.groupId == item.id }
-            },
-        )
-    }
-
-    private fun expandGroups() {
-        if (groupIdToTokens.isNullOrEmpty()) return
-
-        val itemsState = uiState.itemsState as? OrganizeTokensListState.GroupedByNetwork ?: return
-        val currentGroups = itemsState.items.filterIsInstance<DraggableItem.GroupHeader>()
-        val newItems = currentGroups
-            .flatMapIndexed { index, group ->
-                mutableListOf<DraggableItem>(group)
-                    .also { it.addAll(groupIdToTokens?.get(group.id).orEmpty()) }
-                    .also {
-                        if (index != currentGroups.lastIndex) {
-                            it.add(DraggableItem.GroupPlaceholder(id = "group_divider_$index"))
-                        }
-                    }
+        val updatedItemsState = uiState.itemsState.updateItems { items ->
+            when (movingItem) {
+                is DraggableItem.GroupHeader -> items.collapseGroup(movingItem)
+                is DraggableItem.Token -> when (uiState.itemsState) {
+                    is OrganizeTokensListState.GroupedByNetwork -> items.divideGroups(movingItem)
+                    is OrganizeTokensListState.Ungrouped -> items.divideItems(movingItem)
+                }
+                is DraggableItem.GroupPlaceholder -> items
             }
+        }
 
-        uiState = uiState.copy(
-            itemsState = itemsState.updateItems { newItems },
-        )
-
-        groupIdToTokens = null
+        uiState = uiState.copy(itemsState = updatedItemsState)
     }
 
-    private fun moveItem(from: ItemPosition, to: ItemPosition) {
+    private fun endMoving() = viewModelScope.launch(Dispatchers.Default) {
+        if (movingItem == null) return@launch
+
+        val updatedItemsState = uiState.itemsState.updateItems { items ->
+            when (movingItem) {
+                is DraggableItem.GroupHeader -> items.expandGroups()
+                is DraggableItem.Token -> items.uniteItems()
+                is DraggableItem.GroupPlaceholder,
+                null,
+                -> items
+            }
+        }
+
+        uiState = uiState.copy(itemsState = updatedItemsState)
+        movingItem = null
+    }
+
+    private fun moveItem(from: ItemPosition, to: ItemPosition) = viewModelScope.launch(Dispatchers.Default) {
         uiState = uiState.copy(
             itemsState = uiState.itemsState.updateItems {
                 it.moveItem(from.index, to.index)
