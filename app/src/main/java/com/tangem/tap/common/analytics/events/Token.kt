@@ -77,12 +77,6 @@ sealed class Token(
         class ButtonPaste : Send("Button - Paste")
         class ButtonQRCode : Send("Button - QR Code")
         class ButtonSwapCurrency : Send("Button - Swap Currency")
-
-        class TransactionSent(type: CurrencyType, error: Throwable? = null) : Send(
-            event = "Transaction Sent",
-            params = mapOf("Token" to type.value),
-            error = error,
-        )
     }
 
     sealed class Topup(
