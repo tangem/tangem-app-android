@@ -11,6 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH16
@@ -23,16 +24,19 @@ import com.tangem.feature.learn2earn.presentation.ui.component.GradientCircle
 /**
 [REDACTED_AUTHOR]
  */
-@Suppress("ReusedModifierInstance")
+// TODO: fixme: make function as internal after adding feature interface
 @Composable
-fun OneInchStoriesContent(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
+fun OneInchStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         ContentBackground(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .align(Alignment.Center),
         )
         StoryDescription(
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.size40)
+                .fillMaxSize(),
             headerText = stringResource(id = R.string.story_learn_title),
             bodyText = stringResource(id = R.string.story_learn_description),
         )
@@ -77,13 +81,10 @@ private fun ContentBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StoryDescription(headerText: String, bodyText: String) {
+private fun StoryDescription(headerText: String, bodyText: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.size40)
-            .fillMaxSize(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
     ) {
         SpacerH32()
         Text(
@@ -100,6 +101,30 @@ private fun StoryDescription(headerText: String, bodyText: String) {
             textAlign = TextAlign.Center,
             style = TangemTypography.subtitle1,
             color = TangemTheme.colors.text.tertiary,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun OneInchStoriesContentPreview_Light() {
+    TangemTheme(
+        isDark = false,
+    ) {
+        OneInchStoriesScreen(
+            onLearnClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun OneInchStoriesContentPreview_Dark() {
+    TangemTheme(
+        isDark = true,
+    ) {
+        OneInchStoriesScreen(
+            onLearnClick = {},
         )
     }
 }
