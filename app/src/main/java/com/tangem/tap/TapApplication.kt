@@ -102,7 +102,6 @@ val walletCurrenciesManager by lazy {
 val totalFiatBalanceCalculator by lazy {
     TotalFiatBalanceCalculator.provideDefaultImplementation()
 }
-val intentHandler by lazy { IntentHandler() }
 
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
