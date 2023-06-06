@@ -12,12 +12,12 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 
 class ConfigurationPlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        target.plugins.all(startConfigurationAction(project = target))
+    override fun apply(project: Project) {
+        project.configure()
+        project.plugins.all(startPluginConfigurationAction(project))
     }
 
-    private fun startConfigurationAction(project: Project) = Action<Plugin<*>> {
-        project.configure()
+    private fun startPluginConfigurationAction(project: Project) = Action<Plugin<*>> {
         when (this) {
             is AppPlugin -> {
                 project.configure<AppExtension> { configure(project) }
