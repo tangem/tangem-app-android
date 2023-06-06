@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.learn2earn.presentation.ui.OneInchStoriesContent
+import com.tangem.feature.learn2earn.presentation.ui.OneInchStoriesScreen
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
@@ -152,12 +152,7 @@ fun StoriesScreen(
                 colorFilter = if (currentStory.isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
             when (currentStory) {
-                Stories.OneInchPromo -> {
-                    // TODO: fixme
-                    TangemTheme {
-                        OneInchStoriesContent({})
-                    }
-                }
+                Stories.OneInchPromo -> OneInchStoriesScreen({})
                 Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStory.duration) { hideContent.value = it }
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStory.duration)
                 Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStory.duration)
@@ -200,7 +195,11 @@ fun StoriesScreen(
             if (currentStory != Stories.OneInchPromo) {
                 HomeButtons(
                     modifier = Modifier
-                        .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
+                        .padding(
+                            start = TangemTheme.dimens.size16,
+                            end = TangemTheme.dimens.size16,
+                            bottom = TangemTheme.dimens.size36,
+                        )
                         .fillMaxWidth(),
                     isDarkBackground = currentStory.isDarkBackground,
                     btnScanStateInProgress = homeState.value.btnScanStateInProgress,
