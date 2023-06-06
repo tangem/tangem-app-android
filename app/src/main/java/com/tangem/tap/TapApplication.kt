@@ -21,7 +21,6 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -107,7 +106,6 @@ val walletCurrenciesManager by lazy {
 val totalFiatBalanceCalculator by lazy {
     TotalFiatBalanceCalculator.provideDefaultImplementation()
 }
-val intentHandler by lazy { IntentHandler() }
 
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
