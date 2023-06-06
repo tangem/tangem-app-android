@@ -14,22 +14,3 @@ internal sealed interface TokenListState {
         val tokens: ImmutableList<TokenItemState>,
     ) : TokenListState
 }
-
-@Immutable
-internal sealed interface NetworkGroupState {
-    val id: String
-    val networkName: String
-    val tokens: ImmutableList<TokenItemState>
-
-    data class Draggable(
-        override val id: String,
-        override val networkName: String,
-        override val tokens: ImmutableList<TokenItemState.Draggable>,
-    ) : NetworkGroupState
-
-    data class Content(
-        override val id: String,
-        override val networkName: String,
-        override val tokens: ImmutableList<TokenItemState>,
-    ) : NetworkGroupState
-}
