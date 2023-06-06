@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
@@ -103,4 +104,28 @@ private fun ContentBackground(shape: Shape) {
             )
             .fillMaxSize(),
     )
+}
+
+@Preview
+@Composable
+private fun OneInchStoriesContentPreview_Light() {
+    TangemTheme(
+        isDark = false,
+    ) {
+        GetBonusAlert(
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun OneInchStoriesContentPreview_Dark() {
+    TangemTheme(
+        isDark = true,
+    ) {
+        GetBonusAlert(
+            onClick = {},
+        )
+    }
 }
