@@ -19,7 +19,42 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.state.NetworkGroupState
 
 @Composable
-internal fun NetworkGroupItem(state: NetworkGroupState, modifier: Modifier = Modifier) {
+internal fun NetworkGroupItem(state: NetworkGroupState.Content, modifier: Modifier = Modifier) {
+    InternalNetworkGroupItem(
+        modifier = modifier,
+        networkName = state.networkName,
+        tokens = {
+            state.tokens.forEach { token ->
+                key(token.id) {
+                    TokenItem(state = token)
+                }
+            }
+        },
+    )
+}
+
+@Composable
+internal fun DraggableNetworkGroupItem(state: NetworkGroupState.Draggable, modifier: Modifier = Modifier) {
+    InternalNetworkGroupItem(
+        modifier = modifier,
+        networkName = state.networkName,
+        endIcon = {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_group_drop_24),
+                tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
+            )
+        },
+    )
+}
+
+@Composable
+private fun InternalNetworkGroupItem(
+    networkName: String,
+    modifier: Modifier = Modifier,
+    tokens: @Composable ColumnScope.() -> Unit = {},
+    endIcon: @Composable RowScope.() -> Unit = {},
+) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -31,34 +66,30 @@ internal fun NetworkGroupItem(state: NetworkGroupState, modifier: Modifier = Mod
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = R.string.wallet_network_group_title, state.networkName),
+                text = stringResource(id = R.string.wallet_network_group_title, networkName),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
-            if (state is NetworkGroupState.Draggable) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_group_drop_24),
-                    tint = TangemTheme.colors.icon.informative,
-                    contentDescription = null,
-                )
-            }
+            endIcon()
         }
-        Column {
-            state.tokens.forEach { token ->
-                key(token.id) {
-                    TokenItem(state = token)
-                }
-            }
-        }
+        tokens()
     }
 }
 
 // region Preview
+@Composable
+private fun NetworkGroupItemSample(group: NetworkGroupState) {
+    when (group) {
+        is NetworkGroupState.Content -> NetworkGroupItem(group)
+        is NetworkGroupState.Draggable -> DraggableNetworkGroupItem(group)
+    }
+}
+
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun NetworkGroupItemPreview_Light(@PreviewParameter(NetworkGroupProvider::class) group: NetworkGroupState) {
     TangemTheme {
-        NetworkGroupItem(group)
+        NetworkGroupItemSample(group)
     }
 }
 
@@ -66,7 +97,7 @@ private fun NetworkGroupItemPreview_Light(@PreviewParameter(NetworkGroupProvider
 @Composable
 private fun NetworkGroupItemPreview_Dark(@PreviewParameter(NetworkGroupProvider::class) group: NetworkGroupState) {
     TangemTheme(isDark = true) {
-        NetworkGroupItem(group)
+        NetworkGroupItemSample(group)
     }
 }
 
