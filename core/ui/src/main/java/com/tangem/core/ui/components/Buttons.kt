@@ -1,29 +1,9 @@
 package com.tangem.core.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ButtonElevation
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -244,6 +224,78 @@ fun SelectorButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
 }
 // endregion Other
 
+// region Action
+
+/**
+ * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=290-305&t=3z98eFnTeyIx5TH5-4)
+ * */
+@Composable
+fun RoundedActionButton(
+    text: String,
+    icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIcon.Left(icon),
+        onClick = onClick,
+        enabled = enabled,
+        showProgress = false,
+        colors = TangemButtonsDefaults.secondaryButtonColors,
+        size = TangemButtonSize.RoundedAction,
+    )
+}
+
+/**
+ * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1208-1395&t=3z98eFnTeyIx5TH5-4)
+ * */
+@Composable
+fun ActionButton(
+    text: String,
+    icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIcon.Left(icon),
+        onClick = onClick,
+        enabled = enabled,
+        showProgress = false,
+        colors = TangemButtonsDefaults.secondaryButtonColors,
+        size = TangemButtonSize.Action,
+    )
+}
+
+/**
+ * Same as [RoundedActionButton] but colored in primary background color
+ * */
+@Composable
+fun BackgroundActionButton(
+    text: String,
+    icon: Painter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIcon.Left(icon),
+        onClick = onClick,
+        enabled = enabled,
+        showProgress = false,
+        colors = TangemButtonsDefaults.backgroundButtonColors,
+        size = TangemButtonSize.RoundedAction,
+    )
+}
+// endregion Action
+
 // region Defaults
 @Suppress("LongParameterList")
 @Composable
@@ -335,13 +387,12 @@ private fun ButtonContent(
     }
 }
 
-sealed interface TangemButtonIcon {
+@Immutable
+private sealed interface TangemButtonIcon {
     val painter: Painter?
 
-    @Immutable
     data class Left(override val painter: Painter) : TangemButtonIcon
 
-    @Immutable
     data class Right(override val painter: Painter) : TangemButtonIcon
 
     object None : TangemButtonIcon {
@@ -349,10 +400,12 @@ sealed interface TangemButtonIcon {
     }
 }
 
-enum class TangemButtonSize {
+private enum class TangemButtonSize {
     Default,
     Text,
     Selector,
+    Action,
+    RoundedAction,
 }
 
 @Composable
@@ -360,6 +413,9 @@ private fun TangemButtonSize.toHeightDp(): Dp = when (this) {
     TangemButtonSize.Default -> TangemTheme.dimens.size48
     TangemButtonSize.Text -> TangemTheme.dimens.size40
     TangemButtonSize.Selector -> TangemTheme.dimens.size24
+    TangemButtonSize.Action,
+    TangemButtonSize.RoundedAction,
+    -> TangemTheme.dimens.size36
 }
 
 @Composable
@@ -367,6 +423,8 @@ private fun TangemButtonSize.toShape(): Shape = when (this) {
     TangemButtonSize.Default -> TangemTheme.shapes.roundedCornersMedium
     TangemButtonSize.Text -> TangemTheme.shapes.roundedCornersSmall
     TangemButtonSize.Selector -> TangemTheme.shapes.roundedCornersSmall
+    TangemButtonSize.Action -> TangemTheme.shapes.roundedCornersMedium
+    TangemButtonSize.RoundedAction -> TangemTheme.shapes.roundedCornersLarge
 }
 
 @Composable
@@ -374,6 +432,9 @@ private fun TangemButtonSize.toIconPadding(): Dp = when (this) {
     TangemButtonSize.Default -> TangemTheme.dimens.spacing8
     TangemButtonSize.Text -> TangemTheme.dimens.spacing8
     TangemButtonSize.Selector -> 0.dp
+    TangemButtonSize.Action,
+    TangemButtonSize.RoundedAction,
+    -> TangemTheme.dimens.spacing8
 }
 
 object TangemButtonsDefaults {
@@ -421,6 +482,14 @@ object TangemButtonsDefaults {
             backgroundColor = Color.Transparent,
             contentColor = TangemTheme.colors.text.tertiary,
             disabledBackgroundColor = Color.Transparent,
+            disabledContentColor = TangemTheme.colors.text.disabled,
+        )
+
+    val backgroundButtonColors: ButtonColors
+        @Composable get() = TangemButtonColors(
+            backgroundColor = TangemTheme.colors.background.primary,
+            contentColor = TangemTheme.colors.text.primary1,
+            disabledBackgroundColor = TangemTheme.colors.button.disabled,
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
 }
@@ -648,6 +717,69 @@ private fun TextButtonPreview_Light() {
 private fun TextButtonPreview_Dark() {
     TangemTheme(isDark = true) {
         TextButtonSample()
+    }
+}
+
+@Composable
+private fun ActionButtonSample(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary),
+    ) {
+        RoundedActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        ActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        BackgroundActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        RoundedActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            enabled = false,
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        ActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            enabled = false,
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        BackgroundActionButton(
+            text = "Send",
+            icon = painterResource(id = R.drawable.ic_arrow_up_24),
+            enabled = false,
+            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ActionButtonPreview_Light() {
+    TangemTheme {
+        ActionButtonSample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ActionButtonPreview_Dark() {
+    TangemTheme(isDark = true) {
+        ActionButtonSample()
     }
 }
 // endregion Preview
