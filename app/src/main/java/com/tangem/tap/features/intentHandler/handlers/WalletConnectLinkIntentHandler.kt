@@ -30,7 +30,7 @@ class WalletConnectLinkIntentHandler : IntentHandler {
         }
     }
 
-    companion object {
+    private companion object {
         private const val TANGEM_SCHEME = "tangem"
         private const val TANGEM_WC_PREFIX = "tangem://wc?uri="
     }
