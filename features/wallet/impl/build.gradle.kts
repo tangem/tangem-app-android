@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.kotlin.immutable.collections)
 
     /** DI */
     implementation(deps.hilt.android)
