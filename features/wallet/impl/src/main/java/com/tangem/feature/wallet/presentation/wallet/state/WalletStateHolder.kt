@@ -1,4 +1,6 @@
-package com.tangem.feature.wallet.presentation.state
+package com.tangem.feature.wallet.presentation.wallet.state
+
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Wallet state holder
@@ -21,7 +23,7 @@ internal data class WalletStateHolder(
      * @property onMoreClick     lambda be invoked when more button is clicked
      */
     data class HeaderConfig(
-        val wallets: List<WalletCardState>,
+        val wallets: ImmutableList<WalletCardState>,
         val onScanCardClick: () -> Unit,
         val onMoreClick: () -> Unit,
     )
