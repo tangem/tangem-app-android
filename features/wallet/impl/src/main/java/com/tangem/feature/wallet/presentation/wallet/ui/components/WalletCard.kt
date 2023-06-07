@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.ui.components
+package com.tangem.feature.wallet.presentation.wallet.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -17,12 +17,12 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.FontSizeRange
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.ShimmerRectangle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.state.WalletCardState
-import com.tangem.feature.wallet.presentation.ui.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 
 private const val DOTS = "•••"
 
@@ -119,7 +119,7 @@ private fun Balance(state: WalletCardState) {
             )
         }
         is WalletCardState.Loading -> {
-            ShimmerRectangle(
+            RectangleShimmer(
                 modifier = Modifier.size(
                     width = TangemTheme.dimens.size102,
                     height = TangemTheme.dimens.size24,
