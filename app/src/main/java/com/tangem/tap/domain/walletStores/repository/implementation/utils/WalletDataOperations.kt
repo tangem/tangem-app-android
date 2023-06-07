@@ -170,7 +170,10 @@ internal fun List<WalletDataModel>.updateWithMissedDerivation(): List<WalletData
 internal fun List<WalletDataModel>.updateWithUnreachable(): List<WalletDataModel> {
     return this.map { walletData ->
         walletData.copy(
-            status = WalletDataModel.Unreachable(errorMessage = null),
+            status = WalletDataModel.Unreachable(
+                errorMessage = null,
+                amount = walletData.status.amount,
+            ),
         )
     }
 }
