@@ -10,6 +10,7 @@ import timber.log.Timber
  * @author Anton Zhilenkov on 04.06.2023.
  */
 class SellCurrencyIntentHandler : IntentHandler {
+
     override suspend fun handleIntent(intent: Intent?): Boolean {
         return try {
             val intentData = intent?.data ?: return false
@@ -34,7 +35,7 @@ class SellCurrencyIntentHandler : IntentHandler {
         }
     }
 
-    companion object {
+    private companion object {
         private const val TRANSACTION_ID_PARAM = "transactionId"
         private const val CURRENCY_CODE_PARAM = "baseCurrencyCode"
         private const val CURRENCY_AMOUNT_PARAM = "baseCurrencyAmount"

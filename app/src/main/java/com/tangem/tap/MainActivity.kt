@@ -30,7 +30,7 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.features.intentHandler.MainIntentHandler
+import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var testerRouter: TesterRouter
 
     // TODO: fixme: inject through DI
-    private val intentHandler: MainIntentHandler = MainIntentHandler()
+    private val intentProcessor: IntentProcessor = IntentProcessor()
 
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
@@ -119,10 +119,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
-        intentHandler.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider))
-        intentHandler.addHandler(WalletConnectLinkIntentHandler())
-        intentHandler.addHandler(BuyCurrencyIntentHandler())
-        intentHandler.addHandler(SellCurrencyIntentHandler())
+        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider))
+        intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+        intentProcessor.addHandler(BuyCurrencyIntentHandler())
+        intentProcessor.addHandler(SellCurrencyIntentHandler())
     }
 
     private fun initUserWalletsListManager() {
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         scope.launch {
-            intentHandler.handleIntent(intent)
+            intentProcessor.handleIntent(intent)
         }
     }
 
@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
-        intentHandler.removeAll()
+        intentProcessor.removeAll()
         super.onDestroy()
     }
 
@@ -260,7 +260,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         } else {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
             scope.launch {
-                intentHandler.handleIntent(intentWhichStartedActivity)
+                intentProcessor.handleIntent(intentWhichStartedActivity)
             }
         }
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
