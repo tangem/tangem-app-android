@@ -85,7 +85,7 @@ private class EmptyReducer : SendInternalReducer {
 private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val prepareAction = action as PrepareSendScreen
-        val walletManager = action.walletManager!!
+        val walletManager = action.walletManager
         val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
         val decimals = amountToExtract.decimals
         val feePaidInNetworkCurrency = isFeePaidInNetworkCurrency(walletManager.wallet.blockchain)
