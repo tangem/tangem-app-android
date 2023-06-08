@@ -465,6 +465,7 @@
     <string name="wallet_error_no_account">Account is not created</string>
     <string name="wallet_error_unsupported_blockchain">This card is not supported</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Your Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app</string>
+    <string name="wallet_network_group_title">%s network</string>
     <string name="wallet_notification_address_copied">Address was copied to clipboard</string>
     <string name="wallet_notification_no_internet">No internet connection</string>
     <string name="wallet_pending_tx_receiving">Receiving</string>
