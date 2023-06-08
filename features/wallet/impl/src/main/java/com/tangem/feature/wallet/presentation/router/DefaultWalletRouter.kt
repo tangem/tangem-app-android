@@ -10,8 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
-import com.tangem.feature.wallet.presentation.ui.WalletScreen
-import com.tangem.feature.wallet.presentation.viewmodels.WalletViewModel
+import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
