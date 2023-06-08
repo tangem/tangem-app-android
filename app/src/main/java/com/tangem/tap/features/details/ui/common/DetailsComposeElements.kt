@@ -1,23 +1,9 @@
 package com.tangem.tap.features.details.ui.common
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.RadioButton
-import androidx.compose.material.RadioButtonDefaults
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +11,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButtonIconRight
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
@@ -110,13 +96,13 @@ fun EmptyTopBarWithNavigation(
 
 @Composable
 fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    PrimaryButtonIconRight(
+    PrimaryButtonIconEnd(
         text = title,
         enabled = enabled,
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth(),
-        icon = painterResource(id = R.drawable.ic_tangem_24),
+        iconResId = R.drawable.ic_tangem_24,
     )
 }
 
