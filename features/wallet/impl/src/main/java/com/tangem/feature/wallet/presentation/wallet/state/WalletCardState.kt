@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.state
+package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.annotation.DrawableRes
 

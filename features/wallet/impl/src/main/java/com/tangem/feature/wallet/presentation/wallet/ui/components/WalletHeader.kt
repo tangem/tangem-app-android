@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.ui.components
+package com.tangem.feature.wallet.presentation.wallet.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -21,9 +21,10 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.state.WalletCardState
-import com.tangem.feature.wallet.presentation.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.ui.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Wallet screen header
@@ -109,7 +110,7 @@ private fun Preview_WalletHeader_DarkTheme(
 private class WalletHeaderProvider : CollectionPreviewParameterProvider<WalletStateHolder.HeaderConfig>(
     collection = listOf(
         WalletStateHolder.HeaderConfig(
-            wallets = listOf(
+            wallets = persistentListOf(
                 WalletPreviewData.walletCardContent,
                 WalletPreviewData.walletCardLoading,
                 WalletPreviewData.walletCardHiddenContent,
