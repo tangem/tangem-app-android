@@ -4,6 +4,8 @@ import com.tangem.core.ui.R
 import com.tangem.feature.wallet.presentation.common.state.NetworkGroupState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
+import com.tangem.feature.wallet.presentation.common.state.TokenListState
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import kotlinx.collections.immutable.persistentListOf
@@ -104,6 +106,20 @@ internal object WalletPreviewData {
     )
 
     val loadingTokenItemState = TokenItemState.Loading(id = UUID.randomUUID().toString())
+
+    val organizeTokensState = OrganizeTokensStateHolder(
+        tokens = TokenListState.GroupedByNetwork(
+            groups = persistentListOf(),
+        ),
+        header = OrganizeTokensStateHolder.HeaderConfig(
+            onSortByBalanceClick = {},
+            onGroupByNetworkClick = {},
+        ),
+        actions = OrganizeTokensStateHolder.ActionsConfig(
+            onApplyClick = {},
+            onCancelClick = {},
+        ),
+    )
 
     private val draggableTokenList = persistentListOf(
         tokenItemDragState.copy(
