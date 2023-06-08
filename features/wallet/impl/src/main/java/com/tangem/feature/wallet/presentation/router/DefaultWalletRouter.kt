@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import kotlin.properties.Delegates
@@ -35,7 +37,11 @@ internal class DefaultWalletRouter : InnerWalletRouter {
 
                 composable(WalletScreens.ORGANIZE_TOKENS.name) {
                     BackHandler(onBack = ::popBackStack)
-                    // TODO: Add OrganizeTokensScreen
+
+                    val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
+                        .apply { router = this@DefaultWalletRouter }
+
+                    OrganizeTokensScreen(state = viewModel.uiState)
                 }
             }
         }
