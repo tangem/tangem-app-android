@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_logo"
+    android:insetLeft="48dp"
+    android:insetRight="48dp"
+    android:insetTop="48dp"
+    android:insetBottom="48dp"/>
+
+<!-- image should fit exactly in square 192x192 dp-->
+<!-- (192 - splash_logo_side)/2 = 48dp -->
