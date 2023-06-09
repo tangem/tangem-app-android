@@ -32,13 +32,8 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.WalletConnect -> {
                     if (cardTypesResolver?.isMultiwalletAllowed() == true) it else null
                 }
-                SettingsElement.SendFeedback ->
-                    if (cardTypesResolver?.isSaltPay() != true) it else null
-                SettingsElement.LinkMoreCards -> {
-                    // if (state.createBackupAllowed) it else null
-                    // TODO: SaltPay: temporary excluding backup process for Visa cards
-                    if (state.createBackupAllowed && cardTypesResolver?.isSaltPay() != true) it else null
-                }
+                SettingsElement.SendFeedback -> it
+                SettingsElement.LinkMoreCards -> if (state.createBackupAllowed) it else null
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
                 }
