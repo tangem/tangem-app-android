@@ -14,7 +14,8 @@ androidxActivityCompose = "1.5.0"
 androidxAppCompat = "1.5.1"
 androidxBrowser = "1.4.0"
 androidxConstraintLayout = "2.1.4"
-androidxCore = "1.9.0"
+androidxKtx = "1.9.0"
+androidxSplashScreen = "1.0.1"
 androidxFragment = "1.5.3"
 androidxLifecycle = "2.5.1"
 androidx-paging = "3.1.1"
@@ -119,7 +120,8 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
-androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxKtx" }
+androidx-core-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidxLifecycle" }
