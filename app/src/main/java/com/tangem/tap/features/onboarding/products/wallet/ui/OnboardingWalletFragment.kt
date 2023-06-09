@@ -37,14 +37,11 @@ import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.ui.OnboardingSaltPayStateHandler
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
-import com.tangem.wallet.databinding.LayoutOnboardingSaltpayBinding
 import com.tangem.wallet.databinding.LayoutOnboardingSeedPhraseBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,12 +59,9 @@ class OnboardingWalletFragment :
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
-    internal val bindingSaltPay: LayoutOnboardingSaltpayBinding by lazy { binding.onboardingSaltpayContainer }
 
     private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
-
-    private val saltPayStateHandler: OnboardingSaltPayStateHandler = OnboardingSaltPayStateHandler(this)
 
     private lateinit var cardsWidget: WalletCardsWidget
     private var accessCodeDialog: AccessCodeDialog? = null
@@ -108,7 +102,6 @@ class OnboardingWalletFragment :
 
         store.dispatch(OnboardingWallet2Action.Init(seedPhraseViewModel.maxProgress))
         store.dispatch(OnboardingWalletAction.Init)
-        store.dispatch(OnboardingSaltPayAction.Init)
         store.dispatch(
             OnboardingWalletAction.LoadArtwork(
                 cardArtworkUriForUnfinishedBackup = requireContext().resourceUri(R.drawable.card_placeholder_wallet),
@@ -170,7 +163,6 @@ class OnboardingWalletFragment :
 
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
-        if (state.isSaltPay) reInitCardsWidgetIfNeeded(1)
 
         animator.updateBackupState(state.backupState)
         requireActivity().invalidateOptionsMenu()
@@ -181,9 +173,6 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
-            }
-            state.isSaltPay -> {
-                saltPayStateHandler.newState(state)
             }
             else -> {
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
@@ -207,7 +196,6 @@ class OnboardingWalletFragment :
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(
                 state = state.backupState,
-                isSaltPay = state.isSaltPay,
                 isWallet2 = state.wallet2State != null,
             )
 
@@ -231,21 +219,21 @@ class OnboardingWalletFragment :
         animator.setupCreateWalletState()
     }
 
-    private fun setBackupState(state: BackupState, isSaltPay: Boolean, isWallet2: Boolean) {
+    private fun setBackupState(state: BackupState, isWallet2: Boolean) {
         when (state.backupStep) {
-            BackupStep.InitBackup -> showBackupIntro(state, isSaltPay, isWallet2)
+            BackupStep.InitBackup -> showBackupIntro(state, isWallet2)
             BackupStep.ScanOriginCard -> showScanOriginCard()
-            BackupStep.AddBackupCards -> showAddBackupCards(state, isSaltPay)
+            BackupStep.AddBackupCards -> showAddBackupCards(state)
             BackupStep.SetAccessCode -> showSetAccessCode()
             BackupStep.EnterAccessCode -> showEnterAccessCode(state)
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
-            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state, isSaltPay)
-            is BackupStep.WriteBackupCard -> showWriteBackupCard(state, isSaltPay)
+            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
+            is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
             BackupStep.Finished -> showSuccess()
         }
     }
 
-    private fun showBackupIntro(state: BackupState, isSaltPay: Boolean, isWallet2: Boolean) = with(binding) {
+    private fun showBackupIntro(state: BackupState, isWallet2: Boolean) = with(binding) {
         imvFirstBackupCard.show()
         imvSecondBackupCard.show()
 
@@ -260,7 +248,7 @@ class OnboardingWalletFragment :
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
             btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup && !isSaltPay && !isWallet2)
+            btnWalletAlternativeAction.show(state.canSkipBackup && !isWallet2)
         }
         animator.showBackupIntro(state)
     }
@@ -281,7 +269,7 @@ class OnboardingWalletFragment :
         animator.showScanOriginCard()
     }
 
-    private fun showAddBackupCards(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showAddBackupCards(state: BackupState) = with(binding) {
         prepareBackupView()
 
         accessCodeDialog?.dismiss()
@@ -299,25 +287,20 @@ class OnboardingWalletFragment :
         layoutButtonsAddCards.btnContinue.text = getText(R.string.onboarding_button_finalize_backup)
         layoutButtonsAddCards.btnContinue.setOnClickListener { store.dispatch(BackupAction.FinishAddingBackupCards) }
         layoutButtonsAddCards.btnContinue.isEnabled = state.backupCardsNumber != 0
-
-        if (isSaltPay) {
-            saltPayStateHandler.showAddBackupCards(state)
-        } else {
-            when (state.backupCardsNumber) {
-                0 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
-                    tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
-                }
-                1 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
-                    tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
-                }
-                2 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
-                    tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
-                }
-                else -> {}
+        when (state.backupCardsNumber) {
+            0 -> {
+                tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
             }
+            1 -> {
+                tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
+                tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
+            }
+            2 -> {
+                tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+            }
+            else -> {}
         }
 
         animator.showAddBackupCards(state, state.backupCardsNumber)
@@ -363,25 +346,19 @@ class OnboardingWalletFragment :
         accessCodeDialog?.showError(state.accessCodeError)
     }
 
-    private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showWritePrimaryCard(state: BackupState) = with(binding) {
         accessCodeDialog?.dismiss()
 
         reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        if (isSaltPay) {
-            tvHeader.text = getText(R.string.onboarding_saltpay_title_prepare_origin)
-            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
-        } else {
-            tvHeader.text = getText(R.string.common_origin_card)
-            tvBody.text = getString(
-                R.string.onboarding_subtitle_scan_primary_card_format,
-                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
-            )
-            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
-        }
+        tvHeader.text = getText(R.string.common_origin_card)
+        tvBody.text = getString(
+            R.string.onboarding_subtitle_scan_primary_card_format,
+            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+        )
+        layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
         animator.showWritePrimaryCard(state)
@@ -399,27 +376,21 @@ class OnboardingWalletFragment :
         imvSecondBackupCard.show()
     }
 
-    private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showWriteBackupCard(state: BackupState) = with(binding) {
         prepareViewForFinalizeStep()
 
         reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
-        if (isSaltPay) {
-            tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
-            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnWalletMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
-        } else {
-            val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-            tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
-            tvBody.text = getString(
-                R.string.onboarding_subtitle_scan_backup_card_format,
-                cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
-            )
-            layoutButtonsCommon.btnWalletMainAction.text = getString(
-                R.string.onboarding_button_backup_card_format,
-                cardNumber,
-            )
-        }
+        val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
+        tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
+        tvBody.text = getString(
+            R.string.onboarding_subtitle_scan_backup_card_format,
+            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
+        )
+        layoutButtonsCommon.btnWalletMainAction.text = getString(
+            R.string.onboarding_button_backup_card_format,
+            cardNumber,
+        )
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
