@@ -132,6 +132,5 @@ data class Artwork(
         const val MARTA_CARD_ID = "BC02"
         const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
-        const val SALT_PAY_URL = "key_for_switch_url_to_drawableId_of_salt_pay_card"
     }
 }
