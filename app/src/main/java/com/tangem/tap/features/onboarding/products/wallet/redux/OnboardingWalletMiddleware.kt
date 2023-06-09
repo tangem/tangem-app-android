@@ -461,7 +461,6 @@ private fun cardActivationIsFinished(cardId: String): Boolean {
 
 /**
  * Standard Wallet cards start activation at OnboardingWalletAction.CreateWallet
- * SaltPay cards start activation at OnboardingWalletAction.StartSaltPayCardActivation
  */
 private fun startCardActivation(scanResponse: ScanResponse) {
     preferencesStorage.usedCardsPrefStorage.activationStarted(scanResponse.card.cardId)
@@ -469,7 +468,6 @@ private fun startCardActivation(scanResponse: ScanResponse) {
 
 /**
  * Standard Wallet cards finish activation at BackupAction.SkipBackup and BackupAction.FinishBackup
- * SaltPay cards finish activation at OnboardingWalletAction.FinishOnboarding
  */
 internal fun finishCardActivation(cardIds: List<String>) {
     cardIds.forEach { cardId ->
@@ -483,9 +481,6 @@ internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<Strin
         .distinct()
 }
 
-/**
- * Not used for SaltPay cards, because discarding unfinished backup is not possible
- */
 private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
     preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
 }

@@ -27,7 +27,7 @@ import org.rekotlin.Store
  * Handles the verification process to determine if the scanned card requires onboarding.
  *
  * Returns:
- * - [ScanChainException.OnboardingNeeded] if onboarding required for none SaltPay cards.
+ * - [ScanChainException.OnboardingNeeded] if onboarding required.
  *
  * @param store the [Store] that holds the state of the app.
  * @param tapWalletManager manager responsible for handling operations related to the Wallet.
