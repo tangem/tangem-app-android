@@ -27,7 +27,7 @@
     </queries>
 
     <application
-        android:theme="@style/AppTheme"
+        android:theme="@style/SplashTheme"
         android:label="@string/tangem_app_name"
         android:name="com.tangem.tap.TapApplication"
         android:icon="@mipmap/ic_launcher"
