@@ -105,21 +105,22 @@ internal object WalletPreviewData {
     private const val tokensSize = 3
     val draggableItems = List(networksSize) { it }
         .flatMap { index ->
-            val n = index + 1
+            val lastNetworkIndex = networksSize - 1
+            val networkNumber = index + 1
 
             val group = DraggableItem.GroupHeader(
-                id = "group_$n",
-                networkName = "$n",
+                id = "group_$networkNumber",
+                networkName = "$networkNumber",
             )
 
             val tokens: MutableList<DraggableItem.Token> = mutableListOf()
             repeat(times = tokensSize) { i ->
-                val nt = i + 1
+                val tokenNumber = i + 1
                 tokens.add(
                     DraggableItem.Token(
                         tokenItemState = tokenItemDragState.copy(
-                            id = "${group.id}_token_$nt",
-                            name = "Token $nt",
+                            id = "${group.id}_token_$tokenNumber",
+                            name = "Token $tokenNumber",
                             networkIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                         ),
                         groupId = group.id,
@@ -127,9 +128,14 @@ internal object WalletPreviewData {
                 )
             }
 
+            val divider = DraggableItem.GroupPlaceholder(id = "divider_$networkNumber")
+
             buildList {
                 add(group)
                 addAll(tokens)
+                if (index != lastNetworkIndex) {
+                    add(divider)
+                }
             }
         }
         .toPersistentList()
@@ -145,6 +151,12 @@ internal object WalletPreviewData {
         header = OrganizeTokensStateHolder.HeaderConfig(
             onSortByBalanceClick = {},
             onGroupByNetworkClick = {},
+        ),
+        dragConfig = OrganizeTokensStateHolder.DragConfig(
+            onItemDragged = { _, _ -> },
+            onDragStart = {},
+            canDragItemOver = { _, _ -> false },
+            onItemDragEnd = {},
         ),
         actions = OrganizeTokensStateHolder.ActionsConfig(
             onApplyClick = {},
