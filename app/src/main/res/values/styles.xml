@@ -12,6 +12,12 @@
 
     <style name="AppTheme" parent="BaseAppTheme" />
 
+    <style name="SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/background_splash</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/inset_splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+
     <!-- Toolbar -->
 
     <!-- Toolbar - overrides the menu text color to use a selector that responds to whether it's enabled or not -->
