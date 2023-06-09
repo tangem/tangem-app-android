@@ -10,8 +10,6 @@ import org.rekotlin.Action
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
-    object GetToSaltPayStep : OnboardingWalletAction()
-
     object CreateWallet : OnboardingWalletAction()
     data class WalletWasCreated(
         val result: CompletionResult<CreateProductWalletTaskResponse>,

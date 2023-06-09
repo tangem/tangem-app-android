@@ -47,10 +47,7 @@ sealed class GlobalAction : Action {
          * Initiate resuming of unfinished backup for standard Wallet and SaltPay cards.
          * See more BackupAction.CheckForUnfinishedBackup
          */
-        data class StartForUnfinishedBackup(
-            val addedBackupCardsCount: Int,
-            val isSaltPayVisa: Boolean,
-        ) : Onboarding()
+        data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
 
         object Stop : Onboarding()
     }

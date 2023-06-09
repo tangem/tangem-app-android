@@ -24,7 +24,6 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
@@ -47,7 +46,6 @@ import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
-import com.tangem.tap.features.wallet.ui.wallet.saltPay.SaltPayWalletView
 import com.tangem.tap.store
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -166,20 +164,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
     override fun newStateOnMain(state: WalletState) {
         if (activity == null || view == null) return
 
-        val isSaltPay = store.state.globalState.scanResponse?.cardTypesResolver?.isSaltPay() == true
-
         when {
-            isSaltPay && walletView !is SaltPayWalletView -> {
-                walletView.onViewDestroy()
-                walletView = SaltPayWalletView()
-                walletView.changeWalletView(this, binding)
-            }
             state.isMultiwalletAllowed && walletView !is MultiWalletView -> {
                 walletView.onViewDestroy()
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
             }
-            !state.isMultiwalletAllowed && !isSaltPay && walletView !is SingleWalletView -> {
+            !state.isMultiwalletAllowed && walletView !is SingleWalletView -> {
                 walletView.onViewDestroy()
                 walletView = SingleWalletView()
                 walletView.changeWalletView(this, binding)
@@ -199,9 +190,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             binding.toolbar.inflateMenu(R.menu.menu_wallet)
         }
 
-        setupCardImage(state, isSaltPay)
+        setupCardImage(state)
 
-        if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
+        showWarningsIfPresent(state.mainWarningsList)
 
         setupPullToRefreshLayout(state)
 
@@ -255,24 +246,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         binding.rvWarningMessages.show(warnings.isNotEmpty())
     }
 
-    private fun setupCardImage(state: WalletState, isSaltPay: Boolean) {
-        // TODO: SaltPay: remove hardCode
-        if (isSaltPay) {
-            binding.ivCard.load(R.drawable.img_salt_pay_visa) {
-                scale(Scale.FIT)
-                crossfade(enable = true)
-                placeholder(R.drawable.card_placeholder_black)
-                error(R.drawable.card_placeholder_black)
-                fallback(R.drawable.card_placeholder_black)
-            }
-        } else {
-            binding.ivCard.load(state.cardImage?.artworkId) {
-                scale(Scale.FIT)
-                crossfade(enable = true)
-                placeholder(R.drawable.card_placeholder_black)
-                error(R.drawable.card_placeholder_black)
-                fallback(R.drawable.card_placeholder_black)
-            }
+    private fun setupCardImage(state: WalletState) {
+        binding.ivCard.load(state.cardImage?.artworkId) {
+            scale(Scale.FIT)
+            crossfade(enable = true)
+            placeholder(R.drawable.card_placeholder_black)
+            error(R.drawable.card_placeholder_black)
+            fallback(R.drawable.card_placeholder_black)
         }
     }
 

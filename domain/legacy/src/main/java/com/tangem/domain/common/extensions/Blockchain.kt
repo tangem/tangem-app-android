@@ -48,7 +48,6 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "optimistic-ethereum" -> Blockchain.Optimism
         "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
         "dash" -> Blockchain.Dash
-        "sxdai" -> Blockchain.SaltPay
         "kaspa" -> Blockchain.Kaspa
         "the-open-network" -> Blockchain.TON
         "the-open-network/test" -> Blockchain.TONTestnet
@@ -113,7 +112,6 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Optimism -> "optimistic-ethereum"
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
-        Blockchain.SaltPay -> "sxdai"
         Blockchain.Kaspa -> "kaspa"
         Blockchain.TON -> "the-open-network"
         Blockchain.TONTestnet -> "the-open-network/test"
@@ -158,7 +156,6 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
-        Blockchain.SaltPay -> "xdai"
         Blockchain.Kaspa -> "kaspa"
         Blockchain.TON, Blockchain.TONTestnet -> "the-open-network"
         Blockchain.Unknown -> "unknown"
@@ -176,6 +173,5 @@ fun Blockchain.isSupportedInApp(): Boolean {
 }
 
 private val excludedBlockchains = listOf(
-    Blockchain.SaltPay,
     Blockchain.Unknown,
 )

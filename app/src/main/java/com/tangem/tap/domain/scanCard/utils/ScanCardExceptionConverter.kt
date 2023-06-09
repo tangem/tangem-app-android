@@ -4,7 +4,6 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.card.ScanCardException
 import com.tangem.tap.domain.scanCard.chains.ScanChainException
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCardException> {
@@ -35,10 +34,6 @@ internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCar
     private fun concertScanChainException(value: ScanCardException.ChainException): TangemError {
         return when (val e = value as? ScanChainException) {
             is ScanChainException.DisclaimerWasCanceled -> TangemSdkError.UserCancelled()
-            is ScanChainException.PutSaltPayVisaCard -> TangemSdkError.ExceptionError(
-                SaltPayActivationError.PutVisaCard,
-            )
-            is ScanChainException.CheckForSaltPayOnboardingCaseException,
             is ScanChainException.OnboardingNeeded,
             null,
             -> TangemSdkError.ExceptionError(e?.cause)
