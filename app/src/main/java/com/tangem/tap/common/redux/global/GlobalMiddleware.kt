@@ -6,9 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -26,16 +24,12 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
-import com.tangem.tap.network.exchangeServices.utorg.UtorgAuthProvider
-import com.tangem.tap.network.exchangeServices.utorg.UtorgEnvironment
-import com.tangem.tap.network.exchangeServices.utorg.UtorgExchangeService
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
 import com.tangem.tap.walletCurrenciesManager
-import com.tangem.wallet.BuildConfig
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -109,13 +103,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 return
             }
 
-            val scanResponse = globalState.scanResponse ?: globalState.onboardingState.onboardingManager?.scanResponse
-
             // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeChatConfig = action.chatConfig ?: when {
-                scanResponse?.cardTypesResolver?.isSaltPay() == true -> config.saltPayConfig?.sprinklr
-                else -> config.zendesk
-            }
+            val unsafeChatConfig = action.chatConfig ?: config.zendesk
 
             val chatConfig = unsafeChatConfig.guard {
                 store.dispatchDebugErrorNotification("ZendeskConfig not initialized")
@@ -139,11 +128,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     store.state.globalState.scanResponse
                         ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
                 }
-                val productTypeProvider: () -> ProductType? = { scanResponseProvider.invoke()?.productType }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
 
                 val exchangeManager = CurrencyExchangeManager(
-                    buyService = makeBuyExchangeService(config, productTypeProvider),
+                    buyService = makeBuyExchangeService(config),
                     sellService = makeSellExchangeService(config),
                     primaryRules = CardExchangeRules(cardProvider),
                 )
@@ -213,28 +201,13 @@ private fun makeSellExchangeService(config: Config): ExchangeService {
     )
 }
 
-private fun makeBuyExchangeService(config: Config, productTypeProvider: () -> ProductType?): ExchangeService {
+private fun makeBuyExchangeService(config: Config): ExchangeService {
     return BuyExchangeService(
-        productTypeProvider = productTypeProvider,
         mercuryoService = makeMercuryoExchangeService(config),
-        utorgService = makeUtorgExchangeService(config),
     )
 }
 
 private fun makeMercuryoExchangeService(config: Config): MercuryoService {
     val mercuryoEnvironment = MercuryoEnvironment.prod(config.mercuryoWidgetId, config.mercuryoSecret)
     return MercuryoService(mercuryoEnvironment)
-}
-
-private fun makeUtorgExchangeService(config: Config): UtorgExchangeService {
-    val saltPayConfig = requireNotNull(config.saltPayConfig)
-
-    val utorgAuthProvider = UtorgAuthProvider(saltPayConfig.kycProvider.sidValue)
-    val utorgEnvironment = if (BuildConfig.DEBUG) {
-        UtorgEnvironment.stage(utorgAuthProvider, LogConfig.network.utorgService)
-        // UtorgEnvironment.mock()
-    } else {
-        UtorgEnvironment.prod(utorgAuthProvider)
-    }
-    return UtorgExchangeService(utorgEnvironment)
 }
