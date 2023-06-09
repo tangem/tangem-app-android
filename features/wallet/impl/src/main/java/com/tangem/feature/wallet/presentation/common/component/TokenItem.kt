@@ -34,6 +34,8 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.detectReorder
 
 private const val DOTS = "•••"
 val TOKEN_ITEM_HEIGHT: Dp
@@ -46,7 +48,7 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
     when (state) {
         is TokenItemState.Content -> ContentTokenItem(state, modifier)
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
-        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier)
+        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
         is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
     }
 }
@@ -71,7 +73,11 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
 }
 
 @Composable
-internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modifier = Modifier) {
+internal fun DraggableTokenItem(
+    state: TokenItemState.Draggable,
+    modifier: Modifier = Modifier,
+    reorderableTokenListState: ReorderableLazyListState? = null,
+) {
     InternalTokenItem(
         modifier = modifier,
         name = state.name,
@@ -81,13 +87,25 @@ internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modif
         amount = state.fiatAmount,
         hasPending = false,
         options = { ref ->
-            Icon(
+            Box(
                 modifier = Modifier
-                    .constrainAsOptionsItem(scope = this, ref),
-                painter = painterResource(id = R.drawable.ic_drag_24),
-                tint = TangemTheme.colors.icon.informative,
-                contentDescription = null,
-            )
+                    .size(TangemTheme.dimens.size32)
+                    .constrainAsOptionsItem(scope = this, ref)
+                    .let {
+                        if (reorderableTokenListState != null) {
+                            it.detectReorder(reorderableTokenListState)
+                        } else {
+                            it
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_drag_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
     )
 }
