@@ -20,7 +20,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.signin.redux.SignInAction
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -133,8 +132,8 @@ internal class WelcomeMiddleware {
                 scope.launch { onCardScanned(scanResponse) }
             },
             onFailure = {
-                when {
-                    it is TangemSdkError.ExceptionError && it.cause is SaltPayActivationError -> {
+                when (it) {
+                    is TangemSdkError.ExceptionError -> {
                         store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     }
                     else -> {
