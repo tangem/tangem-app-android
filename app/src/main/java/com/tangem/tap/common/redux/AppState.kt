@@ -24,7 +24,6 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayMiddleware
 import com.tangem.tap.features.saveWallet.redux.SaveWalletMiddleware
 import com.tangem.tap.features.saveWallet.redux.SaveWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
@@ -94,7 +93,6 @@ data class AppState(
                 HomeMiddleware.handler,
                 OnboardingNoteMiddleware.handler,
                 OnboardingWalletMiddleware.handler,
-                OnboardingSaltPayMiddleware.handler,
                 OnboardingOtherCardsMiddleware.handler,
                 WalletMiddleware().walletMiddleware,
                 TwinCardsMiddleware.handler,
