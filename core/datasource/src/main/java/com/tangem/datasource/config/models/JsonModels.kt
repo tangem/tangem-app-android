@@ -7,7 +7,6 @@ import com.squareup.moshi.Json
  */
 
 class FeatureModel(
-    val isWalletPayIdEnabled: Boolean,
     val isTopUpEnabled: Boolean,
     val isSendingToPayIdEnabled: Boolean,
     val isCreatingTwinCardsAllowed: Boolean,
@@ -34,7 +33,6 @@ class ConfigValueModel(
     val appsFlyer: AppsFlyer,
     val shopifyShop: ShopifyShop?,
     val zendesk: ZendeskConfig?,
-    val saltPay: SaltPayConfig,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
     val swapReferrerAccount: SwapReferrerAccount?,
