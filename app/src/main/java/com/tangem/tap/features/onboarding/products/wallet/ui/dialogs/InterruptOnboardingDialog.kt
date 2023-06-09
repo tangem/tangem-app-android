@@ -1,4 +1,4 @@
-package com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog
+package com.tangem.tap.features.onboarding.products.wallet.ui.dialogs
 
 import android.app.Dialog
 import android.content.Context
