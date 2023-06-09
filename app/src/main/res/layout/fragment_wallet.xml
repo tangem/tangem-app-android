@@ -178,15 +178,6 @@
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
                 <include
-                    android:id="@+id/l_salt_pay_wallet"
-                    layout="@layout/layout_salt_pay_wallet"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:visibility="visible"
-                    app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
-
-                <include
                     android:id="@+id/l_address"
                     layout="@layout/layout_address"
                     android:layout_width="match_parent"
