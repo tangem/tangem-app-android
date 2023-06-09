@@ -1,9 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 
 /** Wallet card state */
+@Immutable
 internal sealed interface WalletCardState {
+
     /** Id */
     val id: String
 

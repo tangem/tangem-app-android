@@ -59,7 +59,7 @@ private fun InternalNetworkGroupItem(
         Row(
             modifier = Modifier
                 .background(TangemTheme.colors.background.primary)
-                .padding(horizontal = TangemTheme.dimens.spacing12)
+                .padding(horizontal = TangemTheme.dimens.spacing14)
                 .fillMaxWidth()
                 .heightIn(min = TangemTheme.dimens.size48),
             verticalAlignment = Alignment.CenterVertically,

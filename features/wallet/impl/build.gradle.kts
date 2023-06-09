@@ -22,6 +22,8 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.systemUiController)
+
+    /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */
