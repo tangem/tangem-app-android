@@ -78,7 +78,9 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                 card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-                card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> store.dispatch(BackupAction.FinishBackup())
+                card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
+                    store.dispatch(BackupAction.FinishBackup())
+                }
                 else -> {
                     store.dispatch(OnboardingWalletAction.GetToCreateWalletStep)
                     Analytics.send(Onboarding.CreateWallet.ScreenOpened())

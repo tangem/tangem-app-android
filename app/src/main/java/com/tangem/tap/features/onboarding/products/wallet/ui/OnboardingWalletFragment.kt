@@ -63,7 +63,6 @@ class OnboardingWalletFragment :
     private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
-
     private lateinit var cardsWidget: WalletCardsWidget
     private var accessCodeDialog: AccessCodeDialog? = null
 
@@ -220,7 +219,7 @@ class OnboardingWalletFragment :
         animator.setupCreateWalletState()
     }
 
-    private fun setBackupState(state: BackupState,isWallet2: Boolean) {
+    private fun setBackupState(state: BackupState, isWallet2: Boolean) {
         when (state.backupStep) {
             BackupStep.InitBackup -> showBackupIntro(state, isWallet2)
             BackupStep.ScanOriginCard -> showScanOriginCard()
@@ -356,9 +355,9 @@ class OnboardingWalletFragment :
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         tvHeader.text = getText(R.string.common_origin_card)
         tvBody.text = getString(
-                R.string.onboarding_subtitle_scan_primary_card_format,
-                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
-            )
+            R.string.onboarding_subtitle_scan_primary_card_format,
+            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+        )
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
@@ -385,13 +384,13 @@ class OnboardingWalletFragment :
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
         tvBody.text = getString(
-                R.string.onboarding_subtitle_scan_backup_card_format,
-                cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
-            )
+            R.string.onboarding_subtitle_scan_backup_card_format,
+            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
+        )
         layoutButtonsCommon.btnWalletMainAction.text = getString(
-                R.string.onboarding_button_backup_card_format,
-                cardNumber,
-            )
+            R.string.onboarding_button_backup_card_format,
+            cardNumber,
+        )
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }

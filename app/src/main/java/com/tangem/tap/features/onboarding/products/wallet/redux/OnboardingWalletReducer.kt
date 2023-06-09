@@ -29,12 +29,15 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
 }
 
 private object ReducerForGlobalAction {
+
+    private const val MAX_BACKUP_CARDS = 2
+
     fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
         return when (action) {
             is GlobalAction.Onboarding.Start -> {
                 OnboardingWalletState(
                     backupState = state.backupState.copy(
-                        maxBackupCards = maxBackupCards(),
+                        maxBackupCards = MAX_BACKUP_CARDS,
                         canSkipBackup = action.canSkipBackup,
                     ),
                 )
@@ -51,8 +54,6 @@ private object ReducerForGlobalAction {
             else -> state
         }
     }
-
-    private fun maxBackupCards(): Int = 2
 }
 
 private object OnboardingWallet2Reducer {
