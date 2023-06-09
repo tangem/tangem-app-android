@@ -15,10 +15,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.addContext
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -36,7 +33,6 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.Onboardi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.rekotlin.Action
 
 internal object LegacyScanProcessor {
 
@@ -165,7 +161,7 @@ internal object LegacyScanProcessor {
             scope.launch {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 disclaimerWillShow()
-                arrayOf<Action>(
+                store.dispatchWithMain(
                     DisclaimerAction.Show(
                         fromScreen = AppScreen.Home,
                         callback = DisclaimerCallback(
