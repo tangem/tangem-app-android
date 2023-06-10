@@ -4,9 +4,6 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.EditorInfo
@@ -15,9 +12,7 @@ import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
-import com.tangem.tap.common.extensions.getColorCompat
 import com.tangem.tap.common.extensions.getQuantityString
-import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.data.ProductType
@@ -28,26 +23,13 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentShopBinding
 import org.rekotlin.StoreSubscriber
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<ShopState> {
 
-    private val dateFormat = SimpleDateFormat("dd MMMM", Locale.getDefault())
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
-    private val endPreorderTime = Calendar.getInstance()
-    private val isBuyAvailable: Boolean
-
     private var cardTranslationY = 70f
 
     private lateinit var keyboardObserver: KeyboardObserver
-
-    init {
-        endPreorderTime.clear()
-        endPreorderTime.set(END_DATE_SOLD_OUT_YEAR, END_DATE_SOLD_OUT_MONTH, END_DATE_SOLD_OUT_DAY)
-        isBuyAvailable = System.currentTimeMillis() > endPreorderTime.timeInMillis
-    }
 
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
@@ -83,7 +65,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         setupCardsImages()
         setupProductSelection()
         setupPromoCodeEditText()
-        setupSoldOutDescription()
 
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().onBackPressed()
@@ -146,26 +127,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         }
     }
 
-    private fun setupSoldOutDescription() = with(binding) {
-        context?.let { cntx ->
-            if (!isBuyAvailable) {
-                val date = "${dateFormat.format(endPreorderTime.time)}!"
-                val soldOutTitle = cntx.getString(R.string.shop_sold_out_description_prefix)
-                val generalString = "$soldOutTitle $date"
-                val wordToSpan: Spannable = SpannableString(generalString)
-                wordToSpan.setSpan(
-                    ForegroundColorSpan(cntx.getColorCompat(R.color.textBlack)),
-                    generalString.length - date.length,
-                    generalString.length,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
-                )
-                tvSoldOutDesc.text = wordToSpan
-            } else {
-                tvSoldOutDesc.hide()
-            }
-        }
-    }
-
     override fun newState(state: ShopState) {
         if (activity == null || view == null) return
 
@@ -213,16 +174,9 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
     }
 
     private fun handleButtonsState(state: ShopState) = with(binding) {
-        if (isBuyAvailable) {
-            btnPayGooglePay.root.show(state.isGooglePayAvailable)
-            btnAlternativePayment.show(state.isGooglePayAvailable)
-            btnMainAction.show(!state.isGooglePayAvailable)
-        } else {
-            btnPayGooglePay.root.hide()
-            btnAlternativePayment.hide()
-            btnMainAction.show()
-            btnMainAction.text = context?.getString(R.string.shop_pre_order_now)
-        }
+        btnPayGooglePay.root.show(state.isGooglePayAvailable)
+        btnAlternativePayment.show(state.isGooglePayAvailable)
+        btnMainAction.show(!state.isGooglePayAvailable)
 
         if (state.total != null) {
             btnAlternativePayment.setOnClickListener { store.dispatch(ShopAction.StartWebCheckout) }
@@ -234,11 +188,5 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
     override fun handleOnBackPressed() {
         store.dispatch(ShopAction.ResetState)
         super.handleOnBackPressed()
-    }
-
-    companion object {
-        private const val END_DATE_SOLD_OUT_YEAR = 2023
-        private const val END_DATE_SOLD_OUT_MONTH = 5 // June, month start counting from zero!
-        private const val END_DATE_SOLD_OUT_DAY = 10
     }
 }
