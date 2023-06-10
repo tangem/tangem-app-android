@@ -28,21 +28,6 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
     private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
     private val webViewClient = DisclaimerWebViewClient()
 
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        when (store.state.disclaimerState.showedFromScreen) {
-            AppScreen.Home -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
-                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
-            }
-            AppScreen.Details -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.fade)
-                exitTransition = inflater.inflateTransition(android.R.transition.fade)
-            }
-            else -> {}
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(handler = this)
@@ -87,11 +72,29 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
         super.onStop()
     }
 
+    override fun configureTransitions() {
+        val inflater = TransitionInflater.from(requireContext())
+        when (store.state.disclaimerState.showedFromScreen) {
+            AppScreen.Home -> {
+                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
+                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
+            }
+            AppScreen.Details -> {
+                enterTransition = inflater.inflateTransition(android.R.transition.fade)
+                exitTransition = inflater.inflateTransition(android.R.transition.fade)
+            }
+            else -> {}
+        }
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(DisclaimerAction.OnBackPressed)
+    }
+
     override fun newState(state: DisclaimerState) = with(binding) {
         if (activity == null || view == null) return
 
         updateUiVisibility(state.disclaimer, state.progressState)
-        binding.webView.loadUrl(state.disclaimer.getUri().toString())
     }
 
     private fun updateUiVisibility(disclaimer: Disclaimer, progressState: ProgressState?) = with(binding) {
@@ -118,7 +121,9 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 groupError.hide()
                 webView.loadLocalTermsOfServices()
             }
-            else -> Unit
+            else -> {
+                webView.loadUrl(disclaimer.getUri().toString())
+            }
         }
     }
 
