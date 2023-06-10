@@ -3,6 +3,7 @@ package com.tangem.tap.features.disclaimer.ui
 import android.os.Bundle
 import android.view.View
 import android.view.View.OVER_SCROLL_NEVER
+import android.webkit.WebView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.ui.fragments.setStatusBarColor
@@ -111,16 +112,17 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
             }
             ProgressState.Error -> {
                 root.beginDelayedTransition()
-                webView.hide()
-                groupAccept.hide()
+                webView.show()
+                groupAccept.show()
                 groupLoading.hide()
-                groupError.show()
+                groupError.hide()
+                webView.loadLocalTermsOfServices()
             }
-            else -> {}
+            else -> Unit
         }
     }
 
-    override fun handleOnBackPressed() {
-        store.dispatch(DisclaimerAction.OnBackPressed)
+    private fun WebView.loadLocalTermsOfServices() {
+        loadData(localTermsOfServices, "text/html", "UTF-8")
     }
 }
