@@ -74,9 +74,9 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
 
         SpacerH28()
 
-        PrimaryButtonIconEnd(
+        PrimaryButtonIconRight(
             text = stringResource(id = R.string.swapping_permission_buttons_approve),
-            iconResId = R.drawable.ic_tangem_24,
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             modifier = Modifier.fillMaxWidth(),
             onClick = data.approveButton.onClick,
         )

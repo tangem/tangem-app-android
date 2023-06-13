@@ -15,7 +15,6 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.*
@@ -136,28 +135,18 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 tokenSymbolInputField = createTokenSymbolInputField(),
                 decimalsInputField = createDecimalsInputField(),
                 derivationPathSelectorField = createDerivationPathsSelectorField(),
-                derivationPathInputField = createDerivationPathInputField(),
             )
         }
 
-        fun createDerivationPathSelectorAdditionalItem(
-            blockchain: Blockchain,
-            type: DerivationPathSelectorType = DerivationPathSelectorType.BLOCKCHAIN,
-        ): SelectorItem.TitleWithSubtitle {
-            return when (type) {
-                DerivationPathSelectorType.DEFAULT -> SelectorItem.TitleWithSubtitle(
+        fun createDerivationPathSelectorItem(blockchain: Blockchain): SelectorItem.TitleWithSubtitle {
+            return if (blockchain == Blockchain.Unknown) {
+                SelectorItem.TitleWithSubtitle(
                     title = TextReference.Res(R.string.custom_token_derivation_path_default),
                     subtitle = TextReference.Res(R.string.custom_token_derivation_path_default),
                     blockchain = Blockchain.Unknown,
-                    type = DerivationPathSelectorType.DEFAULT,
                 )
-                DerivationPathSelectorType.CUSTOM -> SelectorItem.TitleWithSubtitle(
-                    title = TextReference.Res(R.string.custom_token_custom_derivation),
-                    subtitle = TextReference.Res(R.string.custom_token_custom_derivation),
-                    blockchain = Blockchain.Unknown,
-                    type = DerivationPathSelectorType.CUSTOM,
-                )
-                DerivationPathSelectorType.BLOCKCHAIN -> SelectorItem.TitleWithSubtitle(
+            } else {
+                SelectorItem.TitleWithSubtitle(
                     title = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath?.let(TextReference::Str)
                         ?: TextReference.Res(R.string.custom_token_derivation_path_default),
                     subtitle = TextReference.Str(blockchain.fullName),
@@ -186,7 +175,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 onValueChange = actionsHandler::onContactAddressValueChange,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 label = TextReference.Res(R.string.custom_token_contract_address_input_title),
-                placeholder = TextReference.Str(value = CONTRACT_ADDRESS_PLACEHOLDER),
+                placeholder = TextReference.Str(value = "0x0000000000000000000000000000000000000000"),
                 isLoading = false,
                 isError = false,
                 error = null,
@@ -207,7 +196,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
-                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
+                    (blockchain.isEvm() || blockchain.canHandleTokens()) &&
+                        reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -241,7 +231,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 onValueChange = actionsHandler::onDecimalsValueChange,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                 label = TextReference.Res(R.string.custom_token_decimals_input_title),
-                placeholder = TextReference.Str(value = DECIMALS_PLACEHOLDER),
+                placeholder = TextReference.Str(value = "8"),
                 isEnabled = false,
             )
         }
@@ -260,31 +250,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun getDerivationPathsSelectorItems(): List<SelectorItem.TitleWithSubtitle> {
-            return listOf(
-                createDerivationPathSelectorAdditionalItem(
-                    blockchain = Blockchain.Unknown,
-                    type = DerivationPathSelectorType.DEFAULT,
-                ),
-                createDerivationPathSelectorAdditionalItem(
-                    blockchain = Blockchain.Unknown,
-                    type = DerivationPathSelectorType.CUSTOM,
-                ),
-            ) + Blockchain.values()
-                .filter { blockchain -> blockchain.isSupportedInApp() && !blockchain.isTestnet() }
+            val defaultDerivationPath = createDerivationPathSelectorItem(Blockchain.Unknown)
+            return listOf(defaultDerivationPath) + Blockchain.values()
+                .filter { blockchain -> blockchain.isEvm() && blockchain.isSupportedInApp() && !blockchain.isTestnet() }
                 .sortedBy(Blockchain::fullName)
-                .map(::createDerivationPathSelectorAdditionalItem)
-        }
-
-        private fun createDerivationPathInputField(): AddCustomTokenInputField.DerivationPath? {
-            if (reduxStateHolder.scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
-
-            return AddCustomTokenInputField.DerivationPath(
-                value = "",
-                onValueChange = actionsHandler::onDerivationPathValueChange,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                label = TextReference.Res(R.string.custom_token_custom_derivation),
-                placeholder = TextReference.Str(value = DERIVATION_PATH_PLACEHOLDER),
-            )
+                .map(::createDerivationPathSelectorItem)
         }
     }
 
@@ -336,16 +306,25 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     Timber.e(it)
                 }
 
+            updateDerivationPathSelector()
             updateWarnings()
             updateFloatingButton()
         }
     }
 
+    private fun updateDerivationPathSelector() {
+        uiState = uiState.copySealed(
+            form = uiState.form.copy(
+                derivationPathSelectorField = uiState.form.derivationPathSelectorField?.copy(
+                    isEnabled = uiState.form.networkSelectorField.selectedItem.blockchain.isEvm(),
+                ),
+            ),
+        )
+    }
+
     private fun isDerivationPathSelected(): Boolean {
         return with(uiState.form.derivationPathSelectorField?.selectedItem?.blockchain) {
-            this != null && this != Blockchain.Unknown ||
-                uiState.form.derivationPathSelectorField?.selectedItem?.type == DerivationPathSelectorType.CUSTOM &&
-                !uiState.warnings.contains(AddCustomTokenWarning.WrongDerivationPath)
+            this != null && this != Blockchain.Unknown
         }
     }
 
@@ -418,7 +397,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun updateFloatingButton() {
-        uiState = updateStateWithDerivationError(uiState)
         if (isCustomTokenAlreadyAdded()) {
             uiState = uiState.copySealed(
                 warnings = uiState.warnings + AddCustomTokenWarning.TokenAlreadyAdded,
@@ -427,7 +405,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
             return
         }
 
-        val isCorrectDerivationInput = !uiState.warnings.contains(AddCustomTokenWarning.WrongDerivationPath)
         val state = when {
             isAllTokenFieldsFilled() && isNetworkSelected() -> {
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
@@ -441,8 +418,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
                 uiState.copySealed(
                     floatingButton = uiState.floatingButton.copy(
-                        isEnabled = error is ContractAddressValidatorResult.Success &&
-                            isSupportedToken && isCorrectDerivationInput,
+                        isEnabled = error is ContractAddressValidatorResult.Success && isSupportedToken,
                     ),
                 )
             }
@@ -454,41 +430,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
             else -> {
                 uiState.copySealed(
                     floatingButton = uiState.floatingButton.copy(
-                        isEnabled = if (isNetworkSelected()) {
-                            !isBlockchainAlreadyAdded() && isCorrectDerivationInput
-                        } else {
-                            false
-                        },
+                        isEnabled = if (isNetworkSelected()) !isBlockchainAlreadyAdded() else false,
                     ),
                 )
             }
         }
 
         uiState = state.copySealed(
-            warnings = state.warnings - AddCustomTokenWarning.TokenAlreadyAdded,
+            warnings = uiState.warnings - AddCustomTokenWarning.TokenAlreadyAdded,
         )
-    }
-
-    private fun updateStateWithDerivationError(uiState: AddCustomTokenStateHolder): AddCustomTokenStateHolder {
-        val updatedWarnings = if (isWrongDerivationPathEntered(
-                derivationPathSelectorType = uiState.form.derivationPathSelectorField?.selectedItem?.type,
-                derivationPath = getDerivationPath(),
-            )
-        ) {
-            uiState.warnings + AddCustomTokenWarning.WrongDerivationPath
-        } else {
-            uiState.warnings - AddCustomTokenWarning.WrongDerivationPath
-        }
-        return uiState.copySealed(
-            warnings = updatedWarnings,
-        )
-    }
-
-    private fun isWrongDerivationPathEntered(
-        derivationPathSelectorType: DerivationPathSelectorType?,
-        derivationPath: DerivationPath?,
-    ): Boolean {
-        return derivationPathSelectorType == DerivationPathSelectorType.CUSTOM && derivationPath == null
     }
 
     private fun isCustomTokenAlreadyAdded(): Boolean {
@@ -570,36 +520,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun getDerivationPath(): DerivationPath? {
-        return when (uiState.form.derivationPathSelectorField?.selectedItem?.type) {
-            DerivationPathSelectorType.CUSTOM ->
-                createDerivationPathOrNull(uiState.form.derivationPathInputField?.value ?: "")
-            else ->
-                getDerivationPathForBlockchain(uiState.form.derivationPathSelectorField?.selectedItem?.blockchain)
-        }
-    }
-
-    private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
-        return try {
-            DerivationPath(rawPath)
-        } catch (error: HDWalletError) {
-            null
-        }
-    }
-
-    private fun getDerivationPathForBlockchain(blockchain: Blockchain?): DerivationPath? {
-        if (blockchain == null) return null
-
         val derivationStyle = if (!isDerivationPathSelected()) {
             reduxStateHolder.scanResponse?.card?.derivationStyle
         } else {
             DerivationStyle.LEGACY
         }
-        val derivationNetwork = if (blockchain == Blockchain.Unknown) {
-            uiState.form.networkSelectorField.selectedItem.blockchain
-        } else {
-            blockchain
-        }
-        return derivationNetwork.derivationPath(derivationStyle)
+
+        return when (val derivationNetwork = uiState.form.derivationPathSelectorField?.selectedItem?.blockchain) {
+            Blockchain.Unknown -> uiState.form.networkSelectorField.selectedItem.blockchain
+            else -> derivationNetwork
+        }?.derivationPath(derivationStyle)
     }
 
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
@@ -636,6 +566,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
                 is ContractAddressValidatorResult.Error -> {
                     handleContractAddressErrorValidation(type = validatorResult.type)
+                    updateDerivationPathSelector()
                     updateWarnings()
                     updateFloatingButton()
                 }
@@ -643,13 +574,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         fun onNetworkSelectorItemClick(index: Int) {
-            val selectedItem = requireNotNull(uiState.form.networkSelectorField.items.getOrNull(index))
             uiState = uiState.copySealed(
                 form = uiState.form.copy(
                     networkSelectorField = uiState.form.networkSelectorField.copy(
-                        selectedItem = selectedItem,
+                        selectedItem = requireNotNull(uiState.form.networkSelectorField.items.getOrNull(index)),
                     ),
-                    showTokenFields = selectedItem.blockchain.canHandleTokens(),
                 ),
             )
             onContactAddressValueChange(uiState.form.contractAddressInputField.value)
@@ -683,26 +612,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         fun onDerivationPathSelectorItemClick(index: Int) {
-            val derivationSelector = requireNotNull(uiState.form.derivationPathSelectorField)
-            val selected = requireNotNull(derivationSelector.items.getOrNull(index))
-            val derivationInputField = requireNotNull(uiState.form.derivationPathInputField)
+            val field = requireNotNull(uiState.form.derivationPathSelectorField)
             uiState = uiState.copySealed(
                 form = uiState.form.copy(
-                    derivationPathSelectorField = derivationSelector.copy(
-                        selectedItem = selected,
+                    derivationPathSelectorField = field.copy(
+                        selectedItem = requireNotNull(field.items.getOrNull(index)),
                     ),
-                    derivationPathInputField = derivationInputField.copy(
-                        showField = selected.type == DerivationPathSelectorType.CUSTOM,
-                    ),
-                ),
-            )
-            updateFloatingButton()
-        }
-
-        fun onDerivationPathValueChange(enteredValue: String) {
-            uiState = uiState.copySealed(
-                form = uiState.form.copy(
-                    derivationPathInputField = uiState.form.derivationPathInputField?.copy(value = enteredValue),
                 ),
             )
             updateFloatingButton()
@@ -776,11 +691,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         decimalsInputField = decimalsInputField.copy(value = "", isEnabled = false),
                         derivationPathSelectorField = derivationPathSelectorField?.copy(
                             isEnabled = true,
-                            selectedItem = formStateBuilder
-                                .createDerivationPathSelectorAdditionalItem(
-                                    blockchain = Blockchain.Unknown,
-                                    type = DerivationPathSelectorType.DEFAULT,
-                                ),
+                            selectedItem = formStateBuilder.createDerivationPathSelectorItem(Blockchain.Unknown),
                         ),
                     ),
                 )
@@ -811,8 +722,5 @@ internal class AddCustomTokenViewModel @Inject constructor(
             TestTokenItem(name = "USDT (invalid - 1/3 of address)", address = "Es9vMFrzaCERmJ"),
             TestTokenItem(name = "ETH (full)", address = "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk"),
         )
-        const val DERIVATION_PATH_PLACEHOLDER = "m/44'/0'/0'/0/0"
-        const val DECIMALS_PLACEHOLDER = "8"
-        const val CONTRACT_ADDRESS_PLACEHOLDER = "0x0000000000000000000000000000000000000000"
     }
 }

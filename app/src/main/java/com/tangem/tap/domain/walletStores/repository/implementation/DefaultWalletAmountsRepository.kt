@@ -2,7 +2,9 @@ package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionHistoryProvider
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result.Failure
@@ -33,6 +35,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithFiatRates
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithMissedDerivation
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithRent
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithTxHistories
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithUnreachable
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
@@ -245,6 +248,11 @@ internal class DefaultWalletAmountsRepository(
             TestActions.testAmountInjectionForWalletManagerEnabled = false
         } else {
             walletManager.update()
+
+            val wallet = walletManager.wallet
+            if (wallet.blockchain == Blockchain.SaltPay && walletManager is TransactionHistoryProvider) {
+                walletManager.getTransactionHistory(wallet.address, wallet.blockchain, wallet.getTokens())
+            }
         }
     }
 
@@ -341,7 +349,7 @@ internal class DefaultWalletAmountsRepository(
                         it.updateWithDemoAmounts(wallet = updatedWallet)
                     } else {
                         it.updateWithAmounts(wallet = updatedWallet)
-                    }
+                    }.updateWithTxHistories(wallet = updatedWallet)
                 },
             )
         }

@@ -35,14 +35,14 @@ class ScanCardUseCase(
      * Defaults to null.
      * @param allowRequestAccessCodeFromStorage whether to prompt the user for an access code if needed.
      * Defaults to false.
-     * @param afterScanChains A list of chains that should be executed after a successful card scan operation.
+     * @param afterScanChains An array of chains that should be executed after a successful card scan operation.
      * Defaults to an empty array.
      * @return A [EitherNel] object with either a non-empty list of [ScanCardException] or a [ScanResponse].
      */
     suspend operator fun invoke(
         cardId: String? = null,
         allowRequestAccessCodeFromStorage: Boolean = false,
-        afterScanChains: List<Chain<ScanCardException.ChainException, ScanResponse>> = emptyList(),
+        afterScanChains: Array<Chain<ScanCardException.ChainException, ScanResponse>> = emptyArray(),
     ): Either<ScanCardException, ScanResponse> {
         resetCardIdDisplayFormat()
         scanChainProcessor.addChains(afterScanChains)
@@ -73,6 +73,7 @@ class ScanCardUseCase(
     private fun updateCardIdDisplayFormat(productType: ProductType) {
         tangemSdk.config.cardIdDisplayFormat = when (productType) {
             ProductType.Twins -> CardIdDisplayFormat.LastLuhn(numbers = 4)
+            ProductType.SaltPay -> CardIdDisplayFormat.None
             ProductType.Note,
             ProductType.Wallet,
             ProductType.Start2Coin,

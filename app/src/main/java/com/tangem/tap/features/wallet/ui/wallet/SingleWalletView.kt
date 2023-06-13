@@ -39,6 +39,7 @@ class SingleWalletView : WalletView() {
     private fun showSingleWalletView(binding: FragmentWalletBinding) = with(binding) {
         watchedPrimaryWalletForAddressCard = null
         watchedPrimaryWalletForBalance = null
+        lSaltPayWallet.root.hide()
         tvTwinCardNumber.hide()
         rvMultiwallet.hide()
         btnAddToken.hide()

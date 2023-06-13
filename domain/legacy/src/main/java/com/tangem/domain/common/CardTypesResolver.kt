@@ -7,6 +7,9 @@ interface CardTypesResolver {
     fun isTangemNote(): Boolean
     fun isTangemWallet(): Boolean
     fun isWallet2(): Boolean
+    fun isSaltPay(): Boolean
+    fun isSaltPayVisa(): Boolean
+    fun isSaltPayWallet(): Boolean
     fun isTangemTwins(): Boolean
     fun isStart2Coin(): Boolean
 

@@ -11,6 +11,7 @@ internal sealed interface WarningModel {
     ) : WarningModel
 
     data class BiometricsDisabledWarning(
+        val onConfirm: () -> Unit,
         val onDismiss: () -> Unit,
     ) : WarningModel
 }
