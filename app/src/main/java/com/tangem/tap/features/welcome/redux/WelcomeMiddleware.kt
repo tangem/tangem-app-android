@@ -110,9 +110,10 @@ internal class WelcomeMiddleware {
     }
 
     private fun handleInitialIntent(intent: Intent?) {
-        val isBackgroundScanWasHandled = intentHandler.handleBackgroundScan(intent, hasSavedUserWallets = true)
+        val isBackgroundScanNotHandled = !intentHandler.handleBackgroundScan(intent, hasSavedUserWallets = true)
+        val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
 
-        if (!isBackgroundScanWasHandled) {
+        if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
             store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
         }
     }
