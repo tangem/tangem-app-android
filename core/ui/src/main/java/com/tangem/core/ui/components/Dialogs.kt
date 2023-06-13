@@ -1,12 +1,7 @@
 package com.tangem.core.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 
@@ -52,6 +48,7 @@ data class AdditionalTextInputDialogParams(
  * @param confirmButton title and action for confirm button
  * @param dismissButton title and action for dismiss button (no dismiss button if null)
  * @param onDismissDialog action to perform when dialog is closed
+ * @param isDismissable If false then dialog can not be dismissed by back button click or by outside click
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=48%3A30&t=izDPAJnDbJTTC0Fp-1"
  * >Figma component</a>
@@ -63,6 +60,7 @@ fun BasicDialog(
     onDismissDialog: () -> Unit,
     title: String? = null,
     dismissButton: DialogButton? = null,
+    isDismissable: Boolean = true,
 ) {
     TangemDialog(
         type = DialogType.Message(message),
@@ -70,6 +68,10 @@ fun BasicDialog(
         onDismissDialog = onDismissDialog,
         title = title,
         dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
     )
 }
 
@@ -94,6 +96,7 @@ fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
  * @param dismissButton title and action for dismiss button (no dismiss button if null)
  * @param onDismissDialog action to perform when dialog is closed
  * @param textFieldParams Additional params for dialog text field
+ * @param isDismissable If false then dialog can not be dismissed by back button click or by outside click
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=268%3A273&t=9uHKoudX78ySqium-4"
  * >Figma component</a>
@@ -107,6 +110,7 @@ fun TextInputDialog(
     textFieldParams: AdditionalTextInputDialogParams,
     title: String? = null,
     dismissButton: DialogButton? = null,
+    isDismissable: Boolean = true,
 ) {
     TangemDialog(
         type = DialogType.TextInput(
@@ -118,6 +122,10 @@ fun TextInputDialog(
         onDismissDialog = onDismissDialog,
         title = title,
         dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
     )
 }
 
@@ -129,8 +137,9 @@ private fun TangemDialog(
     onDismissDialog: () -> Unit,
     title: String? = null,
     dismissButton: DialogButton? = null,
+    properties: DialogProperties = DialogProperties(),
 ) {
-    Dialog(onDismissRequest = onDismissDialog) {
+    Dialog(properties = properties, onDismissRequest = onDismissDialog) {
         Column(
             modifier = Modifier
                 .background(
