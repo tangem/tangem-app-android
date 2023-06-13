@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.core.TangemSdkError
+import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
@@ -36,9 +37,9 @@ data class PrepareSendScreen(
 // Address or PayId
 sealed class AddressPayIdActionUi : SendScreenActionUi {
     data class HandleUserInput(val data: String) : AddressPayIdActionUi()
-    data class PasteAddressPayId(val data: String) : AddressPayIdActionUi()
+    data class PasteAddressPayId(val data: String, val sourceType: AddressEntered.SourceType) : AddressPayIdActionUi()
     data class CheckClipboard(val data: String?) : AddressPayIdActionUi()
-    object CheckAddressPayId : AddressPayIdActionUi()
+    data class CheckAddressPayId(val sourceType: AddressEntered.SourceType?) : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
     data class ChangePayIdState(val sendingToPayIdEnabled: Boolean) : AddressPayIdActionUi()
