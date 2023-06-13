@@ -40,12 +40,6 @@ internal fun WalletStoreModel.updateWithError(wallet: Wallet, error: TangemError
     )
 }
 
-internal fun WalletStoreModel.updateWithTxHistories(wallet: Wallet): WalletStoreModel {
-    return this.copy(
-        walletsData = walletsData.updateWithTxHistories(wallet = wallet),
-    )
-}
-
 internal fun WalletStoreModel.updateWithAmounts(wallet: Wallet): WalletStoreModel {
     return this.copy(
         walletsData = walletsData.updateWithAmounts(wallet = wallet),
