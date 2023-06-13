@@ -19,6 +19,9 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
+import com.tangem.tap.common.analytics.events.Token
+import com.tangem.tap.common.analytics.events.Token.Send.SelectedCurrency.CurrencyType
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -120,6 +123,7 @@ private fun verifyAndSendTransaction(
                             transactionExtras = sendState.transactionExtrasState,
                             card = card,
                             externalTransactionData = sendState.externalTransactionData,
+                            mainCurrencyType = sendState.amountState.mainCurrency.type,
                             dispatch = dispatch,
                         )
                     },
@@ -138,6 +142,7 @@ private fun verifyAndSendTransaction(
                 transactionExtras = sendState.transactionExtrasState,
                 card = card,
                 externalTransactionData = sendState.externalTransactionData,
+                mainCurrencyType = sendState.amountState.mainCurrency.type,
                 dispatch = dispatch,
             )
         }
@@ -155,6 +160,7 @@ private fun sendTransaction(
     transactionExtras: TransactionExtrasState,
     card: CardDTO,
     externalTransactionData: ExternalTransactionData?,
+    mainCurrencyType: MainCurrencyType,
     dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
@@ -241,7 +247,20 @@ private fun sendTransaction(
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
-                        Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Sell))
+                        Analytics.send(
+                            Basic.TransactionSent(
+                                sentFrom = AnalyticsParam.TxSentFrom.Sell,
+                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                            ),
+                        )
+                        Analytics.send(
+                            Token.Send.SelectedCurrency(
+                                currency = when (mainCurrencyType) {
+                                    MainCurrencyType.FIAT -> CurrencyType.AppCurrency
+                                    MainCurrencyType.CRYPTO -> CurrencyType.AppCurrency
+                                },
+                            ),
+                        )
                         dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
                         Analytics.send(
@@ -251,6 +270,7 @@ private fun sendTransaction(
                                     token = amountToSend.currencySymbol,
                                     feeType = feeType.convertToAnalyticsFeeType(),
                                 ),
+                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
                             ),
                         )
                         dispatch(NavigationAction.PopBackTo())
