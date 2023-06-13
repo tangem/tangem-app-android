@@ -9,12 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.IntOffset
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.PrimaryButtonIconLeft
+import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
@@ -56,11 +55,11 @@ fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Mo
         Box {
             OnboardingActionBlock(
                 firstActionContent = {
-                    PrimaryButtonIconLeft(
+                    PrimaryButtonIconStart(
                         modifier = Modifier
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
-                        icon = painterResource(id = R.drawable.ic_tangem_24),
+                        iconResId = R.drawable.ic_tangem_24,
                         enabled = state.buttonCreateWallet.enabled,
                         showProgress = state.buttonCreateWallet.showProgress,
                         onClick = state.buttonCreateWallet.onClick,
