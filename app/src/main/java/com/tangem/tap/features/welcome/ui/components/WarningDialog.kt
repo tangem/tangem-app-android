@@ -48,9 +48,10 @@ internal fun WarningDialog(warning: WarningModel?) {
                 title = stringResource(id = R.string.common_warning),
                 message = stringResource(id = R.string.biometric_unavailable_warning),
                 onDismissDialog = warning.onDismiss,
+                isDismissable = false,
                 confirmButton = DialogButton(
                     title = stringResource(id = R.string.common_ok),
-                    onClick = warning.onConfirm,
+                    onClick = warning.onDismiss,
                 ),
             )
         }
@@ -140,7 +141,7 @@ private fun KeyInvalidatedWarningPreview_Dark() {
 @Composable
 private fun BiometricDisabledWarningSample(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        WarningDialog(warning = WarningModel.BiometricsDisabledWarning(onConfirm = {}, onDismiss = {}))
+        WarningDialog(warning = WarningModel.BiometricsDisabledWarning(onDismiss = {}))
     }
 }
 
