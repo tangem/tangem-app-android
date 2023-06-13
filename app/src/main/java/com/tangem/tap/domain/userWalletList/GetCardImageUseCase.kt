@@ -2,7 +2,6 @@ package com.tangem.tap.domain.userWalletList
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
-import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.attestation.OnlineCardVerifier
@@ -43,7 +42,6 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
         return when {
             cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
             cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
-            SaltPayWorkaround.isSaltPayCardId(cardId) -> Artwork.SALT_PAY_URL
             else -> when (TwinsHelper.getTwinCardNumber(cardId)) {
                 TwinCardNumber.First -> Artwork.TWIN_CARD_1
                 TwinCardNumber.Second -> Artwork.TWIN_CARD_2

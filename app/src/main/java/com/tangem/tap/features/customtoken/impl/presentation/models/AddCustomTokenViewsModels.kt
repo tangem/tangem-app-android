@@ -67,6 +67,8 @@ internal data class AddCustomTokenChooseTokenBottomSheet(
  * @property tokenSymbolInputField       input field to enter the token symbol
  * @property decimalsInputField          input field to enter the token decimals
  * @property derivationPathSelectorField selector field to select the derivation path
+ * @property derivationPathInputField    input field for a custom derivation path
+ * @property showTokenFields             if token fields should be shown
  */
 internal data class AddCustomTokenForm(
     val contractAddressInputField: AddCustomTokenInputField.ContactAddress,
@@ -75,6 +77,8 @@ internal data class AddCustomTokenForm(
     val tokenSymbolInputField: AddCustomTokenInputField.TokenSymbol,
     val decimalsInputField: AddCustomTokenInputField.Decimals,
     val derivationPathSelectorField: AddCustomTokenSelectorField.DerivationPath?,
+    val derivationPathInputField: AddCustomTokenInputField.DerivationPath?,
+    val showTokenFields: Boolean = false,
 )
 
 /** Base input field model of add custom token screen */
@@ -174,6 +178,25 @@ internal sealed interface AddCustomTokenInputField {
         override val placeholder: TextReference,
         val isEnabled: Boolean,
     ) : AddCustomTokenInputField
+
+    /**
+     * Input field model to enter a custom derivation path
+     *
+     * @property value           current value
+     * @property onValueChange   lambda be invoked when value is been changed
+     * @property keyboardOptions keyboard options
+     * @property label           label
+     * @property placeholder     placeholder (hint)
+     * @property showField       whether the field should be shown
+     */
+    data class DerivationPath(
+        override val value: String,
+        override val onValueChange: (String) -> Unit,
+        override val keyboardOptions: KeyboardOptions,
+        override val label: TextReference,
+        override val placeholder: TextReference,
+        val showField: Boolean = false,
+    ) : AddCustomTokenInputField
 }
 
 /** Base selector field model of add custom token screen */
@@ -251,8 +274,13 @@ internal sealed interface AddCustomTokenSelectorField {
             override val title: TextReference,
             override val blockchain: Blockchain,
             val subtitle: TextReference,
+            val type: DerivationPathSelectorType = DerivationPathSelectorType.BLOCKCHAIN,
         ) : SelectorItem
     }
+}
+
+enum class DerivationPathSelectorType {
+    DEFAULT, CUSTOM, BLOCKCHAIN
 }
 
 /**
@@ -275,6 +303,10 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
     /** Unsupported Solana token warning */
     object UnsupportedSolanaToken : AddCustomTokenWarning(
         description = TextReference.Res(R.string.alert_manage_tokens_unsupported_message),
+    )
+
+    object WrongDerivationPath : AddCustomTokenWarning(
+        description = TextReference.Res(R.string.custom_token_invalid_derivation_path),
     )
 }
 

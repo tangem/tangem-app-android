@@ -19,11 +19,7 @@ import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import org.rekotlin.StoreSubscriber
 
 internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSelectorState> {
@@ -200,8 +196,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 onDismiss = this::dismissWarningDialog,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
-                onConfirm = this::clearUserWallets,
-                onDismiss = this::dismissWarningDialog,
+                onDismiss = this::clearUserWallets,
             )
             else -> currentDialog
         }

@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
 import androidx.core.os.bundleOf
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.guard
@@ -129,13 +130,16 @@ class TradeCryptoMiddleware {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
 
         Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(selectedWalletData.currency)))
+        val walletManager = store.state.walletState.getWalletManager(selectedWalletData.currency).guard {
+            FirebaseCrashlytics.getInstance().recordException(IllegalStateException("WalletManager is null"))
+            return
+        }
 
-        val walletManager = store.state.walletState.getWalletManager(selectedWalletData.currency)
         store.dispatchOnMain(
             PrepareSendScreen(
-                coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
-                coinRate = selectedWalletData.fiatRate,
                 walletManager = walletManager,
+                coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                coinRate = selectedWalletData.fiatRate,
             ),
         )
         store.dispatchOnMain(

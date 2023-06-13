@@ -21,7 +21,7 @@ class ChainProcessor<E, R> {
      * Adds chains to the existing list of chains to be executed.
      * @param chains the chains to be added to the list
      */
-    fun addChains(chains: Array<Chain<E, R>>) {
+    fun addChains(chains: List<Chain<E, R>>) {
         this.chains.addAll(chains)
     }
 

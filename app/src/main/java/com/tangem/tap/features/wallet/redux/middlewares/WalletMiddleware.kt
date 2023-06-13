@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
@@ -32,7 +33,6 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.ifActive
-import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -147,26 +147,76 @@ class WalletMiddleware {
                 store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
+                val walletStore = walletState.getWalletStore(walletState.selectedCurrency)
+                val selectedWalletData = walletState.selectedWalletData
+                val walletManager = walletStore?.walletManager
+
+                if (walletStore == null || walletManager == null || selectedWalletData == null) {
+                    val error = TapError.UnsupportedState(
+                        "WalletAction.Send: walletStore or selectedWalletData or walletManager is null",
+                    )
+                    FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
+                    store.dispatchErrorNotification(error)
+                    return
+                }
                 if (!networkConnectionManager.isOnline) {
                     store.dispatchErrorNotification(TapError.NoInternetConnection)
                     return
                 }
-                val newAction = prepareSendAction(action.amount, store.state.walletState)
-                if (newAction is PrepareSendScreen && newAction.walletManager == null) {
-                    store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
-                    FirebaseCrashlytics.getInstance().recordException(
-                        IllegalStateException("PrepareSendScreen: walletManager is null"),
-                    )
-                    store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
-                } else {
-                    store.dispatch(newAction)
-                    if (newAction is PrepareSendScreen) {
-                        store.state.walletState.selectedWalletData?.currency?.let { currency ->
-                            Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
-                        }
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+
+                val currency = selectedWalletData.currency
+                val initSendStateAction = if (action.amount == null) {
+                    val sendableAmounts = walletManager.wallet.getSendableAmounts()
+                    if (sendableAmounts.isEmpty()) {
+                        val error = TapError.UnsupportedState("WalletAction.Send: Nothing to send")
+                        FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
+                        store.dispatchErrorNotification(error)
+                        return
                     }
+
+                    if (walletState.isMultiwalletAllowed) {
+                        val amountToSend = sendableAmounts.find { it.currencySymbol == currency.currencySymbol }
+                        if (amountToSend == null) {
+                            val error = TapError.UnsupportedState("WalletAction.Send: Amount to send is null")
+                            FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
+                            store.dispatchErrorNotification(error)
+                            return
+                        }
+
+                        makeInitSendStateActionByCurrency(
+                            currency = currency,
+                            amount = amountToSend,
+                            walletStore = walletStore,
+                            walletManager = walletManager,
+                            selectedWalletData = selectedWalletData,
+                        )
+                    } else {
+                        val isSingleAmount = sendableAmounts.size == 1
+                        if (isSingleAmount) {
+                            makeInitSendStateActionByAmount(
+                                amount = sendableAmounts.first(),
+                                walletStore = walletStore,
+                                walletManager = walletManager,
+                                selectedWalletData = selectedWalletData,
+                            )
+                        } else {
+                            store.dispatch(WalletAction.DialogAction.ChooseCurrency(sendableAmounts))
+                            return
+                        }
+                    }
+                } else {
+                    // action.amount received from the ChooseCurrency dialog
+                    makeInitSendStateActionByAmount(
+                        amount = action.amount,
+                        walletManager = walletManager,
+                        walletStore = walletStore,
+                        selectedWalletData = selectedWalletData,
+                    )
                 }
+
+                Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
+                store.dispatch(initSendStateAction)
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
             }
             is WalletAction.ShowSaveWalletIfNeeded -> {
                 showSaveWalletIfNeeded()
@@ -219,6 +269,59 @@ class WalletMiddleware {
                         }
                 }
             }
+        }
+    }
+
+    private fun makeInitSendStateActionByAmount(
+        amount: Amount,
+        walletStore: WalletStoreModel,
+        walletManager: WalletManager,
+        selectedWalletData: WalletDataModel,
+    ): PrepareSendScreen = when (amount.type) {
+        AmountType.Coin ->
+            PrepareSendScreen(
+                walletManager = walletManager,
+                coinAmount = amount,
+                coinRate = selectedWalletData.fiatRate,
+            )
+        is AmountType.Token -> {
+            PrepareSendScreen(
+                walletManager = walletManager,
+                coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                coinRate = walletStore.blockchainWalletData.fiatRate,
+                tokenAmount = amount,
+                tokenRate = selectedWalletData.fiatRate,
+            )
+        }
+        AmountType.Reserve -> {
+            val exception = IllegalStateException("WalletAction.Send: Reserve can't be sent")
+            FirebaseCrashlytics.getInstance().recordException(exception)
+            throw exception
+        }
+    }
+
+    private fun makeInitSendStateActionByCurrency(
+        currency: Currency,
+        amount: Amount,
+        walletStore: WalletStoreModel,
+        walletManager: WalletManager,
+        selectedWalletData: WalletDataModel,
+    ): PrepareSendScreen = when (currency) {
+        is Currency.Blockchain -> {
+            PrepareSendScreen(
+                walletManager = walletManager,
+                coinAmount = amount,
+                coinRate = selectedWalletData.fiatRate,
+            )
+        }
+        is Currency.Token -> {
+            PrepareSendScreen(
+                walletManager = walletManager,
+                coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                coinRate = walletStore.blockchainWalletData.fiatRate,
+                tokenAmount = amount,
+                tokenRate = selectedWalletData.fiatRate,
+            )
         }
     }
 
@@ -283,73 +386,5 @@ class WalletMiddleware {
                 store.dispatch(WalletAction.Scan(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main)))
             }
         }
-    }
-
-    private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
-        val selectedWalletData = state?.selectedWalletData
-        val currency = selectedWalletData?.currency
-        val walletStore = state?.getWalletStore(currency)
-
-        return if (amount != null) {
-            if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, selectedWalletData, walletStore)
-            } else {
-                PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletStore?.walletManager)
-            }
-        } else {
-            val amounts = walletStore?.walletManager?.wallet?.getSendableAmounts()
-            if (currency != null && state.isMultiwalletAllowed) {
-                when (currency) {
-                    is Currency.Blockchain -> {
-                        val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                            ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
-                        PrepareSendScreen(
-                            coinAmount = amountToSend,
-                            coinRate = selectedWalletData.fiatRate,
-                            walletManager = walletStore.walletManager,
-                        )
-                    }
-                    is Currency.Token -> {
-                        val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                            ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
-                        prepareSendActionForToken(
-                            amount = amountToSend,
-                            selectedWalletData = selectedWalletData,
-                            walletStore = walletStore,
-                        )
-                    }
-                }
-            } else {
-                val amountsSize = amounts?.size ?: 0
-                if (amountsSize > 1) {
-                    WalletAction.DialogAction.ChooseCurrency(amounts)
-                } else {
-                    val amountToSend = amounts?.first()
-                    PrepareSendScreen(
-                        coinAmount = amountToSend,
-                        coinRate = selectedWalletData?.fiatRate,
-                        walletManager = walletStore?.walletManager,
-                    )
-                }
-            }
-        }
-    }
-
-    private fun prepareSendActionForToken(
-        amount: Amount,
-        selectedWalletData: WalletDataModel?,
-        walletStore: WalletStoreModel?,
-    ): PrepareSendScreen {
-        val coinRate = walletStore?.blockchainWalletData?.fiatRate
-        val tokenRate = selectedWalletData?.fiatRate
-        val coinAmount = walletStore?.walletManager?.wallet?.amounts?.get(AmountType.Coin)
-
-        return PrepareSendScreen(
-            coinAmount = coinAmount,
-            coinRate = coinRate,
-            walletManager = walletStore?.walletManager,
-            tokenAmount = amount,
-            tokenRate = tokenRate,
-        )
     }
 }
