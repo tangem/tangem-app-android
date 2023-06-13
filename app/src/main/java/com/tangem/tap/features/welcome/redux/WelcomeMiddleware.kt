@@ -6,7 +6,6 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
-import com.tangem.common.map
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -63,16 +62,12 @@ internal class WelcomeMiddleware {
 
     private fun disableUserWalletsSaving() = scope.launch {
         userWalletsListManager.clear()
+            .flatMap { walletStoresManager.clear() }
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
-            .map {
-                preferencesStorage.shouldSaveUserWallets = false
-                preferencesStorage.shouldSaveAccessCodes = false
-            }
             .doOnFailure { e ->
                 Timber.e(e, "Unable to clear user wallets")
             }
             .doOnResult {
-                // !!! Workaround !!!
                 store.dispatchWithMain(WelcomeAction.CloseError)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
             }
