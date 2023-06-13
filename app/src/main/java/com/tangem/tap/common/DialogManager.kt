@@ -12,7 +12,6 @@ import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.*
@@ -118,9 +117,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 context = context,
                 cardId = state.dialog.cardId,
             )
-            is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
-            is SaltPayDialog.Activation.PutVisaCard -> PutVisaCardDialog.create(context)
-            is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
             is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
             is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context, state.dialog)
             is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)
