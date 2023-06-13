@@ -20,6 +20,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
@@ -31,15 +32,14 @@ import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
-import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
+import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
-import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
-import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
+import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -167,7 +167,7 @@ class WalletConnectSdkHelper {
         return when (result) {
             SimpleResult.Success -> {
                 val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
-                Analytics.send(Basic.TransactionSent(sentFrom))
+                Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
