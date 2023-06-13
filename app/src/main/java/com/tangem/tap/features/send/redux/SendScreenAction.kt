@@ -26,9 +26,9 @@ interface SendScreenActionUi : SendScreenAction
 object ReleaseSendState : Action
 
 data class PrepareSendScreen(
+    val walletManager: WalletManager,
     val coinAmount: Amount?,
     val coinRate: BigDecimal?,
-    val walletManager: WalletManager?,
     val tokenAmount: Amount? = null,
     val tokenRate: BigDecimal? = null,
 ) : SendScreenAction

@@ -6,7 +6,7 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.wallet.R
 
 sealed interface WalletDialog : StateDialog {
-    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
+    data class SelectAmountToSendDialog(val amounts: List<Amount>) : WalletDialog
     object SignedHashesMultiWalletDialog : WalletDialog
     data class ChooseTradeActionDialog(
         val buyAllowed: Boolean,
