@@ -17,6 +17,5 @@ data class Config(
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
     val zendesk: ZendeskConfig? = null,
-    val saltPayConfig: SaltPayConfig? = null,
     val swapReferrerAccount: SwapReferrerAccount? = null,
 )
