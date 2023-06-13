@@ -75,9 +75,9 @@ reactiveNetwork = "3.0.8"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-237"
+tangemBlockchainSdk = "develop-240"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-249"
+tangemCardSdk = "develop-266"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -179,7 +179,7 @@ appsflyer = { module = "com.appsflyer:af-android-sdk", version.ref = "appsflyer"
 armadillo = { module = "at.favre.lib:armadillo", version.ref = "armadillo" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
-kotlin-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "coroutine" }
+kotlin-coroutines-rx2 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx2", version.ref = "coroutine" }
 kotlin-immutable-collections = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlin-immutable-collections" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 googlePlay-core = { module = "com.google.android.play:core", version.ref = "googlePlayCore" }
