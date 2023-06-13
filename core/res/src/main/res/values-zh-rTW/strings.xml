@@ -323,11 +323,9 @@
     <string name="send_transaction_success">交易已成功簽署並發送至區塊鏈節點。錢包餘額稍後更新</string>
     <string name="send_validation_invalid_address">無效地址</string>
     <string name="shop_buy_now">現在購買</string>
-    <string name="shop_free">免費</string>
     <string name="shop_i_have_a_promo_code">輸入折扣碼</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">其他付款方式</string>
-    <string name="shop_shipping">運送</string>
     <string name="shop_total">總計</string>
     <string name="solana_rent_warning">Solana 網絡每 2 天收取 %1$s 的費用。無法付此費用的帳戶將從網絡中清除。向您的帳戶存入超過 %2$s 即可免費使用</string>
     <string name="story_awe_description">安全地存儲您的加密貨幣，同時將私鑰保存在您的卡中</string>
