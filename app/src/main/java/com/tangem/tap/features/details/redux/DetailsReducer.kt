@@ -98,7 +98,7 @@ private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesRe
         }
     }
     val allowedSecurityOptions = when {
-        cardTypesResolver.isStart2Coin() || cardTypesResolver.isTangemNote() || cardTypesResolver.isSaltPay() -> {
+        cardTypesResolver.isStart2Coin() || cardTypesResolver.isTangemNote() -> {
             EnumSet.of(SecurityOption.LongTap)
         }
         card.settings.isBackupAllowed -> {
@@ -116,7 +116,7 @@ private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesRe
 
 private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
     val hasPermanentWallet = card.wallets.any { it.settings.isPermanent }
-    val isNotAllowed = hasPermanentWallet || cardTypesResolver.isSaltPay() || cardTypesResolver.isStart2Coin()
+    val isNotAllowed = hasPermanentWallet || cardTypesResolver.isStart2Coin()
     return !isNotAllowed
 }
 
