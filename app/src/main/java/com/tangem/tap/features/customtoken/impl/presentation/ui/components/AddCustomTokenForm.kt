@@ -1,31 +1,11 @@
 package com.tangem.tap.features.customtoken.impl.presentation.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -62,12 +42,13 @@ internal fun AddCustomTokenForm(model: AddCustomTokenForm) {
             modifier = Modifier.padding(TangemTheme.dimens.spacing16),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
-            InputField(model = model.contractAddressInputField)
+            if (model.showTokenFields) InputField(model = model.contractAddressInputField)
             SelectorField(model = model.networkSelectorField)
-            InputField(model = model.tokenNameInputField)
-            InputField(model = model.tokenSymbolInputField)
-            InputField(model = model.decimalsInputField)
+            if (model.showTokenFields) InputField(model = model.tokenNameInputField)
+            if (model.showTokenFields) InputField(model = model.tokenSymbolInputField)
+            if (model.showTokenFields) InputField(model = model.decimalsInputField)
             model.derivationPathSelectorField?.let { SelectorField(model = it) }
+            if (model.derivationPathInputField?.showField == true) InputField(model = model.derivationPathInputField)
         }
     }
 }
@@ -103,6 +84,7 @@ private fun TextField(model: AddCustomTokenInputField, isError: Boolean) {
             is AddCustomTokenInputField.Decimals -> model.isEnabled
             is AddCustomTokenInputField.TokenName -> model.isEnabled
             is AddCustomTokenInputField.TokenSymbol -> model.isEnabled
+            is AddCustomTokenInputField.DerivationPath -> true
         }
 
         OutlinedTextField(

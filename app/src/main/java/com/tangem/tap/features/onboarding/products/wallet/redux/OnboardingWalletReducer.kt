@@ -1,11 +1,8 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayReducer
 import org.rekotlin.Action
 
 object OnboardingWalletReducer {
@@ -17,14 +14,10 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
 
     return when (action) {
         is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
-        is OnboardingSaltPayAction -> OnboardingSaltPayReducer.reduce(action, state)
-        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState, state.isSaltPay))
+        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState))
         is OnboardingWallet2Action -> OnboardingWallet2Reducer.reduce(action, state)
         is OnboardingWalletAction.GetToCreateWalletStep -> state.copy(
             step = OnboardingWalletStep.CreateWallet,
-        )
-        is OnboardingWalletAction.GetToSaltPayStep -> state.copy(
-            step = OnboardingWalletStep.SaltPay,
         )
         is OnboardingWalletAction.ResumeBackup -> state.copy(step = OnboardingWalletStep.Backup)
         is OnboardingWalletAction.SetArtworkUrl -> {
@@ -36,16 +29,17 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
 }
 
 private object ReducerForGlobalAction {
+
+    private const val MAX_BACKUP_CARDS = 2
+
     fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
         return when (action) {
             is GlobalAction.Onboarding.Start -> {
-                val isSaltPay = action.scanResponse.cardTypesResolver.isSaltPay()
                 OnboardingWalletState(
                     backupState = state.backupState.copy(
-                        maxBackupCards = maxBackupCards(isSaltPay),
-                        canSkipBackup = if (isSaltPay) false else action.canSkipBackup,
+                        maxBackupCards = MAX_BACKUP_CARDS,
+                        canSkipBackup = action.canSkipBackup,
                     ),
-                    isSaltPay = isSaltPay,
                 )
             }
             is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
@@ -55,14 +49,11 @@ private object ReducerForGlobalAction {
                         canSkipBackup = false,
                         isInterruptedBackup = true,
                     ),
-                    isSaltPay = action.isSaltPayVisa,
                 )
             }
             else -> state
         }
     }
-
-    private fun maxBackupCards(isSaltPay: Boolean): Int = if (isSaltPay) 1 else 2
 }
 
 private object OnboardingWallet2Reducer {
@@ -78,11 +69,11 @@ private object OnboardingWallet2Reducer {
 
 private object BackupReducer {
     @Suppress("ComplexMethod")
-    fun reduce(action: BackupAction, state: BackupState, isSaltPay: Boolean): BackupState {
+    fun reduce(action: BackupAction, state: BackupState): BackupState {
         return when (action) {
             is BackupAction.IntroduceBackup -> BackupState(
                 backupStep = BackupStep.InitBackup,
-                maxBackupCards = if (isSaltPay) 1 else 2,
+                maxBackupCards = 2,
                 canSkipBackup = state.canSkipBackup,
             )
             BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
