@@ -1,8 +1,11 @@
 package com.tangem.tap.features.welcome.redux
 
 import android.content.Intent
-import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
+import com.tangem.common.doOnSuccess
+import com.tangem.common.flatMap
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -16,7 +19,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.signin.redux.SignInAction
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -60,16 +62,12 @@ internal class WelcomeMiddleware {
 
     private fun disableUserWalletsSaving() = scope.launch {
         userWalletsListManager.clear()
+            .flatMap { walletStoresManager.clear() }
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
-            .map {
-                preferencesStorage.shouldSaveUserWallets = false
-                preferencesStorage.shouldSaveAccessCodes = false
-            }
             .doOnFailure { e ->
                 Timber.e(e, "Unable to clear user wallets")
             }
             .doOnResult {
-                // !!! Workaround !!!
                 store.dispatchWithMain(WelcomeAction.CloseError)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
             }
@@ -130,8 +128,8 @@ internal class WelcomeMiddleware {
                 scope.launch { onCardScanned(scanResponse) }
             },
             onFailure = {
-                when {
-                    it is TangemSdkError.ExceptionError && it.cause is SaltPayActivationError -> {
+                when (it) {
+                    is TangemSdkError.ExceptionError -> {
                         store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     }
                     else -> {

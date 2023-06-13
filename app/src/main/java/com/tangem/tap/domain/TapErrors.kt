@@ -22,6 +22,10 @@ sealed class TapError(
 
     object UnknownError : TapError(R.string.send_error_unknown)
     open class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
+    data class UnsupportedState(
+        val stateError: String,
+    ) : TapError(R.string.common_custom_string, listOf("Unsupported state: $stateError"))
+
     object ScanCardError : TapError(R.string.scan_card_error)
     object UnknownBlockchain : TapError(R.string.wallet_error_unsupported_blockchain_subtitle)
     object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
@@ -37,11 +41,6 @@ sealed class TapError(
     object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
     object DustChange : TapError(R.string.send_error_dust_change)
-
-    data class UnsupportedState(
-        val stateError: String,
-        val customMessage: String = "Unsupported state:",
-    ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
     sealed class WalletManager {
         object CreationError : CustomError("Can't create wallet manager")

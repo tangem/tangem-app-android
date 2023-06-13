@@ -1,6 +1,5 @@
 package com.tangem.tap.features.disclaimer
 
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
@@ -12,14 +11,12 @@ import java.util.Locale
  */
 enum class DisclaimerType {
     Tangem,
-    SaltPay,
     Start2Coin,
     ;
 
     companion object {
         fun get(cardDTO: CardDTO): DisclaimerType {
             return when {
-                cardDTO.isSaltPay -> SaltPay
                 cardDTO.isStart2Coin -> Start2Coin
                 else -> Tangem
             }
@@ -31,7 +28,6 @@ fun DisclaimerType.createDisclaimer(cardDTO: CardDTO): Disclaimer {
     val dataProvider = provideDisclaimerDataProvider(cardDTO.cardId)
     return when (this) {
         DisclaimerType.Tangem -> TangemDisclaimer(dataProvider)
-        DisclaimerType.SaltPay -> SaltPayDisclaimer(dataProvider)
         DisclaimerType.Start2Coin -> Start2CoinDisclaimer(dataProvider)
     }
 }

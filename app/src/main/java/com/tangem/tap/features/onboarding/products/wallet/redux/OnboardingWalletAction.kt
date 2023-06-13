@@ -10,8 +10,6 @@ import org.rekotlin.Action
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
-    object GetToSaltPayStep : OnboardingWalletAction()
-
     object CreateWallet : OnboardingWalletAction()
     data class WalletWasCreated(
         val result: CompletionResult<CreateProductWalletTaskResponse>,
@@ -57,7 +55,7 @@ sealed class BackupAction : Action {
     object ScanPrimaryCard : BackupAction()
 
     /**
-     * Check for unfinished backup of standard Wallets and SaltPay cards
+     * Check for unfinished backup of standard Wallets
      * See more GlobalAction.Onboarding.StartForUnfinishedBackup
      */
     object CheckForUnfinishedBackup : BackupAction()
@@ -82,9 +80,6 @@ sealed class BackupAction : Action {
     data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
-    /**
-     * It always calls for the SaltPay cards when resuming the activation process.
-     */
     data class FinishBackup(val withAnalytics: Boolean = true) : BackupAction()
 
     object DiscardBackup : BackupAction()

@@ -9,8 +9,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.tap.common.extensions.getBlockchainTxHistory
-import com.tangem.tap.common.extensions.getTokenTxHistory
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -114,7 +112,6 @@ private fun BlockchainNetwork.getBlockchainWalletData(
         fiatRate = null,
         isCardSingleToken = false,
         isCustom = currency.isCustomCurrency(cardDerivationStyle),
-        historyTransactions = walletManager?.getBlockchainTxHistory(),
     )
 }
 
@@ -138,7 +135,6 @@ private fun BlockchainNetwork.getTokensWalletsData(
                 fiatRate = null,
                 isCardSingleToken = token == primaryToken,
                 isCustom = currency.isCustomCurrency(cardDerivationStyle),
-                historyTransactions = walletManager?.getTokenTxHistory(token),
             )
         }
 }
@@ -156,7 +152,6 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
         fiatRate = null,
         isCardSingleToken = false,
         isCustom = false,
-        historyTransactions = walletManager.getBlockchainTxHistory(),
     )
 }
 
@@ -174,7 +169,6 @@ private fun Token.toTokenWalletData(walletManager: WalletManager, primaryToken: 
         fiatRate = null,
         isCardSingleToken = this == primaryToken,
         isCustom = false,
-        historyTransactions = walletManager.getTokenTxHistory(this),
     )
 }
 
