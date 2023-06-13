@@ -4,19 +4,18 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.walletconnect.extensions.isDappSupported
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
-import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
-import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
-import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
-import com.tangem.tap.features.details.redux.walletconnect.WcTransactionType
+import com.tangem.tap.domain.walletconnect.extensions.toWcEthereumSignMessage
+import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
+import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
+import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
+import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.walletConnectRepository
@@ -61,7 +60,7 @@ class WalletConnectManager {
         HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
     }
 
-    private var sessions: MutableMap<WCSession, WalletConnectActiveData> = mutableMapOf()
+    private var sessions: MutableMap<Topic, WalletConnectActiveData> = mutableMapOf()
 
     fun connect(wcUri: String) {
         val session = WCSession.from(wcUri).guard {
@@ -73,7 +72,7 @@ class WalletConnectManager {
             )
             return
         }
-        if (sessions[session] != null) {
+        if (sessions[session.topic] != null) {
             store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
             return
         }
@@ -93,7 +92,7 @@ class WalletConnectManager {
             return
         }
 
-        sessions[session] = WalletConnectActiveData(
+        sessions[session.topic] = WalletConnectActiveData(
             peerId = peerId,
             remotePeerId = null,
             session = session,
@@ -104,26 +103,26 @@ class WalletConnectManager {
     }
 
     fun updateSession(session: WalletConnectSession) {
-        val updatedSession = sessions[session.session]?.copy(
+        val updatedSession = sessions[session.session.topic]?.copy(
             wallet = session.wallet,
         )
         if (updatedSession != null) {
-            sessions[session.session] = updatedSession
+            sessions[session.session.topic] = updatedSession
         }
     }
 
     fun updateBlockchain(session: WalletConnectSession) {
-        sessions[session.session]?.client?.updateSession(
+        sessions[session.session.topic]?.client?.updateSession(
             accounts = listOfNotNull(session.getAddress()),
             chainId = session.wallet.blockchain?.getChainId(),
             approved = true,
         )
 
-        val updatedSession = sessions[session.session]?.copy(
+        val updatedSession = sessions[session.session.topic]?.copy(
             wallet = session.wallet,
         )
         if (updatedSession != null) {
-            sessions[session.session] = updatedSession
+            sessions[session.session.topic] = updatedSession
         }
     }
 
@@ -131,7 +130,7 @@ class WalletConnectManager {
     private fun setupConnectionTimeoutCheck(session: WCSession) {
         scope.launch {
             delay(20_000)
-            val data = sessions[session]
+            val data = sessions[session.topic]
             if (data != null && data.peerMeta == null) {
                 disconnect(session)
                 store.dispatchOnMain(WalletConnectAction.OpeningSessionTimeout(session))
@@ -160,13 +159,13 @@ class WalletConnectManager {
                         setListeners(it.client)
                         it.client.connect(it.session, tangemPeerMeta, it.peerId, it.remotePeerId)
                     }
-            }.associateBy { it.session }.toMutableMap()
+            }.associateBy { it.session.topic }.toMutableMap()
 
         store.dispatchOnMain(WalletConnectAction.SetSessionsRestored(sessions))
     }
 
     fun approve(session: WCSession) {
-        val activeData = sessions[session] ?: return
+        val activeData = sessions[session.topic] ?: return
         removeSimilarSessions(activeData)
 
         val key = activeData.wallet.derivedPublicKey ?: activeData.wallet.walletPublicKey ?: return
@@ -203,18 +202,18 @@ class WalletConnectManager {
         sessionsToRemove.forEach { disconnect(it.value.session) }
     }
 
-    fun rejectRequest(session: WCSession, id: Long) {
-        val activeData = sessions[session] ?: return
+    fun rejectRequest(topic: String, id: Long) {
+        val activeData = sessions[topic] ?: return
         activeData.client.rejectRequest(id)
     }
 
-    fun acceptRequest(session: WCSession, id: Long, data: String) {
-        val activeData = sessions[session] ?: return
+    fun acceptRequest(topic: String, id: Long, data: String) {
+        val activeData = sessions[topic] ?: return
         activeData.client.approveRequest(id, data)
     }
 
     fun disconnect(session: WCSession) {
-        val activeData = sessions[session] ?: return
+        val activeData = sessions[session.topic] ?: return
         val disconnected = if (activeData.client.isConnected) {
             activeData.client.killSession()
         } else {
@@ -228,118 +227,145 @@ class WalletConnectManager {
 
     private fun onSessionClosed(session: WCSession) {
         Analytics.send(WalletConnect.SessionDisconnected())
-        sessions.remove(session)
+        sessions.remove(session.topic)
         walletConnectRepository.removeSession(session)
         store.dispatchOnMain(WalletConnectAction.RemoveSession(session))
     }
 
     fun handleTransactionRequest(
-        transaction: WCEthereumTransaction,
+        transaction: WcEthereumTransaction,
         session: WalletConnectSession,
         id: Long,
-        type: WcTransactionType,
+        type: WcEthTransactionType,
     ) {
-        val activeData = sessions[session.session] ?: return
+        val activeData = sessions[session.session.topic] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareTransactionData(
-                transaction = transaction,
-                session = session,
-                id = id,
-                type = type,
+                EthTransactionData(
+                    transaction = transaction,
+                    networkId = session.wallet.blockchain?.toNetworkId() ?: "",
+                    rawDerivationPath = session.wallet.derivationPath?.rawPath,
+                    id = id,
+                    topic = session.session.topic,
+                    type = type,
+                    metaName = session.peerMeta.name,
+                    metaUrl = session.peerMeta.url,
+                ),
             ).guard {
-                sessions[session.session] = activeData.copy(transactionData = null)
+                sessions[session.session.topic] = activeData.copy(transactionData = null)
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
-                        session.session,
+                        session.session.topic,
                         id,
                     ),
                 )
                 return@launch
             }
-            sessions[session.session] = activeData.copy(transactionData = data)
+            sessions[session.session.topic] = activeData.copy(transactionData = data)
 
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
                     WalletConnectDialog.RequestTransaction(
-                        data.dialogData,
+                        WcPreparedRequest.EthTransaction(
+                            preparedRequestData = data,
+                            topic = session.session.topic,
+                            requestId = id,
+                            derivationPath = data.walletManager.wallet.publicKey.derivationPath?.rawPath,
+                        ),
                     ),
                 ),
             )
         }
     }
 
-    fun completeTransaction(session: WCSession) {
-        val activeData = sessions[session]
+    fun completeTransaction(topic: Topic) {
+        val activeData = sessions[topic]
         val data = activeData?.transactionData ?: return
         scope.launch {
             val hash = WalletConnectSdkHelper().completeTransaction(data, cardId).guard {
-                sessions[data.session.session] = activeData.copy(transactionData = null)
+                sessions[topic] = activeData.copy(transactionData = null)
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
-                        data.session.session,
+                        topic,
                         data.id,
                     ),
                 )
                 return@launch
             }
-            acceptRequest(session, data.id, hash)
-            sessions[session] = activeData.copy(transactionData = null)
+            acceptRequest(topic, data.id, hash)
+            sessions[topic] = activeData.copy(transactionData = null)
         }
     }
 
-    fun signBnb(id: Long, data: ByteArray, sessionData: WCSession) {
-        val activeData = sessions[sessionData] ?: return
+    fun signBnb(id: Long, data: ByteArray, topic: Topic) {
+        val activeData = sessions[topic] ?: return
         scope.launch {
-            val hash = WalletConnectSdkHelper().signBnbTransaction(data, activeData, cardId).guard {
+            val hash = WalletConnectSdkHelper().signBnbTransaction(
+                data = data,
+                networkId = activeData.wallet.blockchain?.toNetworkId() ?: "",
+                derivationPath = activeData.wallet.derivationPath?.rawPath,
+                cardId = cardId,
+            ).guard {
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
-                        sessionData,
+                        topic,
                         id,
                     ),
                 )
                 return@launch
             }
-            acceptRequest(sessionData, id, hash)
+            acceptRequest(topic, id, hash)
         }
     }
 
     fun handlePersonalSignRequest(message: WCEthereumSignMessage, session: WalletConnectSession, id: Long) {
-        val activeData = sessions[session.session] ?: return
+        val activeData = sessions[session.session.topic] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareDataForPersonalSign(
-                message = message,
-                session = session,
+                message = message.toWcEthereumSignMessage(),
+                topic = session.session.topic,
                 id = id,
+                metaName = session.peerMeta.name,
             )
-            sessions[session.session] = activeData.copy(personalSignData = data)
+            sessions[session.session.topic] = activeData.copy(personalSignData = data)
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
                     WalletConnectDialog.PersonalSign(
-                        data.dialogData,
+                        WcPreparedRequest.EthSign(
+                            preparedRequestData = data,
+                            topic = session.session.topic,
+                            requestId = id,
+                            derivationPath = session.wallet.derivationPath?.rawPath,
+                        ),
                     ),
                 ),
             )
         }
     }
 
-    fun sendSignedMessage(session: WCSession) {
-        val activeData = sessions[session]
+    fun sendSignedMessage(topic: Topic) {
+        val activeData = sessions[topic]
         val data = activeData?.personalSignData ?: return
         scope.launch {
-            val hash = WalletConnectSdkHelper().signPersonalMessage(data.hash, activeData.wallet, cardId)
+            val hash = WalletConnectSdkHelper().signPersonalMessage(
+                hashToSign = data.hash,
+                networkId = activeData.wallet.blockchain?.toNetworkId() ?: "",
+                derivationPath = activeData.wallet.derivationPath?.rawPath,
+                cardId = cardId,
+            )
                 .guard {
-                    sessions[data.session.session] = activeData.copy(transactionData = null)
+                    sessions[topic] = activeData.copy(transactionData = null)
                     store.dispatchOnMain(
                         WalletConnectAction.RejectRequest(
-                            data.session.session,
+                            topic,
                             data.id,
                         ),
                     )
                     return@launch
                 }
-            sessions[session] = activeData.copy(personalSignData = data)
-            acceptRequest(data.session.session, data.id, hash)
-            sessions[data.session.session] = activeData.copy(transactionData = null)
+            sessions[topic] = activeData.copy(personalSignData = data)
+            acceptRequest(topic, data.id, hash)
+            sessions[topic] = activeData.copy(transactionData = null)
         }
     }
 
@@ -348,7 +374,7 @@ class WalletConnectManager {
         client.onSessionRequest = { id: Long, peer: WCPeerMeta ->
             Timber.d("OnSessionRequest: $peer")
             val session = client.session
-            val data = sessions[session]?.copy(peerMeta = peer, remotePeerId = client.remotePeerId)
+            val data = sessions[session?.topic]?.copy(peerMeta = peer, remotePeerId = client.remotePeerId)
             if (data != null && session != null) {
                 if (!peer.isDappSupported()) {
                     store.dispatchOnMain(
@@ -358,7 +384,7 @@ class WalletConnectManager {
                         ),
                     )
                 } else {
-                    sessions[session] = data
+                    sessions[session.topic] = data
                     val sessionData = data.toWalletConnectSession()
                     sessionData?.let {
                         store.dispatchOnMain(
@@ -384,13 +410,13 @@ class WalletConnectManager {
             //         AnalyticsAnOld.WcAction.SendTransaction
             //     )
             // )
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+            sessions[client.session?.topic]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandleTransactionRequest(
                         transaction = transaction,
                         session = sessionData,
                         id = id,
-                        type = WcTransactionType.EthSendTransaction,
+                        type = WcEthTransactionType.EthSendTransaction,
                     ),
                 )
             }
@@ -402,13 +428,13 @@ class WalletConnectManager {
             //         AnalyticsAnOld.WcAction.SignTransaction
             //     )
             // )
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+            sessions[client.session?.topic]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandleTransactionRequest(
                         transaction = transaction,
                         session = sessionData,
                         id = id,
-                        type = WcTransactionType.EthSignTransaction,
+                        type = WcEthTransactionType.EthSignTransaction,
                     ),
                 )
             }
@@ -420,7 +446,7 @@ class WalletConnectManager {
             //         AnalyticsAnOld.WcAction.PersonalSign
             //     )
             // )
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+            sessions[client.session?.topic]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandlePersonalSignRequest(
                         message,
@@ -434,7 +460,7 @@ class WalletConnectManager {
         client.onBnbCancel = { id: Long, order: WCBinanceCancelOrder ->
         }
         client.onBnbTrade = { id: Long, order: WCBinanceTradeOrder ->
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+            sessions[client.session?.topic]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Trade(
                         id = id,
@@ -445,7 +471,7 @@ class WalletConnectManager {
             }
         }
         client.onBnbTransfer = { id: Long, order: WCBinanceTransferOrder ->
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+            sessions[client.session?.topic]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Transfer(
                         id = id,
@@ -484,7 +510,7 @@ class WalletConnectManager {
     private fun switchChain(chainId: Int, client: WCClient) {
         val blockchain = Blockchain.fromChainId(chainId)
         Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
-        val session = sessions[client.session]?.toWalletConnectSession()
+        val session = sessions[client.session?.topic]?.toWalletConnectSession()
         if (session != null) {
             store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
         }
@@ -498,6 +524,8 @@ class WalletConnectManager {
         fun isCorrectWcUri(string: String): Boolean = WCSession.from(string) != null
     }
 }
+
+typealias Topic = String
 
 data class WalletConnectActiveData(
     val peerId: String,
