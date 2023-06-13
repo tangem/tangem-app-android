@@ -9,4 +9,6 @@ interface CustomTokenFeatureToggles {
 
     /** Availability of redesigned screen (internal feature) */
     val isRedesignedScreenEnabled: Boolean
+
+    val isNewCardScanningEnabled: Boolean
 }

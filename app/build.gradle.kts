@@ -37,9 +37,12 @@ dependencies {
     implementation(project(":features:swap:data"))
     implementation(project(":features:tester:api"))
     implementation(project(":features:tester:impl"))
+    implementation(project(":features:wallet:api"))
+    implementation(project(":features:wallet:impl"))
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.constraintLayout)
