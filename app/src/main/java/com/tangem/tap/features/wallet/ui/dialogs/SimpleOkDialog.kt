@@ -53,4 +53,17 @@ object SimpleOkDialog {
         ),
         context = context,
     )
+
+    fun create(dialog: AppDialog.OkCancelDialogRes, context: Context): AlertDialog {
+        return AlertDialog.Builder(context).apply {
+            setTitle(context.getString(dialog.headerId))
+            setMessage(dialog.messageId)
+            setPositiveButton(dialog.okButton.title) { _, _ -> dialog.okButton.action?.invoke() }
+            setNegativeButton(dialog.cancelButton.title) { _, _ -> dialog.cancelButton.action?.invoke() }
+            setOnDismissListener {
+                store.dispatchDialogHide()
+                dialog.cancelButton.action?.invoke()
+            }
+        }.create()
+    }
 }
