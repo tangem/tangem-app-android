@@ -1,48 +1,21 @@
 package com.tangem.tap.features.customtoken.legacy.compose
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.BottomSheetState
-import androidx.compose.material.BottomSheetValue
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FabPosition
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButtonIconLeft
+import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.ContractAddress
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Decimals
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.DerivationPath
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Name
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Network
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Symbol
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
@@ -189,12 +162,12 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
 
 @Composable
 private fun AddButton(state: MutableState<AddCustomTokenState>) {
-    PrimaryButtonIconLeft(
+    PrimaryButtonIconStart(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         text = stringResource(id = R.string.common_add),
-        icon = painterResource(id = R.drawable.ic_plus_24),
+        iconResId = R.drawable.ic_plus_24,
         enabled = state.value.screenState.addButton.isEnabled,
         onClick = { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) },
     )
