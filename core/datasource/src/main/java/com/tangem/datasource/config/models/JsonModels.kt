@@ -37,6 +37,7 @@ class ConfigValueModel(
     val amplitudeApiKey: String,
     val swapReferrerAccount: SwapReferrerAccount?,
     val kaspaSecondaryApiUrl: String,
+    val walletConnectProjectId: String,
 )
 
 data class AppsFlyer(
