@@ -1,9 +1,10 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
+import kotlinx.collections.immutable.ImmutableList
 
 data class WalletConnectScreenState(
-    val sessions: List<WcSessionForScreen>,
+    val sessions: ImmutableList<WcSessionForScreen>,
     val isLoading: Boolean = false,
     val onRemoveSession: (String) -> Unit = {},
     val onAddSession: (String?) -> Unit = {},
