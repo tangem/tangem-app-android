@@ -22,6 +22,7 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
@@ -71,7 +72,7 @@ internal class WalletSelectorMiddleware {
                 refreshUserWalletsAmounts()
             }
             is WalletSelectorAction.ClearUserWallets -> {
-                clearUserWalletsAndCloseError()
+                disableUserWalletsSaving()
             }
             is WalletSelectorAction.AddWallet.Success,
             is WalletSelectorAction.AddWallet.Error,
@@ -155,8 +156,16 @@ internal class WalletSelectorMiddleware {
             onFailure = { error ->
                 // Rollback policy if card scanning was failed
                 tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
-                Timber.e(error, "Unable to scan card")
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                when {
+                    error is TangemSdkError.ExceptionError && error.cause is SaltPayActivationError -> {
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                    }
+                    else -> {
+                        Timber.e(error, "Unable to scan card")
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                    }
+                }
             },
         )
     }
@@ -208,7 +217,7 @@ internal class WalletSelectorMiddleware {
     private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
         Analytics.send(MyWallets.Button.WalletUnlockTapped())
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
-        return ScanCardProcessor.scan()
+        return tangemSdkManager.scanProduct(userTokensRepository)
             .map { scanResponse ->
                 val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
                 if (scannedUserWalletId == userWallet.walletId) {
@@ -296,8 +305,12 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private fun clearUserWalletsAndCloseError() = scope.launch {
+    private fun disableUserWalletsSaving() = scope.launch {
         clearUserWallets()
+            .map {
+                preferencesStorage.shouldSaveUserWallets = false
+                preferencesStorage.shouldSaveAccessCodes = false
+            }
             .doOnSuccess {
                 store.dispatchWithMain(WalletSelectorAction.CloseError)
                 popBackToHome()

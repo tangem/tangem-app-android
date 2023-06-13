@@ -5,17 +5,15 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
-import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
-import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.extensions.init
+import com.tangem.sdk.extensions.initWithBiometrics
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
@@ -102,15 +100,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = injectedTangemSdk
-        tangemSdkManager = injectedTangemSdkManager
+        tangemSdk = TangemSdk.initWithBiometrics(this, TangemSdkManager.config)
+        tangemSdkManager = TangemSdkManager(tangemSdk, this)
         appStateHolder.tangemSdkManager = tangemSdkManager
         appStateHolder.tangemSdk = tangemSdk
         backupService = BackupService.init(tangemSdk, this)

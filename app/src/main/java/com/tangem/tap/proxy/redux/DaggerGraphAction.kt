@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy.redux
 
-import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor

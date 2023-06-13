@@ -30,6 +30,7 @@ import com.tangem.tap.common.feedback.*
 import com.tangem.tap.common.images.*
 import com.tangem.tap.common.log.*
 import com.tangem.tap.common.redux.*
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.*
 import com.tangem.tap.common.shop.*
 import com.tangem.tap.domain.configurable.warningMessage.*
@@ -54,7 +55,6 @@ import okhttp3.logging.*
 import org.rekotlin.*
 import timber.log.*
 import javax.inject.*
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
 

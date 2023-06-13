@@ -2,7 +2,6 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter

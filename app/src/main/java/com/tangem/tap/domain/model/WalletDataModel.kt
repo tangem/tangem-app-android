@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.model
 
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.domain.model.WalletDataModel.AddressData
 import com.tangem.tap.domain.model.WalletDataModel.Status
@@ -27,6 +28,7 @@ data class WalletDataModel(
     val fiatRate: BigDecimal?,
     val isCardSingleToken: Boolean,
     val isCustom: Boolean,
+    val historyTransactions: List<TransactionData>?,
 ) {
 
     data class WalletAddresses(
@@ -77,7 +79,6 @@ data class WalletDataModel(
 
     data class Unreachable(
         override val errorMessage: String?,
-        override val amount: BigDecimal = BigDecimal.ZERO,
     ) : Status() {
         override val isErrorStatus: Boolean = true
     }

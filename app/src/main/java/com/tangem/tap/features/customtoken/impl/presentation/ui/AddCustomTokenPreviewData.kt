@@ -4,7 +4,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.features.customtoken.impl.presentation.models.*
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenForm
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenInputField
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenTestBlock
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenWarning
+import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokensToolbar
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.wallet.R
@@ -78,7 +85,6 @@ internal object AddCustomTokenPreviewData {
                 onMenuItemClick = {},
                 isEnabled = true,
             ),
-            derivationPathInputField = null,
         )
     }
 

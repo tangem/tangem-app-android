@@ -37,8 +37,6 @@ class WalletDialogsMiddleware {
                 )
             }
             is WalletAction.DialogAction.ChooseCurrency -> {
-                if (action.amounts.isEmpty()) return
-
                 store.dispatchDialogShow(
                     WalletDialog.SelectAmountToSendDialog(
                         amounts = action.amounts,
