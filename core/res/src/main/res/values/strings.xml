@@ -82,9 +82,11 @@
     <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
     <string name="custom_token_creation_error_required_field">Required field</string>
     <string name="custom_token_creation_error_wrong_decimals">Decimal number must be a valid integer, no higher than %d</string>
+    <string name="custom_token_custom_derivation">Custom derivation</string>
     <string name="custom_token_decimals_input_title">Decimals</string>
     <string name="custom_token_derivation_path_default">Default</string>
     <string name="custom_token_derivation_path_input_title">BIP44 coin type</string>
+    <string name="custom_token_invalid_derivation_path">The derivation path you\'ve entered is not valid</string>
     <string name="custom_token_name_input_placeholder">E.g. USD Coin</string>
     <string name="custom_token_name_input_title">Name</string>
     <string name="custom_token_network_input_not_selected">Not selected</string>
@@ -462,6 +464,7 @@
     <string name="wallet_error_no_account">Account is not created</string>
     <string name="wallet_error_unsupported_blockchain">This card is not supported</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Your Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app</string>
+    <string name="wallet_network_group_title">%s network</string>
     <string name="wallet_notification_address_copied">Address was copied to clipboard</string>
     <string name="wallet_notification_no_internet">No internet connection</string>
     <string name="wallet_pending_tx_receiving">Receiving</string>
