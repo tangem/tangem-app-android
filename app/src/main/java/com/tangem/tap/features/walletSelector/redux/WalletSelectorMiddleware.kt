@@ -71,7 +71,7 @@ internal class WalletSelectorMiddleware {
                 refreshUserWalletsAmounts()
             }
             is WalletSelectorAction.ClearUserWallets -> {
-                disableUserWalletsSaving()
+                clearUserWalletsAndCloseError()
             }
             is WalletSelectorAction.AddWallet.Success,
             is WalletSelectorAction.AddWallet.Error,
@@ -296,12 +296,8 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private fun disableUserWalletsSaving() = scope.launch {
+    private fun clearUserWalletsAndCloseError() = scope.launch {
         clearUserWallets()
-            .map {
-                preferencesStorage.shouldSaveUserWallets = false
-                preferencesStorage.shouldSaveAccessCodes = false
-            }
             .doOnSuccess {
                 store.dispatchWithMain(WalletSelectorAction.CloseError)
                 popBackToHome()
