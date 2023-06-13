@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.tangem.Log
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.tap.common.FileReader
+import com.tangem.datasource.files.FileReader
 import com.tangem.tap.features.wallet.models.Currency
 
 class UserTokensStorageService(private val fileReader: FileReader) {
