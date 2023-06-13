@@ -18,6 +18,7 @@ import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -338,7 +339,7 @@ class TransactionManagerImpl(
     private fun handleSendResult(result: SimpleResult, successEvent: AnalyticsParam.TxSentFrom): SendTxResult {
         when (result) {
             is SimpleResult.Success -> {
-                analytics.send(Basic.TransactionSent(sentFrom = successEvent))
+                analytics.send(Basic.TransactionSent(sentFrom = successEvent, memoType = MemoType.Null))
                 return SendTxResult.Success
             }
             is SimpleResult.Failure -> {
