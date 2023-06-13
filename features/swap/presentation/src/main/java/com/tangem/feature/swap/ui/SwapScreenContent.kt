@@ -346,10 +346,10 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
             )
         }
         else -> {
-            PrimaryButtonIconEnd(
+            PrimaryButtonIconRight(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.swapping_swap),
-                iconResId = R.drawable.ic_tangem_24,
+                icon = painterResource(id = R.drawable.ic_tangem_24),
                 enabled = state.swapButton.enabled,
                 showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,

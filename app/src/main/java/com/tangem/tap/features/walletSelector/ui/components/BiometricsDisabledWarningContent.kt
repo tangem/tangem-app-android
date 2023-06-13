@@ -17,10 +17,9 @@ internal fun BiometricsDisabledWarningContent(warning: WarningModel.BiometricsDi
         title = stringResource(id = R.string.common_warning),
         message = stringResource(id = R.string.biometric_unavailable_warning),
         onDismissDialog = warning.onDismiss,
-        isDismissable = false,
         confirmButton = DialogButton(
             title = stringResource(id = R.string.common_ok),
-            onClick = warning.onDismiss,
+            onClick = warning.onConfirm,
         ),
     )
 }
@@ -31,6 +30,7 @@ private fun BiometricsDisabledWarningContentSample(modifier: Modifier = Modifier
     Column(modifier = modifier) {
         BiometricsDisabledWarningContent(
             warning = WarningModel.BiometricsDisabledWarning(
+                onConfirm = {},
                 onDismiss = {},
             ),
         )

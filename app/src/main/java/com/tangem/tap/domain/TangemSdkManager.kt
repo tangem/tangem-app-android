@@ -229,6 +229,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
             scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.cardTypesResolver.isSaltPay() -> CardIdDisplayFormat.None
             else -> CardIdDisplayFormat.Full
         }
     }

@@ -4,6 +4,7 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
@@ -20,7 +21,7 @@ val CardDTO.isFirmwareMultiwalletAllowed: Boolean
     get() = firmwareVersion >= FirmwareVersion.MultiWalletAvailable && settings.maxWalletsCount > 1
 
 val CardDTO.isHdWalletAllowedByApp: Boolean
-    get() = settings.isHDWalletAllowed
+    get() = settings.isHDWalletAllowed && !isSaltPay
 
 @Suppress("UnnecessaryParentheses")
 fun CardDTO.hasSignedHashes(): Boolean {

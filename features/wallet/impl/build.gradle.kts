@@ -15,14 +15,12 @@ dependencies {
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.kotlin.immutable.collections)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -34,4 +32,5 @@ dependencies {
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
+
 }

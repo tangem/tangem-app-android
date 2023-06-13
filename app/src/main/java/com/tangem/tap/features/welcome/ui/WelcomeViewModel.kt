@@ -72,7 +72,8 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
                 onDismiss = this::dismissWarning,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
-                onDismiss = this::clearUserWallets,
+                onConfirm = this::clearUserWallets,
+                onDismiss = this::dismissWarning,
             )
             else -> null
         }

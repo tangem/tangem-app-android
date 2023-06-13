@@ -20,6 +20,7 @@ import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
@@ -188,7 +189,9 @@ private class ScanWalletProcessor(
         val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
         @Suppress("ComplexCondition")
-        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() && activationInProgress) {
+        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
+            (activationInProgress || card.isSaltPay)
+        ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                 when (linkingResult) {
                     is CompletionResult.Success -> {
@@ -210,7 +213,10 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = ProductType.Wallet
+        val productType = when (card.isSaltPay) {
+            true -> ProductType.SaltPay
+            else -> ProductType.Wallet
+        }
         scope.launch {
             val derivations = collectDerivations(card)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {

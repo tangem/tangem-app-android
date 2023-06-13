@@ -38,16 +38,19 @@ sealed class GlobalAction : Action {
     sealed class Onboarding : GlobalAction() {
         /**
          * Initiate an onboarding process.
-         * For resuming unfinished backup of standard Wallet see
+         * For resuming unfinished backup of standard Wallet and SaltPay cards see
          * BackupAction.CheckForUnfinishedBackup, GlobalAction.Onboarding.StartForUnfinishedBackup
          */
         data class Start(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : Onboarding()
 
         /**
-         * Initiate resuming of unfinished backup for standard Wallet.
+         * Initiate resuming of unfinished backup for standard Wallet and SaltPay cards.
          * See more BackupAction.CheckForUnfinishedBackup
          */
-        data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
+        data class StartForUnfinishedBackup(
+            val addedBackupCardsCount: Int,
+            val isSaltPayVisa: Boolean,
+        ) : Onboarding()
 
         object Stop : Onboarding()
     }

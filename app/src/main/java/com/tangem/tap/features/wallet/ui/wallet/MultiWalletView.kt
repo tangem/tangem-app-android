@@ -73,6 +73,7 @@ class MultiWalletView : WalletView() {
 
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
         watcher.clear()
+        lSaltPayWallet.root.hide()
         tvTwinCardNumber.hide()
         rvPendingTransaction.hide()
         lCardBalance.root.hide()
