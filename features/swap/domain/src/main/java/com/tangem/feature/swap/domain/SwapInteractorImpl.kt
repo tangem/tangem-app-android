@@ -4,16 +4,13 @@ import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.CryptoCurrencyConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
-import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
-import com.tangem.feature.swap.domain.models.domain.SwapApproveType
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.lib.crypto.models.ProxyFees
-import com.tangem.lib.crypto.models.ProxyFiatCurrency
+import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
 import java.math.BigDecimal
@@ -115,12 +112,19 @@ internal class SwapInteractorImpl @Inject constructor(
             permissionOptions.approveData.approveModel.data
         }
         val result = transactionManager.sendApproveTransaction(
-            networkId = networkId,
-            feeAmount = permissionOptions.txFee.feeValue,
-            gasLimit = permissionOptions.txFee.gasLimit,
-            destinationAddress = permissionOptions.approveData.approveModel.toAddress,
-            dataToSign = dataToSign,
+            txData = ApproveTxData(
+                networkId = networkId,
+                feeAmount = permissionOptions.txFee.feeValue,
+                gasLimit = permissionOptions.txFee.gasLimit,
+                destinationAddress = permissionOptions.approveData.approveModel.toAddress,
+                dataToSign = dataToSign,
+            ),
             derivationPath = derivationPath,
+            analyticsData = AnalyticsData(
+                feeType = permissionOptions.txFee.feeType.getNameForAnalytics(),
+                tokenSymbol = permissionOptions.fromToken.symbol,
+                permissionType = permissionOptions.approveType.getNameForAnalytics(),
+            ),
         )
         return when (result) {
             is SendTxResult.Success -> {
@@ -188,15 +192,21 @@ internal class SwapInteractorImpl @Inject constructor(
     ): TxState {
         val amount = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format, use only digits" }
         val result = transactionManager.sendTransaction(
-            networkId = networkId,
-            amountToSend = amount,
-            currencyToSend = cryptoCurrencyConverter.convert(currencyToSend),
-            feeAmount = fee.feeValue,
-            gasLimit = fee.gasLimit,
-            destinationAddress = swapStateData.swapModel.transaction.toWalletAddress,
-            dataToSign = swapStateData.swapModel.transaction.data,
+            txData = SwapTxData(
+                networkId = networkId,
+                amountToSend = amount,
+                currencyToSend = cryptoCurrencyConverter.convert(currencyToSend),
+                feeAmount = fee.feeValue,
+                gasLimit = fee.gasLimit,
+                destinationAddress = swapStateData.swapModel.transaction.toWalletAddress,
+                dataToSign = swapStateData.swapModel.transaction.data,
+            ),
             isSwap = true,
             derivationPath = derivationPath,
+            analyticsData = AnalyticsData(
+                feeType = fee.feeType.getNameForAnalytics(),
+                tokenSymbol = currencyToSend.symbol,
+            ),
         )
         return when (result) {
             is SendTxResult.Success -> {
@@ -587,12 +597,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = normalFeeGas,
                 feeFiatFormatted = normalFiatFee,
                 feeCryptoFormatted = normalCryptoFee,
+                feeType = FeeType.NORMAL,
             ),
             priorityFee = TxFee(
                 feeValue = priorityFeeValue,
                 gasLimit = priorityFeeGas,
                 feeFiatFormatted = priorityFiatFee,
                 feeCryptoFormatted = priorityCryptoFee,
+                feeType = FeeType.PRIORITY,
             ),
         )
     }
@@ -670,8 +682,8 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val DEFAULT_SLIPPAGE = 2
         private const val ZERO_BALANCE = "0"
         private const val DEFAULT_BLOCKCHAIN_INCH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-        private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.4
-        private const val INCREASE_GAS_LIMIT_BY = 125 // 25%
+        private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.0 // if need to increase fee when check isEnough
+        private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val USDT_SYMBOL = "USDT"
         private const val USDC_SYMBOL = "USDC"
         private const val INFINITY_SYMBOL = "∞"
