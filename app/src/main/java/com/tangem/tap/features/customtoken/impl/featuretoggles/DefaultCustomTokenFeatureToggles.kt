@@ -16,4 +16,7 @@ internal class DefaultCustomTokenFeatureToggles(
 
     override val isRedesignedScreenEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "REDESIGNED_CUSTOM_TOKEN_SCREEN_ENABLED")
+
+    override val isNewCardScanningEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NEW_CARD_SCANNING_ENABLED")
 }
