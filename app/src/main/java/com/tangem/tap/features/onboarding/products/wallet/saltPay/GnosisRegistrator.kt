@@ -140,7 +140,7 @@ class GnosisRegistrator(
         val compiledEthereumTransaction = walletManager.transactionBuilder.buildApproveToSign(
             transactionData = walletManager.createTransaction(
                 amount = approveAmount,
-                fee = Fee.CommonFee(feeAmount),
+                fee = Fee.Common(feeAmount),
                 destination = otpProcessorContractAddress,
             ),
             nonce = atomicNonce.getAndIncrement().toBigInteger(),
