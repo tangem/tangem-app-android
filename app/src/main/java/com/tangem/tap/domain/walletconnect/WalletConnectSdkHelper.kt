@@ -86,7 +86,7 @@ class WalletConnectSdkHelper {
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
-            fee = Fee.CommonFee(Amount(fee, wallet.blockchain)),
+            fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
             destinationAddress = transaction.to!!,
             extras = EthereumTransactionExtras(
