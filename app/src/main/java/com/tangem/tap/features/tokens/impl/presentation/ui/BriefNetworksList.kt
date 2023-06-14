@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -20,6 +21,9 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import kotlinx.collections.immutable.ImmutableCollection
+
+/** This const configures how many items show to user and hide more than*/
+private const val MAX_VISIBLE_BRIEF_ICONS = 9
 
 /**
 [REDACTED_AUTHOR]
@@ -37,10 +41,25 @@ internal fun BriefNetworksList(
         exit = fadeOut(),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
-            networks.forEach { network ->
-                key(network.name + network.protocolName) {
-                    BriefNetworkItem(model = network)
+            val iterator = networks.iterator()
+            var index = 0
+            while (iterator.hasNext()) {
+                val network = iterator.next()
+                if (index < MAX_VISIBLE_BRIEF_ICONS) {
+                    key(network.name + network.protocolName) {
+                        BriefNetworkItem(model = network)
+                    }
+                } else {
+                    if (networks.size < MAX_VISIBLE_BRIEF_ICONS + 1) {
+                        key(network.name + network.protocolName) {
+                            BriefNetworkItem(model = network)
+                        }
+                    } else {
+                        HasMoreItem(moreCount = networks.size - index)
+                        break
+                    }
                 }
+                index++
             }
         }
     }
@@ -50,8 +69,8 @@ internal fun BriefNetworksList(
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun BriefNetworkItem(model: NetworkItemState) {
-    Box(modifier = Modifier.size(size = TangemTheme.dimens.size20)) {
+internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(size = TangemTheme.dimens.size20)) {
         Image(
             painter = painterResource(id = model.iconResId.value),
             contentDescription = null,
@@ -75,5 +94,22 @@ internal fun BriefNetworkItem(model: NetworkItemState) {
                 )
             }
         }
+    }
+}
+
+@Composable
+internal fun HasMoreItem(moreCount: Int) {
+    Box(
+        modifier = Modifier
+            .size(size = TangemTheme.dimens.size20)
+            .clip(CircleShape)
+            .background(TangemTheme.colors.control.unchecked),
+    ) {
+        Text(
+            modifier = Modifier.align(Alignment.Center),
+            text = "+$moreCount",
+            style = TangemTheme.typography.overline,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
