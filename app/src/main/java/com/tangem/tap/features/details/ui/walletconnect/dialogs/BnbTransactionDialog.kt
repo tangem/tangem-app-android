@@ -3,20 +3,15 @@ package com.tangem.tap.features.details.ui.walletconnect.dialogs
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import com.trustwallet.walletconnect.models.session.WCSession
 
 object BnbTransactionDialog {
-    fun create(
-        data: BinanceMessageData,
-        session: WCSession,
-        sessionId: Long,
-        dAppName: String,
-        context: Context,
-    ): AlertDialog {
+    fun create(preparedData: WcPreparedRequest.BnbTransaction, context: Context): AlertDialog {
+        val data = preparedData.preparedRequestData.data
         val message = when (data) {
             is BinanceMessageData.Trade -> data.tradeData.map {
                 context.getString(
@@ -37,7 +32,7 @@ object BnbTransactionDialog {
 
         val fullMessage = context.getString(
             R.string.wallet_connect_bnb_sign_message,
-            dAppName,
+            preparedData.preparedRequestData.dAppName,
             message,
         )
         val positiveButtonTitle = context.getText(R.string.common_sign)
@@ -48,14 +43,15 @@ object BnbTransactionDialog {
             setPositiveButton(positiveButtonTitle) { _, _ ->
                 store.dispatch(
                     WalletConnectAction.BinanceTransaction.Sign(
-                        id = sessionId,
+                        id = preparedData.requestId,
                         data = data.data,
-                        sessionData = session,
+                        topic = preparedData.topic,
                     ),
                 )
+                store.dispatch(WalletConnectAction.PerformRequestedAction(preparedData))
             }
             setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
-                store.dispatch(WalletConnectAction.RejectRequest(session, sessionId))
+                store.dispatch(WalletConnectAction.RejectRequest(preparedData.topic, preparedData.requestId))
             }
             setOnDismissListener {
                 store.dispatch(GlobalAction.HideDialog)

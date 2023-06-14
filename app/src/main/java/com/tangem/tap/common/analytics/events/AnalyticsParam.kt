@@ -87,10 +87,52 @@ sealed class AnalyticsParam {
     }
 
     sealed class TxSentFrom(val value: String) {
-        object Send : TxSentFrom("Send")
-        object Swap : TxSentFrom("Swap")
+        data class Send(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Send"), TxData
+
+        data class Swap(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Swap"), TxData
+
+        data class Approve(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+            val permissionType: String,
+        ) : TxSentFrom("Approve"), TxData
+
         object WalletConnect : TxSentFrom("WalletConnect")
         object Sell : TxSentFrom("Sell")
+    }
+
+    sealed interface TxData {
+        val blockchain: String
+        val token: String
+        val feeType: FeeType
+    }
+
+    sealed class FeeType(val value: String) {
+        object Fixed : FeeType("Fixed")
+        object Min : FeeType("Min")
+        object Normal : FeeType("Normal")
+        object Max : FeeType("Max")
+
+        companion object {
+            fun fromString(feeType: String): FeeType {
+                return when (feeType) {
+                    Min.value -> Min
+                    Normal.value -> Normal
+                    Max.value -> Max
+                    Fixed.value -> Fixed
+                    else -> Fixed
+                }
+            }
+        }
     }
 
     sealed class WalletCreationType(val value: String) {
@@ -100,9 +142,13 @@ sealed class AnalyticsParam {
     }
 
     companion object Key {
+        const val BLOCKCHAIN = "blockchain"
+        const val TOKEN = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val BATCH = "Batch"
+        const val FEE_TYPE = "Fee Type"
+        const val PERMISSION_TYPE = "Permission Type"
         const val PRODUCT_TYPE = "Product Type"
         const val FIRMWARE = "Firmware"
         const val CURRENCY = "Currency"

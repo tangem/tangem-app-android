@@ -7,28 +7,22 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.TransactionError
-import com.tangem.blockchain.common.TransactionSender
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.analytics.events.Token.Send.SelectedCurrency.CurrencyType
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -39,25 +33,11 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
-import com.tangem.tap.features.send.redux.AmountAction
-import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
-import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.SendActionUi
-import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.send.redux.states.ExternalTransactionData
-import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -65,7 +45,7 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.util.*
+import java.util.EnumSet
 
 /**
 [REDACTED_AUTHOR]
@@ -134,9 +114,17 @@ private fun verifyAndSendTransaction(
                     },
                     sendAllCallback = {
                         sendTransaction(
-                            action, walletManager, amountToSend, feeAmount, destinationAddress,
-                            sendState.transactionExtrasState, card, sendState.externalTransactionData,
-                            dispatch,
+                            action = action,
+                            walletManager = walletManager,
+                            amountToSend = amountToSend,
+                            feeAmount = feeAmount,
+                            feeType = sendState.feeState.selectedFeeType,
+                            destinationAddress = destinationAddress,
+                            transactionExtras = sendState.transactionExtrasState,
+                            card = card,
+                            externalTransactionData = sendState.externalTransactionData,
+                            mainCurrencyType = sendState.amountState.mainCurrency.type,
+                            dispatch = dispatch,
                         )
                     },
                     reduceAmount,
@@ -145,8 +133,17 @@ private fun verifyAndSendTransaction(
         }
         else -> {
             sendTransaction(
-                action, walletManager, amountToSend, feeAmount, destinationAddress,
-                sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch,
+                action = action,
+                walletManager = walletManager,
+                amountToSend = amountToSend,
+                feeAmount = feeAmount,
+                feeType = sendState.feeState.selectedFeeType,
+                destinationAddress = destinationAddress,
+                transactionExtras = sendState.transactionExtrasState,
+                card = card,
+                externalTransactionData = sendState.externalTransactionData,
+                mainCurrencyType = sendState.amountState.mainCurrency.type,
+                dispatch = dispatch,
             )
         }
     }
@@ -158,10 +155,12 @@ private fun sendTransaction(
     walletManager: WalletManager,
     amountToSend: Amount,
     feeAmount: Amount,
+    feeType: FeeType,
     destinationAddress: String,
     transactionExtras: TransactionExtrasState,
     card: CardDTO,
     externalTransactionData: ExternalTransactionData?,
+    mainCurrencyType: MainCurrencyType,
     dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
@@ -243,17 +242,37 @@ private fun sendTransaction(
             dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
             tangemSdk.config.linkedTerminal = linkedTerminalState
 
-            val currencyType = AnalyticsParam.CurrencyType.Amount(amountToSend)
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    Analytics.send(Token.Send.TransactionSent(currencyType))
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
-                        Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Sell))
+                        Analytics.send(
+                            Basic.TransactionSent(
+                                sentFrom = AnalyticsParam.TxSentFrom.Sell,
+                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                            ),
+                        )
+                        Analytics.send(
+                            Token.Send.SelectedCurrency(
+                                currency = when (mainCurrencyType) {
+                                    MainCurrencyType.FIAT -> CurrencyType.AppCurrency
+                                    MainCurrencyType.CRYPTO -> CurrencyType.AppCurrency
+                                },
+                            ),
+                        )
                         dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
-                        Analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Send))
+                        Analytics.send(
+                            Basic.TransactionSent(
+                                sentFrom = AnalyticsParam.TxSentFrom.Send(
+                                    blockchain = walletManager.wallet.blockchain.fullName,
+                                    token = amountToSend.currencySymbol,
+                                    feeType = feeType.convertToAnalyticsFeeType(),
+                                ),
+                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                            ),
+                        )
                         dispatch(NavigationAction.PopBackTo())
                     }
                     scope.launch(Dispatchers.IO) {
@@ -270,8 +289,6 @@ private fun sendTransaction(
                         destinationAddress = destinationAddress,
                     )
                     val error = sendResult.error as? BlockchainSdkError ?: return@withMainContext
-
-                    Analytics.send(Token.Send.TransactionSent(currencyType, error))
 
                     when (error) {
                         is BlockchainSdkError.WrappedTangemError -> {
