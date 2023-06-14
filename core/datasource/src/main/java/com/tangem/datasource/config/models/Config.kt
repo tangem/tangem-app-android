@@ -18,4 +18,5 @@ data class Config(
     val shopify: ShopifyShop? = null,
     val zendesk: ZendeskConfig? = null,
     val swapReferrerAccount: SwapReferrerAccount? = null,
+    val walletConnectProjectId: String = "",
 )
