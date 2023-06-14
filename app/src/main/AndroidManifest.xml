@@ -34,10 +34,11 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:allowBackup="false"
+        android:fullBackupContent="false"
         android:networkSecurityConfig="@xml/network_security_config"
         android:hardwareAccelerated="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup">
+        tools:replace="android:allowBackup, android:fullBackupContent">
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
@@ -49,6 +50,7 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -58,40 +60,25 @@
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="www.tangem.com"
-                    android:scheme="http" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="www.tangem.com"
-                    android:scheme="https" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="tangem.com"
-                    android:scheme="http" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="tangem.com"
-                    android:scheme="https" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="app.tangem.com"
-                    android:scheme="https" />
-            </intent-filter>
+                <data android:scheme="http" />
+                <data android:host="www.tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TECH_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+                <data android:scheme="https" />
+                <data android:host="www.tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <meta-data
-                android:name="android.nfc.action.TECH_DISCOVERED"
-                android:resource="@xml/nfc_tech_filter" />
+                <data android:scheme="http" />
+                <data android:host="tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https" />
+                <data android:host="tangem.com" />
+                <data android:pathPrefix="/ndef" />
+
+                <data android:scheme="https" />
+                <data android:host="app.tangem.com" />
+                <data android:pathPrefix="/ndef" />
             </intent-filter>
 
             <intent-filter>
