@@ -22,7 +22,7 @@ dependencies {
 
     /** Coroutines */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.coroutines.reactive)
+    implementation(deps.kotlin.coroutines.rx2)
 
     /** Logging */
     implementation(deps.timber)
