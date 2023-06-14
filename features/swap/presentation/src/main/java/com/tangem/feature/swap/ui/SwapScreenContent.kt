@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
@@ -394,6 +395,7 @@ val stateSelectable = SelectableItemsState<TxFee>(
             gasLimit = 0,
             feeFiatFormatted = "",
             feeCryptoFormatted = "",
+            feeType = FeeType.NORMAL,
         ),
     ),
     items = listOf(
@@ -407,6 +409,7 @@ val stateSelectable = SelectableItemsState<TxFee>(
                 gasLimit = 0,
                 feeFiatFormatted = "",
                 feeCryptoFormatted = "",
+                feeType = FeeType.NORMAL,
             ),
         ),
         Item(
@@ -419,6 +422,7 @@ val stateSelectable = SelectableItemsState<TxFee>(
                 gasLimit = 0,
                 feeFiatFormatted = "",
                 feeCryptoFormatted = "",
+                feeType = FeeType.NORMAL,
             ),
         ),
     ).toImmutableList(),
