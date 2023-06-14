@@ -510,7 +510,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val sameAddress = contractAddress == wrappedCurrency.token.contractAddress
                 val sameBlockchain =
                     Blockchain.fromNetworkId(networkSelectorValue.toNetworkId()) == wrappedCurrency.blockchain
-                val isSameDerivationPath = getDerivationPath()?.rawPath == wrappedCurrency.derivationPath
+                val isSameDerivationPath = getDerivationPath().isSameDerivationPath(wrappedCurrency.derivationPath)
                 sameId && sameAddress && sameBlockchain && isSameDerivationPath
             }
     }
@@ -522,8 +522,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
             .filterIsInstance<Currency.Blockchain>()
             .any {
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                networkSelectorValue == it.blockchain && getDerivationPath()?.rawPath == it.derivationPath
+                networkSelectorValue == it.blockchain &&
+                    getDerivationPath().isSameDerivationPath(it.derivationPath)
             }
+    }
+
+    private fun DerivationPath?.isSameDerivationPath(rawDerivationPath: String?): Boolean {
+        return this == rawDerivationPath?.let { DerivationPath(it) }
     }
 
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
