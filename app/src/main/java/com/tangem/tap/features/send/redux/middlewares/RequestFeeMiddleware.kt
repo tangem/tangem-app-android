@@ -56,7 +56,7 @@ class RequestFeeMiddleware {
                         dispatch(FeeAction.FeeCalculation.SetFeeResult(result))
                         when(result) {
                             is TransactionFee.Single -> {
-                                val fee = result.normal.value ?: BigDecimal.ZERO
+                                val fee = result.normal.amount.value ?: BigDecimal.ZERO
                                 if (fee.isZero()) {
                                     dispatch(FeeAction.ChangeLayoutVisibility(main = false))
                                 } else {
