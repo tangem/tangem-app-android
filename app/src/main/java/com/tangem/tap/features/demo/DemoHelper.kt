@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.toBlockchainSdkError
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -89,9 +90,9 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         val blockchain = walletManager.wallet.blockchain
         return Result.Success(
             TransactionFee.Choosable(
-                minimum = Amount(minimumFee, blockchain),
-                normal = Amount(normalFee, blockchain),
-                priority = Amount(priorityFee, blockchain)
+                minimum = Fee.Common(Amount(minimumFee, blockchain)),
+                normal = Fee.Common(Amount(normalFee, blockchain)),
+                priority = Fee.Common(Amount(priorityFee, blockchain))
             )
         )
     }
