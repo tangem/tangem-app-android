@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
@@ -28,21 +29,17 @@ class FeeReducer : SendInternalReducer {
                 state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
             }
             is FeeActionUi.ChangeSelectedFee -> {
-                state.fees?.let {
-                    val currentFee = createValueOfFeeAmount(action.feeType, it)
-                    state.copy(
-                        selectedFeeType = action.feeType,
-                        currentFee = currentFee,
-                    )
-                } ?: state
-                //  TODO?
+                val currentFee = state.fees?.let {
+                    createValueOfFeeAmount(action.feeType, it)
+                }
+                state.copy(
+                    selectedFeeType = action.feeType,
+                    currentFee = currentFee
+                )
             }
             is FeeActionUi.ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
         }
-        return updateLastState(sendState.copy(
-            feeState = result,
-            transactionExtrasState = TransactionExtrasState()
-        ), result)
+        return updateLastState(sendState.copy(feeState = result), result)
     }
 
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
@@ -99,7 +96,7 @@ class FeeReducer : SendInternalReducer {
         return updateLastState(sendState.copy(feeState = result), result)
     }
 
-    private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Amount {
+    private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Fee {
         return when (transactionFee) {
             is TransactionFee.Single -> {
                 transactionFee.normal
