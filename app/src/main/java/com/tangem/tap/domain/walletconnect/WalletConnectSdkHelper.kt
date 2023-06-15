@@ -13,6 +13,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.hexToBigDecimal
@@ -85,7 +86,7 @@ class WalletConnectSdkHelper {
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
-            fee = Amount(fee, wallet.blockchain),
+            fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
             destinationAddress = transaction.to!!,
             extras = EthereumTransactionExtras(
@@ -194,8 +195,7 @@ class WalletConnectSdkHelper {
         val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
             nonce = null,
-            blockchain = data.walletManager.wallet.blockchain,
-            gasLimit = null,
+            blockchain = data.walletManager.wallet.blockchain
         ) ?: return null
 
         val command = SignHashCommand(
