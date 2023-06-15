@@ -9,6 +9,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.successOr
@@ -138,7 +140,7 @@ class GnosisRegistrator(
         val compiledEthereumTransaction = walletManager.transactionBuilder.buildApproveToSign(
             transactionData = walletManager.createTransaction(
                 amount = approveAmount,
-                fee = feeAmount,
+                fee = Fee.Common(feeAmount),
                 destination = otpProcessorContractAddress,
             ),
             nonce = atomicNonce.getAndIncrement().toBigInteger(),
@@ -189,7 +191,7 @@ class GnosisRegistrator(
 
         val transactionData = walletManager.createTransferFromTransaction(
             amount = amount,
-            fee = hardcodeFeeAmount,
+            feeAmount = hardcodeFeeAmount,
             source = addressTreasureSafe,
         )
         val transactionToSign = walletManager.transactionBuilder.buildTransferFromToSign(
@@ -205,13 +207,17 @@ class GnosisRegistrator(
     }
 
     @Suppress("MagicNumber")
-    private fun Result<List<Amount>>.extractFeeAmount(): Result<Amount> {
+    private fun Result<TransactionFee>.extractFeeAmount(): Result<Amount> {
         return when (this) {
             is Result.Success -> {
-                if (this.data.size != 3) {
-                    Result.Failure(BlockchainSdkError.FailedToLoadFee)
-                } else {
-                    Result.Success(this.data[1])
+                when(data) {
+                    is TransactionFee.Single -> {
+                        Result.Failure(BlockchainSdkError.FailedToLoadFee)
+                    }
+                    is TransactionFee.Choosable -> {
+                        val normalFee = (data as TransactionFee.Choosable).normal
+                        Result.Success(normalFee.amount)
+                    }
                 }
             }
             is Result.Failure -> this
