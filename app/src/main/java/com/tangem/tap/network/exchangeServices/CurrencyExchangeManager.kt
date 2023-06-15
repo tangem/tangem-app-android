@@ -103,7 +103,7 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     val fee = feeResult.data.minimum
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
-    if (coinValue < fee.value) return
+    if (coinValue < fee.amount.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 

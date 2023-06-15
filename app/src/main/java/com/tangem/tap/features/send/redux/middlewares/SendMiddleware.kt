@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
@@ -118,11 +119,11 @@ private fun verifyAndSendTransaction(
     val card = appState.globalState.scanResponse?.card ?: return
     val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
-    val feeAmount = sendState.feeState.currentFee ?: return
+    val currentFee = sendState.feeState.currentFee ?: return
 
     val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
-    val transactionErrors = walletManager.validateTransaction(amountToSend, feeAmount)
+    val transactionErrors = walletManager.validateTransaction(amountToSend, currentFee.amount)
     when {
         transactionErrors.contains(TransactionError.TezosSendAll) -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
@@ -134,7 +135,7 @@ private fun verifyAndSendTransaction(
                     },
                     sendAllCallback = {
                         sendTransaction(
-                            action, walletManager, amountToSend, feeAmount, destinationAddress,
+                            action, walletManager, amountToSend, currentFee, destinationAddress,
                             sendState.transactionExtrasState, card, sendState.externalTransactionData,
                             dispatch,
                         )
@@ -145,7 +146,7 @@ private fun verifyAndSendTransaction(
         }
         else -> {
             sendTransaction(
-                action, walletManager, amountToSend, feeAmount, destinationAddress,
+                action, walletManager, amountToSend, currentFee, destinationAddress,
                 sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch,
             )
         }
@@ -157,7 +158,7 @@ private fun sendTransaction(
     action: SendActionUi.SendAmountToRecipient,
     walletManager: WalletManager,
     amountToSend: Amount,
-    feeAmount: Amount,
+    fee: Fee,
     destinationAddress: String,
     transactionExtras: TransactionExtrasState,
     card: CardDTO,
@@ -165,7 +166,7 @@ private fun sendTransaction(
     dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
-    var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
+    var txData = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
     transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
@@ -185,7 +186,7 @@ private fun sendTransaction(
                         updateFeedbackManagerInfo(
                             walletManager = walletManager,
                             amountToSend = amountToSend,
-                            feeAmount = feeAmount,
+                            feeAmount = fee.amount,
                             destinationAddress = destinationAddress,
                         )
                         dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error = error))
@@ -266,7 +267,7 @@ private fun sendTransaction(
                     updateFeedbackManagerInfo(
                         walletManager = walletManager,
                         amountToSend = amountToSend,
-                        feeAmount = feeAmount,
+                        feeAmount = fee.amount,
                         destinationAddress = destinationAddress,
                     )
                     val error = sendResult.error as? BlockchainSdkError ?: return@withMainContext
