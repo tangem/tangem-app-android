@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -139,7 +140,7 @@ class GnosisRegistrator(
         val compiledEthereumTransaction = walletManager.transactionBuilder.buildApproveToSign(
             transactionData = walletManager.createTransaction(
                 amount = approveAmount,
-                fee = feeAmount,
+                fee = Fee.Common(feeAmount),
                 destination = otpProcessorContractAddress,
             ),
             nonce = atomicNonce.getAndIncrement().toBigInteger(),
@@ -190,7 +191,7 @@ class GnosisRegistrator(
 
         val transactionData = walletManager.createTransferFromTransaction(
             amount = amount,
-            fee = hardcodeFeeAmount,
+            feeAmount = hardcodeFeeAmount,
             source = addressTreasureSafe,
         )
         val transactionToSign = walletManager.transactionBuilder.buildTransferFromToSign(
@@ -215,7 +216,7 @@ class GnosisRegistrator(
                     }
                     is TransactionFee.Choosable -> {
                         val normalFee = (data as TransactionFee.Choosable).normal
-                        Result.Success(normalFee)
+                        Result.Success(normalFee.amount)
                     }
                 }
             }
