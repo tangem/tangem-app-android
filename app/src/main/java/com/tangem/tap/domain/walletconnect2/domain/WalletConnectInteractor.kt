@@ -1,13 +1,16 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.domain.walletconnect.*
+import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
-import com.tangem.tap.features.details.ui.walletconnect.*
-import com.tangem.utils.coroutines.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import timber.log.*
+import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class WalletConnectInteractor(
     private val handler: WalletConnectEventsHandler,
@@ -47,6 +50,14 @@ class WalletConnectInteractor(
                 when (wcEvent) {
                     is WalletConnectEvents.SessionProposal -> {
                         Timber.d("WC session proposal event received")
+                        val unsupportedNetworks = wcEvent.chainIds
+                            .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
+                        if (unsupportedNetworks.isNotEmpty()) {
+                            val error = WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks)
+                            handler.onSessionRejected(error)
+                            return@onEach
+                        }
+
                         val networksFormatted = wcEvent.chainIds
                             .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
                             .toString()
@@ -57,12 +68,7 @@ class WalletConnectInteractor(
                             is WalletConnectError.ApprovalErrorMissingNetworks -> {
                                 val missingNetworks = wcEvent.error.missingChains
                                     .map { blockchainHelper.chainIdToNetworkIdOrNull(it) }
-                                val containsUnsupportedNetworks = missingNetworks.any { it == null }
-                                if (containsUnsupportedNetworks) {
-                                    WalletConnectError.ApprovalErrorUnsupportedNetwork
-                                } else {
-                                    WalletConnectError.ApprovalErrorAddNetwork(missingNetworks.filterNotNull())
-                                }
+                                WalletConnectError.ApprovalErrorAddNetwork(missingNetworks.filterNotNull())
                             }
                             else -> wcEvent.error
                         }
