@@ -27,7 +27,6 @@
     </queries>
 
     <application
-        android:theme="@style/SplashTheme"
         android:label="@string/tangem_app_name"
         android:name="com.tangem.tap.TapApplication"
         android:icon="@mipmap/ic_launcher"
@@ -49,6 +48,7 @@
             android:exported="true"
             android:name="com.tangem.tap.MainActivity"
             android:launchMode="singleTop"
+            android:theme="@style/SplashTheme"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
 
@@ -126,13 +126,17 @@
 
         </activity>
 
-        <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
+        <activity
+            android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity"
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name="zendesk.messaging.MessagingActivity"
             android:theme="@style/ZendeskTheme" />
 
-        <activity android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity" />
+        <activity
+            android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity"
+            android:theme="@style/AppTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
