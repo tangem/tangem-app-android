@@ -66,7 +66,7 @@ class WalletConnectMiddleware {
                 walletConnectManager.restoreSessions(action.scanResponse)
             }
             is WalletConnectAction.HandleDeepLink -> {
-                if (!action.wcUri.isNullOrBlank() && WalletConnectManager.isCorrectWcUri(action.wcUri)) {
+                if (!action.wcUri.isNullOrBlank()) {
                     store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
                 }
             }
