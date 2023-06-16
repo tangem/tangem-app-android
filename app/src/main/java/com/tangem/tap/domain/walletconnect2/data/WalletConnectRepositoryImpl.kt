@@ -1,15 +1,22 @@
 package com.tangem.tap.domain.walletconnect2.data
 
-import android.app.*
-import com.tangem.tap.domain.walletconnect2.domain.*
+import android.app.Application
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.models.*
-import com.walletconnect.android.*
-import com.walletconnect.android.relay.*
-import com.walletconnect.web3.wallet.client.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import timber.log.*
-import javax.inject.*
+import com.walletconnect.android.Core
+import com.walletconnect.android.CoreClient
+import com.walletconnect.android.relay.ConnectionType
+import com.walletconnect.web3.wallet.client.Wallet
+import com.walletconnect.web3.wallet.client.Web3Wallet
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
 
 class WalletConnectRepositoryImpl @Inject constructor(
     private val application: Application,
@@ -181,7 +188,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
             userNamespaces = userNamespaces,
         )
         if (missingNetworks.isNotEmpty()) {
-            Timber.e("Unsupported blockchains: $missingNetworks")
+            Timber.e("Not added blockchains: $missingNetworks")
             scope.launch {
                 _events.emit(
                     WalletConnectEvents.SessionApprovalError(
