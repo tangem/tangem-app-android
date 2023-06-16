@@ -457,6 +457,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
     <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect. Пожалуйста, повторите попытку позже.</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_paste_from_clipboard">Вставить из буфера обмена</string>
