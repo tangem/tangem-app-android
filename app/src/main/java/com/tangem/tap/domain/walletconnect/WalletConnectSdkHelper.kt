@@ -33,7 +33,6 @@ import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
 import com.tangem.tap.features.details.redux.walletconnect.*
-import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.store
@@ -194,7 +193,12 @@ class WalletConnectSdkHelper {
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
             is CompletionResult.Success -> {
-                HEX_PREFIX + result.data
+                HEX_PREFIX + EthereumUtils.prepareTransactionToSend(
+                    signature = result.data.signature,
+                    transactionToSign = dataToSign,
+                    walletPublicKey = data.walletManager.wallet.publicKey,
+                    blockchain = data.walletManager.wallet.blockchain,
+                ).toHexString()
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
