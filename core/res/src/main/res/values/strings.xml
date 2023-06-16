@@ -449,6 +449,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">Can\'t send transaction. Not enough funds.</string>
     <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session. Please, try again later.</string>
     <string name="wallet_connect_error_timeout">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Session request contains unsupported blockchains for WalletConnect connection. Unsupported blockchains:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_paste_from_clipboard">Paste from clipboard</string>
