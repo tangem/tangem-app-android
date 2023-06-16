@@ -238,7 +238,7 @@ class WalletConnectMiddleware {
                     return
                 }
                 val blockchain = action.blockchain.guard {
-                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
                     return
                 }
                 val walletManager = getWalletManager(
@@ -298,9 +298,12 @@ class WalletConnectMiddleware {
                             ),
                         )
                     }
-
-                    WalletConnectError.ApprovalErrorUnsupportedNetwork -> {
-                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                    is WalletConnectError.ApprovalErrorUnsupportedNetwork -> {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.UnsupportedNetwork(action.error.unsupportedNetworks),
+                            ),
+                        )
                     }
                     is WalletConnectError.ExternalApprovalError -> {
                         store.dispatchOnMain(
@@ -327,7 +330,7 @@ class WalletConnectMiddleware {
                 scope.launch { walletConnectInteractor.continueWithRequest(action.sessionRequest) }
             }
             is WalletConnectAction.RejectUnsupportedRequest -> {
-                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
             }
         }
     }
@@ -337,7 +340,7 @@ class WalletConnectMiddleware {
             chainId = chainId,
             peer = session.peerMeta,
         ).guard {
-            store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+            store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
             return
         }
 
