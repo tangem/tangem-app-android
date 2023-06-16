@@ -72,6 +72,7 @@ include(":domain:legacy")
 
 include(":domain:core")
 include(":domain:card")
+include(":domain:tokens")
 // endregion Domain modules
 
 // region Data modules
