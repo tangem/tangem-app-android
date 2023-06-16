@@ -32,12 +32,12 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -278,8 +278,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
             scope.launch {
                 val handler = BackgroundScanIntentHandler(hasSavedUserWalletsProvider = { true })
-                val intentWasHandled = handler.handleIntent(intentWhichStartedActivity)
-                if (!intentWasHandled) {
+                val isBackgroundScanNotHandled = handler.handleIntent(intentWhichStartedActivity)
+                val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
+                if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
                 }
             }
