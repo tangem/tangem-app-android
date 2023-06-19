@@ -2,7 +2,6 @@ package com.tangem.datasource.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.BlockchairCredentials
-import com.tangem.blockchain.common.BlockscoutCredentials
 import com.tangem.blockchain.common.GetBlockCredentials
 import com.tangem.blockchain.common.NowNodeCredentials
 import com.tangem.blockchain.common.QuickNodeCredentials
@@ -88,10 +87,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     authToken = configValues.blockchairAuthorizationToken,
                 ),
                 blockcypherTokens = configValues.blockcypherTokens,
-                blockscoutCredentials = BlockscoutCredentials(
-                    userName = configValues.saltPay.blockscoutCredentials.user,
-                    password = configValues.saltPay.blockscoutCredentials.password,
-                ),
                 quickNodeSolanaCredentials = QuickNodeCredentials(
                     apiKey = configValues.quiknodeApiKey,
                     subdomain = configValues.quiknodeSubdomain,
@@ -102,7 +97,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 ),
                 infuraProjectId = configValues.infuraProjectId,
                 tronGridApiKey = configValues.tronGridApiKey,
-                saltPayAuthToken = configValues.saltPay.credentials.basicAuthToken,
                 nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
                 getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey),
                 kaspaSecondaryApiUrl = configValues.kaspaSecondaryApiUrl,
@@ -115,8 +109,8 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             amplitudeApiKey = configValues.amplitudeApiKey,
             shopify = configValues.shopifyShop,
             zendesk = configValues.zendesk,
-            saltPayConfig = configValues.saltPay,
             swapReferrerAccount = configValues.swapReferrerAccount,
+            walletConnectProjectId = configValues.walletConnectProjectId,
         )
     }
 }
