@@ -37,11 +37,11 @@ class WalletConnectInteractor(
     suspend fun startListening(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
+        walletConnectRepository.updateSessions()
         coroutineScope {
             launch { subscribeToEvents() }
             launch { subscribeToSessions() }
         }
-        walletConnectRepository.updateSessions()
     }
 
     private suspend fun subscribeToEvents() {
