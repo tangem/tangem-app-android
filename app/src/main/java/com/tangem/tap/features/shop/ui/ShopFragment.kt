@@ -9,27 +9,34 @@ import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.extensions.getQuantityString
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.shop.presentation.ShopViewModel
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.shop.redux.ShopState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentShopBinding
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 
-class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<ShopState> {
+@AndroidEntryPoint
+internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<ShopState> {
 
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
     private var cardTranslationY = 70f
 
     private lateinit var keyboardObserver: KeyboardObserver
+
+    private val viewModel by viewModels<ShopViewModel>()
 
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
@@ -42,6 +49,8 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel.checkOrderingDelayBlockVisibility()
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
@@ -133,6 +142,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         animateProductSelection(state.selectedProduct)
         handlePriceState(state)
         handlePromoCodeState(state)
+        handleOrderingDelayBlock(isVisible = state.isOrderingDelayBlockVisible)
         handleButtonsState(state)
     }
 
@@ -171,6 +181,10 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
             etPromoCode.setText("")
         }
         pbPromoCode.show(state.promoCodeLoading)
+    }
+
+    private fun handleOrderingDelayBlock(isVisible: Boolean) {
+        if (isVisible) binding.tvSoldOutDesc.show() else binding.tvSoldOutDesc.hide()
     }
 
     private fun handleButtonsState(state: ShopState) = with(binding) {
