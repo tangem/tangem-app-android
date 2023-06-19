@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.learn2earn.presentation.ui.OneInchStoriesScreen
+import com.tangem.feature.learn2earn.presentation.ui.StoriesScreen
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
@@ -39,6 +39,7 @@ import kotlin.math.max
 @Composable
 fun StoriesScreen(
     homeState: MutableState<HomeState>,
+    onLearn2earnClick: () -> Unit,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
@@ -152,7 +153,7 @@ fun StoriesScreen(
                 colorFilter = if (currentStory.isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
             when (currentStory) {
-                Stories.OneInchPromo -> OneInchStoriesScreen({})
+                Stories.OneInchPromo -> StoriesScreen(onLearn2earnClick)
                 Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStory.duration) { hideContent.value = it }
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStory.duration)
                 Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStory.duration)
@@ -215,6 +216,7 @@ fun StoriesScreen(
 @Composable
 private fun StoriesScreenPreview() {
     StoriesScreen(
+        onLearn2earnClick = {},
         onScanButtonClick = {},
         onShopButtonClick = {},
         onSearchTokensClick = {},
