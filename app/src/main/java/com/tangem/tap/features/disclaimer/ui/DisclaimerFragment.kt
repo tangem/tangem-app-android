@@ -3,6 +3,7 @@ package com.tangem.tap.features.disclaimer.ui
 import android.os.Bundle
 import android.view.View
 import android.view.View.OVER_SCROLL_NEVER
+import android.webkit.WebView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.ui.fragments.setStatusBarColor
@@ -26,21 +27,6 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
     private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
     private val webViewClient = DisclaimerWebViewClient()
-
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        when (store.state.disclaimerState.showedFromScreen) {
-            AppScreen.Home -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
-                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
-            }
-            AppScreen.Details -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.fade)
-                exitTransition = inflater.inflateTransition(android.R.transition.fade)
-            }
-            else -> {}
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -86,11 +72,29 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
         super.onStop()
     }
 
+    override fun configureTransitions() {
+        val inflater = TransitionInflater.from(requireContext())
+        when (store.state.disclaimerState.showedFromScreen) {
+            AppScreen.Home -> {
+                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
+                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
+            }
+            AppScreen.Details -> {
+                enterTransition = inflater.inflateTransition(android.R.transition.fade)
+                exitTransition = inflater.inflateTransition(android.R.transition.fade)
+            }
+            else -> {}
+        }
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(DisclaimerAction.OnBackPressed)
+    }
+
     override fun newState(state: DisclaimerState) = with(binding) {
         if (activity == null || view == null) return
 
         updateUiVisibility(state.disclaimer, state.progressState)
-        binding.webView.loadUrl(state.disclaimer.getUri().toString())
     }
 
     private fun updateUiVisibility(disclaimer: Disclaimer, progressState: ProgressState?) = with(binding) {
@@ -111,16 +115,19 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
             }
             ProgressState.Error -> {
                 root.beginDelayedTransition()
-                webView.hide()
-                groupAccept.hide()
+                webView.show()
+                groupAccept.show()
                 groupLoading.hide()
-                groupError.show()
+                groupError.hide()
+                webView.loadLocalTermsOfServices()
             }
-            else -> {}
+            else -> {
+                webView.loadUrl(disclaimer.getUri().toString())
+            }
         }
     }
 
-    override fun handleOnBackPressed() {
-        store.dispatch(DisclaimerAction.OnBackPressed)
+    private fun WebView.loadLocalTermsOfServices() {
+        loadData(localTermsOfServices, "text/html", "UTF-8")
     }
 }
