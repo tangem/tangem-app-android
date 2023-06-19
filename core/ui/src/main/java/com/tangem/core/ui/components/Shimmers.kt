@@ -14,7 +14,7 @@ import com.valentinilk.shimmer.shimmer
  * Rectangle shimmer item with rounded shape from DS
  */
 @Composable
-fun ShimmerRectangle(modifier: Modifier = Modifier) {
+fun RectangleShimmer(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .shimmer()
@@ -51,7 +51,7 @@ private fun ShimmersPreview() {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
     ) {
-        ShimmerRectangle(
+        RectangleShimmer(
             modifier = Modifier.size(
                 width = TangemTheme.dimens.size72,
                 height = TangemTheme.dimens.size12,
