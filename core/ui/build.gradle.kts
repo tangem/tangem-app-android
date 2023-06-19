@@ -9,8 +9,10 @@ dependencies {
     implementation(deps.androidx.fragment.ktx)
 
     /** Compose */
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
 
     /** Other libraries */
