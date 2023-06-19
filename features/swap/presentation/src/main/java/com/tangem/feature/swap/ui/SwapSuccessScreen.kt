@@ -39,7 +39,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
             },
             topBar = {
                 AppBarWithBackButton(
-                    text = stringResource(R.string.swapping_swap),
+                    text = stringResource(R.string.common_swap),
                     onBackClick = onBack,
                     iconRes = R.drawable.ic_close_24,
                 )

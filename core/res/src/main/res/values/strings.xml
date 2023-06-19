@@ -45,6 +45,7 @@
     <string name="common_accept">Accept</string>
     <string name="common_add">Add</string>
     <string name="common_apply">Apply</string>
+    <string name="common_approval">Approval</string>
     <string name="common_attention">Attention</string>
     <string name="common_balance">Balance: %s</string>
     <string name="common_biometric_authentication">biometric authentication</string>
@@ -72,7 +73,9 @@
     <string name="common_start">Start</string>
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
+    <string name="common_swap">Swap</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
+    <string name="common_transfer">Transfer</string>
     <string name="common_understand">I understand</string>
     <string name="common_yes">Yes</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
@@ -382,7 +385,6 @@
     <string name="swapping_permission_unlimited">Unlimited</string>
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
-    <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_action">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
     <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product.</string>
