@@ -3,20 +3,17 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
-import com.tangem.tap.features.send.redux.AmountAction
-import com.tangem.tap.features.send.redux.AmountActionUi
-import com.tangem.tap.features.send.redux.FeeAction
-import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -33,9 +30,9 @@ internal class AddressPayIdMiddleware {
     fun handle(action: AddressPayIdActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
         when (action) {
             is AddressPayIdActionUi.HandleUserInput -> handleUserInput(action.data, appState, dispatch)
-            is AddressPayIdActionUi.PasteAddressPayId -> pasteAddressPayId(action.data, dispatch)
+            is AddressPayIdActionUi.PasteAddressPayId -> pasteAddressPayId(action.data, action.sourceType, dispatch)
             is AddressPayIdActionUi.CheckClipboard -> verifyClipboard(action.data, appState, dispatch)
-            is AddressPayIdActionUi.CheckAddressPayId -> verifyAddressPayId(appState, dispatch)
+            is AddressPayIdActionUi.CheckAddressPayId -> verifyAddressPayId(action.sourceType, appState, dispatch)
             else -> return
         }
     }
@@ -44,24 +41,33 @@ internal class AddressPayIdMiddleware {
         val sendState = appState?.sendState ?: return
         if (input == sendState.addressPayIdState.viewFieldValue.value) return
 
-        setAddressAndCheck(input, true, dispatch)
+        setAddressAndCheck(data = input, sourceType = null, isUserInput = true, dispatch = dispatch)
     }
 
-    private fun pasteAddressPayId(data: String, dispatch: (Action) -> Unit) {
-        setAddressAndCheck(data, false, dispatch)
+    private fun pasteAddressPayId(data: String, sourceType: AddressEntered.SourceType, dispatch: (Action) -> Unit) {
+        setAddressAndCheck(data = data, sourceType = sourceType, isUserInput = false, dispatch = dispatch)
     }
 
-    private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
+    private fun setAddressAndCheck(
+        data: String,
+        sourceType: AddressEntered.SourceType?,
+        isUserInput: Boolean,
+        dispatch: (Action) -> Unit,
+    ) {
         val potentialPayId = data.lowercase()
         if (isPayIdEnabled() && PayIdManager.isPayId(potentialPayId)) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
         }
-        dispatch(AddressPayIdActionUi.CheckAddressPayId)
+        dispatch(AddressPayIdActionUi.CheckAddressPayId(sourceType))
     }
 
-    private fun verifyAddressPayId(appState: AppState?, dispatch: (Action) -> Unit) {
+    private fun verifyAddressPayId(
+        sourceType: AddressEntered.SourceType?,
+        appState: AppState?,
+        dispatch: (Action) -> Unit,
+    ) {
         val sendState = appState?.sendState ?: return
         val wallet = sendState.walletManager?.wallet ?: return
         val addressPayId = sendState.addressPayIdState.normalFieldValue ?: return
@@ -70,7 +76,13 @@ internal class AddressPayIdMiddleware {
         if (isPayIdEnabled() && PayIdManager.isPayId(addressPayId)) {
             verifyPayId(addressPayId, wallet, isUserInput, dispatch)
         } else {
-            verifyAddress(addressPayId, wallet, isUserInput, dispatch)
+            verifyAddress(
+                address = addressPayId,
+                wallet = wallet,
+                isUserInput = isUserInput,
+                dispatch = dispatch,
+                sourceType = sourceType,
+            )
         }
     }
 
@@ -112,24 +124,45 @@ internal class AddressPayIdMiddleware {
         }
     }
 
-    private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
+    private fun verifyAddress(
+        address: String,
+        wallet: Wallet,
+        sourceType: AddressEntered.SourceType?,
+        isUserInput: Boolean,
+        dispatch: (Action) -> Unit,
+    ) {
         val addressSchemeSplit = when (wallet.blockchain) {
-            Blockchain.BitcoinCash,
-            Blockchain.Kaspa,
-            -> listOf(address)
+            Blockchain.BitcoinCash, Blockchain.Kaspa -> listOf(address)
             else -> address.split(":")
         }
+
         val noSchemeAddress = when (addressSchemeSplit.size) {
             1 -> address // no scheme
             2 -> { // scheme
                 if (wallet.blockchain.validateShareScheme(addressSchemeSplit[0])) {
                     addressSchemeSplit[1]
                 } else {
+                    sourceType?.let {
+                        Analytics.send(
+                            event = AddressEntered(
+                                sourceType = sourceType,
+                                validationResult = AddressEntered.ValidationResult.Fail,
+                            ),
+                        )
+                    }
                     dispatch(SetAddressError(Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN))
                     return
                 }
             }
             else -> { // invalid URI
+                sourceType?.let {
+                    Analytics.send(
+                        event = AddressEntered(
+                            sourceType = sourceType,
+                            validationResult = AddressEntered.ValidationResult.Fail,
+                        ),
+                    )
+                }
                 dispatch(SetAddressError(Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN))
                 return
             }
@@ -146,9 +179,25 @@ internal class AddressPayIdMiddleware {
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
             dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
             dispatch(FeeAction.RequestFee)
+            sourceType?.let {
+                Analytics.send(
+                    event = AddressEntered(
+                        sourceType = sourceType,
+                        validationResult = AddressEntered.ValidationResult.Success,
+                    ),
+                )
+            }
         } else {
             dispatch(SetAddressError(failReason))
             dispatch(TransactionExtrasAction.Release)
+            sourceType?.let {
+                Analytics.send(
+                    event = AddressEntered(
+                        sourceType = sourceType,
+                        validationResult = AddressEntered.ValidationResult.Fail,
+                    ),
+                )
+            }
         }
     }
 
@@ -187,7 +236,13 @@ internal class AddressPayIdMiddleware {
         if (PayIdManager.isPayId(addressPayId) && isPayIdEnabled()) {
             verifyPayId(addressPayId, wallet, false, internalDispatcher)
         } else {
-            verifyAddress(addressPayId, wallet, false, internalDispatcher)
+            verifyAddress(
+                address = addressPayId,
+                wallet = wallet,
+                sourceType = null,
+                isUserInput = false,
+                dispatch = internalDispatcher,
+            )
         }
     }
 
