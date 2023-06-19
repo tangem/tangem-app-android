@@ -51,4 +51,7 @@ interface TangemTechApi {
         @Header("card_id") cardId: String,
         @Body startReferralBody: StartReferralBody,
     ): ReferralResponse
+
+    @GET("shops")
+    suspend fun getShopInfo(@Query(value = "name") name: String): ShopResponse
 }
