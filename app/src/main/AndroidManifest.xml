@@ -133,6 +133,8 @@
 
         <activity android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity" />
 
+        <activity android:name="com.tangem.feature.learn2earn.presentation.Learn2earnWebViewActivity"/>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
