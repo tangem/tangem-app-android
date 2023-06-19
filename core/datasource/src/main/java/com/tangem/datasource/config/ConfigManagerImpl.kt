@@ -1,11 +1,6 @@
 package com.tangem.datasource.config
 
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.BlockchairCredentials
-import com.tangem.blockchain.common.GetBlockCredentials
-import com.tangem.blockchain.common.NowNodeCredentials
-import com.tangem.blockchain.common.QuickNodeCredentials
-import com.tangem.blockchain.common.TonCenterCredentials
+import com.tangem.blockchain.common.*
 import com.tangem.datasource.config.ConfigManager.Companion.IS_CREATING_TWIN_CARDS_ALLOWED
 import com.tangem.datasource.config.ConfigManager.Companion.IS_SENDING_TO_PAY_ID_ENABLED
 import com.tangem.datasource.config.ConfigManager.Companion.IS_TOP_UP_ENABLED
@@ -111,6 +106,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             zendesk = configValues.zendesk,
             swapReferrerAccount = configValues.swapReferrerAccount,
             walletConnectProjectId = configValues.walletConnectProjectId,
+            tangemComAuthorization = configValues.tangemComAuthorization,
         )
     }
 }
