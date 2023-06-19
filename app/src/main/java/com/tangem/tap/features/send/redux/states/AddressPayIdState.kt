@@ -34,6 +34,21 @@ data class TransactionExtrasState(
     val cosmosMemoState: CosmosMemoState? = null,
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
+
+    fun isNull(): Boolean {
+        return xlmMemo == null && binanceMemo == null && xrpDestinationTag == null && tonMemoState == null &&
+            cosmosMemoState == null
+    }
+
+    fun isEmpty(): Boolean {
+        val isXlmEmpty = xlmMemo?.viewFieldValue?.value?.isEmpty() ?: false
+        val isBinanceEmpty = binanceMemo?.viewFieldValue?.value?.isEmpty() ?: false
+        val isXrpEmpty = xrpDestinationTag?.viewFieldValue?.value?.isEmpty() ?: false
+        val isTonEmpty = tonMemoState?.viewFieldValue?.value?.isEmpty() ?: false
+        val isCosmosEmpty = cosmosMemoState?.viewFieldValue?.value?.isEmpty() ?: false
+
+        return isXlmEmpty || isBinanceEmpty || isXrpEmpty || isTonEmpty || isCosmosEmpty
+    }
 }
 
 enum class XlmMemoType {
@@ -105,6 +120,7 @@ data class TonMemoState(
     val memo: String? = null,
     val error: TransactionExtraError? = null,
 )
+
 data class CosmosMemoState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val memo: String? = null,
