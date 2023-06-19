@@ -77,4 +77,16 @@ data class TxFee(
     val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
+    val feeType: FeeType,
 )
+
+enum class FeeType {
+    NORMAL, PRIORITY
+}
+
+fun FeeType.getNameForAnalytics(): String {
+    return when (this) {
+        FeeType.NORMAL -> "Normal"
+        FeeType.PRIORITY -> "Max"
+    }
+}
