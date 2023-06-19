@@ -32,25 +32,10 @@ import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.common.toggleWidget.ViewStateWidget
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.CheckClipboard
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.PasteAddressPayId
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetTruncateHandler
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.TruncateOrRestore
-import com.tangem.tap.features.send.redux.AmountAction
-import com.tangem.tap.features.send.redux.AmountActionUi
-import com.tangem.tap.features.send.redux.AmountActionUi.CheckAmountToSend
-import com.tangem.tap.features.send.redux.AmountActionUi.SetMainCurrency
-import com.tangem.tap.features.send.redux.AmountActionUi.SetMaxAmount
-import com.tangem.tap.features.send.redux.AmountActionUi.ToggleMainCurrency
-import com.tangem.tap.features.send.redux.FeeActionUi.ChangeIncludeFee
-import com.tangem.tap.features.send.redux.FeeActionUi.ChangeSelectedFee
-import com.tangem.tap.features.send.redux.FeeActionUi.ToggleControlsVisibility
-import com.tangem.tap.features.send.redux.ReceiptAction
-import com.tangem.tap.features.send.redux.ReleaseSendState
-import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.SendActionUi
-import com.tangem.tap.features.send.redux.TransactionExtrasAction
+import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
+import com.tangem.tap.features.send.redux.AmountActionUi.*
+import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -62,12 +47,7 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import java.text.DecimalFormatSymbols
 
 private const val EDIT_TEXT_INPUT_DEBOUNCE = 400L
@@ -123,20 +103,37 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
         store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
-        etAddressOrPayId.setOnFocusChangeListener { _, hasFocus ->
-            store.dispatch(TruncateOrRestore(!hasFocus))
-        }
-        etAddressOrPayId.inputtedTextAsFlow()
-            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
-            .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
-            .onEach {
-                store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
+        etAddressOrPayId.apply {
+            setOnSystemPasteButtonClickListener {
+                store.dispatch(
+                    PasteAddressPayId(
+                        data = requireContext().getFromClipboard()?.toString() ?: "",
+                        sourceType = Token.Send.AddressEntered.SourceType.PastePopup,
+                    ),
+                )
             }
-            .launchIn(mainScope)
+
+            setOnFocusChangeListener { _, hasFocus ->
+                store.dispatch(TruncateOrRestore(!hasFocus))
+            }
+
+            inputtedTextAsFlow()
+                .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
+                .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
+                .onEach {
+                    store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
+                }
+                .launchIn(mainScope)
+        }
 
         imvPaste.setOnClickListener {
             Analytics.send(Token.Send.ButtonPaste())
-            store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
+            store.dispatch(
+                PasteAddressPayId(
+                    data = requireContext().getFromClipboard()?.toString() ?: "",
+                    sourceType = Token.Send.AddressEntered.SourceType.PasteButton,
+                ),
+            )
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         }
         imvQrCode.setOnClickListener {
@@ -207,7 +204,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         // inserting an incorrect amount by shareUri
         binding.lSendAddressPayid.imvQrCode.postDelayed(
             {
-                store.dispatch(PasteAddressPayId(scannedCode))
+                store.dispatch(
+                    PasteAddressPayId(
+                        data = scannedCode,
+                        sourceType = Token.Send.AddressEntered.SourceType.QRCode,
+                    ),
+                )
                 store.dispatch(TruncateOrRestore(!binding.lSendAddressPayid.etAddressOrPayId.isFocused))
             },
             200,
