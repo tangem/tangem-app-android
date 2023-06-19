@@ -84,9 +84,11 @@
     <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
     <string name="custom_token_creation_error_required_field">Обязательное поле</string>
     <string name="custom_token_creation_error_wrong_decimals">Количество знаков после запятой должно быть корректным числом не больше %d</string>
+    <string name="custom_token_custom_derivation">Своя деривация</string>
     <string name="custom_token_decimals_input_title">Знаков после запятой</string>
     <string name="custom_token_derivation_path_default">По умолчанию</string>
     <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
+    <string name="custom_token_invalid_derivation_path">Введенный путь деривации некорректен</string>
     <string name="custom_token_name_input_placeholder">Например, USD Coin</string>
     <string name="custom_token_name_input_title">Название токена</string>
     <string name="custom_token_network_input_not_selected">Не выбрано</string>
@@ -331,11 +333,10 @@
     <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
     <string name="send_validation_invalid_address">Неверный адрес</string>
     <string name="shop_buy_now">Купить сейчас</string>
-    <string name="shop_free">Бесплатно</string>
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Другие способы оплаты</string>
-    <string name="shop_shipping">Доставка</string>
+    <string name="shop_sold_out_description_prefix">Из-за большого количества заказов, которые мы получаем, cроки доставки могут быть увеличены.</string>
     <string name="shop_total">Итого</string>
     <string name="solana_rent_warning">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
@@ -471,6 +472,7 @@
     <string name="wallet_error_no_account">Аккаунт не создан</string>
     <string name="wallet_error_unsupported_blockchain">Эта карта не поддерживается</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Ваша карта Tangem предназначена для работы с другим приложением. Пожалуйста, ознакомьтесь с названием и инструкциями на вашей карте и установите правильное приложение.</string>
+    <string name="wallet_network_group_title">Сеть %s</string>
     <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
     <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
     <string name="wallet_pending_tx_receiving">Получение</string>
