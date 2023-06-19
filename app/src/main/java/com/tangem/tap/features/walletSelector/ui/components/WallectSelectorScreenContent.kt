@@ -3,14 +3,7 @@ package com.tangem.tap.features.walletSelector.ui.components
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Icon
@@ -28,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SecondaryButtonIconRight
+import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
@@ -191,11 +184,11 @@ private fun Footer(
                 onClick = onUnlockClick,
             )
         }
-        SecondaryButtonIconRight(
+        SecondaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.user_wallet_list_add_button),
             showProgress = showAddCardProgress,
-            icon = painterResource(id = R.drawable.ic_tangem_24),
+            iconResId = R.drawable.ic_tangem_24,
             onClick = onAddCardClick,
         )
     }
