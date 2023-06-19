@@ -26,7 +26,7 @@ import com.tangem.feature.learn2earn.presentation.ui.component.GradientCircle
  */
 // [REDACTED_TODO_COMMENT]
 @Composable
-fun OneInchStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
+fun StoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         ContentBackground(
             modifier = Modifier
@@ -111,7 +111,7 @@ private fun OneInchStoriesContentPreview_Light() {
     TangemTheme(
         isDark = false,
     ) {
-        OneInchStoriesScreen(
+        StoriesScreen(
             onLearnClick = {},
         )
     }
@@ -123,7 +123,7 @@ private fun OneInchStoriesContentPreview_Dark() {
     TangemTheme(
         isDark = true,
     ) {
-        OneInchStoriesScreen(
+        StoriesScreen(
             onLearnClick = {},
         )
     }
