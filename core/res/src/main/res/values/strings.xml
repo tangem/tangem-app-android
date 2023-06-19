@@ -332,7 +332,7 @@
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Other payment methods</string>
-    <string name="shop_sold_out_description_prefix">Due to the high volume of orders we are receiving, Shipping and Local Delivery orders may be delayed.</string>
+    <string name="shop_sold_out_description">Due to the high volume of orders we are receiving shipping may be delayed up to 5 weeks depending on your location</string>
     <string name="shop_total">Total</string>
     <string name="solana_rent_warning">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
