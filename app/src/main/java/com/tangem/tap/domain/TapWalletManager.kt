@@ -83,9 +83,9 @@ class TapWalletManager(
     }
 
     private fun setupWalletConnectV2(userWallet: UserWallet) {
-        val cardId = if (userWallet.cardsInWallet.size == 1) {
+        val cardId = if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
             userWallet.cardId
-        } else {
+        } else { // if wallet has backup, any card from wallet can be used to sign
             null
         }
         scope.launch {
