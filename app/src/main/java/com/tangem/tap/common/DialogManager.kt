@@ -12,7 +12,6 @@ import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.*
@@ -94,14 +93,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 ChooseNetworkDialog.create(state.dialog.session, state.dialog.networks, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
                 ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
-            is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.dialogData, context)
+            is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.data, context)
             is WalletConnectDialog.PersonalSign -> PersonalSignDialog.create(state.dialog.data, context)
             is WalletConnectDialog.BnbTransactionDialog ->
                 BnbTransactionDialog.create(
-                    data = state.dialog.data,
-                    session = state.dialog.session,
-                    sessionId = state.dialog.sessionId,
-                    dAppName = state.dialog.dAppName,
+                    preparedData = state.dialog.data,
                     context = context,
                 )
             is WalletConnectDialog.UnsupportedNetwork ->
@@ -110,6 +106,15 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
                     context = context,
                 )
+            is WalletConnectDialog.SessionProposalDialog -> {
+                SessionProposalDialog.create(
+                    sessionProposal = state.dialog.sessionProposal,
+                    networks = state.dialog.networks,
+                    context = context,
+                    onApprove = state.dialog.onApprove,
+                    onReject = state.dialog.onReject,
+                )
+            }
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
@@ -118,9 +123,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 context = context,
                 cardId = state.dialog.cardId,
             )
-            is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
-            is SaltPayDialog.Activation.PutVisaCard -> PutVisaCardDialog.create(context)
-            is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
             is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
             is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context, state.dialog)
             is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)

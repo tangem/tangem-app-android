@@ -4,6 +4,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.walletconnect.Topic
+import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
+import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
+import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
@@ -58,7 +62,7 @@ sealed class WalletConnectAction : Action {
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
         WalletConnectAction()
 
-    data class DisconnectSession(val session: WCSession) : WalletConnectAction()
+    data class DisconnectSession(val topic: String, val session: WCSession?) : WalletConnectAction()
 
     data class RemoveSession(val session: WCSession) : WalletConnectAction()
 
@@ -66,7 +70,7 @@ sealed class WalletConnectAction : Action {
         val transaction: WCEthereumTransaction,
         val session: WalletConnectSession,
         val id: Long,
-        val type: WcTransactionType,
+        val type: WcEthTransactionType,
     ) :
         WalletConnectAction()
 
@@ -78,11 +82,11 @@ sealed class WalletConnectAction : Action {
         val id: Long,
     ) : WalletConnectAction()
 
-    data class SendTransaction(val session: WCSession) : WalletConnectAction()
+    data class SendTransaction(val topic: Topic) : WalletConnectAction()
 
-    data class SignMessage(val session: WCSession) : WalletConnectAction()
+    data class SignMessage(val topic: Topic) : WalletConnectAction()
 
-    data class RejectRequest(val session: WCSession, val id: Long) : WalletConnectAction()
+    data class RejectRequest(val topic: Topic, val id: Long) : WalletConnectAction()
 
     object NotEnoughFunds : WalletConnectAction(), NotificationAction {
         override val messageResource = R.string.wallet_connect_create_tx_not_enough_funds
@@ -108,7 +112,22 @@ sealed class WalletConnectAction : Action {
         data class Sign(
             val id: Long,
             val data: ByteArray,
-            val sessionData: WCSession,
+            val topic: Topic,
         ) : WalletConnectAction()
     }
+
+    //region WalletConnect 2.0
+    object ApproveProposal : WalletConnectAction()
+    object RejectProposal : WalletConnectAction()
+
+    object SessionEstablished : WalletConnectAction()
+    data class SessionRejected(val error: WalletConnectError) : WalletConnectAction()
+    data class SessionListUpdated(val sessions: List<WcSessionForScreen>) : WalletConnectAction()
+
+    data class ShowSessionRequest(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
+
+    object RejectUnsupportedRequest : WalletConnectAction()
+
+    data class PerformRequestedAction(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
+    //endregion WalletConnect 2.0
 }

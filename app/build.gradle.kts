@@ -9,6 +9,17 @@ plugins {
     id("configuration")
 }
 
+//conflict of dependencies when adding WalletConnectV2.0 library
+configurations {
+    all {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+        resolutionStrategy {
+            force("org.bouncycastle:bcpkix-jdk15on:1.70")
+        }
+        exclude(group = "com.github.komputing.kethereum")
+    }
+}
+
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
     implementation(project(":domain:legacy"))
@@ -42,6 +53,7 @@ dependencies {
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.constraintLayout)
@@ -123,6 +135,8 @@ dependencies {
     implementation(deps.armadillo)
     implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
+    implementation(deps.walletConnectCore)
+    implementation(deps.walletConnectWeb3)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
