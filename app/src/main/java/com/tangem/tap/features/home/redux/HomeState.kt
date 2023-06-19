@@ -11,7 +11,8 @@ data class HomeState(
     val stories: List<Stories> = initDefaultStories(),
 ) : StateType {
 
-    val firstStory: Stories = stories[0]
+    val firstStory: Stories
+        get() = stories[0]
 
     val btnScanStateInProgress: Boolean
         get() = btnScanState.progressState == ProgressState.Loading
@@ -20,7 +21,6 @@ data class HomeState(
 
     companion object {
         fun initDefaultStories(): List<Stories> = listOf(
-            Stories.OneInchPromo,
             Stories.TangemIntro,
             Stories.RevolutionaryWallet,
             Stories.UltraSecureBackup,
