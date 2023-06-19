@@ -69,6 +69,7 @@
     <string name="common_start">開始</string>
     <string name="common_submit">提交</string>
     <string name="common_success">成功</string>
+    <string name="common_swap">交換</string>
     <string name="common_terms_and_conditions">條款和條件</string>
     <string name="common_understand">我了解</string>
     <string name="common_yes">是</string>
@@ -367,7 +368,6 @@
     <string name="swapping_permission_subheader">要繼續，您需要允許 1inch 智能合約使用您的 %s</string>
     <string name="swapping_success_view_explorer_button_title">在瀏覽器中查看</string>
     <string name="swapping_success_view_title">進行中</string>
-    <string name="swapping_swap">交換</string>
     <string name="swapping_swap_action">交易</string>
     <string name="swapping_swap_of_to">交易 %s 至</string>
     <string name="swapping_tangem_fee_disclaimer">此外，報價包括%s的 Tangem 費用。這有助於我們提供一流的產品</string>
