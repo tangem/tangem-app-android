@@ -1,8 +1,10 @@
 package com.tangem.tap.features.welcome.redux
 
-import android.content.Intent
-import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
+import com.tangem.common.doOnSuccess
+import com.tangem.common.flatMap
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -17,7 +19,6 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.signin.redux.SignInAction
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -95,15 +96,6 @@ internal class WelcomeMiddleware {
                         WalletConnectLinkIntentHandler().handleIntent(it)
                     }
                 }
-        }
-    }
-
-    private fun handleInitialIntent(intent: Intent?) {
-        val isBackgroundScanNotHandled = !intentHandler.handleBackgroundScan(intent, hasSavedUserWallets = true)
-        val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
-
-        if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
-            store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
         }
     }
 
