@@ -45,11 +45,6 @@ class CardContextInterceptor(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Wallet -> "Wallet"
-            ProductType.SaltPay -> if (scanResponse.cardTypesResolver.isSaltPayVisa()) {
-                "Visa"
-            } else {
-                "Visa Backup"
-            }
             ProductType.Start2Coin -> "Start2Coin"
             else -> if (DemoHelper.isDemoCard(scanResponse)) {
                 if (DemoHelper.isTestDemoCard(scanResponse)) {
