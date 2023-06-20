@@ -40,12 +40,6 @@ class TangemDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(da
     override fun getPreferenceKey(): String = "tangem_tos_accepted"
 }
 
-class SaltPayDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(dataProvider) {
-    override fun type(): DisclaimerType = DisclaimerType.SaltPay
-    override fun getUri(): Uri = Uri.parse("$baseUrl/soltpay_tos.html")
-    override fun getPreferenceKey(): String = "saltPay_tos_accepted"
-}
-
 class Start2CoinDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(dataProvider) {
     override fun type(): DisclaimerType = DisclaimerType.Start2Coin
     override fun getUri(): Uri = Uri.parse("$baseUrl/" + filename(dataProvider.getLanguage(), getRegion()))
