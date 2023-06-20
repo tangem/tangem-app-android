@@ -6,9 +6,9 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.data.source.preferences.model.DataSourceTopupInfo
 import com.tangem.data.source.preferences.storage.ToppedUpWalletStorage
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.copy

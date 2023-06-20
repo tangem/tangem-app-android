@@ -10,9 +10,9 @@ import com.tangem.blockchain.extensions.Result.Success
 import com.tangem.common.*
 import com.tangem.common.core.TangemError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd

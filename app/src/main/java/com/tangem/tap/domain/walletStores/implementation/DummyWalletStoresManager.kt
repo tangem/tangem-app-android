@@ -2,7 +2,7 @@ package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresManager

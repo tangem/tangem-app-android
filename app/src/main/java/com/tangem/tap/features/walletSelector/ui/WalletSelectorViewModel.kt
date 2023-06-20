@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.userWalletList.UserWalletsListError

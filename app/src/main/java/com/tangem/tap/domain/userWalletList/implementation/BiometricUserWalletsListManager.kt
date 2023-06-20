@@ -2,7 +2,7 @@ package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager

@@ -1,7 +1,7 @@
 package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.common.core.TangemError
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
