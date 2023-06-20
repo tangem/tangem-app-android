@@ -98,7 +98,7 @@ sealed class WalletAction : Action {
             val swapAllowed: Boolean,
         ) : DialogAction()
 
-        data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
+        data class ChooseCurrency(val amounts: List<Amount>) : DialogAction()
         data class RussianCardholdersWarningDialog(
             val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null,
         ) : DialogAction()
