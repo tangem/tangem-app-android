@@ -5,11 +5,13 @@ import com.google.gson.GsonBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.tradeOrderSerializer
 import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
 import com.tangem.tap.features.details.redux.walletconnect.TradeData
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
-import com.trustwallet.walletconnect.models.binance.tradeOrderSerializer
 import timber.log.Timber
 
 object BnbHelper {
@@ -36,6 +38,50 @@ object BnbHelper {
             amount = amount,
             address = input.address,
             data = gson.toJson(order).toByteArray().calculateSha256(),
+        )
+    }
+
+    fun WcBinanceTradeOrder.toWCBinanceTradeOrder(): WCBinanceTradeOrder {
+        return WCBinanceTradeOrder(
+            account_number = accountNumber,
+            chain_id = chainId,
+            data = data,
+            memo = memo,
+            sequence = sequence,
+            source = source,
+            msgs = msgs.map { it.toWCBinanceTradeOrderMessage() },
+        )
+    }
+
+    private fun WcBinanceTradeOrder.Message.toWCBinanceTradeOrderMessage(): WCBinanceTradeOrder.Message {
+        return WCBinanceTradeOrder.Message(id, orderType, price, quantity, sender, side, symbol, timeInforce)
+    }
+
+    fun WcBinanceTransferOrder.toWCBinanceTransferOrder(): WCBinanceTransferOrder {
+        return WCBinanceTransferOrder(
+            account_number = accountNumber,
+            chain_id = chainId,
+            data = data,
+            memo = memo,
+            sequence = sequence,
+            source = source,
+            msgs = msgs.map { it.toWCBinanceTransferOrderMessage() },
+        )
+    }
+
+    private fun WcBinanceTransferOrder.Message.toWCBinanceTransferOrderMessage(): WCBinanceTransferOrder.Message {
+        return WCBinanceTransferOrder.Message(
+            inputs.map { it.toWCBinanceItem() },
+            outputs.map { it.toWCBinanceItem() },
+        )
+    }
+
+    private fun WcBinanceTransferOrder.Message.Item.toWCBinanceItem(): WCBinanceTransferOrder.Message.Item {
+        return WCBinanceTransferOrder.Message.Item(
+            address,
+            coins.map {
+                WCBinanceTransferOrder.Message.Item.Coin(it.amount, it.denom)
+            },
         )
     }
 
