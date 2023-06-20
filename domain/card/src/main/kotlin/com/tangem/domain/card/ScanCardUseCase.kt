@@ -73,7 +73,6 @@ class ScanCardUseCase(
     private fun updateCardIdDisplayFormat(productType: ProductType) {
         tangemSdk.config.cardIdDisplayFormat = when (productType) {
             ProductType.Twins -> CardIdDisplayFormat.LastLuhn(numbers = 4)
-            ProductType.SaltPay -> CardIdDisplayFormat.None
             ProductType.Note,
             ProductType.Wallet,
             ProductType.Start2Coin,
