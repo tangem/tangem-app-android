@@ -20,15 +20,6 @@ object TapWorkarounds {
     val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
 
-    val CardDTO.isSaltPay: Boolean
-        get() = isSaltPayVisa || isSaltPayWallet
-
-    val CardDTO.isSaltPayVisa: Boolean
-        get() = SaltPayWorkaround.isVisaBatchId(batchId)
-
-    val CardDTO.isSaltPayWallet: Boolean
-        get() = SaltPayWorkaround.isWalletCardId(cardId)
-
     val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
 

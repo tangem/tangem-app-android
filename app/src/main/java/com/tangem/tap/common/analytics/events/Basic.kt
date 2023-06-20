@@ -49,10 +49,25 @@ sealed class Basic(
         params = mapOf(AnalyticsParam.CURRENCY to currency.value),
     )
 
-    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom) : Basic(
+    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) : Basic(
         event = "Transaction sent",
-        params = mapOf(AnalyticsParam.SOURCE to sentFrom.value),
-    )
+        params = buildMap {
+            this[AnalyticsParam.SOURCE] = sentFrom.value
+            if (sentFrom is AnalyticsParam.TxData) {
+                this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
+                this[AnalyticsParam.TOKEN] = sentFrom.token
+                this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
+            }
+            if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
+                this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
+            }
+            this["Memo"] = memoType.name
+        },
+    ) {
+        enum class MemoType {
+            Empty, Full, Null
+        }
+    }
 
     class ScanError(error: Throwable) : Basic(
         event = "Scan",
