@@ -5,8 +5,6 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.core.TangemError
-import com.tangem.tap.common.extensions.getBlockchainTxHistory
-import com.tangem.tap.common.extensions.getTokenTxHistory
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
@@ -25,21 +23,6 @@ internal fun List<WalletDataModel>.updateWithFiatRates(fiatRates: Map<String, Do
     return this.map { walletData ->
         val rate = fiatRates[walletData.currency.coinId]?.toBigDecimal()
         walletData.updateWithFiatRate(rate)
-    }
-}
-
-internal fun WalletDataModel.updateWithTxHistory(wallet: Wallet): WalletDataModel {
-    return this.copy(
-        historyTransactions = when (currency) {
-            is Currency.Blockchain -> wallet.getBlockchainTxHistory()
-            is Currency.Token -> wallet.getTokenTxHistory(currency.token)
-        },
-    )
-}
-
-internal fun List<WalletDataModel>.updateWithTxHistories(wallet: Wallet): List<WalletDataModel> {
-    return this.map { walletData ->
-        walletData.updateWithTxHistory(wallet)
     }
 }
 
@@ -170,7 +153,10 @@ internal fun List<WalletDataModel>.updateWithMissedDerivation(): List<WalletData
 internal fun List<WalletDataModel>.updateWithUnreachable(): List<WalletDataModel> {
     return this.map { walletData ->
         walletData.copy(
-            status = WalletDataModel.Unreachable(errorMessage = null),
+            status = WalletDataModel.Unreachable(
+                errorMessage = null,
+                amount = walletData.status.amount,
+            ),
         )
     }
 }
