@@ -20,6 +20,7 @@ import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -36,14 +37,11 @@ class TransactionManagerImpl(
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
-        networkId: String,
-        feeAmount: BigDecimal,
-        gasLimit: Int,
-        destinationAddress: String,
-        dataToSign: String,
+        txData: ApproveTxData,
         derivationPath: String?,
+        analyticsData: AnalyticsData,
     ): SendTxResult {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(txData.networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         walletManager.update()
         val amount = Amount(value = BigDecimal.ZERO, blockchain = blockchain)
@@ -51,40 +49,55 @@ class TransactionManagerImpl(
             walletManager = walletManager,
             amount = amount,
             blockchain = blockchain,
-            feeAmount = feeAmount,
-            gasLimit = gasLimit,
-            destinationAddress = destinationAddress,
-            dataToSign = dataToSign,
+            feeAmount = txData.feeAmount,
+            gasLimit = txData.gasLimit,
+            destinationAddress = txData.destinationAddress,
+            dataToSign = txData.dataToSign,
+            successEvent = AnalyticsParam.TxSentFrom.Approve(
+                blockchain = blockchain.fullName,
+                token = analyticsData.tokenSymbol,
+                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
+                permissionType = analyticsData.permissionType ?: "",
+            ),
         )
     }
 
     override suspend fun sendTransaction(
-        networkId: String,
-        amountToSend: BigDecimal,
-        feeAmount: BigDecimal,
-        gasLimit: Int,
-        destinationAddress: String,
-        dataToSign: String,
+        txData: SwapTxData,
         isSwap: Boolean,
-        currencyToSend: Currency,
         derivationPath: String?,
+        analyticsData: AnalyticsData,
     ): SendTxResult {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(txData.networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         walletManager.update()
         val amount = if (isSwap) {
-            createAmountForSwap(amountToSend, currencyToSend, blockchain)
+            createAmountForSwap(txData.amountToSend, txData.currencyToSend, blockchain)
         } else {
-            createAmount(amountToSend, currencyToSend, blockchain)
+            createAmount(txData.amountToSend, txData.currencyToSend, blockchain)
+        }
+        val successEvent = if (isSwap) {
+            AnalyticsParam.TxSentFrom.Swap(
+                blockchain = blockchain.fullName,
+                token = analyticsData.tokenSymbol,
+                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
+            )
+        } else {
+            AnalyticsParam.TxSentFrom.Send(
+                blockchain = blockchain.fullName,
+                token = analyticsData.tokenSymbol,
+                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
+            )
         }
         return sendTransactionInternal(
             walletManager = walletManager,
             amount = amount,
             blockchain = blockchain,
-            feeAmount = feeAmount,
-            gasLimit = gasLimit,
-            destinationAddress = destinationAddress,
-            dataToSign = dataToSign,
+            feeAmount = txData.feeAmount,
+            gasLimit = txData.gasLimit,
+            destinationAddress = txData.destinationAddress,
+            dataToSign = txData.dataToSign,
+            successEvent = successEvent,
         )
     }
 
@@ -97,6 +110,7 @@ class TransactionManagerImpl(
         gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
+        successEvent: AnalyticsParam.TxSentFrom,
     ): SendTxResult {
         val txData = walletManager.createTransaction(
             amount = amount,
@@ -112,7 +126,10 @@ class TransactionManagerImpl(
             FirebaseCrashlytics.getInstance().recordException(ex)
             return SendTxResult.UnknownError(ex)
         }
-        return handleSendResult(sendResult)
+        return handleSendResult(
+            result = sendResult,
+            successEvent = successEvent,
+        )
     }
 
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
@@ -337,10 +354,10 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun handleSendResult(result: SimpleResult): SendTxResult {
+    private fun handleSendResult(result: SimpleResult, successEvent: AnalyticsParam.TxSentFrom): SendTxResult {
         when (result) {
             is SimpleResult.Success -> {
-                analytics.send(Basic.TransactionSent(AnalyticsParam.TxSentFrom.Swap))
+                analytics.send(Basic.TransactionSent(sentFrom = successEvent, memoType = MemoType.Null))
                 return SendTxResult.Success
             }
             is SimpleResult.Failure -> {
