@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -31,6 +32,7 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -90,6 +92,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var walletRouter: WalletRouter
 
+    @Inject
+    lateinit var walletConnectInteractor: WalletConnectInteractor
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
@@ -97,6 +102,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         systemActions()
@@ -116,12 +123,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 GooglePayService(createPaymentsClient(this), this),
             ),
         )
-
         store.dispatch(
             DaggerGraphAction.SetActivityDependencies(
                 testerRouter = testerRouter,
                 scanCardUseCase = scanCardUseCase,
                 walletRouter = walletRouter,
+                walletConnectInteractor = walletConnectInteractor,
             ),
         )
     }
