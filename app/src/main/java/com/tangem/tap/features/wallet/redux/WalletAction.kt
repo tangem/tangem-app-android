@@ -4,8 +4,8 @@ import android.content.Context
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError

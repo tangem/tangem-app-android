@@ -7,7 +7,7 @@ import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey

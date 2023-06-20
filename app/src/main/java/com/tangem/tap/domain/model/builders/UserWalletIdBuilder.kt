@@ -3,12 +3,12 @@ package com.tangem.tap.domain.model.builders
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.Secp256k1
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.extensions.calculateHmacSha256
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 
 class UserWalletIdBuilder private constructor(
     private val publicKey: ByteArray?,
@@ -30,15 +30,11 @@ class UserWalletIdBuilder private constructor(
         }
     }
 
-    private fun calculateUserWalletId(seed: ByteArray?): ByteArray? {
+    private fun calculateUserWalletId(seed: ByteArray): ByteArray {
         val message = MESSAGE_FOR_WALLET_ID.toByteArray()
-        val keyHash = seed?.calculateSha256()
+        val keyHash = seed.calculateSha256()
 
-        return if (keyHash != null) {
-            message.calculateHmacSha256(keyHash)
-        } else {
-            null
-        }
+        return message.calculateHmacSha256(keyHash)
     }
 
     companion object {

@@ -8,7 +8,7 @@ import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.fold
 import com.tangem.common.map
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.models.userwallet.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
