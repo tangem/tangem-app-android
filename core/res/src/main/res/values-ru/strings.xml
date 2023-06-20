@@ -46,6 +46,7 @@
     <string name="chat_button_title">Чат</string>
     <string name="common_accept">Принять</string>
     <string name="common_add">Добавить</string>
+    <string name="common_apply">Применить</string>
     <string name="common_attention">Внимание</string>
     <string name="common_balance">Баланс: %s</string>
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
@@ -255,6 +256,9 @@
     <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
     <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
     <string name="onboarding_wallet_info_title_third">Код доступа</string>
+    <string name="organize_tokens_group">Группировка</string>
+    <string name="organize_tokens_sort_by_balance">По балансу</string>
+    <string name="organize_tokens_title">Сортировка токенов</string>
     <string name="referral_button_participate">Участвовать</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
