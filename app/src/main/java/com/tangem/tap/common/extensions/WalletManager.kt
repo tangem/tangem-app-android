@@ -2,9 +2,6 @@ package com.tangem.tap.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionHistoryProvider
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.services.Result
@@ -38,9 +35,6 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
         Result.Success(wallet)
     } else {
         update()
-        if (wallet.blockchain == Blockchain.SaltPay && this is TransactionHistoryProvider) {
-            this.getTransactionHistory(wallet.address, wallet.blockchain, wallet.getTokens())
-        }
         Result.Success(wallet)
     }
 } catch (exception: Exception) {
@@ -87,26 +81,10 @@ fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
     return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
 
-fun WalletManager.getBlockchainTxHistory(): List<TransactionData> = wallet.getBlockchainTxHistory()
-
-fun WalletManager.getTokenTxHistory(token: Token): List<TransactionData> = wallet.getTokenTxHistory(token)
-
 fun <T> WalletManager.Companion.stub(): T {
     val wallet = Wallet(Blockchain.Unknown, setOf(), Wallet.PublicKey(byteArrayOf(), null, null), setOf())
     return object : WalletManager(wallet) {
         override val currentHost: String = ""
         override suspend fun update() {}
     } as T
-}
-
-fun Wallet.getBlockchainTxHistory(): List<TransactionData> {
-    return historyTransactions.filter {
-        it.contractAddress.isNullOrEmpty()
-    }
-}
-
-fun Wallet.getTokenTxHistory(token: Token): List<TransactionData> {
-    return historyTransactions.filter {
-        it.contractAddress == token.contractAddress
-    }
 }
