@@ -9,6 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -34,6 +36,10 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 
 private const val DOTS = "•••"
+val TOKEN_ITEM_HEIGHT: Dp
+    @Composable
+    @ReadOnlyComposable
+    get() = TangemTheme.dimens.size68
 
 @Composable
 internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
@@ -76,7 +82,8 @@ internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modif
         hasPending = false,
         options = { ref ->
             Icon(
-                modifier = Modifier.constrainAsOptionsItem(scope = this, ref),
+                modifier = Modifier
+                    .constrainAsOptionsItem(scope = this, ref),
                 painter = painterResource(id = R.drawable.ic_drag_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,
@@ -251,7 +258,7 @@ private fun BaseSurface(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        modifier = modifier.defaultMinSize(minHeight = TangemTheme.dimens.size68),
+        modifier = modifier.defaultMinSize(minHeight = TOKEN_ITEM_HEIGHT),
         color = TangemTheme.colors.background.primary,
         onClick = onClick ?: {},
         enabled = onClick != null,
