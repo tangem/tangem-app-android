@@ -25,8 +25,8 @@ internal class DefaultShopRepository(
             .fold(
                 onSuccess = ShopResponse::isOrderingAvailable,
                 onFailure = {
-                    Timber.e("Server error. isShopifyOrderingAvailable returns default value (false)")
-                    false
+                    Timber.e("Server error. isShopifyOrderingAvailable returns default value (true)")
+                    true
                 },
             )
     }
