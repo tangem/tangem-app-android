@@ -1,10 +1,6 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.*
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
@@ -13,6 +9,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -25,10 +22,6 @@ import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.walletStoresManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -85,8 +78,22 @@ class TapWalletManager(
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
-
+        setupWalletConnectV2(userWallet)
         loadData(userWallet, refresh)
+    }
+
+    private fun setupWalletConnectV2(userWallet: UserWallet) {
+        val cardId = if (userWallet.cardsInWallet.size == 1) {
+            userWallet.cardId
+        } else {
+            null
+        }
+        scope.launch {
+            store.state.daggerGraphState.walletConnectInteractor?.startListening(
+                userWalletId = userWallet.walletId.stringValue,
+                cardId = cardId,
+            )
+        }
     }
 
     suspend fun loadData(userWallet: UserWallet, refresh: Boolean = false) {
