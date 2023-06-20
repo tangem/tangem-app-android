@@ -8,7 +8,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
@@ -25,24 +24,22 @@ internal class DefaultWalletRouter : InnerWalletRouter {
 
     @Composable
     override fun Initialize() {
-        TangemTheme {
-            NavHost(
-                navController = rememberNavController().apply { navController = this },
-                startDestination = WalletScreens.WALLET.name,
-            ) {
-                composable(WalletScreens.WALLET.name) {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
-                    WalletScreen(state = viewModel.uiState)
-                }
+        NavHost(
+            navController = rememberNavController().apply { navController = this },
+            startDestination = WalletScreens.WALLET.name,
+        ) {
+            composable(WalletScreens.WALLET.name) {
+                val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
+                WalletScreen(state = viewModel.uiState)
+            }
 
-                composable(WalletScreens.ORGANIZE_TOKENS.name) {
-                    BackHandler(onBack = ::popBackStack)
+            composable(WalletScreens.ORGANIZE_TOKENS.name) {
+                BackHandler(onBack = ::popBackStack)
 
-                    val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
-                        .apply { router = this@DefaultWalletRouter }
+                val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
+                    .apply { router = this@DefaultWalletRouter }
 
-                    OrganizeTokensScreen(state = viewModel.uiState)
-                }
+                OrganizeTokensScreen(state = viewModel.uiState)
             }
         }
     }
