@@ -7,7 +7,6 @@ import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.backupService
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -52,7 +51,6 @@ internal object UseCaseScanProcessor {
             if (analyticsEvent != null) {
                 add(AnalyticsChain(analyticsEvent))
             }
-            add(CheckForUnfinishedSaltPayBackupChain(backupService))
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager, preferencesStorage))
         }
@@ -91,9 +89,7 @@ internal object UseCaseScanProcessor {
                 navigateTo(exception.onboardingRoute)
                 onWalletNotCreated()
             }
-            is ScanChainException.PutSaltPayVisaCard,
             is ScanChainException.DisclaimerWasCanceled,
-            is ScanChainException.CheckForSaltPayOnboardingCaseException,
             -> onFailure(scanCardExceptionConverter.convertBack(exception))
         }
     }
