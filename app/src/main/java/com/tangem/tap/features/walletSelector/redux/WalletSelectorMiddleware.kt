@@ -168,7 +168,12 @@ internal class WalletSelectorMiddleware {
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.dispatchWithMain(
+                    NavigationAction.PopBackTo(
+                        screen = AppScreen.Wallet,
+                        popOnlyFrom = AppScreen.WalletSelector,
+                    )
+                )
                 store.onUserWalletSelected(userWallet)
             }
     }

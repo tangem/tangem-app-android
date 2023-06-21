@@ -16,6 +16,7 @@ sealed class NavigationAction : Action {
 
     data class PopBackTo(
         val screen: AppScreen? = null,
+        val popOnlyFrom: AppScreen? = null,
         val inclusive: Boolean = false,
     ) : NavigationAction()
 
