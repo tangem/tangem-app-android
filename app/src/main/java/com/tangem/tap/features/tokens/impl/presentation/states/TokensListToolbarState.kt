@@ -1,6 +1,13 @@
 package com.tangem.tap.features.tokens.impl.presentation.states
 
-/** Toolbar state */
+import androidx.compose.runtime.Immutable
+
+/**
+ * Toolbar state.
+ * All subclasses is stable, but @Immutable annotation is required to use this sealed class like as
+ * field of TokensListStateHolder.
+ */
+@Immutable
 sealed interface TokensListToolbarState {
 
     /** Callback to be invoked when BackButton is being clicked */
