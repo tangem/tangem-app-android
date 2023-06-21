@@ -5,5 +5,5 @@ package com.tangem.lib.auth
  */
 interface BasicAuthProvider {
 
-    fun getCredentials(): String?
+    fun getCredentials(): Map<String, String>
 }
