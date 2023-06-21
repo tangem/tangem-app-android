@@ -2,6 +2,7 @@ package com.tangem.tap.network.auth.di
 
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.lib.auth.AuthProvider
+import com.tangem.lib.auth.BasicAuthProvider
 import com.tangem.tap.network.auth.AuthProviderImpl
 import com.tangem.tap.network.auth.TangemBasicAuthProvider
 import com.tangem.tap.proxy.AppStateHolder
@@ -23,7 +24,7 @@ class AuthModule {
 
     @Provides
     @Singleton
-    fun provideTangemBasicAuthProvider(configManager: ConfigManager): com.tangem.lib.auth.BasicAuthProvider {
+    fun provideTangemBasicAuthProvider(configManager: ConfigManager): BasicAuthProvider {
         return TangemBasicAuthProvider(configManager.config.tangemComAuthorization)
     }
 }
