@@ -15,6 +15,8 @@ internal class DefaultPreferenceStorage(
 ) : SimpleKrate(context = context, name = "Lear2earnPromotion"), Learn2earnPreferenceStorage {
 
     override var promoCode: String? by stringPref().withDefault(null)
+
     override var promotionInfo: String? by stringPref().withDefault(null)
+
     override var alreadyReceivedAward: Boolean by booleanPref().withDefault(false)
 }
