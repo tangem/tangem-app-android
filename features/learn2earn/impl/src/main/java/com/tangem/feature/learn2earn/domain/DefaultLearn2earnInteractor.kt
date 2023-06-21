@@ -89,8 +89,6 @@ class DefaultLearn2earnInteractor(
     }
 
     private suspend fun initPromotionInfo() {
-        // return Promotion.dummyActive()
-
         promotion = repository.getPromotionInfo()
             .fold(
                 onSuccess = { response ->
