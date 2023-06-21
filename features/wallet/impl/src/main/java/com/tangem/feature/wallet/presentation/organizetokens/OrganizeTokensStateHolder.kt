@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
 import androidx.compose.runtime.Immutable
-import com.tangem.feature.wallet.presentation.common.state.NetworkGroupState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -51,10 +50,9 @@ internal sealed interface DraggableItem {
     val id: String
 
     data class GroupHeader(
-        val groupState: NetworkGroupState.Draggable,
-    ) : DraggableItem {
-        override val id: String = groupState.id
-    }
+        override val id: String,
+        val networkName: String,
+    ) : DraggableItem
 
     data class Token(
         val tokenItemState: TokenItemState.Draggable,
