@@ -199,7 +199,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
-
+// [REDACTED_TODO_COMMENT]
+// [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
             learn2ernInteractor.init()
