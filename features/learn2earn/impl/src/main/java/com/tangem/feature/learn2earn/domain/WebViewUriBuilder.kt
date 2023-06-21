@@ -42,9 +42,7 @@ class WebViewUriBuilder(
     }
 
     fun getBasicAuthHeaders(): Map<String, String> {
-        return basicAuthProvider.getCredentials()?.let {
-            mapOf("Authorization" to "Basic $it")
-        } ?: mapOf()
+        return basicAuthProvider.getCredentials()
     }
 
     fun isPromoCodeRedirect(uri: Uri): Boolean {
