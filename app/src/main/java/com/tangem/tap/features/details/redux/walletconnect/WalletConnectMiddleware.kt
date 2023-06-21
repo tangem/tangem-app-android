@@ -306,13 +306,16 @@ class WalletConnectMiddleware {
                         )
                     }
                     is WalletConnectError.ExternalApprovalError -> {
-                        store.dispatchOnMain(
-                            GlobalAction.ShowDialog(
-                                AppDialog.SimpleOkWarningDialog(
-                                    message = action.error.message ?: "",
+                        val message = action.error.message
+                        if (!message.isNullOrEmpty()) {
+                            store.dispatchOnMain(
+                                GlobalAction.ShowDialog(
+                                    AppDialog.SimpleOkWarningDialog(
+                                        message = message,
+                                    ),
                                 ),
-                            ),
-                        )
+                            )
+                        }
                     }
                     else -> Unit
                 }
