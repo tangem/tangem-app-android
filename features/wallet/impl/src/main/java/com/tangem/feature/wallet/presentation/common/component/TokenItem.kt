@@ -206,7 +206,7 @@ private fun InternalTokenItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
+                    horizontal = TangemTheme.dimens.spacing14,
                     vertical = TangemTheme.dimens.spacing4,
                 ),
         ) {
