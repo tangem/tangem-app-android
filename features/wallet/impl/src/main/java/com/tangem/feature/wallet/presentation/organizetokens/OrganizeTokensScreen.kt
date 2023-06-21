@@ -93,7 +93,7 @@ private fun DraggableItem(index: Int, item: DraggableItem, lastItemIndex: Int) {
     when (item) {
         is DraggableItem.GroupHeader -> DraggableNetworkGroupItem(
             modifier = itemModifier,
-            state = item.groupState,
+            networkName = item.networkName,
         )
         is DraggableItem.Token -> DraggableTokenItem(
             modifier = itemModifier,
