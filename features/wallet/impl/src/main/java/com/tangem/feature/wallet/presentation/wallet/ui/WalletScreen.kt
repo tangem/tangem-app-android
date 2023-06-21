@@ -1,19 +1,27 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.RoundedActionButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
@@ -35,6 +43,10 @@ internal fun WalletScreen(state: WalletStateHolder) {
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
+        val lastContentItemIndex = remember(state.contentItems) {
+            state.contentItems.lastIndex
+        }
+
         LazyColumn(
             modifier = Modifier
                 .padding(scaffoldPaddings)
@@ -43,44 +55,33 @@ internal fun WalletScreen(state: WalletStateHolder) {
         ) {
             item { WalletCardsList(wallets = state.wallets) }
 
-            items(
-                count = state.contentItems.size,
-                key = {
-                    when (val item = state.contentItems[it]) {
-                        is WalletContentItemState.NetworkGroupTitle -> item.text
+            itemsIndexed(
+                items = state.contentItems,
+                key = { _, item ->
+                    when (item) {
+                        is WalletContentItemState.NetworkGroupTitle -> item.networkName
                         is WalletContentItemState.Token -> item.tokenItemState.id
                     }
                 },
-            ) { index: Int ->
-                if (index == 0) NetworkGroupHeader()
+            ) { index, item ->
+                val itemModifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                    .clipFirstAndLastItems(index, lastContentItemIndex)
 
-                when (val item = state.contentItems[index]) {
+                when (item) {
                     is WalletContentItemState.NetworkGroupTitle -> {
-                        Text(
-                            text = stringResource(id = R.string.wallet_network_group_title, item.text),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .background(color = TangemTheme.colors.background.primary)
-                                .padding(
-                                    start = TangemTheme.dimens.spacing14,
-                                    top = if (index != 0) TangemTheme.dimens.spacing12 else TangemTheme.dimens.size0,
-                                    end = TangemTheme.dimens.spacing14,
-                                    bottom = TangemTheme.dimens.spacing12,
-                                ),
-                            color = TangemTheme.colors.text.tertiary,
-                            style = TangemTheme.typography.subtitle2,
+                        NetworkGroupItem(
+                            networkName = item.networkName,
+                            modifier = itemModifier,
                         )
                     }
                     is WalletContentItemState.Token -> {
                         TokenItem(
                             state = item.tokenItemState,
-                            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                            modifier = itemModifier,
                         )
                     }
                 }
-
-                if (index == state.contentItems.size - 1) NetworkGroupFooter()
             }
 
             item {
@@ -95,37 +96,53 @@ internal fun WalletScreen(state: WalletStateHolder) {
     }
 }
 
-@Composable
-private fun NetworkGroupHeader() {
-    Box(
-        modifier = Modifier
-            .padding(top = TangemTheme.dimens.spacing14)
-            .padding(horizontal = TangemTheme.dimens.spacing16)
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.spacing12)
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = RoundedCornerShape(
-                    topStart = TangemTheme.dimens.radius16,
-                    topEnd = TangemTheme.dimens.radius16,
-                ),
-            ),
-    )
+private fun Modifier.clipFirstAndLastItems(index: Int, lastItemIndex: Int): Modifier = composed {
+    when (index) {
+        0 -> {
+            this
+                .padding(top = TangemTheme.dimens.spacing14)
+                .clip(
+                    RoundedCornerShape(
+                        topStart = TangemTheme.dimens.radius16,
+                        topEnd = TangemTheme.dimens.radius16,
+                    ),
+                )
+        }
+        lastItemIndex -> {
+            this
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = TangemTheme.dimens.radius16,
+                        bottomEnd = TangemTheme.dimens.radius16,
+                    ),
+                )
+        }
+        else -> this
+    }
 }
 
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun NetworkGroupFooter() {
-    Box(
-        modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.spacing12)
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = RoundedCornerShape(
-                    bottomStart = TangemTheme.dimens.radius16,
-                    bottomEnd = TangemTheme.dimens.radius16,
-                ),
-            ),
-    )
+private fun WalletScreenPreview_Light(
+    @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
+) {
+    TangemTheme {
+        WalletScreen(state)
+    }
 }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun WalletScreenPreview_Dark(
+    @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
+) {
+    TangemTheme(isDark = true) {
+        WalletScreen(state)
+    }
+}
+
+private class WalletScreenParameterProvider : CollectionPreviewParameterProvider<WalletStateHolder>(
+    collection = listOf(WalletPreviewData.groupedWalletScreenState),
+)
+// endregion Preview
