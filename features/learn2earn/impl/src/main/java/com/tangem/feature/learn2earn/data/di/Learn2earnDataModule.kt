@@ -12,6 +12,7 @@ import com.tangem.feature.learn2earn.data.DefaultUsedCardsPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.api.UsedCardsPreferenceStorage
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,12 +45,14 @@ class Learn2earnDataModule {
         usedCardsPreferenceStorage: UsedCardsPreferenceStorage,
         @NetworkMoshi moshi: Moshi,
         @PromotionOneInch promotionApi: PromotionApi,
+        dispatchers: AppCoroutineDispatcherProvider,
     ): Learn2earnRepository {
         return DefaultLearn2earnRepository(
             preferencesStorage = preferenceStorage,
             usedCardsPreferenceStorage = usedCardsPreferenceStorage,
             moshi = moshi,
             api = promotionApi,
+            dispatchers = dispatchers,
         )
     }
 }
