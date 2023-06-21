@@ -14,7 +14,5 @@ abstract class AbstractPromotionResponse {
     data class Error(
         @Json(name = "code") val code: Int,
         @Json(name = "description") val description: String,
-    ) {
-        companion object
-    }
+    )
 }
