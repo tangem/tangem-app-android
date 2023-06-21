@@ -1,12 +1,16 @@
 package com.tangem.tap.features.tokens.impl.presentation.states
 
+import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Network item state
+ * Token item state.
+ * All subclasses is stable, but @Immutable annotation is required to use this sealed class like as
+ * field of TokensListStateHolder.
  *
 [REDACTED_AUTHOR]
  */
+@Immutable
 sealed interface TokenItemState {
 
     /** Token id */
