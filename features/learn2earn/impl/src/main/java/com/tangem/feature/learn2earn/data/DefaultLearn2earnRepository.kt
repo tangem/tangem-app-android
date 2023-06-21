@@ -6,6 +6,8 @@ import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.api.UsedCardsPreferenceStorage
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -16,6 +18,7 @@ internal class DefaultLearn2earnRepository(
     private val usedCardsPreferenceStorage: UsedCardsPreferenceStorage,
     private val moshi: Moshi,
     private val api: PromotionApi,
+    private val dispatchers: AppCoroutineDispatcherProvider,
 ) : Learn2earnRepository {
 
     private val promotionInfoAdapter = moshi.adapter(PromotionInfoResponse::class.java)
@@ -40,50 +43,47 @@ internal class DefaultLearn2earnRepository(
         return preferencesStorage.alreadyReceivedAward
     }
 
-    override suspend fun requestAwardByCode(walletId: String, address: String): Result<Boolean> {
-        return runCatching {
-            api.codeAward(CodeAwardRequestBody(walletId, address, getPromoCode()))
-        }.fold(
-            onSuccess = { response ->
-                val alreadyReceived = response.status ?: false
-                preferencesStorage.alreadyReceivedAward = alreadyReceived
-                Result.success(alreadyReceived)
-            },
-            onFailure = { exception -> Result.failure(exception) },
-        )
-    }
-
     override suspend fun getPromotionInfo(): Result<PromotionInfoResponse> {
-        val info = restorePromotionInfo()
+        return withContext(dispatchers.io) {
+            val info = restorePromotionInfo()
 
-        return if (info?.status == PromotionInfoResponse.Status.FINISHED) {
-            Result.success(info)
-        } else {
-            runCatching { api.getPromotionInfo(getProgramName()) }
-                .fold(
-                    onSuccess = { infoResponse ->
-                        savePromotionInfo(infoResponse)
-                        Result.success(infoResponse)
-                    },
-                    onFailure = { exception -> Result.failure(exception) },
-                )
+            if (info?.status == PromotionInfoResponse.Status.FINISHED) {
+                Result.success(info)
+            } else {
+                runCatching { api.getPromotionInfo(getProgramName()) }
+                    .fold(
+                        onSuccess = { infoResponse ->
+                            savePromotionInfo(infoResponse)
+                            Result.success(infoResponse)
+                        },
+                        onFailure = { exception -> Result.failure(exception) },
+                    )
+            }
         }
     }
 
     override suspend fun validate(walletId: String): ValidateResponse {
-        return api.validate(ValidateRequestBody(walletId, getProgramName()))
+        return withContext(dispatchers.io) {
+            api.validate(ValidateRequestBody(walletId, getProgramName()))
+        }
     }
 
-    override suspend fun award(walletId: String): AwardResponse {
-        return api.award(AwardRequestBody(walletId, getProgramName()))
+    override suspend fun requestAward(walletId: String): AwardResponse {
+        return withContext(dispatchers.io) {
+            api.requestAward(AwardRequestBody(walletId, getProgramName()))
+        }
     }
 
-    override suspend fun codeValidate(walletId: String, code: String?): CodeValidateResponse {
-        return api.codeValidate(CodeValidateRequestBody(walletId, code))
+    override suspend fun validateCode(walletId: String, code: String?): CodeValidateResponse {
+        return withContext(dispatchers.io) {
+            api.validateCode(CodeValidateRequestBody(walletId, code))
+        }
     }
 
-    override suspend fun codeAward(walletId: String, address: String, code: String?): CodeAwardResponse {
-        return api.codeAward(CodeAwardRequestBody(walletId, address, code))
+    override suspend fun requestAwardByCode(walletId: String, address: String, code: String?): CodeAwardResponse {
+        return withContext(dispatchers.io) {
+            api.requestAwardByCode(CodeAwardRequestBody(walletId, address, code))
+        }
     }
 
     private fun restorePromotionInfo(): PromotionInfoResponse? {
@@ -101,7 +101,6 @@ internal class DefaultLearn2earnRepository(
             preferencesStorage.promotionInfo = promotionInfoAdapter.toJson(infoResponse)
         } catch (ex: Exception) {
             Timber.e(ex)
-            preferencesStorage.promotionInfo = null
         }
     }
 
