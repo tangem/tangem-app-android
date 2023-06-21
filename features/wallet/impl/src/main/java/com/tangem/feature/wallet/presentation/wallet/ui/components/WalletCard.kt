@@ -44,7 +44,7 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing12),
+                .padding(horizontal = TangemTheme.dimens.spacing14),
         ) {
             val (balanceBlock, imageItem) = createRefs()
             Column(
@@ -182,10 +182,10 @@ private fun Preview_WalletCard_DarkTheme(@PreviewParameter(WalletCardStateProvid
 
 private class WalletCardStateProvider : CollectionPreviewParameterProvider<WalletCardState>(
     collection = listOf(
-        WalletPreviewData.walletCardContent,
-        WalletPreviewData.walletCardLoading,
-        WalletPreviewData.walletCardHiddenContent,
-        WalletPreviewData.walletCardError,
+        WalletPreviewData.walletCardContentState,
+        WalletPreviewData.walletCardLoadingState,
+        WalletPreviewData.walletCardHiddenContentState,
+        WalletPreviewData.walletCardErrorState,
     ),
 )
 
