@@ -26,9 +26,9 @@ internal class WalletViewModel @Inject constructor() : ViewModel() {
     var uiState by mutableStateOf(getInitialState())
         private set
 // [REDACTED_TODO_COMMENT]
-    private fun getInitialState(): WalletStateHolder = WalletPreviewData.walletScreenState.copy(
+    private fun getInitialState(): WalletStateHolder = WalletPreviewData.groupedWalletScreenState.copy(
         onBackClick = { router.popBackStack() },
-        headerConfig = WalletPreviewData.walletScreenState.headerConfig.copy(
+        topBarConfig = WalletPreviewData.groupedWalletScreenState.topBarConfig.copy(
             onScanCardClick = { router.openOrganizeTokensScreen() },
         ),
     )
