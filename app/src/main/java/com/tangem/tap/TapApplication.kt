@@ -200,6 +200,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
+        // TODO: Try to performance and user experience.
+        //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
             learn2ernInteractor.init()

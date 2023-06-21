@@ -66,10 +66,10 @@ class NetworkModule {
                 AuthenticationHeader(authProvider),
             )
             .allowLogging()
-            .callTimeout(PromotionApi.ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .connectTimeout(PromotionApi.ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .readTimeout(PromotionApi.ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .writeTimeout(PromotionApi.ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .connectTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .writeTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build()
         return createBasePromotionRetrofit(okClient, moshi)
     }
@@ -90,5 +90,6 @@ class NetworkModule {
         const val PROMOTION_BASE_URL = "https://tangem.com/v1/"
 
         const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
+        const val API_ONE_INCH_TIMEOUT_MS = 5000L
     }
 }
