@@ -13,8 +13,9 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.state.TokenListState
 
 @Composable
-internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder) {
+internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Modifier = Modifier) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(state.header)
         },
