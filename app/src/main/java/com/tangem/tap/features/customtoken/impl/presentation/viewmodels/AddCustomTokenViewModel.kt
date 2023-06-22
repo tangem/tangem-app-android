@@ -271,7 +271,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                 ),
             ) + Blockchain.values()
-                .filter { blockchain -> blockchain.isSupportedInApp() && !blockchain.isTestnet() }
+                .filter { blockchain ->
+                    blockchain.isSupportedInApp() && !blockchain.isTestnet() && blockchain != Blockchain.Cardano
+                }
                 .sortedBy(Blockchain::fullName)
                 .map(::createDerivationPathSelectorAdditionalItem)
         }
