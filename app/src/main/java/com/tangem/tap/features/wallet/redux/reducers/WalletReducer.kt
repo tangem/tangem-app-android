@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
@@ -151,7 +152,7 @@ fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
             getShareUri(it.value),
             getExploreUrl(it.value),
         )
-        if (it.type == blockchain.defaultAddressType()) {
+        if (it.type == AddressType.Default) {
             listOfAddressData.add(0, addressData)
         } else {
             listOfAddressData.add(addressData)
