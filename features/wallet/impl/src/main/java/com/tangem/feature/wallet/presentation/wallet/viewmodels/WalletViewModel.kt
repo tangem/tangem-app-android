@@ -27,9 +27,9 @@ internal class WalletViewModel @Inject constructor() : ViewModel() {
         private set
 
     // TODO: [REDACTED_TASK_KEY] Use production data instead of WalletPreviewData
-    private fun getInitialState(): WalletStateHolder = WalletPreviewData.groupedWalletScreenState.copy(
+    private fun getInitialState(): WalletStateHolder = WalletPreviewData.multicurrencyWalletScreenState.copy(
         onBackClick = { router.popBackStack() },
-        topBarConfig = WalletPreviewData.groupedWalletScreenState.topBarConfig.copy(
+        topBarConfig = WalletPreviewData.multicurrencyWalletScreenState.topBarConfig.copy(
             onScanCardClick = { router.openOrganizeTokensScreen() },
         ),
     )
