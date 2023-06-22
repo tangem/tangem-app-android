@@ -7,13 +7,7 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.flow.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class RuntimeUserWalletsListManager : UserWalletsListManager {
@@ -35,6 +29,12 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
 
     override val hasUserWallets: Boolean
         get() = state.value.userWallet != null
+
+    /**
+     * only 1 wallet stored in runtime implementation
+     */
+    override val walletsCount: Int
+        get() = 1
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         state.value.userWallet
