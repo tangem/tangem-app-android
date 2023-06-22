@@ -56,12 +56,13 @@ import kotlinx.coroutines.flow.flowOf
  * @author Andrew Khokhlov on 27/03/2023
  */
 @Composable
-internal fun TokensListScreen(stateHolder: TokensListStateHolder) {
+internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modifier = Modifier) {
     BackHandler(onBack = stateHolder.toolbarState.onBackButtonClick)
 
     var floatingButtonHeight by remember { mutableStateOf(value = 0.dp) }
 
     Scaffold(
+        modifier = modifier,
         topBar = { TokensListToolbar(state = stateHolder.toolbarState) },
         floatingActionButton = {
             if (stateHolder is TokensListStateHolder.ManageContent) {

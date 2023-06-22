@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.router
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -32,7 +34,10 @@ internal class DefaultWalletRouter : InnerWalletRouter {
             ) {
                 composable(WalletScreens.WALLET.name) {
                     val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
-                    WalletScreen(state = viewModel.uiState)
+                    WalletScreen(
+                        modifier = Modifier.systemBarsPadding(),
+                        state = viewModel.uiState,
+                    )
                 }
 
                 composable(WalletScreens.ORGANIZE_TOKENS.name) {
@@ -41,7 +46,10 @@ internal class DefaultWalletRouter : InnerWalletRouter {
                     val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
                         .apply { router = this@DefaultWalletRouter }
 
-                    OrganizeTokensScreen(state = viewModel.uiState)
+                    OrganizeTokensScreen(
+                        modifier = Modifier.systemBarsPadding(),
+                        state = viewModel.uiState,
+                    )
                 }
             }
         }
