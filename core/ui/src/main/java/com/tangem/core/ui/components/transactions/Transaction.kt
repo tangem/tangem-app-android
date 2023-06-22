@@ -26,7 +26,8 @@ import com.tangem.core.ui.res.TangemTheme
 /**
  * Transaction component
  *
- * @param state state
+ * @param state    state
+ * @param modifier modifier
  *
  * @see <a href = "https://www.figma.com/file/RU7AIgwHtGdMfy83T5UOoR/iOS?type=design&node-id=446-438&t=71jPDxMMk4e0
  * a025-4">Figma Component</a>
@@ -34,9 +35,9 @@ import com.tangem.core.ui.res.TangemTheme
 [REDACTED_AUTHOR]
  */
 @Composable
-fun Transaction(state: TransactionState) {
+fun Transaction(state: TransactionState, modifier: Modifier = Modifier) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .background(TangemTheme.colors.background.primary)
             .defaultMinSize(minHeight = TangemTheme.dimens.size56)
             .padding(horizontal = TangemTheme.dimens.spacing12, vertical = TangemTheme.dimens.spacing10),
@@ -212,14 +213,26 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Content -> {
             Text(
                 text = when (state) {
-                    is TransactionState.Sending -> "to: ${state.address}"
-                    is TransactionState.Send -> "to: ${state.address}"
-                    is TransactionState.Receiving -> "from: ${state.address}"
-                    is TransactionState.Receive -> "from: ${state.address}"
-                    is TransactionState.Approving -> "from: ${state.address}"
-                    is TransactionState.Approved -> "from: ${state.address}"
-                    is TransactionState.Swapping -> "contract: ${state.address}"
-                    is TransactionState.Swapped -> "contract ${state.address}"
+                    is TransactionState.Sending,
+                    is TransactionState.Send,
+                    -> stringResource(
+                        id = R.string.transaction_history_transaction_to_address,
+                        state.address,
+                    )
+                    is TransactionState.Receiving,
+                    is TransactionState.Receive,
+                    is TransactionState.Approving,
+                    is TransactionState.Approved,
+                    -> stringResource(
+                        id = R.string.transaction_history_transaction_from_address,
+                        state.address,
+                    )
+                    is TransactionState.Swapping,
+                    is TransactionState.Swapped,
+                    -> stringResource(
+                        id = R.string.transaction_history_contract_address,
+                        state.address,
+                    )
                 },
                 modifier = modifier,
                 textAlign = TextAlign.Start,
