@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.transactions.TransactionState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
@@ -9,13 +10,14 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.util.UUID
 
 internal object WalletPreviewData {
 
-    val walletTopBarConfig = WalletStateHolder.TopBarConfig(onScanCardClick = {}, onMoreClick = {})
+    val walletTopBarConfig = WalletTopBarConfig(onScanCardClick = {}, onMoreClick = {})
 
     val walletCardContentState = WalletCardState.Content(
         id = UUID.randomUUID().toString(),
@@ -159,7 +161,7 @@ internal object WalletPreviewData {
         ),
     )
 
-    val groupedWalletScreenState = WalletStateHolder(
+    val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
         selectedWallet = walletCardContentState,
@@ -170,8 +172,8 @@ internal object WalletPreviewData {
             walletCardErrorState,
         ),
         contentItems = persistentListOf(
-            WalletContentItemState.NetworkGroupTitle("Bitcoin"),
-            WalletContentItemState.Token(
+            WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Bitcoin"),
+            WalletContentItemState.MultiCurrencyItem.Token(
                 tokenItemVisibleState.copy(
                     id = "token_1",
                     name = "Ethereum",
@@ -180,7 +182,7 @@ internal object WalletPreviewData {
                     amount = "1,89340821 ETH",
                 ),
             ),
-            WalletContentItemState.Token(
+            WalletContentItemState.MultiCurrencyItem.Token(
                 tokenItemVisibleState.copy(
                     id = "token_2",
                     name = "Ethereum",
@@ -189,7 +191,7 @@ internal object WalletPreviewData {
                     amount = "1,89340821 ETH",
                 ),
             ),
-            WalletContentItemState.Token(
+            WalletContentItemState.MultiCurrencyItem.Token(
                 tokenItemVisibleState.copy(
                     id = "token_3",
                     name = "Ethereum",
@@ -198,7 +200,7 @@ internal object WalletPreviewData {
                     amount = "1,89340821 ETH",
                 ),
             ),
-            WalletContentItemState.Token(
+            WalletContentItemState.MultiCurrencyItem.Token(
                 tokenItemVisibleState.copy(
                     id = "token_4",
                     name = "Ethereum",
@@ -207,8 +209,8 @@ internal object WalletPreviewData {
                     amount = "1,89340821 ETH",
                 ),
             ),
-            WalletContentItemState.NetworkGroupTitle("Ethereum"),
-            WalletContentItemState.Token(
+            WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Ethereum"),
+            WalletContentItemState.MultiCurrencyItem.Token(
                 tokenItemVisibleState.copy(
                     id = "token_5",
                     name = "Ethereum",
@@ -219,5 +221,36 @@ internal object WalletPreviewData {
             ),
         ),
         onOrganizeTokensClick = {},
+    )
+
+    val singleWalletScreenState = WalletStateHolder.SingleCurrencyContent(
+        onBackClick = {},
+        topBarConfig = walletTopBarConfig,
+        selectedWallet = walletCardContentState,
+        wallets = persistentListOf(
+            walletCardContentState,
+            walletCardLoadingState,
+            walletCardHiddenContentState,
+            walletCardErrorState,
+        ),
+        contentItems = persistentListOf(
+            WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
+            WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Today"),
+            WalletContentItemState.SingleCurrencyItem.Transaction(
+                TransactionState.Sending(
+                    address = "33BddS...ga2B",
+                    amount = "-0.500913 BTC",
+                    timestamp = "8:41",
+                ),
+            ),
+            WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Yesterday"),
+            WalletContentItemState.SingleCurrencyItem.Transaction(
+                TransactionState.Sending(
+                    address = "33BddS...ga2B",
+                    amount = "-0.500913 BTC",
+                    timestamp = "8:41",
+                ),
+            ),
+        ),
     )
 }
