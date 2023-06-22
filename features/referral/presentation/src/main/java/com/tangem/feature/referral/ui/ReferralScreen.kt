@@ -5,41 +5,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.BottomSheetState
-import androidx.compose.material.BottomSheetValue
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Snackbar
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Text
-import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,9 +33,7 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
-import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
-import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoContentState
-import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
+import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.feature.referral.presentation.R
 import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.launch
@@ -77,47 +45,46 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
+internal fun ReferralScreen(stateHolder: ReferralStateHolder, modifier: Modifier = Modifier) {
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
     )
 
-    TangemTheme {
-        BottomSheetScaffold(
-            sheetContent = {
-                AgreementBottomSheetContent(
-                    url = when (val state = stateHolder.referralInfoState) {
-                        is ReferralInfoState.NonParticipantContent -> state.url
-                        is ReferralInfoState.ParticipantContent -> state.url
-                        is ReferralInfoState.Loading -> ""
-                    },
-                )
-            },
-            scaffoldState = bottomSheetScaffoldState,
-            sheetShape = RoundedCornerShape(
-                topStart = TangemTheme.dimens.radius16,
-                topEnd = TangemTheme.dimens.radius16,
-            ),
-            sheetElevation = TangemTheme.dimens.elevation24,
-            sheetPeekHeight = TangemTheme.dimens.size0,
-            content = {
-                ReferralContent(
-                    stateHolder = stateHolder,
-                    onAgreementClick = {
-                        stateHolder.analytics.onAgreementClicked.invoke()
-                        coroutineScope.launch {
-                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
-                                bottomSheetScaffoldState.bottomSheetState.expand()
-                            } else {
-                                bottomSheetScaffoldState.bottomSheetState.collapse()
-                            }
+    BottomSheetScaffold(
+        modifier = modifier,
+        sheetContent = {
+            AgreementBottomSheetContent(
+                url = when (val state = stateHolder.referralInfoState) {
+                    is ReferralInfoState.NonParticipantContent -> state.url
+                    is ReferralInfoState.ParticipantContent -> state.url
+                    is ReferralInfoState.Loading -> ""
+                },
+            )
+        },
+        scaffoldState = bottomSheetScaffoldState,
+        sheetShape = RoundedCornerShape(
+            topStart = TangemTheme.dimens.radius16,
+            topEnd = TangemTheme.dimens.radius16,
+        ),
+        sheetElevation = TangemTheme.dimens.elevation24,
+        sheetPeekHeight = TangemTheme.dimens.size0,
+        content = {
+            ReferralContent(
+                stateHolder = stateHolder,
+                onAgreementClick = {
+                    stateHolder.analytics.onAgreementClicked.invoke()
+                    coroutineScope.launch {
+                        if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
+                            bottomSheetScaffoldState.bottomSheetState.expand()
+                        } else {
+                            bottomSheetScaffoldState.bottomSheetState.collapse()
                         }
-                    },
-                )
-            },
-        )
-    }
+                    }
+                },
+            )
+        },
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -485,7 +452,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.ParticipantContent(
                     award = "10 USDT",
                     networkName = "Tron",
@@ -497,7 +464,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
@@ -513,7 +480,7 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.ParticipantContent(
                     award = "10 USDT",
                     networkName = "Tron",
@@ -525,7 +492,7 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
@@ -541,7 +508,7 @@ private fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.NonParticipantContent(
                     award = "10 USDT",
                     networkName = "Tron",
@@ -550,7 +517,7 @@ private fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
@@ -566,7 +533,7 @@ private fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.NonParticipantContent(
                     award = "10 USDT",
                     networkName = "Tron",
@@ -575,7 +542,7 @@ private fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
@@ -591,10 +558,10 @@ private fun Preview_ReferralScreen_Loading_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
@@ -610,10 +577,10 @@ private fun Preview_ReferralScreen_Loading_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                headerState = HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
-                analytics = ReferralStateHolder.Analytics(
+                analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
                     onShareClicked = {},
