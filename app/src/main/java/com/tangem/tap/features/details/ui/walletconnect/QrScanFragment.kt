@@ -24,7 +24,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
+        setFitSystemWindows(fit = true)
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -47,6 +47,11 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
         scannerView?.stopCamera()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        setFitSystemWindows(fit = false)
+    }
+
     override fun onResume() {
         super.onResume()
         scannerView?.setResultHandler(this)
@@ -55,7 +60,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result) {
         store.dispatch(NavigationAction.PopBackTo())
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, false) }
+        setFitSystemWindows(fit = false)
         if (!result.text.isNullOrBlank()) {
             store.dispatch(WalletConnectAction.OpenSession(result.text))
         }
@@ -82,5 +87,11 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     private fun requestPermission() {
         requestPermissions(arrayOf(Manifest.permission.CAMERA), CameraView.PERMISSION_REQUEST_CODE)
+    }
+
+    private fun setFitSystemWindows(fit: Boolean) {
+        activity?.window?.let {
+            WindowCompat.setDecorFitsSystemWindows(it, fit)
+        }
     }
 }
