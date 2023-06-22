@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletHeader
 
@@ -14,10 +15,11 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletHeader
  * @author Andrew Khokhlov on 29/05/2023
  */
 @Composable
-internal fun WalletScreen(state: WalletStateHolder) {
+internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
     Scaffold(
+        modifier = modifier,
         topBar = { WalletHeader(config = state.headerConfig) },
     ) {
         // TODO: AND-3642 Design a body with tokens and transactions
