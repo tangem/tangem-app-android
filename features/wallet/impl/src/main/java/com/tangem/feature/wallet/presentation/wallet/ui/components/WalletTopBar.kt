@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
 
 /**
  * Wallet screen top bar
@@ -16,7 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WalletTopBar(config: WalletStateHolder.TopBarConfig) {
+internal fun WalletTopBar(config: WalletTopBarConfig) {
     TopAppBar(
         title = {
             Icon(painter = painterResource(id = R.drawable.img_tangem_logo_90_24), contentDescription = null)
