@@ -62,6 +62,7 @@
     <string name="common_done">Готово</string>
     <string name="common_enable">Включить</string>
     <string name="common_enabled">Включено</string>
+    <string name="common_explorer">Обозреватель</string>
     <string name="common_no">Нет</string>
     <string name="common_ok">Ок</string>
     <string name="common_origin_card">Основная карта</string>
@@ -77,6 +78,7 @@
     <string name="common_success">Успешно</string>
     <string name="common_swap">Обмен</string>
     <string name="common_terms_and_conditions">условия участия</string>
+    <string name="common_transactions">Транзакции</string>
     <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
     <string name="common_yes">Да</string>
@@ -417,9 +419,11 @@
         <item quantity="many">%d токенов</item>
         <item quantity="other">%d токенов</item>
     </plurals>
+    <string name="transaction_history_contract_address">контракт: %s</string>
     <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
-    <string name="transaction_history_error_failed_to_load">Не удалось загрузить транзакции</string>
-    <string name="transaction_history_title">Транзакции</string>
+    <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
+    <string name="transaction_history_not_supported_description">История транзакций в настоящее время не поддерживается для этого блокчейна. Но не волнуйтесь, мы работаем над этим! А пока вы можете проверить ее в обозревателе.</string>
+    <string name="transaction_history_transaction_from_address">от: %s</string>
     <string name="transaction_history_tx_in_progress">В процессе…</string>
     <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
     <string name="twins_onboarding_description_format">Это карта, которую вы держите в руках. У парной карты номер %s.\n\nОбе карты можно использовать для вывода средств из этого кошелька.</string>
