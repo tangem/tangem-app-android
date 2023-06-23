@@ -41,6 +41,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -613,7 +614,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
 
         fun onBackButtonClick() {
-            featureRouter.popBackStack()
+            viewModelScope.launch(dispatchers.main) {
+                // need delay before close, cause crashed in compose PopUpMenu as
+                delay(timeMillis = 100)
+                featureRouter.popBackStack()
+            }
         }
 
         fun onContactAddressValueChange(enteredValue: String) {
