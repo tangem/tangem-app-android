@@ -7,10 +7,7 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenO
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.state.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.util.UUID
@@ -220,6 +217,12 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
+        notifications = persistentListOf(
+            WalletNotification.UnreachableNetworks,
+            WalletNotification.LikeTangemApp(onClick = {}),
+            WalletNotification.NeedToBackup(onClick = {}),
+            WalletNotification.ScanCard(onClick = {}),
+        ),
         onOrganizeTokensClick = {},
     )
 
@@ -251,6 +254,12 @@ internal object WalletPreviewData {
                     timestamp = "8:41",
                 ),
             ),
+        ),
+        notifications = persistentListOf(
+            WalletNotification.UnreachableNetworks,
+            WalletNotification.LikeTangemApp(onClick = {}),
+            WalletNotification.NeedToBackup(onClick = {}),
+            WalletNotification.ScanCard(onClick = {}),
         ),
     )
 }
