@@ -21,9 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.BackgroundActionButton
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.buttons.actions.ActionConfig
+import com.tangem.core.ui.components.buttons.actions.BackgroundActionButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -214,16 +215,20 @@ private fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             BackgroundActionButton(
+                config = ActionConfig(
+                    text = stringResource(id = R.string.organize_tokens_sort_by_balance),
+                    iconResId = R.drawable.ic_sort_24,
+                    onClick = config.onSortByBalanceClick,
+                ),
                 modifier = Modifier.weight(1f),
-                text = stringResource(id = R.string.organize_tokens_sort_by_balance),
-                iconResId = R.drawable.ic_sort_24,
-                onClick = config.onSortByBalanceClick,
             )
             BackgroundActionButton(
+                config = ActionConfig(
+                    text = stringResource(id = R.string.organize_tokens_group),
+                    iconResId = R.drawable.ic_group_24,
+                    onClick = config.onGroupByNetworkClick,
+                ),
                 modifier = Modifier.weight(1f),
-                text = stringResource(id = R.string.organize_tokens_group),
-                iconResId = R.drawable.ic_group_24,
-                onClick = config.onGroupByNetworkClick,
             )
         }
     }

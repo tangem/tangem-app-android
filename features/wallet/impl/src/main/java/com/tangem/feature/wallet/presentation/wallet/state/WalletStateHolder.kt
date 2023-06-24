@@ -53,6 +53,7 @@ internal sealed class WalletStateHolder(
      * @property wallets        list of wallets states
      * @property contentItems   content items
      * @property notifications  notifications
+     * @property buttons        manage buttons
      */
     data class SingleCurrencyContent(
         override val onBackClick: () -> Unit,
@@ -61,5 +62,6 @@ internal sealed class WalletStateHolder(
         override val wallets: ImmutableList<WalletCardState>,
         override val contentItems: ImmutableList<WalletContentItemState.SingleCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
+        val buttons: ImmutableList<WalletManageButton>,
     ) : WalletStateHolder(onBackClick, topBarConfig, selectedWallet, wallets, contentItems, notifications)
 }
