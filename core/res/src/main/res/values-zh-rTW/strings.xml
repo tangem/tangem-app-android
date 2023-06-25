@@ -301,11 +301,7 @@
     <string name="search_tokens_title">搜尋代幣</string>
     <string name="send_amount_label">數量</string>
     <string name="send_destination_hint_address">地址</string>
-    <string name="send_destination_hint_address_payid">地址或 PayString</string>
     <string name="send_error_address_same_as_wallet">地址與錢包地址相同</string>
-    <string name="send_error_payid_not_registered">PayString 未註冊</string>
-    <string name="send_error_payid_request_failed">PayString 請求失敗</string>
-    <string name="send_error_payid_unsupported_by_blockchain">PayString 不被區塊鏈支持</string>
     <string name="send_extras_error_invalid_destination_tag">標籤無效。它不會被添加到交易中</string>
     <string name="send_extras_error_invalid_memo">Memo無效。 它不會被添加到交易中</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
@@ -415,7 +411,6 @@
     <string name="user_wallet_list_single_header">單一幣種</string>
     <string name="user_wallet_list_title">我的錢包</string>
     <string name="user_wallet_list_unlock_all">用 %s 解鎖全部</string>
-    <string name="wallet_address_button_create_payid">創建支付字符串</string>
     <string name="wallet_address_button_explore">交易記錄</string>
     <string name="wallet_balance_blockchain_unreachable">網路無法使用</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
