@@ -25,7 +25,7 @@ object SendScreenReducer {
 
         val reducer: SendInternalReducer = when (action) {
             is PrepareSendScreen -> PrepareSendScreenStatesReducer()
-            is AddressPayIdActionUi, is AddressPayIdVerifyAction -> AddressPayIdReducer()
+            is AddressActionUi, is AddressVerifyAction -> AddressReducer()
             is TransactionExtrasAction -> TransactionExtrasReducer()
             is AmountActionUi, is AmountAction -> AmountReducer()
             is FeeActionUi, is FeeAction -> FeeReducer()
@@ -71,7 +71,7 @@ private class SendReducer : SendInternalReducer {
             amountState = state.amountState.copy(
                 inputIsEnabled = false,
             ),
-            addressPayIdState = state.addressPayIdState.copy(
+            addressState = state.addressState.copy(
                 inputIsEnabled = false,
             ),
         )
