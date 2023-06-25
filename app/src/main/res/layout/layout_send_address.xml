@@ -18,10 +18,9 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilAddressOrPayId"
+            android:id="@+id/tilAddress"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="@string/send_destination_hint_address_payid"
             app:boxBackgroundColor="@color/backgroundLightGray"
             app:errorIconDrawable="@null"
             app:layout_constraintEnd_toEndOf="parent"
@@ -29,7 +28,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <com.tangem.tap.features.send.ui.EditTextCustomPaste
-                android:id="@+id/etAddressOrPayId"
+                android:id="@+id/etAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/backgroundLightGray"
@@ -71,7 +70,7 @@
             android:layout_marginTop="10dp"
             android:background="@drawable/shape_ellipse"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tilAddressOrPayId">
+            app:layout_constraintTop_toTopOf="@+id/tilAddress">
 
             <ImageView
                 android:id="@+id/imvQrCode"
@@ -103,41 +102,6 @@
             android:orientation="vertical"
             android:visibility="gone"
             tools:visibility="visible">
-
-<!--            <com.google.android.material.chip.ChipGroup-->
-<!--                android:id="@+id/groupMemo"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginTop="8dp"-->
-<!--                app:layout_constraintEnd_toEndOf="parent"-->
-<!--                app:layout_constraintStart_toStartOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="parent"-->
-<!--                app:selectionRequired="true"-->
-<!--                app:singleLine="true"-->
-<!--                app:singleSelection="true">-->
-
-<!--                <com.google.android.material.chip.Chip-->
-<!--                    android:id="@+id/chipMemoText"-->
-<!--                    style="@style/TapChip"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="Text" />-->
-
-<!--                <com.google.android.material.chip.Chip-->
-<!--                    android:id="@+id/chipMemoId"-->
-<!--                    style="@style/TapChip"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="ID" />-->
-
-<!--                <com.google.android.material.chip.Chip-->
-<!--                    android:id="@+id/chipMemoHash"-->
-<!--                    style="@style/TapChip"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="Hash" />-->
-
-<!--            </com.google.android.material.chip.ChipGroup>-->
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilXlmMemo"
