@@ -1,6 +1,9 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
@@ -134,22 +137,13 @@ class TapWalletManager(
 
     fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
-        val blockchain = data.cardTypesResolver.getBlockchain()
+
         if (data.cardTypesResolver.isStart2Coin()) {
-            configManager?.turnOff(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
             configManager?.turnOff(ConfigManager.IS_TOP_UP_ENABLED)
-        } else if (blockchain == Blockchain.Bitcoin ||
-            data.walletData?.blockchain == Blockchain.Bitcoin.id
-        ) {
-            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
-            configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         } else {
-            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
             configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         }
     }
 }
 
-fun Wallet.getFirstToken(): Token? {
-    return getTokens().toList().getOrNull(0)
-}
+fun Wallet.getFirstToken(): Token? = getTokens().toList().getOrNull(index = 0)
