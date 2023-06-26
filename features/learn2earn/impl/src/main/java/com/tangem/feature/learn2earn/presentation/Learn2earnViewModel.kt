@@ -109,7 +109,8 @@ class Learn2earnViewModel @Inject constructor(
         return if (interactor.isUserRegisteredInPromotion()) {
             MainScreenState.Description.GetBonus
         } else {
-            MainScreenState.Description.Learn(interactor.getAwardAmount())
+            val (count, award) = interactor.getAwardAmount()
+            MainScreenState.Description.Learn(count, award)
         }
     }
 
