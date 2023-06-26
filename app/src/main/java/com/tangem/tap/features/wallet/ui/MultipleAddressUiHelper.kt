@@ -22,14 +22,22 @@ object MultipleAddressUiHelper {
         return when (id) {
             R.id.chip_default -> {
                 when (blockchain) {
-                    Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.Litecoin -> BitcoinAddressType.Segwit
+                    Blockchain.Bitcoin,
+                    Blockchain.BitcoinTestnet,
+                    Blockchain.Litecoin,
+                    Blockchain.BitcoinCash,
+                    -> BitcoinAddressType.Segwit
                     Blockchain.CardanoShelley -> CardanoAddressType.Shelley
                     else -> null
                 }
             }
             R.id.chip_legacy -> {
                 when (blockchain) {
-                    Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.Litecoin -> BitcoinAddressType.Legacy
+                    Blockchain.Bitcoin,
+                    Blockchain.BitcoinTestnet,
+                    Blockchain.Litecoin,
+                    Blockchain.BitcoinCash,
+                    -> BitcoinAddressType.Legacy
                     Blockchain.CardanoShelley -> CardanoAddressType.Byron
                     else -> null
                 }

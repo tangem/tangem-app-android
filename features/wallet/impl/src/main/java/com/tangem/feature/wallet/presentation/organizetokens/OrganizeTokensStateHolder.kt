@@ -1,10 +1,13 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
-import com.tangem.feature.wallet.presentation.common.state.TokenListState
+import androidx.compose.runtime.Immutable
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 internal data class OrganizeTokensStateHolder(
-    val tokens: TokenListState,
     val header: HeaderConfig,
+    val itemsState: OrganizeTokensListState,
     val actions: ActionsConfig,
 ) {
 
@@ -17,4 +20,44 @@ internal data class OrganizeTokensStateHolder(
         val onApplyClick: () -> Unit,
         val onCancelClick: () -> Unit,
     )
+}
+
+@Immutable
+internal sealed class OrganizeTokensListState {
+    abstract val items: ImmutableList<DraggableItem>
+
+    data class GroupedByNetwork(
+        override val items: ImmutableList<DraggableItem>,
+    ) : OrganizeTokensListState()
+
+    data class Ungrouped(
+        override val items: ImmutableList<DraggableItem.Token>,
+    ) : OrganizeTokensListState()
+
+    @Suppress("UNCHECKED_CAST")
+    inline fun updateItems(update: (List<DraggableItem>) -> List<DraggableItem>): OrganizeTokensListState {
+        val updatedItems = update(this.items).toPersistentList()
+
+        return when (this) {
+            is GroupedByNetwork -> this.copy(items = updatedItems)
+            is Ungrouped -> this.copy(items = updatedItems as ImmutableList<DraggableItem.Token>)
+        }
+    }
+}
+
+@Immutable
+internal sealed interface DraggableItem {
+    val id: String
+
+    data class GroupHeader(
+        override val id: String,
+        val networkName: String,
+    ) : DraggableItem
+
+    data class Token(
+        val tokenItemState: TokenItemState.Draggable,
+        val groupId: String,
+    ) : DraggableItem {
+        override val id: String = tokenItemState.id
+    }
 }
