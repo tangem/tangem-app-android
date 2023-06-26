@@ -77,9 +77,9 @@ walletConnectWeb3 = "1.8.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_4.7-245"
+tangemBlockchainSdk = "release-app_4.8-251"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_4.7-268"
+tangemCardSdk = "release-app_4.8-270"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
