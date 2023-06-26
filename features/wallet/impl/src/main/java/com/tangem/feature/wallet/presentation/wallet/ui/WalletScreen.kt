@@ -48,7 +48,7 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
         }
 
         LazyColumn(
-            modifier = Modifier
+            modifier = modifier
                 .padding(scaffoldPaddings)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
