@@ -1,6 +1,7 @@
 package com.tangem.feature.learn2earn.presentation.ui.state
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.feature.learn2earn.domain.models.PromotionError
 import com.tangem.feature.learn2earn.impl.R
 
@@ -30,9 +31,9 @@ data class MainScreenState(
 
     sealed class Description(val title: TextReference, val subtitle: TextReference) {
 
-        class Learn(awardAmount: String) : Description(
+        class Learn(count: Int, award: String) : Description(
             TextReference.Res(R.string.main_learn_title),
-            TextReference.Res(R.string.main_learn_subtitle, listOf(awardAmount)),
+            TextReference.PluralRes(R.plurals.main_learn_subtitle, count, WrappedList(listOf(award))),
         )
 
         object GetBonus : Description(

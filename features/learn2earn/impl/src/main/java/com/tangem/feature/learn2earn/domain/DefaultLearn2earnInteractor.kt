@@ -15,7 +15,6 @@ import com.tangem.feature.learn2earn.domain.models.toDomainError
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
-import java.text.DecimalFormat
 
 /**
 [REDACTED_AUTHOR]
@@ -62,7 +61,7 @@ class DefaultLearn2earnInteractor(
         return repository.getUserData().isRegisteredInPromotion
     }
 
-    override fun getAwardAmount(): String {
+    override fun getAwardAmount(): Pair<Int, String> {
         val userInfo = repository.getUserData()
         val promotionInfo = promotion.getPromotionInfo()
 
@@ -70,9 +69,9 @@ class DefaultLearn2earnInteractor(
             promotionInfo.awardForOldCard
         } else {
             promotionInfo.awardForNewCard
-        }
+        }.toInt()
 
-        return DecimalFormat("0.#").format(awardAmount)
+        return awardAmount to awardAmount.toString()
     }
 
     @Throws(IllegalArgumentException::class)
