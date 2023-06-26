@@ -66,7 +66,7 @@ class WalletConnectMiddleware {
                 walletConnectManager.restoreSessions(action.scanResponse)
             }
             is WalletConnectAction.HandleDeepLink -> {
-                if (!action.wcUri.isNullOrBlank() && WalletConnectManager.isCorrectWcUri(action.wcUri)) {
+                if (!action.wcUri.isNullOrBlank()) {
                     store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
                 }
             }
@@ -238,7 +238,7 @@ class WalletConnectMiddleware {
                     return
                 }
                 val blockchain = action.blockchain.guard {
-                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
                     return
                 }
                 val walletManager = getWalletManager(
@@ -298,18 +298,24 @@ class WalletConnectMiddleware {
                             ),
                         )
                     }
-
-                    WalletConnectError.ApprovalErrorUnsupportedNetwork -> {
-                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
-                    }
-                    is WalletConnectError.ExternalApprovalError -> {
+                    is WalletConnectError.ApprovalErrorUnsupportedNetwork -> {
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
-                                AppDialog.SimpleOkWarningDialog(
-                                    message = action.error.message ?: "",
-                                ),
+                                WalletConnectDialog.UnsupportedNetwork(action.error.unsupportedNetworks),
                             ),
                         )
+                    }
+                    is WalletConnectError.ExternalApprovalError -> {
+                        val message = action.error.message
+                        if (!message.isNullOrEmpty()) {
+                            store.dispatchOnMain(
+                                GlobalAction.ShowDialog(
+                                    AppDialog.SimpleOkWarningDialog(
+                                        message = message,
+                                    ),
+                                ),
+                            )
+                        }
                     }
                     else -> Unit
                 }
@@ -327,7 +333,7 @@ class WalletConnectMiddleware {
                 scope.launch { walletConnectInteractor.continueWithRequest(action.sessionRequest) }
             }
             is WalletConnectAction.RejectUnsupportedRequest -> {
-                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
             }
         }
     }
@@ -337,7 +343,7 @@ class WalletConnectMiddleware {
             chainId = chainId,
             peer = session.peerMeta,
         ).guard {
-            store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+            store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
             return
         }
 

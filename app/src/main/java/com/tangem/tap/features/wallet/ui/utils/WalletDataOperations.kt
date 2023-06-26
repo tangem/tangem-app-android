@@ -98,7 +98,7 @@ internal fun WalletDataModel.getAvailableActions(
 
 internal fun WalletDataModel.shouldShowMultipleAddress(): Boolean {
     val listOfAddresses = walletAddresses?.list.orEmpty()
-    return listOfAddresses.size > 1
+    return listOfAddresses.size > 1 && currency.blockchain != Blockchain.BitcoinCash
 }
 
 internal fun WalletDataModel.assembleWarnings(
