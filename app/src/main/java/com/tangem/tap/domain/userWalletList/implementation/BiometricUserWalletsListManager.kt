@@ -118,7 +118,9 @@ internal class BiometricUserWalletsListManager(
             }
             .flatMap { updatedUserWallet ->
                 saveInternal(updatedUserWallet, changeSelectedUserWallet = false)
-                    .map { updatedUserWallet }
+            }
+            .flatMap {
+                get(userWalletId)
             }
     }
 
