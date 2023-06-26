@@ -56,6 +56,7 @@
     <string name="common_done">完成</string>
     <string name="common_enable">允許</string>
     <string name="common_enabled">啟用</string>
+    <string name="common_exchange">交易</string>
     <string name="common_no">否</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">主卡片</string>
@@ -69,7 +70,9 @@
     <string name="common_start">開始</string>
     <string name="common_submit">提交</string>
     <string name="common_success">成功</string>
+    <string name="common_swap">交換</string>
     <string name="common_terms_and_conditions">條款和條件</string>
+    <string name="common_transactions">交易</string>
     <string name="common_understand">我了解</string>
     <string name="common_yes">是</string>
     <string name="contract_address_copied_message">已複製代幣地址</string>
@@ -367,7 +370,6 @@
     <string name="swapping_permission_subheader">要繼續，您需要允許 1inch 智能合約使用您的 %s</string>
     <string name="swapping_success_view_explorer_button_title">在瀏覽器中查看</string>
     <string name="swapping_success_view_title">進行中</string>
-    <string name="swapping_swap">交換</string>
     <string name="swapping_swap_action">交易</string>
     <string name="swapping_swap_of_to">交易 %s 至</string>
     <string name="swapping_tangem_fee_disclaimer">此外，報價包括%s的 Tangem 費用。這有助於我們提供一流的產品</string>
@@ -392,7 +394,6 @@
     </plurals>
     <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
     <string name="transaction_history_error_failed_to_load">無法加載交易</string>
-    <string name="transaction_history_title">交易</string>
     <string name="transaction_history_tx_in_progress">進行中…</string>
     <string name="twin_error_same_card">您掃描了同一張卡片。要創建雙錢包，您需要掃描編號為 %d 的卡</string>
     <string name="twins_onboarding_description_format">這一個是你手裡拿著的，另一個是編號為 %s 的，這兩張卡都可以用來從這個錢包中提取資金</string>
