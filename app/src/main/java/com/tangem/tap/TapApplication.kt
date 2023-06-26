@@ -200,6 +200,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
+        // TODO: Try to performance and user experience.
+        //  https://tangem.atlassian.net/browse/AND-3859
         runBlocking {
             featureTogglesManager.init()
             learn2ernInteractor.init()
