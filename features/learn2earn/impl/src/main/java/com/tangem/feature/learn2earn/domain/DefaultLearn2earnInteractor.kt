@@ -170,7 +170,7 @@ class DefaultLearn2earnInteractor(
     }
 
     override fun buildUriForOldUser(): Uri {
-        return webViewUriBuilder.buildUriForOlgUser()
+        return webViewUriBuilder.buildUriForOldUser()
     }
 
     override fun getBasicAuthHeaders(): ArrayList<String> {
@@ -242,11 +242,7 @@ class DefaultLearn2earnInteractor(
     }
 
     private fun getCurrencyForAward(): Currency? {
-        if (promotion.info == null) return null
-
-        val info = promotion.getPromotionInfo()
-        val token = info.awardPaymentToken
-        // use only the first available network
+        val token = promotion.info?.awardPaymentToken ?: return null
 
         return Currency.NonNativeToken(
             id = token.id,
