@@ -436,6 +436,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">無法交易，無足夠資金</string>
     <string name="wallet_connect_error_failed_to_connect">未能建立 WalletConnect 連接。請稍後再試</string>
     <string name="wallet_connect_error_timeout">無法建立 WalletConnect 連接:超時錯誤。請稍後再試</string>
+    <string name="wallet_connect_error_unsupported_blockchains">會話請求包含不支持 WalletConnect 連接的區塊鏈。不支持的區塊鏈：</string>
     <string name="wallet_connect_error_unsupported_dapp">由於技術問題，無法與此 Dapp 建立連接</string>
     <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
     <string name="wallet_connect_paste_from_clipboard">從剪貼板貼上</string>
