@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -15,65 +14,83 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.state.NetworkGroupState
 
 @Composable
-internal fun NetworkGroupItem(state: NetworkGroupState, modifier: Modifier = Modifier) {
+internal fun NetworkGroupItem(networkName: String, modifier: Modifier = Modifier) {
+    InternalNetworkGroupItem(
+        modifier = modifier,
+        networkName = networkName,
+    )
+}
+
+@Composable
+internal fun DraggableNetworkGroupItem(networkName: String, modifier: Modifier = Modifier) {
+    InternalNetworkGroupItem(
+        modifier = modifier,
+        networkName = networkName,
+        endIcon = {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_group_drop_24),
+                tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
+            )
+        },
+    )
+}
+
+@Composable
+private fun InternalNetworkGroupItem(
+    networkName: String,
+    modifier: Modifier = Modifier,
+    endIcon: @Composable RowScope.() -> Unit = {},
+) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .background(TangemTheme.colors.background.primary)
-                .padding(horizontal = TangemTheme.dimens.spacing12)
+                .padding(horizontal = TangemTheme.dimens.spacing14)
                 .fillMaxWidth()
                 .heightIn(min = TangemTheme.dimens.size48),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = R.string.wallet_network_group_title, state.networkName),
+                text = stringResource(id = R.string.wallet_network_group_title, networkName),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
-            if (state is NetworkGroupState.Draggable) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_group_drop_24),
-                    tint = TangemTheme.colors.icon.informative,
-                    contentDescription = null,
-                )
-            }
-        }
-        Column {
-            state.tokens.forEach { token ->
-                key(token.id) {
-                    TokenItem(state = token)
-                }
-            }
+            endIcon()
         }
     }
 }
 
 // region Preview
+@Composable
+private fun NetworkGroupItemSample(isDraggable: Boolean) {
+    if (isDraggable) {
+        DraggableNetworkGroupItem(networkName = "Ethereum")
+    } else {
+        NetworkGroupItem(networkName = "Ethereum")
+    }
+}
+
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun NetworkGroupItemPreview_Light(@PreviewParameter(NetworkGroupProvider::class) group: NetworkGroupState) {
+private fun NetworkGroupItemPreview_Light(@PreviewParameter(NetworkGroupProvider::class) isDraggable: Boolean) {
     TangemTheme {
-        NetworkGroupItem(group)
+        NetworkGroupItemSample(isDraggable)
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun NetworkGroupItemPreview_Dark(@PreviewParameter(NetworkGroupProvider::class) group: NetworkGroupState) {
+private fun NetworkGroupItemPreview_Dark(@PreviewParameter(NetworkGroupProvider::class) isDraggable: Boolean) {
     TangemTheme(isDark = true) {
-        NetworkGroupItem(group)
+        NetworkGroupItemSample(isDraggable)
     }
 }
 
-private class NetworkGroupProvider : CollectionPreviewParameterProvider<NetworkGroupState>(
-    collection = listOf(
-        WalletPreviewData.networkGroup,
-        WalletPreviewData.draggableNetworkGroup,
-    ),
+private class NetworkGroupProvider : CollectionPreviewParameterProvider<Boolean>(
+    collection = listOf(true, false),
 )
 // endregion Preview
