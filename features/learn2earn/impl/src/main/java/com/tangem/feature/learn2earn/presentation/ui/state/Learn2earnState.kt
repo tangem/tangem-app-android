@@ -25,9 +25,14 @@ data class MainScreenState(
     val onClick: () -> Unit,
     val description: Description,
     val showProgress: Boolean,
-    val logoAlphaValue: Float = 1f,
+    val logoState: LogoState,
     val dialog: Dialog? = null,
 ) {
+
+    sealed class LogoState(val alpha: Float) {
+        object Idle : LogoState(alpha = 1.0f)
+        object InProgress : LogoState(alpha = 0.2f)
+    }
 
     sealed class Description(val title: TextReference, val subtitle: TextReference) {
 
