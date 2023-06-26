@@ -21,6 +21,20 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
     )
 }
 
+internal fun OkHttpClient.Builder.addLazyHeaders(vararg requestHeaders: LazyRequestHeader): OkHttpClient.Builder {
+    return addInterceptor(
+        Interceptor { chain ->
+            val request = chain.request().newBuilder().apply {
+                requestHeaders
+                    .flatMap(LazyRequestHeader::values)
+                    .forEach { addHeader(it.first, it.second.invoke()) }
+            }.build()
+
+            chain.proceed(request)
+        },
+    )
+}
+
 /**
  * Extension for logging each [OkHttpClient] request
  *
