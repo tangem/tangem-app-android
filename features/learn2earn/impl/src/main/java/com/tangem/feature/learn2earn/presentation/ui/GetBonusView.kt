@@ -49,7 +49,7 @@ internal fun GetBonusView(state: MainScreenState, modifier: Modifier = Modifier)
             Box(modifier = Modifier.padding(horizontal = TangemTheme.dimens.size16)) {
                 Image(
                     painter = painterResource(id = R.drawable.img_1inch_logo_42_40),
-                    alpha = state.logoAlphaValue,
+                    alpha = state.logoState.alpha,
                     contentDescription = null,
                 )
                 if (state.showProgress) {
@@ -147,5 +147,6 @@ private fun makePreviewState(): MainScreenState = MainScreenState(
     isVisible = true,
     onClick = {},
     description = MainScreenState.Description.Learn(0, "0"),
+    logoState = MainScreenState.LogoState.Idle,
     showProgress = false,
 )
