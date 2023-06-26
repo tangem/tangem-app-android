@@ -10,6 +10,7 @@ data class ShopState(
     val promoCode: String? = null,
     val promoCodeLoading: Boolean = false,
     val isGooglePayAvailable: Boolean = false, // TODO: change when we add support for GPay
+    val isOrderingDelayBlockVisible: Boolean = false,
 ) : StateType {
     val total: String?
         get() = availableProducts.firstOrNull { it.type == selectedProduct }?.totalSum?.finalValue
