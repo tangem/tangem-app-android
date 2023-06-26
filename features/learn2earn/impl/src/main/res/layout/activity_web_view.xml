@@ -10,6 +10,7 @@
         android:id="@+id/app_bar"
         style="@style/Widget.MaterialComponents.Toolbar.Surface"
         android:layout_width="match_parent"
+        app:liftOnScroll="true"
         android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
