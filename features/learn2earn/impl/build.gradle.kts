@@ -17,31 +17,28 @@ dependencies {
     implementation(project(":core:res"))
     implementation(project(":data:source:preferences"))
     implementation(project(":libs:auth"))
+    implementation(project(":libs:crypto"))
 
     implementation(deps.material)
 
     /** AndroidX */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.browser)
 
     /** Compose */
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
 
-    /** Tangem libraries */
-    // TODO: 1inch: delete if later it doesn't needed
-    // implementation(deps.tangem.card.core)
-    // implementation(deps.tangem.card.android) {
-    //     exclude(module = "joda-time")
-    // }
+    /** Preferences */
+    implementation(deps.krateSharedPref)
 
     /** Network */
-    implementation(deps.krateSharedPref)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.retrofit)
