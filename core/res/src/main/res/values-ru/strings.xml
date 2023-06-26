@@ -343,7 +343,7 @@
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Другие способы оплаты</string>
-    <string name="shop_sold_out_description_prefix">Из-за большого количества заказов, которые мы получаем, cроки доставки могут быть увеличены.</string>
+    <string name="shop_sold_out_description">Из-за высокого количества заказов, которые мы получаем, доставка может быть задержана на срок до 5 недель в зависимости от вашего местоположения</string>
     <string name="shop_total">Итого</string>
     <string name="solana_rent_warning">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
@@ -463,6 +463,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
     <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect. Пожалуйста, повторите попытку позже.</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_paste_from_clipboard">Вставить из буфера обмена</string>

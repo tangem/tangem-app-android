@@ -15,6 +15,7 @@ import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import org.rekotlin.StateType
 
 data class GlobalState(
+    @Deprecated("Use scan response from selected user wallet")
     val scanResponse: ScanResponse? = null,
     val onboardingState: OnboardingState = OnboardingState(),
     val cardVerifiedOnline: Boolean = false,
