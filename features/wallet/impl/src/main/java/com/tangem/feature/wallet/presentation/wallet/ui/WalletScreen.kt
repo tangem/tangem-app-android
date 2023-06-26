@@ -36,7 +36,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun WalletScreen(state: WalletStateHolder) {
+internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
     Scaffold(
@@ -48,7 +48,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
         }
 
         LazyColumn(
-            modifier = Modifier
+            modifier = modifier
                 .padding(scaffoldPaddings)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
