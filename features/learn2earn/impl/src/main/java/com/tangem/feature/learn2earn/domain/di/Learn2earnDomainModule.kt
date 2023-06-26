@@ -4,8 +4,10 @@ import android.content.Context
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.domain.DefaultLearn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
+import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import com.tangem.feature.learn2earn.presentation.Learn2earnRouter
-import com.tangem.lib.auth.BasicAuthProvider
+import com.tangem.lib.crypto.DerivationManager
+import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,13 +29,19 @@ class Learn2earnDomainModule {
     @Singleton
     fun provideInteractor(
         repository: Learn2earnRepository,
-        basicAuthProvider: BasicAuthProvider,
+        userWalletManager: UserWalletManager,
+        derivationManager: DerivationManager,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
             repository = repository,
-            basicAuthProvider = basicAuthProvider,
-            // TODO: 1inch: paste locale provider instead of hardcode
-            userCountryCodeProvider = { "ru" },
+            userWalletManager = userWalletManager,
+            derivationManager = derivationManager,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideWebViewHandler(interactor: Learn2earnInteractor): WebViewRedirectHandler {
+        return interactor
     }
 }
