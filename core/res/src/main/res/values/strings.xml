@@ -44,6 +44,8 @@
     <string name="chat_button_title">Support</string>
     <string name="common_accept">Accept</string>
     <string name="common_add">Add</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_approval">Approval</string>
     <string name="common_attention">Attention</string>
     <string name="common_balance">Balance: %s</string>
     <string name="common_biometric_authentication">biometric authentication</string>
@@ -58,6 +60,7 @@
     <string name="common_done">Done</string>
     <string name="common_enable">Enable</string>
     <string name="common_enabled">Enabled</string>
+    <string name="common_explorer">Explorer</string>
     <string name="common_no">No</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Primary Card</string>
@@ -71,7 +74,10 @@
     <string name="common_start">Start</string>
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
+    <string name="common_swap">Swap</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
+    <string name="common_transactions">Transactions</string>
+    <string name="common_transfer">Transfer</string>
     <string name="common_understand">I understand</string>
     <string name="common_yes">Yes</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
@@ -253,6 +259,9 @@
     <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
     <string name="onboarding_wallet_info_title_second">Identical cards</string>
     <string name="onboarding_wallet_info_title_third">Access code</string>
+    <string name="organize_tokens_group">Group</string>
+    <string name="organize_tokens_sort_by_balance">By balance</string>
+    <string name="organize_tokens_title">Organize tokens</string>
     <string name="referral_button_participate">Participate</string>
     <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
@@ -378,7 +387,6 @@
     <string name="swapping_permission_unlimited">Unlimited</string>
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
-    <string name="swapping_swap">Swap</string>
     <string name="swapping_swap_action">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
     <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product.</string>
@@ -403,9 +411,12 @@
         <item quantity="one">%d token</item>
         <item quantity="other">%d tokens</item>
     </plurals>
+    <string name="transaction_history_contract_address">contract: %s</string>
     <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
-    <string name="transaction_history_error_failed_to_load">Failed to load transactions</string>
-    <string name="transaction_history_title">Transactions</string>
+    <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+    <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
+    <string name="transaction_history_transaction_from_address">from: %s</string>
+    <string name="transaction_history_transaction_to_address">to: %s</string>
     <string name="transaction_history_tx_in_progress">In progress…</string>
     <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
     <string name="twins_onboarding_description_format">This one that you are holding in your hands and the other one with number %s.\n\nBoth cards can be used to extract funds from this wallet.</string>
