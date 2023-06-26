@@ -312,14 +312,8 @@ private fun TangemButton(
     textStyle: TextStyle = TangemTheme.typography.button,
 ) {
     Button(
-        modifier = modifier
-            .width(IntrinsicSize.Min)
-            .heightIn(min = size.toHeightDp()),
-        onClick = {
-            if (!showProgress) {
-                onClick()
-            }
-        },
+        modifier = modifier.heightIn(min = size.toHeightDp()),
+        onClick = { if (!showProgress) onClick() },
         enabled = enabled,
         elevation = elevation,
         shape = size.toShape(),
@@ -588,59 +582,44 @@ private open class TangemButtonColors(
 
 // region Preview
 @Composable
-private fun PrimaryButtonSample(modifier: Modifier = Modifier) {
+private fun PrimaryButtonSample() {
     Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
-        PrimaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Manage tokens",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        PrimaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            showProgress = true,
-            text = "Manage tokens",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        PrimaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
+        PrimaryButton(modifier = Modifier.fillMaxWidth(), showProgress = true, text = "Manage tokens", onClick = { })
         PrimaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
     }
 }
@@ -662,59 +641,44 @@ private fun PrimaryButtonPreview_Dark() {
 }
 
 @Composable
-private fun SecondaryButtonSample(modifier: Modifier = Modifier) {
+private fun SecondaryButtonSample() {
     Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
-        SecondaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Manage tokens",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        SecondaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            showProgress = true,
-            text = "Manage tokens",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        SecondaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
+        SecondaryButton(modifier = Modifier.fillMaxWidth(), showProgress = true, text = "Manage tokens", onClick = { })
         SecondaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
-            onClick = { /* no-op */ },
+            onClick = { },
         )
     }
 }
@@ -736,50 +700,23 @@ private fun SecondaryButtonPreview_Dark() {
 }
 
 @Composable
-private fun TextButtonSample(modifier: Modifier = Modifier) {
+private fun TextButtonSample() {
     Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
-        TextButton(
-            text = "Enabled",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        TextButtonIconStart(
-            text = "Enabled",
-            iconResId = R.drawable.ic_plus_24,
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        TextButton(
-            text = "Enabled",
-            enabled = false,
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        TextButtonIconStart(
-            text = "Enabled",
-            iconResId = R.drawable.ic_plus_24,
-            enabled = false,
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        WarningTextButton(
-            text = "Delete",
-            onClick = { /* no-op */ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        SelectorButton(
-            text = "USD",
-            onClick = { /* no-op */ },
-        )
+        TextButton(text = "Enabled", onClick = { })
+        TextButtonIconStart(text = "Enabled", iconResId = R.drawable.ic_plus_24, onClick = { })
+        TextButton(text = "Enabled", enabled = false, onClick = { })
+        TextButtonIconStart(text = "Enabled", iconResId = R.drawable.ic_plus_24, enabled = false, onClick = { })
+        WarningTextButton(text = "Delete", onClick = { })
+        SelectorButton(text = "USD", onClick = { })
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun TextButtonPreview_Light() {
+private fun TextButtonPreview_LightTheme() {
     TangemTheme {
         TextButtonSample()
     }
@@ -787,62 +724,30 @@ private fun TextButtonPreview_Light() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun TextButtonPreview_Dark() {
+private fun TextButtonPreview_DarkTheme() {
     TangemTheme(isDark = true) {
         TextButtonSample()
     }
 }
 
 @Composable
-private fun ActionButtonSample(modifier: Modifier = Modifier) {
+private fun ActionButtonSample() {
     Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
-        RoundedActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        ActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        BackgroundActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        RoundedActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            enabled = false,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        ActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            enabled = false,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
-        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
-        BackgroundActionButton(
-            text = "Send",
-            iconResId = R.drawable.ic_arrow_up_24,
-            enabled = false,
-            onClick = { /* [REDACTED_TODO_COMMENT]*/ },
-        )
+        RoundedActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, onClick = { })
+        ActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, onClick = { })
+        BackgroundActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, onClick = { })
+        RoundedActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, enabled = false, onClick = { })
+        ActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, enabled = false, onClick = { })
+        BackgroundActionButton(text = "Send", iconResId = R.drawable.ic_arrow_up_24, enabled = false, onClick = { })
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ActionButtonPreview_Light() {
+private fun ActionButtonPreview_LightTheme() {
     TangemTheme {
         ActionButtonSample()
     }
@@ -850,7 +755,7 @@ private fun ActionButtonPreview_Light() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ActionButtonPreview_Dark() {
+private fun ActionButtonPreview_DarkTheme() {
     TangemTheme(isDark = true) {
         ActionButtonSample()
     }
