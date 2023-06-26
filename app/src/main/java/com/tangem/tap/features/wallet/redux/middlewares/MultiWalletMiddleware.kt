@@ -9,7 +9,7 @@ import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -114,7 +114,8 @@ class MultiWalletMiddleware {
                 )
             }
             .doOnSuccess { updatedUserWallet ->
-                store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                store.dispatchWithMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                store.dispatchWithMain(GlobalAction.SaveScanResponse(updatedUserWallet.scanResponse))
                 store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
             }
     }
