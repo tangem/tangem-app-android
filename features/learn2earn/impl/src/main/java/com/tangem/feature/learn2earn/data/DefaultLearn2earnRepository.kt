@@ -5,7 +5,7 @@ import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
-import com.tangem.feature.learn2earn.data.api.UsedCardsPreferenceStorage
+import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -15,38 +15,32 @@ import timber.log.Timber
  */
 internal class DefaultLearn2earnRepository(
     private val preferencesStorage: Learn2earnPreferenceStorage,
-    private val usedCardsPreferenceStorage: UsedCardsPreferenceStorage,
-    private val moshi: Moshi,
     private val api: PromotionApi,
     private val dispatchers: AppCoroutineDispatcherProvider,
+    moshi: Moshi,
 ) : Learn2earnRepository {
 
     private val promotionInfoAdapter = moshi.adapter(PromotionInfoResponse::class.java)
+    private val userInfoAdapter = moshi.adapter(PromoUserData::class.java)
 
-    override fun isHadActivatedCards(): Boolean {
-        return usedCardsPreferenceStorage.isHadActivatedCards()
+    private var userData: PromoUserData = restoreUserData()
+
+    override fun getUserData(): PromoUserData {
+        return userData
     }
 
-    override fun getPromoCode(): String? {
-        return preferencesStorage.promoCode
-    }
-
-    override fun savePromoCode(code: String) {
-        preferencesStorage.promoCode = code
+    override fun updateUserData(userData: PromoUserData) {
+        this.userData = userData
+        saveUserData(userData)
     }
 
     override fun getProgramName(): String {
         return PROGRAM_NAME
     }
 
-    override fun isAlreadyReceivedAward(): Boolean {
-        return preferencesStorage.alreadyReceivedAward
-    }
-
     override suspend fun getPromotionInfo(): Result<PromotionInfoResponse> {
         return withContext(dispatchers.io) {
             val info = restorePromotionInfo()
-
             if (info?.status == PromotionInfoResponse.Status.FINISHED) {
                 Result.success(info)
             } else {
@@ -68,9 +62,9 @@ internal class DefaultLearn2earnRepository(
         }
     }
 
-    override suspend fun requestAward(walletId: String): AwardResponse {
+    override suspend fun requestAward(walletId: String, address: String): AwardResponse {
         return withContext(dispatchers.io) {
-            api.requestAward(AwardRequestBody(walletId, getProgramName()))
+            api.requestAward(AwardRequestBody(walletId, address, getProgramName()))
         }
     }
 
@@ -103,6 +97,31 @@ internal class DefaultLearn2earnRepository(
             Timber.e(ex)
         }
     }
+
+    private fun restoreUserData(): PromoUserData {
+        return try {
+            preferencesStorage.userData?.let { userInfoAdapter.fromJson(it) }
+                ?: createNewUser().apply { saveUserData(this) }
+        } catch (ex: Exception) {
+            Timber.e(ex)
+            createNewUser().apply { saveUserData(this) }
+        }
+    }
+
+    private fun saveUserData(userData: PromoUserData) {
+        try {
+            preferencesStorage.userData = userInfoAdapter.toJson(userData)
+        } catch (ex: Exception) {
+            Timber.e(ex)
+            preferencesStorage.userData = null
+        }
+    }
+
+    private fun createNewUser(): PromoUserData = PromoUserData(
+        promoCode = null,
+        isRegisteredInPromotion = false,
+        alreadyReceivedAward = false,
+    )
 
     private companion object {
         const val PROGRAM_NAME: String = "1inch"
