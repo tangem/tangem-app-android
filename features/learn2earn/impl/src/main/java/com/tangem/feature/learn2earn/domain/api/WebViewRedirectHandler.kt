@@ -4,7 +4,7 @@ import android.net.Uri
 
 /**
  * Handler that helps determine what actions to take inside the WebView of the Learn2earnWebViewActivity after
- * a redirect has been processedWebViewRedirectHandler
+ * a redirect has been processed by WebViewRedirectHandler
  *
 [REDACTED_AUTHOR]
  */
