@@ -4,14 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -27,11 +20,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SelectorButton
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW16
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.domain.model.TotalFiatBalance
@@ -42,7 +31,8 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Currency
+import java.util.Locale
 
 internal class TotalBalanceCard @JvmOverloads constructor(
     context: Context,
@@ -125,7 +115,7 @@ private fun TotalBalanceCardContent(state: TotalBalanceCardState, modifier: Modi
                 -> LoadedAmount(
                     amount = buildAmountString(
                         amount = state.amount,
-                        fiatCurrencySymbol = state.fiatCurrency.symbol,
+                        fiatCurrency = state.fiatCurrency,
                     ),
                 )
             }
@@ -228,30 +218,45 @@ private fun LoadedAmount(amount: AnnotatedString, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun buildAmountString(amount: BigDecimal?, fiatCurrencySymbol: String): AnnotatedString {
+private fun buildAmountString(amount: BigDecimal?, fiatCurrency: FiatCurrency): AnnotatedString {
     if (amount == null) return AnnotatedString(text = UNKNOWN_AMOUNT_SIGN)
 
-    val formatter = NumberFormat.getInstance(Locale.getDefault()) as? DecimalFormat
-        ?: return AnnotatedString("${amount.toPlainString()} $fiatCurrencySymbol")
-    val decimalFormat = formatter.apply {
-        maximumFractionDigits = 2
-        minimumFractionDigits = 2
-        isGroupingUsed = true
-        this.roundingMode = RoundingMode.HALF_UP
+    val locale = Locale.getDefault()
+    val fractionDigits = 2
+    val formatter = NumberFormat.getCurrencyInstance(locale) as? DecimalFormat
+        ?: return AnnotatedString("${amount.toPlainString()} ${fiatCurrency.symbol}")
+
+    val currencyToShow = "${fiatCurrency.symbol} "
+    val scaledAmount = Currency.getInstance(fiatCurrency.code)?.let { currency ->
+        formatter.currency = currency
+        formatter.maximumFractionDigits = fractionDigits
+        formatter.minimumFractionDigits = fractionDigits
+        formatter.isGroupingUsed = true
+        formatter.roundingMode = RoundingMode.HALF_UP
+        formatter.format(amount).replace(currency.symbol, currencyToShow)
+    } ?: formatter.format(amount)
+
+    val integer = scaledAmount.substringBefore(formatter.decimalFormatSymbols.decimalSeparator)
+    var reminder = scaledAmount.substringAfter(formatter.decimalFormatSymbols.decimalSeparator)
+
+    // if locale formatted currency at the end, remember it and place out of AnnotatedString
+    val currency = if (reminder.endsWith(currencyToShow)) {
+        reminder = reminder.dropLast(currencyToShow.length)
+        currencyToShow
+    } else {
+        ""
     }
-    val scaledAmount = decimalFormat.format(amount)
-    val integer = scaledAmount.substringBefore(decimalFormat.decimalFormatSymbols.decimalSeparator)
-    val reminder = scaledAmount.substringAfter(decimalFormat.decimalFormatSymbols.decimalSeparator)
 
     return buildAnnotatedString {
         append(integer)
-        append(decimalFormat.decimalFormatSymbols.decimalSeparator)
+        append(formatter.decimalFormatSymbols.decimalSeparator)
         append(
             AnnotatedString(
-                text = "$reminder $fiatCurrencySymbol",
+                text = reminder,
                 spanStyle = TangemTheme.typography.h3.toSpanStyle(),
             ),
         )
+        append(currency) // it is not empty if was placed at the end after locale formatting
     }
 }
 
