@@ -146,6 +146,6 @@ private fun OneInchStoriesContentPreview_Dark() {
 private fun makePreviewState(): MainScreenState = MainScreenState(
     isVisible = true,
     onClick = {},
-    description = MainScreenState.Description.Learn("0"),
+    description = MainScreenState.Description.Learn(0, "0"),
     showProgress = false,
 )
