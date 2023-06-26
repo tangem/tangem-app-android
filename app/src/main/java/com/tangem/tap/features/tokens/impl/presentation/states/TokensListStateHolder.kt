@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.states
 
+import androidx.compose.runtime.Immutable
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
  *
 [REDACTED_AUTHOR]
  */
+@Immutable
 internal sealed interface TokensListStateHolder {
 
     /** Toolbar state */
