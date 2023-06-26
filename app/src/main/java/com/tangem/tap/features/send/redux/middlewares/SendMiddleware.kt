@@ -6,7 +6,7 @@ import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
-import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactionExtras
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
@@ -168,9 +168,7 @@ private fun sendTransaction(
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
     transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
-    transactionExtras.xrpDestinationTag?.tag?.let {
-        txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it))
-    }
+    transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionExtras(it)) }
     transactionExtras.cosmosMemoState?.memo?.let { txData = txData.copy(extras = CosmosTransactionExtras(it)) }
     transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
 
@@ -250,17 +248,10 @@ private fun sendTransaction(
                         Analytics.send(
                             Basic.TransactionSent(
                                 sentFrom = AnalyticsParam.TxSentFrom.Sell,
-                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                                memoType = getMemoType(transactionExtras),
                             ),
                         )
-                        Analytics.send(
-                            Token.Send.SelectedCurrency(
-                                currency = when (mainCurrencyType) {
-                                    MainCurrencyType.FIAT -> CurrencyType.AppCurrency
-                                    MainCurrencyType.CRYPTO -> CurrencyType.AppCurrency
-                                },
-                            ),
-                        )
+                        Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
                         dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
                         Analytics.send(
@@ -270,9 +261,10 @@ private fun sendTransaction(
                                     token = amountToSend.currencySymbol,
                                     feeType = feeType.convertToAnalyticsFeeType(),
                                 ),
-                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                                memoType = getMemoType(transactionExtras),
                             ),
                         )
+                        Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
                         dispatch(NavigationAction.PopBackTo())
                     }
                     scope.launch(Dispatchers.IO) {
@@ -334,6 +326,25 @@ private fun sendTransaction(
             }
         }
     }
+}
+
+private fun getMemoType(transactionExtras: TransactionExtrasState): MemoType {
+    return when {
+        transactionExtras.isEmpty() -> MemoType.Empty
+        transactionExtras.isNull() -> MemoType.Null
+        else -> MemoType.Full
+    }
+}
+
+private fun Analytics.sendSelectedCurrencyEvent(mainCurrencyType: MainCurrencyType) {
+    send(
+        Token.Send.SelectedCurrency(
+            currency = when (mainCurrencyType) {
+                MainCurrencyType.FIAT -> CurrencyType.AppCurrency
+                MainCurrencyType.CRYPTO -> CurrencyType.Token
+            },
+        ),
+    )
 }
 
 private fun updateFeedbackManagerInfo(
