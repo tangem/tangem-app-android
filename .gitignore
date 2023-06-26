@@ -2,6 +2,7 @@
 
 # Built application files
 /build
+/buildSrc
 
 # Local configuration file (sdk path, etc)
 local.properties
