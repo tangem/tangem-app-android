@@ -46,6 +46,8 @@
     <string name="chat_button_title">Чат</string>
     <string name="common_accept">Принять</string>
     <string name="common_add">Добавить</string>
+    <string name="common_apply">Применить</string>
+    <string name="common_approval">Одобрение</string>
     <string name="common_attention">Внимание</string>
     <string name="common_balance">Баланс: %s</string>
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
@@ -73,7 +75,9 @@
     <string name="common_start">Начать</string>
     <string name="common_submit">Отправить</string>
     <string name="common_success">Успешно</string>
+    <string name="common_swap">Обмен</string>
     <string name="common_terms_and_conditions">условия участия</string>
+    <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
     <string name="common_yes">Да</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
@@ -255,6 +259,9 @@
     <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
     <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
     <string name="onboarding_wallet_info_title_third">Код доступа</string>
+    <string name="organize_tokens_group">Группировка</string>
+    <string name="organize_tokens_sort_by_balance">По балансу</string>
+    <string name="organize_tokens_title">Сортировка токенов</string>
     <string name="referral_button_participate">Участвовать</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
@@ -382,7 +389,6 @@
     <string name="swapping_permission_unlimited">Безлимитно</string>
     <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
     <string name="swapping_success_view_title">В процессе</string>
-    <string name="swapping_swap">Обмен</string>
     <string name="swapping_swap_action">Обменять</string>
     <string name="swapping_swap_of_to">Обмен %s на</string>
     <string name="swapping_tangem_fee_disclaimer">Котировки включают дополнительную комиссию Tangem в размере %s. Это помогает нам предоставлять первоклассный продукт.</string>
