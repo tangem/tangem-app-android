@@ -339,7 +339,7 @@
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Other payment methods</string>
-    <string name="shop_sold_out_description_prefix">Due to the high volume of orders we are receiving, Shipping and Local Delivery orders may be delayed.</string>
+    <string name="shop_sold_out_description">Due to the high volume of orders we are receiving shipping may be delayed up to 5 weeks depending on your location</string>
     <string name="shop_total">Total</string>
     <string name="solana_rent_warning">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
@@ -455,6 +455,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">Can\'t send transaction. Not enough funds.</string>
     <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session. Please, try again later.</string>
     <string name="wallet_connect_error_timeout">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Session request contains unsupported blockchains for WalletConnect connection. Unsupported blockchains:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_paste_from_clipboard">Paste from clipboard</string>
