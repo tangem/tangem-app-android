@@ -19,6 +19,7 @@ import javax.inject.Inject
  */
 class AppStateHolder @Inject constructor() {
 
+    @Deprecated("Use scan response from selected user wallet")
     var scanResponse: ScanResponse? = null
     var walletState: WalletState? = null
     var userTokensRepository: UserTokensRepository? = null
