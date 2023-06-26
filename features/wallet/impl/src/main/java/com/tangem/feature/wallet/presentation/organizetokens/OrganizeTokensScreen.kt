@@ -34,10 +34,11 @@ import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkG
 import com.tangem.feature.wallet.presentation.common.component.DraggableTokenItem
 
 @Composable
-internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder) {
+internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Modifier = Modifier) {
     val tokensListState = rememberLazyListState()
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(state.header, tokensListState)
         },

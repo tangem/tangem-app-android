@@ -173,5 +173,6 @@ fun Blockchain.isSupportedInApp(): Boolean {
 }
 
 private val excludedBlockchains = listOf(
+    Blockchain.Ducatus,
     Blockchain.Unknown,
 )
