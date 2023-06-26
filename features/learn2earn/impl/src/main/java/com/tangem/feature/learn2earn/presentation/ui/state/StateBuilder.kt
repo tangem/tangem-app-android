@@ -13,6 +13,7 @@ internal fun Learn2earnState.Companion.init(uiActions: UiActions): Learn2earnSta
             isVisible = false,
             onClick = uiActions.buttonMainClick,
             description = MainScreenState.Description.Learn(0, "0"),
+            logoState = MainScreenState.LogoState.Idle,
             showProgress = false,
         ),
     )
@@ -42,7 +43,7 @@ internal fun Learn2earnState.updateGetBonusVisibility(isVisible: Boolean): Learn
     }
 }
 
-internal fun Learn2earnState.changeGetBounsDescription(description: MainScreenState.Description,): Learn2earnState {
+internal fun Learn2earnState.changeGetBounsDescription(description: MainScreenState.Description): Learn2earnState {
     return if (mainScreenState.description == description) {
         this
     } else {
@@ -86,7 +87,11 @@ internal fun Learn2earnState.updateProgress(showProgress: Boolean): Learn2earnSt
         copy(
             mainScreenState = mainScreenState.copy(
                 showProgress = showProgress,
-                logoAlphaValue = if (showProgress) 0.2f else 1f,
+                logoState = if (showProgress) {
+                    MainScreenState.LogoState.InProgress
+                } else {
+                    MainScreenState.LogoState.Idle
+                },
             ),
         )
     }
