@@ -24,9 +24,8 @@ import com.tangem.feature.learn2earn.presentation.ui.component.GradientCircle
 /**
 [REDACTED_AUTHOR]
  */
-// TODO: 1inch: make function as internal after adding feature interface
 @Composable
-fun StoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
+fun Learn2earnStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         ContentBackground(
             modifier = Modifier
@@ -111,7 +110,7 @@ private fun OneInchStoriesContentPreview_Light() {
     TangemTheme(
         isDark = false,
     ) {
-        StoriesScreen(
+        Learn2earnStoriesScreen(
             onLearnClick = {},
         )
     }
@@ -123,7 +122,7 @@ private fun OneInchStoriesContentPreview_Dark() {
     TangemTheme(
         isDark = true,
     ) {
-        StoriesScreen(
+        Learn2earnStoriesScreen(
             onLearnClick = {},
         )
     }
