@@ -1,24 +1,34 @@
 package com.tangem.feature.learn2earn.domain.api
 
 import android.net.Uri
-import com.tangem.feature.learn2earn.domain.models.RedirectConsequences
 
 /**
 [REDACTED_AUTHOR]
  */
-interface Learn2earnInteractor {
+interface Learn2earnInteractor : WebViewRedirectHandler {
+
+    var webViewResultHandler: WebViewResultHandler?
+
+    fun setupDependencies(authCredentials: String?, countryCodeProvider: () -> String)
 
     suspend fun init()
 
+    fun isUserHadPromoCode(): Boolean
+
     fun isNeedToShowViewOnStoriesScreen(): Boolean
 
-    suspend fun isNeedToShowViewOnWalletScreen(walletId: String): Boolean
+    suspend fun isNeedToShowViewOnMainScreen(): Boolean
 
-    fun getBasicAuthHeaders(): Map<String, String>
+    fun isUserRegisteredInPromotion(): Boolean
 
-    fun buildUriForStories(): Uri
+    fun getAwardAmount(): String
 
-    fun buildUriForMainPage(walletId: String, cardId: String, cardPubKey: String): Uri
+    @Throws(IllegalArgumentException::class)
+    suspend fun requestAward(): Result<Unit>
 
-    fun handleWebViewRedirect(uri: Uri): RedirectConsequences
+    fun buildUriForNewUser(): Uri
+
+    fun buildUriForOldUser(): Uri
+
+    fun getBasicAuthHeaders(): ArrayList<String>
 }
