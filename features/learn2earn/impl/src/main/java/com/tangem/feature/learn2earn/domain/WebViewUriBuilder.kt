@@ -23,7 +23,7 @@ internal class WebViewUriBuilder(
         return builder.build()
     }
 
-    fun buildUriForOlgUser(): Uri {
+    fun buildUriForOldUser(): Uri {
         val builder = makeWebViewUriBuilder()
             .appendQueryParameter("type", QUERY_EXISTED_CARD)
 
