@@ -17,6 +17,7 @@ import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
@@ -97,12 +98,12 @@ class WalletMiddleware {
                                 Timber.e("Unable to create wallet, no user wallet selected")
                                 return@launch
                             }
+                            val updatedScanResponse = selectedUserWallet.scanResponse.copy(
+                                card = result.data,
+                            )
+                            store.dispatchWithMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                             userWalletsListManager.update(selectedUserWallet.walletId) { userWallet ->
-                                userWallet.copy(
-                                    scanResponse = userWallet.scanResponse.copy(
-                                        card = result.data,
-                                    ),
-                                )
+                                userWallet.copy(scanResponse = updatedScanResponse)
                             }
                         }
                         is CompletionResult.Failure -> Unit
