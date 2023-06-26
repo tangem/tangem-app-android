@@ -21,7 +21,7 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     fun isUserRegisteredInPromotion(): Boolean
 
-    fun getAwardAmount(): String
+    fun getAwardAmount(): Pair<Int, String>
 
     @Throws(IllegalArgumentException::class)
     suspend fun requestAward(): Result<Unit>
