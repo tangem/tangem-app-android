@@ -3,6 +3,7 @@ package com.tangem.feature.learn2earn.domain
 import android.net.Uri
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
+import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.feature.learn2earn.domain.models.CardType
 import com.tangem.feature.learn2earn.domain.models.Promotion
@@ -23,7 +24,7 @@ class DefaultLearn2earnInteractor(
     private val webViewUriBuilder = WebViewUriBuilder(
         basicAuthProvider = basicAuthProvider,
         userCountryCodeProvider = userCountryCodeProvider,
-        promoCodeProvider = { repository.getPromoCode() },
+        promoCodeProvider = { repository.getUserData().promoCode },
         promoNameProvider = { repository.getProgramName() },
     )
 
@@ -71,7 +72,14 @@ class DefaultLearn2earnInteractor(
         }
 
         return if (webViewUriBuilder.isPromoCodeRedirect(uri)) {
-            webViewUriBuilder.extractPromoCode(uri)?.let { repository.savePromoCode(it) }
+            webViewUriBuilder.extractPromoCode(uri)?.let { code ->
+                updateUserData {
+                    it.copy(
+                        promoCode = code,
+                        isRegisteredInPromotion = true,
+                    )
+                }
+            }
             RedirectConsequences.NOTHING
         } else {
             RedirectConsequences.PROCEED
@@ -80,7 +88,7 @@ class DefaultLearn2earnInteractor(
 
     private fun promotionIsActive(): Boolean {
         val isActive = when {
-            repository.isAlreadyReceivedAward() -> false
+            repository.getUserData().alreadyReceivedAward -> false
             promotion.isError() -> false
             else -> promotion.getInfo().status == PromotionInfoResponse.Status.ACTIVE
         }
@@ -117,5 +125,11 @@ class DefaultLearn2earnInteractor(
                     )
                 },
             )
+    }
+
+    private fun updateUserData(updateBlock: (PromoUserData) -> PromoUserData): PromoUserData {
+        return updateBlock(repository.getUserData()).apply {
+            repository.updateUserData(this)
+        }
     }
 }
