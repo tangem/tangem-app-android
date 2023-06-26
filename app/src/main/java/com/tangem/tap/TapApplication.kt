@@ -3,6 +3,7 @@ package com.tangem.tap
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.compose.ui.text.intl.Locale
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.Log
@@ -245,6 +246,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
         initFeedbackManager(this, preferencesStorage, foregroundActivityObserver, store)
+        learn2earnSetupAdditionalDependencies(config)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -305,6 +307,13 @@ class TapApplication : Application(), ImageLoaderFactory {
             chatManager = ChatManager(preferencesStorage, foregroundActivityObserver, store),
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
+    }
+
+    private fun learn2earnSetupAdditionalDependencies(config: Config) {
+        learn2ernInteractor.setupDependencies(
+            authCredentials = config.tangemComAuthorization,
+            countryCodeProvider = { store.state.globalState.userCountryCode ?: Locale.current.language },
+        )
     }
 
     private fun initWarningMessagesManager() {
