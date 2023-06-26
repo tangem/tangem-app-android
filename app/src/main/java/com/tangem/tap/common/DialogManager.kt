@@ -100,12 +100,19 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     preparedData = state.dialog.data,
                     context = context,
                 )
-            is WalletConnectDialog.UnsupportedNetwork ->
+            is WalletConnectDialog.UnsupportedNetwork -> {
+                val warning = if (state.dialog.networks.isNullOrEmpty()) {
+                    context.getString(R.string.wallet_connect_scanner_error_unsupported_network)
+                } else {
+                    context.getString(R.string.wallet_connect_error_unsupported_blockchains) +
+                        state.dialog.networks
+                }
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
-                    messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
+                    message = warning,
                     context = context,
                 )
+            }
             is WalletConnectDialog.SessionProposalDialog -> {
                 SessionProposalDialog.create(
                     sessionProposal = state.dialog.sessionProposal,
