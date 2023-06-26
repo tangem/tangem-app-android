@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.transition.TransitionInflater
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 import com.tangem.feature.referral.router.ReferralRouter
 import com.tangem.feature.referral.ui.ReferralScreen
@@ -28,13 +30,17 @@ class ReferralFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
         viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
         viewModel.onScreenOpened()
         return ComposeView(inflater.context).apply {
             isTransitionGroup = true
             setContent {
-                ReferralScreen(stateHolder = viewModel.uiState)
+                TangemTheme {
+                    ReferralScreen(
+                        modifier = Modifier.systemBarsPadding(),
+                        stateHolder = viewModel.uiState,
+                    )
+                }
             }
         }
     }
