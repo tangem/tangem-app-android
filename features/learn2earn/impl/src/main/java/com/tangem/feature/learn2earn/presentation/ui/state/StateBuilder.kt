@@ -79,7 +79,6 @@ internal fun Learn2earnState.hideDialog(): Learn2earnState {
     }
 }
 
-@Suppress("MagicNumber")
 internal fun Learn2earnState.updateProgress(showProgress: Boolean): Learn2earnState {
     return if (mainScreenState.showProgress == showProgress) {
         this
