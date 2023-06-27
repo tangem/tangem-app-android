@@ -390,7 +390,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
             chipGroupAddressType.show()
             chipGroupAddressType.fitChipsByGroupWidth()
 
-            val checkedId = MultipleAddressUiHelper.typeToId(selectedAddress.type)
+            val checkedId = MultipleAddressUiHelper.typeToId(selectedAddress.type, currency.blockchain)
             if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
             chipGroupAddressType.setOnCheckedChangeListener { _, checkedId ->
