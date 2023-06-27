@@ -9,6 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -32,15 +34,21 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.detectReorder
 
 private const val DOTS = "•••"
+val TOKEN_ITEM_HEIGHT: Dp
+    @Composable
+    @ReadOnlyComposable
+    get() = TangemTheme.dimens.size68
 
 @Composable
 internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
     when (state) {
         is TokenItemState.Content -> ContentTokenItem(state, modifier)
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
-        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier)
+        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
         is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
     }
 }
@@ -65,7 +73,11 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
 }
 
 @Composable
-internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modifier = Modifier) {
+internal fun DraggableTokenItem(
+    state: TokenItemState.Draggable,
+    modifier: Modifier = Modifier,
+    reorderableTokenListState: ReorderableLazyListState? = null,
+) {
     InternalTokenItem(
         modifier = modifier,
         name = state.name,
@@ -75,12 +87,25 @@ internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modif
         amount = state.fiatAmount,
         hasPending = false,
         options = { ref ->
-            Icon(
-                modifier = Modifier.constrainAsOptionsItem(scope = this, ref),
-                painter = painterResource(id = R.drawable.ic_drag_24),
-                tint = TangemTheme.colors.icon.informative,
-                contentDescription = null,
-            )
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size32)
+                    .constrainAsOptionsItem(scope = this, ref)
+                    .let {
+                        if (reorderableTokenListState != null) {
+                            it.detectReorder(reorderableTokenListState)
+                        } else {
+                            it
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_drag_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
     )
 }
@@ -199,7 +224,7 @@ private fun InternalTokenItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
+                    horizontal = TangemTheme.dimens.spacing14,
                     vertical = TangemTheme.dimens.spacing4,
                 ),
         ) {
@@ -251,7 +276,7 @@ private fun BaseSurface(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        modifier = modifier.defaultMinSize(minHeight = TangemTheme.dimens.size68),
+        modifier = modifier.defaultMinSize(minHeight = TOKEN_ITEM_HEIGHT),
         color = TangemTheme.colors.background.primary,
         onClick = onClick ?: {},
         enabled = onClick != null,
