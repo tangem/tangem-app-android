@@ -220,7 +220,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TangemTheme {
-                    Learn2earnMainPageScreen(learn2earnViewModel)
+                    Learn2earnMainPageScreen(learn2earnViewModel.uiState)
                 }
             }
         }
