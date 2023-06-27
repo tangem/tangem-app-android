@@ -8,6 +8,7 @@ import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.feature.learn2earn.domain.api.*
 import com.tangem.feature.learn2earn.domain.models.Promotion
 import com.tangem.feature.learn2earn.domain.models.PromotionError
+import com.tangem.feature.learn2earn.domain.models.getData
 import com.tangem.feature.learn2earn.domain.models.toDomainError
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
@@ -57,14 +58,10 @@ class DefaultLearn2earnInteractor(
     }
 
     override fun getAwardAmount(): Int {
-        val userInfo = repository.getUserData()
-        val promotionInfo = promotion.getPromotionInfo()
+        val promoCode = repository.getUserData().promoCode
+        val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
 
-        return if (userInfo.promoCode == null) {
-            promotionInfo.awardForOldCard
-        } else {
-            promotionInfo.awardForNewCard
-        }.toInt()
+        return awardAmount
     }
 
     @Throws(IllegalArgumentException::class)
@@ -194,10 +191,14 @@ class DefaultLearn2earnInteractor(
     }
 
     private fun promotionIsActive(): Boolean {
+        val userData = repository.getUserData()
         val isActive = when {
-            repository.getUserData().isAlreadyReceivedAward -> false
+            userData.isAlreadyReceivedAward -> false
             promotion.isError() -> false
-            else -> promotion.getPromotionInfo().status == PromotionInfoResponse.Status.ACTIVE
+            else -> {
+                val data = promotion.getPromotionInfo().getData(userData.promoCode)
+                data.status == PromotionInfoResponse.Status.ACTIVE
+            }
         }
 
         return isActive
@@ -211,9 +212,8 @@ class DefaultLearn2earnInteractor(
                     if (responseError == null) {
                         Promotion(
                             info = Promotion.PromotionInfo(
-                                status = response.status!!,
-                                awardForNewCard = response.awardForNewCard!!,
-                                awardForOldCard = response.awardForOldCard!!,
+                                newCard = response.newCard!!,
+                                oldCard = response.oldCard!!,
                                 awardPaymentToken = response.awardPaymentToken!!,
                             ),
                             error = null,

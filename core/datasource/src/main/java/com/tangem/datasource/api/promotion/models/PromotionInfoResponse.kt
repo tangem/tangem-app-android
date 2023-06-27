@@ -6,12 +6,16 @@ import com.squareup.moshi.Json
 [REDACTED_AUTHOR]
  */
 data class PromotionInfoResponse(
-    @Json(name = "status") val status: Status?,
-    @Json(name = "awardForNewCard") val awardForNewCard: Double?,
-    @Json(name = "awardForOldCard") val awardForOldCard: Double?,
+    @Json(name = "newCard") val newCard: Data?,
+    @Json(name = "oldCard") val oldCard: Data?,
     @Json(name = "awardPaymentToken") val awardPaymentToken: TokenData?,
     @Json(name = "error") override val error: Error? = null,
 ) : AbstractPromotionResponse() {
+
+    data class Data(
+        @Json(name = "status") val status: Status,
+        @Json(name = "award") val award: Double,
+    )
 
     enum class Status(val value: String) {
         @Json(name = "pending")
