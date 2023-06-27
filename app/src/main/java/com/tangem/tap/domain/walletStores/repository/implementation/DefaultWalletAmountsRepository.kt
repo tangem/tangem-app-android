@@ -7,16 +7,11 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result.Failure
 import com.tangem.blockchain.extensions.Result.Success
-import com.tangem.common.CompletionResult
-import com.tangem.common.catching
+import com.tangem.common.*
 import com.tangem.common.core.TangemError
-import com.tangem.common.flatMap
-import com.tangem.common.flatMapOnFailure
-import com.tangem.common.fold
-import com.tangem.common.map
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
@@ -25,15 +20,7 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStore
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStores
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithAmounts
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithDemoAmounts
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithError
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithFiatRates
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithMissedDerivation
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithRent
-import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithUnreachable
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.*
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import com.tangem.tap.features.demo.DemoHelper
@@ -45,13 +32,8 @@ import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import kotlin.time.Duration
@@ -200,37 +182,40 @@ internal class DefaultWalletAmountsRepository(
         walletStore: WalletStoreModel,
         walletManager: WalletManager?,
     ): CompletionResult<Unit> {
-        val hasMissedDerivations = with(walletStore) {
+        val isDerivationMissed = with(walletStore) {
             derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath.rawPath)
         }
 
         return when {
-            hasMissedDerivations -> {
+            isDerivationMissed -> {
                 updateWalletStoreWithMissedDerivation(walletStore)
             }
             walletManager == null -> {
                 updateWalletStoreWithUnreachable(walletStore)
             }
             else -> {
-                updateWalletManager(scanResponse, walletManager).map {
-                    updateWalletManagerInStorage(
-                        userWalletId,
-                        walletManager,
-                    )
-                }.flatMap {
-                    updateWalletStoreWithAmounts(
-                        walletStore = walletStore,
-                        updatedWallet = walletManager.wallet,
-                        // FIXME: move DemoHelper to Demo core module maybe
-                        isDemo = DemoHelper.isDemoCardId(scanResponse.card.cardId),
-                    )
-                }.flatMap { fetchWalletStoreRentIfNeeded(walletStore, walletManager) }.flatMapOnFailure { error ->
-                    updateWalletStoreWithError(
-                        walletStore = walletStore,
-                        wallet = walletManager.wallet,
-                        error = error,
-                    )
-                }
+                updateWalletManager(scanResponse, walletManager)
+                    .map {
+                        updateWalletManagerInStorage(userWalletId, walletManager)
+                    }
+                    .flatMap {
+                        updateWalletStoreWithAmounts(
+                            walletStore = walletStore,
+                            updatedWallet = walletManager.wallet,
+                            // FIXME: move DemoHelper to Demo core module maybe
+                            isDemo = DemoHelper.isDemoCardId(scanResponse.card.cardId),
+                        )
+                    }
+                    .flatMap {
+                        fetchWalletStoreRentIfNeeded(walletStore, walletManager)
+                    }
+                    .flatMapOnFailure { error ->
+                        updateWalletStoreWithError(
+                            walletStore = walletStore,
+                            wallet = walletManager.wallet,
+                            error = error,
+                        )
+                    }
             }
         }
     }
