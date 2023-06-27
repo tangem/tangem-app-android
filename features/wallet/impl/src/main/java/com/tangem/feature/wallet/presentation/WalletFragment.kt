@@ -6,8 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
+import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -32,8 +33,6 @@ internal class WalletFragment : Fragment() {
         }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
-
         with(TransitionInflater.from(requireContext())) {
             enterTransition = inflateTransition(R.transition.slide_right)
             exitTransition = inflateTransition(R.transition.fade)
@@ -41,8 +40,15 @@ internal class WalletFragment : Fragment() {
 
         return ComposeView(inflater.context).apply {
             setContent {
-                isTransitionGroup = true
-                _walletRouter.Initialize()
+                TangemTheme {
+                    val systemBarsColor = TangemTheme.colors.background.secondary
+                    SystemBarsEffect {
+                        setSystemBarsColor(systemBarsColor)
+                    }
+
+                    isTransitionGroup = true
+                    _walletRouter.Initialize()
+                }
             }
         }
     }
