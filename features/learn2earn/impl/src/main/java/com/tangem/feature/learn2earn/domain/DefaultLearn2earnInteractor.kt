@@ -103,7 +103,7 @@ class DefaultLearn2earnInteractor(
             val address = getWalletAddressForAward(awardCurrency)
             val awardResponse = repository.requestAward(walletId, address)
             if (awardResponse.status == true) {
-                updateUserData { it.copy(alreadyReceivedAward = true) }
+                updateUserData { it.copy(isAlreadyReceivedAward = true) }
                 null
             } else {
                 awardResponse.error
@@ -123,7 +123,7 @@ class DefaultLearn2earnInteractor(
             val address = getWalletAddressForAward(awardCurrency)
             val awardWithCodeResponse = repository.requestAwardByCode(walletId, address, promoCode)
             if (awardWithCodeResponse.status == true) {
-                updateUserData { it.copy(alreadyReceivedAward = true) }
+                updateUserData { it.copy(isAlreadyReceivedAward = true) }
                 null
             } else {
                 awardWithCodeResponse.error
@@ -159,7 +159,7 @@ class DefaultLearn2earnInteractor(
             is PromotionError.CardAlreadyHasAward, is PromotionError.WalletAlreadyHasAward,
             is PromotionError.CodeWasAlreadyUsed,
             -> {
-                updateUserData { it.copy(alreadyReceivedAward = true) }
+                updateUserData { it.copy(isAlreadyReceivedAward = true) }
             }
             else -> Unit
         }
@@ -202,7 +202,7 @@ class DefaultLearn2earnInteractor(
 
     private fun promotionIsActive(): Boolean {
         val isActive = when {
-            repository.getUserData().alreadyReceivedAward -> false
+            repository.getUserData().isAlreadyReceivedAward -> false
             promotion.isError() -> false
             else -> promotion.getPromotionInfo().status == PromotionInfoResponse.Status.ACTIVE
         }
