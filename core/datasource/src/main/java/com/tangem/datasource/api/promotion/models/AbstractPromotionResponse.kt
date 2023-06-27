@@ -13,6 +13,6 @@ abstract class AbstractPromotionResponse {
 
     data class Error(
         @Json(name = "code") val code: Int,
-        @Json(name = "description") val message: String,
+        @Json(name = "message") val message: String,
     )
 }
