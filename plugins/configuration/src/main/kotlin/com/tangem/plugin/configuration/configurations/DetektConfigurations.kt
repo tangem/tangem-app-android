@@ -22,7 +22,7 @@ private fun DetektExtension.configure(project: Project) {
     ignoreFailures = false
     autoCorrect = true
     buildUponDefaultConfig = true
-    config.setFrom(project.rootProject.files("plugins/configuration/detekt.yml"))
+    config.setFrom(project.rootProject.files("tangem-android-tools/detekt-config.yml"))
 }
 
 private fun Project.configureDetektPlugins() {
