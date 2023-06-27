@@ -12,7 +12,7 @@ internal fun Learn2earnState.Companion.init(uiActions: UiActions): Learn2earnSta
         mainScreenState = MainScreenState(
             isVisible = false,
             onClick = uiActions.buttonMainClick,
-            description = MainScreenState.Description.Learn(0, "0"),
+            description = MainScreenState.Description.Learn(0),
             logoState = MainScreenState.LogoState.Idle,
             showProgress = false,
         ),
