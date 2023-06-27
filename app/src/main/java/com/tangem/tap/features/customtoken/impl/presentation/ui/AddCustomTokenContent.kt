@@ -8,11 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -33,11 +29,12 @@ import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCu
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun AddCustomTokenContent(state: AddCustomTokenStateHolder.Content) {
+internal fun AddCustomTokenContent(state: AddCustomTokenStateHolder.Content, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackButtonClick)
 
     var floatingButtonHeight by remember { mutableStateOf(0.dp) }
     Scaffold(
+        modifier = modifier,
         topBar = {
             AddCustomTokenToolbar(
                 title = state.toolbar.title,
