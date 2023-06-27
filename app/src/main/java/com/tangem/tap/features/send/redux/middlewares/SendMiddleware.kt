@@ -6,7 +6,7 @@ import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
-import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactionExtras
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
@@ -56,18 +56,17 @@ class SendMiddleware {
         { nextDispatch ->
             { action ->
                 when (action) {
-                    is AddressPayIdActionUi -> AddressPayIdMiddleware().handle(action, appState(), dispatch)
+                    is AddressActionUi -> AddressMiddleware().handle(action, appState(), dispatch)
                     is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
                     is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                     is SendActionUi.SendAmountToRecipient ->
                         verifyAndSendTransaction(action, appState(), dispatch)
-                    is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
                     is SendAction.Warnings.Update -> updateWarnings(dispatch)
                     is SendActionUi.CheckIfTransactionDataWasProvided -> {
                         val transactionData = appState()?.sendState?.externalTransactionData
                         if (transactionData != null) {
                             store.dispatchOnMain(
-                                AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
+                                AddressVerifyAction.AddressVerification.SetWalletAddress(
                                     address = transactionData.destinationAddress,
                                     isUserInput = false,
                                 ),
@@ -97,7 +96,7 @@ private fun verifyAndSendTransaction(
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return
     val card = appState.globalState.scanResponse?.card ?: return
-    val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
+    val destinationAddress = sendState.addressState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val fee = sendState.feeState.currentFee ?: return
 
@@ -169,9 +168,7 @@ private fun sendTransaction(
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
     transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
-    transactionExtras.xrpDestinationTag?.tag?.let {
-        txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it))
-    }
+    transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionExtras(it)) }
     transactionExtras.cosmosMemoState?.memo?.let { txData = txData.copy(extras = CosmosTransactionExtras(it)) }
     transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
 
@@ -251,17 +248,10 @@ private fun sendTransaction(
                         Analytics.send(
                             Basic.TransactionSent(
                                 sentFrom = AnalyticsParam.TxSentFrom.Sell,
-                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                                memoType = getMemoType(transactionExtras),
                             ),
                         )
-                        Analytics.send(
-                            Token.Send.SelectedCurrency(
-                                currency = when (mainCurrencyType) {
-                                    MainCurrencyType.FIAT -> CurrencyType.AppCurrency
-                                    MainCurrencyType.CRYPTO -> CurrencyType.AppCurrency
-                                },
-                            ),
-                        )
+                        Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
                         dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
                         Analytics.send(
@@ -271,9 +261,10 @@ private fun sendTransaction(
                                     token = amountToSend.currencySymbol,
                                     feeType = feeType.convertToAnalyticsFeeType(),
                                 ),
-                                memoType = if (txData.extras != null) MemoType.Full else MemoType.Empty,
+                                memoType = getMemoType(transactionExtras),
                             ),
                         )
+                        Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
                         dispatch(NavigationAction.PopBackTo())
                     }
                     scope.launch(Dispatchers.IO) {
@@ -337,6 +328,25 @@ private fun sendTransaction(
     }
 }
 
+private fun getMemoType(transactionExtras: TransactionExtrasState): MemoType {
+    return when {
+        transactionExtras.isEmpty() -> MemoType.Empty
+        transactionExtras.isNull() -> MemoType.Null
+        else -> MemoType.Full
+    }
+}
+
+private fun Analytics.sendSelectedCurrencyEvent(mainCurrencyType: MainCurrencyType) {
+    send(
+        Token.Send.SelectedCurrency(
+            currency = when (mainCurrencyType) {
+                MainCurrencyType.FIAT -> CurrencyType.AppCurrency
+                MainCurrencyType.CRYPTO -> CurrencyType.Token
+            },
+        ),
+    )
+}
+
 private fun updateFeedbackManagerInfo(
     walletManager: WalletManager,
     amountToSend: Amount,
@@ -379,12 +389,6 @@ fun createValidateTransactionError(
         }
     }
     return TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
-}
-
-private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -> Unit) {
-    val isSendingToPayIdEnabled =
-        appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
-    dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
 }
 
 private fun updateWarnings(dispatch: (Action) -> Unit) {
