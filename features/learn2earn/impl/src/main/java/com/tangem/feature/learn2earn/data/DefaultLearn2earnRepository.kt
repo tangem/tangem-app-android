@@ -120,7 +120,7 @@ internal class DefaultLearn2earnRepository(
     private fun createNewUser(): PromoUserData = PromoUserData(
         promoCode = null,
         isRegisteredInPromotion = false,
-        alreadyReceivedAward = false,
+        isAlreadyReceivedAward = false,
     )
 
     private companion object {
