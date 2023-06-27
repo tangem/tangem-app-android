@@ -246,7 +246,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
         initFeedbackManager(this, preferencesStorage, foregroundActivityObserver, store)
-        learn2earnSetupAdditionalDependencies(config)
+        setupLearn2earnAdditionalDependencies(config)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -309,7 +309,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 
-    private fun learn2earnSetupAdditionalDependencies(config: Config) {
+    private fun setupLearn2earnAdditionalDependencies(config: Config) {
         learn2ernInteractor.setupDependencies(
             authCredentials = config.tangemComAuthorization,
             countryCodeProvider = { store.state.globalState.userCountryCode ?: Locale.current.language },
