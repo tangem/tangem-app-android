@@ -54,7 +54,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
 
         Column {
             AppBarWithBackButton(
-                text = stringResource(R.string.swapping_swap),
+                text = stringResource(R.string.common_swap),
                 onBackClick = state.onBackClicked,
                 iconRes = R.drawable.ic_close_24,
             )
@@ -348,7 +348,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_swap),
+                text = stringResource(id = R.string.common_swap),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.swapButton.enabled,
                 showProgress = state.swapButton.loading,
@@ -384,7 +384,7 @@ private val receiveCard = SwapCardData(
     coinId = "",
 )
 
-val stateSelectable = SelectableItemsState<TxFee>(
+val stateSelectable = SelectableItemsState(
     selectedItem = Item(
         0,
         TextReference.Str("Balance"),
