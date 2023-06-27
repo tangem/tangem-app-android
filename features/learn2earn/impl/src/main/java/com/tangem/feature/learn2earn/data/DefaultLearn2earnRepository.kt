@@ -21,7 +21,7 @@ internal class DefaultLearn2earnRepository(
 ) : Learn2earnRepository {
 
     private val promotionInfoAdapter = moshi.adapter(PromotionInfoResponse::class.java)
-    private val userInfoAdapter = moshi.adapter(PromoUserData::class.java)
+    private val userDataAdapter = moshi.adapter(PromoUserData::class.java)
 
     private var userData: PromoUserData = restoreUserData()
 
@@ -100,7 +100,7 @@ internal class DefaultLearn2earnRepository(
 
     private fun restoreUserData(): PromoUserData {
         return try {
-            preferencesStorage.userData?.let { userInfoAdapter.fromJson(it) }
+            preferencesStorage.userData?.let { userDataAdapter.fromJson(it) }
                 ?: createEmptyUserData().apply { saveUserData(this) }
         } catch (ex: Exception) {
             Timber.e(ex)
@@ -110,7 +110,7 @@ internal class DefaultLearn2earnRepository(
 
     private fun saveUserData(userData: PromoUserData) {
         try {
-            preferencesStorage.userData = userInfoAdapter.toJson(userData)
+            preferencesStorage.userData = userDataAdapter.toJson(userData)
         } catch (ex: Exception) {
             Timber.e(ex)
         }
