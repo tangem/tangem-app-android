@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
@@ -19,8 +20,23 @@ import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import java.math.BigDecimal
 
 internal fun WalletDataModel.mainButton(blockchainAmount: BigDecimal): WalletMainButton = WalletMainButton.SendButton(
-    enabled = !isEmptyAmount && status.pendingTransactions.isEmpty() && !blockchainAmount.isZero(),
+    enabled = !isEmptyAmount &&
+        hasPendingTransactions() &&
+        !blockchainAmount.isZero(),
 )
+
+internal fun WalletDataModel.hasPendingTransactions(): Boolean {
+    // for now check pending ongoing only just for BTC, later test and add other utxo networks
+    val isBitcoinBlockchain =
+        currency.blockchain == Blockchain.Bitcoin || currency.blockchain == Blockchain.BitcoinTestnet
+    if (currency.isBlockchain() && isBitcoinBlockchain) {
+        val outgoingTransactions = status.pendingTransactions.filter {
+            it.type == PendingTransactionType.Outgoing
+        }
+        return outgoingTransactions.isEmpty()
+    }
+    return status.pendingTransactions.isEmpty()
+}
 
 internal fun WalletDataModel.getFormattedAmount(): String {
     return status.amount.toFormattedCurrencyString(
@@ -82,7 +98,7 @@ internal fun WalletDataModel.getAvailableActions(
 
 internal fun WalletDataModel.shouldShowMultipleAddress(): Boolean {
     val listOfAddresses = walletAddresses?.list.orEmpty()
-    return listOfAddresses.size > 1
+    return listOfAddresses.size > 1 && currency.blockchain != Blockchain.BitcoinCash
 }
 
 internal fun WalletDataModel.assembleWarnings(
