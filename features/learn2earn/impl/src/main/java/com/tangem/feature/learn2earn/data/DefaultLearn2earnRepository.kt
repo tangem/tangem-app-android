@@ -113,7 +113,6 @@ internal class DefaultLearn2earnRepository(
             preferencesStorage.userData = userInfoAdapter.toJson(userData)
         } catch (ex: Exception) {
             Timber.e(ex)
-            preferencesStorage.userData = null
         }
     }
 
