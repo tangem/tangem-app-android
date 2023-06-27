@@ -36,9 +36,9 @@ data class MainScreenState(
 
     sealed class Description(val title: TextReference, val subtitle: TextReference) {
 
-        class Learn(count: Int, award: String) : Description(
+        class Learn(award: Int) : Description(
             TextReference.Res(R.string.main_learn_title),
-            TextReference.PluralRes(R.plurals.main_learn_subtitle, count, WrappedList(listOf(award))),
+            TextReference.PluralRes(R.plurals.main_learn_subtitle, award, WrappedList(listOf(award))),
         )
 
         object GetBonus : Description(
