@@ -101,10 +101,10 @@ internal class DefaultLearn2earnRepository(
     private fun restoreUserData(): PromoUserData {
         return try {
             preferencesStorage.userData?.let { userInfoAdapter.fromJson(it) }
-                ?: createNewUser().apply { saveUserData(this) }
+                ?: createEmptyUserData().apply { saveUserData(this) }
         } catch (ex: Exception) {
             Timber.e(ex)
-            createNewUser().apply { saveUserData(this) }
+            createEmptyUserData().apply { saveUserData(this) }
         }
     }
 
@@ -116,7 +116,7 @@ internal class DefaultLearn2earnRepository(
         }
     }
 
-    private fun createNewUser(): PromoUserData = PromoUserData(
+    private fun createEmptyUserData(): PromoUserData = PromoUserData(
         promoCode = null,
         isRegisteredInPromotion = false,
         isAlreadyReceivedAward = false,
