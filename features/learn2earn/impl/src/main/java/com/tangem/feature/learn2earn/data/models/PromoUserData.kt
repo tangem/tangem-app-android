@@ -6,5 +6,5 @@ package com.tangem.feature.learn2earn.data.models
 data class PromoUserData(
     val promoCode: String?,
     val isRegisteredInPromotion: Boolean,
-    val alreadyReceivedAward: Boolean,
+    val isAlreadyReceivedAward: Boolean,
 )
