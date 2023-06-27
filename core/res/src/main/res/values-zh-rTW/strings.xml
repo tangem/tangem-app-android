@@ -56,6 +56,7 @@
     <string name="common_done">完成</string>
     <string name="common_enable">允許</string>
     <string name="common_enabled">啟用</string>
+    <string name="common_exchange">交易</string>
     <string name="common_no">否</string>
     <string name="common_ok">OK</string>
     <string name="common_origin_card">主卡片</string>
@@ -69,7 +70,9 @@
     <string name="common_start">開始</string>
     <string name="common_submit">提交</string>
     <string name="common_success">成功</string>
+    <string name="common_swap">交換</string>
     <string name="common_terms_and_conditions">條款和條件</string>
+    <string name="common_transactions">交易</string>
     <string name="common_understand">我了解</string>
     <string name="common_yes">是</string>
     <string name="contract_address_copied_message">已複製代幣地址</string>
@@ -298,11 +301,7 @@
     <string name="search_tokens_title">搜尋代幣</string>
     <string name="send_amount_label">數量</string>
     <string name="send_destination_hint_address">地址</string>
-    <string name="send_destination_hint_address_payid">地址或 PayString</string>
     <string name="send_error_address_same_as_wallet">地址與錢包地址相同</string>
-    <string name="send_error_payid_not_registered">PayString 未註冊</string>
-    <string name="send_error_payid_request_failed">PayString 請求失敗</string>
-    <string name="send_error_payid_unsupported_by_blockchain">PayString 不被區塊鏈支持</string>
     <string name="send_extras_error_invalid_destination_tag">標籤無效。它不會被添加到交易中</string>
     <string name="send_extras_error_invalid_memo">Memo無效。 它不會被添加到交易中</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
@@ -367,7 +366,6 @@
     <string name="swapping_permission_subheader">要繼續，您需要允許 1inch 智能合約使用您的 %s</string>
     <string name="swapping_success_view_explorer_button_title">在瀏覽器中查看</string>
     <string name="swapping_success_view_title">進行中</string>
-    <string name="swapping_swap">交換</string>
     <string name="swapping_swap_action">交易</string>
     <string name="swapping_swap_of_to">交易 %s 至</string>
     <string name="swapping_tangem_fee_disclaimer">此外，報價包括%s的 Tangem 費用。這有助於我們提供一流的產品</string>
@@ -392,7 +390,6 @@
     </plurals>
     <string name="transaction_history_empty_transactions">您還沒有任何交易</string>
     <string name="transaction_history_error_failed_to_load">無法加載交易</string>
-    <string name="transaction_history_title">交易</string>
     <string name="transaction_history_tx_in_progress">進行中…</string>
     <string name="twin_error_same_card">您掃描了同一張卡片。要創建雙錢包，您需要掃描編號為 %d 的卡</string>
     <string name="twins_onboarding_description_format">這一個是你手裡拿著的，另一個是編號為 %s 的，這兩張卡都可以用來從這個錢包中提取資金</string>
@@ -414,7 +411,6 @@
     <string name="user_wallet_list_single_header">單一幣種</string>
     <string name="user_wallet_list_title">我的錢包</string>
     <string name="user_wallet_list_unlock_all">用 %s 解鎖全部</string>
-    <string name="wallet_address_button_create_payid">創建支付字符串</string>
     <string name="wallet_address_button_explore">交易記錄</string>
     <string name="wallet_balance_blockchain_unreachable">網路無法使用</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
@@ -436,6 +432,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">無法交易，無足夠資金</string>
     <string name="wallet_connect_error_failed_to_connect">未能建立 WalletConnect 連接。請稍後再試</string>
     <string name="wallet_connect_error_timeout">無法建立 WalletConnect 連接:超時錯誤。請稍後再試</string>
+    <string name="wallet_connect_error_unsupported_blockchains">會話請求包含不支持 WalletConnect 連接的區塊鏈。不支持的區塊鏈：</string>
     <string name="wallet_connect_error_unsupported_dapp">由於技術問題，無法與此 Dapp 建立連接</string>
     <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
     <string name="wallet_connect_paste_from_clipboard">從剪貼板貼上</string>
