@@ -22,22 +22,15 @@ object MultipleAddressUiHelper {
         }
     }
 
-    fun idToType(id: Int, blockchain: Blockchain?): AddressType? {
-        return when (id) {
-            R.id.chip_default -> {
-                when (blockchain) {
-                    in blockchainsSupportingSplit -> AddressType.Default
+    fun idToType(id: Int, blockchain: Blockchain): AddressType? {
+        return when (blockchain) {
+            in blockchainsSupportingSplit -> {
+                when(id) {
+                    R.id.chip_default -> AddressType.Default
+                    R.id.chip_legacy -> AddressType.Legacy
                     else -> null
                 }
             }
-
-            R.id.chip_legacy -> {
-                when (blockchain) {
-                    in blockchainsSupportingSplit -> AddressType.Legacy
-                    else -> null
-                }
-            }
-
             else -> null
         }
     }
@@ -49,4 +42,5 @@ object MultipleAddressUiHelper {
         Blockchain.BitcoinCash,
         Blockchain.CardanoShelley
     )
+
 }
