@@ -46,6 +46,8 @@
     <string name="chat_button_title">Чат</string>
     <string name="common_accept">Принять</string>
     <string name="common_add">Добавить</string>
+    <string name="common_apply">Применить</string>
+    <string name="common_approval">Одобрение</string>
     <string name="common_attention">Внимание</string>
     <string name="common_balance">Баланс: %s</string>
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
@@ -60,6 +62,7 @@
     <string name="common_done">Готово</string>
     <string name="common_enable">Включить</string>
     <string name="common_enabled">Включено</string>
+    <string name="common_explorer">Обозреватель</string>
     <string name="common_no">Нет</string>
     <string name="common_ok">Ок</string>
     <string name="common_origin_card">Основная карта</string>
@@ -73,7 +76,10 @@
     <string name="common_start">Начать</string>
     <string name="common_submit">Отправить</string>
     <string name="common_success">Успешно</string>
+    <string name="common_swap">Обмен</string>
     <string name="common_terms_and_conditions">условия участия</string>
+    <string name="common_transactions">Транзакции</string>
+    <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
     <string name="common_yes">Да</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
@@ -255,6 +261,9 @@
     <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
     <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
     <string name="onboarding_wallet_info_title_third">Код доступа</string>
+    <string name="organize_tokens_group">Группировка</string>
+    <string name="organize_tokens_sort_by_balance">По балансу</string>
+    <string name="organize_tokens_title">Сортировка токенов</string>
     <string name="referral_button_participate">Участвовать</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
@@ -308,11 +317,7 @@
     <string name="search_tokens_title">Поиск валют</string>
     <string name="send_amount_label">Сумма</string>
     <string name="send_destination_hint_address">Адрес</string>
-    <string name="send_destination_hint_address_payid">Адрес или PayString</string>
     <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
-    <string name="send_error_payid_not_registered">PayString не зарегистрирован</string>
-    <string name="send_error_payid_request_failed">Не удалось выполнить запрос PayString</string>
-    <string name="send_error_payid_unsupported_by_blockchain">PayString не поддерживается блокчейном</string>
     <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
     <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
@@ -336,7 +341,7 @@
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_other_payment_methods">Другие способы оплаты</string>
-    <string name="shop_sold_out_description_prefix">Из-за большого количества заказов, которые мы получаем, cроки доставки могут быть увеличены.</string>
+    <string name="shop_sold_out_description">Из-за высокого количества заказов, которые мы получаем, доставка может быть задержана на срок до 5 недель в зависимости от вашего местоположения</string>
     <string name="shop_total">Итого</string>
     <string name="solana_rent_warning">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
@@ -382,7 +387,6 @@
     <string name="swapping_permission_unlimited">Безлимитно</string>
     <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
     <string name="swapping_success_view_title">В процессе</string>
-    <string name="swapping_swap">Обмен</string>
     <string name="swapping_swap_action">Обменять</string>
     <string name="swapping_swap_of_to">Обмен %s на</string>
     <string name="swapping_tangem_fee_disclaimer">Котировки включают дополнительную комиссию Tangem в размере %s. Это помогает нам предоставлять первоклассный продукт.</string>
@@ -411,9 +415,11 @@
         <item quantity="many">%d токенов</item>
         <item quantity="other">%d токенов</item>
     </plurals>
+    <string name="transaction_history_contract_address">контракт: %s</string>
     <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
-    <string name="transaction_history_error_failed_to_load">Не удалось загрузить транзакции</string>
-    <string name="transaction_history_title">Транзакции</string>
+    <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
+    <string name="transaction_history_not_supported_description">История транзакций в настоящее время не поддерживается для этого блокчейна. Но не волнуйтесь, мы работаем над этим! А пока вы можете проверить ее в обозревателе.</string>
+    <string name="transaction_history_transaction_from_address">от: %s</string>
     <string name="transaction_history_tx_in_progress">В процессе…</string>
     <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
     <string name="twins_onboarding_description_format">Это карта, которую вы держите в руках. У парной карты номер %s.\n\nОбе карты можно использовать для вывода средств из этого кошелька.</string>
@@ -435,7 +441,6 @@
     <string name="user_wallet_list_single_header">Одновалютные</string>
     <string name="user_wallet_list_title">Мои кошельки</string>
     <string name="user_wallet_list_unlock_all">Разблокировать все с %s</string>
-    <string name="wallet_address_button_create_payid">Создать PayString</string>
     <string name="wallet_address_button_explore">История транзакций</string>
     <string name="wallet_balance_blockchain_unreachable">Сеть недоступна</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
@@ -457,6 +462,7 @@
     <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
     <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect. Пожалуйста, повторите попытку позже.</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сессию WalletConnect за отведённое время. Пожалуйста, повторите попытку позже.</string>
+    <string name="wallet_connect_error_unsupported_blockchains">Запрос на подключение через WalletConnect содержит неподдерживаемые блокчеины. Неподдерживаемые блокчеины:\n</string>
     <string name="wallet_connect_error_unsupported_dapp">Cоединение с этим Dapp сервисом не может быть установлено из-за его технической реализации.</string>
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_paste_from_clipboard">Вставить из буфера обмена</string>
