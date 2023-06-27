@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.transition.TransitionInflater
@@ -25,8 +26,6 @@ import dagger.hilt.android.AndroidEntryPoint
 internal class TokensListFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
-
         with(TransitionInflater.from(requireContext())) {
             enterTransition = inflateTransition(R.transition.fade)
             exitTransition = inflateTransition(R.transition.fade)
@@ -41,7 +40,10 @@ internal class TokensListFragment : Fragment() {
                 }
 
                 TangemTheme {
-                    TokensListScreen(stateHolder = viewModel.uiState)
+                    TokensListScreen(
+                        modifier = Modifier.systemBarsPadding(),
+                        stateHolder = viewModel.uiState,
+                    )
                 }
             }
         }
