@@ -1,7 +1,6 @@
 package com.tangem.datasource.utils
 
 import com.tangem.lib.auth.AuthProvider
-import com.tangem.lib.auth.LazyAuthProvider
 
 /**
  * Presentation of request header
@@ -25,8 +24,8 @@ sealed class LazyRequestHeader(vararg pairs: Pair<String, () -> String>) {
 
     val values: List<Pair<String, () -> String>> = pairs.toList()
 
-    class LazyAuthenticationHeader(authProvider: LazyAuthProvider) : LazyRequestHeader(
-        "card_id" to authProvider.getCardIdProvider(),
-        "card_public_key" to authProvider.getCardPublicKeyProvider(),
+    class LazyAuthenticationHeader(authProvider: AuthProvider) : LazyRequestHeader(
+        "card_id" to { authProvider.getCardId() },
+        "card_public_key" to { authProvider.getCardPublicKey() },
     )
 }
