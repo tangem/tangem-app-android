@@ -6,6 +6,7 @@ import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
+import com.tangem.feature.learn2earn.data.models.getData
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -40,9 +41,10 @@ internal class DefaultLearn2earnRepository(
 
     override suspend fun getPromotionInfo(): Result<PromotionInfoResponse> {
         return withContext(dispatchers.io) {
-            val info = restorePromotionInfo()
-            if (info?.status == PromotionInfoResponse.Status.FINISHED) {
-                Result.success(info)
+            val promotionInfo = restorePromotionInfo()
+            val data = promotionInfo?.getData(userData.promoCode)
+            if (data?.status == PromotionInfoResponse.Status.FINISHED) {
+                Result.success(promotionInfo)
             } else {
                 runCatching { api.getPromotionInfo(getProgramName()) }
                     .fold(
