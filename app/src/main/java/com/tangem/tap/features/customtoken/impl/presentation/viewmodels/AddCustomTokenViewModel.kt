@@ -41,6 +41,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -207,7 +208,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
-                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
+                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true &&
+                        blockchain != Blockchain.Cardano
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -270,7 +272,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                 ),
             ) + Blockchain.values()
-                .filter { blockchain -> blockchain.isSupportedInApp() && !blockchain.isTestnet() }
+                .filter { blockchain ->
+                    blockchain.isSupportedInApp() && !blockchain.isTestnet() && blockchain != Blockchain.Cardano
+                }
                 .sortedBy(Blockchain::fullName)
                 .map(::createDerivationPathSelectorAdditionalItem)
         }
@@ -510,7 +514,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val sameAddress = contractAddress == wrappedCurrency.token.contractAddress
                 val sameBlockchain =
                     Blockchain.fromNetworkId(networkSelectorValue.toNetworkId()) == wrappedCurrency.blockchain
-                val isSameDerivationPath = getDerivationPath()?.rawPath == wrappedCurrency.derivationPath
+                val isSameDerivationPath = getDerivationPath().isSameDerivationPath(wrappedCurrency.derivationPath)
                 sameId && sameAddress && sameBlockchain && isSameDerivationPath
             }
     }
@@ -522,8 +526,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
             .filterIsInstance<Currency.Blockchain>()
             .any {
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                networkSelectorValue == it.blockchain && getDerivationPath()?.rawPath == it.derivationPath
+                networkSelectorValue == it.blockchain &&
+                    getDerivationPath().isSameDerivationPath(it.derivationPath)
             }
+    }
+
+    private fun DerivationPath?.isSameDerivationPath(rawDerivationPath: String?): Boolean {
+        return this == rawDerivationPath?.let { DerivationPath(it) }
     }
 
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
@@ -605,7 +614,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
 
         fun onBackButtonClick() {
-            featureRouter.popBackStack()
+            viewModelScope.launch(dispatchers.main) {
+                // need delay before close, cause crashed in compose PopUpMenu as
+                delay(timeMillis = 100)
+                featureRouter.popBackStack()
+            }
         }
 
         fun onContactAddressValueChange(enteredValue: String) {
