@@ -61,17 +61,15 @@ class DefaultLearn2earnInteractor(
         return repository.getUserData().isRegisteredInPromotion
     }
 
-    override fun getAwardAmount(): Pair<Int, String> {
+    override fun getAwardAmount(): Int {
         val userInfo = repository.getUserData()
         val promotionInfo = promotion.getPromotionInfo()
 
-        val awardAmount = if (userInfo.promoCode == null) {
+        return if (userInfo.promoCode == null) {
             promotionInfo.awardForOldCard
         } else {
             promotionInfo.awardForNewCard
         }.toInt()
-
-        return awardAmount to awardAmount.toString()
     }
 
     @Throws(IllegalArgumentException::class)
