@@ -9,8 +9,8 @@ import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLazyHeaders
 import com.tangem.datasource.utils.allowLogging
+import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.BuildConfig
-import com.tangem.lib.auth.LazyAuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -63,7 +63,7 @@ class NetworkModule {
     @Provides
     @Singleton
     @PromotionOneInch
-    fun providePromotionOneInchApi(authProvider: LazyAuthProvider, @NetworkMoshi moshi: Moshi): PromotionApi {
+    fun providePromotionOneInchApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): PromotionApi {
         val okClient = OkHttpClient.Builder()
             .addLazyHeaders(
                 LazyRequestHeader.LazyAuthenticationHeader(authProvider),
