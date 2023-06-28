@@ -15,9 +15,12 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.learn2earn.impl.R
@@ -57,7 +60,7 @@ internal fun GetBonusView(state: MainScreenState, modifier: Modifier = Modifier)
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(size = TangemTheme.dimens.size28),
-                        color = Color.White,
+                        color = TangemColorPalette.White,
                         strokeWidth = TangemTheme.dimens.size2,
                     )
                 }
@@ -125,28 +128,46 @@ private fun ContentBackground(shape: Shape) {
 
 @Preview
 @Composable
-private fun OneInchStoriesContentPreview_Light() {
+private fun GetBonusViewPreview_Light(@PreviewParameter(GetBonusViewPreviewProvider::class) state: MainScreenState) {
     TangemTheme(
         isDark = false,
     ) {
-        GetBonusView(makePreviewState())
+        GetBonusView(state)
     }
 }
 
 @Preview
 @Composable
-private fun OneInchStoriesContentPreview_Dark() {
+private fun GetBonusViewPreview_Dark(@PreviewParameter(GetBonusViewPreviewProvider::class) state: MainScreenState) {
     TangemTheme(
         isDark = true,
     ) {
-        GetBonusView(makePreviewState())
+        GetBonusView(state)
     }
 }
 
-private fun makePreviewState(): MainScreenState = MainScreenState(
-    isVisible = true,
-    onClick = {},
-    description = MainScreenState.Description.Learn(0),
-    logoState = MainScreenState.LogoState.Idle,
-    showProgress = false,
+private class GetBonusViewPreviewProvider : CollectionPreviewParameterProvider<MainScreenState>(
+    collection = listOf(
+        MainScreenState(
+            isVisible = true,
+            onClick = {},
+            description = MainScreenState.Description.Learn(1),
+            logoState = MainScreenState.LogoState.Idle,
+            showProgress = false,
+        ),
+        MainScreenState(
+            isVisible = true,
+            onClick = {},
+            description = MainScreenState.Description.Learn(2),
+            logoState = MainScreenState.LogoState.InProgress,
+            showProgress = true,
+        ),
+        MainScreenState(
+            isVisible = true,
+            onClick = {},
+            description = MainScreenState.Description.GetBonus,
+            logoState = MainScreenState.LogoState.Idle,
+            showProgress = false,
+        ),
+    ),
 )
