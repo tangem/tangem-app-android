@@ -3,6 +3,7 @@ package com.tangem.feature.learn2earn.domain.di
 import android.content.Context
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.domain.DefaultLearn2earnInteractor
+import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import com.tangem.feature.learn2earn.presentation.Learn2earnRouter
@@ -29,6 +30,7 @@ class Learn2earnDomainModule {
     @Singleton
     fun provideInteractor(
         repository: Learn2earnRepository,
+        dependencyProvider: Learn2earnDependencyProvider,
         userWalletManager: UserWalletManager,
         derivationManager: DerivationManager,
     ): Learn2earnInteractor {
@@ -36,6 +38,7 @@ class Learn2earnDomainModule {
             repository = repository,
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
+            dependencyProvider = dependencyProvider,
         )
     }
 
