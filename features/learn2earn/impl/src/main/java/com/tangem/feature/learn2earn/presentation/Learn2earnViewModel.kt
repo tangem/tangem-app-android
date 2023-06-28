@@ -30,8 +30,8 @@ class Learn2earnViewModel @Inject constructor(
     var uiState: Learn2earnState by mutableStateOf(
         Learn2earnState.init(
             uiActions = Learn2earnUiActions(
-                buttonStoryClick = ::buttonStoryClick,
-                buttonMainClick = ::buttonMainClick,
+                onButtonStoryClick = ::onButtonStoryClick,
+                onButtonMainClick = ::onButtonMainClick,
             ),
         ),
     )
@@ -58,11 +58,11 @@ class Learn2earnViewModel @Inject constructor(
         }
     }
 
-    private fun buttonStoryClick() {
+    private fun onButtonStoryClick() {
         router.openWebView(interactor.buildUriForNewUser(), interactor.getBasicAuthHeaders())
     }
 
-    private fun buttonMainClick() {
+    private fun onButtonMainClick() {
         if (!interactor.isUserHadPromoCode() && !interactor.isUserRegisteredInPromotion()) {
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
