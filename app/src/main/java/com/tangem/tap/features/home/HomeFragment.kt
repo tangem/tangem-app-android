@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
@@ -33,13 +33,13 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
 
-    private val learn2earnViewModel by viewModels<Learn2earnViewModel>()
+    private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store.dispatch(HomeAction.OnCreate)
         store.dispatch(HomeAction.Init)
-        if (learn2earnViewModel.isNeedToShowViewOnStoriesScreen()) {
+        if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
             store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
             // re init homeState after inserting learn2earn story
             homeState = mutableStateOf(store.state.homeState)
@@ -90,10 +90,8 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     @Composable
     private fun ScreenContent() {
         StoriesScreen(
-            homeState,
-            onLearn2earnClick = {
-                learn2earnViewModel.onStoriesClick()
-            },
+            homeState = homeState,
+            onLearn2earnClick = learn2earnViewModel.uiState.storyScreenState.onClick,
             onScanButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
                 store.dispatch(HomeAction.ReadCard())

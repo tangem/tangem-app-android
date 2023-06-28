@@ -138,7 +138,9 @@
             android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity"
             android:theme="@style/AppTheme" />
 
-        <activity android:name="com.tangem.feature.learn2earn.presentation.Learn2earnWebViewActivity"/>
+        <activity
+            android:name="com.tangem.feature.learn2earn.presentation.webView.Learn2earnWebViewActivity"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
