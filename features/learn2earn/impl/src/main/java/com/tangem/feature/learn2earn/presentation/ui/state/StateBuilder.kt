@@ -7,11 +7,11 @@ internal fun Learn2earnState.Companion.init(uiActions: Learn2earnUiActions): Lea
     return Learn2earnState(
         storyScreenState = StoryScreenState(
             isVisible = false,
-            onClick = uiActions.buttonStoryClick,
+            onClick = uiActions.onButtonStoryClick,
         ),
         mainScreenState = MainScreenState(
             isVisible = false,
-            onClick = uiActions.buttonMainClick,
+            onClick = uiActions.onButtonMainClick,
             description = MainScreenState.Description.Learn(0),
             logoState = MainScreenState.LogoState.Idle,
             showProgress = false,
