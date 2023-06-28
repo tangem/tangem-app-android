@@ -3,7 +3,9 @@ package com.tangem.feature.learn2earn.domain
 import com.tangem.utils.converter.TwoWayConverter
 
 /**
- * A converter that helps prepare a list of headers to put in an intent and retrieve them later.
+ * A converter that helps prepare a list of headers to be added to the Bundle.
+ * ArrayList is used to prevent cast exceptions when the convert result is placed in a Bundle.
+ * @see Learn2earnRouter#openWebView() putStringArrayListExtra
  *
 [REDACTED_AUTHOR]
  */
