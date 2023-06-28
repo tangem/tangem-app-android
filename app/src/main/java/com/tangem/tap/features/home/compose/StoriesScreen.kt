@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.learn2earn.presentation.ui.StoriesScreen
+import com.tangem.feature.learn2earn.presentation.ui.Learn2earnStoriesScreen
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
@@ -54,8 +54,11 @@ fun StoriesScreen(
         currentStory = state.stories[max(0, currentStep() - 1)]
     }
     val goToNextScreen = {
-        currentStory =
-            if (currentStep() < state.stories.lastIndex) state.stories[currentStep() + 1] else state.firstStory
+        currentStory = if (currentStep() < state.stories.lastIndex) {
+            state.stories[currentStep() + 1]
+        } else {
+            state.firstStory
+        }
     }
 
     val isPressed = remember { mutableStateOf(false) }
@@ -153,7 +156,7 @@ fun StoriesScreen(
                 colorFilter = if (currentStory.isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
             when (currentStory) {
-                Stories.OneInchPromo -> StoriesScreen(onLearn2earnClick)
+                Stories.OneInchPromo -> Learn2earnStoriesScreen(onLearn2earnClick)
                 Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStory.duration) { hideContent.value = it }
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStory.duration)
                 Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStory.duration)
