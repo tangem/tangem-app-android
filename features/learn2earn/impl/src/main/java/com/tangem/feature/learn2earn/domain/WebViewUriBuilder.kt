@@ -1,23 +1,20 @@
 package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
-import com.tangem.feature.learn2earn.domain.models.CardType
 import com.tangem.feature.learn2earn.impl.BuildConfig
-import com.tangem.lib.auth.BasicAuthProvider
 
 /**
 [REDACTED_AUTHOR]
  */
-class WebViewUriBuilder(
-    private val basicAuthProvider: BasicAuthProvider,
+internal class WebViewUriBuilder(
+    private val authCredentialsProvider: () -> String?,
     private val userCountryCodeProvider: () -> String,
     private val promoCodeProvider: () -> String?,
-    private val promoNameProvider: () -> String,
 ) {
 
-    fun buildUriForStories(type: CardType): Uri {
+    fun buildUriForNewUser(): Uri {
         val builder = makeWebViewUriBuilder()
-            .appendQueryParameter("type", type.typeName)
+            .appendQueryParameter("type", QUERY_NEW_CARD)
 
         promoCodeProvider.invoke()?.let {
             builder.appendQueryParameter("code", it)
@@ -26,23 +23,20 @@ class WebViewUriBuilder(
         return builder.build()
     }
 
-    fun buildUriForMainPage(walletId: String, cardId: String, cardPubKey: String): Uri {
+    fun buildUriForOldUser(): Uri {
         val builder = makeWebViewUriBuilder()
-            .appendQueryParameter("type", CardType.EXISTED.typeName)
-            .appendQueryParameter("cardPublicKey", cardPubKey)
-            .appendQueryParameter("cardId", cardId)
-            .appendQueryParameter("walletId", walletId)
-            .appendQueryParameter("programName", promoNameProvider.invoke())
-
-        promoCodeProvider.invoke()?.let {
-            builder.appendQueryParameter("code", it)
-        }
+            .appendQueryParameter("type", QUERY_EXISTED_CARD)
 
         return builder.build()
     }
 
     fun getBasicAuthHeaders(): Map<String, String> {
-        return basicAuthProvider.getCredentials()
+        val credentials = authCredentialsProvider.invoke()
+        return if (credentials == null) {
+            mapOf()
+        } else {
+            mapOf("Authorization" to "Basic $credentials")
+        }
     }
 
     fun isPromoCodeRedirect(uri: Uri): Boolean {
@@ -67,30 +61,34 @@ class WebViewUriBuilder(
 
     private fun makeWebViewUriBuilder(): Uri.Builder {
         val builder = Uri.Builder()
-        builder.scheme("https")
+        builder.scheme(SCHEME)
 
         if (BuildConfig.DEBUG) {
-            builder.authority(DEV_WEB_VIEW_BASE_URL)
+            builder.authority(DEV_BASE_URL)
             builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath("promotion-test")
+            builder.appendPath(DEV_PATH_PROMOTION)
         } else {
-            builder.authority(WEB_VIEW_BASE_URL)
+            builder.authority(BASE_URL)
             builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath("promotion")
+            builder.appendPath(PATH_PROMOTION)
         }
 
         return builder
     }
 
     private companion object {
-        const val WEB_VIEW_BASE_URL = "tangem.com"
+        const val SCHEME = "https"
 
-        const val DEV_WEB_VIEW_BASE_URL = "devweb.tangem.com"
-        const val DEV_WEB_VIEW_BASIC_AUTH = "Basic dGFuZ2VtOnRhbmdlbWRldjc="
-        // TODO: 1inch: replace by invalid auth
-        // const val DEV_WEB_VIEW_BASIC_AUTH = "Basic paste valid value"
+        const val BASE_URL = "tangem.com"
+        const val PATH_PROMOTION = "promotion"
+
+        const val QUERY_NEW_CARD = "new-card"
+        const val QUERY_EXISTED_CARD = "existed-card"
+
+        const val DEV_BASE_URL = "devweb.tangem.com"
+        const val DEV_PATH_PROMOTION = "promotion-test"
 
         const val SUFFIX_CODE_CREATED = "/code-created?code="
-        const val SUFFIX_READY_FOR_AWARD = "/ready-for-exsited-card-award"
+        const val SUFFIX_READY_FOR_AWARD = "/ready-for-existed-card-award"
     }
 }
