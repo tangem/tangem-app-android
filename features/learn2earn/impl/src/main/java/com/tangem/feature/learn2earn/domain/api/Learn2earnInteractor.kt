@@ -9,8 +9,6 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     var webViewResultHandler: WebViewResultHandler?
 
-    fun setupDependencies(authCredentials: String?, countryCodeProvider: () -> String)
-
     suspend fun init()
 
     fun isUserHadPromoCode(): Boolean
