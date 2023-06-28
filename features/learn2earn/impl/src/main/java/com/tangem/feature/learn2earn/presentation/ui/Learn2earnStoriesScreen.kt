@@ -106,7 +106,7 @@ private fun StoryDescription(headerText: String, bodyText: String, modifier: Mod
 
 @Preview
 @Composable
-private fun OneInchStoriesContentPreview_Light() {
+private fun Learn2earnStoriesScreenPreview_Light() {
     TangemTheme(
         isDark = false,
     ) {
@@ -118,7 +118,7 @@ private fun OneInchStoriesContentPreview_Light() {
 
 @Preview
 @Composable
-private fun OneInchStoriesContentPreview_Dark() {
+private fun Learn2earnStoriesScreenPreview_Dark() {
     TangemTheme(
         isDark = true,
     ) {
