@@ -29,7 +29,7 @@ class Learn2earnViewModel @Inject constructor(
 
     var uiState: Learn2earnState by mutableStateOf(
         Learn2earnState.init(
-            uiActions = UiActions(
+            uiActions = Learn2earnUiActions(
                 buttonStoryClick = ::buttonStoryClick,
                 buttonMainClick = ::buttonMainClick,
             ),
