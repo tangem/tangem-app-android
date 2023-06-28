@@ -11,7 +11,7 @@ data class Promotion(
 ) {
 
     @Throws(NullPointerException::class)
-    fun getInfo(): PromotionInfo = info!!
+    fun getPromotionInfo(): PromotionInfo = info!!
 
     fun isError(): Boolean = error != null
 
@@ -19,9 +19,9 @@ data class Promotion(
 
     data class PromotionInfo(
         val status: PromotionInfoResponse.Status,
-        val awardForNewCard: Float,
-        val awardForOldCard: Float,
-        val awardPaymentToken: PromotionInfoResponse.TokenInfo,
+        val awardForNewCard: Double,
+        val awardForOldCard: Double,
+        val awardPaymentToken: PromotionInfoResponse.TokenData,
     ) {
         companion object
     }
