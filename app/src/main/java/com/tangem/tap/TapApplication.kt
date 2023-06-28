@@ -145,7 +145,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
     @Inject
-    lateinit var learn2ernInteractor: Learn2earnInteractor
+    lateinit var learn2earnInteractor: Learn2earnInteractor
 
     override fun onCreate() {
         super.onCreate()
@@ -204,7 +204,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
-            learn2ernInteractor.init()
+            learn2earnInteractor.init()
         }
 
         initTopUpController()
