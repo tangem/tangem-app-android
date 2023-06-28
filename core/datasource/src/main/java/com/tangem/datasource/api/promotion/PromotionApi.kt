@@ -24,6 +24,6 @@ interface PromotionApi {
     @POST("promotion/validate")
     suspend fun validate(@Body request: ValidateRequestBody): ValidateResponse
 
-    @GET("promotion/award")
+    @POST("promotion/award")
     suspend fun requestAward(@Body request: AwardRequestBody): AwardResponse
 }
