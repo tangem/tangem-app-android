@@ -22,7 +22,9 @@ internal class WebViewViewModel @Inject constructor(
     }
 
     fun extractData(intent: Intent): WebViewData {
-        val uriString = intent.getStringExtra(Learn2earnWebViewActivity.EXTRA_WEB_URI)!!
+        val uriString = requireNotNull(intent.getStringExtra(Learn2earnWebViewActivity.EXTRA_WEB_URI)) {
+            "The Intent property EXTRA_WEB_URI is null"
+        }
         val rawHeaders = intent.getStringArrayListExtra(Learn2earnWebViewActivity.EXTRA_WEB_HEADERS) ?: ArrayList()
 
         return WebViewData(
