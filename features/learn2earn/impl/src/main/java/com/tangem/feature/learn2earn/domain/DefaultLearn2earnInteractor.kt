@@ -5,10 +5,7 @@ import com.tangem.datasource.api.promotion.models.AbstractPromotionResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
-import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
-import com.tangem.feature.learn2earn.domain.api.RedirectConsequences
-import com.tangem.feature.learn2earn.domain.api.WebViewResult
-import com.tangem.feature.learn2earn.domain.api.WebViewResultHandler
+import com.tangem.feature.learn2earn.domain.api.*
 import com.tangem.feature.learn2earn.domain.models.Promotion
 import com.tangem.feature.learn2earn.domain.models.PromotionError
 import com.tangem.feature.learn2earn.domain.models.toDomainError
@@ -23,20 +20,18 @@ class DefaultLearn2earnInteractor(
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
+    dependencyProvider: Learn2earnDependencyProvider,
 ) : Learn2earnInteractor {
 
     override var webViewResultHandler: WebViewResultHandler? = null
 
-    private lateinit var webViewUriBuilder: WebViewUriBuilder
     private lateinit var promotion: Promotion
 
-    override fun setupDependencies(authCredentials: String?, countryCodeProvider: () -> String) {
-        webViewUriBuilder = WebViewUriBuilder(
-            authCredentials = authCredentials,
-            userCountryCodeProvider = countryCodeProvider,
-            promoCodeProvider = { repository.getUserData().promoCode },
-        )
-    }
+    private val webViewUriBuilder: WebViewUriBuilder = WebViewUriBuilder(
+        authCredentialsProvider = dependencyProvider.getWebViewAuthCredentialsProvider(),
+        userCountryCodeProvider = dependencyProvider.getUserCountryCodeProvider(),
+        promoCodeProvider = { repository.getUserData().promoCode },
+    )
 
     override suspend fun init() {
         initPromotionInfo()
