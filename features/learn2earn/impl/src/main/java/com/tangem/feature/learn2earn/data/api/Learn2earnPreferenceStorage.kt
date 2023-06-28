@@ -5,9 +5,7 @@ package com.tangem.feature.learn2earn.data.api
  */
 interface Learn2earnPreferenceStorage {
 
-    var promoCode: String?
-
     var promotionInfo: String?
 
-    var alreadyReceivedAward: Boolean
+    var userData: String?
 }
