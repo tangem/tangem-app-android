@@ -13,7 +13,7 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
             val request = chain.request().newBuilder().apply {
                 requestHeaders
                     .flatMap(RequestHeader::values)
-                    .forEach { addHeader(it.first, it.second) }
+                    .forEach { addHeader(it.first, it.second.invoke()) }
             }.build()
 
             chain.proceed(request)
