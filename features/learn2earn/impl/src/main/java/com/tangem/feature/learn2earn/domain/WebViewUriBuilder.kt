@@ -7,7 +7,7 @@ import com.tangem.feature.learn2earn.impl.BuildConfig
 [REDACTED_AUTHOR]
  */
 internal class WebViewUriBuilder(
-    private val authCredentials: String?,
+    private val authCredentialsProvider: () -> String?,
     private val userCountryCodeProvider: () -> String,
     private val promoCodeProvider: () -> String?,
 ) {
@@ -30,10 +30,13 @@ internal class WebViewUriBuilder(
         return builder.build()
     }
 
-    fun getBasicAuthHeaders(): Map<String, String> = if (authCredentials == null) {
-        mapOf()
-    } else {
-        mapOf("Authorization" to "Basic $authCredentials")
+    fun getBasicAuthHeaders(): Map<String, String> {
+        val credentials = authCredentialsProvider.invoke()
+        return if (credentials == null) {
+            mapOf()
+        } else {
+            mapOf("Authorization" to "Basic $credentials")
+        }
     }
 
     fun isPromoCodeRedirect(uri: Uri): Boolean {
