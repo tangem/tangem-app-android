@@ -69,6 +69,6 @@ data class MainScreenState(
 }
 
 class Learn2earnUiActions(
-    val buttonStoryClick: () -> Unit,
-    val buttonMainClick: () -> Unit,
+    val onButtonStoryClick: () -> Unit,
+    val onButtonMainClick: () -> Unit,
 )
