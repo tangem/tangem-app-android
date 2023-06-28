@@ -170,6 +170,14 @@ internal object WalletPreviewData {
         ),
     )
 
+    val manageButtons = persistentListOf(
+        WalletManageButton.Buy(onClick = {}),
+        WalletManageButton.Send(onClick = {}),
+        WalletManageButton.Receive(onClick = {}),
+        WalletManageButton.Exchange(onClick = {}),
+        WalletManageButton.CopyAddress(onClick = {}),
+    )
+
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
@@ -273,5 +281,6 @@ internal object WalletPreviewData {
             WalletNotification.NeedToBackup(onClick = {}),
             WalletNotification.ScanCard(onClick = {}),
         ),
+        buttons = manageButtons,
     )
 }
