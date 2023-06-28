@@ -13,20 +13,6 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
             val request = chain.request().newBuilder().apply {
                 requestHeaders
                     .flatMap(RequestHeader::values)
-                    .forEach { addHeader(it.first, it.second) }
-            }.build()
-
-            chain.proceed(request)
-        },
-    )
-}
-
-internal fun OkHttpClient.Builder.addLazyHeaders(vararg requestHeaders: LazyRequestHeader): OkHttpClient.Builder {
-    return addInterceptor(
-        Interceptor { chain ->
-            val request = chain.request().newBuilder().apply {
-                requestHeaders
-                    .flatMap(LazyRequestHeader::values)
                     .forEach { addHeader(it.first, it.second.invoke()) }
             }.build()
 
