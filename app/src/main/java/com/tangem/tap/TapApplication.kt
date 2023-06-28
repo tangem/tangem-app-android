@@ -3,7 +3,6 @@ package com.tangem.tap
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.compose.ui.text.intl.Locale
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.Log
@@ -146,7 +145,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
     @Inject
-    lateinit var learn2ernInteractor: Learn2earnInteractor
+    lateinit var learn2earnInteractor: Learn2earnInteractor
 
     override fun onCreate() {
         super.onCreate()
@@ -205,7 +204,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
-            learn2ernInteractor.init()
+            learn2earnInteractor.init()
         }
 
         initTopUpController()
@@ -246,7 +245,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
         initFeedbackManager(this, preferencesStorage, foregroundActivityObserver, store)
-        setupLearn2earnAdditionalDependencies(config)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -307,13 +305,6 @@ class TapApplication : Application(), ImageLoaderFactory {
             chatManager = ChatManager(preferencesStorage, foregroundActivityObserver, store),
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
-    }
-
-    private fun setupLearn2earnAdditionalDependencies(config: Config) {
-        learn2ernInteractor.setupDependencies(
-            authCredentials = config.tangemComAuthorization,
-            countryCodeProvider = { store.state.globalState.userCountryCode ?: Locale.current.language },
-        )
     }
 
     private fun initWarningMessagesManager() {
