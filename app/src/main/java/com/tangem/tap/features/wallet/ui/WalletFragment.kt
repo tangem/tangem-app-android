@@ -217,7 +217,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
         binding.composeLearnToEarnContainer.show(true) { binding.llWarnings.beginDelayedTransition() }
         binding.composeLearnToEarnContainer.apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewCompositionStrategy(
+                strategy = ViewCompositionStrategy.DisposeOnLifecycleDestroyed(
+                    lifecycle = this@WalletFragment.lifecycle,
+                ),
+            )
             setContent {
                 TangemTheme {
                     Learn2earnMainPageScreen(learn2earnViewModel.uiState)
