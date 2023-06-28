@@ -4,10 +4,8 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.paymentology.PaymentologyApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.utils.LazyRequestHeader
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
-import com.tangem.datasource.utils.addLazyHeaders
 import com.tangem.datasource.utils.allowLogging
 import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.BuildConfig
@@ -65,8 +63,8 @@ class NetworkModule {
     @PromotionOneInch
     fun providePromotionOneInchApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): PromotionApi {
         val okClient = OkHttpClient.Builder()
-            .addLazyHeaders(
-                LazyRequestHeader.LazyAuthenticationHeader(authProvider),
+            .addHeaders(
+                AuthenticationHeader(authProvider),
             )
             .allowLogging()
             .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
