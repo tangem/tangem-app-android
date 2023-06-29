@@ -11,7 +11,6 @@ data class Config(
     val appsFlyerDevKey: String = "",
     val amplitudeApiKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
-    val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
@@ -19,4 +18,5 @@ data class Config(
     val zendesk: ZendeskConfig? = null,
     val swapReferrerAccount: SwapReferrerAccount? = null,
     val walletConnectProjectId: String = "",
+    val tangemComAuthorization: String? = null,
 )
