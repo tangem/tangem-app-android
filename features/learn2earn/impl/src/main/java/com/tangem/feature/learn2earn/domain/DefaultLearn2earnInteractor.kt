@@ -57,14 +57,10 @@ class DefaultLearn2earnInteractor(
     }
 
     override fun getAwardAmount(): Int {
-        val userInfo = repository.getUserData()
-        val promotionInfo = promotion.getPromotionInfo()
+        val promoCode = repository.getUserData().promoCode
+        val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
 
-        return if (userInfo.promoCode == null) {
-            promotionInfo.awardForOldCard
-        } else {
-            promotionInfo.awardForNewCard
-        }.toInt()
+        return awardAmount
     }
 
     @Throws(IllegalArgumentException::class)
@@ -194,10 +190,14 @@ class DefaultLearn2earnInteractor(
     }
 
     private fun promotionIsActive(): Boolean {
+        val userData = repository.getUserData()
         val isActive = when {
-            repository.getUserData().isAlreadyReceivedAward -> false
+            userData.isAlreadyReceivedAward -> false
             promotion.isError() -> false
-            else -> promotion.getPromotionInfo().status == PromotionInfoResponse.Status.ACTIVE
+            else -> {
+                val data = promotion.getPromotionInfo().getData(userData.promoCode)
+                data.status == PromotionInfoResponse.Status.ACTIVE
+            }
         }
 
         return isActive
@@ -209,12 +209,12 @@ class DefaultLearn2earnInteractor(
                 onSuccess = { response ->
                     val responseError = response.error
                     if (responseError == null) {
+                        val npeMessage = { "Shouldn't be null" }
                         Promotion(
                             info = Promotion.PromotionInfo(
-                                status = response.status!!,
-                                awardForNewCard = response.awardForNewCard!!,
-                                awardForOldCard = response.awardForOldCard!!,
-                                awardPaymentToken = response.awardPaymentToken!!,
+                                newCard = requireNotNull(response.newCard, npeMessage),
+                                oldCard = requireNotNull(response.oldCard, npeMessage),
+                                awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
                             ),
                             error = null,
                         )
@@ -251,5 +251,13 @@ class DefaultLearn2earnInteractor(
         return updateBlock(repository.getUserData()).apply {
             repository.updateUserData(this)
         }
+    }
+}
+
+private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
+    return if (promoCode == null) {
+        newCard
+    } else {
+        oldCard
     }
 }
