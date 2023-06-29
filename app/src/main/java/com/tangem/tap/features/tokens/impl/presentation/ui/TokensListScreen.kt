@@ -25,9 +25,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -155,18 +152,8 @@ private fun DifferentAddressesWarning() {
         contentAlignment = Alignment.Center,
     ) {
         val text = stringResource(id = R.string.alert_manage_tokens_addresses_message)
-        val firstSpaceIndex = text.indexOf(" ")
         Text(
-            text = AnnotatedString(
-                text = text,
-                spanStyles = listOf(
-                    AnnotatedString.Range(
-                        SpanStyle(fontWeight = FontWeight.Bold),
-                        start = 0,
-                        end = firstSpaceIndex,
-                    ),
-                ),
-            ),
+            text = text,
             modifier = Modifier.padding(
                 horizontal = TangemTheme.dimens.spacing16,
                 vertical = TangemTheme.dimens.spacing8,
