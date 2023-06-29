@@ -10,7 +10,6 @@ import com.tangem.wallet.R
 fun Blockchain.getGreyedOutIconRes(): Int {
     return when (this) {
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_no_color
-//        Blockchain.Ducatus -> R.drawable.ic_ducatus
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> R.drawable.ic_bitcoin_no_color
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color
         Blockchain.Litecoin -> R.drawable.ic_litecoin_no_color
