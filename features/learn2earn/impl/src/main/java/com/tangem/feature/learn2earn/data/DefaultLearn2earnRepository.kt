@@ -40,9 +40,10 @@ internal class DefaultLearn2earnRepository(
 
     override suspend fun getPromotionInfo(): Result<PromotionInfoResponse> {
         return withContext(dispatchers.io) {
-            val info = restorePromotionInfo()
-            if (info?.status == PromotionInfoResponse.Status.FINISHED) {
-                Result.success(info)
+            val promotionInfo = restorePromotionInfo()
+            val data = promotionInfo?.getData(userData.promoCode)
+            if (data?.status == PromotionInfoResponse.Status.FINISHED) {
+                Result.success(promotionInfo)
             } else {
                 runCatching { api.getPromotionInfo(getProgramName()) }
                     .fold(
@@ -124,5 +125,13 @@ internal class DefaultLearn2earnRepository(
 
     private companion object {
         const val PROGRAM_NAME: String = "1inch"
+    }
+}
+
+private fun PromotionInfoResponse.getData(promoCode: String?): PromotionInfoResponse.Data? {
+    return if (promoCode == null) {
+        newCard
+    } else {
+        oldCard
     }
 }
