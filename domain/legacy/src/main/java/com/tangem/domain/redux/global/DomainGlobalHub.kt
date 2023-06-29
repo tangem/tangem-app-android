@@ -36,6 +36,7 @@ private class DomainGlobalReducer : ReStoreReducer<DomainGlobalState> {
         return when (action) {
             is DomainGlobalAction.SaveScanNoteResponse -> {
                 val card = action.scanResponse.card
+                // TODO: AuthHeaders: try to remove it, because now we can use headers with dynamic values
                 state.networkServices.tangemTechService.addAuthenticationHeader(
                     RequestHeader.AuthenticationHeader(
                         object : AuthProvider {
