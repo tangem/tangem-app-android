@@ -23,21 +23,21 @@ import kotlinx.collections.immutable.persistentListOf
 /**
  * Wallets list
  *
- * @param wallets list of wallet state
+ * @param wallets  list of wallet state
+ * @param modifier modifier
  *
 [REDACTED_AUTHOR]
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun WalletCardsList(wallets: ImmutableList<WalletCardState>) {
+internal fun WalletCardsList(wallets: ImmutableList<WalletCardState>, modifier: Modifier = Modifier) {
     val horizontalCardPadding = TangemTheme.dimens.spacing16
     val itemWidth = LocalConfiguration.current.screenWidthDp.dp - horizontalCardPadding * 2
 
     val lazyListState = rememberLazyListState()
     LazyRow(
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        modifier = modifier.background(color = TangemTheme.colors.background.secondary),
         state = lazyListState,
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
     ) {
