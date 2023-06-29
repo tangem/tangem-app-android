@@ -12,6 +12,13 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
 
     var state = state.homeState
     when (action) {
+        is HomeAction.InsertStory -> {
+            state = state.copy(
+                stories = state.stories.toMutableList().apply {
+                    add(action.position, action.story)
+                },
+            )
+        }
         is HomeAction.ScanInProgress -> {
             state = state.copy(scanInProgress = action.scanInProgress)
         }
