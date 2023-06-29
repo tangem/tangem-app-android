@@ -31,12 +31,14 @@ sealed class Basic(
         currency: AnalyticsParam.CardCurrency,
         batch: String,
         signInType: SignInType,
+        walletsCount: String,
     ) : Basic(
         event = "Signed in",
         params = mapOf(
             AnalyticsParam.CURRENCY to currency.value,
             AnalyticsParam.BATCH to batch,
             "Sign in type" to signInType.name,
+            "Wallets Count" to walletsCount,
         ),
     ) {
         enum class SignInType {
