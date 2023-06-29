@@ -126,6 +126,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Cronos -> "cronos"
         Blockchain.Telos -> "telos"
         Blockchain.TelosTestnet -> "telos/test"
+        Blockchain.AlephZero -> "azero"
+        Blockchain.AlephZeroTestnet -> "azero/test"
     }
 }
 
@@ -167,6 +169,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.TerraV2 -> "terra-luna-2"
         Blockchain.Cronos -> "crypto-com-chain"
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
+        Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "azero"
     }
 }
 
