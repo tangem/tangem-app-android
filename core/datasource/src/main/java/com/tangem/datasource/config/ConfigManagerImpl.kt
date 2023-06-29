@@ -103,6 +103,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             zendesk = configValues.zendesk,
             swapReferrerAccount = configValues.swapReferrerAccount,
             walletConnectProjectId = configValues.walletConnectProjectId,
+            tangemComAuthorization = configValues.tangemComAuthorization,
         )
     }
 }
