@@ -8,7 +8,6 @@ import com.squareup.moshi.Json
 
 class FeatureModel(
     val isTopUpEnabled: Boolean,
-    val isSendingToPayIdEnabled: Boolean,
     val isCreatingTwinCardsAllowed: Boolean,
 )
 
