@@ -1,28 +1,26 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.RoundedActionButton
+import com.tangem.core.ui.components.buttons.actions.ActionConfig
+import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -30,9 +28,11 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButtons
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletCardsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
+import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 
 /**
  * Wallet screen
@@ -49,15 +49,29 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
-        val lastContentItemIndex = remember(state.contentItems) { state.contentItems.lastIndex }
 
         LazyColumn(
             modifier = modifier
-                .padding(scaffoldPaddings)
+                .padding(paddingValues = scaffoldPaddings)
                 .fillMaxSize(),
+            contentPadding = PaddingValues(
+                horizontal = TangemTheme.dimens.spacing16,
+                vertical = TangemTheme.dimens.spacing8,
+            ),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item { WalletCardsList(wallets = state.wallets) }
+            item {
+                WalletCardsList(
+                    wallets = state.wallets,
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                )
+            }
+
+            if (state is WalletStateHolder.SingleCurrencyContent) {
+                item { WalletManageButtons(buttons = state.buttons) }
+            }
+
+            items(items = state.notifications, itemContent = { Notification(state = it.state) })
 
             itemsIndexed(
                 items = state.contentItems,
@@ -70,40 +84,46 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
                         is WalletContentItemState.SingleCurrencyItem.Transaction -> index
                     }
                 },
-            ) { index, item ->
-                val itemModifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .clipFirstAndLastItems(index, lastContentItemIndex)
-
-                when (item) {
-                    is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> {
-                        NetworkGroupItem(networkName = item.networkName, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.MultiCurrencyItem.Token -> {
-                        TokenItem(state = item.state, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.Title -> {
-                        SingleCurrencyTitle(config = item, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
-                        TransactionGroupTitle(config = item, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.Transaction -> {
-                        Transaction(state = item.state, modifier = itemModifier)
-                    }
-                }
-            }
+                itemContent = { index, item ->
+                    ContentItem(currentIndex = index, lastIndex = state.contentItems.lastIndex, item = item)
+                },
+            )
 
             if (state is WalletStateHolder.MultiCurrencyContent) {
                 item {
                     RoundedActionButton(
-                        text = stringResource(id = R.string.organize_tokens_title),
-                        iconResId = R.drawable.ic_filter_24,
-                        onClick = state.onOrganizeTokensClick,
+                        config = ActionConfig(
+                            text = stringResource(id = R.string.organize_tokens_title),
+                            iconResId = R.drawable.ic_filter_24,
+                            onClick = state.onOrganizeTokensClick,
+                        ),
                         modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ContentItem(currentIndex: Int, lastIndex: Int, item: WalletContentItemState) {
+    val itemModifier = Modifier.walletContentItemDecoration(currentIndex, lastIndex)
+
+    when (item) {
+        is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> {
+            NetworkGroupItem(networkName = item.networkName, modifier = itemModifier)
+        }
+        is WalletContentItemState.MultiCurrencyItem.Token -> {
+            TokenItem(state = item.state, modifier = itemModifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.Title -> {
+            SingleCurrencyTitle(config = item, modifier = itemModifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
+            TransactionGroupTitle(config = item, modifier = itemModifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.Transaction -> {
+            Transaction(state = item.state, modifier = itemModifier)
         }
     }
 }
@@ -164,31 +184,6 @@ private fun TransactionGroupTitle(
         textAlign = TextAlign.Start,
         style = TangemTheme.typography.body2,
     )
-}
-
-private fun Modifier.clipFirstAndLastItems(index: Int, lastItemIndex: Int): Modifier = composed {
-    when (index) {
-        0 -> {
-            this
-                .padding(top = TangemTheme.dimens.spacing14)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = TangemTheme.dimens.radius16,
-                        topEnd = TangemTheme.dimens.radius16,
-                    ),
-                )
-        }
-        lastItemIndex -> {
-            this
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = TangemTheme.dimens.radius16,
-                        bottomEnd = TangemTheme.dimens.radius16,
-                    ),
-                )
-        }
-        else -> this
-    }
 }
 
 // region Preview
