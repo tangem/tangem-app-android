@@ -2,17 +2,16 @@ package com.tangem.tap.features.send.redux.states
 
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.AddressVerifyAction
 import java.math.BigInteger
 
-data class AddressPayIdState(
+data class AddressState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val normalFieldValue: String? = null,
     val truncatedFieldValue: String? = null,
     val destinationWalletAddress: String? = null,
-    val error: AddressPayIdVerifyAction.Error? = null,
+    val error: AddressVerifyAction.Error? = null,
     val truncateHandler: ((String) -> String)? = null,
-    val sendingToPayIdEnabled: Boolean = false,
     val pasteIsEnabled: Boolean = false,
     val inputIsEnabled: Boolean = true,
 ) : SendScreenState {
@@ -22,8 +21,6 @@ data class AddressPayIdState(
     fun truncate(value: String): String = truncateHandler?.invoke(value) ?: value
 
     fun isReady(): Boolean = error == null && destinationWalletAddress?.isNotEmpty() ?: false
-
-    fun isPayIdState(): Boolean = destinationWalletAddress != null && destinationWalletAddress != normalFieldValue
 }
 
 data class TransactionExtrasState(
@@ -98,11 +95,7 @@ data class BinanceMemoState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val memo: BigInteger? = null,
     val error: TransactionExtraError? = null,
-) {
-    companion object {
-        val MAX_NUMBER: BigInteger = BigInteger("FFFFFFFFFFFFFFFF", 16)
-    }
-}
+)
 
 // tag must contains only digits
 data class XrpDestinationTagState(
