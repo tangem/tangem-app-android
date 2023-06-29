@@ -1,13 +1,7 @@
 package com.tangem.datasource.config
 
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.BlockchairCredentials
-import com.tangem.blockchain.common.GetBlockCredentials
-import com.tangem.blockchain.common.NowNodeCredentials
-import com.tangem.blockchain.common.QuickNodeCredentials
-import com.tangem.blockchain.common.TonCenterCredentials
+import com.tangem.blockchain.common.*
 import com.tangem.datasource.config.ConfigManager.Companion.IS_CREATING_TWIN_CARDS_ALLOWED
-import com.tangem.datasource.config.ConfigManager.Companion.IS_SENDING_TO_PAY_ID_ENABLED
 import com.tangem.datasource.config.ConfigManager.Companion.IS_TOP_UP_ENABLED
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.config.models.ConfigModel
@@ -34,7 +28,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     override fun turnOff(name: String) {
         when (name) {
-            IS_SENDING_TO_PAY_ID_ENABLED -> config = config.copy(isSendingToPayIdEnabled = false)
             IS_TOP_UP_ENABLED -> config = config.copy(isTopUpEnabled = false)
             IS_CREATING_TWIN_CARDS_ALLOWED -> config = config.copy(isCreatingTwinCardsAllowed = false)
         }
@@ -42,13 +35,13 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     override fun resetToDefault(name: String) {
         when (name) {
-            IS_SENDING_TO_PAY_ID_ENABLED ->
-                config =
-                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
-            IS_TOP_UP_ENABLED -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
-            IS_CREATING_TWIN_CARDS_ALLOWED ->
-                config =
-                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+            IS_TOP_UP_ENABLED -> {
+                config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
+            }
+            IS_CREATING_TWIN_CARDS_ALLOWED -> {
+                config = config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+            }
+            else -> Unit
         }
     }
 
@@ -57,12 +50,11 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
         config = config.copy(
             isTopUpEnabled = model.isTopUpEnabled,
-            isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
             isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
+
         defaultConfig = defaultConfig.copy(
             isTopUpEnabled = model.isTopUpEnabled,
-            isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
             isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
     }
@@ -111,6 +103,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             zendesk = configValues.zendesk,
             swapReferrerAccount = configValues.swapReferrerAccount,
             walletConnectProjectId = configValues.walletConnectProjectId,
+            tangemComAuthorization = configValues.tangemComAuthorization,
         )
     }
 }
