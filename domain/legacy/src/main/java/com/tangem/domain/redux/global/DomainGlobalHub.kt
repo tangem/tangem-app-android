@@ -36,6 +36,7 @@ private class DomainGlobalReducer : ReStoreReducer<DomainGlobalState> {
         return when (action) {
             is DomainGlobalAction.SaveScanNoteResponse -> {
                 val card = action.scanResponse.card
+// [REDACTED_TODO_COMMENT]
                 state.networkServices.tangemTechService.addAuthenticationHeader(
                     RequestHeader.AuthenticationHeader(
                         object : AuthProvider {
