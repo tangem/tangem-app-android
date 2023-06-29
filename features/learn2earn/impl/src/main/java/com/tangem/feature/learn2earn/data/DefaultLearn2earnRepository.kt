@@ -6,7 +6,6 @@ import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
-import com.tangem.feature.learn2earn.data.models.getData
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -126,5 +125,13 @@ internal class DefaultLearn2earnRepository(
 
     private companion object {
         const val PROGRAM_NAME: String = "1inch"
+    }
+}
+
+private fun PromotionInfoResponse.getData(promoCode: String?): PromotionInfoResponse.Data? {
+    return if (promoCode == null) {
+        newCard
+    } else {
+        oldCard
     }
 }
