@@ -8,7 +8,6 @@ import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.feature.learn2earn.domain.api.*
 import com.tangem.feature.learn2earn.domain.models.Promotion
 import com.tangem.feature.learn2earn.domain.models.PromotionError
-import com.tangem.feature.learn2earn.domain.models.getData
 import com.tangem.feature.learn2earn.domain.models.toDomainError
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
@@ -210,11 +209,12 @@ class DefaultLearn2earnInteractor(
                 onSuccess = { response ->
                     val responseError = response.error
                     if (responseError == null) {
+                        val npeMessage = { "Shouldn't be null" }
                         Promotion(
                             info = Promotion.PromotionInfo(
-                                newCard = response.newCard!!,
-                                oldCard = response.oldCard!!,
-                                awardPaymentToken = response.awardPaymentToken!!,
+                                newCard = requireNotNull(response.newCard, npeMessage),
+                                oldCard = requireNotNull(response.oldCard, npeMessage),
+                                awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
                             ),
                             error = null,
                         )
@@ -251,5 +251,13 @@ class DefaultLearn2earnInteractor(
         return updateBlock(repository.getUserData()).apply {
             repository.updateUserData(this)
         }
+    }
+}
+
+private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
+    return if (promoCode == null) {
+        newCard
+    } else {
+        oldCard
     }
 }
