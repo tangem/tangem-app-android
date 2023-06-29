@@ -8,7 +8,6 @@ import com.squareup.moshi.Json
 
 class FeatureModel(
     val isTopUpEnabled: Boolean,
-    val isSendingToPayIdEnabled: Boolean,
     val isCreatingTwinCardsAllowed: Boolean,
 )
 
@@ -38,6 +37,7 @@ class ConfigValueModel(
     val swapReferrerAccount: SwapReferrerAccount?,
     val kaspaSecondaryApiUrl: String,
     val walletConnectProjectId: String,
+    val tangemComAuthorization: String?,
 )
 
 data class AppsFlyer(
