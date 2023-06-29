@@ -61,6 +61,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "cronos" -> Blockchain.Cronos
         "telos" -> Blockchain.Telos
         "telos/test" -> Blockchain.TelosTestnet
+        "azero" -> Blockchain.AlephZero
+        "azero/test" -> Blockchain.AlephZeroTestnet
         else -> null
     }
 }
