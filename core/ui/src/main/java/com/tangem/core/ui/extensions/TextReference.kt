@@ -1,9 +1,11 @@
 package com.tangem.core.ui.extensions
 
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 
 /**
@@ -24,6 +26,8 @@ sealed interface TextReference {
      */
     data class Res(@StringRes val id: Int, val formatArgs: WrappedList<Any> = WrappedList(emptyList())) : TextReference
 
+    data class PluralRes(@PluralsRes val id: Int, val count: Int, val formatArgs: WrappedList<Any>) : TextReference
+
     /**
      * Text string
      *
@@ -38,6 +42,7 @@ sealed interface TextReference {
 fun TextReference.resolveReference(): String {
     return when (this) {
         is TextReference.Res -> stringResource(id, *formatArgs.toTypedArray())
+        is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
     }
 }
