@@ -12,7 +12,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -33,7 +32,6 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -110,19 +108,23 @@ class WalletConnectMiddleware {
                 )
             }
             is WalletConnectAction.OpeningSessionTimeout -> {
-                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
+                Timber.e("OpeningSessionTimeout for topic ${action.session.topic}")
+                // do not show dialog for now, it shows always to user if cannot establish connection
+                // store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
             }
             is WalletConnectAction.FailureEstablishingSession -> {
-                if (action.error != null) {
-                    store.dispatch(
-                        GlobalAction.ShowDialog(
-                            AppDialog.SimpleOkDialogRes(
-                                headerId = R.string.common_warning,
-                                messageId = action.error.messageResource,
-                            ),
-                        ),
-                    )
-                }
+                Timber.e("FailureEstablishingSession for topic ${action.session?.topic}")
+                // disable alerts in release to avoid annoying users
+                // if (action.error != null) {
+                //     store.dispatch(
+                //         GlobalAction.ShowDialog(
+                //             AppDialog.SimpleOkDialogRes(
+                //                 headerId = R.string.common_warning,
+                //                 messageId = action.error.messageResource,
+                //             ),
+                //         ),
+                //     )
+                // }
                 if (action.session != null) {
                     walletConnectManager.disconnect(action.session)
                 }
@@ -140,11 +142,14 @@ class WalletConnectMiddleware {
                 }
             }
             is WalletConnectAction.RefuseOpeningSession -> {
-                store.dispatch(
-                    GlobalAction.ShowDialog(
-                        WalletConnectDialog.OpeningSessionRejected,
-                    ),
-                )
+                Timber.e("RefuseOpeningSession")
+
+                // do not show for now to avoid anoying users with alert
+                // store.dispatch(
+                //     GlobalAction.ShowDialog(
+                //         WalletConnectDialog.OpeningSessionRejected,
+                //     ),
+                // )
             }
             is WalletConnectAction.ScanCard -> {
                 val scanResponse = store.state.globalState.scanResponse ?: return
@@ -306,16 +311,18 @@ class WalletConnectMiddleware {
                         )
                     }
                     is WalletConnectError.ExternalApprovalError -> {
-                        val message = action.error.message
-                        if (!message.isNullOrEmpty()) {
-                            store.dispatchOnMain(
-                                GlobalAction.ShowDialog(
-                                    AppDialog.SimpleOkWarningDialog(
-                                        message = message,
-                                    ),
-                                ),
-                            )
-                        }
+                        Timber.e(action.error, "ExternalApprovalError ${action.error.message}")
+                        // do not show dialog on this event
+                        // val message = action.error.message
+                        // if (!message.isNullOrEmpty()) {
+                        //     store.dispatchOnMain(
+                        //         GlobalAction.ShowDialog(
+                        //             AppDialog.SimpleOkWarningDialog(
+                        //                 message = message,
+                        //             ),
+                        //         ),
+                        //     )
+                        // }
                     }
                     else -> Unit
                 }
