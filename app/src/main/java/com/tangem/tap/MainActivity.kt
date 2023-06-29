@@ -33,6 +33,11 @@ import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
+import com.tangem.tap.features.intentHandler.IntentProcessor
+import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -45,6 +50,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -95,6 +101,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
+    // TODO: fixme: inject through DI
+    private val intentProcessor: IntentProcessor = IntentProcessor()
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
@@ -117,6 +126,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
         initUserWalletsListManager()
+        initIntentHandlers()
 
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
@@ -131,6 +141,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletConnectInteractor = walletConnectInteractor,
             ),
         )
+    }
+
+    private fun initIntentHandlers() {
+        val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
+        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider))
+        intentProcessor.addHandler(WalletConnectLinkIntentHandler())
+        intentProcessor.addHandler(BuyCurrencyIntentHandler())
+        intentProcessor.addHandler(SellCurrencyIntentHandler())
     }
 
     private fun initUserWalletsListManager() {
@@ -164,12 +182,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onResume()
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
-        navigateToInitialScreenIfNeeded(intent)
+        navigateToInitialScreenIfNeededOnResume(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intentHandler.handleIntent(intent, userWalletsListManager.hasUserWallets)
+        scope.launch {
+            intentProcessor.handleIntent(intent)
+        }
     }
 
     override fun onStart() {
@@ -185,6 +205,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
+        intentProcessor.removeAll()
         super.onDestroy()
     }
 
@@ -235,29 +256,39 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lockUserWalletsTimer?.restart()
     }
 
-    private fun navigateToInitialScreenIfNeeded(intent: Intent?) {
+    private fun navigateToInitialScreenIfNeededOnResume(intentWhichStartedActivity: Intent?) {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isNotScannedBefore = store.state.globalState.scanResponse == null
         val isOnboardingServiceNotActive = store.state.globalState.onboardingState.onboardingStarted
         val isShopNotOpened = store.state.shopState.total != null
         when {
             !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive && isShopNotOpened -> {
-                navigateToInitialScreen(intent)
+                navigateToInitialScreenOnResume(intentWhichStartedActivity)
             }
             backStackIsEmpty -> {
-                navigateToInitialScreen(intent)
+                navigateToInitialScreenOnResume(intentWhichStartedActivity)
             }
             else -> Unit
         }
     }
 
-    private fun navigateToInitialScreen(intent: Intent?) {
+    private fun navigateToInitialScreenOnResume(intentWhichStartedActivity: Intent?) {
         if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
-            store.dispatchOnMain(WelcomeAction.HandleIntentIfNeeded(intent))
+            store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
+            scope.launch {
+                val handler = BackgroundScanIntentHandler(hasSavedUserWalletsProvider = { true })
+                val isBackgroundScanNotHandled = handler.handleIntent(intentWhichStartedActivity)
+                val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
+                if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
+                    store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
+                }
+            }
         } else {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
-            intentHandler.handleIntent(intent, hasSavedUserWallets = false)
+            scope.launch {
+                intentProcessor.handleIntent(intentWhichStartedActivity)
+            }
         }
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
