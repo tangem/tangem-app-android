@@ -15,16 +15,9 @@ data class Promotion(
 
     fun isError(): Boolean = error != null
 
-    fun isUnreachable(): Boolean = error == PromotionError.NetworkUnreachable
-
     data class PromotionInfo(
-        val status: PromotionInfoResponse.Status,
-        val awardForNewCard: Double,
-        val awardForOldCard: Double,
+        val newCard: PromotionInfoResponse.Data,
+        val oldCard: PromotionInfoResponse.Data,
         val awardPaymentToken: PromotionInfoResponse.TokenData,
-    ) {
-        companion object
-    }
-
-    companion object
+    )
 }
