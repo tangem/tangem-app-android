@@ -20,6 +20,7 @@ import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import org.rekotlin.Store
 
@@ -44,18 +45,25 @@ class CheckForOnboardingChain(
     override suspend fun invoke(
         previousChainResult: ScanResponse,
     ): Either<ScanCardException.ChainException, ScanResponse> {
-        tapWalletManager.updateConfigManager(previousChainResult)
+        tapWalletManager.updateConfigManager()
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(previousChainResult))
 
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
         return when {
-            OnboardingHelper.isOnboardingCase(previousChainResult) -> {
-                Analytics.addContext(previousChainResult)
+            OnboardingHelper.isOnboardingCase(previousChainResult, cardTypeResolver) -> {
+                Analytics.addContext(
+                    scanResponse = previousChainResult,
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                )
                 store.dispatchOnMain(GlobalAction.Onboarding.Start(previousChainResult, canSkipBackup = true))
                 val appScreen = OnboardingHelper.whereToNavigate(previousChainResult)
                 ScanChainException.OnboardingNeeded(appScreen).left()
             }
             else -> {
-                Analytics.setContext(previousChainResult)
+                Analytics.setContext(
+                    scanResponse = previousChainResult,
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                )
                 // If twins was twinned previously but twins welcome not shown
                 if (previousChainResult.twinsIsTwinned() && !preferencesStore.wasTwinsOnboardingShown()) {
                     store.dispatchOnMain(
