@@ -29,6 +29,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -221,7 +222,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 twinCardsState.walletManager
             } else {
                 val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(getScanResponse()).guard {
+                val walletManager = wmFactory.makePrimaryWalletManager(
+                    scanResponse = getScanResponse(),
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                ).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)

@@ -22,6 +22,7 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
@@ -162,7 +163,11 @@ internal class WalletSelectorMiddleware {
     }
 
     private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
-        val userWallet = UserWalletBuilder(scanResponse).build()
+        val userWallet = UserWalletBuilder(
+            scanResponse = scanResponse,
+            cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+        )
+            .build()
             ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 
         return userWalletsListManager.save(userWallet)
