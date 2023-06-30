@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
@@ -49,9 +48,6 @@ data class WalletState(
     val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
-
-    val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.cardTypesResolver?.isTangemTwins() == true
 
     val isExchangeServiceFeatureOn: Boolean
         get() = store.state.globalState.exchangeManager.featureIsSwitchedOn()
