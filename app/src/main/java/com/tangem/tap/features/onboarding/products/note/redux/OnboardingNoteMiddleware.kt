@@ -7,13 +7,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getTopUpUrl
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -29,6 +23,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -123,7 +118,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 noteState.walletManager
             } else {
                 val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(scanResponse).guard {
+                val walletManager = wmFactory.makePrimaryWalletManager(
+                    scanResponse = scanResponse,
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                ).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)

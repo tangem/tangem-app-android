@@ -27,6 +27,7 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -101,10 +102,15 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
 }
 
 private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
-    val userWallet = UserWalletBuilder(scanResponse).build().guard {
-        Timber.e("User wallet not created")
-        return@launch
-    }
+    val userWallet = UserWalletBuilder(
+        scanResponse = scanResponse,
+        cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+    )
+        .build()
+        .guard {
+            Timber.e("User wallet not created")
+            return@launch
+        }
 
     userWalletsListManager.save(userWallet)
         .doOnFailure { error ->
