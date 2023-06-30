@@ -4,11 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,7 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.buttons.actions.ActionConfig
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
@@ -30,9 +27,10 @@ import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButtons
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletCardsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
+import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletNotificationDecoration
 
 /**
  * Wallet screen
@@ -42,7 +40,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletConten
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifier) {
+internal fun WalletScreen(state: WalletStateHolder) {
     BackHandler(onBack = state.onBackClick)
 
     Scaffold(
@@ -51,27 +49,42 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
     ) { scaffoldPaddings ->
 
         LazyColumn(
-            modifier = modifier
+            modifier = Modifier
                 .padding(paddingValues = scaffoldPaddings)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing8,
-            ),
+            contentPadding = PaddingValues(vertical = TangemTheme.dimens.spacing8),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item {
-                WalletCardsList(
-                    wallets = state.wallets,
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                WalletsList(
+                    config = state.walletsListConfig,
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing14),
                 )
             }
 
             if (state is WalletStateHolder.SingleCurrencyContent) {
-                item { WalletManageButtons(buttons = state.buttons) }
+                item {
+                    WalletManageButtons(
+                        buttons = state.buttons,
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .padding(bottom = TangemTheme.dimens.spacing14),
+                    )
+                }
             }
 
-            items(items = state.notifications, itemContent = { Notification(state = it.state) })
+            itemsIndexed(
+                items = state.notifications,
+                itemContent = { index, item ->
+                    Notification(
+                        state = item.state,
+                        modifier = Modifier.walletNotificationDecoration(
+                            currentIndex = index,
+                            lastIndex = state.notifications.lastIndex,
+                        ),
+                    )
+                },
+            )
 
             itemsIndexed(
                 items = state.contentItems,
@@ -85,45 +98,40 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
                     }
                 },
                 itemContent = { index, item ->
-                    ContentItem(currentIndex = index, lastIndex = state.contentItems.lastIndex, item = item)
+                    ContentItem(
+                        item = item,
+                        modifier = Modifier.walletContentItemDecoration(
+                            currentIndex = index,
+                            lastIndex = state.contentItems.lastIndex,
+                        ),
+                    )
                 },
             )
 
             if (state is WalletStateHolder.MultiCurrencyContent) {
-                item {
-                    RoundedActionButton(
-                        config = ActionConfig(
-                            text = stringResource(id = R.string.organize_tokens_title),
-                            iconResId = R.drawable.ic_filter_24,
-                            onClick = state.onOrganizeTokensClick,
-                        ),
-                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
-                    )
-                }
+                item { OrganizeTokensButton(onClick = state.onOrganizeTokensClick) }
             }
         }
     }
 }
 
 @Composable
-private fun ContentItem(currentIndex: Int, lastIndex: Int, item: WalletContentItemState) {
-    val itemModifier = Modifier.walletContentItemDecoration(currentIndex, lastIndex)
-
+private fun ContentItem(item: WalletContentItemState, modifier: Modifier = Modifier) {
     when (item) {
         is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> {
-            NetworkGroupItem(networkName = item.networkName, modifier = itemModifier)
+            NetworkGroupItem(networkName = item.networkName, modifier = modifier)
         }
         is WalletContentItemState.MultiCurrencyItem.Token -> {
-            TokenItem(state = item.state, modifier = itemModifier)
+            TokenItem(state = item.state, modifier = modifier)
         }
         is WalletContentItemState.SingleCurrencyItem.Title -> {
-            SingleCurrencyTitle(config = item, modifier = itemModifier)
+            SingleCurrencyTitle(config = item, modifier = modifier)
         }
         is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
-            TransactionGroupTitle(config = item, modifier = itemModifier)
+            TransactionGroupTitle(config = item, modifier = modifier)
         }
         is WalletContentItemState.SingleCurrencyItem.Transaction -> {
-            Transaction(state = item.state, modifier = itemModifier)
+            Transaction(state = item.state, modifier = modifier)
         }
     }
 }
@@ -186,8 +194,22 @@ private fun TransactionGroupTitle(
     )
 }
 
+@Composable
+private fun OrganizeTokensButton(onClick: () -> Unit) {
+    RoundedActionButton(
+        config = ActionButtonConfig(
+            text = stringResource(id = R.string.organize_tokens_title),
+            iconResId = R.drawable.ic_filter_24,
+            onClick = onClick,
+        ),
+        modifier = Modifier
+            .padding(top = TangemTheme.dimens.spacing8)
+            .padding(horizontal = TangemTheme.dimens.spacing16),
+    )
+}
+
 // region Preview
-@Preview(showBackground = true, widthDp = 360)
+@Preview
 @Composable
 private fun WalletScreenPreview_Light(
     @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
@@ -197,7 +219,7 @@ private fun WalletScreenPreview_Light(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360)
+@Preview
 @Composable
 private fun WalletScreenPreview_Dark(
     @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
