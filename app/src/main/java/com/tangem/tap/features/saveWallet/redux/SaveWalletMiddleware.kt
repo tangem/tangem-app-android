@@ -7,6 +7,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -21,12 +22,7 @@ import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.isLockable
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -96,7 +92,10 @@ internal class SaveWalletMiddleware {
 
         scope.launch {
             val userWallet = userWalletsListManager.selectedUserWalletSync
-                ?: UserWalletBuilder(scanResponse)
+                ?: UserWalletBuilder(
+                    scanResponse = scanResponse,
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                )
                     .backupCardsIds(state.backupInfo?.backupCardsIds)
                     .build()
                 ?: return@launch
