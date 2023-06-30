@@ -23,8 +23,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.buttons.actions.ActionConfig
-import com.tangem.core.ui.components.buttons.actions.BackgroundActionButton
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -206,21 +206,23 @@ private fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
-            BackgroundActionButton(
-                config = ActionConfig(
+            RoundedActionButton(
+                config = ActionButtonConfig(
                     text = stringResource(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
                     onClick = config.onSortByBalanceClick,
                 ),
                 modifier = Modifier.weight(1f),
+                color = TangemTheme.colors.background.primary,
             )
-            BackgroundActionButton(
-                config = ActionConfig(
+            RoundedActionButton(
+                config = ActionButtonConfig(
                     text = stringResource(id = R.string.organize_tokens_group),
                     iconResId = R.drawable.ic_group_24,
                     onClick = config.onGroupByNetworkClick,
                 ),
                 modifier = Modifier.weight(1f),
+                color = TangemTheme.colors.background.primary,
             )
         }
     }
