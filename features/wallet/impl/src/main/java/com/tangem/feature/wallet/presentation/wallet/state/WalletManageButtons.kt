@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -20,14 +21,16 @@ import kotlinx.collections.immutable.ImmutableList
  * Wallet manage buttons
  *
  * @param buttons  manage buttons
+ * @param modifier modifier
  *
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun WalletManageButtons(buttons: ImmutableList<WalletManageButton>) {
+internal fun WalletManageButtons(buttons: ImmutableList<WalletManageButton>, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .horizontalScroll(state = rememberScrollState())
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
     ) {
