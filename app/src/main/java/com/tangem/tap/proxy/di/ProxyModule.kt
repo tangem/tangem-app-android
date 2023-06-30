@@ -46,9 +46,7 @@ class ProxyModule {
     @Provides
     @Singleton
     fun provideDerivationManager(appStateHolder: AppStateHolder): DerivationManager {
-        return DerivationManagerImpl(
-            appStateHolder = appStateHolder,
-        )
+        return DerivationManagerImpl(appStateHolder = appStateHolder)
     }
 
     // regions FeatureConsumers
