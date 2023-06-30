@@ -1,96 +1,150 @@
 package com.tangem.core.ui.components.buttons.actions
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.res.TangemTheme
 
 /**
- * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=290-305&t=3z98eFnTeyIx5TH5-4)
+ * Rounded action button
+ *
+ * @param config   component config
+ * @param modifier modifier
+ * @param color    background color
+ *
+ * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=290-306&mode=design&t=
+ * cSLQtIbR2J1h5M9U-4">Show in Figma</a>
  */
 @Composable
-fun RoundedActionButton(config: ActionConfig, modifier: Modifier = Modifier) {
-    TangemButton(
+fun RoundedActionButton(
+    config: ActionButtonConfig,
+    modifier: Modifier = Modifier,
+    color: Color = TangemTheme.colors.button.secondary,
+) {
+    Button(
+        config = config,
+        shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
         modifier = modifier,
-        text = config.text,
-        icon = TangemButtonIconPosition.Start(config.iconResId),
-        onClick = config.onClick,
-        enabled = config.enabled,
-        showProgress = false,
-        colors = TangemButtonsDefaults.secondaryButtonColors,
-        size = TangemButtonSize.RoundedAction,
+        color = color,
     )
 }
 
 /**
- * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1208-1395&t=3z98eFnTeyIx5TH5-4)
+ * Action button
+ *
+ * @param config   component config
+ * @param modifier modifier
+ * @param color    background color
+ *
+ * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=290-306&mode=design&t=
+ * cSLQtIbR2J1h5M9U-4">Show in Figma</a>
  */
 @Composable
-fun ActionButton(config: ActionConfig, modifier: Modifier = Modifier) {
-    TangemButton(
+fun ActionButton(
+    config: ActionButtonConfig,
+    modifier: Modifier = Modifier,
+    color: Color = TangemTheme.colors.button.secondary,
+) {
+    Button(
+        config = config,
+        shape = RoundedCornerShape(size = TangemTheme.dimens.radius12),
         modifier = modifier,
-        text = config.text,
-        icon = TangemButtonIconPosition.Start(config.iconResId),
-        onClick = config.onClick,
-        enabled = config.enabled,
-        showProgress = false,
-        colors = TangemButtonsDefaults.secondaryButtonColors,
-        size = TangemButtonSize.Action,
+        color = color,
     )
 }
 
-/**
- * Same as [RoundedActionButton] but colored in primary background color
- */
 @Composable
-fun BackgroundActionButton(config: ActionConfig, modifier: Modifier = Modifier) {
-    TangemButton(
-        modifier = modifier,
-        text = config.text,
-        icon = TangemButtonIconPosition.Start(config.iconResId),
-        onClick = config.onClick,
-        enabled = config.enabled,
-        showProgress = false,
-        colors = TangemButtonsDefaults.backgroundButtonColors,
-        size = TangemButtonSize.RoundedAction,
-    )
+private fun Button(
+    config: ActionButtonConfig,
+    shape: RoundedCornerShape,
+    modifier: Modifier = Modifier,
+    color: Color = TangemTheme.colors.button.secondary,
+) {
+    Row(
+        modifier = modifier
+            .clickable(enabled = config.enabled, onClick = config.onClick)
+            .heightIn(min = TangemTheme.dimens.size36)
+            .background(
+                color = if (config.enabled) color else TangemTheme.colors.button.disabled,
+                shape = shape,
+            )
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing24,
+            )
+            .padding(vertical = TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(id = config.iconResId),
+            contentDescription = null,
+            modifier = Modifier.size(size = TangemTheme.dimens.size20),
+            tint = if (config.enabled) TangemTheme.colors.icon.primary1 else TangemTheme.colors.icon.informative,
+        )
+
+        SpacerW8()
+
+        Text(
+            text = config.text,
+            color = if (config.enabled) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.disabled,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = TangemTheme.typography.button,
+        )
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(group = "RoundedActionButton", showBackground = true)
 @Composable
-private fun Preview_ActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionConfig) {
+private fun Preview_RoundedActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
     TangemTheme(isDark = false) {
-        Column {
-            RoundedActionButton(state)
-            ActionButton(state)
-            BackgroundActionButton(state)
-        }
+        RoundedActionButton(state)
     }
 }
 
-@Preview(showBackground = true)
+@Preview(group = "RoundedActionButton", showBackground = true)
 @Composable
-private fun Preview_ActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionConfig) {
-    TangemTheme {
-        Column {
-            RoundedActionButton(state)
-            ActionButton(state)
-            BackgroundActionButton(state)
-        }
+private fun Preview_RoundedActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemTheme(isDark = true) {
+        RoundedActionButton(state)
     }
 }
 
-private class ActionStateProvider : CollectionPreviewParameterProvider<ActionConfig>(
+@Preview(group = "ActionButton", showBackground = true)
+@Composable
+private fun Preview_ActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemTheme(isDark = false) {
+        ActionButton(state)
+    }
+}
+
+@Preview(group = "ActionButton", showBackground = true)
+@Composable
+private fun Preview_ActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemTheme(isDark = true) {
+        ActionButton(state)
+    }
+}
+
+private class ActionStateProvider : CollectionPreviewParameterProvider<ActionButtonConfig>(
     collection = listOf(
-        ActionConfig(text = "Send", iconResId = R.drawable.ic_arrow_up_24, onClick = {}),
-        ActionConfig(text = "Receive", iconResId = R.drawable.ic_arrow_down_24, enabled = false, onClick = {}),
+        ActionButtonConfig(text = "Enabled", iconResId = R.drawable.ic_arrow_up_24, enabled = true, onClick = {}),
+        ActionButtonConfig(text = "Disabled", iconResId = R.drawable.ic_arrow_down_24, enabled = false, onClick = {}),
     ),
 )
