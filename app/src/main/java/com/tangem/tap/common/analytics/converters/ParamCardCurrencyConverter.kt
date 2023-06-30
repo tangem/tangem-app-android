@@ -2,15 +2,15 @@ package com.tangem.tap.common.analytics.converters
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.Converter
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 
 /**
 [REDACTED_AUTHOR]
  */
-class ParamCardCurrencyConverter : Converter<CardTypesResolver, AnalyticsParam.CardCurrency?> {
+class ParamCardCurrencyConverter : Converter<CardTypeResolver, AnalyticsParam.CardCurrency?> {
 
-    override fun convert(value: CardTypesResolver): AnalyticsParam.CardCurrency? {
+    override fun convert(value: CardTypeResolver): AnalyticsParam.CardCurrency? {
         if (value.isMultiwalletAllowed()) return AnalyticsParam.CardCurrency.MultiCurrency
 
         val type = when {
