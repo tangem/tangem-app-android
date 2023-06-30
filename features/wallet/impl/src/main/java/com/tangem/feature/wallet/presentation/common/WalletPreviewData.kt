@@ -49,6 +49,17 @@ internal object WalletPreviewData {
         onClick = {},
     )
 
+    val walletListConfig = WalletsListConfig(
+        selectedWalletIndex = 0,
+        wallets = persistentListOf(
+            walletCardContentState,
+            walletCardLoadingState,
+            walletCardHiddenContentState,
+            walletCardErrorState,
+        ),
+        onWalletChange = {},
+    )
+
     val tokenItemVisibleState = TokenItemState.Content(
         id = UUID.randomUUID().toString(),
         tokenIconUrl = null,
@@ -195,13 +206,7 @@ internal object WalletPreviewData {
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
-        selectedWallet = walletCardContentState,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        walletsListConfig = walletListConfig,
         contentItems = persistentListOf(
             WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Bitcoin"),
             WalletContentItemState.MultiCurrencyItem.Token(
@@ -263,13 +268,7 @@ internal object WalletPreviewData {
     val singleWalletScreenState = WalletStateHolder.SingleCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
-        selectedWallet = walletCardContentState,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        walletsListConfig = walletListConfig,
         contentItems = persistentListOf(
             WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
             WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Today"),

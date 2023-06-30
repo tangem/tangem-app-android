@@ -10,10 +10,11 @@ import com.tangem.core.ui.res.TangemTheme
 /**
 [REDACTED_AUTHOR]
  */
-internal fun Modifier.walletContentItemDecoration(currentIndex: Int, lastItemIndex: Int): Modifier = composed {
+internal fun Modifier.walletContentItemDecoration(currentIndex: Int, lastIndex: Int): Modifier = composed {
+    val modifierWithHorizontalPadding = this.padding(horizontal = TangemTheme.dimens.spacing16)
     when (currentIndex) {
         0 -> {
-            this
+            modifierWithHorizontalPadding
                 .padding(top = TangemTheme.dimens.spacing14)
                 .clip(
                     RoundedCornerShape(
@@ -22,8 +23,8 @@ internal fun Modifier.walletContentItemDecoration(currentIndex: Int, lastItemInd
                     ),
                 )
         }
-        lastItemIndex -> {
-            this
+        lastIndex -> {
+            modifierWithHorizontalPadding
                 .clip(
                     RoundedCornerShape(
                         bottomStart = TangemTheme.dimens.radius16,
@@ -31,6 +32,6 @@ internal fun Modifier.walletContentItemDecoration(currentIndex: Int, lastItemInd
                     ),
                 )
         }
-        else -> this
+        else -> modifierWithHorizontalPadding
     }
 }
