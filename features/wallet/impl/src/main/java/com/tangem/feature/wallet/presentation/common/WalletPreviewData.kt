@@ -106,11 +106,17 @@ internal object WalletPreviewData {
     val draggableItems = List(networksSize) { it }
         .flatMap { index ->
             val lastNetworkIndex = networksSize - 1
+            val lastTokenIndex = tokensSize - 1
             val networkNumber = index + 1
 
             val group = DraggableItem.GroupHeader(
                 id = "group_$networkNumber",
                 networkName = "$networkNumber",
+                roundingMode = when (index) {
+                    0 -> DraggableItem.RoundingMode.Top()
+                    lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
+                    else -> DraggableItem.RoundingMode.None
+                },
             )
 
             val tokens: MutableList<DraggableItem.Token> = mutableListOf()
@@ -120,10 +126,14 @@ internal object WalletPreviewData {
                     DraggableItem.Token(
                         tokenItemState = tokenItemDragState.copy(
                             id = "${group.id}_token_$tokenNumber",
-                            name = "Token $tokenNumber",
+                            name = "Token $tokenNumber from $networkNumber network",
                             networkIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                         ),
                         groupId = group.id,
+                        roundingMode = when {
+                            i == lastTokenIndex && index == lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
+                            else -> DraggableItem.RoundingMode.None
+                        },
                     ),
                 )
             }
@@ -142,6 +152,10 @@ internal object WalletPreviewData {
 
     val draggableTokens = draggableItems
         .filterIsInstance<DraggableItem.Token>()
+        .toMutableList()
+        .also {
+            it[0] = it[0].copy(roundingMode = DraggableItem.RoundingMode.Top())
+        }
         .toPersistentList()
 
     val groupedOrganizeTokensState = OrganizeTokensStateHolder(
