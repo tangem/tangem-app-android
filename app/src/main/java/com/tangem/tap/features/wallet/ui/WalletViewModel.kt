@@ -5,7 +5,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -14,6 +13,7 @@ import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.analytics.WalletAnalyticsEventsMapper
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.walletStoresManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,8 +54,9 @@ internal class WalletViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         launch()
         val scanResponse = store.state.globalState.scanResponse
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
         if (scanResponse != null) {
-            val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+            val currency = ParamCardCurrencyConverter().convert(cardTypeResolver)
             val signInType = store.state.signInState.type
             if (currency != null && signInType != null) {
                 analyticsEventHandler.send(
