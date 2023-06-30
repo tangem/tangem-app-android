@@ -12,7 +12,7 @@ import androidx.annotation.DrawableRes
  *
  * @author Andrew Khokhlov on 23/06/2023
  */
-data class ActionConfig(
+data class ActionButtonConfig(
     val text: String,
     @DrawableRes val iconResId: Int,
     val onClick: () -> Unit,
