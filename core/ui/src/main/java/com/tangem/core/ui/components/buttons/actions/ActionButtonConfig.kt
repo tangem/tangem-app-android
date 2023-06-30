@@ -12,7 +12,7 @@ import androidx.annotation.DrawableRes
  *
 [REDACTED_AUTHOR]
  */
-data class ActionConfig(
+data class ActionButtonConfig(
     val text: String,
     @DrawableRes val iconResId: Int,
     val onClick: () -> Unit,
