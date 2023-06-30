@@ -49,7 +49,12 @@ internal object UseCaseScanProcessor {
         val chains = buildList {
             add(ScanningFinishedChain { onScanStateChange(false) })
             if (analyticsEvent != null) {
-                add(AnalyticsChain(analyticsEvent))
+                add(
+                    AnalyticsChain(
+                        event = analyticsEvent,
+                        cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                    ),
+                )
             }
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager, preferencesStorage))
