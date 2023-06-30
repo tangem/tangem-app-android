@@ -1,15 +1,15 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
-import java.util.*
+import java.util.EnumSet
 
 object DetailsReducer {
     fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
@@ -23,11 +23,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
             handlePrepareScreen(action)
         }
         is DetailsAction.PrepareCardSettingsData -> {
-            handlePrepareCardSettingsScreen(
-                card = action.card,
-                cardTypesResolver = action.cardTypesResolver,
-                state = detailsState,
-            )
+            handlePrepareCardSettingsScreen(card = action.card, state = detailsState)
         }
         is DetailsAction.ResetCardSettingsData -> detailsState.copy(cardSettingsState = null)
         is DetailsAction.ResetToFactory -> {
@@ -60,17 +56,14 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
     )
 }
 
-private fun handlePrepareCardSettingsScreen(
-    card: CardDTO,
-    cardTypesResolver: CardTypesResolver,
-    state: DetailsState,
-): DetailsState {
+private fun handlePrepareCardSettingsScreen(card: CardDTO, state: DetailsState): DetailsState {
+    val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
     val cardSettingsState = CardSettingsState(
-        cardInfo = card.toCardInfo(cardTypesResolver),
-        manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
+        cardInfo = card.toCardInfo(cardTypeResolver),
+        manageSecurityState = prepareSecurityOptions(card, cardTypeResolver),
         card = card,
-        resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
-        accessCodeRecovery = if (cardTypesResolver.isWallet2()) {
+        resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypeResolver),
+        accessCodeRecovery = if (cardTypeResolver.isWallet2()) {
             val enabled = card.userSettings?.isUserCodeRecoveryAllowed ?: false
             AccessCodeRecoveryState(
                 enabledOnCard = enabled,
@@ -83,7 +76,7 @@ private fun handlePrepareCardSettingsScreen(
     return state.copy(cardSettingsState = cardSettingsState)
 }
 
-private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesResolver): ManageSecurityState {
+private fun prepareSecurityOptions(card: CardDTO, cardTypeResolver: CardTypeResolver): ManageSecurityState {
     val securityOption = when {
         card.isAccessCodeSet -> {
             SecurityOption.AccessCode
@@ -98,14 +91,15 @@ private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesRe
         }
     }
     val allowedSecurityOptions = when {
-        cardTypesResolver.isStart2Coin() || cardTypesResolver.isTangemNote() -> {
+        cardTypeResolver.isStart2Coin() || cardTypeResolver.isTangemNote() -> {
             EnumSet.of(SecurityOption.LongTap)
         }
         card.settings.isBackupAllowed -> {
             EnumSet.of(securityOption)
         }
-        else ->
-            prepareAllowedSecurityOptions(cardTypesResolver = cardTypesResolver, currentSecurityOption = securityOption)
+        else -> {
+            prepareAllowedSecurityOptions(cardTypeResolver = cardTypeResolver, currentSecurityOption = securityOption)
+        }
     }
     return ManageSecurityState(
         currentOption = securityOption,
@@ -114,9 +108,9 @@ private fun prepareSecurityOptions(card: CardDTO, cardTypesResolver: CardTypesRe
     )
 }
 
-private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: CardTypesResolver): Boolean {
+private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypeResolver: CardTypeResolver): Boolean {
     val hasPermanentWallet = card.wallets.any { it.settings.isPermanent }
-    val isNotAllowed = hasPermanentWallet || cardTypesResolver.isStart2Coin()
+    val isNotAllowed = hasPermanentWallet || cardTypeResolver.isStart2Coin()
     return !isNotAllowed
 }
 
@@ -140,12 +134,10 @@ private fun handleSecurityAction(action: DetailsAction.ManageSecurity, state: De
             // Setting options to show only LongTap from now on for non-twins
             val manageSecurityState = state.cardSettingsState?.manageSecurityState?.copy(
                 currentOption = state.cardSettingsState.manageSecurityState.selectedOption,
-                allowedOptions = state.scanResponse?.cardTypesResolver?.let {
-                    prepareAllowedSecurityOptions(
-                        cardTypesResolver = it,
-                        currentSecurityOption = state.cardSettingsState.manageSecurityState.selectedOption,
-                    )
-                } ?: EnumSet.of(SecurityOption.LongTap),
+                allowedOptions = prepareAllowedSecurityOptions(
+                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+                    currentSecurityOption = state.cardSettingsState.manageSecurityState.selectedOption,
+                ),
             )
             state.copy(
                 cardSettingsState = state.cardSettingsState?.copy(
@@ -229,12 +221,12 @@ private fun handleAccessCodeRecoveryAction(
 }
 
 private fun prepareAllowedSecurityOptions(
-    cardTypesResolver: CardTypesResolver,
+    cardTypeResolver: CardTypeResolver,
     currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
     val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
-    if (cardTypesResolver.isTangemTwins()) {
+    if (cardTypeResolver.isTangemTwins()) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
     }
     if (currentSecurityOption == SecurityOption.AccessCode) {
@@ -246,9 +238,8 @@ private fun prepareAllowedSecurityOptions(
     return allowedSecurityOptions
 }
 
-@Suppress("MagicNumber")
-private fun CardDTO.toCardInfo(cardTypesResolver: CardTypesResolver): CardInfo {
-    val cardId = this.cardId.chunked(4).joinToString(separator = " ")
+private fun CardDTO.toCardInfo(cardTypeResolver: CardTypeResolver): CardInfo {
+    val cardId = this.cardId.chunked(size = 4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
 
@@ -256,7 +247,7 @@ private fun CardDTO.toCardInfo(cardTypesResolver: CardTypesResolver): CardInfo {
         cardId = cardId,
         issuer = issuer,
         signedHashes = signedHashes,
-        isTwin = cardTypesResolver.isTangemTwins(),
+        isTwin = cardTypeResolver.isTangemTwins(),
         hasBackup = backupStatus?.isActive == true,
     )
 }
