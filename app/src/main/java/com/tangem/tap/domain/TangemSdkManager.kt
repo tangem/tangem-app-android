@@ -14,7 +14,7 @@ import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
@@ -38,7 +38,11 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
+class TangemSdkManager(
+    private val tangemSdk: TangemSdk,
+    private val context: Context,
+    private val cardTypeResolver: CardTypeResolver,
+) {
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
@@ -78,7 +82,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(scanResponse.cardTypesResolver),
+            CreateProductWalletTask(cardTypeResolver),
             scanResponse.card.cardId,
             Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
@@ -90,7 +94,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return when (val seedResult = DefaultMnemonic(mnemonic, tangemSdk.wordlist).generateSeed()) {
             is CompletionResult.Success -> runTaskAsync(
-                CreateProductWalletTask(scanResponse.cardTypesResolver, seedResult.data),
+                CreateProductWalletTask(cardTypeResolver, seedResult.data),
                 scanResponse.card.cardId,
                 Message(context.getString(R.string.initial_message_create_wallet_body)),
             )
@@ -228,7 +232,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
-            scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            cardTypeResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
             else -> CardIdDisplayFormat.Full
         }
     }
