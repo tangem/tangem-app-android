@@ -2,17 +2,19 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.models.scan.ScanResponse
 
 /**
 [REDACTED_AUTHOR]
  */
 class LinkedCardContextInterceptor(
-    private val scanResponse: ScanResponse,
+    scanResponse: ScanResponse,
+    cardTypeResolver: CardTypeResolver,
     val parent: LinkedCardContextInterceptor? = null,
 ) : ParamsInterceptor {
 
-    private val contextInterceptor = CardContextInterceptor(scanResponse)
+    private val contextInterceptor = CardContextInterceptor(scanResponse, cardTypeResolver)
 
     override fun id(): String = LinkedCardContextInterceptor.id()
 
