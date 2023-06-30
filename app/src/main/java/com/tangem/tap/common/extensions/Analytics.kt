@@ -1,6 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
@@ -11,8 +12,8 @@ import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterc
 /**
  * Sets the new context
  */
-fun Analytics.setContext(scanResponse: ScanResponse) {
-    addParamsInterceptor(LinkedCardContextInterceptor(scanResponse))
+fun Analytics.setContext(scanResponse: ScanResponse, cardTypeResolver: CardTypeResolver) {
+    addParamsInterceptor(LinkedCardContextInterceptor(scanResponse, cardTypeResolver))
 }
 
 /**
@@ -25,9 +26,13 @@ fun Analytics.eraseContext() {
 /**
  * Adds a new context and keeps a previous context as the parent of the new one
  */
-fun Analytics.addContext(scanResponse: ScanResponse) {
+fun Analytics.addContext(scanResponse: ScanResponse, cardTypeResolver: CardTypeResolver) {
     val currentContext = removeParamsInterceptor(LinkedCardContextInterceptor.id()) as? LinkedCardContextInterceptor
-    val newContext = LinkedCardContextInterceptor(scanResponse, parent = currentContext)
+    val newContext = LinkedCardContextInterceptor(
+        scanResponse = scanResponse,
+        cardTypeResolver = cardTypeResolver,
+        parent = currentContext,
+    )
 
     addParamsInterceptor(newContext)
 }

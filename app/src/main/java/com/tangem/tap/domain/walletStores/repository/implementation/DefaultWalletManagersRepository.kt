@@ -1,22 +1,17 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationParams
-import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
 import com.tangem.common.mapFailure
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.Provider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -30,6 +25,7 @@ import timber.log.Timber
 
 internal class DefaultWalletManagersRepository(
     private val walletManagerFactory: WalletManagerFactory,
+    private val cardTypeResolverProvider: Provider<CardTypeResolver>,
 ) : WalletManagersRepository {
     private val walletManagersStorage = WalletManagerStorage
 
@@ -56,10 +52,7 @@ internal class DefaultWalletManagersRepository(
             derivationPath = blockchainNetwork?.derivationPath,
         )
 
-        foundWalletManager?.updateTokens(
-            scanResponse = userWallet.scanResponse,
-            blockchainNetwork = blockchainNetwork,
-        )
+        foundWalletManager?.updateTokens(blockchainNetwork = blockchainNetwork)
             ?: makeAndStore(userWallet, blockchainNetwork)
     }
 
@@ -69,7 +62,7 @@ internal class DefaultWalletManagersRepository(
     ): CompletionResult<WalletManager> {
         val scanResponse = userWallet.scanResponse
         val blockchain = blockchainNetwork?.blockchain
-            ?: scanResponse.cardTypesResolver.getBlockchain().let { blockchain ->
+            ?: cardTypeResolverProvider.invoke().getBlockchain().let { blockchain ->
                 if (scanResponse.card.isTestCard) blockchain.getTestnetVersion() else blockchain
             }
         val derivationParams = getDerivationParams(
@@ -80,6 +73,7 @@ internal class DefaultWalletManagersRepository(
         val walletManager = blockchain?.let {
             walletManagerFactory.makeWalletManagerForApp(
                 scanResponse = userWallet.scanResponse,
+                cardTypeResolver = cardTypeResolverProvider.invoke(),
                 blockchain = blockchain,
                 derivationParams = derivationParams,
             )
@@ -98,10 +92,7 @@ internal class DefaultWalletManagersRepository(
                 CompletionResult.Failure(error)
             }
             walletManager != null -> {
-                walletManager.updateTokens(
-                    scanResponse = scanResponse,
-                    blockchainNetwork = blockchainNetwork,
-                )
+                walletManager.updateTokens(blockchainNetwork = blockchainNetwork)
                     .doOnSuccess { store(userWallet.walletId, it) }
             }
             else -> {
@@ -161,13 +152,10 @@ internal class DefaultWalletManagersRepository(
         }
     }
 
-    private fun WalletManager.updateTokens(
-        scanResponse: ScanResponse,
-        blockchainNetwork: BlockchainNetwork?,
-    ): CompletionResult<WalletManager> {
+    private fun WalletManager.updateTokens(blockchainNetwork: BlockchainNetwork?): CompletionResult<WalletManager> {
         val walletManager = this
         return catching {
-            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.cardTypesResolver.getPrimaryToken())
+            val tokens = blockchainNetwork?.tokens ?: listOfNotNull(cardTypeResolverProvider.invoke().getPrimaryToken())
 
             if (tokens != walletManager.cardTokens) {
                 // TODO: remove ability to manipulate with walletManager.cardTokens
