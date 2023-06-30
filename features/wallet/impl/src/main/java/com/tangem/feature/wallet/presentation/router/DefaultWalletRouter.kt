@@ -34,10 +34,7 @@ internal class DefaultWalletRouter : InnerWalletRouter {
             ) {
                 composable(WalletScreens.WALLET.name) {
                     val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
-                    WalletScreen(
-                        modifier = Modifier.systemBarsPadding(),
-                        state = viewModel.uiState,
-                    )
+                    WalletScreen(state = viewModel.uiState)
                 }
 
                 composable(WalletScreens.ORGANIZE_TOKENS.name) {
