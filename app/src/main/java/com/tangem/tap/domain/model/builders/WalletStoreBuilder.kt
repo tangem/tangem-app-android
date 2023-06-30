@@ -1,14 +1,10 @@
 package com.tangem.tap.domain.model.builders
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -29,19 +25,25 @@ interface WalletStoreBuilder {
     companion object {
         operator fun invoke(
             userWallet: UserWallet,
+            cardTypeResolver: CardTypeResolver,
             blockchainNetwork: BlockchainNetwork,
         ): BlockchainNetworkWalletStoreBuilder {
-            return BlockchainNetworkWalletStoreBuilderImpl(userWallet, blockchainNetwork)
+            return BlockchainNetworkWalletStoreBuilderImpl(userWallet, cardTypeResolver, blockchainNetwork)
         }
 
-        operator fun invoke(userWallet: UserWallet, walletManager: WalletManager): WalletMangerWalletStoreBuilder {
-            return WalletMangerWalletStoreBuilderImpl(userWallet, walletManager)
+        operator fun invoke(
+            userWallet: UserWallet,
+            cardTypeResolver: CardTypeResolver,
+            walletManager: WalletManager,
+        ): WalletMangerWalletStoreBuilder {
+            return WalletMangerWalletStoreBuilderImpl(userWallet, cardTypeResolver, walletManager)
         }
     }
 }
 
 private class BlockchainNetworkWalletStoreBuilderImpl(
     private val userWallet: UserWallet,
+    private val cardTypeResolver: CardTypeResolver,
     private val blockchainNetwork: BlockchainNetwork,
 ) : WalletStoreBuilder.BlockchainNetworkWalletStoreBuilder {
     private var walletManager: WalletManager? = null
@@ -56,7 +58,7 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
         val tokensWalletsData = blockchainNetwork.getTokensWalletsData(
             walletManager = walletManager,
             cardDerivationStyle = cardDerivationStyle,
-            primaryToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken(),
+            primaryToken = cardTypeResolver.getPrimaryToken(),
         )
 
         return WalletStoreModel(
@@ -73,6 +75,7 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
 
 private class WalletMangerWalletStoreBuilderImpl(
     private val userWallet: UserWallet,
+    private val cardTypeResolver: CardTypeResolver,
     private val walletManager: WalletManager,
 ) : WalletStoreBuilder.WalletMangerWalletStoreBuilder {
 
@@ -81,7 +84,7 @@ private class WalletMangerWalletStoreBuilderImpl(
         val blockchainWalletData = wallet.blockchain.toBlockchainWalletData(walletManager)
         val tokenWalletsData = wallet.getTokens().firstOrNull()?.toTokenWalletData(
             walletManager = walletManager,
-            primaryToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken(),
+            primaryToken = cardTypeResolver.getPrimaryToken(),
         )
 
         return WalletStoreModel(
