@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
-import com.tangem.core.ui.components.buttons.actions.ActionConfig
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.impl.R
  *
 [REDACTED_AUTHOR]
  */
-sealed class WalletManageButton(val config: ActionConfig) {
+sealed class WalletManageButton(val config: ActionButtonConfig) {
 
     /**
      * Buy
@@ -18,7 +18,7 @@ sealed class WalletManageButton(val config: ActionConfig) {
      * @param onClick lambda be invoked when manage button is clicked
      */
     data class Buy(val onClick: () -> Unit) : WalletManageButton(
-        config = ActionConfig(
+        config = ActionButtonConfig(
             text = "Buy",
             iconResId = R.drawable.ic_plus_24,
             onClick = onClick,
@@ -31,7 +31,7 @@ sealed class WalletManageButton(val config: ActionConfig) {
      * @param onClick lambda be invoked when manage button is clicked
      */
     data class Send(val onClick: () -> Unit) : WalletManageButton(
-        config = ActionConfig(
+        config = ActionButtonConfig(
             text = "Send",
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
@@ -44,7 +44,7 @@ sealed class WalletManageButton(val config: ActionConfig) {
      * @param onClick lambda be invoked when manage button is clicked
      */
     data class Receive(val onClick: () -> Unit) : WalletManageButton(
-        config = ActionConfig(
+        config = ActionButtonConfig(
             text = "Receive",
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
@@ -57,7 +57,7 @@ sealed class WalletManageButton(val config: ActionConfig) {
      * @param onClick lambda be invoked when manage button is clicked
      */
     data class Exchange(val onClick: () -> Unit) : WalletManageButton(
-        config = ActionConfig(
+        config = ActionButtonConfig(
             text = "Exchange",
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
@@ -70,7 +70,7 @@ sealed class WalletManageButton(val config: ActionConfig) {
      * @param onClick lambda be invoked when manage button is clicked
      */
     data class CopyAddress(val onClick: () -> Unit) : WalletManageButton(
-        config = ActionConfig(
+        config = ActionButtonConfig(
             text = "Copy address",
             iconResId = R.drawable.ic_copy_24,
             onClick = onClick,
