@@ -20,6 +20,7 @@ data class TangemDimens internal constructor(
     val elevation24: Dp = 24.dp,
     // endregion Elevation
     // region Radius
+    val radius0: Dp = 0.dp,
     val radius2: Dp = 2.dp,
     val radius3: Dp = 3.dp,
     val radius4: Dp = 4.dp,
