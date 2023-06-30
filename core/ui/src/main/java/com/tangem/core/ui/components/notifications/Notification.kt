@@ -2,10 +2,11 @@ package com.tangem.core.ui.components.notifications
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,19 +33,23 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun Notification(state: NotificationState, modifier: Modifier = Modifier) {
-    Surface(
-        onClick = if (state is NotificationState.Action) {
-            state.onClick
-        } else {
-            {}
-        },
-        modifier = modifier,
-        enabled = when (state) {
-            is NotificationState.Simple -> false
-            is NotificationState.Action -> true
-        },
-        shape = RoundedCornerShape(TangemTheme.dimens.radius18),
-        color = TangemTheme.colors.button.secondary,
+    Box(
+        modifier = modifier
+            .clickable(
+                enabled = when (state) {
+                    is NotificationState.Simple -> false
+                    is NotificationState.Action -> true
+                },
+                onClick = if (state is NotificationState.Action) {
+                    state.onClick
+                } else {
+                    {}
+                },
+            )
+            .background(
+                color = TangemTheme.colors.button.secondary,
+                RoundedCornerShape(size = TangemTheme.dimens.radius18),
+            ),
     ) {
         Box(
             modifier = Modifier
