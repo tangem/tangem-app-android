@@ -1,10 +1,11 @@
 package com.tangem.tap.features.walletSelector.redux
 
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
 import org.rekotlin.Action
 
 internal object WalletSelectorReducer {
@@ -99,7 +100,10 @@ internal object WalletSelectorReducer {
             )
         } else {
             UserWalletModel.Type.SingleCurrency(
-                blockchainName = scanResponse.cardTypesResolver.getBlockchain().fullName,
+                blockchainName = store.state.daggerGraphState
+                    .get(DaggerGraphState::cardTypeResolver)
+                    .getBlockchain()
+                    .fullName,
             )
         }
     }

@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.SignatureCountValidator
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -107,9 +106,10 @@ class WarningsMiddleware {
     }
 
     private fun checkIfWarningNeeded(scanResponse: ScanResponse): WarningMessage? {
-        if (scanResponse.cardTypesResolver.isTangemTwins() || scanResponse.isDemoCard()) return null
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
+        if (cardTypeResolver.isTangemTwins() || scanResponse.isDemoCard()) return null
 
-        if (scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+        if (cardTypeResolver.isMultiwalletAllowed()) {
             val isBackupForbidden = with(scanResponse.card.settings) { !(isBackupAllowed || isHDWalletAllowed) }
             return if (scanResponse.card.hasSignedHashes() && isBackupForbidden) {
                 WarningMessagesManager.signedHashesMultiWalletWarning
@@ -139,9 +139,8 @@ class WarningsMiddleware {
         val card = scanResponse?.card
         if (card == null || preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) return
 
-        if (scanResponse.cardTypesResolver.isTangemTwins() || scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
-            return
-        }
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
+        if (cardTypeResolver.isTangemTwins() || cardTypeResolver.isMultiwalletAllowed()) return
 
         val validator = store.state.walletState.walletManagers.firstOrNull()
             as? SignatureCountValidator
