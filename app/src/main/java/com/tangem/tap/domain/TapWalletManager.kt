@@ -9,8 +9,6 @@ import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
@@ -25,6 +23,7 @@ import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -58,7 +57,10 @@ class TapWalletManager(
     }
 
     private suspend fun loadUserWalletData(userWallet: UserWallet, refresh: Boolean, sendAnalyticsEvent: Boolean) {
-        Analytics.setContext(userWallet.scanResponse)
+        Analytics.setContext(
+            scanResponse = userWallet.scanResponse,
+            cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
+        )
         if (sendAnalyticsEvent) {
             Analytics.send(Basic.WalletOpened())
         }
@@ -68,7 +70,7 @@ class TapWalletManager(
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
-        updateConfigManager(scanResponse)
+        updateConfigManager()
         withMainContext {
             // Order is important
             store.dispatch(DisclaimerAction.SetDisclaimer(card.createDisclaimer()))
@@ -135,10 +137,11 @@ class TapWalletManager(
             }
     }
 
-    fun updateConfigManager(data: ScanResponse) {
+    fun updateConfigManager() {
         val configManager = store.state.globalState.configManager
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
 
-        if (data.cardTypesResolver.isStart2Coin()) {
+        if (cardTypeResolver.isStart2Coin()) {
             configManager?.turnOff(ConfigManager.IS_TOP_UP_ENABLED)
         } else {
             configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
