@@ -8,7 +8,6 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -404,7 +403,8 @@ class WalletConnectMiddleware {
 
     private fun handleScanResponse(scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain) {
         val card = scanResponse.card
-        if (!scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
+        if (!cardTypeResolver.isMultiwalletAllowed()) {
             store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
             return
         }
