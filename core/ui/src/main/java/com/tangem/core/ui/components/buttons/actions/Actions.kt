@@ -9,6 +9,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,12 +78,13 @@ private fun Button(
 ) {
     Row(
         modifier = modifier
-            .clickable(enabled = config.enabled, onClick = config.onClick)
             .heightIn(min = TangemTheme.dimens.size36)
+            .clip(shape)
             .background(
                 color = if (config.enabled) color else TangemTheme.colors.button.disabled,
                 shape = shape,
             )
+            .clickable(enabled = config.enabled, onClick = config.onClick)
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing24,
