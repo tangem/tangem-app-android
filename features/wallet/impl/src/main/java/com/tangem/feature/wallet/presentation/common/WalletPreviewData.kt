@@ -22,7 +22,7 @@ internal object WalletPreviewData {
         balance = "8923,05 $",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardLoadingState = WalletCardState.Loading(
@@ -30,7 +30,7 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardHiddenContentState = WalletCardState.HiddenContent(
@@ -38,7 +38,7 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardErrorState = WalletCardState.Error(
@@ -46,7 +46,7 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletListConfig = WalletsListConfig(
@@ -288,12 +288,7 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
-        notifications = persistentListOf(
-            WalletNotification.UnreachableNetworks,
-            WalletNotification.LikeTangemApp(onClick = {}),
-            WalletNotification.NeedToBackup(onClick = {}),
-            WalletNotification.ScanCard(onClick = {}),
-        ),
+        notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons,
     )
 }
