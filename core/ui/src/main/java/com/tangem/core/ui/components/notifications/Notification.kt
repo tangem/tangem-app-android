@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,11 @@ import com.tangem.core.ui.res.TangemTheme
 fun Notification(state: NotificationState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
+            .clip(shape = RoundedCornerShape(size = TangemTheme.dimens.radius18))
+            .background(
+                color = TangemTheme.colors.button.secondary,
+                shape = RoundedCornerShape(size = TangemTheme.dimens.radius18),
+            )
             .clickable(
                 enabled = when (state) {
                     is NotificationState.Simple -> false
@@ -45,10 +51,6 @@ fun Notification(state: NotificationState, modifier: Modifier = Modifier) {
                 } else {
                     {}
                 },
-            )
-            .background(
-                color = TangemTheme.colors.button.secondary,
-                RoundedCornerShape(size = TangemTheme.dimens.radius18),
             ),
     ) {
         Box(
