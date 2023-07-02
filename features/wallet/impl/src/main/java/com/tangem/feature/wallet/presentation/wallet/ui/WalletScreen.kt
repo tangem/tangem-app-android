@@ -1,10 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletNotificationDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
 /**
  * Wallet screen
@@ -39,6 +42,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletNotifi
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongMethod")
 @Composable
 internal fun WalletScreen(state: WalletStateHolder) {
     BackHandler(onBack = state.onBackClick)
@@ -47,6 +51,9 @@ internal fun WalletScreen(state: WalletStateHolder) {
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
+
+        val walletsListState = rememberLazyListState()
+        val changeableItemModifier = Modifier.changeWalletAnimator(walletsListState)
 
         LazyColumn(
             modifier = Modifier
@@ -58,6 +65,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
             item {
                 WalletsList(
                     config = state.walletsListConfig,
+                    lazyListState = walletsListState,
                     modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing14),
                 )
             }
@@ -66,9 +74,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 item {
                     WalletManageButtons(
                         buttons = state.buttons,
-                        modifier = Modifier
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
-                            .padding(bottom = TangemTheme.dimens.spacing14),
+                        modifier = changeableItemModifier.padding(bottom = TangemTheme.dimens.spacing14),
                     )
                 }
             }
@@ -78,7 +84,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 itemContent = { index, item ->
                     Notification(
                         state = item.state,
-                        modifier = Modifier.walletNotificationDecoration(
+                        modifier = changeableItemModifier.walletNotificationDecoration(
                             currentIndex = index,
                             lastIndex = state.notifications.lastIndex,
                         ),
@@ -100,7 +106,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 itemContent = { index, item ->
                     ContentItem(
                         item = item,
-                        modifier = Modifier.walletContentItemDecoration(
+                        modifier = changeableItemModifier.walletContentItemDecoration(
                             currentIndex = index,
                             lastIndex = state.contentItems.lastIndex,
                         ),
@@ -109,7 +115,14 @@ internal fun WalletScreen(state: WalletStateHolder) {
             )
 
             if (state is WalletStateHolder.MultiCurrencyContent) {
-                item { OrganizeTokensButton(onClick = state.onOrganizeTokensClick) }
+                item {
+                    OrganizeTokensButton(
+                        onClick = state.onOrganizeTokensClick,
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
+                    )
+                }
             }
         }
     }
@@ -195,16 +208,14 @@ private fun TransactionGroupTitle(
 }
 
 @Composable
-private fun OrganizeTokensButton(onClick: () -> Unit) {
+private fun OrganizeTokensButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     RoundedActionButton(
         config = ActionButtonConfig(
             text = stringResource(id = R.string.organize_tokens_title),
             iconResId = R.drawable.ic_filter_24,
             onClick = onClick,
         ),
-        modifier = Modifier
-            .padding(top = TangemTheme.dimens.spacing8)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = modifier,
     )
 }
 
