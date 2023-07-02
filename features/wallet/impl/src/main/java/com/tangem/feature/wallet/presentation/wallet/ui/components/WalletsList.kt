@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -20,11 +21,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.FlowCollector
-
-private const val MIN_OFFSET = -2
-private const val MAX_OFFSET = 2
 
 /**
  * Wallets list component
@@ -36,11 +34,10 @@ private const val MAX_OFFSET = 2
  */
 @OptIn(ExperimentalFoundationApi::class, InternalCoroutinesApi::class)
 @Composable
-internal fun WalletsList(config: WalletsListConfig, modifier: Modifier = Modifier) {
+internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState, modifier: Modifier = Modifier) {
     val horizontalCardPadding = TangemTheme.dimens.spacing16
     val itemWidth = LocalConfiguration.current.screenWidthDp.dp - horizontalCardPadding * 2
 
-    val lazyListState = rememberLazyListState()
     LazyRow(
         modifier = modifier.background(color = TangemTheme.colors.background.secondary),
         state = lazyListState,
@@ -54,17 +51,8 @@ internal fun WalletsList(config: WalletsListConfig, modifier: Modifier = Modifie
     }
 
     LaunchedEffect(lazyListState) {
-        snapshotFlow(lazyListState::firstVisibleItemScrollOffset)
-            .collect(
-                collector = FlowCollector { firstVisibleItemScrollOffset ->
-                    val itemSize = lazyListState.layoutInfo.visibleItemsInfo.firstOrNull()?.size ?: 1
-                    val offset = lazyListState.firstVisibleItemIndex * itemSize + firstVisibleItemScrollOffset
-                    val currentIndex = offset / itemSize
-                    if (offset - currentIndex * itemSize in MIN_OFFSET..MAX_OFFSET) {
-                        config.onWalletChange(currentIndex)
-                    }
-                },
-            )
+        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo }
+            .collect(collector = ScrollOffsetCollector(callback = config.onWalletChange))
     }
 }
 
@@ -72,7 +60,10 @@ internal fun WalletsList(config: WalletsListConfig, modifier: Modifier = Modifie
 @Composable
 private fun Preview_WalletHeader_LightTheme() {
     TangemTheme(isDark = false) {
-        WalletsList(config = WalletPreviewData.walletListConfig)
+        WalletsList(
+            config = WalletPreviewData.walletListConfig,
+            lazyListState = rememberLazyListState(),
+        )
     }
 }
 
@@ -80,6 +71,9 @@ private fun Preview_WalletHeader_LightTheme() {
 @Composable
 private fun Preview_WalletHeader_DarkTheme() {
     TangemTheme(isDark = true) {
-        WalletsList(config = WalletPreviewData.walletListConfig)
+        WalletsList(
+            config = WalletPreviewData.walletListConfig,
+            lazyListState = rememberLazyListState(),
+        )
     }
 }
