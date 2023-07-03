@@ -6,7 +6,6 @@ import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnPreferenceStorage
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
-import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -15,7 +14,6 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 internal class DefaultLearn2earnRepository(
-    override val featureToggleManager: Learn2earnFeatureToggleManager,
     private val preferencesStorage: Learn2earnPreferenceStorage,
     private val api: PromotionApi,
     private val dispatchers: AppCoroutineDispatcherProvider,
