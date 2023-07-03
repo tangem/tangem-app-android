@@ -5,6 +5,7 @@ import com.tangem.datasource.api.promotion.models.AbstractPromotionResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
+import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
 import com.tangem.feature.learn2earn.domain.api.*
 import com.tangem.feature.learn2earn.domain.models.Promotion
 import com.tangem.feature.learn2earn.domain.models.PromotionError
@@ -17,6 +18,7 @@ import com.tangem.lib.crypto.models.Currency
 [REDACTED_AUTHOR]
  */
 class DefaultLearn2earnInteractor(
+    private val featureToggleManager: Learn2earnFeatureToggleManager,
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
@@ -207,7 +209,7 @@ class DefaultLearn2earnInteractor(
     private fun promotionIsActive(): Boolean {
         val userData = repository.getUserData()
         val isActive = when {
-            !repository.featureToggleManager.isLearn2earnEnabled -> false
+            !featureToggleManager.isLearn2earnEnabled -> false
             userData.isAlreadyReceivedAward -> false
             promotion.isError() -> false
             else -> {
@@ -220,7 +222,7 @@ class DefaultLearn2earnInteractor(
     }
 
     private suspend fun initPromotionInfo() {
-        promotion = if (repository.featureToggleManager.isLearn2earnEnabled) {
+        promotion = if (featureToggleManager.isLearn2earnEnabled) {
             repository.getPromotionInfo()
                 .fold(
                     onSuccess = { response ->
