@@ -5,7 +5,7 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 /**
 [REDACTED_AUTHOR]
  */
-class ProdLearn2earnFeatureToggleManager(
+internal class DefaultLearn2earnFeatureToggleManager(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : Learn2earnFeatureToggleManager {
 
