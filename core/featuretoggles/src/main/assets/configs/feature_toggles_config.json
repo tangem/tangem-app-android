@@ -14,5 +14,9 @@
     {
         "name": "REDESIGNED_WALLET_SCREEN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "1INCH_LEARN_2_EARN_ENABLED",
+        "version": "undefined"
     }
 ]
