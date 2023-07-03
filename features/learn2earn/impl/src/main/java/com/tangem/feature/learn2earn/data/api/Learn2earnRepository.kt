@@ -2,11 +2,14 @@ package com.tangem.feature.learn2earn.data.api
 
 import com.tangem.datasource.api.promotion.models.*
 import com.tangem.feature.learn2earn.data.models.PromoUserData
+import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
 
 /**
  * @author Anton Zhilenkov on 07.06.2023.
  */
 interface Learn2earnRepository {
+
+    val featureToggleManager: Learn2earnFeatureToggleManager
 
     fun getUserData(): PromoUserData
 
