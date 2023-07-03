@@ -50,15 +50,15 @@ class WalletConnectInteractor(
                 when (wcEvent) {
                     is WalletConnectEvents.SessionProposal -> {
                         Timber.d("WC session proposal event received")
-                        val unsupportedNetworks = wcEvent.chainIds
+                        val unsupportedNetworks = wcEvent.requiredChainIds
                             .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
                         if (unsupportedNetworks.isNotEmpty()) {
                             val error = WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks)
                             handler.onSessionRejected(error)
                             return@onEach
                         }
-
-                        val networksFormatted = wcEvent.chainIds
+                        val networksFormatted = (wcEvent.requiredChainIds + wcEvent.optionalChainIds)
+                            .distinct()
                             .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
                             .toString()
                         handler.onProposalReceived(proposal = wcEvent, networksFormatted = networksFormatted)
