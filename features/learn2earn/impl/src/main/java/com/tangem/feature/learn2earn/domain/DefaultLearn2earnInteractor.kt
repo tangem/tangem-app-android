@@ -207,6 +207,7 @@ class DefaultLearn2earnInteractor(
     private fun promotionIsActive(): Boolean {
         val userData = repository.getUserData()
         val isActive = when {
+            !repository.featureToggleManager.isLearn2earnEnabled -> false
             userData.isAlreadyReceivedAward -> false
             promotion.isError() -> false
             else -> {
@@ -219,34 +220,41 @@ class DefaultLearn2earnInteractor(
     }
 
     private suspend fun initPromotionInfo() {
-        promotion = repository.getPromotionInfo()
-            .fold(
-                onSuccess = { response ->
-                    val responseError = response.error
-                    if (responseError == null) {
-                        val npeMessage = { "Shouldn't be null" }
-                        Promotion(
-                            info = Promotion.PromotionInfo(
-                                newCard = requireNotNull(response.newCard, npeMessage),
-                                oldCard = requireNotNull(response.oldCard, npeMessage),
-                                awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
-                            ),
-                            error = null,
-                        )
-                    } else {
+        promotion = if (repository.featureToggleManager.isLearn2earnEnabled) {
+            repository.getPromotionInfo()
+                .fold(
+                    onSuccess = { response ->
+                        val responseError = response.error
+                        if (responseError == null) {
+                            val npeMessage = { "Shouldn't be null" }
+                            Promotion(
+                                info = Promotion.PromotionInfo(
+                                    newCard = requireNotNull(response.newCard, npeMessage),
+                                    oldCard = requireNotNull(response.oldCard, npeMessage),
+                                    awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
+                                ),
+                                error = null,
+                            )
+                        } else {
+                            Promotion(
+                                info = null,
+                                error = responseError.toDomainError(),
+                            )
+                        }
+                    },
+                    onFailure = {
                         Promotion(
                             info = null,
-                            error = responseError.toDomainError(),
+                            error = PromotionError.NetworkUnreachable,
                         )
-                    }
-                },
-                onFailure = {
-                    Promotion(
-                        info = null,
-                        error = PromotionError.NetworkUnreachable,
-                    )
-                },
+                    },
+                )
+        } else {
+            Promotion(
+                info = null,
+                error = null,
             )
+        }
     }
 
     private fun getCurrencyForAward(): Currency? {
