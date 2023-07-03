@@ -8,7 +8,6 @@ import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.allowLogging
 import com.tangem.lib.auth.AuthProvider
-import com.tangem.lib.auth.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -76,12 +75,20 @@ class NetworkModule {
     }
 
     private fun createBasePromotionRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): PromotionApi {
+        // TODO: 1inch: switched to develop environment by default for testing on external builds
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(if (BuildConfig.DEBUG) DEV_TANGEM_TECH_BASE_URL else PROD_TANGEM_TECH_BASE_URL)
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
             .create(PromotionApi::class.java)
+
+        // return Retrofit.Builder()
+        //     .addConverterFactory(MoshiConverterFactory.create(moshi))
+        //     .baseUrl(if (BuildConfig.DEBUG) DEV_TANGEM_TECH_BASE_URL else PROD_TANGEM_TECH_BASE_URL)
+        //     .client(okHttpClient)
+        //     .build()
+        //     .create(PromotionApi::class.java)
     }
 
     private companion object {

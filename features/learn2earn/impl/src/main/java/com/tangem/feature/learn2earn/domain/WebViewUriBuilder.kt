@@ -1,7 +1,6 @@
 package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
-import com.tangem.feature.learn2earn.impl.BuildConfig
 
 /**
  * @author Anton Zhilenkov on 12.06.2023.
@@ -63,15 +62,20 @@ internal class WebViewUriBuilder(
         val builder = Uri.Builder()
         builder.scheme(SCHEME)
 
-        if (BuildConfig.DEBUG) {
-            builder.authority(DEV_BASE_URL)
-            builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath(DEV_PATH_PROMOTION)
-        } else {
-            builder.authority(BASE_URL)
-            builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath(PATH_PROMOTION)
-        }
+        // TODO: 1inch: switched to develop environment by default for testing on external builds
+        builder.authority(DEV_BASE_URL)
+        builder.appendPath(userCountryCodeProvider.invoke())
+        builder.appendPath(DEV_PATH_PROMOTION)
+
+        // if (BuildConfig.DEBUG) {
+        //     builder.authority(DEV_BASE_URL)
+        //     builder.appendPath(userCountryCodeProvider.invoke())
+        //     builder.appendPath(DEV_PATH_PROMOTION)
+        // } else {
+        //     builder.authority(BASE_URL)
+        //     builder.appendPath(userCountryCodeProvider.invoke())
+        //     builder.appendPath(PATH_PROMOTION)
+        // }
 
         return builder
     }
