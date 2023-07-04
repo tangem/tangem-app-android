@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state
+package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButton
 import kotlinx.collections.immutable.ImmutableList
 
 /**
