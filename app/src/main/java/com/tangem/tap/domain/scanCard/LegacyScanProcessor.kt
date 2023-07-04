@@ -7,7 +7,6 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
@@ -23,7 +22,6 @@ import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -73,11 +71,7 @@ internal object LegacyScanProcessor {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
                 onScanStateChange(false)
-                sendAnalytics(
-                    analyticsEvent = analyticsEvent,
-                    scanResponse = scanResponse,
-                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-                )
+                sendAnalytics(analyticsEvent, scanResponse)
 
                 showDisclaimerIfNeed(
                     scanResponse = scanResponse,
@@ -95,14 +89,10 @@ internal object LegacyScanProcessor {
             }
     }
 
-    private fun sendAnalytics(
-        analyticsEvent: AnalyticsEvent?,
-        scanResponse: ScanResponse,
-        cardTypeResolver: CardTypeResolver,
-    ) {
+    private fun sendAnalytics(analyticsEvent: AnalyticsEvent?, scanResponse: ScanResponse) {
         analyticsEvent?.let {
             // this workaround needed to send CardWasScannedEvent without adding a context
-            val interceptor = CardContextInterceptor(scanResponse, cardTypeResolver)
+            val interceptor = CardContextInterceptor(scanResponse)
             val params = it.params.toMutableMap()
             interceptor.intercept(params)
             it.params = params.toMap()
@@ -156,25 +146,18 @@ internal object LegacyScanProcessor {
     ) {
         val globalState = store.state.globalState
         val tapWalletManager = globalState.tapWalletManager
-        tapWalletManager.updateConfigManager()
+        tapWalletManager.updateConfigManager(scanResponse)
 
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
-        if (OnboardingHelper.isOnboardingCase(scanResponse, cardTypeResolver)) {
-            Analytics.addContext(
-                scanResponse = scanResponse,
-                cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-            )
+        if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+            Analytics.addContext(scanResponse)
             onWalletNotCreated()
             store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
             val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
             navigateTo(appScreen) { onProgressStateChange(it) }
         } else {
-            Analytics.setContext(
-                scanResponse = scanResponse,
-                cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-            )
+            Analytics.setContext(scanResponse)
             if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                 onWalletNotCreated()
                 store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))

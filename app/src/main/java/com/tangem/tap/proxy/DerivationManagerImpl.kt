@@ -29,7 +29,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
 
-class DerivationManagerImpl(private val appStateHolder: AppStateHolder) : DerivationManager {
+class DerivationManagerImpl(
+    private val appStateHolder: AppStateHolder,
+) : DerivationManager {
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
