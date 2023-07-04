@@ -53,6 +53,9 @@ internal class BiometricUserWalletsListManager(
     override val hasUserWallets: Boolean
         get() = keysRepository.hasSavedEncryptionKeys()
 
+    override val walletsCount: Int
+        get() = state.value.userWallets.size
+
     override suspend fun unlock(): CompletionResult<UserWallet> {
         return unlockWithBiometryInternal()
             .mapFailure { error ->
