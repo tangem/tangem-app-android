@@ -22,7 +22,7 @@ internal object WalletPreviewData {
         balance = "8923,05 $",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardLoadingState = WalletCardState.Loading(
@@ -30,7 +30,7 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardHiddenContentState = WalletCardState.HiddenContent(
@@ -38,7 +38,7 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
     )
 
     val walletCardErrorState = WalletCardState.Error(
@@ -46,7 +46,18 @@ internal object WalletPreviewData {
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
-        onClick = {},
+        onClick = null,
+    )
+
+    val walletListConfig = WalletsListConfig(
+        selectedWalletIndex = 0,
+        wallets = persistentListOf(
+            walletCardContentState,
+            walletCardLoadingState,
+            walletCardHiddenContentState,
+            walletCardErrorState,
+        ),
+        onWalletChange = {},
     )
 
     val tokenItemVisibleState = TokenItemState.Content(
@@ -106,11 +117,17 @@ internal object WalletPreviewData {
     val draggableItems = List(networksSize) { it }
         .flatMap { index ->
             val lastNetworkIndex = networksSize - 1
+            val lastTokenIndex = tokensSize - 1
             val networkNumber = index + 1
 
             val group = DraggableItem.GroupHeader(
                 id = "group_$networkNumber",
                 networkName = "$networkNumber",
+                roundingMode = when (index) {
+                    0 -> DraggableItem.RoundingMode.Top()
+                    lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
+                    else -> DraggableItem.RoundingMode.None
+                },
             )
 
             val tokens: MutableList<DraggableItem.Token> = mutableListOf()
@@ -120,10 +137,14 @@ internal object WalletPreviewData {
                     DraggableItem.Token(
                         tokenItemState = tokenItemDragState.copy(
                             id = "${group.id}_token_$tokenNumber",
-                            name = "Token $tokenNumber",
+                            name = "Token $tokenNumber from $networkNumber network",
                             networkIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                         ),
                         groupId = group.id,
+                        roundingMode = when {
+                            i == lastTokenIndex && index == lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
+                            else -> DraggableItem.RoundingMode.None
+                        },
                     ),
                 )
             }
@@ -142,6 +163,10 @@ internal object WalletPreviewData {
 
     val draggableTokens = draggableItems
         .filterIsInstance<DraggableItem.Token>()
+        .toMutableList()
+        .also {
+            it[0] = it[0].copy(roundingMode = DraggableItem.RoundingMode.Top())
+        }
         .toPersistentList()
 
     val groupedOrganizeTokensState = OrganizeTokensStateHolder(
@@ -170,16 +195,18 @@ internal object WalletPreviewData {
         ),
     )
 
+    val manageButtons = persistentListOf(
+        WalletManageButton.Buy(onClick = {}),
+        WalletManageButton.Send(onClick = {}),
+        WalletManageButton.Receive(onClick = {}),
+        WalletManageButton.Exchange(onClick = {}),
+        WalletManageButton.CopyAddress(onClick = {}),
+    )
+
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
-        selectedWallet = walletCardContentState,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        walletsListConfig = walletListConfig,
         contentItems = persistentListOf(
             WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Bitcoin"),
             WalletContentItemState.MultiCurrencyItem.Token(
@@ -241,13 +268,7 @@ internal object WalletPreviewData {
     val singleWalletScreenState = WalletStateHolder.SingleCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
-        selectedWallet = walletCardContentState,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        walletsListConfig = walletListConfig,
         contentItems = persistentListOf(
             WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
             WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Today"),
@@ -267,11 +288,7 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
-        notifications = persistentListOf(
-            WalletNotification.UnreachableNetworks,
-            WalletNotification.LikeTangemApp(onClick = {}),
-            WalletNotification.NeedToBackup(onClick = {}),
-            WalletNotification.ScanCard(onClick = {}),
-        ),
+        notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
+        buttons = manageButtons,
     )
 }
