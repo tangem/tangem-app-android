@@ -32,20 +32,27 @@ fun Learn2earnStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modif
                 .fillMaxSize()
                 .align(Alignment.Center),
         )
-        StoryDescription(
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.size40)
-                .fillMaxSize(),
-            headerText = stringResource(id = R.string.story_learn_title),
-            bodyText = stringResource(id = R.string.story_learn_description),
-        )
-        Image(
-            modifier = Modifier
-                .padding(bottom = TangemTheme.dimens.size68)
-                .align(Alignment.BottomCenter),
-            painter = painterResource(id = R.drawable.img_1inch_logo_401_378),
-            contentDescription = null,
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            StoryDescription(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.size40)
+                    .weight(weight = 1f),
+                headerText = stringResource(id = R.string.story_learn_title),
+                bodyText = stringResource(id = R.string.story_learn_description),
+            )
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = TangemTheme.dimens.size16)
+                    .navigationBarsPadding()
+                    .weight(weight = 1.2f),
+                painter = painterResource(id = R.drawable.img_1inch_logo_401_378),
+                contentDescription = null,
+            )
+        }
+
         SecondaryButton(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.size16)
