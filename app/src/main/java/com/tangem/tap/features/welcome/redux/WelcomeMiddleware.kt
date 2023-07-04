@@ -20,7 +20,6 @@ import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.signin.redux.SignInAction
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -80,12 +79,7 @@ internal class WelcomeMiddleware {
 
     private fun proceedWithCard(state: WelcomeState) = scope.launch {
         scanCardInternal { scanResponse ->
-            val userWallet = UserWalletBuilder(
-                scanResponse = scanResponse,
-                cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-            )
-                .build()
-                ?: return@scanCardInternal
+            val userWallet = UserWalletBuilder(scanResponse).build() ?: return@scanCardInternal
 
             userWalletsListManager.save(userWallet, canOverride = true)
                 .doOnFailure { error ->
