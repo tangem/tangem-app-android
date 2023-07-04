@@ -3,8 +3,9 @@ package com.tangem.tap.features.onboarding.products.otherCards.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.*
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -12,7 +13,10 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
-import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -86,10 +90,9 @@ private fun handleOtherCardsAction(action: Action) {
                             onboardingManager.activationStarted(updatedCard.cardId)
                             store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
 
-                            val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
-                            val primaryBlockchain = cardTypeResolver.getBlockchain()
+                            val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
-                                val primaryToken = cardTypeResolver.getPrimaryToken()
+                                val primaryToken = updatedResponse.cardTypesResolver.getPrimaryToken()
                                 val blockchainNetwork =
                                     BlockchainNetwork(
                                         blockchain = primaryBlockchain,

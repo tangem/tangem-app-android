@@ -1,16 +1,15 @@
 package com.tangem.tap.domain.model.builders
 
-import com.tangem.domain.card.CardTypeResolver
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.GetCardImageUseCase
 
 class UserWalletBuilder(
     private val scanResponse: ScanResponse,
-    private val cardTypeResolver: CardTypeResolver,
     private val getCardImageUseCase: GetCardImageUseCase = GetCardImageUseCase(),
 ) {
     private var backupCardsIds: Set<String> = emptySet()
@@ -47,7 +46,7 @@ class UserWalletBuilder(
                         artworkUrl = getCardImageUseCase.invoke(card.cardId, card.cardPublicKey),
                         cardsInWallet = backupCardsIds.plus(card.cardId),
                         scanResponse = this,
-                        isMultiCurrency = cardTypeResolver.isMultiwalletAllowed(),
+                        isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(),
                     )
                 }
         }
