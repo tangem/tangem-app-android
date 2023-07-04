@@ -37,6 +37,7 @@ class ConfigValueModel(
     val swapReferrerAccount: SwapReferrerAccount?,
     val kaspaSecondaryApiUrl: String,
     val walletConnectProjectId: String,
+    val tangemComAuthorization: String?,
 )
 
 data class AppsFlyer(
