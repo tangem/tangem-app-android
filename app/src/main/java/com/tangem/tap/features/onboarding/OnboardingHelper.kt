@@ -4,11 +4,10 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
@@ -17,7 +16,11 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
-import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,11 +29,11 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 object OnboardingHelper {
-    fun isOnboardingCase(response: ScanResponse, cardTypeResolver: CardTypeResolver): Boolean {
+    fun isOnboardingCase(response: ScanResponse): Boolean {
         val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
         val cardId = response.card.cardId
         return when {
-            cardTypeResolver.isTangemTwins() -> {
+            response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
                 } else {
@@ -38,7 +41,7 @@ object OnboardingHelper {
                 }
             }
 
-            cardTypeResolver.isWallet2() -> {
+            response.cardTypesResolver.isWallet2() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true
@@ -70,10 +73,7 @@ object OnboardingHelper {
         accessCode: String? = null,
         backupCardsIds: List<String>? = null,
     ) {
-        Analytics.setContext(
-            scanResponse = scanResponse,
-            cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-        )
+        Analytics.setContext(scanResponse)
         when {
             // When should save user wallets, then save card without navigate to save wallet screen
             preferencesStorage.shouldSaveUserWallets -> scope.launch {
@@ -119,10 +119,7 @@ object OnboardingHelper {
     }
 
     private suspend fun proceedWithScanResponse(scanResponse: ScanResponse, backupCardsIds: List<String>?) {
-        val userWallet = UserWalletBuilder(
-            scanResponse = scanResponse,
-            cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-        )
+        val userWallet = UserWalletBuilder(scanResponse)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
             .guard {
