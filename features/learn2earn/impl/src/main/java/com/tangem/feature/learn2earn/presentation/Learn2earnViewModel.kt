@@ -81,6 +81,7 @@ class Learn2earnViewModel @Inject constructor(
                                     .hideDialog()
                             }
                             val successDialog = MainScreenState.Dialog.Claimed(
+                                networkFullName = interactor.getAwardNetworkName(),
                                 onOk = onHideDialog,
                                 onDismissRequest = onHideDialog,
                             )
