@@ -212,13 +212,16 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 val accountsRequired = requiredNamespace.value.chains
                     ?.mapNotNull { chain -> userChains[chain] }
                     ?.flatten() ?: emptyList()
-                val accountsOptional = sessionProposal.optionalNamespaces[requiredNamespace.key]?.chains
+                val optionalNamespace = sessionProposal.optionalNamespaces[requiredNamespace.key]
+                val accountsOptional = optionalNamespace?.chains
                     ?.mapNotNull { chain -> userChains[chain] }
                     ?.flatten() ?: emptyList()
 
+                val methods = (requiredNamespace.value.methods + (optionalNamespace?.methods ?: emptyList()))
+                    .distinct()
                 requiredNamespace.key to Wallet.Model.Namespace.Session(
-                    accounts = accountsRequired + accountsOptional,
-                    methods = requiredNamespace.value.methods,
+                    accounts = (accountsRequired + accountsOptional).distinct(),
+                    methods = methods,
                     events = requiredNamespace.value.events,
                 )
             }.toMap()
