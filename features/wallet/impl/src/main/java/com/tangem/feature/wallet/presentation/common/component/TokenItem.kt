@@ -32,6 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
@@ -318,7 +319,7 @@ private fun TokenTitleAmountBlock(title: String, amount: String?, hasPending: Bo
 @Composable
 private fun TokenFiatPercentageBlock(
     fiatAmount: String,
-    priceChange: TokenOptionsState.PriceChange,
+    priceChange: PriceChangeConfig,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.requiredWidth(IntrinsicSize.Max)) {
@@ -336,11 +337,11 @@ private fun TokenFiatPercentageBlock(
             val iconChangeArrow: Int
             val changeTextColor: Color
             when (priceChange.type) {
-                TokenOptionsState.PriceChange.Type.UP -> {
+                PriceChangeConfig.Type.UP -> {
                     iconChangeArrow = R.drawable.img_arrow_up_8
                     changeTextColor = TangemTheme.colors.text.accent
                 }
-                TokenOptionsState.PriceChange.Type.DOWN -> {
+                PriceChangeConfig.Type.DOWN -> {
                     iconChangeArrow = R.drawable.img_arrow_down_8
                     changeTextColor = TangemTheme.colors.text.warning
                 }
@@ -353,7 +354,7 @@ private fun TokenFiatPercentageBlock(
             SpacerW4()
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
-                text = priceChange.valuePercent,
+                text = priceChange.valueInPercent,
                 style = TangemTypography.body2,
                 color = changeTextColor,
             )
