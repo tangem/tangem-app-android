@@ -39,11 +39,11 @@ internal sealed interface WalletContentItemState {
         data class Title(val onExploreClick: () -> Unit) : SingleCurrencyItem
 
         /**
-         * Transaction group title item
+         * Group title item
          *
          * @property title title
          */
-        data class TransactionGroupTitle(val title: String) : SingleCurrencyItem
+        data class GroupTitle(val title: String) : SingleCurrencyItem
 
         /**
          * Transaction item
