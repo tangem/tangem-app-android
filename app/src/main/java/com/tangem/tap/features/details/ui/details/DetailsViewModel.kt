@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.details
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -15,7 +16,6 @@ import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 
@@ -26,11 +26,11 @@ class DetailsViewModel(private val store: Store<AppState>) {
 
     @Suppress("ComplexMethod")
     fun updateState(state: DetailsState): DetailsScreenState {
-        val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
+        val cardTypesResolver = state.scanResponse?.cardTypesResolver
         val settings = SettingsElement.values().mapNotNull {
             when (it) {
                 SettingsElement.WalletConnect -> {
-                    if (cardTypeResolver.isMultiwalletAllowed()) it else null
+                    if (cardTypesResolver?.isMultiwalletAllowed() == true) it else null
                 }
                 SettingsElement.SendFeedback -> it
                 SettingsElement.LinkMoreCards -> if (state.createBackupAllowed) it else null
@@ -38,8 +38,8 @@ class DetailsViewModel(private val store: Store<AppState>) {
                     if (state.privacyPolicyUrl != null) it else null
                 }
                 SettingsElement.AppSettings -> if (state.appSettingsState.isBiometricsAvailable) it else null
-                SettingsElement.AppCurrency -> if (!cardTypeResolver.isMultiwalletAllowed()) it else null
-                SettingsElement.ReferralProgram -> if (cardTypeResolver.isTangemWallet()) it else null
+                SettingsElement.AppCurrency -> if (cardTypesResolver?.isMultiwalletAllowed() != true) it else null
+                SettingsElement.ReferralProgram -> if (cardTypesResolver?.isTangemWallet() == true) it else null
                 SettingsElement.TesterMenu -> if (BuildConfig.TESTER_MENU_ENABLED) it else null
                 else -> it
             }

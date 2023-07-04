@@ -12,7 +12,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.map
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.models.scan.CardDTO
@@ -55,7 +55,7 @@ private data class CreateWalletResponse(
 }
 
 class CreateProductWalletTask(
-    private val cardTypeResolver: CardTypeResolver,
+    private val cardTypesResolver: CardTypesResolver,
     private val seed: ByteArray? = null,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
@@ -72,8 +72,8 @@ class CreateProductWalletTask(
         val cardDto = CardDTO(card)
 
         val commandProcessor = when {
-            cardTypeResolver.isTangemNote() -> CreateWalletTangemNote(cardTypeResolver)
-            cardTypeResolver.isTangemTwins() ->
+            cardTypesResolver.isTangemNote() -> CreateWalletTangemNote(cardTypesResolver)
+            cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
             else -> CreateWalletTangemWallet(seed)
@@ -97,7 +97,7 @@ class CreateProductWalletTask(
     }
 }
 
-private class CreateWalletTangemNote(private val cardTypeResolver: CardTypeResolver) :
+private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesResolver) :
     ProductCommandProcessor<CreateWalletResponse> {
     override fun proceed(
         card: CardDTO,
@@ -109,7 +109,7 @@ private class CreateWalletTangemNote(private val cardTypeResolver: CardTypeResol
             return
         }
 
-        val curvesSupportedByBlockchain = cardTypeResolver.getBlockchain().getSupportedCurves().toSet()
+        val curvesSupportedByBlockchain = cardTypesResolver.getBlockchain().getSupportedCurves().toSet()
         if (curvesSupportedByBlockchain.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return

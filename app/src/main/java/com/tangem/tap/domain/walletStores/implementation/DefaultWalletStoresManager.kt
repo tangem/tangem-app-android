@@ -2,9 +2,12 @@ package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.*
-import com.tangem.domain.card.CardTypeResolver
-import com.tangem.domain.common.Provider
+import com.tangem.common.CompletionResult
+import com.tangem.common.doOnSuccess
+import com.tangem.common.flatMap
+import com.tangem.common.flatMapOnFailure
+import com.tangem.common.fold
+import com.tangem.common.map
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.domain.model.UserWallet
@@ -32,7 +35,6 @@ internal class DefaultWalletStoresManager(
     private val walletAmountsRepository: WalletAmountsRepository,
     private val walletManagersRepository: WalletManagersRepository,
     private val appCurrencyProvider: () -> FiatCurrency,
-    private val cardTypeResolverProvider: Provider<CardTypeResolver>,
 ) : WalletStoresManager {
     private val state = MutableStateFlow(State())
 
@@ -149,11 +151,7 @@ internal class DefaultWalletStoresManager(
                         { walletManager ->
                             walletStoresRepository.storeOrUpdate(
                                 userWalletId = userWalletId,
-                                walletStore = WalletStoreBuilder(
-                                    userWallet = userWallet,
-                                    cardTypeResolver = cardTypeResolverProvider.invoke(),
-                                    blockchainNetwork = blockchainNetwork,
-                                )
+                                walletStore = WalletStoreBuilder(userWallet, blockchainNetwork)
                                     .walletManager(walletManager)
                                     .build(),
                             )
@@ -187,11 +185,7 @@ internal class DefaultWalletStoresManager(
                 val userWalletId = userWallet.walletId
                 walletStoresRepository.storeOrUpdate(
                     userWalletId = userWalletId,
-                    walletStore = WalletStoreBuilder(
-                        userWallet = userWallet,
-                        cardTypeResolver = cardTypeResolverProvider.invoke(),
-                        walletManager = walletManager,
-                    )
+                    walletStore = WalletStoreBuilder(userWallet, walletManager)
                         .build(),
                 )
             }
