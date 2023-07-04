@@ -20,9 +20,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
-import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.common.Provider
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -84,7 +82,6 @@ private val walletManagersRepository by lazy {
                 ?.blockchainSdkConfig
                 ?: BlockchainSdkConfig(),
         ),
-        cardTypeResolverProvider = Provider { store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver) },
     )
 }
 private val walletAmountsRepository by lazy {
@@ -99,7 +96,6 @@ val walletStoresManager by lazy {
         walletManagersRepository = walletManagersRepository,
         walletAmountsRepository = walletAmountsRepository,
         appCurrencyProvider = { store.state.globalState.appCurrency },
-        cardTypeResolverProvider = Provider { store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver) },
     )
 }
 val walletCurrenciesManager by lazy {
@@ -109,7 +105,6 @@ val walletCurrenciesManager by lazy {
         walletManagersRepository = walletManagersRepository,
         walletAmountsRepository = walletAmountsRepository,
         appCurrencyProvider = { store.state.globalState.appCurrency },
-        cardTypeResolverProvider = Provider { store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver) },
     )
 }
 val totalFiatBalanceCalculator by lazy {
@@ -152,9 +147,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var learn2earnInteractor: Learn2earnInteractor
 
-    @Inject
-    lateinit var cardTypeResolver: CardTypeResolver
-
     override fun onCreate() {
         super.onCreate()
 
@@ -171,7 +163,6 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    cardTypeResolver = cardTypeResolver,
                 ),
             ),
         )
@@ -228,7 +219,6 @@ class TapApplication : Application(), ImageLoaderFactory {
             },
             walletStoresManagerProvider = { walletStoresManager },
             topupWalletStorage = preferencesStorage.toppedUpWalletStorage,
-            cardTypeResolver = cardTypeResolver,
         )
         store.dispatch(GlobalAction.SetTopUpController(topUpController))
     }

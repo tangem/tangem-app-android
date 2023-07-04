@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.Action
@@ -25,7 +26,7 @@ sealed class DetailsAction : Action {
 
     object ScanCard : DetailsAction()
 
-    data class PrepareCardSettingsData(val card: CardDTO) : DetailsAction()
+    data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {

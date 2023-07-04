@@ -3,7 +3,6 @@ package com.tangem.tap.di
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import com.tangem.TangemSdk
-import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.sdk.extensions.initWithBiometrics
 import com.tangem.tap.domain.TangemSdkManager
@@ -28,12 +27,8 @@ internal object ActivityModule {
 
     @Provides
     @ActivityScoped
-    fun provideTangemSdkManager(
-        @ActivityContext context: Context,
-        tangemSdk: TangemSdk,
-        cardTypeResolver: CardTypeResolver,
-    ): TangemSdkManager {
-        return TangemSdkManager(tangemSdk, context, cardTypeResolver)
+    fun provideTangemSdkManager(@ActivityContext context: Context, tangemSdk: TangemSdk): TangemSdkManager {
+        return TangemSdkManager(tangemSdk, context)
     }
 
     @Provides

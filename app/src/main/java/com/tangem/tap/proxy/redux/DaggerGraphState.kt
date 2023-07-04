@@ -2,7 +2,6 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.card.CardTypeResolver
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -24,7 +23,6 @@ data class DaggerGraphState(
     val walletConnectRepository: WalletConnectRepository? = null,
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
     val walletConnectInteractor: WalletConnectInteractor? = null,
-    val cardTypeResolver: CardTypeResolver? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {

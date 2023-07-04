@@ -5,8 +5,9 @@ import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.Analytics
 import com.tangem.data.source.preferences.model.DataSourceTopupInfo
 import com.tangem.data.source.preferences.storage.ToppedUpWalletStorage
-import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -31,7 +32,6 @@ class TopUpController(
     var scanResponseProvider: (() -> ScanResponse?)? = null,
     var walletStoresManagerProvider: (() -> WalletStoresManager)? = null,
     private val topupWalletStorage: ToppedUpWalletStorage,
-    private val cardTypeResolver: CardTypeResolver,
 ) : WalletCurrenciesManager.Listener {
 
     private var hadMissedDerivations: Boolean = false
@@ -100,7 +100,7 @@ class TopUpController(
             }
 
             val cardBalanceState = BalanceCalculator(walletDataModels).calculate().toCardBalanceState()
-            send(userWalletId, cardBalanceState, cardTypeResolver)
+            send(userWalletId, cardBalanceState, scanResponse.cardTypesResolver)
         }
     }
 
@@ -120,14 +120,14 @@ class TopUpController(
 
     fun send(scanResponse: ScanResponse, cardBalanceState: AnalyticsParam.CardBalanceState) {
         UserWalletIdBuilder.scanResponse(scanResponse).build()?.let {
-            send(it, cardBalanceState, cardTypeResolver)
+            send(it, cardBalanceState, scanResponse.cardTypesResolver)
         }
     }
 
     fun send(
         userWalletId: UserWalletId,
         cardBalanceState: AnalyticsParam.CardBalanceState,
-        cardTypeResolver: CardTypeResolver,
+        cardTypesResolver: CardTypesResolver,
     ) {
         val topupInfo = topupWalletStorage.restore(userWalletId.stringValue).guard {
             val topupInfo = DataSourceTopupInfo(
@@ -152,7 +152,7 @@ class TopUpController(
 
         if (cardBalanceState.isToppedUp()) {
             topupWalletStorage.save(topupInfo.copy(cardBalanceState = DataSourceTopupInfo.CardBalanceState.Full))
-            TopUpEventConverter().convert(cardTypeResolver)?.let {
+            TopUpEventConverter().convert(cardTypesResolver)?.let {
                 Analytics.send(it)
             }
         }

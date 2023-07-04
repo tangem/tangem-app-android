@@ -7,6 +7,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -29,9 +30,9 @@ import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
+import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
 object OnboardingWalletMiddleware {
@@ -42,8 +43,8 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
     { next ->
         { action ->
             when (action) {
-                is OnboardingWallet2Action -> handleWallet2Action(action)
-                else -> handleWalletAction(action)
+                is OnboardingWallet2Action -> handleWallet2Action(action, state)
+                else -> handleWalletAction(action, state, dispatch)
             }
             next(action)
         }
@@ -51,7 +52,7 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleWalletAction(action: Action) {
+private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch: DispatchFunction) {
     if (action !is OnboardingWalletAction) return
 
     val globalState = store.state.globalState
@@ -177,7 +178,7 @@ private fun handleWalletAction(action: Action) {
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleWallet2Action(action: OnboardingWallet2Action) {
+private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> AppState?) {
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager
 
@@ -185,8 +186,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
 
     when (action) {
         is OnboardingWallet2Action.Init -> {
-            val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
-            if (cardTypeResolver.isWallet2()) {
+            if (scanResponse?.cardTypesResolver?.isWallet2() == true) {
                 store.dispatch(OnboardingWallet2Action.SetDependencies(action.maxProgress))
             }
         }
