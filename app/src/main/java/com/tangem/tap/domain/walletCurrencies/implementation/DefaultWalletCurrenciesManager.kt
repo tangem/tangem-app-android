@@ -2,8 +2,6 @@ package com.tangem.tap.domain.walletCurrencies.implementation
 
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.*
-import com.tangem.domain.card.CardTypeResolver
-import com.tangem.domain.common.Provider
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.CardDTO
@@ -28,7 +26,6 @@ internal class DefaultWalletCurrenciesManager(
     private val walletAmountsRepository: WalletAmountsRepository,
     private val walletManagersRepository: WalletManagersRepository,
     private val appCurrencyProvider: () -> FiatCurrency,
-    private val cardTypeResolverProvider: Provider<CardTypeResolver>,
 ) : WalletCurrenciesManager {
 
     private val listeners = mutableListOf<WalletCurrenciesManager.Listener>()
@@ -230,11 +227,7 @@ internal class DefaultWalletCurrenciesManager(
                     .flatMap { walletManager ->
                         walletStoresRepository.storeOrUpdate(
                             userWalletId = userWallet.walletId,
-                            walletStore = WalletStoreBuilder(
-                                userWallet = userWallet,
-                                cardTypeResolver = cardTypeResolverProvider.invoke(),
-                                blockchainNetwork = blockchainNetwork,
-                            )
+                            walletStore = WalletStoreBuilder(userWallet, blockchainNetwork)
                                 .walletManager(walletManager)
                                 .build(),
                         )
