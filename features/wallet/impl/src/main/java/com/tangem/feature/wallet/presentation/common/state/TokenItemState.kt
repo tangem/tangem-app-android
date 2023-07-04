@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState.PriceChange.Type
 
 /** Token item state */
 @Immutable
@@ -85,27 +84,13 @@ internal sealed interface TokenItemState {
          * @property fiatAmount fiat amount of token
          * @property priceChange value of price changing
          */
-        data class Visible(val fiatAmount: String, val priceChange: PriceChange) : TokenOptionsState
+        data class Visible(val fiatAmount: String, val priceChange: PriceChangeConfig) : TokenOptionsState
 
         /**
          * Hidden token options state
          *
          * @property priceChange value of price changing
          */
-        data class Hidden(val priceChange: PriceChange) : TokenOptionsState
-
-        /**
-         * Price changing option state
-         *
-         * @property valuePercent value in percent
-         * @property type         type [Type]
-         */
-        data class PriceChange(val valuePercent: String, val type: Type) {
-
-            /** Price changing type */
-            enum class Type {
-                UP, DOWN
-            }
-        }
+        data class Hidden(val priceChange: PriceChangeConfig) : TokenOptionsState
     }
 }
