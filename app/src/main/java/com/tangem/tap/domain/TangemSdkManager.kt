@@ -14,7 +14,7 @@ import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
@@ -38,11 +38,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(
-    private val tangemSdk: TangemSdk,
-    private val context: Context,
-    private val cardTypeResolver: CardTypeResolver,
-) {
+class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
@@ -82,7 +78,7 @@ class TangemSdkManager(
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(cardTypeResolver),
+            CreateProductWalletTask(scanResponse.cardTypesResolver),
             scanResponse.card.cardId,
             Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
@@ -94,7 +90,7 @@ class TangemSdkManager(
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return when (val seedResult = DefaultMnemonic(mnemonic, tangemSdk.wordlist).generateSeed()) {
             is CompletionResult.Success -> runTaskAsync(
-                CreateProductWalletTask(cardTypeResolver, seedResult.data),
+                CreateProductWalletTask(scanResponse.cardTypesResolver, seedResult.data),
                 scanResponse.card.cardId,
                 Message(context.getString(R.string.initial_message_create_wallet_body)),
             )
@@ -232,7 +228,7 @@ class TangemSdkManager(
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
-            cardTypeResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
             else -> CardIdDisplayFormat.Full
         }
     }
