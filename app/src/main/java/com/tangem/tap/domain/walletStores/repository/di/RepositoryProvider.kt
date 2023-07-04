@@ -2,8 +2,6 @@ package com.tangem.tap.domain.walletStores.repository.di
 
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.datasource.api.tangemTech.TangemTechService
-import com.tangem.domain.card.CardTypeResolver
-import com.tangem.domain.common.Provider
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
@@ -18,9 +16,8 @@ fun WalletStoresRepository.Companion.provideDefaultImplementation(): WalletStore
 
 fun WalletManagersRepository.Companion.provideDefaultImplementation(
     walletManagerFactory: WalletManagerFactory,
-    cardTypeResolverProvider: Provider<CardTypeResolver>,
 ): WalletManagersRepository {
-    return DefaultWalletManagersRepository(walletManagerFactory, cardTypeResolverProvider)
+    return DefaultWalletManagersRepository(walletManagerFactory)
 }
 
 fun WalletAmountsRepository.Companion.provideDefaultImplementation(
