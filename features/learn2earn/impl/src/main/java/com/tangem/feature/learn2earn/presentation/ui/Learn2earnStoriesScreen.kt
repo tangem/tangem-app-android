@@ -49,9 +49,10 @@ fun Learn2earnStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modif
         SecondaryButton(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.size16)
-                .padding(bottom = TangemTheme.dimens.size84)
+                .padding(bottom = TangemTheme.dimens.size36)
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding(),
             text = stringResource(id = R.string.story_learn_learn),
             onClick = onLearnClick,
         )
