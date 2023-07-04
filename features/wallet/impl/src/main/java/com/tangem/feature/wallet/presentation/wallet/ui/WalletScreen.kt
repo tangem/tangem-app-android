@@ -1,28 +1,25 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.RoundedActionButton
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -30,9 +27,13 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButtons
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletCardsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
+import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
+import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletNotificationDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
 /**
  * Wallet screen
@@ -41,23 +42,55 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongMethod")
 @Composable
-internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifier) {
+internal fun WalletScreen(state: WalletStateHolder) {
     BackHandler(onBack = state.onBackClick)
 
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
-        val lastContentItemIndex = remember(state.contentItems) { state.contentItems.lastIndex }
+
+        val walletsListState = rememberLazyListState()
+        val changeableItemModifier = Modifier.changeWalletAnimator(walletsListState)
 
         LazyColumn(
-            modifier = modifier
-                .padding(scaffoldPaddings)
+            modifier = Modifier
+                .padding(paddingValues = scaffoldPaddings)
                 .fillMaxSize(),
+            contentPadding = PaddingValues(vertical = TangemTheme.dimens.spacing8),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item { WalletCardsList(wallets = state.wallets) }
+            item {
+                WalletsList(
+                    config = state.walletsListConfig,
+                    lazyListState = walletsListState,
+                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing14),
+                )
+            }
+
+            if (state is WalletStateHolder.SingleCurrencyContent) {
+                item {
+                    WalletManageButtons(
+                        buttons = state.buttons,
+                        modifier = changeableItemModifier.padding(bottom = TangemTheme.dimens.spacing14),
+                    )
+                }
+            }
+
+            itemsIndexed(
+                items = state.notifications,
+                itemContent = { index, item ->
+                    Notification(
+                        state = item.state,
+                        modifier = changeableItemModifier.walletNotificationDecoration(
+                            currentIndex = index,
+                            lastIndex = state.notifications.lastIndex,
+                        ),
+                    )
+                },
+            )
 
             itemsIndexed(
                 items = state.contentItems,
@@ -70,40 +103,48 @@ internal fun WalletScreen(state: WalletStateHolder, modifier: Modifier = Modifie
                         is WalletContentItemState.SingleCurrencyItem.Transaction -> index
                     }
                 },
-            ) { index, item ->
-                val itemModifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .clipFirstAndLastItems(index, lastContentItemIndex)
-
-                when (item) {
-                    is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> {
-                        NetworkGroupItem(networkName = item.networkName, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.MultiCurrencyItem.Token -> {
-                        TokenItem(state = item.state, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.Title -> {
-                        SingleCurrencyTitle(config = item, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
-                        TransactionGroupTitle(config = item, modifier = itemModifier)
-                    }
-                    is WalletContentItemState.SingleCurrencyItem.Transaction -> {
-                        Transaction(state = item.state, modifier = itemModifier)
-                    }
-                }
-            }
+                itemContent = { index, item ->
+                    ContentItem(
+                        item = item,
+                        modifier = changeableItemModifier.walletContentItemDecoration(
+                            currentIndex = index,
+                            lastIndex = state.contentItems.lastIndex,
+                        ),
+                    )
+                },
+            )
 
             if (state is WalletStateHolder.MultiCurrencyContent) {
                 item {
-                    RoundedActionButton(
-                        text = stringResource(id = R.string.organize_tokens_title),
-                        iconResId = R.drawable.ic_filter_24,
+                    OrganizeTokensButton(
                         onClick = state.onOrganizeTokensClick,
-                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ContentItem(item: WalletContentItemState, modifier: Modifier = Modifier) {
+    when (item) {
+        is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> {
+            NetworkGroupItem(networkName = item.networkName, modifier = modifier)
+        }
+        is WalletContentItemState.MultiCurrencyItem.Token -> {
+            TokenItem(state = item.state, modifier = modifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.Title -> {
+            SingleCurrencyTitle(config = item, modifier = modifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
+            TransactionGroupTitle(config = item, modifier = modifier)
+        }
+        is WalletContentItemState.SingleCurrencyItem.Transaction -> {
+            Transaction(state = item.state, modifier = modifier)
         }
     }
 }
@@ -166,33 +207,20 @@ private fun TransactionGroupTitle(
     )
 }
 
-private fun Modifier.clipFirstAndLastItems(index: Int, lastItemIndex: Int): Modifier = composed {
-    when (index) {
-        0 -> {
-            this
-                .padding(top = TangemTheme.dimens.spacing14)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = TangemTheme.dimens.radius16,
-                        topEnd = TangemTheme.dimens.radius16,
-                    ),
-                )
-        }
-        lastItemIndex -> {
-            this
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = TangemTheme.dimens.radius16,
-                        bottomEnd = TangemTheme.dimens.radius16,
-                    ),
-                )
-        }
-        else -> this
-    }
+@Composable
+private fun OrganizeTokensButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    RoundedActionButton(
+        config = ActionButtonConfig(
+            text = stringResource(id = R.string.organize_tokens_title),
+            iconResId = R.drawable.ic_filter_24,
+            onClick = onClick,
+        ),
+        modifier = modifier,
+    )
 }
 
 // region Preview
-@Preview(showBackground = true, widthDp = 360)
+@Preview
 @Composable
 private fun WalletScreenPreview_Light(
     @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
@@ -202,7 +230,7 @@ private fun WalletScreenPreview_Light(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360)
+@Preview
 @Composable
 private fun WalletScreenPreview_Dark(
     @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
