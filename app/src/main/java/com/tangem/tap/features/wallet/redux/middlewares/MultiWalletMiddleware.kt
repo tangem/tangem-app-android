@@ -19,7 +19,6 @@ import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
@@ -83,10 +82,7 @@ class MultiWalletMiddleware {
                     return
                 }
                 val scanResponse = selectedUserWallet.scanResponse
-                Analytics.addContext(
-                    scanResponse = scanResponse,
-                    cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver),
-                )
+                Analytics.addContext(scanResponse)
                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
             }
