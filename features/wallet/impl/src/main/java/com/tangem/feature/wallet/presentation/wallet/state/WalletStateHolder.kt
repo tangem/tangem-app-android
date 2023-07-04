@@ -43,12 +43,13 @@ internal sealed class WalletStateHolder(
     /**
      * Single currency wallet content state
      *
-     * @property onBackClick       lambda be invoked when back button is clicked
-     * @property topBarConfig      top bar config
-     * @property walletsListConfig wallets list config
-     * @property contentItems      content items
-     * @property notifications     notifications
-     * @property buttons           manage buttons
+     * @property onBackClick           lambda be invoked when back button is clicked
+     * @property topBarConfig          top bar config
+     * @property walletsListConfig     wallets list config
+     * @property contentItems          content items
+     * @property notifications         notifications
+     * @property buttons               manage buttons
+     * @property marketplaceBlockState marketplace block state
      */
     data class SingleCurrencyContent(
         override val onBackClick: () -> Unit,
@@ -57,5 +58,6 @@ internal sealed class WalletStateHolder(
         override val contentItems: ImmutableList<WalletContentItemState.SingleCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
         val buttons: ImmutableList<WalletManageButton>,
+        val marketplaceBlockState: WalletMarketplaceBlockState,
     ) : WalletStateHolder(onBackClick, topBarConfig, walletsListConfig, contentItems, notifications)
 }
