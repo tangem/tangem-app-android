@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.ParamsInterceptor
-import com.tangem.domain.card.CardTypeResolver
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
@@ -16,7 +16,6 @@ import com.tangem.tap.features.demo.DemoHelper
  */
 class CardContextInterceptor(
     private val scanResponse: ScanResponse?,
-    private val cardTypeResolver: CardTypeResolver,
 ) : ParamsInterceptor {
 
     override fun id(): String = CardContextInterceptor.id()
@@ -36,7 +35,7 @@ class CardContextInterceptor(
         params[AnalyticsParam.PRODUCT_TYPE] = getProductType(scanResponse)
         params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue
 
-        ParamCardCurrencyConverter().convert(cardTypeResolver)?.let {
+        ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)?.let {
             params[AnalyticsParam.CURRENCY] = it.value
         }
     }
