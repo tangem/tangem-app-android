@@ -10,6 +10,8 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.OrganizeTokensRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
+import com.tangem.domain.tokens.store.SingletonTokensStoreHolder
+import com.tangem.domain.tokens.store.TokensStoreHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 class FetchTokensUseCase(
@@ -18,6 +20,7 @@ class FetchTokensUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val organizeTokensRepository: OrganizeTokensRepository,
+    private val tokensStoreHolder: TokensStoreHolder = SingletonTokensStoreHolder,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokensError, Unit> {
