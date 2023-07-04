@@ -63,6 +63,11 @@ class DefaultLearn2earnInteractor(
         return awardAmount
     }
 
+    override fun getAwardNetworkName(): String {
+        val networkId = promotion.getPromotionInfo().awardPaymentToken.networkId
+        return userWalletManager.getNativeTokenForNetwork(networkId).name
+    }
+
     @Throws(IllegalArgumentException::class)
     override suspend fun requestAward(): Result<Unit> {
         val awardCurrency = getCurrencyForAward()
