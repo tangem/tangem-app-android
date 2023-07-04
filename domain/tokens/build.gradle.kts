@@ -7,4 +7,7 @@ dependencies {
     implementation(project(":domain:core"))
     implementation(project(":domain:models"))
     implementation(project(":core:utils"))
+
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
 }
