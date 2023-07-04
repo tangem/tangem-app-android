@@ -39,6 +39,8 @@ dependencies {
 
     /** Features */
     implementation(project(":features:onboarding"))
+    implementation(project(":features:learn2earn:api"))
+    implementation(project(":features:learn2earn:impl"))
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
