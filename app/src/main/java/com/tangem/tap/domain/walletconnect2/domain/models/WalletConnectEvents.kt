@@ -9,7 +9,8 @@ sealed interface WalletConnectEvents {
         val description: String,
         val url: String,
         val icons: List<URI>,
-        val chainIds: List<String>,
+        val requiredChainIds: List<String>,
+        val optionalChainIds: List<String>,
     ) : WalletConnectEvents
 
     data class SessionApprovalError(val error: WalletConnectError) : WalletConnectEvents
