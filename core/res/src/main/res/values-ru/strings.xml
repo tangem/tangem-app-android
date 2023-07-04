@@ -493,6 +493,8 @@
     <string name="wallet_error_no_account">Аккаунт не создан</string>
     <string name="wallet_error_unsupported_blockchain">Эта карта не поддерживается</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Ваша карта Tangem предназначена для работы с другим приложением. Пожалуйста, ознакомьтесь с названием и инструкциями на вашей карте и установите правильное приложение.</string>
+    <string name="wallet_marketplace_block_title">Рыночная цена %s</string>
+    <string name="wallet_marketprice_block_update_time">за 24 часа</string>
     <string name="wallet_network_group_title">Сеть %s</string>
     <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
     <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
