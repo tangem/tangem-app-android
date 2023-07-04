@@ -1,9 +1,8 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
 import org.rekotlin.Action
 
 object TwinCardsReducer {
@@ -18,8 +17,7 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
 
     when (action) {
         is TwinCardsAction.IfTwinsPrepareState -> {
-            val cardTypeResolver = store.state.daggerGraphState.get(DaggerGraphState::cardTypeResolver)
-            state = if (cardTypeResolver.isTangemTwins()) {
+            state = if (action.scanResponse.cardTypesResolver.isTangemTwins()) {
                 val cardNumber = action.scanResponse.card.getTwinCardNumber() ?: return state
 
                 TwinCardsState(
