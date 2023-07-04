@@ -12,7 +12,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 
-private const val ANIMATION_MAX_OFFSET = 80
+private const val ANIMATION_MAX_OFFSET_IN_DP = 80
 private const val ANIMATION_MAX_ALPHA = 1f
 
 /**
@@ -46,7 +46,7 @@ internal fun Modifier.changeWalletAnimator(lazyListState: LazyListState) = compo
                 walletItemSize - walletItemOffset
             }
 
-            ANIMATION_MAX_OFFSET.dp / walletItemSize * position
+            ANIMATION_MAX_OFFSET_IN_DP.dp / walletItemSize * position
         }
     }
 
