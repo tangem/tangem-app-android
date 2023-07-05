@@ -45,6 +45,10 @@ class Learn2earnViewModel @Inject constructor(
         updateMainScreenViews()
     }
 
+    fun onMainScreenRefreshed() {
+        updateMainScreenViews()
+    }
+
     private fun updateMainScreenViews() {
         viewModelScope.launch(dispatchers.io) {
             if (interactor.isNeedToShowViewOnMainScreen()) {
@@ -81,6 +85,7 @@ class Learn2earnViewModel @Inject constructor(
                                     .hideDialog()
                             }
                             val successDialog = MainScreenState.Dialog.Claimed(
+                                networkFullName = interactor.getAwardNetworkName(),
                                 onOk = onHideDialog,
                                 onDismissRequest = onHideDialog,
                             )
