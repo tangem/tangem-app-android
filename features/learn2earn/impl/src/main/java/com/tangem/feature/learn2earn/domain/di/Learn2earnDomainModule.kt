@@ -1,7 +1,10 @@
 package com.tangem.feature.learn2earn.domain.di
 
 import android.content.Context
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
+import com.tangem.feature.learn2earn.data.toggles.DefaultLearn2earnFeatureToggleManager
+import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
 import com.tangem.feature.learn2earn.domain.DefaultLearn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
@@ -28,13 +31,21 @@ class Learn2earnDomainModule {
 
     @Provides
     @Singleton
+    fun provideFeatureToggle(featureToggleManager: FeatureTogglesManager): Learn2earnFeatureToggleManager {
+        return DefaultLearn2earnFeatureToggleManager(featureToggleManager)
+    }
+
+    @Provides
+    @Singleton
     fun provideInteractor(
+        featureToggleManager: Learn2earnFeatureToggleManager,
         repository: Learn2earnRepository,
         dependencyProvider: Learn2earnDependencyProvider,
         userWalletManager: UserWalletManager,
         derivationManager: DerivationManager,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
+            featureToggleManager = featureToggleManager,
             repository = repository,
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
