@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class Learn2earnDataModule {
+internal class Learn2earnDataModule {
 
     @Provides
     @Singleton
