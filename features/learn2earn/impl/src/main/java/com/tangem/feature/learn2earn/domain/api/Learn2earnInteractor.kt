@@ -21,6 +21,8 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     fun getAwardAmount(): Int
 
+    fun getAwardNetworkName(): String
+
     @Throws(IllegalArgumentException::class)
     suspend fun requestAward(): Result<Unit>
 
