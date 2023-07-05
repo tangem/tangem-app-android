@@ -50,6 +50,7 @@ data class MainScreenState(
     sealed class Dialog {
 
         data class Claimed(
+            val networkFullName: String,
             val onOk: () -> Unit,
             val onDismissRequest: () -> Unit,
         ) : Dialog()
