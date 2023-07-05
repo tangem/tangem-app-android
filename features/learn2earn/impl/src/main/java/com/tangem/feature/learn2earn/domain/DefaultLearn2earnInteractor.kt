@@ -48,8 +48,18 @@ class DefaultLearn2earnInteractor(
     override suspend fun isNeedToShowViewOnMainScreen(): Boolean {
         if (!promotionIsActive()) return false
 
-        val response = repository.validate(userWalletManager.getWalletId())
-        return response.valid == true
+        val promoCode = repository.getUserData().promoCode
+        val userWalletId = userWalletManager.getWalletId()
+        return if (promoCode == null) {
+            val response = repository.validate(userWalletId)
+            response.valid == true
+        } else {
+            val response = repository.validateCode(userWalletId, promoCode)
+            when (val error = response.error?.toDomainError()) {
+                null -> response.valid == true
+                else -> error !is PromotionError.CodeWasNotAppliedInShop
+            }
+        }
     }
 
     override fun isUserRegisteredInPromotion(): Boolean {
@@ -61,6 +71,11 @@ class DefaultLearn2earnInteractor(
         val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
 
         return awardAmount
+    }
+
+    override fun getAwardNetworkName(): String {
+        val networkId = promotion.getPromotionInfo().awardPaymentToken.networkId
+        return userWalletManager.getNativeTokenForNetwork(networkId).name
     }
 
     @Throws(IllegalArgumentException::class)
