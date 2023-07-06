@@ -37,12 +37,12 @@ data class MainScreenState(
     sealed class Description(val title: TextReference, val subtitle: TextReference) {
 
         class Learn(award: Int) : Description(
-            TextReference.Res(R.string.main_learn_title),
+            TextReference.Res(R.string.common_learn_and_earn),
             TextReference.PluralRes(R.plurals.main_learn_subtitle, award, WrappedList(listOf(award))),
         )
 
         object GetBonus : Description(
-            TextReference.Res(R.string.main_get_bonus_title),
+            TextReference.Res(R.string.common_learn_and_earn),
             TextReference.Res(R.string.main_get_bonus_subtitle),
         )
     }
