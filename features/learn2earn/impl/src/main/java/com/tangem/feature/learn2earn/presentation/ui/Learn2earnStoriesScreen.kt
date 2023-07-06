@@ -39,7 +39,7 @@ fun Learn2earnStoriesScreen(onLearnClick: () -> Unit, modifier: Modifier = Modif
                 modifier = Modifier
                     .padding(horizontal = TangemTheme.dimens.size40)
                     .weight(weight = 1f),
-                headerText = stringResource(id = R.string.story_learn_title),
+                headerText = stringResource(id = R.string.common_learn_and_earn),
                 bodyText = stringResource(id = R.string.story_learn_description),
             )
             Image(
