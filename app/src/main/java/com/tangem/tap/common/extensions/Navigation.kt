@@ -169,7 +169,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
 
         AppScreen.WalletDetails -> {
             val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::tokenDetailsFeatureToggles
+                getDependency = DaggerGraphState::tokenDetailsFeatureToggles,
             )
             if (featureToggles.isRedesignedScreenEnabled) {
                 store.state.daggerGraphState
