@@ -150,63 +150,6 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_explore"
                 tools:text="Send only Ethereum (ETH) from Ethereum network to this address. Using other tokens and networks may result in loss of funds." />
 
-            <View
-                android:id="@+id/v_payid_divider"
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="@color/lightGray5"
-                android:layout_marginTop="25dp"
-                app:layout_constraintTop_toBottomOf="@id/btn_copy" />
-
-            <ImageView
-                android:id="@+id/iv_payid_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:src="@drawable/ic_payid"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
-                android:importantForAccessibility="no" />
-
-            <TextView
-                android:id="@+id/tv_create_payid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawablePadding="9dp"
-                android:padding="16dp"
-                android:text="@string/wallet_address_button_create_payid"
-                android:textColor="@color/darkGray6"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
-
-            <TextView
-                android:id="@+id/tv_payid_address"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:textAlignment="textEnd"
-                android:textColor="@color/darkGray1"
-                android:textSize="13sp"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
-                app:layout_constraintStart_toEndOf="@id/iv_payid_icon"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
-                tools:text="romafdffdfdfn$payid.tangem.com" />
-
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/group_payid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:constraint_referenced_ids="v_payid_divider, iv_payid_icon, tv_payid_address, tv_create_payid" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
