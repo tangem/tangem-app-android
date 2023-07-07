@@ -111,7 +111,7 @@ internal object WalletPreviewData {
         name = "Polygon",
     )
 
-    val loadingTokenItemState = TokenItemState.Loading(id = UUID.randomUUID().toString())
+    val loadingTokenItemState = TokenItemState.Loading
 
     private const val networksSize = 10
     private const val tokensSize = 3
