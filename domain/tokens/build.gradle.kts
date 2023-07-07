@@ -7,4 +7,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.wallets.models)
     implementation(projects.core.utils)
+
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
 }
