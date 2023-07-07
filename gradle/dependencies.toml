@@ -75,6 +75,8 @@ arrow = "1.2.0-RC"
 reactiveNetwork = "3.0.8"
 walletConnectCore = "1.15.0"
 walletConnectWeb3 = "1.8.0"
+prettyLogger = "2.2.0"
+prettyOkHttpLoggingInterceptor = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
@@ -222,4 +224,6 @@ arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 reactive-network = { module = "com.github.pwittchen:reactivenetwork-rx2", version.ref = "reactiveNetwork" }
 walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "walletConnectCore" }
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
+prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
+prettyOkHttpLoggingInterceptor = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "prettyOkHttpLoggingInterceptor" }
 # endregion Other
