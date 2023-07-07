@@ -25,6 +25,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
@@ -67,7 +68,6 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 WalletsList(
                     config = state.walletsListConfig,
                     lazyListState = walletsListState,
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing14),
                 )
             }
 
@@ -75,7 +75,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 item {
                     WalletManageButtons(
                         buttons = state.buttons,
-                        modifier = changeableItemModifier.padding(bottom = TangemTheme.dimens.spacing14),
+                        modifier = changeableItemModifier.padding(top = TangemTheme.dimens.spacing14),
                     )
                 }
             }
@@ -86,8 +86,8 @@ internal fun WalletScreen(state: WalletStateHolder) {
                     Notification(
                         state = item.state,
                         modifier = changeableItemModifier
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
-                            .padding(bottom = TangemTheme.dimens.spacing14),
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
                     )
                 },
             )
@@ -96,7 +96,9 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 item {
                     WalletMarketplaceBlock(
                         state = state.marketplaceBlockState,
-                        modifier = changeableItemModifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
                     )
                 }
             }
@@ -106,10 +108,11 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 key = { index, item ->
                     when (item) {
                         is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> item.networkName
-                        is WalletContentItemState.MultiCurrencyItem.Token -> item.state.id
+                        is WalletContentItemState.MultiCurrencyItem.Token -> index
                         is WalletContentItemState.SingleCurrencyItem.Title -> index
                         is WalletContentItemState.SingleCurrencyItem.GroupTitle -> item.title
                         is WalletContentItemState.SingleCurrencyItem.Transaction -> index
+                        is WalletContentItemState.Loading -> index
                     }
                 },
                 itemContent = { index, item ->
@@ -154,6 +157,9 @@ private fun ContentItem(item: WalletContentItemState, modifier: Modifier = Modif
         }
         is WalletContentItemState.SingleCurrencyItem.Transaction -> {
             Transaction(state = item.state, modifier = modifier)
+        }
+        WalletContentItemState.Loading -> {
+            TokenItem(state = TokenItemState.Loading, modifier = modifier)
         }
     }
 }

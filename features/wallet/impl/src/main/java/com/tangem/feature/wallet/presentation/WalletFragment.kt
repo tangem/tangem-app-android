@@ -47,7 +47,7 @@ internal class WalletFragment : Fragment() {
                     }
 
                     isTransitionGroup = true
-                    _walletRouter.Initialize()
+                    _walletRouter.Initialize(fragmentManager = requireActivity().supportFragmentManager)
                 }
             }
         }

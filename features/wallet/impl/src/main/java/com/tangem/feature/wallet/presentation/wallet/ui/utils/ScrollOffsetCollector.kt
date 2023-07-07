@@ -20,13 +20,8 @@ internal class ScrollOffsetCollector(
     private val LazyListItemInfo.halfItemSize get() = size.div(other = 2)
 
     override suspend fun emit(value: List<LazyListItemInfo>) {
-        val firstItem = requireNotNull(value.firstOrNull()) {
-            "At least 1 item should be visible in list"
-        }
-
-        val lastItem = requireNotNull(value.lastOrNull()) {
-            "At least 1 item should be visible in list"
-        }
+        val firstItem = value.firstOrNull() ?: return
+        val lastItem = value.lastOrNull() ?: return
 
         if (abs(firstItem.offset) > firstItem.halfItemSize) {
             callback(firstItem.index + 1)
