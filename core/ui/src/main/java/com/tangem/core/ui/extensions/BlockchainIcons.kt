@@ -41,6 +41,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "terra-2", "terra-luna-2" -> R.drawable.img_terra2_22
         "cronos" -> R.drawable.img_cronos_22
         "TELOS", "TELOS/test" -> R.drawable.img_telos_22
+        "aleph-zero", "aleph-zero/test" -> R.drawable.img_azero_22
         else -> R.drawable.ic_alert_24
     }
 }
