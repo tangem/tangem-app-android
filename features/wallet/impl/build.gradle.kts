@@ -40,5 +40,9 @@ dependencies {
     implementation(project(":features:wallet:api"))
 
     /** Domain modules */
+    implementation(project(":common"))
     implementation(project(":domain:legacy"))
+    implementation(project(":domain:models"))
+    implementation(project(":domain:wallets"))
+    implementation(project(":domain:wallets:models"))
 }
