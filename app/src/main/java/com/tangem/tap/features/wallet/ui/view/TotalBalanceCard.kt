@@ -27,6 +27,7 @@ import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 import com.tangem.wallet.R
 import com.valentinilk.shimmer.shimmer
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -227,14 +228,21 @@ private fun buildAmountString(amount: BigDecimal?, fiatCurrency: FiatCurrency): 
         ?: return AnnotatedString("${amount.toPlainString()} ${fiatCurrency.symbol}")
 
     val currencyToShow = "${fiatCurrency.symbol} "
-    val scaledAmount = Currency.getInstance(fiatCurrency.code)?.let { currency ->
-        formatter.currency = currency
-        formatter.maximumFractionDigits = fractionDigits
-        formatter.minimumFractionDigits = fractionDigits
-        formatter.isGroupingUsed = true
-        formatter.roundingMode = RoundingMode.HALF_UP
-        formatter.format(amount).replace(currency.symbol, currencyToShow)
-    } ?: formatter.format(amount)
+    val scaledAmount = try {
+        Currency.getInstance(fiatCurrency.code)?.let { currency ->
+            formatter.currency = currency
+            formatter.maximumFractionDigits = fractionDigits
+            formatter.minimumFractionDigits = fractionDigits
+            formatter.isGroupingUsed = true
+            formatter.roundingMode = RoundingMode.HALF_UP
+            formatter.format(amount).replace(currency.symbol, currencyToShow)
+        } ?: formatter.format(amount)
+    } catch (e: IllegalArgumentException) {
+        Timber.e("TotalBalanceCard buildAmountString currencyCode is not a supported ISO 4217 code: $e")
+        formatter.currency?.let {
+            formatter.format(amount).replace(it.symbol, currencyToShow)
+        } ?: formatter.format(amount)
+    }
 
     val integer = scaledAmount.substringBefore(formatter.decimalFormatSymbols.decimalSeparator)
     var reminder = scaledAmount.substringAfter(formatter.decimalFormatSymbols.decimalSeparator)
