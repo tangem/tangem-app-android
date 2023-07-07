@@ -12,6 +12,7 @@ dependencies {
 
     // region Domain modules
     implementation(project(":domain:legacy"))
+    implementation(project(":domain:models"))
     implementation(project(":domain:wallets:models"))
     // endregion
 
