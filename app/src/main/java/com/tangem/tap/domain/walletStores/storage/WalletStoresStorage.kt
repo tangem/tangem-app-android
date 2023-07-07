@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.walletStores.storage
 
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
