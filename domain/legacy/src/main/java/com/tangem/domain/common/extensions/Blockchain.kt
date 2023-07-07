@@ -61,8 +61,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "cronos" -> Blockchain.Cronos
         "telos" -> Blockchain.Telos
         "telos/test" -> Blockchain.TelosTestnet
-        "azero" -> Blockchain.AlephZero
-        "azero/test" -> Blockchain.AlephZeroTestnet
+        "aleph-zero" -> Blockchain.AlephZero
+        "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         else -> null
     }
 }
@@ -128,8 +128,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Cronos -> "cronos"
         Blockchain.Telos -> "telos"
         Blockchain.TelosTestnet -> "telos/test"
-        Blockchain.AlephZero -> "azero"
-        Blockchain.AlephZeroTestnet -> "azero/test"
+        Blockchain.AlephZero -> "aleph-zero"
+        Blockchain.AlephZeroTestnet -> "aleph-zero/test"
     }
 }
 
@@ -171,7 +171,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.TerraV2 -> "terra-luna-2"
         Blockchain.Cronos -> "crypto-com-chain"
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
-        Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "azero"
+        Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
     }
 }
 
