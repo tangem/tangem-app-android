@@ -182,4 +182,7 @@ fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
 
-private val excludedBlockchains = listOf(Blockchain.Unknown)
+private val excludedBlockchains = listOf(
+    Blockchain.Unknown,
+    Blockchain.Ducatus,
+)
