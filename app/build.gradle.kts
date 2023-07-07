@@ -114,13 +114,6 @@ dependencies {
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-    //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.okHttp)
-    implementation(deps.okHttp.logging)
     implementation(deps.zendesk.chat)
     implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
