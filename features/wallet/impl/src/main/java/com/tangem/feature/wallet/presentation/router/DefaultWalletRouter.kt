@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -22,11 +23,14 @@ import kotlin.properties.Delegates
 internal class DefaultWalletRouter : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
+    private var fragmentManager: FragmentManager by Delegates.notNull()
 
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize() {
+    override fun Initialize(fragmentManager: FragmentManager) {
+        this.fragmentManager = fragmentManager
+
         TangemTheme {
             NavHost(
                 navController = rememberNavController().apply { navController = this },
@@ -53,10 +57,24 @@ internal class DefaultWalletRouter : InnerWalletRouter {
     }
 
     override fun popBackStack() {
-        navController.popBackStack()
+        /*
+         * It's hack that avoid issue with closing the wallet screen.
+         * We are using NavGraph only inside feature so first backstack's element is entry of NavGraph and
+         * next element is wallet screen entry.
+         * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
+         */
+        if (navController.backQueue.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
+            fragmentManager.popBackStack()
+        } else {
+            navController.popBackStack()
+        }
     }
 
     override fun openOrganizeTokensScreen() {
         navController.navigate(WalletScreens.ORGANIZE_TOKENS.name)
+    }
+
+    private companion object {
+        const val BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN = 2
     }
 }
