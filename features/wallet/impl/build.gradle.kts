@@ -22,9 +22,11 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.reorderable)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.tangem.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -36,4 +38,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
+
+    /** Domain modules */
+    implementation(project(":domain:legacy"))
 }
