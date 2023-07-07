@@ -205,10 +205,10 @@ internal class DefaultLearn2earnInteractor(
             WebViewResult.ReadyForAward -> {
                 updateUserData { it.copy(isRegisteredInPromotion = true) }
             }
-            is WebViewResult.AnalyticsEvent -> {
+            is WebViewResult.Learn2earnAnalyticsEvent -> {
                 analyticsEventHandler.send(result.event)
             }
-            else -> Unit
+            WebViewResult.Empty -> Unit
         }
         webViewResultHandler?.handleResult(result)
 
@@ -286,21 +286,21 @@ internal class DefaultLearn2earnInteractor(
             repository.updateUserData(this)
         }
     }
-}
 
-private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
-    return if (promoCode == null) {
-        newCard
-    } else {
-        oldCard
+    private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
+        return if (promoCode == null) {
+            newCard
+        } else {
+            oldCard
+        }
     }
-}
 
-private fun WebViewResult.toWebViewAction(): WebViewAction {
-    return when (this) {
-        WebViewResult.Empty -> WebViewAction.PROCEED
-        WebViewResult.ReadyForAward -> WebViewAction.FINISH_SESSION
-        is WebViewResult.AnalyticsEvent -> WebViewAction.NOTHING
-        is WebViewResult.PromoCode -> WebViewAction.NOTHING
+    private fun WebViewResult.toWebViewAction(): WebViewAction {
+        return when (this) {
+            WebViewResult.Empty -> WebViewAction.PROCEED
+            WebViewResult.ReadyForAward -> WebViewAction.FINISH_SESSION
+            is WebViewResult.Learn2earnAnalyticsEvent -> WebViewAction.NOTHING
+            is WebViewResult.PromoCode -> WebViewAction.NOTHING
+        }
     }
 }
