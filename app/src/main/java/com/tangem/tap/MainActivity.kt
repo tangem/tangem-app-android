@@ -13,6 +13,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
+import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.extensions.init
@@ -99,6 +100,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var walletRouter: WalletRouter
 
     @Inject
+    lateinit var tokenDetailsRouter: TokenDetailsRouter
+
+    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
     // TODO: fixme: inject through DI
@@ -139,6 +143,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 scanCardUseCase = scanCardUseCase,
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
+                tokenDetailsRouter = tokenDetailsRouter,
             ),
         )
     }
