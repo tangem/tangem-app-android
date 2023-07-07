@@ -2,11 +2,11 @@ package com.tangem.tap.features.wallet.models
 
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.blockchain.common.Blockchain as SdkBlockchain
 import com.tangem.blockchain.common.Token as SdkToken
 

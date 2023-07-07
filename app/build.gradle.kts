@@ -26,6 +26,8 @@ dependencies {
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
     implementation(project(":domain:card"))
+    implementation(project(":domain:wallets"))
+    implementation(project(":domain:wallets:models"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
     implementation(project(":core:featuretoggles"))
