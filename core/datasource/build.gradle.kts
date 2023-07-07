@@ -36,6 +36,7 @@ dependencies {
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
     implementation(deps.reactive.network)
+    implementation(deps.prettyOkHttpLoggingInterceptor)
 
     /** Time */
     implementation(deps.jodatime)
