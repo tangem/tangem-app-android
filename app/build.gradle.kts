@@ -139,6 +139,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
+    implementation(deps.prettyLogger)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
