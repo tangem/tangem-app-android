@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletCurrencies
 
 import com.tangem.common.CompletionResult
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.features.wallet.models.Currency
 
 interface WalletCurrenciesManager {

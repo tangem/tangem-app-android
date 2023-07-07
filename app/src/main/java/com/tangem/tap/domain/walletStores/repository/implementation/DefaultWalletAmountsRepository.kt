@@ -10,13 +10,13 @@ import com.tangem.blockchain.extensions.Result.Success
 import com.tangem.common.*
 import com.tangem.common.core.TangemError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
@@ -169,7 +169,7 @@ internal class DefaultWalletAmountsRepository(
 
         walletStores.map { walletStore ->
             async {
-                // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
+                // TODO: Find wallet manager via [com.tangem.domain.wallets.legacy.WalletManagersRepository]
                 val walletManager = walletStore.walletManager
                 fetchAmountsForWalletStore(userWalletId, scanResponse, walletStore, walletManager)
             }

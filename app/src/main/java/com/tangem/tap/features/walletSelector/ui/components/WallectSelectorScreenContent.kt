@@ -25,7 +25,7 @@ import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
 import com.tangem.wallet.R
 

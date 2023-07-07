@@ -7,9 +7,9 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.flatMap
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.extensions.replaceByOrAdd
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.publicInformation

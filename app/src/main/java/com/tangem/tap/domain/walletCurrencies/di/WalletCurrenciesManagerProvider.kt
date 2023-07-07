@@ -1,11 +1,11 @@
 package com.tangem.tap.domain.walletCurrencies.di
 
+import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletCurrencies.implementation.DefaultWalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 
 fun WalletCurrenciesManager.Companion.provideDefaultImplementation(

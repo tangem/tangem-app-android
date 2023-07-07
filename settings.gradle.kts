@@ -77,6 +77,8 @@ include(":domain:legacy")
 
 include(":domain:core")
 include(":domain:card")
+include(":domain:wallets")
+include(":domain:wallets:models")
 // endregion Domain modules
 
 // region Data modules

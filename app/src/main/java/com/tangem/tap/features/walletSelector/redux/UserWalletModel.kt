@@ -1,6 +1,6 @@
 package com.tangem.tap.features.walletSelector.redux
 
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.model.TotalFiatBalance
 
 data class UserWalletModel(
