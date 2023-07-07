@@ -2,7 +2,7 @@ package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.isSameWalletStore
