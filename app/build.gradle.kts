@@ -39,6 +39,8 @@ dependencies {
 
     /** Features */
     implementation(project(":features:onboarding"))
+    implementation(project(":features:learn2earn:api"))
+    implementation(project(":features:learn2earn:impl"))
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
@@ -50,6 +52,8 @@ dependencies {
     implementation(project(":features:tester:impl"))
     implementation(project(":features:wallet:api"))
     implementation(project(":features:wallet:impl"))
+    implementation(projects.features.tokendetails.api)
+    implementation(projects.features.tokendetails.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
