@@ -25,9 +25,10 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
  *
  * @param level logging level. By default, only the request body.
  */
-internal fun OkHttpClient.Builder.allowLogging(): OkHttpClient.Builder =
-    if (BuildConfig.DEBUG) {
+internal fun OkHttpClient.Builder.allowLogging(): OkHttpClient.Builder {
+    return if (BuildConfig.DEBUG) {
         addInterceptor(interceptor = createNetworkLoggingInterceptor())
     } else {
         this
     }
+}
