@@ -1,6 +1,6 @@
 package com.tangem.feature.learn2earn.domain.api
 
-import com.tangem.feature.learn2earn.analytics.Learn2earnEvents
+import com.tangem.core.analytics.AnalyticsEvent
 
 /**
  * Handler that helps determine a result of the Learn2earnWebViewActivity webView actions.
@@ -15,5 +15,5 @@ sealed class WebViewResult {
     object Empty : WebViewResult()
     data class PromoCode(val promoCode: String) : WebViewResult()
     object ReadyForAward : WebViewResult()
-    data class AnalyticsEvent(val event: Learn2earnEvents) : WebViewResult()
+    data class Learn2earnAnalyticsEvent(val event: AnalyticsEvent) : WebViewResult()
 }
