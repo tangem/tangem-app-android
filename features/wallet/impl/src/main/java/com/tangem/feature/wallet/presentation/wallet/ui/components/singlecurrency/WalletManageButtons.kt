@@ -1,13 +1,11 @@
-package com.tangem.feature.wallet.presentation.wallet.state
+package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -15,6 +13,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButton
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -27,18 +26,19 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun WalletManageButtons(buttons: ImmutableList<WalletManageButton>, modifier: Modifier = Modifier) {
-    Row(
+    LazyRow(
         modifier = modifier
-            .horizontalScroll(state = rememberScrollState())
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        buttons.forEach { button ->
-            key(button.config.text) {
-                ActionButton(config = button.config)
-            }
-        }
+        items(
+            items = buttons,
+            key = { it.config.text },
+            itemContent = { ActionButton(config = it.config) },
+        )
     }
 }
 

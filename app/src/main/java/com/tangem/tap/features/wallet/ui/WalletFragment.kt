@@ -268,6 +268,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
     private fun refreshWalletData() {
         Analytics.send(Portfolio.Refreshed())
         store.dispatch(WalletAction.LoadData.Refresh)
+        learn2earnViewModel.onMainScreenRefreshed()
     }
 
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {

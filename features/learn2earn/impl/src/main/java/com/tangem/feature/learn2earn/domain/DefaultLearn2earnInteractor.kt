@@ -5,6 +5,7 @@ import com.tangem.datasource.api.promotion.models.AbstractPromotionResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
+import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
 import com.tangem.feature.learn2earn.domain.api.*
 import com.tangem.feature.learn2earn.domain.models.Promotion
 import com.tangem.feature.learn2earn.domain.models.PromotionError
@@ -17,6 +18,7 @@ import com.tangem.lib.crypto.models.Currency
  * @author Anton Zhilenkov on 07.06.2023.
  */
 class DefaultLearn2earnInteractor(
+    private val featureToggleManager: Learn2earnFeatureToggleManager,
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
@@ -48,8 +50,18 @@ class DefaultLearn2earnInteractor(
     override suspend fun isNeedToShowViewOnMainScreen(): Boolean {
         if (!promotionIsActive()) return false
 
-        val response = repository.validate(userWalletManager.getWalletId())
-        return response.valid == true
+        val promoCode = repository.getUserData().promoCode
+        val userWalletId = userWalletManager.getWalletId()
+        return if (promoCode == null) {
+            val response = repository.validate(userWalletId)
+            response.valid == true
+        } else {
+            val response = repository.validateCode(userWalletId, promoCode)
+            when (val error = response.error?.toDomainError()) {
+                null -> response.valid == true
+                else -> error !is PromotionError.CodeWasNotAppliedInShop
+            }
+        }
     }
 
     override fun isUserRegisteredInPromotion(): Boolean {
@@ -61,6 +73,11 @@ class DefaultLearn2earnInteractor(
         val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
 
         return awardAmount
+    }
+
+    override fun getAwardNetworkName(): String {
+        val networkId = promotion.getPromotionInfo().awardPaymentToken.networkId
+        return userWalletManager.getNativeTokenForNetwork(networkId).name
     }
 
     @Throws(IllegalArgumentException::class)
@@ -192,6 +209,7 @@ class DefaultLearn2earnInteractor(
     private fun promotionIsActive(): Boolean {
         val userData = repository.getUserData()
         val isActive = when {
+            !featureToggleManager.isLearn2earnEnabled -> false
             userData.isAlreadyReceivedAward -> false
             promotion.isError() -> false
             else -> {
@@ -204,34 +222,41 @@ class DefaultLearn2earnInteractor(
     }
 
     private suspend fun initPromotionInfo() {
-        promotion = repository.getPromotionInfo()
-            .fold(
-                onSuccess = { response ->
-                    val responseError = response.error
-                    if (responseError == null) {
-                        val npeMessage = { "Shouldn't be null" }
-                        Promotion(
-                            info = Promotion.PromotionInfo(
-                                newCard = requireNotNull(response.newCard, npeMessage),
-                                oldCard = requireNotNull(response.oldCard, npeMessage),
-                                awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
-                            ),
-                            error = null,
-                        )
-                    } else {
+        promotion = if (featureToggleManager.isLearn2earnEnabled) {
+            repository.getPromotionInfo()
+                .fold(
+                    onSuccess = { response ->
+                        val responseError = response.error
+                        if (responseError == null) {
+                            val npeMessage = { "Shouldn't be null" }
+                            Promotion(
+                                info = Promotion.PromotionInfo(
+                                    newCard = requireNotNull(response.newCard, npeMessage),
+                                    oldCard = requireNotNull(response.oldCard, npeMessage),
+                                    awardPaymentToken = requireNotNull(response.awardPaymentToken, npeMessage),
+                                ),
+                                error = null,
+                            )
+                        } else {
+                            Promotion(
+                                info = null,
+                                error = responseError.toDomainError(),
+                            )
+                        }
+                    },
+                    onFailure = {
                         Promotion(
                             info = null,
-                            error = responseError.toDomainError(),
+                            error = PromotionError.NetworkUnreachable,
                         )
-                    }
-                },
-                onFailure = {
-                    Promotion(
-                        info = null,
-                        error = PromotionError.NetworkUnreachable,
-                    )
-                },
+                    },
+                )
+        } else {
+            Promotion(
+                info = null,
+                error = null,
             )
+        }
     }
 
     private fun getCurrencyForAward(): Currency? {
