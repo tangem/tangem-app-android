@@ -73,13 +73,13 @@ class Learn2earnViewModel @Inject constructor(
 
     private fun onButtonMainClick() {
         if (!interactor.isUserHadPromoCode() && !interactor.isUserRegisteredInPromotion()) {
-            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New))
+            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New()))
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
             return
         }
 
-        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old))
+        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
         viewModelScope.launch(dispatchers.io) {
             updateUi { uiState.updateProgress(showProgress = true) }
 
@@ -172,9 +172,8 @@ class Learn2earnViewModel @Inject constructor(
         interactor.webViewResultHandler = object : WebViewResultHandler {
             override fun handleResult(result: WebViewResult) {
                 interactor.webViewResultHandler = null
-                when (result) {
-                    WebViewResult.ReadyForAward -> updateMainScreenViews()
-                    else -> Unit
+                if (result is WebViewResult.ReadyForAward) {
+                    updateMainScreenViews()
                 }
             }
         }
