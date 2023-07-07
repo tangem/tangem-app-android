@@ -1,7 +1,6 @@
-package com.tangem.tap.domain.model
+package com.tangem.domain.wallets.models
 
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.common.util.UserWalletId
 
 /**
  * Represents user's wallet which stored in app persistence
