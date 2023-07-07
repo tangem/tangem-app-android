@@ -28,6 +28,8 @@ dependencyResolutionManagement {
     }
 }
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 include(":app")
 include(":common")
 
@@ -60,6 +62,9 @@ include(":features:tester:impl")
 
 include(":features:wallet:api")
 include(":features:wallet:impl")
+
+include(":features:tokendetails:api")
+include(":features:tokendetails:impl")
 
 include(":features:learn2earn:api")
 include(":features:learn2earn:impl")
