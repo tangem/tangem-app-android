@@ -27,6 +27,11 @@ interface UserWalletsListManager {
     val hasUserWallets: Boolean
 
     /**
+     * Count of saved user wallets
+     */
+    val walletsCount: Int
+
+    /**
      * Set [UserWallet] with provided [UserWalletId] as selected
      *
      * @param userWalletId [UserWalletId] of [UserWallet] which must be selected
