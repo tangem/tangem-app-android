@@ -26,8 +26,11 @@ fun createRetrofitInstance(
 
     if (logEnabled) okHttpBuilder.addInterceptor(createNetworkLoggingInterceptor())
 
-    return Retrofit.Builder().baseUrl(baseUrl).addConverterFactory(MoshiConverter.networkMoshiConverter)
-        .client(okHttpBuilder.build()).build()
+    return Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .addConverterFactory(MoshiConverter.networkMoshiConverter)
+        .client(okHttpBuilder.build())
+        .build()
 }
 
 fun createNetworkLoggingInterceptor(): Interceptor {
