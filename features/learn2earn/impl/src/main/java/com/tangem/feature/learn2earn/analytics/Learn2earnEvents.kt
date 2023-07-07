@@ -2,7 +2,7 @@ package com.tangem.feature.learn2earn.analytics
 
 import com.tangem.core.analytics.AnalyticsEvent
 
-sealed class Learn2earnEvents(
+internal sealed class Learn2earnEvents(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
@@ -58,10 +58,10 @@ sealed class Learn2earnEvents(
     }
 }
 
-sealed class AnalyticsParam {
+internal sealed class AnalyticsParam {
     sealed class ClientType(val value: String) {
-        object New : ClientType("New")
-        object Old : ClientType("Old")
+        class New : ClientType("New")
+        class Old : ClientType("Old")
     }
 
     companion object Key {
