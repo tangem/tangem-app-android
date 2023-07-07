@@ -1,6 +1,7 @@
 package com.tangem.feature.learn2earn.domain.di
 
 import android.content.Context
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.toggles.DefaultLearn2earnFeatureToggleManager
@@ -21,7 +22,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class Learn2earnDomainModule {
+internal class Learn2earnDomainModule {
 
     @Provides
     @Singleton
@@ -42,6 +43,7 @@ class Learn2earnDomainModule {
         repository: Learn2earnRepository,
         dependencyProvider: Learn2earnDependencyProvider,
         userWalletManager: UserWalletManager,
+        analyticsEventHandler: AnalyticsEventHandler,
         derivationManager: DerivationManager,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
@@ -49,6 +51,7 @@ class Learn2earnDomainModule {
             repository = repository,
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
+            analyticsEventHandler = analyticsEventHandler,
             dependencyProvider = dependencyProvider,
         )
     }

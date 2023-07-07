@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.tangem.feature.learn2earn.domain.HeadersConverter
-import com.tangem.feature.learn2earn.domain.api.RedirectConsequences
 import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -14,12 +13,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class WebViewViewModel @Inject constructor(
-    private val handler: WebViewRedirectHandler,
-) : ViewModel(), WebViewRedirectHandler {
-
-    override fun handleRedirect(uri: Uri): RedirectConsequences {
-        return handler.handleRedirect(uri)
-    }
+    handler: WebViewRedirectHandler,
+) : ViewModel(), WebViewRedirectHandler by handler {
 
     fun extractData(intent: Intent): WebViewData {
         val uriString = requireNotNull(intent.getStringExtra(Learn2earnWebViewActivity.EXTRA_WEB_URI)) {
