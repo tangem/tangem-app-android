@@ -22,6 +22,7 @@ import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -147,6 +148,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var learn2earnInteractor: Learn2earnInteractor
 
+    @Inject
+    lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -163,6 +167,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                 ),
             ),
         )
