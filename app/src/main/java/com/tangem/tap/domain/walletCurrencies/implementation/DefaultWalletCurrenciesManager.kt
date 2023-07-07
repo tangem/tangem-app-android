@@ -2,17 +2,17 @@ package com.tangem.tap.domain.walletCurrencies.implementation
 
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.*
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.legacy.WalletManagersRepository
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.builders.WalletStoreBuilder
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
