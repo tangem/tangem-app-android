@@ -7,20 +7,12 @@ import androidx.compose.runtime.Immutable
 @Immutable
 internal sealed interface TokenItemState {
 
-    /** Token id */
-    val id: String
-
-    /**
-     * Loading token state
-     *
-     * @property id token id
-     */
-    data class Loading(override val id: String) : TokenItemState
+    /** Loading token state */
+    object Loading : TokenItemState
 
     /**
      * Content token state
      *
-     * @property id                  token id
      * @property tokenIconUrl        token icon url
      * @property tokenIconResId      token icon resource id
      * @property networkIconResId    network icon resource id, may be null if it is a coin
@@ -30,7 +22,7 @@ internal sealed interface TokenItemState {
      * @property tokenOptions        state for token options
      */
     data class Content(
-        override val id: String,
+        val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
@@ -43,14 +35,13 @@ internal sealed interface TokenItemState {
     /**
      * Draggable token state
      *
-     * @property id                  token id
      * @property tokenIconUrl        token icon url
      * @property tokenIconResId      token icon resource id
      * @property networkIconResId    network icon resource id, may be null if it is a coin
      * @property name                token name
      */
     data class Draggable(
-        override val id: String,
+        val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
@@ -68,7 +59,7 @@ internal sealed interface TokenItemState {
      * @property name                token name
      */
     data class Unreachable(
-        override val id: String,
+        val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
