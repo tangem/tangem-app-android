@@ -16,6 +16,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -24,7 +25,6 @@ import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTransferOrder
 import com.tangem.tap.domain.walletconnect2.domain.WcEthereumSignMessage
