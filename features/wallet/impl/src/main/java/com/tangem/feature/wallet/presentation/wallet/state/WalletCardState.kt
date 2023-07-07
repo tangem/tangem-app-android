@@ -18,7 +18,7 @@ internal sealed interface WalletCardState {
 
     /** Wallet image resource id */
     @get:DrawableRes
-    val imageResId: Int
+    val imageResId: Int?
 
     /** Lambda be invoked when card is clicked */
     val onClick: (() -> Unit)?
@@ -37,7 +37,7 @@ internal sealed interface WalletCardState {
         override val id: String,
         override val title: String,
         override val additionalInfo: String,
-        override val imageResId: Int,
+        override val imageResId: Int?,
         override val onClick: (() -> Unit)? = null,
         val balance: String,
     ) : WalletCardState
@@ -55,8 +55,8 @@ internal sealed interface WalletCardState {
         override val id: String,
         override val title: String,
         override val additionalInfo: String,
-        override val imageResId: Int,
-        override val onClick: (() -> Unit)?,
+        override val imageResId: Int?,
+        override val onClick: (() -> Unit)? = null,
     ) : WalletCardState
 
     /**
@@ -72,7 +72,7 @@ internal sealed interface WalletCardState {
         override val id: String,
         override val title: String,
         override val additionalInfo: String,
-        override val imageResId: Int,
+        override val imageResId: Int?,
         override val onClick: (() -> Unit)?,
     ) : WalletCardState
 
@@ -89,7 +89,7 @@ internal sealed interface WalletCardState {
         override val id: String,
         override val title: String,
         override val additionalInfo: String,
-        override val imageResId: Int,
+        override val imageResId: Int?,
         override val onClick: (() -> Unit)?,
     ) : WalletCardState
 }
