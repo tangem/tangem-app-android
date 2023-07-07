@@ -4,6 +4,8 @@ import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.features.tester.api.TesterRouter
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
+import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -23,6 +25,8 @@ data class DaggerGraphState(
     val walletConnectRepository: WalletConnectRepository? = null,
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
     val walletConnectInteractor: WalletConnectInteractor? = null,
+    val tokenDetailsFeatureToggles: TokenDetailsFeatureToggles? = null,
+    val tokenDetailsRouter: TokenDetailsRouter? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
