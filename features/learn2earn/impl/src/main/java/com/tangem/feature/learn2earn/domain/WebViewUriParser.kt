@@ -19,7 +19,7 @@ internal class WebViewUriParser(
             if (event == null) {
                 WebViewResult.Empty
             } else {
-                WebViewResult.AnalyticsEvent(event)
+                WebViewResult.Learn2earnAnalyticsEvent(event)
             }
         }
         isPromoCodeRedirect(uri) -> {
@@ -68,8 +68,8 @@ internal class WebViewUriParser(
 
         val analyticsEvent = when (event) {
             EVENT_PROMO_BUY -> PromoScreen.ButtonBuy()
-            EVENT_PROMO_SUCCESS_NEW_USER -> PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.New)
-            EVENT_PROMO_SUCCESS_OLD_USER -> PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.Old)
+            EVENT_PROMO_SUCCESS_NEW_USER -> PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.New())
+            EVENT_PROMO_SUCCESS_OLD_USER -> PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.Old())
             else -> null
         }
         return analyticsEvent
