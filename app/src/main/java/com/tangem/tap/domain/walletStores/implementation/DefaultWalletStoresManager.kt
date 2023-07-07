@@ -2,22 +2,17 @@ package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.CompletionResult
-import com.tangem.common.doOnSuccess
-import com.tangem.common.flatMap
-import com.tangem.common.flatMapOnFailure
-import com.tangem.common.fold
-import com.tangem.common.map
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.common.*
+import com.tangem.domain.wallets.legacy.WalletManagersRepository
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.WalletStoreBuilder
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateSelectedAddress
 import com.tangem.tap.features.wallet.models.Currency
