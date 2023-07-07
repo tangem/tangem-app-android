@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.common.BlockchainSdkConfig
@@ -14,6 +15,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
@@ -58,7 +60,6 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.runBlocking
-import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
 import javax.inject.Inject
@@ -168,7 +169,11 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
 
         if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
+            Timber.plant(object : Timber.DebugTree() {
+                override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                    Logger.log(priority, tag, message, t)
+                }
+            })
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
@@ -187,7 +192,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
+                createNetworkLoggingInterceptor()
             )
         }
 
