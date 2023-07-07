@@ -22,12 +22,6 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.reKotlin)
-// [REDACTED_TODO_COMMENT]
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.okHttp.logging)
     implementation(deps.timber)
     implementation(deps.kotlin.coroutines)
 
