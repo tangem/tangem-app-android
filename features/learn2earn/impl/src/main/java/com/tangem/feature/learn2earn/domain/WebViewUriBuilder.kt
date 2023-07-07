@@ -39,41 +39,15 @@ internal class WebViewUriBuilder(
         }
     }
 
-    fun isPromoCodeRedirect(uri: Uri): Boolean {
-        return uri.toString().contains(SUFFIX_CODE_CREATED)
-    }
-
-    fun isReadyForExistedCardAwardRedirect(uri: Uri): Boolean {
-        return uri.toString().endsWith(SUFFIX_READY_FOR_AWARD)
-    }
-
-    fun extractPromoCode(uri: Uri): String? {
-        val url = uri.toString()
-
-        return if (isPromoCodeRedirect(uri)) {
-            val replaceString = makeWebViewUriBuilder().build().toString() + SUFFIX_CODE_CREATED
-            val code = url.replace(replaceString, "")
-            code
-        } else {
-            null
-        }
-    }
-
-    private fun makeWebViewUriBuilder(): Uri.Builder {
-        val builder = Uri.Builder()
-        builder.scheme(SCHEME)
-
+    private fun makeWebViewUriBuilder(): Uri.Builder = Uri.Builder().apply {
+        scheme(SCHEME)
         if (BuildConfig.DEBUG) {
-            builder.authority(DEV_BASE_URL)
-            builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath(DEV_PATH_PROMOTION)
+            authority(DEV_BASE_URL)
         } else {
-            builder.authority(BASE_URL)
-            builder.appendPath(userCountryCodeProvider.invoke())
-            builder.appendPath(PATH_PROMOTION)
+            authority(BASE_URL)
         }
-
-        return builder
+        appendPath(userCountryCodeProvider.invoke())
+        appendPath(PATH_PROMOTION)
     }
 
     private companion object {
@@ -86,9 +60,5 @@ internal class WebViewUriBuilder(
         const val QUERY_EXISTED_CARD = "existed-card"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
-        const val DEV_PATH_PROMOTION = "promotion-test"
-
-        const val SUFFIX_CODE_CREATED = "/code-created?code="
-        const val SUFFIX_READY_FOR_AWARD = "/ready-for-existed-card-award"
     }
 }
