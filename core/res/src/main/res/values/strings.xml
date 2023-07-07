@@ -66,6 +66,7 @@
     <string name="common_exchange">Exchange</string>
     <string name="common_explore_transaction_history">Explore transaction history</string>
     <string name="common_explorer">Explorer</string>
+    <string name="common_learn_and_earn">Learn &amp; Earn</string>
     <string name="common_like">Like</string>
     <string name="common_main_network">Main network</string>
     <string name="common_no">No</string>
@@ -158,19 +159,17 @@
     <string name="initial_message_tap_header">Tap the card</string>
     <string name="internal_error_wallet_manager_not_found">Internal error: wallet manager not found</string>
     <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
-    <string name="main_get_bonus_subtitle">You have completed the training and can get your 1inch tokens</string>
-    <string name="main_get_bonus_title">Get a bonus</string>
+    <string name="main_get_bonus_subtitle">You have completed all of the lessons, and are now eligible to receive your 1INCH tokens</string>
     <plurals name="main_learn_subtitle">
-        <item quantity="one">Complete the training and get %d 1inch token on your wallet</item>
-        <item quantity="other">Complete the training and get %d 1inch tokens on your wallet</item>
+        <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
+        <item quantity="other">Complete three lessons and receive %d 1INCH tokens to your wallet</item>
     </plurals>
-    <string name="main_learn_title">Learn &amp; Earn</string>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
-    <string name="main_promotion_credited">1inch tokens will be credited to your %s wallet address within 24 hours</string>
+    <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 24 hours</string>
     <string name="main_promotion_no_purchase">There was no purchase of a wallet using your promo code, which means you cannot receive a bonus. Buy Tangem wallet, scan it in the app, and get the bonus.</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
@@ -351,9 +350,8 @@
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
     <string name="story_finish_title">The Wallet for Everyone</string>
-    <string name="story_learn_description">Complete the training, get the opportunity to buy Tangem wallet with a discount and receive 1inch tokens on your wallet</string>
+    <string name="story_learn_description">Take three lessons, get a discount on your Tangem Wallet, and receive 1INCH tokens to your wallet</string>
     <string name="story_learn_learn">Learn</string>
-    <string name="story_learn_title">Learn and get a bonus</string>
     <string name="story_meet_borrow">Borrow</string>
     <string name="story_meet_buy">Buy</string>
     <string name="story_meet_exchange">Exchange</string>
