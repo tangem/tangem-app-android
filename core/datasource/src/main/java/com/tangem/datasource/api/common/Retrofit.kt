@@ -1,8 +1,10 @@
 package com.tangem.datasource.api.common
 
+import android.util.Log
+import com.ihsanbal.logging.Level
+import com.ihsanbal.logging.LoggingInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
@@ -22,15 +24,15 @@ fun createRetrofitInstance(
     }
     interceptors.forEach { okHttpBuilder.addInterceptor(it) }
 
-    if (logEnabled) okHttpBuilder.addInterceptor(createHttpLoggingInterceptor())
+    if (logEnabled) okHttpBuilder.addInterceptor(createNetworkLoggingInterceptor())
 
-    return Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .addConverterFactory(MoshiConverter.networkMoshiConverter)
-        .client(okHttpBuilder.build())
-        .build()
+    return Retrofit.Builder().baseUrl(baseUrl).addConverterFactory(MoshiConverter.networkMoshiConverter)
+        .client(okHttpBuilder.build()).build()
 }
 
-private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
-    level = HttpLoggingInterceptor.Level.BODY
+fun createNetworkLoggingInterceptor(): Interceptor {
+    return LoggingInterceptor.Builder()
+        .setLevel(Level.BODY)
+        .log(Log.VERBOSE)
+        .build()
 }
