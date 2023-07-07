@@ -52,6 +52,8 @@ dependencies {
     implementation(project(":features:tester:impl"))
     implementation(project(":features:wallet:api"))
     implementation(project(":features:wallet:impl"))
+    implementation(projects.features.tokendetails.api)
+    implementation(projects.features.tokendetails.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
