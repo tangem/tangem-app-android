@@ -3,11 +3,11 @@ package com.tangem.tap.proxy
 import com.tangem.TangemSdk
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.redux.WalletState
 import org.rekotlin.Store
