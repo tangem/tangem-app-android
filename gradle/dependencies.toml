@@ -31,6 +31,7 @@ compose-constraint = "1.0.1"
 compose-navigation = "2.5.3"
 compose-accompanist = "0.30.1"
 compose-paging = "1.0.0-alpha18"
+compose-reorderable = "0.9.6"
 # endregion Compose
 
 # region Other libraries
@@ -77,9 +78,9 @@ walletConnectWeb3 = "1.10.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_4.8-255"
+tangemBlockchainSdk = "release-app_4.9-274"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_4.8-270"
+tangemCardSdk = "release-app_4.9-274"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -147,6 +148,7 @@ compose-accompanist-appCompatTheme = { module = "com.google.accompanist:accompan
 compose-accompanist-systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "compose-accompanist" }
 compose-accompanist-webView = { module = "com.google.accompanist:accompanist-webview", version.ref = "compose-accompanist" }
 compose-paging = { module = "androidx.paging:paging-compose", version.ref = "compose-paging" }
+compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "compose-reorderable" }
 # endregion Compose
 
 # region Firebase
