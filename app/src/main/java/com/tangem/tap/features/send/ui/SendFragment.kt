@@ -17,6 +17,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -25,7 +26,6 @@ import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
@@ -33,7 +33,7 @@ import com.tangem.tap.common.toggleWidget.ViewStateWidget
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.send.redux.*
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
+import com.tangem.tap.features.send.redux.AddressActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
 import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
@@ -80,7 +80,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         etAmountToSend = view.findViewById(R.id.etAmountToSend)
 
         initSendButtonStates()
-        setupAddressOrPayIdLayout()
+        setupAddressLayout()
         setupTransactionExtrasLayout()
         setupAmountLayout()
         setupFeeLayout()
@@ -99,14 +99,14 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
     }
 
-    private fun setupAddressOrPayIdLayout() = with(binding.lSendAddressPayid) {
-        store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
+    private fun setupAddressLayout() = with(binding.lSendAddress) {
+        store.dispatch(SetTruncateHandler { etAddress.truncateMiddleWith(it, "...") })
         store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
-        etAddressOrPayId.apply {
+        etAddress.apply {
             setOnSystemPasteButtonClickListener {
                 store.dispatch(
-                    PasteAddressPayId(
+                    PasteAddress(
                         data = requireContext().getFromClipboard()?.toString() ?: "",
                         sourceType = Token.Send.AddressEntered.SourceType.PastePopup,
                     ),
@@ -119,9 +119,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
             inputtedTextAsFlow()
                 .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
-                .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
+                .filter { store.state.sendState.addressState.viewFieldValue.value != it }
                 .onEach {
-                    store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
+                    store.dispatch(AddressActionUi.HandleUserInput(it))
                 }
                 .launchIn(mainScope)
         }
@@ -129,12 +129,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         imvPaste.setOnClickListener {
             Analytics.send(Token.Send.ButtonPaste())
             store.dispatch(
-                PasteAddressPayId(
+                PasteAddress(
                     data = requireContext().getFromClipboard()?.toString() ?: "",
                     sourceType = Token.Send.AddressEntered.SourceType.PasteButton,
                 ),
             )
-            store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
+            store.dispatch(TruncateOrRestore(!etAddress.isFocused))
         }
         imvQrCode.setOnClickListener {
             Analytics.send(Token.Send.ButtonQRCode())
@@ -145,7 +145,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
     }
 
-    private fun setupTransactionExtrasLayout() = with(binding.lSendAddressPayid) {
+    private fun setupTransactionExtrasLayout() = with(binding.lSendAddress) {
         // TODO: [REDACTED_TASK_KEY]
         etXlmMemo.inputtedTextAsFlow()
             .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
@@ -202,15 +202,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
         // If do not use the delay, then etAmount error field is not displayed when
         // inserting an incorrect amount by shareUri
-        binding.lSendAddressPayid.imvQrCode.postDelayed(
+        binding.lSendAddress.imvQrCode.postDelayed(
             {
                 store.dispatch(
-                    PasteAddressPayId(
+                    PasteAddress(
                         data = scannedCode,
                         sourceType = Token.Send.AddressEntered.SourceType.QRCode,
                     ),
                 )
-                store.dispatch(TruncateOrRestore(!binding.lSendAddressPayid.etAddressOrPayId.isFocused))
+                store.dispatch(TruncateOrRestore(!binding.lSendAddress.etAddress.isFocused))
             },
             200,
         )

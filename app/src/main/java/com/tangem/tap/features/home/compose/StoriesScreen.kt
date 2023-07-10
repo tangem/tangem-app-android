@@ -5,29 +5,11 @@ package com.tangem.tap.features.home.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,38 +25,40 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.tap.features.home.compose.content.FirstStoriesContent
-import com.tangem.tap.features.home.compose.content.StoriesCurrencies
-import com.tangem.tap.features.home.compose.content.StoriesRevolutionaryWallet
-import com.tangem.tap.features.home.compose.content.StoriesUltraSecureBackup
-import com.tangem.tap.features.home.compose.content.StoriesWalletForEveryone
-import com.tangem.tap.features.home.compose.content.StoriesWeb3
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.learn2earn.presentation.ui.Learn2earnStoriesScreen
+import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
+import com.tangem.tap.features.home.redux.Stories
 import com.tangem.wallet.R
 import kotlin.math.max
-
-private const val STEPS = 6
 
 @Suppress("LongMethod", "ComplexMethod")
 @Composable
 fun StoriesScreen(
     homeState: MutableState<HomeState>,
+    onLearn2earnClick: () -> Unit,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
 ) {
-    val currentStep = remember { mutableStateOf(1) }
     val systemUiController = rememberSystemUiController()
+    val state = homeState.value
 
-    val isDarkBackground = currentStep.value !in 3..5
+    var currentStory by remember { mutableStateOf(state.firstStory) }
+    val currentStep = { state.stepOf(currentStory) }
 
     val goToPreviousScreen = {
-        currentStep.value = max(1, currentStep.value - 1)
+        currentStory = state.stories[max(0, currentStep() - 1)]
     }
     val goToNextScreen = {
-        currentStep.value = if (currentStep.value < STEPS) currentStep.value + 1 else 1
+        currentStory = if (currentStep() < state.stories.lastIndex) {
+            state.stories[currentStep() + 1]
+        } else {
+            state.firstStory
+        }
     }
 
     val isPressed = remember { mutableStateOf(false) }
@@ -82,10 +66,10 @@ fun StoriesScreen(
 
     val hideContent = remember { mutableStateOf(true) }
 
-    LaunchedEffect(key1 = isDarkBackground) {
+    LaunchedEffect(key1 = currentStory.isDarkBackground) {
         systemUiController.setSystemBarsColor(
             color = Color.Transparent,
-            darkIcons = !isDarkBackground,
+            darkIcons = !currentStory.isDarkBackground,
         )
     }
 
@@ -134,7 +118,7 @@ fun StoriesScreen(
                     },
             )
         }
-        if (!isDarkBackground) {
+        if (!currentStory.isDarkBackground) {
             Image(
                 modifier = Modifier.fillMaxSize(),
                 painter = painterResource(id = R.drawable.ic_overlay),
@@ -154,9 +138,9 @@ fun StoriesScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             StoriesProgressBar(
-                steps = STEPS,
-                currentStep = currentStep.value,
-                stepDuration = currentStep.duration(),
+                steps = state.stories.lastIndex,
+                currentStep = currentStep(),
+                stepDuration = currentStory.duration,
                 paused = isPaused,
                 onStepFinish = goToNextScreen,
             )
@@ -169,15 +153,16 @@ fun StoriesScreen(
                     .height(17.dp)
                     .alpha(if (hideContent.value) 0f else 1f)
                     .align(Alignment.Start),
-                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black),
+                colorFilter = if (currentStory.isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
-            when (currentStep.value) {
-                1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
-                2 -> StoriesRevolutionaryWallet(currentStep.duration())
-                3 -> StoriesUltraSecureBackup(isPaused, currentStep.duration())
-                4 -> StoriesCurrencies(isPaused, currentStep.duration())
-                5 -> StoriesWeb3(isPaused, currentStep.duration())
-                6 -> StoriesWalletForEveryone(currentStep.duration())
+            when (currentStory) {
+                Stories.OneInchPromo -> Learn2earnStoriesScreen(onLearn2earnClick)
+                Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStory.duration) { hideContent.value = it }
+                Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStory.duration)
+                Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStory.duration)
+                Stories.Currencies -> StoriesCurrencies(isPaused, currentStory.duration)
+                Stories.Web3 -> StoriesWeb3(isPaused, currentStory.duration)
+                Stories.WalletForEveryone -> StoriesWalletForEveryone(currentStory.duration)
             }
         }
         Column(
@@ -186,7 +171,7 @@ fun StoriesScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
         ) {
-            if (currentStep.value == 4) {
+            if (currentStory == Stories.Currencies) {
                 Button(
                     onClick = onSearchTokensClick,
                     modifier = Modifier
@@ -210,29 +195,31 @@ fun StoriesScreen(
                     )
                 }
             }
-            HomeButtons(
-                modifier = Modifier
-                    .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
-                    .fillMaxWidth(),
-                isDarkBackground = isDarkBackground,
-                btnScanStateInProgress = homeState.value.btnScanStateInProgress,
-                onScanButtonClick = onScanButtonClick,
-                onShopButtonClick = onShopButtonClick,
-            )
+
+            if (currentStory != Stories.OneInchPromo) {
+                HomeButtons(
+                    modifier = Modifier
+                        .padding(
+                            start = TangemTheme.dimens.size16,
+                            end = TangemTheme.dimens.size16,
+                            bottom = TangemTheme.dimens.size36,
+                        )
+                        .fillMaxWidth(),
+                    isDarkBackground = currentStory.isDarkBackground,
+                    btnScanStateInProgress = homeState.value.btnScanStateInProgress,
+                    onScanButtonClick = onScanButtonClick,
+                    onShopButtonClick = onShopButtonClick,
+                )
+            }
         }
     }
-}
-
-@Suppress("MagicNumber")
-private fun MutableState<Int>.duration(): Int = when (this.value) {
-    1 -> 8000
-    else -> 6000
 }
 
 @Preview
 @Composable
 private fun StoriesScreenPreview() {
     StoriesScreen(
+        onLearn2earnClick = {},
         onScanButtonClick = {},
         onShopButtonClick = {},
         onSearchTokensClick = {},

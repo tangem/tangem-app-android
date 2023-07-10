@@ -12,36 +12,47 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import androidx.fragment.app.activityViewModels
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
 import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
+import com.tangem.tap.features.home.redux.Stories
 import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.store
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
+
+    private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store.dispatch(HomeAction.OnCreate)
         store.dispatch(HomeAction.Init)
+        if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
+            store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
+            // re init homeState after inserting learn2earn story
+            homeState = mutableStateOf(store.state.homeState)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(inflater.context).apply {
             setContent {
-                BackHandler {
-                    requireActivity().finish()
-                }
-
-                AppCompatTheme {
+                TangemTheme {
+                    BackHandler {
+                        requireActivity().finish()
+                    }
                     ScreenContent()
                 }
             }
@@ -79,7 +90,8 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     @Composable
     private fun ScreenContent() {
         StoriesScreen(
-            homeState,
+            homeState = homeState,
+            onLearn2earnClick = learn2earnViewModel.uiState.storyScreenState.onClick,
             onScanButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
                 store.dispatch(HomeAction.ReadCard())

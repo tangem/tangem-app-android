@@ -8,7 +8,9 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -21,18 +23,22 @@ import coil.load
 import coil.size.Scale
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
+import com.tangem.feature.learn2earn.presentation.ui.Learn2earnMainPageScreen
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.events.Portfolio
+import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
@@ -73,6 +79,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     private var walletView: WalletView = MultiWalletView()
 
+    private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
     private val viewModel by viewModels<WalletViewModel>()
 
     private val totalBalanceWatcher = modelWatcher {
@@ -102,6 +109,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
+        learn2earnViewModel.onMainScreenCreated()
     }
 
     override fun onStart() {
@@ -199,6 +207,27 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         binding.toolbar.setNavigationIcon(
             if (state.canSaveUserWallets) R.drawable.ic_wallet_24 else R.drawable.ic_tap_card_24,
         )
+
+        showLearn2earnView()
+    }
+
+    private fun showLearn2earnView() {
+        val isShowing = learn2earnViewModel.uiState.mainScreenState.isVisible
+        if (!isShowing) return
+
+        binding.composeLearnToEarnContainer.show(true) { binding.llWarnings.beginDelayedTransition() }
+        binding.composeLearnToEarnContainer.apply {
+            setViewCompositionStrategy(
+                strategy = ViewCompositionStrategy.DisposeOnLifecycleDestroyed(
+                    lifecycle = this@WalletFragment.lifecycle,
+                ),
+            )
+            setContent {
+                TangemTheme {
+                    Learn2earnMainPageScreen(learn2earnViewModel.uiState)
+                }
+            }
+        }
     }
 
     private fun setupPullToRefreshLayout(state: WalletState) {
@@ -239,6 +268,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
     private fun refreshWalletData() {
         Analytics.send(Portfolio.Refreshed())
         store.dispatch(WalletAction.LoadData.Refresh)
+        learn2earnViewModel.onMainScreenRefreshed()
     }
 
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {
