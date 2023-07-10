@@ -3,8 +3,9 @@ package com.tangem.tap.features.walletSelector.redux
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
@@ -16,7 +17,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.TotalFiatBalance
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
