@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.util.twinsIsTwinned
@@ -15,7 +16,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction

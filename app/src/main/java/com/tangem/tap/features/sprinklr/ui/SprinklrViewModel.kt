@@ -2,8 +2,8 @@ package com.tangem.tap.features.sprinklr.ui
 
 import androidx.lifecycle.ViewModel
 import com.google.accompanist.web.WebContent
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.sprinklr.redux.SprinklrState
 import com.tangem.tap.store
 import kotlinx.coroutines.flow.MutableStateFlow

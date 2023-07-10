@@ -13,7 +13,7 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView
-import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.store
 import me.dm7.barcodescanner.zxing.ZXingScannerView
