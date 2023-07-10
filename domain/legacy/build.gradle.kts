@@ -22,6 +22,8 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.reKotlin)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
     implementation(deps.timber)
     implementation(deps.kotlin.coroutines)
 
