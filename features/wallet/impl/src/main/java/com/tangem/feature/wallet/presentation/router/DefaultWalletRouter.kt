@@ -11,6 +11,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
@@ -20,7 +23,7 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
-internal class DefaultWalletRouter : InnerWalletRouter {
+internal class DefaultWalletRouter(private val navigationStateHolder: NavigationStateHolder) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
     private var fragmentManager: FragmentManager by Delegates.notNull()
@@ -72,6 +75,10 @@ internal class DefaultWalletRouter : InnerWalletRouter {
 
     override fun openOrganizeTokensScreen() {
         navController.navigate(WalletScreens.ORGANIZE_TOKENS.name)
+    }
+
+    override fun openDetailsScreen() {
+        navigationStateHolder.navigate(NavigationAction.NavigateTo(AppScreen.Details))
     }
 
     private companion object {
