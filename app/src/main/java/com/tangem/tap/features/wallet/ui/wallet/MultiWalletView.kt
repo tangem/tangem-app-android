@@ -4,6 +4,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
@@ -11,8 +13,6 @@ import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.ErrorType
