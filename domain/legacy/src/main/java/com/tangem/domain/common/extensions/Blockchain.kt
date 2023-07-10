@@ -29,6 +29,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "bitcoin-cash/test" -> Blockchain.BitcoinCashTestnet
         "cardano" -> Blockchain.CardanoShelley
         "dogecoin" -> Blockchain.Dogecoin
+        "ducatus" -> Blockchain.Ducatus
         "litecoin" -> Blockchain.Litecoin
         "rootstock" -> Blockchain.RSK
         "stellar" -> Blockchain.Stellar
@@ -59,6 +60,10 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "terra" -> Blockchain.TerraV1
         "terra-2" -> Blockchain.TerraV2
         "cronos" -> Blockchain.Cronos
+        "telos" -> Blockchain.Telos
+        "telos/test" -> Blockchain.TelosTestnet
+        "aleph-zero" -> Blockchain.AlephZero
+        "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         else -> null
     }
 }
@@ -82,6 +87,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Cardano -> "cardano"
         Blockchain.CardanoShelley -> "cardano"
         Blockchain.Dogecoin -> "dogecoin"
+        Blockchain.Ducatus -> "ducatus"
         Blockchain.Ethereum -> "ethereum"
         Blockchain.EthereumTestnet -> "ethereum/test"
         Blockchain.EthereumClassic -> "ethereum-classic"
@@ -122,6 +128,10 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TerraV1 -> "terra"
         Blockchain.TerraV2 -> "terra-2"
         Blockchain.Cronos -> "cronos"
+        Blockchain.Telos -> "telos"
+        Blockchain.TelosTestnet -> "telos/test"
+        Blockchain.AlephZero -> "aleph-zero"
+        Blockchain.AlephZeroTestnet -> "aleph-zero/test"
     }
 }
 
@@ -142,6 +152,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
         Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
+        Blockchain.Ducatus -> "ducatus"
         Blockchain.Litecoin -> "litecoin"
         Blockchain.RSK -> "rootstock"
         Blockchain.Tezos -> "tezos"
@@ -162,6 +173,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.TerraV1 -> "terra-luna"
         Blockchain.TerraV2 -> "terra-luna-2"
         Blockchain.Cronos -> "crypto-com-chain"
+        Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
+        Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
     }
 }
 
@@ -169,4 +182,7 @@ fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
 
-private val excludedBlockchains = listOf(Blockchain.Unknown)
+private val excludedBlockchains = listOf(
+    Blockchain.Unknown,
+    Blockchain.Ducatus,
+)
