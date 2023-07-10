@@ -1,6 +1,8 @@
 package com.tangem.tap.proxy
 
 import com.tangem.TangemSdk
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -18,7 +20,7 @@ import javax.inject.Inject
  * Holds objects from old modules, that missing in DI graph.
  * Object sets manually to use in new modules and [AppStateHolder] proxies its to DI.
  */
-class AppStateHolder @Inject constructor() : WalletsStateHolder {
+class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationStateHolder {
 
     override var userWalletsListManager: UserWalletsListManager? = null
 
@@ -34,5 +36,9 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder {
 
     fun getActualCard(): CardDTO? {
         return scanResponse?.card
+    }
+
+    override fun navigate(action: NavigationAction) {
+        mainStore?.dispatch(action)
     }
 }

@@ -9,6 +9,7 @@ plugins {
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.material)
 
     /** Compose */
     implementation(deps.compose.coil)
@@ -34,6 +35,7 @@ dependencies {
 
     /** Core modules */
     implementation(project(":core:featuretoggles"))
+    implementation(project(":core:navigation"))
     implementation(project(":core:ui"))
 
     /** Feature Apis */
