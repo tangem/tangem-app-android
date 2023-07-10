@@ -30,4 +30,7 @@ internal interface InnerWalletRouter : WalletRouter {
 
     /** Open organize tokens screen */
     fun openOrganizeTokensScreen()
+
+    /** Open details screen */
+    fun openDetailsScreen()
 }
