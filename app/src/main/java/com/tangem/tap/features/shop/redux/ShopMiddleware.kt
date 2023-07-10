@@ -1,12 +1,12 @@
 package com.tangem.tap.features.shop.redux
 
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.scope
 import com.tangem.tap.shopService
 import com.tangem.tap.store
