@@ -1,6 +1,6 @@
 package com.tangem.tap.features.walletSelector.ui.model
 
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 
 internal sealed interface UserWalletItem {

@@ -5,7 +5,7 @@ import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 /**
 * [REDACTED_AUTHOR]
  */
-data class Promotion(
+internal data class Promotion(
     val info: PromotionInfo?,
     val error: PromotionError?,
 ) {
