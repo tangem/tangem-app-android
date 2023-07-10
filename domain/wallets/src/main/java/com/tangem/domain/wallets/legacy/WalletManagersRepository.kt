@@ -1,13 +1,14 @@
-package com.tangem.tap.domain.walletStores.repository
+package com.tangem.domain.wallets.legacy
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 
 interface WalletManagersRepository {
+
     suspend fun findOrMakeMultiCurrencyWalletManager(
         userWallet: UserWallet,
         blockchainNetwork: BlockchainNetwork,
