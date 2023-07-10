@@ -3,9 +3,9 @@ package com.tangem.tap.domain.model
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel.WalletRent
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import java.math.BigDecimal
 
