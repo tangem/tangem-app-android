@@ -11,6 +11,7 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
@@ -18,7 +19,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
