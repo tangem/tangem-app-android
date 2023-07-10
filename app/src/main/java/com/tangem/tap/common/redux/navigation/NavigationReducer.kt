@@ -1,5 +1,7 @@
 package com.tangem.tap.common.redux.navigation
 
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.NavigationState
 import com.tangem.tap.common.extensions.getPreviousScreen
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
