@@ -12,6 +12,7 @@
     <string name="common_done">Exécuté</string>
     <string name="common_ok">OK</string>
     <string name="common_save_changes">Sauvegarder les modifications</string>
+    <string name="common_send">Envoyer</string>
     <string name="common_success">Avec succès</string>
     <string name="details_manage_security_access_code">Code d\'accès</string>
     <string name="details_manage_security_access_code_description">Vous devrez entrer le mot de passe correct avant de scanner la carte</string>
@@ -34,11 +35,7 @@
     <string name="main_processing_full_amount">Le montant n\'inclut pas certains de vos fonds</string>
     <string name="send_amount_label">Somme</string>
     <string name="send_destination_hint_address">Adresse</string>
-    <string name="send_destination_hint_address_payid">Adresse ou PayString</string>
     <string name="send_error_address_same_as_wallet">L\'adresse est la même que celle de votre portefeuille</string>
-    <string name="send_error_payid_not_registered">PayString non enregistré</string>
-    <string name="send_error_payid_request_failed">La demande de PayString a échoué</string>
-    <string name="send_error_payid_unsupported_by_blockchain">PayString non pris en charge par la blockchain</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_fee_include_description">Inclure les commissions</string>
@@ -48,7 +45,6 @@
     <string name="send_fee_picker_priority">Priorité</string>
     <string name="send_max_amount_label">Somme maximale</string>
     <string name="send_network_fee_title">Commissions du réseau</string>
-    <string name="send_title">Envoyer</string>
     <string name="send_total_label">Total</string>
     <string name="send_total_subtitle_asset_format">Sera envoyé %1$s et %2$s</string>
     <string name="send_total_subtitle_fiat_format">≈ %1$s (incl. les commissions : %2$s)</string>
@@ -57,11 +53,9 @@
     <string name="send_validation_invalid_address">Adresse incorrecte</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
-    <string name="wallet_address_button_create_payid">Créer PayString</string>
     <string name="wallet_balance_loading">Solde est en cours de téléchargement…</string>
     <string name="wallet_balance_tx_in_progress">Transaction en cours…</string>
     <string name="wallet_balance_verified">Solde confirmé</string>
-    <string name="wallet_button_send">Envoyer</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_error_no_account">Compte n\'est pas créé</string>
     <string name="wallet_error_unsupported_blockchain">Cette carte n\'est pas prise en charge</string>
