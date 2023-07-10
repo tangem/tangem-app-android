@@ -22,6 +22,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
@@ -41,7 +42,6 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
