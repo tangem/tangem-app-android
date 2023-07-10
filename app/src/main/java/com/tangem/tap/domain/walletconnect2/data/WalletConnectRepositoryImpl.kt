@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.data
 
 import android.app.Application
+import arrow.core.flatten
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -97,6 +98,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                             sessionProposal.url,
                             sessionProposal.icons,
                             sessionProposal.requiredNamespaces.values.flatMap { it.chains ?: emptyList() },
+                            sessionProposal.optionalNamespaces.values.flatMap { it.chains ?: emptyList() },
                         ),
                     )
                 }
@@ -187,6 +189,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
             namespaces = sessionProposal.requiredNamespaces,
             userNamespaces = userNamespaces,
         )
+
         if (missingNetworks.isNotEmpty()) {
             Timber.e("Not added blockchains: $missingNetworks")
             scope.launch {
@@ -204,17 +207,29 @@ class WalletConnectRepositoryImpl @Inject constructor(
         }.groupBy { pair -> pair.first }
             .mapValues { entry -> entry.value.map { pair -> pair.second }.toSet() }
 
-        val preparedNamespaces = sessionProposal.requiredNamespaces.map { requiredNamespace ->
-            val accounts = requiredNamespace.value.chains?.mapNotNull { userChains[it] }?.flatten() ?: emptyList()
+        val preparedNamespaces = sessionProposal.requiredNamespaces
+            .map { requiredNamespace ->
+                val accountsRequired = requiredNamespace.value.chains
+                    ?.mapNotNull { chain -> userChains[chain] }
+                    ?.flatten() ?: emptyList()
+                val optionalNamespace = sessionProposal.optionalNamespaces[requiredNamespace.key]
+                val accountsOptional = optionalNamespace?.chains
+                    ?.mapNotNull { chain -> userChains[chain] }
+                    ?.flatten() ?: emptyList()
 
-            requiredNamespace.key to Wallet.Model.Namespace.Session(
-                accounts = accounts,
-                methods = requiredNamespace.value.methods,
-                events = requiredNamespace.value.events,
-            )
-        }.toMap()
+                val methods = (requiredNamespace.value.methods + (optionalNamespace?.methods ?: emptyList()))
+                    .distinct()
+                requiredNamespace.key to Wallet.Model.Namespace.Session(
+                    accounts = (accountsRequired + accountsOptional).distinct(),
+                    methods = methods,
+                    events = requiredNamespace.value.events,
+                )
+            }.toMap()
 
-        val sessionApproval = Wallet.Params.SessionApprove(sessionProposal.proposerPublicKey, preparedNamespaces)
+        val sessionApproval = Wallet.Params.SessionApprove(
+            proposerPublicKey = sessionProposal.proposerPublicKey,
+            namespaces = preparedNamespaces,
+        )
 
         Timber.d("Session approval is prepared for sending: $sessionApproval")
 
