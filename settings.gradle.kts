@@ -37,9 +37,10 @@ include(":common")
 include(":core:analytics")
 include(":core:datasource")
 include(":core:featuretoggles")
+include(":core:navigation")
 include(":core:res")
-include(":core:utils")
 include(":core:ui")
+include(":core:utils")
 // endregion Core modules
 
 // region Libs modules
