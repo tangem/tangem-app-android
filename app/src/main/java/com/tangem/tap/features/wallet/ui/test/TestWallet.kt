@@ -5,10 +5,10 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.tap.common.TestAction
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import java.math.BigDecimal
