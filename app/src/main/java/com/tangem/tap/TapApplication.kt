@@ -23,7 +23,9 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -49,7 +51,6 @@ import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
@@ -148,6 +149,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var learn2earnInteractor: Learn2earnInteractor
 
+    @Inject
+    lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -164,6 +168,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                 ),
             ),
         )
