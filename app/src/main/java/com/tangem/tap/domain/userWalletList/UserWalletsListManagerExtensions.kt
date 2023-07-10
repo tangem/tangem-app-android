@@ -1,7 +1,8 @@
 package com.tangem.tap.domain.userWalletList
 
 import com.tangem.common.CompletionResult
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
