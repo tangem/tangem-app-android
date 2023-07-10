@@ -4,12 +4,12 @@ import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 import com.tangem.tap.preferencesStorage
