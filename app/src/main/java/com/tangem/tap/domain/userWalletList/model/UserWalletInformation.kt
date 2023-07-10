@@ -3,7 +3,7 @@ package com.tangem.tap.domain.userWalletList.model
 import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 
 @JsonClass(generateAdapter = true)
 internal data class UserWalletSensitiveInformation(
