@@ -1,7 +1,7 @@
 package com.tangem.tap.features.customtoken.impl.presentation.routers
 
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.store
 
 /** Default implementation of custom token feature router */
