@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.repository
 
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 
 internal interface UserWalletsKeysRepository {
