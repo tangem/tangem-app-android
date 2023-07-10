@@ -1,6 +1,9 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
@@ -8,6 +11,7 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
@@ -15,7 +19,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
@@ -134,22 +137,13 @@ class TapWalletManager(
 
     fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
-        val blockchain = data.cardTypesResolver.getBlockchain()
+
         if (data.cardTypesResolver.isStart2Coin()) {
-            configManager?.turnOff(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
             configManager?.turnOff(ConfigManager.IS_TOP_UP_ENABLED)
-        } else if (blockchain == Blockchain.Bitcoin ||
-            data.walletData?.blockchain == Blockchain.Bitcoin.id
-        ) {
-            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
-            configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         } else {
-            configManager?.resetToDefault(ConfigManager.IS_SENDING_TO_PAY_ID_ENABLED)
             configManager?.resetToDefault(ConfigManager.IS_TOP_UP_ENABLED)
         }
     }
 }
 
-fun Wallet.getFirstToken(): Token? {
-    return getTokens().toList().getOrNull(0)
-}
+fun Wallet.getFirstToken(): Token? = getTokens().toList().getOrNull(index = 0)
