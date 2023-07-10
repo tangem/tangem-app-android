@@ -25,14 +25,14 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_buy"
             style="@style/TapPrimaryIconButton"
-            android:text="@string/wallet_button_buy"
+            android:text="@string/common_buy"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_up" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_sell"
             style="@style/TapPrimaryIconButton"
-            android:text="@string/wallet_button_sell"
+            android:text="@string/common_sell"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_down" />
 
@@ -51,7 +51,7 @@
         style="@style/TapPrimaryIconButton"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:text="@string/wallet_button_send"
+        android:text="@string/common_send"
         app:icon="@drawable/ic_send" />
 
 </merge>
