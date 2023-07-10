@@ -17,7 +17,6 @@ interface ConfigManager {
     fun resetToDefault(name: String)
 
     companion object {
-        const val IS_SENDING_TO_PAY_ID_ENABLED = "isSendingToPayIdEnabled"
         const val IS_CREATING_TWIN_CARDS_ALLOWED = "isCreatingTwinCardsAllowed"
         const val IS_TOP_UP_ENABLED = "isTopUpEnabled"
     }
