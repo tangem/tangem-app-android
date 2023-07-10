@@ -141,7 +141,7 @@
 
         <activity
             android:name="com.tangem.feature.learn2earn.presentation.webView.Learn2earnWebViewActivity"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
