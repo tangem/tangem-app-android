@@ -17,6 +17,7 @@ object DaggerGraphReducer {
                 scanCardUseCase = action.scanCardUseCase,
                 walletRouter = action.walletRouter,
                 walletConnectInteractor = action.walletConnectInteractor,
+                tokenDetailsRouter = action.tokenDetailsRouter,
             )
         }
     }

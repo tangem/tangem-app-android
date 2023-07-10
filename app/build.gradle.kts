@@ -26,8 +26,11 @@ dependencies {
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
     implementation(project(":domain:card"))
+    implementation(project(":domain:wallets"))
+    implementation(project(":domain:wallets:models"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(project(":core:navigation"))
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
     implementation(project(":core:ui"))
@@ -39,6 +42,8 @@ dependencies {
 
     /** Features */
     implementation(project(":features:onboarding"))
+    implementation(project(":features:learn2earn:api"))
+    implementation(project(":features:learn2earn:impl"))
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
@@ -50,6 +55,8 @@ dependencies {
     implementation(project(":features:tester:impl"))
     implementation(project(":features:wallet:api"))
     implementation(project(":features:wallet:impl"))
+    implementation(projects.features.tokendetails.api)
+    implementation(projects.features.tokendetails.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

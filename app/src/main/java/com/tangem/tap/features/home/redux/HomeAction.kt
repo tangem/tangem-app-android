@@ -11,6 +11,8 @@ sealed class HomeAction : Action {
     object OnCreate : HomeAction()
     object Init : HomeAction()
 
+    data class InsertStory(val position: Int, val story: Stories) : HomeAction()
+
     data class ReadCard(
         val analyticsEvent: AnalyticsEvent? = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Introduction),
     ) : HomeAction()

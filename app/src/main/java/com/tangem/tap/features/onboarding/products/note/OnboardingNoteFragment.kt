@@ -10,10 +10,10 @@ import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.ShareElement
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler

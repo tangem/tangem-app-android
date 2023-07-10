@@ -11,27 +11,37 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 
-class TangemCardTypesResolver(
+internal class TangemCardTypesResolver(
     private val card: CardDTO,
     private val productType: ProductType,
     private val walletData: WalletData?,
 ) : CardTypesResolver {
 
     override fun isTangemNote(): Boolean = productType == ProductType.Note
-    override fun isTangemWallet(): Boolean = card.settings.isBackupAllowed &&
-        card.settings.isHDWalletAllowed &&
-        card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
 
-    override fun isWallet2(): Boolean =
-        card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+    override fun isTangemWallet(): Boolean {
+        return card.settings.isBackupAllowed && card.settings.isHDWalletAllowed &&
+            card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
+    }
+
+    override fun isWhiteWallet(): Boolean {
+        return walletData == null && card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
+    }
+
+    override fun isWallet2(): Boolean {
+        return card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+    }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
+
     override fun isStart2Coin(): Boolean = card.isStart2Coin
 
-    override fun isMultiwalletAllowed(): Boolean = !isTangemTwins() &&
-        !card.isStart2Coin &&
-        !isTangemNote() &&
-        (multiWalletAvailable() || card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
+    override fun isDev(): Boolean = card.isTestCard
+
+    override fun isMultiwalletAllowed(): Boolean {
+        return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&
+            (multiWalletAvailable() || card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
+    }
 
     private fun multiWalletAvailable() = card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
 
@@ -59,19 +69,21 @@ class TangemCardTypesResolver(
             cardToken.decimals,
         )
     }
-}
 
-private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
-    // workaround for BSC (BNB) notes cards
-    return when (blockchainName) {
-        "BINANCE" -> {
-            Blockchain.BSC
-        }
-        "BINANCE/test" -> {
-            Blockchain.BSCTestnet
-        }
-        else -> {
-            Blockchain.fromId(blockchainName)
+    override fun getBackupCardsCount(): Int = card.wallets.size
+
+    private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
+        // workaround for BSC (BNB) notes cards
+        return when (blockchainName) {
+            "BINANCE" -> {
+                Blockchain.BSC
+            }
+            "BINANCE/test" -> {
+                Blockchain.BSCTestnet
+            }
+            else -> {
+                Blockchain.fromId(blockchainName)
+            }
         }
     }
 }

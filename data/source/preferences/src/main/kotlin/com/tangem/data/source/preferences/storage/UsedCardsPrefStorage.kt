@@ -68,6 +68,10 @@ class UsedCardsPrefStorage internal constructor(
         return cardInfo.isActivationStarted && !cardInfo.isActivationFinished
     }
 
+    fun hadFinishedActivation(): Boolean {
+        return restore().any { it.isActivationFinished }
+    }
+
     private fun findCardInfo(
         cardId: String,
         list: MutableList<DataSourceUsedCardInfo>? = null,

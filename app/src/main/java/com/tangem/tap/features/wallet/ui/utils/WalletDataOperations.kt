@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
@@ -26,15 +27,14 @@ internal fun WalletDataModel.mainButton(blockchainAmount: BigDecimal): WalletMai
 
 internal fun WalletDataModel.hasPendingTransactions(): Boolean {
     // for now check pending ongoing only just for BTC, later test and add other utxo networks
-    // disabled for release 4.8, test and enable in 4.9
-    // val isBitcoinBlockchain =
-    //     currency.blockchain == Blockchain.Bitcoin || currency.blockchain == Blockchain.BitcoinTestnet
-    // if (currency.isBlockchain() && isBitcoinBlockchain) {
-    //     val outgoingTransactions = status.pendingTransactions.filter {
-    //         it.type == PendingTransactionType.Outgoing
-    //     }
-    //     return outgoingTransactions.isEmpty()
-    // }
+    val isBitcoinBlockchain =
+        currency.blockchain == Blockchain.Bitcoin || currency.blockchain == Blockchain.BitcoinTestnet
+    if (currency.isBlockchain() && isBitcoinBlockchain) {
+        val outgoingTransactions = status.pendingTransactions.filter {
+            it.type == PendingTransactionType.Outgoing
+        }
+        return outgoingTransactions.isEmpty()
+    }
     return status.pendingTransactions.isEmpty()
 }
 
@@ -98,7 +98,7 @@ internal fun WalletDataModel.getAvailableActions(
 
 internal fun WalletDataModel.shouldShowMultipleAddress(): Boolean {
     val listOfAddresses = walletAddresses?.list.orEmpty()
-    return listOfAddresses.size > 1 && currency.blockchain != Blockchain.BitcoinCash
+    return listOfAddresses.size > 1
 }
 
 internal fun WalletDataModel.assembleWarnings(

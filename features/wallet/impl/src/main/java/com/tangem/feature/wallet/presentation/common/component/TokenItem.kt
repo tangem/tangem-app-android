@@ -32,8 +32,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.detectReorder
 
 private const val DOTS = "•••"
 val TOKEN_ITEM_HEIGHT: Dp
@@ -46,7 +49,7 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
     when (state) {
         is TokenItemState.Content -> ContentTokenItem(state, modifier)
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
-        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier)
+        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
         is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
     }
 }
@@ -71,7 +74,11 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
 }
 
 @Composable
-internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modifier = Modifier) {
+internal fun DraggableTokenItem(
+    state: TokenItemState.Draggable,
+    modifier: Modifier = Modifier,
+    reorderableTokenListState: ReorderableLazyListState? = null,
+) {
     InternalTokenItem(
         modifier = modifier,
         name = state.name,
@@ -81,13 +88,25 @@ internal fun DraggableTokenItem(state: TokenItemState.Draggable, modifier: Modif
         amount = state.fiatAmount,
         hasPending = false,
         options = { ref ->
-            Icon(
+            Box(
                 modifier = Modifier
-                    .constrainAsOptionsItem(scope = this, ref),
-                painter = painterResource(id = R.drawable.ic_drag_24),
-                tint = TangemTheme.colors.icon.informative,
-                contentDescription = null,
-            )
+                    .size(TangemTheme.dimens.size32)
+                    .constrainAsOptionsItem(scope = this, ref)
+                    .let {
+                        if (reorderableTokenListState != null) {
+                            it.detectReorder(reorderableTokenListState)
+                        } else {
+                            it
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_drag_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
     )
 }
@@ -300,7 +319,7 @@ private fun TokenTitleAmountBlock(title: String, amount: String?, hasPending: Bo
 @Composable
 private fun TokenFiatPercentageBlock(
     fiatAmount: String,
-    priceChange: TokenOptionsState.PriceChange,
+    priceChange: PriceChangeConfig,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.requiredWidth(IntrinsicSize.Max)) {
@@ -318,11 +337,11 @@ private fun TokenFiatPercentageBlock(
             val iconChangeArrow: Int
             val changeTextColor: Color
             when (priceChange.type) {
-                TokenOptionsState.PriceChange.Type.UP -> {
+                PriceChangeConfig.Type.UP -> {
                     iconChangeArrow = R.drawable.img_arrow_up_8
                     changeTextColor = TangemTheme.colors.text.accent
                 }
-                TokenOptionsState.PriceChange.Type.DOWN -> {
+                PriceChangeConfig.Type.DOWN -> {
                     iconChangeArrow = R.drawable.img_arrow_down_8
                     changeTextColor = TangemTheme.colors.text.warning
                 }
@@ -335,7 +354,7 @@ private fun TokenFiatPercentageBlock(
             SpacerW4()
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
-                text = priceChange.valuePercent,
+                text = priceChange.valueInPercent,
                 style = TangemTypography.body2,
                 color = changeTextColor,
             )

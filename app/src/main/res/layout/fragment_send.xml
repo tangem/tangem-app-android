@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-            app:title="@string/send_title" />
+            app:title="@string/common_send" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -39,8 +39,8 @@
             android:orientation="vertical">
 
             <include
-                android:id="@+id/l_send_address_payid"
-                layout="@layout/layout_send_address_payid"
+                android:id="@+id/l_send_address"
+                layout="@layout/layout_send_address"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp" />
@@ -115,7 +115,7 @@
                         style="@style/TapPrimaryIconButton"
                         android:layout_width="match_parent"
                         android:fontFamily="@font/saira_semi_condensed_regular"
-                        android:text="@string/send_title"
+                        android:text="@string/common_send"
                         app:icon="@drawable/ic_arrow_right" />
 
                     <ProgressBar

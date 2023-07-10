@@ -3,12 +3,12 @@ package com.tangem.tap.domain.scanCard.chains
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
