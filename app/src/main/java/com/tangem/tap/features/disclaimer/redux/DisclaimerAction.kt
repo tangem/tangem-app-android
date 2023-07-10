@@ -1,6 +1,6 @@
 package com.tangem.tap.features.disclaimer.redux
 
-import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.core.navigation.AppScreen
 import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.Action

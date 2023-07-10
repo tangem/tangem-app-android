@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactionExtras
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
@@ -26,7 +27,6 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -55,18 +55,17 @@ class SendMiddleware {
         { nextDispatch ->
             { action ->
                 when (action) {
-                    is AddressPayIdActionUi -> AddressPayIdMiddleware().handle(action, appState(), dispatch)
+                    is AddressActionUi -> AddressMiddleware().handle(action, appState(), dispatch)
                     is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
                     is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                     is SendActionUi.SendAmountToRecipient ->
                         verifyAndSendTransaction(action, appState(), dispatch)
-                    is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
                     is SendAction.Warnings.Update -> updateWarnings(dispatch)
                     is SendActionUi.CheckIfTransactionDataWasProvided -> {
                         val transactionData = appState()?.sendState?.externalTransactionData
                         if (transactionData != null) {
                             store.dispatchOnMain(
-                                AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
+                                AddressVerifyAction.AddressVerification.SetWalletAddress(
                                     address = transactionData.destinationAddress,
                                     isUserInput = false,
                                 ),
@@ -96,7 +95,7 @@ private fun verifyAndSendTransaction(
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return
     val card = appState.globalState.scanResponse?.card ?: return
-    val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
+    val destinationAddress = sendState.addressState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
 
@@ -389,12 +388,6 @@ fun createValidateTransactionError(
         }
     }
     return TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
-}
-
-private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -> Unit) {
-    val isSendingToPayIdEnabled =
-        appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
-    dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
 }
 
 private fun updateWarnings(dispatch: (Action) -> Unit) {
