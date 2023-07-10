@@ -1,5 +1,5 @@
 <resources>
 
-    <bool name="largeHeap">false</bool>
+    <bool name="largeHeap">true</bool>
 
 </resources>
