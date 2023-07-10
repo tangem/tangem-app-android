@@ -32,7 +32,7 @@ internal class WalletViewModel @Inject constructor() : ViewModel() {
         onBackClick = { router.popBackStack() },
         topBarConfig = WalletTopBarConfig(
             onScanCardClick = { router.openOrganizeTokensScreen() },
-            onMoreClick = { router.openDetailsScreen() }
+            onMoreClick = { router.openDetailsScreen() },
         ),
         walletsListConfig = WalletPreviewData.multicurrencyWalletScreenState.walletsListConfig.copy(
             onWalletChange = ::selectWallet,
