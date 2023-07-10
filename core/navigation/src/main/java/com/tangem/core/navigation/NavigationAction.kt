@@ -1,4 +1,4 @@
-package com.tangem.tap.common.redux.navigation
+package com.tangem.core.navigation
 
 import android.net.Uri
 import android.os.Bundle
@@ -7,6 +7,7 @@ import org.rekotlin.Action
 import java.lang.ref.WeakReference
 
 sealed class NavigationAction : Action {
+
     data class NavigateTo(
         val screen: AppScreen,
         val fragmentShareTransition: FragmentShareTransition? = null,
@@ -14,10 +15,7 @@ sealed class NavigationAction : Action {
         val bundle: Bundle? = null,
     ) : NavigationAction()
 
-    data class PopBackTo(
-        val screen: AppScreen? = null,
-        val inclusive: Boolean = false,
-    ) : NavigationAction()
+    data class PopBackTo(val screen: AppScreen? = null, val inclusive: Boolean = false) : NavigationAction()
 
     data class OpenUrl(val url: String) : NavigationAction()
 
@@ -28,5 +26,6 @@ sealed class NavigationAction : Action {
     data class Share(val data: String) : NavigationAction()
 
     data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
+
     data class ActivityDestroyed(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
 }
