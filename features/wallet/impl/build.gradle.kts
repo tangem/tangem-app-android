@@ -26,6 +26,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.tangem.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -37,4 +38,7 @@ dependencies {
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
+
+    /** Domain modules */
+    implementation(project(":domain:legacy"))
 }
