@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.di
 
+import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.feature.wallet.presentation.router.DefaultWalletRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.Module
@@ -14,5 +15,7 @@ internal object WalletRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideWalletRouter(): WalletRouter = DefaultWalletRouter()
+    fun provideWalletRouter(navigationStateHolder: NavigationStateHolder): WalletRouter {
+        return DefaultWalletRouter(navigationStateHolder = navigationStateHolder)
+    }
 }
