@@ -174,11 +174,13 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
 
         if (BuildConfig.DEBUG) {
-            Timber.plant(object : Timber.DebugTree() {
-                override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                    Logger.log(priority, tag, message, t)
-                }
-            })
+            Timber.plant(
+                object : Timber.DebugTree() {
+                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                        Logger.log(priority, tag, message, t)
+                    }
+                },
+            )
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
@@ -197,7 +199,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
-                createNetworkLoggingInterceptor()
+                createNetworkLoggingInterceptor(),
             )
         }
 
