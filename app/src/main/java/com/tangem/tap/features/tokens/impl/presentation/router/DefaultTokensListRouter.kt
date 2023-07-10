@@ -1,10 +1,10 @@
 package com.tangem.tap.features.tokens.impl.presentation.router
 
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
