@@ -475,6 +475,17 @@
             ]
         },
         {
+            "id": "telos",
+            "symbol": "TLOS",
+            "name": "Telos EVM",
+            "networks":
+            [
+                {
+                    "networkId": "telos/test"
+                }
+            ]
+        },
+        {
             "id": "ravencoin",
             "symbol": "RVN",
             "name": "Ravencoin",
@@ -493,6 +504,17 @@
             [
                 {
                     "networkId": "cosmos/test"
+                }
+            ]
+        },
+        {
+            "id": "aleph-zero",
+            "symbol": "AZERO",
+            "name": "Aleph Zero",
+            "networks":
+            [
+                {
+                    "networkId": "aleph-zero/test"
                 }
             ]
         }
