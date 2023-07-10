@@ -7,30 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.common.extensions.remove
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.enableError
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.update
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.BaseStoreFragment
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
+import com.tangem.tap.features.send.redux.AddressVerifyAction.Error
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.states.AddressPayIdState
-import com.tangem.tap.features.send.redux.states.AmountState
-import com.tangem.tap.features.send.redux.states.FeeState
-import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
-import com.tangem.tap.features.send.redux.states.ReceiptState
-import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.send.redux.states.StateId
-import com.tangem.tap.features.send.redux.states.TransactionExtraError
-import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.KaspaWarningDialog
@@ -61,7 +46,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         lastChangedStates.forEach {
             when (it) {
                 StateId.SEND_SCREEN -> handleSendScreen(fg, state)
-                StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
+                StateId.ADDRESS_PAY_ID -> handleAddressState(fg, state.addressState)
                 StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
@@ -72,7 +57,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
     @Suppress("ComplexMethod")
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
-        with(fg.binding.lSendAddressPayid) {
+        with(fg.binding.lSendAddress) {
             fun showView(view: View, info: Any?) {
                 view.show(info != null)
             }
@@ -192,13 +177,10 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         )
     }
 
-    private fun handleAddressPayIdState(fg: SendFragment, state: AddressPayIdState) =
-        with(fg.binding.lSendAddressPayid) {
+    private fun handleAddressState(fg: SendFragment, state: AddressState) {
+        with(fg.binding.lSendAddress) {
             fun parseError(context: Context, error: Error?): String? {
                 val resId = when (error) {
-                    Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_error_payid_unsupported_by_blockchain
-                    Error.PAY_ID_NOT_REGISTERED -> R.string.send_error_payid_not_registered
-                    Error.PAY_ID_REQUEST_FAILED -> R.string.send_error_payid_request_failed
                     Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_validation_invalid_address
                     Error.ADDRESS_SAME_AS_WALLET -> R.string.send_error_address_same_as_wallet
                     else -> null
@@ -208,8 +190,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
             imvPaste.isEnabled = state.pasteIsEnabled
 
-            val et = etAddressOrPayId
-            val til = tilAddressOrPayId
+            val et = etAddress
+            val til = tilAddress
             val parsedError = parseError(til.context, state.error)
 
             til.isEnabled = state.inputIsEnabled
@@ -218,19 +200,15 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             flPaste.show(state.inputIsEnabled)
             flQrCode.show(state.inputIsEnabled)
 
-            val hintResId = if (state.sendingToPayIdEnabled) {
-                R.string.send_destination_hint_address_payid
-            } else {
-                R.string.send_destination_hint_address
-            }
-            til.hint = til.getString(hintResId)
+            til.hint = til.getString(R.string.send_destination_hint_address)
             til.error = parsedError
             til.isErrorEnabled = parsedError != null
             til.helperText = state.destinationWalletAddress
-            til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
+            til.isHelperTextEnabled = parsedError == null
 
             if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
         }
+    }
 
     private fun handleAmountState(fg: SendFragment, state: AmountState) = with(fg.binding.lSendAmount) {
         if (state.error != null) {

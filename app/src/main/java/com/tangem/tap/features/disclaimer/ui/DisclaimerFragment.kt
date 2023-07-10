@@ -6,12 +6,12 @@ import android.view.View.OVER_SCROLL_NEVER
 import android.webkit.WebView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.disclaimer.Disclaimer
