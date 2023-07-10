@@ -1,4 +1,4 @@
-package com.tangem.tap.common.redux.navigation
+package com.tangem.core.navigation
 
 import android.view.View
 import androidx.transition.TransitionSet
