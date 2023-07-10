@@ -8,16 +8,12 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.deserialization.WalletDataDeserializer
-import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toByteArray
-import com.tangem.common.extensions.toHexString
-import com.tangem.common.extensions.toMapKey
+import com.tangem.common.extensions.*
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
@@ -36,10 +32,10 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch
+import kotlin.collections.set
 
 class ScanProductTask(
     val card: Card? = null,
