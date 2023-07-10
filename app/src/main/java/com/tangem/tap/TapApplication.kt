@@ -1,59 +1,68 @@
 package com.tangem.tap
 
-import android.app.*
-import android.content.*
-import android.content.pm.*
-import coil.*
-import com.tangem.*
-import com.tangem.blockchain.common.*
-import com.tangem.blockchain.network.*
-import com.tangem.core.analytics.*
-import com.tangem.core.featuretoggle.manager.*
-import com.tangem.data.source.preferences.*
-import com.tangem.datasource.api.common.*
-import com.tangem.datasource.asset.*
-import com.tangem.datasource.config.*
-import com.tangem.datasource.config.models.*
-import com.tangem.datasource.connection.*
-import com.tangem.domain.*
-import com.tangem.domain.common.*
-import com.tangem.features.wallet.featuretoggles.*
-import com.tangem.tap.common.*
-import com.tangem.tap.common.analytics.*
-import com.tangem.tap.common.analytics.api.*
-import com.tangem.tap.common.analytics.handlers.amplitude.*
-import com.tangem.tap.common.analytics.handlers.appsFlyer.*
-import com.tangem.tap.common.analytics.handlers.firebase.*
-import com.tangem.tap.common.analytics.topup.*
-import com.tangem.tap.common.chat.*
-import com.tangem.tap.common.feedback.*
-import com.tangem.tap.common.images.*
-import com.tangem.tap.common.log.*
-import com.tangem.tap.common.redux.*
-import com.tangem.tap.common.redux.global.*
-import com.tangem.tap.common.shop.*
-import com.tangem.tap.domain.configurable.warningMessage.*
-import com.tangem.tap.domain.tokens.*
-import com.tangem.tap.domain.totalBalance.*
-import com.tangem.tap.domain.totalBalance.di.*
-import com.tangem.tap.domain.walletCurrencies.*
-import com.tangem.tap.domain.walletCurrencies.di.*
-import com.tangem.tap.domain.walletStores.*
-import com.tangem.tap.domain.walletStores.di.*
-import com.tangem.tap.domain.walletStores.repository.*
-import com.tangem.tap.domain.walletStores.repository.di.*
+import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import com.tangem.Log
+import com.tangem.LogFormat
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.data.source.preferences.PreferencesDataSource
+import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.config.FeaturesLocalLoader
+import com.tangem.datasource.config.models.Config
+import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.domain.DomainLayer
+import com.tangem.domain.common.LogConfig
+import com.tangem.domain.wallets.legacy.WalletManagersRepository
+import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
+import com.tangem.tap.common.analytics.AnalyticsFactory
+import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.topup.TopUpController
+import com.tangem.tap.common.chat.ChatManager
+import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
+import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TangemLogCollector
+import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.appReducer
+import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.shop.TangemShopService
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
+import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
+import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.WalletStoresManager
+import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
+import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.*
-import com.tangem.tap.features.customtoken.api.featuretoggles.*
-import com.tangem.tap.proxy.*
-import com.tangem.tap.proxy.redux.*
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
+import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
-import dagger.hilt.android.*
-import kotlinx.coroutines.*
-import okhttp3.logging.*
-import org.rekotlin.*
-import timber.log.*
-import javax.inject.*
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.runBlocking
+import okhttp3.logging.HttpLoggingInterceptor
+import org.rekotlin.Store
+import timber.log.Timber
+import javax.inject.Inject
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -102,7 +111,6 @@ val walletCurrenciesManager by lazy {
 val totalFiatBalanceCalculator by lazy {
     TotalFiatBalanceCalculator.provideDefaultImplementation()
 }
-val intentHandler by lazy { IntentHandler() }
 
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
@@ -137,6 +145,12 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
+    @Inject
+    lateinit var learn2earnInteractor: Learn2earnInteractor
+
+    @Inject
+    lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
+
     override fun onCreate() {
         super.onCreate()
 
@@ -153,6 +167,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                 ),
             ),
         )
@@ -190,8 +205,11 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
-        scope.launch {
+        // TODO: Try to performance and user experience.
+        //  [REDACTED_JIRA]
+        runBlocking {
             featureTogglesManager.init()
+            learn2earnInteractor.init()
         }
 
         initTopUpController()
