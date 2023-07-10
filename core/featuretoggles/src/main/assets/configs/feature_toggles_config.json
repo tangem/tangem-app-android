@@ -18,5 +18,9 @@
     {
         "name": "1INCH_LEARN_2_EARN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_TOKEN_DETAIL_SCREEN_ENABLED",
+        "version": "undefined"
     }
 ]
