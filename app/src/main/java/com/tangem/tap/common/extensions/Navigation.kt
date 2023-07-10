@@ -167,7 +167,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             }
         }
 
-        AppScreen.WalletDetails -> WalletDetailsFragment()
+        AppScreen.WalletDetails -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::tokenDetailsFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::tokenDetailsRouter)
+                    .getEntryFragment()
+            } else {
+                WalletDetailsFragment()
+            }
+        }
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
         AppScreen.ReferralProgram -> ReferralFragment()
