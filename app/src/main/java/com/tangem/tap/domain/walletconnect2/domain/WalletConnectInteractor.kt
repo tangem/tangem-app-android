@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -216,6 +218,7 @@ class WalletConnectInteractor(
                 id = request.requestId,
             )
         } else {
+            Analytics.send(WalletConnect.RequestSigned())
             walletConnectRepository.sendRequest(
                 topic = request.topic,
                 id = request.requestId,
