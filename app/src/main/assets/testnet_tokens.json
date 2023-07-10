@@ -506,6 +506,17 @@
                     "networkId": "cosmos/test"
                 }
             ]
+        },
+        {
+            "id": "aleph-zero",
+            "symbol": "AZERO",
+            "name": "Aleph Zero",
+            "networks":
+            [
+                {
+                    "networkId": "aleph-zero/test"
+                }
+            ]
         }
     ]
 }
