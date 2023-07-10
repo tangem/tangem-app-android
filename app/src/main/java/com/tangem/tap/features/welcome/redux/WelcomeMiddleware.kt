@@ -1,11 +1,12 @@
 package com.tangem.tap.features.welcome.redux
 
-import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -14,11 +15,10 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
+import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.signin.redux.SignInAction
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -39,24 +39,10 @@ internal class WelcomeMiddleware {
 
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
         when (action) {
-            is WelcomeAction.ProceedWithBiometrics -> {
-                proceedWithBiometrics(state)
-            }
-            is WelcomeAction.ProceedWithCard -> {
-                proceedWithCard(state)
-            }
-            is WelcomeAction.HandleIntentIfNeeded -> {
-                handleInitialIntent(action.intent)
-            }
-            is WelcomeAction.ClearUserWallets -> {
-                disableUserWalletsSaving()
-            }
-            is WelcomeAction.ProceedWithBiometrics.Error,
-            is WelcomeAction.ProceedWithCard.Error,
-            is WelcomeAction.ProceedWithBiometrics.Success,
-            is WelcomeAction.ProceedWithCard.Success,
-            is WelcomeAction.CloseError,
-            -> Unit
+            is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics(state)
+            is WelcomeAction.ProceedWithCard -> proceedWithCard(state)
+            is WelcomeAction.ClearUserWallets -> disableUserWalletsSaving()
+            else -> Unit
         }
     }
 
@@ -85,7 +71,9 @@ internal class WelcomeMiddleware {
                 store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
 
-                intentHandler.handleWalletConnectLink(state.intent)
+                state.intent?.let {
+                    WalletConnectLinkIntentHandler().handleIntent(it)
+                }
             }
     }
 
@@ -104,17 +92,10 @@ internal class WelcomeMiddleware {
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet = userWallet)
 
-                    intentHandler.handleWalletConnectLink(state.intent)
+                    state.intent?.let {
+                        WalletConnectLinkIntentHandler().handleIntent(it)
+                    }
                 }
-        }
-    }
-
-    private fun handleInitialIntent(intent: Intent?) {
-        val isBackgroundScanNotHandled = !intentHandler.handleBackgroundScan(intent, hasSavedUserWallets = true)
-        val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
-
-        if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
-            store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
         }
     }
 
