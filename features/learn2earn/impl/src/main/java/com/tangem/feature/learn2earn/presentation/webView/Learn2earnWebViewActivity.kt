@@ -38,7 +38,7 @@ class Learn2earnWebViewActivity : AppCompatActivity() {
         webView.settings.loadsImagesAutomatically = true
 
         webView.webViewClient = Learn2earnWebViewClient(
-            helper = viewModel,
+            redirectHandler = viewModel,
             headers = webViewData.headers,
             finishSessionHandler = { finish() },
         )
