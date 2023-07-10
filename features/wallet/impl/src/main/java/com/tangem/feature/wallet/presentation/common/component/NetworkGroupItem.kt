@@ -14,6 +14,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.detectReorder
 
 @Composable
 internal fun NetworkGroupItem(networkName: String, modifier: Modifier = Modifier) {
@@ -24,16 +26,33 @@ internal fun NetworkGroupItem(networkName: String, modifier: Modifier = Modifier
 }
 
 @Composable
-internal fun DraggableNetworkGroupItem(networkName: String, modifier: Modifier = Modifier) {
+internal fun DraggableNetworkGroupItem(
+    networkName: String,
+    modifier: Modifier = Modifier,
+    reorderableTokenListState: ReorderableLazyListState? = null,
+) {
     InternalNetworkGroupItem(
         modifier = modifier,
         networkName = networkName,
         endIcon = {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_group_drop_24),
-                tint = TangemTheme.colors.icon.informative,
-                contentDescription = null,
-            )
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size32)
+                    .let {
+                        if (reorderableTokenListState != null) {
+                            it.detectReorder(reorderableTokenListState)
+                        } else {
+                            it
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_group_drop_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
     )
 }
