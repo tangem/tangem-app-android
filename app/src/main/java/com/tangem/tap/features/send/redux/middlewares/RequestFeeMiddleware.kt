@@ -38,7 +38,7 @@ class RequestFeeMiddleware {
         }
         val typedAmount = sendState.amountState.amountToExtract ?: return
 
-        val destinationAddress = sendState.addressPayIdState.destinationWalletAddress!!
+        val destinationAddress = sendState.addressState.destinationWalletAddress!!
         val destinationAmount = Amount(typedAmount, sendState.amountState.amountToSendCrypto)
         val txSender = if (scanResponse.isDemoCard()) {
             DemoTransactionSender(walletManager)
