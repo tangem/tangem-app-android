@@ -1,7 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui
 
 import androidx.compose.runtime.Immutable
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
