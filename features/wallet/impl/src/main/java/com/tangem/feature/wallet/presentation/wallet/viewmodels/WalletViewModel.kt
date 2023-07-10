@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -30,8 +31,9 @@ internal class WalletViewModel @Inject constructor() : ViewModel() {
     // TODO: [REDACTED_TASK_KEY] Use production data instead of WalletPreviewData
     private fun getInitialState(): WalletStateHolder = WalletPreviewData.multicurrencyWalletScreenState.copy(
         onBackClick = { router.popBackStack() },
-        topBarConfig = WalletPreviewData.multicurrencyWalletScreenState.topBarConfig.copy(
+        topBarConfig = WalletTopBarConfig(
             onScanCardClick = { router.openOrganizeTokensScreen() },
+            onMoreClick = { router.openDetailsScreen() }
         ),
         walletsListConfig = WalletPreviewData.multicurrencyWalletScreenState.walletsListConfig.copy(
             onWalletChange = ::selectWallet,
