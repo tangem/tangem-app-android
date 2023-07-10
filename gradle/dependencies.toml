@@ -73,14 +73,14 @@ mviCore = "1.3.1"
 kotlinSerialization = "1.4.1"
 arrow = "1.2.0-RC"
 reactiveNetwork = "3.0.8"
-walletConnectCore = "1.15.0"
-walletConnectWeb3 = "1.8.0"
+walletConnectCore = "1.17.0"
+walletConnectWeb3 = "1.10.0"
 prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-259"
+tangemBlockchainSdk = "develop-268"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-266"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
