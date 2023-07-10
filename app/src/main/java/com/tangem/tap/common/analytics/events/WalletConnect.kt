@@ -12,7 +12,13 @@ sealed class WalletConnect(
 ) : AnalyticsEvent("Wallet Connect", event, params, error) {
 
     class ScreenOpened : WalletConnect(event = "WC Screen Opened")
-    class NewSessionEstablished : WalletConnect("New Session Established")
+    class NewSessionEstablished(dAppName: String) : WalletConnect(
+        event = "New Session Established",
+        params = mapOf(
+            AnalyticsParam.DAPP_NAME to dAppName,
+        ),
+    )
+
     class SessionDisconnected : WalletConnect("Session Disconnected")
     class RequestSigned : WalletConnect("Request Signed")
 
