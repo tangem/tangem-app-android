@@ -2,6 +2,8 @@ package com.tangem.tap.domain.walletconnect2.data
 
 import android.app.Application
 import arrow.core.flatten
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -237,6 +239,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
             params = sessionApproval,
             onSuccess = {
                 Timber.d("Approved successfully: $it")
+                Analytics.send(WalletConnect.NewSessionEstablished(sessionProposal.name))
             },
             onError = {
                 Timber.d("Error while approving: $it")
@@ -261,7 +264,9 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 ),
             ),
             onSuccess = {},
-            onError = {},
+            onError = {
+                Analytics.send(WalletConnect.TransactionError(it.throwable))
+            },
         )
     }
 
@@ -299,6 +304,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
         Web3Wallet.disconnectSession(
             params = Wallet.Params.SessionDisconnect(topic),
             onSuccess = {
+                Analytics.send(WalletConnect.SessionDisconnected())
                 updateSessions()
                 Timber.d("Disconnected successfully: $it")
             },
