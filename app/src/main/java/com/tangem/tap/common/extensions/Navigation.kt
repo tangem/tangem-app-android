@@ -2,10 +2,10 @@ package com.tangem.tap.common.extensions
 
 import android.os.Bundle
 import androidx.fragment.app.*
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.FragmentShareTransition
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.customtoken.legacy.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
@@ -167,7 +167,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             }
         }
 
-        AppScreen.WalletDetails -> WalletDetailsFragment()
+        AppScreen.WalletDetails -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::tokenDetailsFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::tokenDetailsRouter)
+                    .getEntryFragment()
+            } else {
+                WalletDetailsFragment()
+            }
+        }
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
         AppScreen.ReferralProgram -> ReferralFragment()
