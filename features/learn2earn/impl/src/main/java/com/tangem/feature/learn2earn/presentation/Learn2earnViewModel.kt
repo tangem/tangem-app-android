@@ -5,6 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.feature.learn2earn.analytics.AnalyticsParam
+import com.tangem.feature.learn2earn.analytics.Learn2earnEvents
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.WebViewResult
 import com.tangem.feature.learn2earn.domain.api.WebViewResultHandler
@@ -25,6 +28,7 @@ class Learn2earnViewModel @Inject constructor(
     private val interactor: Learn2earnInteractor,
     private val router: Learn2earnRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
 ) : ViewModel() {
 
     var uiState: Learn2earnState by mutableStateOf(
@@ -45,6 +49,10 @@ class Learn2earnViewModel @Inject constructor(
         updateMainScreenViews()
     }
 
+    fun onMainScreenRefreshed() {
+        updateMainScreenViews()
+    }
+
     private fun updateMainScreenViews() {
         viewModelScope.launch(dispatchers.io) {
             if (interactor.isNeedToShowViewOnMainScreen()) {
@@ -59,16 +67,19 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun onButtonStoryClick() {
+        analytics.send(Learn2earnEvents.IntroductionProcess.ButtonLearn())
         router.openWebView(interactor.buildUriForNewUser(), interactor.getBasicAuthHeaders())
     }
 
     private fun onButtonMainClick() {
         if (!interactor.isUserHadPromoCode() && !interactor.isUserRegisteredInPromotion()) {
+            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New()))
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
             return
         }
 
+        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
         viewModelScope.launch(dispatchers.io) {
             updateUi { uiState.updateProgress(showProgress = true) }
 
@@ -76,11 +87,13 @@ class Learn2earnViewModel @Inject constructor(
                 .onSuccess { requestAwardResult ->
                     requestAwardResult.fold(
                         onSuccess = {
+                            analytics.send(Learn2earnEvents.MainScreen.NoticeClaimSuccess())
                             val onHideDialog = {
                                 uiState = uiState.updateGetBonusVisibility(isVisible = false)
                                     .hideDialog()
                             }
                             val successDialog = MainScreenState.Dialog.Claimed(
+                                networkFullName = interactor.getAwardNetworkName(),
                                 onOk = onHideDialog,
                                 onDismissRequest = onHideDialog,
                             )
@@ -159,9 +172,8 @@ class Learn2earnViewModel @Inject constructor(
         interactor.webViewResultHandler = object : WebViewResultHandler {
             override fun handleResult(result: WebViewResult) {
                 interactor.webViewResultHandler = null
-                when (result) {
-                    WebViewResult.ReadyForAward -> updateMainScreenViews()
-                    WebViewResult.PromoCodeReceived -> Unit
+                if (result is WebViewResult.ReadyForAward) {
+                    updateMainScreenViews()
                 }
             }
         }

@@ -28,7 +28,7 @@ private fun ClaimedDialog(dialog: MainScreenState.Dialog.Claimed) {
             Text(text = stringResource(id = R.string.common_success))
         },
         text = {
-            Text(text = stringResource(id = R.string.main_promotion_credited))
+            Text(text = stringResource(id = R.string.main_promotion_credited, dialog.networkFullName))
         },
         confirmButton = {
             TextButton(

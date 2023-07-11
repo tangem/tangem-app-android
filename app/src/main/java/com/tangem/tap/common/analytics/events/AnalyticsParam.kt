@@ -156,5 +156,6 @@ sealed class AnalyticsParam {
         const val ERROR_CODE = "Error Code"
         const val ERROR_KEY = "Error Key"
         const val CREATION_TYPE = "Creation type"
+        const val DAPP_NAME = "DApp Name"
     }
 }

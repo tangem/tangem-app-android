@@ -11,8 +11,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.tester.api.TesterRouter
+import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.extensions.init
@@ -23,13 +27,10 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.googlepay.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -98,6 +99,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var walletRouter: WalletRouter
 
     @Inject
+    lateinit var tokenDetailsRouter: TokenDetailsRouter
+
+    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 // [REDACTED_TODO_COMMENT]
     private val intentProcessor: IntentProcessor = IntentProcessor()
@@ -137,6 +141,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 scanCardUseCase = scanCardUseCase,
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
+                tokenDetailsRouter = tokenDetailsRouter,
             ),
         )
     }

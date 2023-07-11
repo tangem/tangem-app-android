@@ -1,23 +1,28 @@
 package com.tangem.tap.proxy
 
 import com.tangem.TangemSdk
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.redux.WalletState
 import org.rekotlin.Store
 import javax.inject.Inject
 
 /**
- * Holds objects from old modules, that missing in DI graph
- * Object sets manually to use in new modules and [AppStateHolder] proxies its to DI
+ * Holds objects from old modules, that missing in DI graph.
+ * Object sets manually to use in new modules and [AppStateHolder] proxies its to DI.
  */
-class AppStateHolder @Inject constructor() {
+class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationStateHolder {
+
+    override var userWalletsListManager: UserWalletsListManager? = null
 
     @Deprecated("Use scan response from selected user wallet")
     var scanResponse: ScanResponse? = null
@@ -27,10 +32,13 @@ class AppStateHolder @Inject constructor() {
     var tangemSdkManager: TangemSdkManager? = null
     var tangemSdk: TangemSdk? = null
     var walletStoresManager: WalletStoresManager? = null
-    var userWalletsListManager: UserWalletsListManager? = null
     var appFiatCurrency: FiatCurrency = FiatCurrency.Default
 
     fun getActualCard(): CardDTO? {
         return scanResponse?.card
+    }
+
+    override fun navigate(action: NavigationAction) {
+        mainStore?.dispatch(action)
     }
 }
