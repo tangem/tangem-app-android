@@ -1,14 +1,14 @@
 package com.tangem.tap.common.analytics.paramsInterceptor
 
-import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.scan.ScanResponse
 
 /**
 [REDACTED_AUTHOR]
  */
 class LinkedCardContextInterceptor(
-    private val scanResponse: ScanResponse,
+    scanResponse: ScanResponse,
     val parent: LinkedCardContextInterceptor? = null,
 ) : ParamsInterceptor {
 
