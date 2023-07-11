@@ -394,7 +394,7 @@ class WalletConnectManager {
                             ),
                         )
                     }
-                    Analytics.send(WalletConnect.NewSessionEstablished())
+                    Analytics.send(WalletConnect.NewSessionEstablished(""))
                 }
             }
         }

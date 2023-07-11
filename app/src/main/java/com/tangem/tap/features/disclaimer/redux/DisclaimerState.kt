@@ -1,7 +1,7 @@
 package com.tangem.tap.features.disclaimer.redux
 
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.core.navigation.AppScreen
 import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.DummyDisclaimer
 import com.tangem.tap.features.wallet.redux.ProgressState
