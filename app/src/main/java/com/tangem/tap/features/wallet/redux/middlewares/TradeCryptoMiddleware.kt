@@ -6,6 +6,8 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.feature.swap.presentation.SwapFragment
@@ -15,8 +17,6 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.getIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
