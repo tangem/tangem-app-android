@@ -120,13 +120,6 @@ dependencies {
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-// [REDACTED_TODO_COMMENT]
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.okHttp)
-    implementation(deps.okHttp.logging)
     implementation(deps.zendesk.chat)
     implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
@@ -145,6 +138,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
+    implementation(deps.prettyLogger)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
