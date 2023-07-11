@@ -1,8 +1,8 @@
 package com.tangem.tap.features.disclaimer.redux
 
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.store
 import org.rekotlin.Action
 import org.rekotlin.Middleware
