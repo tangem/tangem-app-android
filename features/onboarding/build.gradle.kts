@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:datasource"))
     implementation(project(":core:analytics"))
+    implementation(projects.core.analytics.models)
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":core:res"))
