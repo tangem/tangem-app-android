@@ -14,6 +14,7 @@ import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.ShareElement
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.models.scan.ScanResponse
@@ -25,7 +26,6 @@ import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.TwinsCardWidget
