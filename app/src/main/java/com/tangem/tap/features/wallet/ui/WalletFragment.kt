@@ -23,6 +23,8 @@ import coil.load
 import coil.size.Scale
 import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.OneTouchClickListener
@@ -37,8 +39,6 @@ import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
