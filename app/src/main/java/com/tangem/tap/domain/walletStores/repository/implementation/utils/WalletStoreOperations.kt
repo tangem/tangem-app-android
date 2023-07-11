@@ -3,7 +3,7 @@ package com.tangem.tap.domain.walletStores.repository.implementation.utils
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.core.TangemError
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
 import timber.log.Timber
