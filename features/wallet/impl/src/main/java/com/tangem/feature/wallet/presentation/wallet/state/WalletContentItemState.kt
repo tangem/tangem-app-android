@@ -52,4 +52,6 @@ internal sealed interface WalletContentItemState {
          */
         data class Transaction(val state: TransactionState) : SingleCurrencyItem
     }
+
+    object Loading : WalletContentItemState
 }
