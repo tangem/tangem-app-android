@@ -9,6 +9,7 @@ plugins {
 dependencies {
     /** Core modules */
     implementation(project(":core:analytics"))
+    implementation(projects.core.analytics.models)
     implementation(project(":core:res"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
