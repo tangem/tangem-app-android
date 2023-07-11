@@ -5,15 +5,14 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -26,13 +25,16 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButtons
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
+import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockGroupTitle
+import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockTitle
+import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.WalletManageButtons
+import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.WalletMarketplaceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
-import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletNotificationDecoration
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
 /**
@@ -66,7 +68,6 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 WalletsList(
                     config = state.walletsListConfig,
                     lazyListState = walletsListState,
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing14),
                 )
             }
 
@@ -74,33 +75,44 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 item {
                     WalletManageButtons(
                         buttons = state.buttons,
-                        modifier = changeableItemModifier.padding(bottom = TangemTheme.dimens.spacing14),
+                        modifier = changeableItemModifier.padding(top = TangemTheme.dimens.spacing14),
                     )
                 }
             }
 
-            itemsIndexed(
+            items(
                 items = state.notifications,
-                itemContent = { index, item ->
+                itemContent = { item ->
                     Notification(
                         state = item.state,
-                        modifier = changeableItemModifier.walletNotificationDecoration(
-                            currentIndex = index,
-                            lastIndex = state.notifications.lastIndex,
-                        ),
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
                     )
                 },
             )
+
+            if (state is WalletStateHolder.SingleCurrencyContent) {
+                item {
+                    WalletMarketplaceBlock(
+                        state = state.marketplaceBlockState,
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14)
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
+                    )
+                }
+            }
 
             itemsIndexed(
                 items = state.contentItems,
                 key = { index, item ->
                     when (item) {
                         is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> item.networkName
-                        is WalletContentItemState.MultiCurrencyItem.Token -> item.state.id
+                        is WalletContentItemState.MultiCurrencyItem.Token -> index
                         is WalletContentItemState.SingleCurrencyItem.Title -> index
-                        is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> item.title
+                        is WalletContentItemState.SingleCurrencyItem.GroupTitle -> item.title
                         is WalletContentItemState.SingleCurrencyItem.Transaction -> index
+                        is WalletContentItemState.Loading -> index
                     }
                 },
                 itemContent = { index, item ->
@@ -138,73 +150,18 @@ private fun ContentItem(item: WalletContentItemState, modifier: Modifier = Modif
             TokenItem(state = item.state, modifier = modifier)
         }
         is WalletContentItemState.SingleCurrencyItem.Title -> {
-            SingleCurrencyTitle(config = item, modifier = modifier)
+            TransactionsBlockTitle(config = item, modifier = modifier)
         }
-        is WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle -> {
-            TransactionGroupTitle(config = item, modifier = modifier)
+        is WalletContentItemState.SingleCurrencyItem.GroupTitle -> {
+            TransactionsBlockGroupTitle(config = item, modifier = modifier)
         }
         is WalletContentItemState.SingleCurrencyItem.Transaction -> {
             Transaction(state = item.state, modifier = modifier)
         }
-    }
-}
-
-@Composable
-private fun SingleCurrencyTitle(
-    config: WalletContentItemState.SingleCurrencyItem.Title,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary)
-            .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing12)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = stringResource(id = R.string.common_transactions),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.subtitle2,
-        )
-
-        Row(
-            modifier = Modifier.clickable(onClick = config.onExploreClick),
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_compass_24),
-                contentDescription = null,
-                modifier = Modifier.size(size = TangemTheme.dimens.size18),
-                tint = TangemTheme.colors.icon.informative,
-            )
-            Text(
-                text = stringResource(id = R.string.common_explorer),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-            )
+        WalletContentItemState.Loading -> {
+            TokenItem(state = TokenItemState.Loading, modifier = modifier)
         }
     }
-}
-
-@Composable
-private fun TransactionGroupTitle(
-    config: WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = config.title,
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary)
-            .fillMaxWidth()
-            .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing14,
-            ),
-        color = TangemTheme.colors.text.tertiary,
-        textAlign = TextAlign.Start,
-        style = TangemTheme.typography.body2,
-    )
 }
 
 @Composable
