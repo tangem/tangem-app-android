@@ -7,19 +7,15 @@ import com.tangem.common.core.TangemError
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
-import com.tangem.tap.common.redux.DebugErrorAction
-import com.tangem.tap.common.redux.ErrorAction
-import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.StateDialog
-import com.tangem.tap.common.redux.ToastNotificationAction
+import com.tangem.tap.common.redux.*
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
 
