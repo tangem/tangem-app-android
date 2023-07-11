@@ -22,6 +22,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
@@ -152,6 +153,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
 
+    @Inject
+    lateinit var scanCardProcessor: ScanCardProcessor
+
     override fun onCreate() {
         super.onCreate()
 
@@ -169,6 +173,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
+                    scanCardProcessor = scanCardProcessor,
                 ),
             ),
         )
