@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 * [REDACTED_AUTHOR]
@@ -13,7 +13,6 @@ sealed class MainScreen(
     class ScreenOpened : MainScreen("Screen opened")
     class ButtonScanCard : MainScreen("Button - Scan Card")
     class ButtonMyWallets : MainScreen("Button - My Wallets")
-    class ButtonBuy : MainScreen("Button - Buy")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
         event = "Enable Biometric",
