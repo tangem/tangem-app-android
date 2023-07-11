@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.fragment.app.FragmentManager
 import com.tangem.features.wallet.navigation.WalletRouter
 
 /**
@@ -15,14 +16,21 @@ import com.tangem.features.wallet.navigation.WalletRouter
 @Stable
 internal interface InnerWalletRouter : WalletRouter {
 
-    /** Initialize router */
+    /**
+     * Initialize router
+     *
+     * @param fragmentManager fragment manager
+     */
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun Initialize()
+    fun Initialize(fragmentManager: FragmentManager)
 
     /** Pop back stack */
     fun popBackStack()
 
     /** Open organize tokens screen */
     fun openOrganizeTokensScreen()
+
+    /** Open details screen */
+    fun openDetailsScreen()
 }
