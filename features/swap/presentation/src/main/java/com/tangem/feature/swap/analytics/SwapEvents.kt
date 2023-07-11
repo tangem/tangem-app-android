@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.analytics
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 sealed class SwapEvents(
     event: String,
@@ -13,7 +13,6 @@ sealed class SwapEvents(
     )
 
     object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
-    object ReceiveTokenClicked : SwapEvents(event = "Receive Token Clicked")
     object ChooseTokenScreenOpened : SwapEvents(event = "Choose Token Screen Opened")
     object SearchTokenClicked : SwapEvents(event = "Searched Token Clicked")
     data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
@@ -24,7 +23,6 @@ sealed class SwapEvents(
     object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
     object ButtonPermissionApproveClicked : SwapEvents(event = "Button - Permission Approve")
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
-    object ButtonPermitAndSwapClicked : SwapEvents(event = "Button - Permit and Swap")
     object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
     object SwapInProgressScreen : SwapEvents(event = "Swap in Progress Screen Opened")
 }
