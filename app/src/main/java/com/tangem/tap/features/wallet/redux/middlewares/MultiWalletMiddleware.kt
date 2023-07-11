@@ -4,6 +4,9 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.addContext
@@ -11,10 +14,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
