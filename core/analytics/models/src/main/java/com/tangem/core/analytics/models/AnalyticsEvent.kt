@@ -1,4 +1,4 @@
-package com.tangem.core.analytics
+package com.tangem.core.analytics.models
 
 /**
 [REDACTED_AUTHOR]
