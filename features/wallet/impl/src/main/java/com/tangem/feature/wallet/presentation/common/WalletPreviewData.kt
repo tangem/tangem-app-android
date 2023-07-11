@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
@@ -70,9 +71,9 @@ internal object WalletPreviewData {
         hasPending = true,
         tokenOptions = TokenOptionsState.Visible(
             fiatAmount = "321 $",
-            priceChange = TokenOptionsState.PriceChange(
-                valuePercent = "2%",
-                type = TokenOptionsState.PriceChange.Type.UP,
+            priceChange = PriceChangeConfig(
+                valueInPercent = "2%",
+                type = PriceChangeConfig.Type.UP,
             ),
         ),
     )
@@ -86,9 +87,9 @@ internal object WalletPreviewData {
         amount = "5,412 MATIC",
         hasPending = true,
         tokenOptions = TokenOptionsState.Hidden(
-            priceChange = TokenOptionsState.PriceChange(
-                valuePercent = "2%",
-                type = TokenOptionsState.PriceChange.Type.UP,
+            priceChange = PriceChangeConfig(
+                valueInPercent = "2%",
+                type = PriceChangeConfig.Type.UP,
             ),
         ),
     )
@@ -110,7 +111,7 @@ internal object WalletPreviewData {
         name = "Polygon",
     )
 
-    val loadingTokenItemState = TokenItemState.Loading(id = UUID.randomUUID().toString())
+    val loadingTokenItemState = TokenItemState.Loading
 
     private const val networksSize = 10
     private const val tokensSize = 3
@@ -203,6 +204,15 @@ internal object WalletPreviewData {
         WalletManageButton.CopyAddress(onClick = {}),
     )
 
+    val marketplaceBlockContent = WalletMarketplaceBlockState.Content(
+        currencyName = "BTC",
+        price = "0.11$",
+        priceChangeConfig = PriceChangeConfig(
+            valueInPercent = "5.16%",
+            type = PriceChangeConfig.Type.UP,
+        ),
+    )
+
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
@@ -271,7 +281,7 @@ internal object WalletPreviewData {
         walletsListConfig = walletListConfig,
         contentItems = persistentListOf(
             WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
-            WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Today"),
+            WalletContentItemState.SingleCurrencyItem.GroupTitle("Today"),
             WalletContentItemState.SingleCurrencyItem.Transaction(
                 TransactionState.Sending(
                     address = "33BddS...ga2B",
@@ -279,7 +289,7 @@ internal object WalletPreviewData {
                     timestamp = "8:41",
                 ),
             ),
-            WalletContentItemState.SingleCurrencyItem.TransactionGroupTitle("Yesterday"),
+            WalletContentItemState.SingleCurrencyItem.GroupTitle("Yesterday"),
             WalletContentItemState.SingleCurrencyItem.Transaction(
                 TransactionState.Sending(
                     address = "33BddS...ga2B",
@@ -290,5 +300,6 @@ internal object WalletPreviewData {
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons,
+        marketplaceBlockState = marketplaceBlockContent,
     )
 }
