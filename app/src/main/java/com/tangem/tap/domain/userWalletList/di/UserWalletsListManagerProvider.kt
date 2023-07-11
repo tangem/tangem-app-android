@@ -5,22 +5,17 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.RuntimeUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricUserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
-import com.tangem.tap.domain.userWalletList.utils.json.ByteArrayKeyAdapter
-import com.tangem.tap.domain.userWalletList.utils.json.CardBackupStatusAdapter
-import com.tangem.tap.domain.userWalletList.utils.json.DerivationPathAdapterWithMigration
-import com.tangem.tap.domain.userWalletList.utils.json.ExtendedPublicKeysMapAdapter
-import com.tangem.tap.domain.userWalletList.utils.json.ScanResponseDerivedKeysMapAdapter
-import com.tangem.tap.domain.userWalletList.utils.json.WalletDerivedKeysMapAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.*
 
 private const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
 
