@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":domain:wallets:models"))
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(projects.core.analytics.models)
     implementation(project(":core:navigation"))
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
