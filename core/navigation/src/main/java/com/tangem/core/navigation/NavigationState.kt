@@ -1,4 +1,4 @@
-package com.tangem.tap.common.redux.navigation
+package com.tangem.core.navigation
 
 import androidx.appcompat.app.AppCompatActivity
 import org.rekotlin.StateType
@@ -9,17 +9,25 @@ data class NavigationState(
     val activity: WeakReference<AppCompatActivity>? = null,
 ) : StateType
 
-enum class AppScreen(
-    val isDialogFragment: Boolean = false,
-) {
+enum class AppScreen(val isDialogFragment: Boolean = false) {
     Home,
     Shop,
     Disclaimer,
-    OnboardingNote, OnboardingWallet, OnboardingTwins, OnboardingOther,
-    Wallet, WalletDetails,
+    OnboardingNote,
+    OnboardingWallet,
+    OnboardingTwins,
+    OnboardingOther,
+    Wallet,
+    WalletDetails,
     Send,
-    Details, DetailsSecurity, CardSettings, AppSettings, ResetToFactory, AccessCodeRecovery,
-    AddTokens, AddCustomToken,
+    Details,
+    DetailsSecurity,
+    CardSettings,
+    AppSettings,
+    ResetToFactory,
+    AccessCodeRecovery,
+    AddTokens,
+    AddCustomToken,
     WalletConnectSessions,
     QrScan,
     ReferralProgram,
