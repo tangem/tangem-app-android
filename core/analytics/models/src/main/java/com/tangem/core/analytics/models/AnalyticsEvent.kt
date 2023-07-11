@@ -1,4 +1,4 @@
-package com.tangem.core.analytics
+package com.tangem.core.analytics.models
 
 /**
  * Created by Anton Zhilenkov on 28.09.2022.
