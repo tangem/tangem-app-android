@@ -28,6 +28,8 @@ dependencyResolutionManagement {
     }
 }
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 include(":app")
 include(":common")
 
@@ -35,9 +37,10 @@ include(":common")
 include(":core:analytics")
 include(":core:datasource")
 include(":core:featuretoggles")
+include(":core:navigation")
 include(":core:res")
-include(":core:utils")
 include(":core:ui")
+include(":core:utils")
 // endregion Core modules
 
 // region Libs modules
@@ -61,6 +64,9 @@ include(":features:tester:impl")
 include(":features:wallet:api")
 include(":features:wallet:impl")
 
+include(":features:tokendetails:api")
+include(":features:tokendetails:impl")
+
 include(":features:learn2earn:api")
 include(":features:learn2earn:impl")
 // endregion Feature modules
@@ -72,6 +78,8 @@ include(":domain:legacy")
 
 include(":domain:core")
 include(":domain:card")
+include(":domain:wallets")
+include(":domain:wallets:models")
 // endregion Domain modules
 
 // region Data modules
