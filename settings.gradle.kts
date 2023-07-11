@@ -35,6 +35,7 @@ include(":common")
 
 // region Core modules
 include(":core:analytics")
+include(":core:analytics:models")
 include(":core:datasource")
 include(":core:featuretoggles")
 include(":core:navigation")
