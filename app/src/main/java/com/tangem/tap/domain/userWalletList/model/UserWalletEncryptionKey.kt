@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.model
 
 import com.squareup.moshi.JsonClass
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 
 @JsonClass(generateAdapter = true)
 internal data class UserWalletEncryptionKey(

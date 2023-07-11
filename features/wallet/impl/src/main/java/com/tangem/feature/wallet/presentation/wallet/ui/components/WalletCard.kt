@@ -62,16 +62,18 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
             }
 
             val imageWidth = TangemTheme.dimens.size120
-            WalletImage(
-                id = state.imageResId,
-                modifier = Modifier.constrainAs(imageItem) {
-                    centerVerticallyTo(parent)
-                    top.linkTo(parent.top)
-                    end.linkTo(parent.end)
-                    height = Dimension.fillToConstraints
-                    width = Dimension.value(imageWidth)
-                },
-            )
+            state.imageResId?.let {
+                WalletImage(
+                    id = it,
+                    modifier = Modifier.constrainAs(imageItem) {
+                        centerVerticallyTo(parent)
+                        top.linkTo(parent.top)
+                        end.linkTo(parent.end)
+                        height = Dimension.fillToConstraints
+                        width = Dimension.value(imageWidth)
+                    },
+                )
+            }
         }
     }
 }

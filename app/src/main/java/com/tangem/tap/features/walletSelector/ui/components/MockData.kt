@@ -1,6 +1,6 @@
 package com.tangem.tap.features.walletSelector.ui.components
 
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
