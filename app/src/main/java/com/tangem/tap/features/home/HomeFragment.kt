@@ -14,11 +14,11 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
 import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
