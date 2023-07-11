@@ -2,7 +2,7 @@ package com.tangem.tap.domain.scanCard
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
