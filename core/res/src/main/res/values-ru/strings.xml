@@ -68,6 +68,7 @@
     <string name="common_exchange">Обменять</string>
     <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
     <string name="common_explorer">Обозреватель</string>
+    <string name="common_learn_and_earn">Учись и получай бонусы!</string>
     <string name="common_like">Нравится</string>
     <string name="common_main_network">Основная сеть</string>
     <string name="common_no">Нет</string>
@@ -160,21 +161,19 @@
     <string name="initial_message_tap_header">Приложите карту</string>
     <string name="internal_error_wallet_manager_not_found">Внутренняя ошибка: не удается найти менеджер кошельков</string>
     <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
-    <string name="main_get_bonus_subtitle">Вы завершили обучение и можете получить свои токены 1inch</string>
-    <string name="main_get_bonus_title">Получите бонус</string>
+    <string name="main_get_bonus_subtitle">Вы успешно прошли все уроки и теперь можете получить 1INCH токены</string>
     <plurals name="main_learn_subtitle">
-        <item quantity="one">Пройдите обучение и получите %d токен 1inch на свой кошелек</item>
-        <item quantity="few">Пройдите обучение и получите %d токена 1inch на свой кошелек</item>
-        <item quantity="many">Пройдите обучение и получите %d токена 1inch на свой кошелек</item>
-        <item quantity="other">Пройдите обучение и получите %d токенов 1inch на свой кошелек</item>
+        <item quantity="one">Пройдите 3 урока и получите %d 1INCH токен на свой кошелек</item>
+        <item quantity="few">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
+        <item quantity="many">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
+        <item quantity="other">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
     </plurals>
-    <string name="main_learn_title">Бонус за обучение</string>
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
-    <string name="main_promotion_credited">Токены 1inch будут зачислены на адрес вашего кошелька в течение 2 дней</string>
+    <string name="main_promotion_credited">1INCH токены будут зачислены на адрес вашего кошелька в сети %s в течение 24 часов</string>
     <string name="main_promotion_no_purchase">По вашему промокоду не было покупки кошелька, а значит вы не можете получить бонус. Купите кошелек Tangem, отсканируйте его в приложении и получите бонус.</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
@@ -355,9 +354,8 @@
     <string name="story_currencies_title">Тысячи криптовалют</string>
     <string name="story_finish_description">Используйте его на ходу, в любом месте, в любое время. Без проводов и батареек. Как только понадобится крипта, просто приложите карту к телефону.</string>
     <string name="story_finish_title">Кошелек для каждого</string>
-    <string name="story_learn_description">Пройдите обучение и получите возможность купить кошелек Tangem со скидкой и токены 1inch в качестве бонуса</string>
+    <string name="story_learn_description">Пройдите 3 урока, получите скидку на покупку Tangem Wallet и 1INCH токены</string>
     <string name="story_learn_learn">Пройти обучение</string>
-    <string name="story_learn_title">Получите свой бонус</string>
     <string name="story_meet_borrow">Занимайте</string>
     <string name="story_meet_buy">Покупайте</string>
     <string name="story_meet_exchange">Обменивайте</string>
@@ -493,6 +491,8 @@
     <string name="wallet_error_no_account">Аккаунт не создан</string>
     <string name="wallet_error_unsupported_blockchain">Эта карта не поддерживается</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Ваша карта Tangem предназначена для работы с другим приложением. Пожалуйста, ознакомьтесь с названием и инструкциями на вашей карте и установите правильное приложение.</string>
+    <string name="wallet_marketplace_block_title">Рыночная цена %s</string>
+    <string name="wallet_marketprice_block_update_time">за 24 часа</string>
     <string name="wallet_network_group_title">Сеть %s</string>
     <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
     <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
