@@ -29,7 +29,6 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "bitcoin-cash/test" -> Blockchain.BitcoinCashTestnet
         "cardano" -> Blockchain.CardanoShelley
         "dogecoin" -> Blockchain.Dogecoin
-        "ducatus" -> Blockchain.Ducatus
         "litecoin" -> Blockchain.Litecoin
         "rootstock" -> Blockchain.RSK
         "stellar" -> Blockchain.Stellar
@@ -87,7 +86,6 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Cardano -> "cardano"
         Blockchain.CardanoShelley -> "cardano"
         Blockchain.Dogecoin -> "dogecoin"
-        Blockchain.Ducatus -> "ducatus"
         Blockchain.Ethereum -> "ethereum"
         Blockchain.EthereumTestnet -> "ethereum/test"
         Blockchain.EthereumClassic -> "ethereum-classic"
@@ -152,7 +150,6 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
         Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
-        Blockchain.Ducatus -> "ducatus"
         Blockchain.Litecoin -> "litecoin"
         Blockchain.RSK -> "rootstock"
         Blockchain.Tezos -> "tezos"
@@ -182,7 +179,4 @@ fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
 
-private val excludedBlockchains = listOf(
-    Blockchain.Unknown,
-    Blockchain.Ducatus,
-)
+private val excludedBlockchains = listOf(Blockchain.Unknown)
