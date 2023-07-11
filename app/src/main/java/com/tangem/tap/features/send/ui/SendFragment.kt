@@ -17,6 +17,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -25,7 +26,6 @@ import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
