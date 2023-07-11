@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -50,15 +52,15 @@ class WalletConnectInteractor(
                 when (wcEvent) {
                     is WalletConnectEvents.SessionProposal -> {
                         Timber.d("WC session proposal event received")
-                        val unsupportedNetworks = wcEvent.chainIds
+                        val unsupportedNetworks = wcEvent.requiredChainIds
                             .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
                         if (unsupportedNetworks.isNotEmpty()) {
                             val error = WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks)
                             handler.onSessionRejected(error)
                             return@onEach
                         }
-
-                        val networksFormatted = wcEvent.chainIds
+                        val networksFormatted = (wcEvent.requiredChainIds + wcEvent.optionalChainIds)
+                            .distinct()
                             .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
                             .toString()
                         handler.onProposalReceived(proposal = wcEvent, networksFormatted = networksFormatted)
@@ -216,6 +218,7 @@ class WalletConnectInteractor(
                 id = request.requestId,
             )
         } else {
+            Analytics.send(WalletConnect.RequestSigned())
             walletConnectRepository.sendRequest(
                 topic = request.topic,
                 id = request.requestId,

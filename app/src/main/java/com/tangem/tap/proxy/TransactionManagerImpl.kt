@@ -14,6 +14,7 @@ import com.tangem.blockchain.extensions.isNetworkError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
@@ -23,7 +24,6 @@ import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
 import java.math.BigInteger
