@@ -9,6 +9,7 @@ plugins {
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.material)
 
     /** Compose */
     implementation(deps.compose.coil)
@@ -26,6 +27,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.tangem.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -33,8 +35,16 @@ dependencies {
 
     /** Core modules */
     implementation(project(":core:featuretoggles"))
+    implementation(project(":core:navigation"))
     implementation(project(":core:ui"))
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
+
+    /** Domain modules */
+    implementation(project(":common"))
+    implementation(project(":domain:legacy"))
+    implementation(project(":domain:models"))
+    implementation(project(":domain:wallets"))
+    implementation(project(":domain:wallets:models"))
 }
