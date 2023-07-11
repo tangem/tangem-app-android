@@ -9,8 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import org.rekotlin.StoreSubscriber
