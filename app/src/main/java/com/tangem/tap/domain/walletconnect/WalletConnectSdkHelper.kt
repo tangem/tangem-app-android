@@ -77,6 +77,7 @@ class WalletConnectSdkHelper {
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
+            // TODO refactoring
             fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
             destinationAddress = transaction.to!!,
