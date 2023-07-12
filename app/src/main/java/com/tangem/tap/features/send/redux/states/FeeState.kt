@@ -1,6 +1,5 @@
 package com.tangem.tap.features.send.redux.states
 
-import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.common.analytics.events.AnalyticsParam
