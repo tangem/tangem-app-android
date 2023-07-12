@@ -16,10 +16,10 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.signin.redux.SignInAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -103,7 +103,7 @@ internal class WelcomeMiddleware {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
-        ScanCardProcessor.scan(
+        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
