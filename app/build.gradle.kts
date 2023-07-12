@@ -28,6 +28,7 @@ dependencies {
     implementation(project(":domain:card"))
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.tokens)
     implementation(project(":common"))
     implementation(project(":core:analytics"))
     implementation(projects.core.analytics.models)
@@ -40,6 +41,7 @@ dependencies {
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
     implementation(project(":data:source:preferences"))
+    implementation(projects.data.tokens)
 
     /** Features */
     implementation(project(":features:onboarding"))
