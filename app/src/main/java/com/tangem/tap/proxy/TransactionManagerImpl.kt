@@ -226,7 +226,7 @@ class TransactionManagerImpl(
                         ProxyFees(
                             minFee = singleFee,
                             normalFee = singleFee,
-                            priorityFee = singleFee
+                            priorityFee = singleFee,
                         )
                     }
                     is TransactionFee.Choosable -> {
@@ -243,11 +243,10 @@ class TransactionManagerImpl(
                             priorityFee = ProxyFee(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.priority.amount),
-                            )
+                            ),
                         )
                     }
                 }
-
             }
             is Result.Failure -> {
                 error(fee.error.message ?: fee.error.customMessage)
@@ -310,7 +309,7 @@ class TransactionManagerImpl(
                     gasLimit = (choosableFee.priority as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                 )
-                
+
                 ProxyFees(
                     minFee = minProxyFee,
                     normalFee = normalProxyFee,
