@@ -22,7 +22,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun MarketPriceBlock(state: MarketPriceState, modifier: Modifier = Modifier) {
+fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
     var rootWidth by remember { mutableStateOf(value = 0) }
     Column(
         modifier = modifier
@@ -44,12 +44,12 @@ fun MarketPriceBlock(state: MarketPriceState, modifier: Modifier = Modifier) {
         )
 
         when (state) {
-            is MarketPriceState.Loading -> {
+            is MarketPriceBlockState.Loading -> {
                 RectangleShimmer(
                     modifier = Modifier.size(width = TangemTheme.dimens.size158, height = TangemTheme.dimens.size20),
                 )
             }
-            is MarketPriceState.Content -> {
+            is MarketPriceBlockState.Content -> {
                 Price(
                     config = state,
                     priceWidthDp = with(LocalDensity.current) { rootWidth.div(other = 2).toDp() },
@@ -60,7 +60,7 @@ fun MarketPriceBlock(state: MarketPriceState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Price(config: MarketPriceState.Content, priceWidthDp: Dp) {
+private fun Price(config: MarketPriceBlockState.Content, priceWidthDp: Dp) {
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -114,9 +114,9 @@ private fun PriceChangeInPercent(config: PriceChangeConfig) {
 
 @Preview
 @Composable
-private fun Preview_MarketPrice_Light(
-    @PreviewParameter(WalletMarketplaceStateProvider::class)
-    state: MarketPriceState,
+private fun Preview_MarketPriceBlock_Light(
+    @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
+    state: MarketPriceBlockState,
 ) {
     TangemTheme(isDark = false) {
         MarketPriceBlock(state = state)
@@ -125,18 +125,18 @@ private fun Preview_MarketPrice_Light(
 
 @Preview
 @Composable
-private fun Preview_MarketPrice_Dark(
-    @PreviewParameter(WalletMarketplaceStateProvider::class)
-    state: MarketPriceState,
+private fun Preview_MarketPriceBlock_Dark(
+    @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
+    state: MarketPriceBlockState,
 ) {
     TangemTheme(isDark = true) {
         MarketPriceBlock(state = state)
     }
 }
 
-private class WalletMarketplaceStateProvider : CollectionPreviewParameterProvider<MarketPriceState>(
+private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterProvider<MarketPriceBlockState>(
     collection = listOf(
-        MarketPriceState.Content(
+        MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900",
             priceChangeConfig = PriceChangeConfig(
@@ -144,7 +144,7 @@ private class WalletMarketplaceStateProvider : CollectionPreviewParameterProvide
                 type = PriceChangeConfig.Type.DOWN,
             ),
         ),
-        MarketPriceState.Content(
+        MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900",
             priceChangeConfig = PriceChangeConfig(
@@ -152,6 +152,6 @@ private class WalletMarketplaceStateProvider : CollectionPreviewParameterProvide
                 type = PriceChangeConfig.Type.UP,
             ),
         ),
-        MarketPriceState.Loading(currencyName = "BTC"),
+        MarketPriceBlockState.Loading(currencyName = "BTC"),
     ),
 )

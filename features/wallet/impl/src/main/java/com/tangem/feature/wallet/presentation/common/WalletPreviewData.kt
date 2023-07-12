@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.marketprice.MarketPriceState
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -292,7 +292,7 @@ internal object WalletPreviewData {
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons,
-        marketPriceBlockState = MarketPriceState.Content(
+        marketPriceBlockState = MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900.12$",
             priceChangeConfig = PriceChangeConfig(
