@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
@@ -19,7 +20,10 @@ import kotlin.properties.Delegates
 * [REDACTED_AUTHOR]
  */
 @HiltViewModel
-internal class WalletViewModel @Inject constructor() : ViewModel() {
+internal class WalletViewModel @Inject constructor(
+    @Suppress("unused") // TODO: https://tangem.atlassian.net/browse/AND-3814
+    private val getTokenListUseCase: GetTokenListUseCase,
+) : ViewModel() {
 
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()

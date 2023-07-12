@@ -81,8 +81,10 @@ include(":domain:core")
 include(":domain:card")
 include(":domain:wallets")
 include(":domain:wallets:models")
+include(":domain:tokens")
 // endregion Domain modules
 
 // region Data modules
+include(":data:tokens")
 include(":data:source:preferences")
 // endregion Data modules
