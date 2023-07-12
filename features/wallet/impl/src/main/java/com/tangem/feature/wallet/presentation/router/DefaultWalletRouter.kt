@@ -40,7 +40,8 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
                 startDestination = WalletScreens.WALLET.name,
             ) {
                 composable(WalletScreens.WALLET.name) {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
+                    val viewModel = hiltViewModel<WalletViewModel>()
+                        .apply { router = this@DefaultWalletRouter }
                     WalletScreen(state = viewModel.uiState)
                 }
 
