@@ -14,6 +14,7 @@ internal enum class TangemButtonSize {
     Selector,
     Action,
     RoundedAction,
+    Suggestion,
 }
 
 @Composable
@@ -25,6 +26,7 @@ internal fun TangemButtonSize.toHeightDp(): Dp = when (this) {
     TangemButtonSize.Action,
     TangemButtonSize.RoundedAction,
     -> TangemTheme.dimens.size36
+    TangemButtonSize.Suggestion -> TangemTheme.dimens.size48
 }
 
 @Composable
@@ -35,6 +37,7 @@ internal fun TangemButtonSize.toShape(): Shape = when (this) {
     TangemButtonSize.Selector -> TangemTheme.shapes.roundedCornersSmall
     TangemButtonSize.Action -> TangemTheme.shapes.roundedCornersMedium
     TangemButtonSize.RoundedAction -> TangemTheme.shapes.roundedCornersLarge
+    TangemButtonSize.Suggestion -> TangemTheme.shapes.roundedCornersMedium
 }
 
 @Composable
@@ -45,6 +48,7 @@ internal fun TangemButtonSize.toIconPadding(): Dp = when (this) {
     TangemButtonSize.Selector -> 0.dp
     TangemButtonSize.Action,
     TangemButtonSize.RoundedAction,
+    TangemButtonSize.Suggestion,
     -> TangemTheme.dimens.spacing8
 }
 
@@ -74,6 +78,7 @@ internal fun TangemButtonSize.toContentPadding(icon: TangemButtonIconPosition): 
         )
         TangemButtonSize.Action,
         TangemButtonSize.RoundedAction,
+        TangemButtonSize.Suggestion,
         -> PaddingValues(
             top = TangemTheme.dimens.spacing8,
             bottom = TangemTheme.dimens.spacing8,
@@ -101,5 +106,6 @@ internal fun TangemButtonSize.toHorizontalContentPadding(icon: TangemButtonIconP
             is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing16 to TangemTheme.dimens.spacing24
             is TangemButtonIconPosition.End -> TangemTheme.dimens.spacing24 to TangemTheme.dimens.spacing16
         }
+        TangemButtonSize.Suggestion -> TangemTheme.dimens.spacing32 to TangemTheme.dimens.spacing32
     }
 }

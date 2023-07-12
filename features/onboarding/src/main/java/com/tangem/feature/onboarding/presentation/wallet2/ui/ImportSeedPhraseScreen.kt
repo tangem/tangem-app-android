@@ -12,9 +12,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.IntOffset
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.SuggestionPrimaryButton
 import com.tangem.core.ui.components.TangemTextFieldsDefault
+import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
@@ -125,7 +126,7 @@ private fun SuggestionsBlock(state: ImportSeedPhraseState, modifier: Modifier = 
             contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
         ) {
             items(state.suggestionsList.size) { index ->
-                PrimaryButton(
+                SuggestionPrimaryButton(
                     modifier = Modifier
                         .height(TangemTheme.dimens.size46)
                         .padding(all = TangemTheme.dimens.size4),

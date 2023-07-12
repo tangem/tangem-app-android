@@ -136,6 +136,26 @@ fun PrimaryButtonIconStart(
         showProgress = showProgress,
     )
 }
+
+@Composable
+fun SuggestionPrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    showProgress: Boolean = false,
+    enabled: Boolean = true,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIconPosition.None,
+        onClick = onClick,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        size = TangemButtonSize.Suggestion,
+        enabled = enabled,
+        showProgress = showProgress,
+    )
+}
 // endregion PrimaryButton
 
 // region SecondaryButton
@@ -230,7 +250,12 @@ private fun PrimaryButtonSample() {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         PrimaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
-        PrimaryButton(modifier = Modifier.fillMaxWidth(), showProgress = true, text = "Manage tokens", onClick = { })
+        PrimaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            showProgress = true,
+            text = "Manage tokens",
+            onClick = { },
+        )
         PrimaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
@@ -289,7 +314,12 @@ private fun SecondaryButtonSample() {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         SecondaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
-        SecondaryButton(modifier = Modifier.fillMaxWidth(), showProgress = true, text = "Manage tokens", onClick = { })
+        SecondaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            showProgress = true,
+            text = "Manage tokens",
+            onClick = { },
+        )
         SecondaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
