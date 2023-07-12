@@ -22,7 +22,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun MarketPrice(state: MarketPriceState, modifier: Modifier = Modifier) {
+fun MarketPriceBlock(state: MarketPriceState, modifier: Modifier = Modifier) {
     var rootWidth by remember { mutableStateOf(value = 0) }
     Column(
         modifier = modifier
@@ -119,7 +119,7 @@ private fun Preview_MarketPrice_Light(
     state: MarketPriceState,
 ) {
     TangemTheme(isDark = false) {
-        MarketPrice(state = state)
+        MarketPriceBlock(state = state)
     }
 }
 
@@ -130,7 +130,7 @@ private fun Preview_MarketPrice_Dark(
     state: MarketPriceState,
 ) {
     TangemTheme(isDark = true) {
-        MarketPrice(state = state)
+        MarketPriceBlock(state = state)
     }
 }
 

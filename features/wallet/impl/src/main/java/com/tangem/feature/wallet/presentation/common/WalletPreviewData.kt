@@ -299,6 +299,6 @@ internal object WalletPreviewData {
                 valueInPercent = "5.16%",
                 type = PriceChangeConfig.Type.UP,
             ),
-        )
+        ),
     )
 }

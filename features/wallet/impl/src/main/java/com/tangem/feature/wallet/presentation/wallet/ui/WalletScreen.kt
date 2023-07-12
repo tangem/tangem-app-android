@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
-import com.tangem.core.ui.components.marketprice.MarketPrice
+import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
 import com.tangem.core.ui.res.TangemTheme
@@ -94,7 +94,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
 
             if (state is WalletStateHolder.SingleCurrencyContent) {
                 item {
-                    MarketPrice(
+                    MarketPriceBlock(
                         state = state.marketPriceBlockState,
                         modifier = changeableItemModifier
                             .padding(top = TangemTheme.dimens.spacing14)
