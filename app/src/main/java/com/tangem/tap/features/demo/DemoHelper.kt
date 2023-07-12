@@ -92,8 +92,8 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
             TransactionFee.Choosable(
                 minimum = Fee.Common(Amount(minimumFee, blockchain)),
                 normal = Fee.Common(Amount(normalFee, blockchain)),
-                priority = Fee.Common(Amount(priorityFee, blockchain))
-            )
+                priority = Fee.Common(Amount(priorityFee, blockchain)),
+            ),
         )
     }
 
