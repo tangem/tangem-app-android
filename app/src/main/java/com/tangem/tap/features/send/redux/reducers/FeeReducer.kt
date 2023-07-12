@@ -1,6 +1,5 @@
 package com.tangem.tap.features.send.redux.reducers
 
-import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.features.send.redux.FeeAction
@@ -9,7 +8,6 @@ import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
@@ -34,7 +32,7 @@ class FeeReducer : SendInternalReducer {
                 }
                 state.copy(
                     selectedFeeType = action.feeType,
-                    currentFee = currentFee
+                    currentFee = currentFee,
                 )
             }
             is FeeActionUi.ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
@@ -43,7 +41,6 @@ class FeeReducer : SendInternalReducer {
     }
 
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
-
         val result = when (action) {
             is FeeAction.RequestFee -> {
                 state.copy(progressState = ProgressState.Loading)
@@ -122,6 +119,4 @@ class FeeReducer : SendInternalReducer {
     private fun getCurrentFeeType(state: FeeState): FeeType {
         return if (state.selectedFeeType == FeeType.SINGLE) FeeType.NORMAL else state.selectedFeeType
     }
-
- 
 }
