@@ -8,17 +8,14 @@ import com.tangem.wallet.R
 object MultipleAddressUiHelper {
 
     fun typeToId(type: AddressType, blockchain: Blockchain): Int {
-        return when (blockchain) {
-            in blockchainsSupportingSplit -> {
-                if (type == AddressType.Legacy) {
-                    R.id.chip_legacy
-                } else {
-                    R.id.chip_default
-                }
+        return if (blockchain in blockchainsSupportingSplit) {
+            if (type == AddressType.Legacy) {
+                R.id.chip_legacy
+            } else {
+                R.id.chip_default
             }
-            else -> {
-                View.NO_ID
-            }
+        } else {
+            View.NO_ID
         }
     }
 
