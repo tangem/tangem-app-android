@@ -7,6 +7,14 @@ import com.tangem.wallet.R
 
 object MultipleAddressUiHelper {
 
+    private val blockchainsSupportingSplit = listOf(
+        Blockchain.Bitcoin,
+        Blockchain.BitcoinTestnet,
+        Blockchain.Litecoin,
+        Blockchain.BitcoinCash,
+        Blockchain.CardanoShelley,
+    )
+
     fun typeToId(type: AddressType, blockchain: Blockchain): Int {
         return if (blockchain in blockchainsSupportingSplit) {
             if (type == AddressType.Legacy) {
@@ -22,7 +30,7 @@ object MultipleAddressUiHelper {
     fun idToType(id: Int, blockchain: Blockchain): AddressType? {
         return when (blockchain) {
             in blockchainsSupportingSplit -> {
-                when(id) {
+                when (id) {
                     R.id.chip_default -> AddressType.Default
                     R.id.chip_legacy -> AddressType.Legacy
                     else -> null
@@ -31,13 +39,4 @@ object MultipleAddressUiHelper {
             else -> null
         }
     }
-
-    private val blockchainsSupportingSplit = listOf(
-        Blockchain.Bitcoin,
-        Blockchain.BitcoinTestnet,
-        Blockchain.Litecoin,
-        Blockchain.BitcoinCash,
-        Blockchain.CardanoShelley
-    )
-
 }
