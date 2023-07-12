@@ -169,13 +169,17 @@ class SeedPhraseViewModel @Inject constructor(
                 if (fieldState.isError != hasError) {
                     updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
-
-                val allFieldsWithoutError = SeedPhraseField.values()
+                val isCreateWalletButtonEnabled = SeedPhraseField.values()
                     .map { field -> field.getState(uiState) }
-                    .all { fieldState -> !fieldState.isError }
+                    .all { fieldState -> fieldState.textFieldValue.text.isNotEmpty() && !fieldState.isError }
 
-                if (uiState.checkSeedPhraseState.buttonCreateWallet.enabled != allFieldsWithoutError) {
-                    updateUi { uiBuilder.checkSeedPhrase.updateCreateWalletButton(uiState, allFieldsWithoutError) }
+                if (uiState.checkSeedPhraseState.buttonCreateWallet.enabled != isCreateWalletButtonEnabled) {
+                    updateUi {
+                        uiBuilder.checkSeedPhrase.updateCreateWalletButton(
+                            uiState = uiState,
+                            enabled = isCreateWalletButtonEnabled,
+                        )
+                    }
                 }
             }
         }
