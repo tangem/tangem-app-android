@@ -75,12 +75,14 @@ arrow = "1.2.0-RC"
 reactiveNetwork = "3.0.8"
 walletConnectCore = "1.17.0"
 walletConnectWeb3 = "1.10.0"
+prettyLogger = "2.2.0"
+okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-#tangemBlockchainSdk = "develop-240"
-tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-266"
+tangemBlockchainSdk = "develop-281"
+#tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
+tangemCardSdk = "develop-273"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -201,7 +203,7 @@ material = { module = "com.google.android.material:material", version.ref = "goo
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-okHttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
 otaliastudiosCameraView = { module = "com.otaliastudios:cameraview", version.ref = "otaliastudiosCameraView" }
 shopify-buy = { module = "com.shopify.mobilebuysdk:buy3", version.ref = "shopifyBuySdk" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
@@ -222,4 +224,5 @@ arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 reactive-network = { module = "com.github.pwittchen:reactivenetwork-rx2", version.ref = "reactiveNetwork" }
 walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "walletConnectCore" }
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
+prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
 # endregion Other
