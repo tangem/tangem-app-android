@@ -190,7 +190,10 @@ class SingleWalletView : WalletView() {
                 (binding.lAddress.root as? ViewGroup)?.beginDelayedTransition()
                 chipGroupAddressType.show()
                 chipGroupAddressType.fitChipsByGroupWidth()
-                val checkedId = MultipleAddressUiHelper.typeToId(primaryWallet.walletAddresses.selectedAddress.type, primaryWallet.currency.blockchain)
+                val checkedId = MultipleAddressUiHelper.typeToId(
+                    primaryWallet.walletAddresses.selectedAddress.type,
+                    primaryWallet.currency.blockchain,
+                )
                 if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
                 chipGroupAddressType.setOnCheckedChangeListener { group, checkedId ->
