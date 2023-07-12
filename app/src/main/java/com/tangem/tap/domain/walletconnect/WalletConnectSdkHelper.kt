@@ -183,7 +183,7 @@ class WalletConnectSdkHelper {
         val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
             nonce = null,
-            blockchain = data.walletManager.wallet.blockchain
+            blockchain = data.walletManager.wallet.blockchain,
         ) ?: return null
 
         val command = SignHashCommand(
