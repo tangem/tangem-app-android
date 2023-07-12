@@ -25,7 +25,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -67,7 +66,6 @@ class SeedPhraseViewModel @Inject constructor(
     )
 
     private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
-    private var suggestionWordInserted: AtomicBoolean = AtomicBoolean(false)
 
     private var generatedMnemonicComponents: List<String>? = null
     private var importedMnemonicComponents: List<String>? = null
@@ -197,18 +195,13 @@ class SeedPhraseViewModel @Inject constructor(
 
         val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
         when {
-            suggestionWordInserted.getAndSet(false) -> {
-                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
-                    validateMnemonic(inputMnemonic)
-                }
-            }
-            isSameText && !isCursorMoved -> {
-                // do nothing
-            }
             isSameText && isCursorMoved -> {
                 debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
                     updateSuggestions(fieldState)
                 }
+            }
+            isSameText && !isCursorMoved -> {
+                // do nothing
             }
             else -> {
                 debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
@@ -243,7 +236,6 @@ class SeedPhraseViewModel @Inject constructor(
                     is SeedPhraseError.InvalidWords -> {
                         uiBuilder.importSeedPhrase.updateInvalidWords(uiState, error.words)
                     }
-
                     else -> uiState
                 }
                 updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, error) }
@@ -366,7 +358,6 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
         viewModelScope.launchSingle {
-            suggestionWordInserted.set(true)
             val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
             val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
             val cursorPosition = textFieldValue.selection.end
