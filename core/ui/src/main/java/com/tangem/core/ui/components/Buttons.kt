@@ -137,6 +137,9 @@ fun PrimaryButtonIconStart(
     )
 }
 
+/**
+ * [Show in Figma](https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?type=design&node-id=2985%3A12897&mode=design&t=yNVqtEJV3QyLDqbv-1)
+ */
 @Composable
 fun SuggestionPrimaryButton(
     text: String,
