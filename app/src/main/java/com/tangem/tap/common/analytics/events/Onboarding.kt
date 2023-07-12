@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -72,25 +72,7 @@ sealed class Onboarding(
         class SetupFinished : Twins("Twin Setup Finished")
     }
 
-    class PinScreenOpened : Onboarding("Onboarding", "PIN screen opened")
-    class ButtonSetPinCode : Onboarding("Onboarding", "Button - Set PIN Code")
-    class CardConnectionScreenOpened : Onboarding("Onboarding", "Card Connection Screen Opened")
-    class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
-    class PinCodeSet : Onboarding("Onboarding", "PIN Code Set")
-
-    class KYCScreenOpened : Onboarding("Onboarding", "KYC screen opened")
-    class KYCStarted : Onboarding("Onboarding", "KYC Started")
-    class KYCInProgress : Onboarding("Onboarding", "KYC In Progress")
-    class KYCRejected : Onboarding("Onboarding", "KYC Rejected")
-
-    class ClaimScreenOpened : Onboarding("Onboarding", "Claim Screen Opened")
-    class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
-    class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim Was Successfully")
-
     class ButtonChat : Onboarding("Onboarding", "Button - Chat")
-
-    class NotEnoughGasError : Onboarding("Onboarding", "Not Enough Gas Error")
-    class CardNotPassedError : Onboarding("Onboarding", "Card Not Passed Error")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
