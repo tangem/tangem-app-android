@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
 import me.dm7.barcodescanner.zxing.ZXingScannerView
@@ -16,11 +17,15 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView
 * [REDACTED_AUTHOR]
  */
 class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
+
     private lateinit var mScannerView: ZXingScannerView
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        mScannerView = ZXingScannerView(this)
+
+        mScannerView = ZXingScannerView(this).apply {
+            setFormats(listOf(BarcodeFormat.QR_CODE))
+        }
         setContentView(mScannerView)
 
         if (!permissionIsGranted()) requestPermission()
