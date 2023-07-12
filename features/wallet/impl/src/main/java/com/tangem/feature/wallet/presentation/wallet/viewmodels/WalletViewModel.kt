@@ -5,11 +5,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnSuccess
+import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -19,7 +26,12 @@ import kotlin.properties.Delegates
 * [REDACTED_AUTHOR]
  */
 @HiltViewModel
-internal class WalletViewModel @Inject constructor() : ViewModel() {
+internal class WalletViewModel @Inject constructor(
+    @Suppress("unused") // TODO: https://tangem.atlassian.net/browse/AND-3814
+    private val getTokenListUseCase: GetTokenListUseCase,
+    private val scanCardProcessor: ScanCardProcessor,
+    private val dispatchers: CoroutineDispatcherProvider,
+) : ViewModel() {
 
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()
@@ -29,15 +41,31 @@ internal class WalletViewModel @Inject constructor() : ViewModel() {
         private set
 // [REDACTED_TODO_COMMENT]
     private fun getInitialState(): WalletStateHolder = WalletPreviewData.multicurrencyWalletScreenState.copy(
-        onBackClick = { router.popBackStack() },
-        topBarConfig = WalletTopBarConfig(
-            onScanCardClick = { router.openOrganizeTokensScreen() },
-            onMoreClick = { router.openDetailsScreen() },
-        ),
+        onBackClick = ::onBackClick,
+        topBarConfig = createTopBarConfig(),
         walletsListConfig = WalletPreviewData.multicurrencyWalletScreenState.walletsListConfig.copy(
             onWalletChange = ::selectWallet,
         ),
     )
+
+    private fun onBackClick() {
+        router.popBackStack()
+    }
+
+    private fun createTopBarConfig(): WalletTopBarConfig {
+        return WalletTopBarConfig(
+            onScanCardClick = ::onScanCardClick,
+            onMoreClick = { router.openDetailsScreen() },
+        )
+    }
+
+    private fun onScanCardClick() {
+        viewModelScope.launch(dispatchers.io) {
+            scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
+                .doOnSuccess { /* TODO: Add handler */ }
+                .doOnFailure { /* TODO: Add handler */ }
+        }
+    }
 // [REDACTED_TODO_COMMENT]
     private fun selectWallet(index: Int) {
         if (uiState.walletsListConfig.selectedWalletIndex == index) return
