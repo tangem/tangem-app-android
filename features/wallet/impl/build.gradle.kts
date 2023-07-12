@@ -50,4 +50,5 @@ dependencies {
     implementation(project(":domain:models"))
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.tokens)
 }
