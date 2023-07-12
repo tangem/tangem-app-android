@@ -15,10 +15,10 @@ import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
@@ -102,7 +102,8 @@ class MultiWalletMiddleware {
     }
 
     private fun scanAndUpdateCard(selectedUserWallet: UserWallet) = scope.launch(Dispatchers.Default) {
-        ScanCardProcessor.scan(selectedUserWallet.cardId, allowsRequestAccessCodeFromRepository = true)
+        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor)
+            .scan(cardId = selectedUserWallet.cardId, allowsRequestAccessCodeFromRepository = true)
             .flatMap { scanResponse ->
                 userWalletsListManager.update(
                     userWalletId = selectedUserWallet.walletId,
