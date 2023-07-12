@@ -5,7 +5,7 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
@@ -21,12 +21,12 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -78,7 +78,7 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
     )
 
-    ScanCardProcessor.scan(
+    store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
         analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
