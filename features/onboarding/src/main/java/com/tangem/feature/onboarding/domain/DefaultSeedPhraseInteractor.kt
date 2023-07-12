@@ -96,7 +96,7 @@ internal class DefaultSeedPhraseInteractor constructor(
 }
 
 private fun MnemonicErrorResult.mapToError(): SeedPhraseError = when (this) {
-    MnemonicErrorResult.InvalidWordCount -> SeedPhraseError.InvalidEntropyLength
+    MnemonicErrorResult.InvalidWordCount -> SeedPhraseError.InvalidWordCount
     MnemonicErrorResult.InvalidEntropyLength -> SeedPhraseError.InvalidEntropyLength
     MnemonicErrorResult.InvalidWordsFile -> SeedPhraseError.InvalidWordsFile
     MnemonicErrorResult.InvalidChecksum -> SeedPhraseError.InvalidChecksum
