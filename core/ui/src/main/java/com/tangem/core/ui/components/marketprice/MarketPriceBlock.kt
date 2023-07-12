@@ -21,6 +21,11 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 
+/**
+ *  @see <a href =
+ * "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1217-922&mode=design&t=t1PxyisyGJSwzQwg-4"
+ * >Figma component</a>
+ */
 @Composable
 fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
     var rootWidth by remember { mutableStateOf(value = 0) }
