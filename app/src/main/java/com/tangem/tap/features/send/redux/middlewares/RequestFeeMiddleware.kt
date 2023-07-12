@@ -54,7 +54,7 @@ class RequestFeeMiddleware {
                         val result = feeResult.data
 //                    val result = FeeMock.getFee(walletManager.wallet.blockchain)
                         dispatch(FeeAction.FeeCalculation.SetFeeResult(result))
-                        when(result) {
+                        when (result) {
                             is TransactionFee.Single -> {
                                 val fee = result.normal.amount.value ?: BigDecimal.ZERO
                                 if (fee.isZero()) {
