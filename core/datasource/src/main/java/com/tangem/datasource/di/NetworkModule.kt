@@ -63,9 +63,7 @@ class NetworkModule {
     @PromotionOneInch
     fun providePromotionOneInchApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): PromotionApi {
         val okClient = OkHttpClient.Builder()
-            .addHeaders(
-                AuthenticationHeader(authProvider),
-            )
+            .addHeaders(AuthenticationHeader(authProvider))
             .allowLogging()
             .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .connectTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)

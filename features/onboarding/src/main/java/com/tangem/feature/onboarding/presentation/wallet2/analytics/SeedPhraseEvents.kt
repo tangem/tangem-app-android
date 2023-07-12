@@ -1,6 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.analytics
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 sealed class SeedPhraseEvents(
     event: String,

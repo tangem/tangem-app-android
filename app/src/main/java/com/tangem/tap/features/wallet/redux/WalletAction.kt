@@ -3,7 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.content.Context
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.models.UserWallet

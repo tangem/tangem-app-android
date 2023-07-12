@@ -3,7 +3,7 @@ package com.tangem.tap.domain.scanCard
 import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.ScanCardException

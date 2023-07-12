@@ -22,12 +22,8 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.reKotlin)
-    //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.okHttp.logging)
     implementation(deps.timber)
     implementation(deps.kotlin.coroutines)
 
