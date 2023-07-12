@@ -32,7 +32,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.okHttp)
-    implementation(deps.okHttp.logging)
+    implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
     implementation(deps.reactive.network)

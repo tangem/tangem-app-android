@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.paramsInterceptor
 
-import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
