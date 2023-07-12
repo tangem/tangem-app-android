@@ -27,6 +27,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
 
     /** DI */
@@ -37,14 +38,17 @@ dependencies {
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:navigation"))
     implementation(project(":core:ui"))
+    implementation(projects.core.utils)
 
     /** Feature Apis */
     implementation(project(":features:wallet:api"))
 
     /** Domain modules */
     implementation(project(":common"))
+    implementation(projects.domain.card)
     implementation(project(":domain:legacy"))
     implementation(project(":domain:models"))
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.tokens)
 }
