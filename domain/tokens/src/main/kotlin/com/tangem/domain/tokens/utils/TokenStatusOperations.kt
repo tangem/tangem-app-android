@@ -27,6 +27,8 @@ internal class TokenStatusOperations(
             name = token.name,
             symbol = token.symbol,
             isCoin = token.isCoin,
+            decimals = token.decimals,
+            iconUrl = token.iconUrl,
             value = createStatus(),
         )
     }

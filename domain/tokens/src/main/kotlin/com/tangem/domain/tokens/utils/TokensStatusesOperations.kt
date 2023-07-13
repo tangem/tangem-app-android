@@ -31,7 +31,7 @@ internal class TokensStatusesOperations(
             if (tokens == null) {
                 flowOf(emptySet())
             } else {
-                val tokensIds = tokens.map { token -> token.id }
+                val tokensIds = tokens.map { token -> token.id }.toNonEmptySet()
                 val groupedTokens = groupTokens(tokens)
 
                 combine(getQuotes(tokensIds), getNetworksStatues(groupedTokens)) { quotes, networksStatuses ->
@@ -87,6 +87,7 @@ internal class TokensStatusesOperations(
                 .mapValues { (_, tokens) ->
                     tokens.toNonEmptySetOrNull()
                         ?.map { it.id }
+                        ?.toNonEmptySet()
                         ?: raise(TokensError.EmptyTokens)
                 }
         }
