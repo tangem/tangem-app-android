@@ -1,8 +1,9 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
-import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
@@ -204,15 +205,6 @@ internal object WalletPreviewData {
         WalletManageButton.CopyAddress(onClick = {}),
     )
 
-    val marketplaceBlockContent = WalletMarketplaceBlockState.Content(
-        currencyName = "BTC",
-        price = "0.11$",
-        priceChangeConfig = PriceChangeConfig(
-            valueInPercent = "5.16%",
-            type = PriceChangeConfig.Type.UP,
-        ),
-    )
-
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
@@ -300,6 +292,13 @@ internal object WalletPreviewData {
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons,
-        marketplaceBlockState = marketplaceBlockContent,
+        marketPriceBlockState = MarketPriceBlockState.Content(
+            currencyName = "BTC",
+            price = "98900.12$",
+            priceChangeConfig = PriceChangeConfig(
+                valueInPercent = "5.16%",
+                type = PriceChangeConfig.Type.UP,
+            ),
+        ),
     )
 }
