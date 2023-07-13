@@ -68,7 +68,7 @@ internal object MockTokenLists {
 
     val loadingUngroupedTokenList = with(ungroupedTokenList) {
         copy(
-            tokens = tokens.map { it.copy(value = TokenStatus.Loading) },
+            tokens = tokens.map { it.copy(value = TokenStatus.Loading) }.toNonEmptySet(),
             totalFiatBalance = TokenList.FiatBalance.Loading,
         )
     }
