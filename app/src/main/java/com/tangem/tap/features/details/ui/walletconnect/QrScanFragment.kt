@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
+import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView
 import com.tangem.core.navigation.NavigationAction
@@ -38,8 +39,17 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if (!permissionIsGranted()) requestPermission()
 
-        scannerView = ZXingScannerView(activity)
+        scannerView = ZXingScannerView(activity).apply {
+            setFormats(listOf(BarcodeFormat.QR_CODE))
+        }
+
         return scannerView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        scannerView?.setResultHandler(this)
+        scannerView?.startCamera()
     }
 
     override fun onPause() {
@@ -50,12 +60,6 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     override fun onDestroy() {
         super.onDestroy()
         setFitSystemWindows(fit = false)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        scannerView?.setResultHandler(this)
-        scannerView?.startCamera()
     }
 
     override fun handleResult(result: Result) {
