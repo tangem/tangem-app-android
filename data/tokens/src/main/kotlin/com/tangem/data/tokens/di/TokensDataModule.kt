@@ -1,8 +1,8 @@
 package com.tangem.data.tokens.di
 
-import com.tangem.data.tokens.repository.DefaultNetworksRepository
-import com.tangem.data.tokens.repository.DefaultQuotesRepository
-import com.tangem.data.tokens.repository.DefaultTokensRepository
+import com.tangem.data.tokens.repository.MockNetworksRepository
+import com.tangem.data.tokens.repository.MockQuotesRepository
+import com.tangem.data.tokens.repository.MockTokensRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
@@ -18,13 +18,13 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideTokensRepository(): TokensRepository = DefaultTokensRepository()
+    fun provideTokensRepository(): TokensRepository = MockTokensRepository()
 
     @Provides
     @Singleton
-    fun provideQuotesRepository(): QuotesRepository = DefaultQuotesRepository()
+    fun provideQuotesRepository(): QuotesRepository = MockQuotesRepository()
 
     @Provides
     @Singleton
-    fun provideNetworksRepository(): NetworksRepository = DefaultNetworksRepository()
+    fun provideNetworksRepository(): NetworksRepository = MockNetworksRepository()
 }
