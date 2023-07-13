@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
+package com.tangem.core.ui.components.marketprice
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,22 +17,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
-import com.tangem.feature.wallet.presentation.wallet.state.WalletMarketplaceBlockState
 
 /**
- * Wallet marketplace block
- *
- * @param state state
- *
-[REDACTED_AUTHOR]
+ *  @see <a href =
+ * "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1217-922&mode=design&t=t1PxyisyGJSwzQwg-4"
+ * >Figma component</a>
  */
 @Composable
-internal fun WalletMarketplaceBlock(state: WalletMarketplaceBlockState, modifier: Modifier = Modifier) {
+fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
     var rootWidth by remember { mutableStateOf(value = 0) }
     Column(
         modifier = modifier
@@ -54,12 +49,12 @@ internal fun WalletMarketplaceBlock(state: WalletMarketplaceBlockState, modifier
         )
 
         when (state) {
-            is WalletMarketplaceBlockState.Loading -> {
+            is MarketPriceBlockState.Loading -> {
                 RectangleShimmer(
                     modifier = Modifier.size(width = TangemTheme.dimens.size158, height = TangemTheme.dimens.size20),
                 )
             }
-            is WalletMarketplaceBlockState.Content -> {
+            is MarketPriceBlockState.Content -> {
                 Price(
                     config = state,
                     priceWidthDp = with(LocalDensity.current) { rootWidth.div(other = 2).toDp() },
@@ -70,7 +65,7 @@ internal fun WalletMarketplaceBlock(state: WalletMarketplaceBlockState, modifier
 }
 
 @Composable
-private fun Price(config: WalletMarketplaceBlockState.Content, priceWidthDp: Dp) {
+private fun Price(config: MarketPriceBlockState.Content, priceWidthDp: Dp) {
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -124,35 +119,44 @@ private fun PriceChangeInPercent(config: PriceChangeConfig) {
 
 @Preview
 @Composable
-private fun Preview_MarketplaceBlock_Light(
-    @PreviewParameter(WalletMarketplaceStateProvider::class)
-    state: WalletMarketplaceBlockState,
+private fun Preview_MarketPriceBlock_Light(
+    @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
+    state: MarketPriceBlockState,
 ) {
     TangemTheme(isDark = false) {
-        WalletMarketplaceBlock(state = state)
+        MarketPriceBlock(state = state)
     }
 }
 
 @Preview
 @Composable
-private fun Preview_MarketplaceBlock_Dark(
-    @PreviewParameter(WalletMarketplaceStateProvider::class)
-    state: WalletMarketplaceBlockState,
+private fun Preview_MarketPriceBlock_Dark(
+    @PreviewParameter(WalletMarketPriceBlockStateProvider::class)
+    state: MarketPriceBlockState,
 ) {
     TangemTheme(isDark = true) {
-        WalletMarketplaceBlock(state = state)
+        MarketPriceBlock(state = state)
     }
 }
 
-private class WalletMarketplaceStateProvider : CollectionPreviewParameterProvider<WalletMarketplaceBlockState>(
+private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterProvider<MarketPriceBlockState>(
     collection = listOf(
-        WalletPreviewData.marketplaceBlockContent,
-        WalletPreviewData.marketplaceBlockContent.copy(
+        MarketPriceBlockState.Content(
+            currencyName = "BTC",
+            price = "98900",
             priceChangeConfig = PriceChangeConfig(
                 valueInPercent = "5.16%",
                 type = PriceChangeConfig.Type.DOWN,
             ),
         ),
-        WalletMarketplaceBlockState.Loading(currencyName = "BTC"),
+        MarketPriceBlockState.Content(
+            currencyName = "BTC",
+            price = "98900",
+            priceChangeConfig = PriceChangeConfig(
+                valueInPercent = "10.89%",
+                type = PriceChangeConfig.Type.UP,
+            ),
+        ),
+        MarketPriceBlockState.Loading(currencyName = "BTC"),
     ),
 )
