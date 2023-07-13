@@ -9,6 +9,7 @@ import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactionExtras
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
@@ -97,11 +98,11 @@ private fun verifyAndSendTransaction(
     val card = appState.globalState.scanResponse?.card ?: return
     val destinationAddress = sendState.addressState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
-    val feeAmount = sendState.feeState.currentFee ?: return
+    val fee = sendState.feeState.currentFee ?: return
 
     val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
-    val transactionErrors = walletManager.validateTransaction(amountToSend, feeAmount)
+    val transactionErrors = walletManager.validateTransaction(amountToSend, fee.amount)
     when {
         transactionErrors.contains(TransactionError.TezosSendAll) -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
@@ -116,7 +117,7 @@ private fun verifyAndSendTransaction(
                             action = action,
                             walletManager = walletManager,
                             amountToSend = amountToSend,
-                            feeAmount = feeAmount,
+                            fee = fee,
                             feeType = sendState.feeState.selectedFeeType,
                             destinationAddress = destinationAddress,
                             transactionExtras = sendState.transactionExtrasState,
@@ -135,7 +136,7 @@ private fun verifyAndSendTransaction(
                 action = action,
                 walletManager = walletManager,
                 amountToSend = amountToSend,
-                feeAmount = feeAmount,
+                fee = fee,
                 feeType = sendState.feeState.selectedFeeType,
                 destinationAddress = destinationAddress,
                 transactionExtras = sendState.transactionExtrasState,
@@ -153,7 +154,7 @@ private fun sendTransaction(
     action: SendActionUi.SendAmountToRecipient,
     walletManager: WalletManager,
     amountToSend: Amount,
-    feeAmount: Amount,
+    fee: Fee,
     feeType: FeeType,
     destinationAddress: String,
     transactionExtras: TransactionExtrasState,
@@ -163,7 +164,7 @@ private fun sendTransaction(
     dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
-    var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
+    var txData = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
     transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
@@ -181,7 +182,7 @@ private fun sendTransaction(
                         updateFeedbackManagerInfo(
                             walletManager = walletManager,
                             amountToSend = amountToSend,
-                            feeAmount = feeAmount,
+                            feeAmount = fee.amount,
                             destinationAddress = destinationAddress,
                         )
                         dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error = error))
@@ -276,7 +277,7 @@ private fun sendTransaction(
                     updateFeedbackManagerInfo(
                         walletManager = walletManager,
                         amountToSend = amountToSend,
-                        feeAmount = feeAmount,
+                        feeAmount = fee.amount,
                         destinationAddress = destinationAddress,
                     )
                     val error = sendResult.error as? BlockchainSdkError ?: return@withMainContext
