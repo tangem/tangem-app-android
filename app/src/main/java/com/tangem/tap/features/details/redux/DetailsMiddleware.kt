@@ -372,9 +372,9 @@ class DetailsMiddleware {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
             preferencesStorage.shouldSaveAccessCodes = true
-            tangemSdkManager.setAccessCodeRequestPolicy(
-                useBiometricsForAccessCode = scanResponse?.card?.isAccessCodeSet == true,
-            )
+            store.state.daggerGraphState
+                .get(DaggerGraphState::cardSdkConfigRepository)
+                .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true)
 
             return CompletionResult.Success(Unit)
         }
@@ -385,9 +385,9 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
                     preferencesStorage.shouldSaveAccessCodes = false
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = false,
-                    )
+                    store.state.daggerGraphState
+                        .get(DaggerGraphState::cardSdkConfigRepository)
+                        .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = false)
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")

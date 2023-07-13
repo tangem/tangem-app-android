@@ -100,8 +100,8 @@ internal class WelcomeMiddleware {
     }
 
     private suspend inline fun scanCardInternal(crossinline onCardScanned: suspend (ScanResponse) -> Unit) {
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
         store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),

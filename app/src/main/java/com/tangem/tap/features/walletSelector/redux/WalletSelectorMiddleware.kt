@@ -126,11 +126,13 @@ internal class WalletSelectorMiddleware {
     private fun addWallet() = scope.launch {
         Analytics.send(MyWallets.Button.ScanNewCard())
 
-        val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
+        val cardSdkConfigRepository = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
+
+        val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
 
         // Update access code policy for access code saving when a card was scanned
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
 
         store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
@@ -147,14 +149,14 @@ internal class WalletSelectorMiddleware {
                 saveUserWalletAndPopBackToWalletScreen(scanResponse)
                     .doOnFailure { error ->
                         // Rollback policy if card saving was failed
-                        tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                         Timber.e(error, "Unable to save user wallet")
                         store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                     }
             },
             onFailure = { error ->
                 // Rollback policy if card scanning was failed
-                tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                 Timber.e(error, "Unable to scan card")
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
             },
