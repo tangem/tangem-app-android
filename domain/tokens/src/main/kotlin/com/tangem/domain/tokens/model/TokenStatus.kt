@@ -7,6 +7,8 @@ data class TokenStatus(
     val networkId: Network.ID,
     val name: String,
     val symbol: String,
+    val decimals: Int,
+    val iconUrl: String?,
     val isCoin: Boolean,
     val value: Status,
 ) {

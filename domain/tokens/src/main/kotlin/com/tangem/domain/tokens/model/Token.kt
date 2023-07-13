@@ -5,6 +5,8 @@ data class Token(
     val networkId: Network.ID,
     val name: String,
     val symbol: String,
+    val iconUrl: String?,
+    val decimals: Int,
     val isCustom: Boolean,
     val isCoin: Boolean,
 ) {
