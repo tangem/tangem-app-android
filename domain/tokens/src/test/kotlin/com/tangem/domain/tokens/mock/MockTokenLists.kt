@@ -68,7 +68,7 @@ internal object MockTokenLists {
 
     val loadingUngroupedTokenList = with(ungroupedTokenList) {
         copy(
-            tokens = tokens.map { it.copy(value = TokenStatus.Loading) }.toNonEmptySet(),
+            tokens = tokens.map { it.copy(value = TokenStatus.Loading) }.toSet(),
             totalFiatBalance = TokenList.FiatBalance.Loading,
         )
     }
@@ -91,7 +91,7 @@ internal object MockTokenLists {
 
     val sortedGroupedTokenList: TokenList.GroupedByNetwork
         get() {
-            val groups = sortedNetworksGroups
+            val groups = sortedNetworksGroups.toSet()
 
             return groupedTokenList.copy(
                 groups = groups,
