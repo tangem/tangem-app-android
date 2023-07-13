@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
@@ -179,6 +180,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
 
         if (BuildConfig.DEBUG) {
+            Logger.addLogAdapter(AndroidLogAdapter())
             Timber.plant(
                 object : Timber.DebugTree() {
                     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {

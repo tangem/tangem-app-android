@@ -14,7 +14,7 @@ class SeedPhraseErrorConverter : ModuleMessageConverter<Pair<Context, SeedPhrase
         val (context, message) = source
 
         val convertedMessage = when (message) {
-            SeedPhraseError.InvalidEntropyLength -> {
+            SeedPhraseError.InvalidChecksum -> {
                 context.getString(R.string.onboarding_seed_mnemonic_invalid_checksum)
             }
             is SeedPhraseError.InvalidWords -> {

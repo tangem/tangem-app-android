@@ -8,7 +8,7 @@ import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toFiatRateString
 import com.tangem.tap.common.extensions.toFiatValue
-import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.extensions.toFormattedCryptoCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -38,8 +38,8 @@ internal fun WalletDataModel.hasPendingTransactions(): Boolean {
     return status.pendingTransactions.isEmpty()
 }
 
-internal fun WalletDataModel.getFormattedAmount(): String {
-    return status.amount.toFormattedCurrencyString(
+internal fun WalletDataModel.getFormattedCryptoAmount(): String {
+    return status.amount.toFormattedCryptoCurrencyString(
         decimals = currency.decimals,
         currency = currency.currencySymbol,
     )

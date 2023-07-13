@@ -10,10 +10,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.TangemSdk
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -56,7 +57,6 @@ import java.lang.ref.WeakReference
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
 internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
@@ -88,7 +88,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var testerRouter: TesterRouter
 
     @Inject
-    lateinit var injectedTangemSdk: TangemSdk
+    lateinit var cardSdkLifecycleObserver: CardSdkLifecycleObserver
+
+    @Inject
+    lateinit var cardSdkConfigRepository: CardSdkConfigRepository
 
     @Inject
     lateinit var injectedTangemSdkManager: TangemSdkManager
@@ -122,11 +125,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = injectedTangemSdk
+        cardSdkLifecycleObserver.onCreate(context = this)
+
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
-        appStateHolder.tangemSdk = tangemSdk
-        backupService = BackupService.init(tangemSdk, this)
+        backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
         lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
         initUserWalletsListManager()
@@ -144,8 +147,35 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
+                cardSdkConfigRepository = cardSdkConfigRepository,
             ),
         )
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dialogManager.onStart(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
+        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+
+        navigateToInitialScreenIfNeededOnResume(intent)
+    }
+
+    override fun onStop() {
+        notificationsHandler = null
+        dialogManager.onStop()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
+        intentProcessor.removeAll()
+        cardSdkLifecycleObserver.onDestroy()
+        super.onDestroy()
     }
 
     private fun initIntentHandlers() {
@@ -183,35 +213,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
-    override fun onResume() {
-        super.onResume()
-        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
-
-        navigateToInitialScreenIfNeededOnResume(intent)
-    }
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         scope.launch {
             intentProcessor.handleIntent(intent)
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        dialogManager.onStart(this)
-    }
-
-    override fun onStop() {
-        notificationsHandler = null
-        dialogManager.onStop()
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
-        intentProcessor.removeAll()
-        super.onDestroy()
     }
 
     override fun showSnackbar(text: Int, buttonTitle: Int?, action: View.OnClickListener?) {

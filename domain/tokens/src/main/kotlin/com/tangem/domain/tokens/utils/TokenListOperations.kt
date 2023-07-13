@@ -84,8 +84,9 @@ internal class TokenListOperations(
     ): NonEmptySet<NetworkGroup> {
         val groupsWithSortedTokens = groupTokens(tokens, networks)
             .map { group ->
-                group.copy(tokens = sortTokensByBalance(group.tokens))
+                group.copy(tokens = sortTokensByBalance(group.tokens as NonEmptySet<TokenStatus>))
             }
+            .toNonEmptySet()
         val sortedGroups = if (isAnyTokenLoading) {
             groupsWithSortedTokens
         } else {
@@ -131,7 +132,8 @@ internal class TokenListOperations(
 
     private suspend fun getNetworks(tokens: NonEmptySet<TokenStatus>): NonEmptySet<Network> {
         return withContext(dispatchers.io) {
-            val networks = networksRepository.getNetworks(tokens.map { it.networkId }).bind()
+            val networksIds = tokens.map { it.networkId }.toNonEmptySet()
+            val networks = networksRepository.getNetworks(networksIds).bind()
             ensureNotNull(networks.toNonEmptySetOrNull()) { TokensError.EmptyNetworks }
         }
     }

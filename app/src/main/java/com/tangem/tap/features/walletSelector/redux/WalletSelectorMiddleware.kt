@@ -6,6 +6,8 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.*
@@ -18,8 +20,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.WalletStoreModel
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.Dispatchers
@@ -126,11 +126,13 @@ internal class WalletSelectorMiddleware {
     private fun addWallet() = scope.launch {
         Analytics.send(MyWallets.Button.ScanNewCard())
 
-        val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
+        val cardSdkConfigRepository = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
+
+        val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
 
         // Update access code policy for access code saving when a card was scanned
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
 
         store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
@@ -147,14 +149,14 @@ internal class WalletSelectorMiddleware {
                 saveUserWalletAndPopBackToWalletScreen(scanResponse)
                     .doOnFailure { error ->
                         // Rollback policy if card saving was failed
-                        tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                         Timber.e(error, "Unable to save user wallet")
                         store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                     }
             },
             onFailure = { error ->
                 // Rollback policy if card scanning was failed
-                tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                 Timber.e(error, "Unable to scan card")
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
             },

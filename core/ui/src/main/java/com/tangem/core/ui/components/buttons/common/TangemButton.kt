@@ -30,7 +30,7 @@ internal fun TangemButton(
         elevation = elevation,
         shape = size.toShape(),
         colors = colors,
-        contentPadding = size.toContentPadding(icon = icon),
+        contentPadding = if (showProgress) ButtonDefaults.ContentPadding else size.toContentPadding(icon = icon),
     ) {
         ButtonContent(
             text = text,

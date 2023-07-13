@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.transition.TransitionInflater
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.ui.TokensListScreen
 import com.tangem.tap.features.tokens.impl.presentation.viewmodels.TokensListViewModel
@@ -40,6 +41,10 @@ internal class TokensListFragment : Fragment() {
                 }
 
                 TangemTheme {
+                    val statusBarColor = TangemTheme.colors.background.secondary
+                    SystemBarsEffect {
+                        setSystemBarsColor(color = statusBarColor)
+                    }
                     TokensListScreen(
                         modifier = Modifier.systemBarsPadding(),
                         stateHolder = viewModel.uiState,

@@ -59,7 +59,7 @@ import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
 import com.tangem.tap.features.wallet.ui.utils.assembleWarnings
 import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
-import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedCryptoAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
 import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
@@ -390,7 +390,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
             chipGroupAddressType.show()
             chipGroupAddressType.fitChipsByGroupWidth()
 
-            val checkedId = MultipleAddressUiHelper.typeToId(selectedAddress.type)
+            val checkedId = MultipleAddressUiHelper.typeToId(selectedAddress.type, currency.blockchain)
             if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
             chipGroupAddressType.setOnCheckedChangeListener { _, checkedId ->
@@ -425,7 +425,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = walletData.getFormattedAmount()
+                lBalance.tvAmount.text = walletData.getFormattedCryptoAmount()
                 lBalance.tvFiatAmount.text = walletData.getFormattedFiatAmount(store.state.globalState.appCurrency)
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
@@ -437,7 +437,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = walletData.getFormattedAmount()
+                lBalance.tvAmount.text = walletData.getFormattedCryptoAmount()
                 lBalance.tvFiatAmount.text = walletData.getFormattedFiatAmount(store.state.globalState.appCurrency)
                 when (status) {
                     is WalletDataModel.VerifiedOnline,
