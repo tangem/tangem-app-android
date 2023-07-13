@@ -67,7 +67,7 @@ class AmountMiddleware {
         }
 
         val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
-        val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
+        val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee?.amount)
         val amountFieldErrors = filterErrorsForAmountField(transactionErrors)
         if (amountFieldErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
