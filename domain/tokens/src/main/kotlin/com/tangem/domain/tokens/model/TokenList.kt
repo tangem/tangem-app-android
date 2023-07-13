@@ -1,6 +1,5 @@
 package com.tangem.domain.tokens.model
 
-import arrow.core.NonEmptySet
 import java.math.BigDecimal
 
 sealed class TokenList {
@@ -8,13 +7,13 @@ sealed class TokenList {
     open val sortedBy: SortType = SortType.NONE
 
     data class GroupedByNetwork(
-        val groups: NonEmptySet<NetworkGroup>,
+        val groups: Set<NetworkGroup>,
         override val totalFiatBalance: FiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
 
     data class Ungrouped(
-        val tokens: NonEmptySet<TokenStatus>,
+        val tokens: Set<TokenStatus>,
         override val totalFiatBalance: FiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
