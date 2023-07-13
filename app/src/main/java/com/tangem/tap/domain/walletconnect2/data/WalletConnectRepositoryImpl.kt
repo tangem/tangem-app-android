@@ -6,6 +6,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
+import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.walletconnect.android.Core
 import com.walletconnect.android.CoreClient
@@ -87,7 +88,10 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
     private fun defineWalletDelegate(): Web3Wallet.WalletDelegate {
         return object : Web3Wallet.WalletDelegate {
-            override fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal) {
+            override fun onSessionProposal(
+                sessionProposal: Wallet.Model.SessionProposal,
+                verifyContext: Wallet.Model.VerifyContext,
+            ) {
                 // Triggered when wallet receives the session proposal sent by a Dapp
                 Timber.d("sessionProposal: $sessionProposal")
                 this@WalletConnectRepositoryImpl.sessionProposal = sessionProposal
@@ -106,7 +110,10 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 }
             }
 
-            override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest) {
+            override fun onSessionRequest(
+                sessionRequest: Wallet.Model.SessionRequest,
+                verifyContext: Wallet.Model.VerifyContext,
+            ) {
                 // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
                 Timber.d("sessionRequest: $sessionRequest")
                 val request = wcRequestDeserializer.deserialize(
@@ -115,22 +122,38 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 )
                 Timber.d("sessionRequestParsed: $request")
 
-                scope.launch {
-                    _events.emit(
-                        WalletConnectEvents.SessionRequest(
-                            request = request,
-                            chainId = sessionRequest.chainId,
+                when (request) {
+                    is WcRequest.AddChain -> {
+                        // we can send approval automatically, because in WC 2.0 the list of chains is approved when
+                        // initial connection is established
+                        sendRequest(
                             topic = sessionRequest.topic,
                             id = sessionRequest.request.id,
-                            metaUrl = sessionRequest.peerMetaData?.url ?: "",
-                            metaName = sessionRequest.peerMetaData?.name ?: "",
-                        ),
-                    )
+                            result = "",
+                        )
+                    }
+                    else ->
+                        scope.launch {
+                            _events.emit(
+                                WalletConnectEvents.SessionRequest(
+                                    request = request,
+                                    chainId = sessionRequest.chainId,
+                                    topic = sessionRequest.topic,
+                                    id = sessionRequest.request.id,
+                                    metaUrl = sessionRequest.peerMetaData?.url ?: "",
+                                    metaName = sessionRequest.peerMetaData?.name ?: "",
+                                ),
+                            )
+                        }
                 }
             }
 
-            override fun onAuthRequest(authRequest: Wallet.Model.AuthRequest) {
+            override fun onAuthRequest(
+                authRequest: Wallet.Model.AuthRequest,
+                verifyContext: Wallet.Model.VerifyContext,
+            ) {
                 // Triggered when Dapp / Requester makes an authorization request
+                Timber.d("onAuthRequest: $authRequest")
             }
 
             override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -174,6 +197,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
             override fun onError(error: Wallet.Model.Error) {
                 // Triggered whenever there is an issue inside the SDK
+                Timber.d("onError: $error")
             }
         }
     }
