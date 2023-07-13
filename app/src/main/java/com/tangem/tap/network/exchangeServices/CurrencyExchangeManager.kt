@@ -72,7 +72,7 @@ class CurrencyExchangeManager(
         return when (action) {
             Action.Buy -> buyService
             Action.Sell -> sellService
-        } as ExchangeUrlBuilder
+        }
     }
 
     enum class Action { Buy, Sell }
@@ -96,15 +96,14 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult =
-        walletManager.getFee(
-            amountToSend,
-            destinationAddress,
-        ) as? Result.Success ?: return
-    val fee = feeResult.data[0]
+    val feeResult = walletManager.getFee(
+        amountToSend,
+        destinationAddress,
+    ) as? Result.Success ?: return
+    val fee = feeResult.data.minimum
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
-    if (coinValue < fee.value) return
+    if (coinValue < fee.amount.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 

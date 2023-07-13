@@ -6,6 +6,8 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.isNetworkError
@@ -112,7 +114,7 @@ class TransactionManagerImpl(
     ): SendTxResult {
         val txData = walletManager.createTransaction(
             amount = amount,
-            fee = Amount(value = feeAmount, blockchain = blockchain),
+            fee = Fee.Common(Amount(value = feeAmount, blockchain = blockchain)),
             destination = destinationAddress,
         ).copy(hash = dataToSign, extras = createExtras(walletManager, gasLimit, dataToSign))
 
@@ -214,24 +216,37 @@ class TransactionManagerImpl(
         return when (fee) {
             is Result.Success -> {
                 // for not EVM blockchains set gasLimit ZERO for now
-                val firstFee = fee.data.firstOrNull() ?: error("no fee found")
-                val minFee = ProxyFee(
-                    gasLimit = BigInteger.ZERO,
-                    fee = convertToProxyAmount(amount = firstFee),
-                )
-                val normalFee = ProxyFee(
-                    gasLimit = BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.getOrNull(index = 1) ?: firstFee),
-                )
-                val priorityFee = ProxyFee(
-                    gasLimit = BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.getOrNull(index = 2) ?: firstFee),
-                )
-                ProxyFees(
-                    minFee = minFee,
-                    normalFee = normalFee,
-                    priorityFee = priorityFee,
-                )
+                when (fee.data) {
+                    is TransactionFee.Single -> {
+                        val fee = (fee.data as TransactionFee.Single).normal
+                        val singleFee = ProxyFee(
+                            gasLimit = BigInteger.ZERO,
+                            fee = convertToProxyAmount(amount = fee.amount),
+                        )
+                        ProxyFees(
+                            minFee = singleFee,
+                            normalFee = singleFee,
+                            priorityFee = singleFee,
+                        )
+                    }
+                    is TransactionFee.Choosable -> {
+                        val choosableFee = fee.data as TransactionFee.Choosable
+                        ProxyFees(
+                            minFee = ProxyFee(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
+                            ),
+                            normalFee = ProxyFee(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = choosableFee.normal.amount),
+                            ),
+                            priorityFee = ProxyFee(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = choosableFee.priority.amount),
+                            ),
+                        )
+                    }
+                }
             }
             is Result.Failure -> {
                 error(fee.error.message ?: fee.error.customMessage)
@@ -280,19 +295,21 @@ class TransactionManagerImpl(
         }
         return when (fee) {
             is Result.Success -> {
-                val minFee = fee.data.firstOrNull() ?: error("no fee found")
+                val choosableFee = fee.data
+
                 val minProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(minFee),
+                    gasLimit = (choosableFee.minimum as Fee.Ethereum).gasLimit,
+                    fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                 )
                 val normalProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.getOrNull(index = 1) ?: minFee),
+                    gasLimit = (choosableFee.normal as Fee.Ethereum).gasLimit,
+                    fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                 )
                 val priorityProxyFee = ProxyFee(
-                    gasLimit = walletManager.gasLimit ?: BigInteger.ZERO,
-                    fee = convertToProxyAmount(fee.data.lastOrNull() ?: minFee),
+                    gasLimit = (choosableFee.priority as Fee.Ethereum).gasLimit,
+                    fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                 )
+
                 ProxyFees(
                     minFee = minProxyFee,
                     normalFee = normalProxyFee,
