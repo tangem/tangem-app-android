@@ -136,29 +136,6 @@ fun PrimaryButtonIconStart(
         showProgress = showProgress,
     )
 }
-
-/**
- * [Show in Figma](https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?type=design&node-id=2985%3A12897&mode=design&t=yNVqtEJV3QyLDqbv-1)
- */
-@Composable
-fun SuggestionPrimaryButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    showProgress: Boolean = false,
-    enabled: Boolean = true,
-) {
-    TangemButton(
-        modifier = modifier,
-        text = text,
-        icon = TangemButtonIconPosition.None,
-        onClick = onClick,
-        colors = TangemButtonsDefaults.primaryButtonColors,
-        size = TangemButtonSize.Suggestion,
-        enabled = enabled,
-        showProgress = showProgress,
-    )
-}
 // endregion PrimaryButton
 
 // region SecondaryButton
