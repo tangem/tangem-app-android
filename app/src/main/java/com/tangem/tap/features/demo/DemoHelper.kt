@@ -6,6 +6,8 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.toBlockchainSdkError
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
@@ -84,13 +86,13 @@ object DemoHelper {
 
 class DemoTransactionSender(private val walletManager: WalletManager) : TransactionSender {
 
-    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<TransactionFee> {
         val blockchain = walletManager.wallet.blockchain
         return Result.Success(
-            listOf(
-                Amount(0.0001.toBigDecimal(), blockchain),
-                Amount(0.0002.toBigDecimal(), blockchain),
-                Amount(0.0003.toBigDecimal(), blockchain),
+            TransactionFee.Choosable(
+                minimum = Fee.Common(Amount(minimumFee, blockchain)),
+                normal = Fee.Common(Amount(normalFee, blockchain)),
+                priority = Fee.Common(Amount(priorityFee, blockchain)),
             ),
         )
     }
@@ -120,5 +122,9 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
 
     companion object {
         val ID = DemoTransactionSender::class.java.simpleName
+
+        private val minimumFee = 0.0001.toBigDecimal()
+        private val normalFee = 0.0002.toBigDecimal()
+        private val priorityFee = 0.0003.toBigDecimal()
     }
 }
