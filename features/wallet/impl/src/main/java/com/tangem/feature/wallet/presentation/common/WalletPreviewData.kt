@@ -4,6 +4,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
@@ -51,14 +52,16 @@ internal object WalletPreviewData {
         onClick = null,
     )
 
+    val wallets = mapOf(
+        UserWalletId(stringValue = "123") to walletCardContentState,
+        UserWalletId(stringValue = "321") to walletCardLoadingState,
+        UserWalletId(stringValue = "42") to walletCardHiddenContentState,
+        UserWalletId(stringValue = "24") to walletCardErrorState,
+    )
+
     val walletListConfig = WalletsListConfig(
         selectedWalletIndex = 0,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        wallets = wallets.values.toPersistentList(),
         onWalletChange = {},
     )
 
