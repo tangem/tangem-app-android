@@ -11,7 +11,10 @@ internal object MockTokens {
         name = "Token 1",
         symbol = "T1",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = true,
+
     )
     val token2 = Token(
         id = Token.ID("token2"),
@@ -19,6 +22,8 @@ internal object MockTokens {
         name = "Token 2",
         symbol = "T2",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = false,
     )
     val token3 = Token(
@@ -27,6 +32,8 @@ internal object MockTokens {
         name = "Token 3",
         symbol = "T3",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = false,
     )
     val token4 = Token(
@@ -35,7 +42,10 @@ internal object MockTokens {
         name = "Token 4",
         symbol = "T4",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = true,
+
     )
     val token5 = Token(
         id = Token.ID("token5"),
@@ -43,7 +53,9 @@ internal object MockTokens {
         name = "Token 5",
         symbol = "T5",
         isCustom = false,
-        isCoin = true,
+        decimals = 8,
+        iconUrl = null,
+        isCoin = false,
     )
     val token6 = Token(
         id = Token.ID("token6"),
@@ -51,6 +63,8 @@ internal object MockTokens {
         name = "Token 6",
         symbol = "T6",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = false,
     )
     val token7 = Token(
@@ -59,7 +73,9 @@ internal object MockTokens {
         name = "Token 7",
         symbol = "T7",
         isCustom = false,
-        isCoin = false,
+        decimals = 8,
+        iconUrl = null,
+        isCoin = true,
     )
     val token8 = Token(
         id = Token.ID("token8"),
@@ -67,7 +83,9 @@ internal object MockTokens {
         name = "Token 8",
         symbol = "T8",
         isCustom = false,
-        isCoin = true,
+        decimals = 8,
+        iconUrl = null,
+        isCoin = false,
     )
     val token9 = Token(
         id = Token.ID("token9"),
@@ -75,7 +93,9 @@ internal object MockTokens {
         name = "Token 9",
         symbol = "T9",
         isCustom = false,
-        isCoin = true,
+        decimals = 8,
+        iconUrl = null,
+        isCoin = false,
     )
     val token10 = Token(
         id = Token.ID("token10"),
@@ -83,6 +103,8 @@ internal object MockTokens {
         name = "Token 10",
         symbol = "T10",
         isCustom = false,
+        decimals = 8,
+        iconUrl = null,
         isCoin = false,
     )
 
