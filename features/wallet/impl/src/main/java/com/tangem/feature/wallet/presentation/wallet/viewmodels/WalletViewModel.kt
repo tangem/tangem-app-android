@@ -6,16 +6,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.Either
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.error.TokensError
+import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
+import com.tangem.feature.wallet.presentation.wallet.utils.TokenErrorToWalletStateConverter
+import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -27,7 +37,6 @@ import kotlin.properties.Delegates
  */
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
-    @Suppress("unused") // TODO: [REDACTED_JIRA]
     private val getTokenListUseCase: GetTokenListUseCase,
     private val scanCardProcessor: ScanCardProcessor,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -40,14 +49,29 @@ internal class WalletViewModel @Inject constructor(
     var uiState by mutableStateOf(getInitialState())
         private set
 
+    private var getTokenListJob: Job? = null
+        set(value) {
+            field?.cancel()
+            field = value
+        }
+
     // TODO: [REDACTED_TASK_KEY] Use production data instead of WalletPreviewData
-    private fun getInitialState(): WalletStateHolder = WalletPreviewData.multicurrencyWalletScreenState.copy(
-        onBackClick = ::onBackClick,
-        topBarConfig = createTopBarConfig(),
-        walletsListConfig = WalletPreviewData.multicurrencyWalletScreenState.walletsListConfig.copy(
-            onWalletChange = ::selectWallet,
-        ),
-    )
+    private fun getInitialState(): WalletStateHolder {
+        val state = WalletPreviewData.multicurrencyWalletScreenState.copy(
+            onBackClick = ::onBackClick,
+            topBarConfig = createTopBarConfig(),
+            walletsListConfig = WalletPreviewData.multicurrencyWalletScreenState.walletsListConfig.copy(
+                onWalletChange = ::selectWallet,
+            ),
+            contentItems = getLoadingMultiCurrencyTokens(),
+        )
+
+        val selectedWalletIndex = state.walletsListConfig.selectedWalletIndex
+        val selectedWalletId = WalletPreviewData.wallets.keys.elementAt(selectedWalletIndex)
+        launchGetTokenListJob(selectedWalletId)
+
+        return state
+    }
 
     private fun onBackClick() {
         router.popBackStack()
@@ -74,14 +98,45 @@ internal class WalletViewModel @Inject constructor(
 
         Log.i("WalletViewModel", "selectWallet: $index")
 
-        uiState = if (index % 2 == 0) {
-            WalletPreviewData.multicurrencyWalletScreenState.copy(
+        uiState = when (val state = uiState) {
+            is WalletStateHolder.MultiCurrencyContent -> state.copy(
                 walletsListConfig = uiState.walletsListConfig.copy(selectedWalletIndex = index),
             )
-        } else {
-            WalletPreviewData.singleWalletScreenState.copy(
+            is WalletStateHolder.SingleCurrencyContent -> state.copy(
                 walletsListConfig = uiState.walletsListConfig.copy(selectedWalletIndex = index),
             )
         }
+
+        val selectedWalletId = WalletPreviewData.wallets.keys.elementAt(index)
+        launchGetTokenListJob(selectedWalletId)
+    }
+
+    private fun launchGetTokenListJob(userWalletId: UserWalletId) {
+        getTokenListJob = getTokenListUseCase(userWalletId)
+            .distinctUntilChanged()
+            .mapLatest(::updateStateWithTokenListOrError)
+            .onEach { uiState = it }
+            .flowOn(Dispatchers.Default)
+            .launchIn(viewModelScope)
+    }
+
+    private fun updateStateWithTokenListOrError(tokenList: Either<TokensError, TokenList>): WalletStateHolder {
+        val updateStateWithError = { error: TokensError ->
+            val converter = TokenErrorToWalletStateConverter(uiState)
+
+            converter.convert(error)
+        }
+        val updateState = { list: TokenList ->
+            val converter = TokenListToWalletStateConverter(
+                uiState,
+                isWalletContentHidden = false, // TODO: [REDACTED_JIRA]
+                fiatCurrencyCode = "USD", // TODO: [REDACTED_JIRA]
+                fiatCurrencySymbol = "$", // TODO: [REDACTED_JIRA]
+            )
+
+            converter.convert(list)
+        }
+
+        return tokenList.fold(ifLeft = updateStateWithError, ifRight = updateState)
     }
 }
