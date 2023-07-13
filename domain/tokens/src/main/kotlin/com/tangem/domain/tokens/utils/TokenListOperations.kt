@@ -84,7 +84,7 @@ internal class TokenListOperations(
     ): NonEmptySet<NetworkGroup> {
         val groupsWithSortedTokens = groupTokens(tokens, networks)
             .map { group ->
-                group.copy(tokens = sortTokensByBalance(group.tokens))
+                group.copy(tokens = sortTokensByBalance(group.tokens as NonEmptySet<TokenStatus>))
             }
             .toNonEmptySet()
         val sortedGroups = if (isAnyTokenLoading) {
