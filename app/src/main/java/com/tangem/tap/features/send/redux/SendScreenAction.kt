@@ -4,6 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.StateDialog
@@ -114,7 +115,7 @@ sealed class FeeAction : SendScreenAction {
 
     object RequestFee : FeeAction()
     sealed class FeeCalculation : FeeAction() {
-        data class SetFeeResult(val fee: List<Amount>) : FeeCalculation()
+        data class SetFeeResult(val fee: TransactionFee) : FeeCalculation()
         object ClearResult : FeeCalculation()
     }
 
