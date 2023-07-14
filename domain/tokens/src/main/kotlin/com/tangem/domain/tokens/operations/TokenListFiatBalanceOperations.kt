@@ -1,5 +1,6 @@
-package com.tangem.domain.tokens.utils
+package com.tangem.domain.tokens.operations
 
+import arrow.core.NonEmptySet
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -7,7 +8,7 @@ import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
-    private val tokens: Set<TokenStatus>,
+    private val tokens: NonEmptySet<TokenStatus>,
     private val isAnyTokenLoading: Boolean,
     private val dispatcher: CoroutineDispatcherProvider,
 ) {
@@ -15,7 +16,7 @@ internal class TokenListFiatBalanceOperations(
     suspend fun calculateFiatBalance(): TokenList.FiatBalance {
         return withContext(dispatcher.single) {
             var fiatBalance: TokenList.FiatBalance = TokenList.FiatBalance.Loading
-            if (tokens.isEmpty() || isAnyTokenLoading) return@withContext fiatBalance
+            if (isAnyTokenLoading) return@withContext fiatBalance
 
             for (token in tokens) {
                 when (val status = token.value) {
