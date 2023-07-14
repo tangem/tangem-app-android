@@ -1,10 +1,6 @@
 package com.tangem.data.tokens.repository
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import com.tangem.data.tokens.mock.MockTokens
-import com.tangem.domain.tokens.error.TokensError
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -18,17 +14,17 @@ internal class MockTokensRepository : TokensRepository {
         sortedTokensIds: Set<Token.ID>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
-    ): Either<TokensError, Unit> = Unit.right()
+    ) = Unit
 
-    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Either<TokensError, Set<Token>>> {
-        return flowOf(value = MockTokens.tokens[userWalletId]?.right() ?: TokensError.EmptyTokens.left())
+    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+        return flowOf(value = MockTokens.tokens[userWalletId]!!)
     }
 
-    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Either<TokensError, Boolean>> {
-        return flowOf(MockTokens.isGrouped[userWalletId]?.right() ?: TokensError.EmptyTokens.left())
+    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
+        return flowOf(value = MockTokens.isGrouped[userWalletId]!!)
     }
 
-    override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Either<TokensError, Boolean>> {
-        return flowOf(MockTokens.isSortedByBalance[userWalletId]?.right() ?: TokensError.EmptyTokens.left())
+    override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
+        return flowOf(value = MockTokens.isSortedByBalance[userWalletId]!!)
     }
 }
