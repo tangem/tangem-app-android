@@ -16,7 +16,7 @@ import com.tangem.domain.card.SetAccessCodeRequestPolicyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.domain.tokens.error.TokensError
+import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -24,7 +24,7 @@ import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
 import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
-import com.tangem.feature.wallet.presentation.wallet.utils.TokenErrorToWalletStateConverter
+import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorToWalletStateConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -150,9 +150,9 @@ internal class WalletViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateStateWithTokenListOrError(tokenList: Either<TokensError, TokenList>): WalletStateHolder {
-        val updateStateWithError = { error: TokensError ->
-            val converter = TokenErrorToWalletStateConverter(uiState)
+    private fun updateStateWithTokenListOrError(tokenList: Either<TokenListError, TokenList>): WalletStateHolder {
+        val updateStateWithError = { error: TokenListError ->
+            val converter = TokenListErrorToWalletStateConverter(uiState)
 
             converter.convert(error)
         }
