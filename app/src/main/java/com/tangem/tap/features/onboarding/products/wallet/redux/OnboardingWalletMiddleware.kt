@@ -30,9 +30,9 @@ import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
 object OnboardingWalletMiddleware {
@@ -43,8 +43,8 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
     { next ->
         { action ->
             when (action) {
-                is OnboardingWallet2Action -> handleWallet2Action(action, state)
-                else -> handleWalletAction(action, state, dispatch)
+                is OnboardingWallet2Action -> handleWallet2Action(action)
+                else -> handleWalletAction(action)
             }
             next(action)
         }
@@ -52,7 +52,7 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch: DispatchFunction) {
+private fun handleWalletAction(action: Action) {
     if (action !is OnboardingWalletAction) return
 
     val globalState = store.state.globalState
@@ -178,7 +178,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleWallet2Action(action: OnboardingWallet2Action, state: () -> AppState?) {
+private fun handleWallet2Action(action: OnboardingWallet2Action) {
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager
 
@@ -329,7 +329,9 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.AddBackupCard -> {
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
-                tangemSdk.config.filter.cardIdFilter = null
+                store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
+                    .config.filter.cardIdFilter = null
+
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
