@@ -22,6 +22,7 @@ dependencies {
     // endregion
 
     // region Other libraries
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     // endregion
 }
