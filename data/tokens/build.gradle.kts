@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.domain.core)
     implementation(projects.domain.tokens)
     implementation(projects.domain.wallets.models)
 
