@@ -15,7 +15,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.images.load
-import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedCryptoAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatRate
 import com.tangem.tap.store
@@ -85,7 +85,7 @@ class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHold
 
             lContent.tvCurrency.text = wallet.currency.currencyName
             lContent.tvAmountFiat.text = wallet.getFormattedFiatAmount(fiatCurrency)
-            lContent.tvAmount.text = wallet.getFormattedAmount()
+            lContent.tvAmount.text = wallet.getFormattedCryptoAmount()
 
             lContent.tvStatus.isVisible = statusMessage != null
             lContent.tvStatus.text = statusMessage
