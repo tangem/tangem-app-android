@@ -5,15 +5,14 @@ import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.recover
 import arrow.core.right
-import com.tangem.domain.tokens.error.TokensError
+import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TokenStatus
+import com.tangem.domain.tokens.operations.TokenListOperations
+import com.tangem.domain.tokens.operations.TokensStatusesOperations
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
-import com.tangem.domain.tokens.utils.TokenListFiatBalanceOperations
-import com.tangem.domain.tokens.utils.TokenListOperations
-import com.tangem.domain.tokens.utils.TokensStatusesOperations
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -21,13 +20,13 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flatMapConcat
 
 class GetTokenListUseCase(
-    private val tokensRepository: TokensRepository,
-    private val quotesRepository: QuotesRepository,
-    private val networksRepository: NetworksRepository,
-    private val dispatchers: CoroutineDispatcherProvider,
+    internal val tokensRepository: TokensRepository,
+    internal val quotesRepository: QuotesRepository,
+    internal val networksRepository: NetworksRepository,
+    internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = true): Flow<Either<TokensError, TokenList>> {
+    operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = true): Flow<Either<TokenListError, TokenList>> {
         return channelFlow {
             recover(
                 block = {
@@ -41,53 +40,39 @@ class GetTokenListUseCase(
             )
         }
     }
-    private fun Raise<TokensError>.getTokenList(userWalletId: UserWalletId, refresh: Boolean): Flow<TokenList> {
+    private fun Raise<TokenListError>.getTokenList(userWalletId: UserWalletId, refresh: Boolean): Flow<TokenList> {
         return getTokensStatuses(userWalletId, refresh).flatMapConcat { tokens ->
             createTokenList(userWalletId, tokens)
         }
     }
 
-    private fun Raise<TokensError>.getTokensStatuses(
+    private fun Raise<TokenListError>.getTokensStatuses(
         userWalletId: UserWalletId,
         refresh: Boolean,
     ): Flow<Set<TokenStatus>> {
         val operations = TokensStatusesOperations(
-            tokensRepository,
-            quotesRepository,
-            networksRepository,
-            userWalletId,
-            refresh,
-            dispatchers,
+            userWalletId = userWalletId,
+            refresh = refresh,
+            useCase = this@GetTokenListUseCase,
             raise = this,
+            transformError = TokenListError::fromTokenStatusesOperations,
         )
 
         return operations.getTokensStatusesFlow()
     }
 
-    private suspend fun Raise<TokensError>.createTokenList(
+    private fun Raise<TokenListError>.createTokenList(
         userWalletId: UserWalletId,
         tokens: Set<TokenStatus>,
     ): Flow<TokenList> {
-        val isAnyTokenLoading = tokens.any { it.value is TokenStatus.Loading }
         val operations = TokenListOperations(
-            tokensRepository,
-            networksRepository,
-            userWalletId,
-            calculateFiatBalance(tokens, isAnyTokenLoading),
-            isAnyTokenLoading,
-            dispatchers,
+            userWalletId = userWalletId,
+            tokens = tokens,
+            useCase = this@GetTokenListUseCase,
             raise = this,
+            transform = TokenListError::fromTokenListOperations,
         )
 
-        return operations.getTokenListFlow(tokens)
-    }
-
-    private suspend fun calculateFiatBalance(
-        tokens: Set<TokenStatus>,
-        isAnyTokenLoading: Boolean,
-    ): TokenList.FiatBalance {
-        val operations = TokenListFiatBalanceOperations(tokens, isAnyTokenLoading, dispatchers)
-
-        return operations.calculateFiatBalance()
+        return operations.getTokenListFlow()
     }
 }
