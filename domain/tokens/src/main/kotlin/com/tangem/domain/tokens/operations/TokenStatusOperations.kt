@@ -1,9 +1,5 @@
-package com.tangem.domain.tokens.utils
+package com.tangem.domain.tokens.operations
 
-import arrow.core.raise.Raise
-import arrow.core.raise.ensure
-import arrow.core.raise.ensureNotNull
-import com.tangem.domain.tokens.error.TokensError
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.Token
@@ -17,8 +13,7 @@ internal class TokenStatusOperations(
     private val quote: Quote?,
     private val networkStatus: NetworkStatus?,
     private val dispatchers: CoroutineDispatcherProvider,
-    raise: Raise<TokensError>,
-) : Raise<TokensError> by raise {
+) {
 
     suspend fun createTokenStatus(): TokenStatus = withContext(dispatchers.single) {
         TokenStatus(
@@ -68,7 +63,7 @@ internal class TokenStatusOperations(
 
     private fun getTokenAmount(): BigDecimal {
         val amount = networkStatus?.value?.amounts?.get(token.id)
-        return ensureNotNull(amount) { TokensError.TokenAmountNotFound(token.id) }
+        return amount ?: error("Incorrect network status: $networkStatus")
     }
 
     private fun calculateFiatAmountOrNull(amount: BigDecimal, fiatRate: BigDecimal?): BigDecimal? {
@@ -78,9 +73,6 @@ internal class TokenStatusOperations(
     }
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
-        val fiatAmount = amount * fiatRate
-        ensure(condition = fiatAmount >= BigDecimal.ZERO) { TokensError.TokenFiatAmountLessThenZero(token.id) }
-
-        return fiatAmount
+        return amount * fiatRate
     }
 }
