@@ -36,8 +36,8 @@ import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTrans
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
@@ -163,7 +163,10 @@ class WalletConnectSdkHelper {
     private suspend fun sendTransaction(data: WcTransactionData, cardId: String?): String? {
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
-            signer = CommonSigner(tangemSdk, cardId),
+            signer = CommonSigner(
+                tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
+                cardId = cardId,
+            ),
         )
         return when (result) {
             SimpleResult.Success -> {
