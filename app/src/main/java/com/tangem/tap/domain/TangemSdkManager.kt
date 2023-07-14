@@ -1,27 +1,25 @@
 package com.tangem.tap.domain
 
-import android.content.Context
+import android.content.res.Resources
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
 import com.tangem.common.biometric.BiometricManager
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
-import com.tangem.operations.pins.CheckUserCodesCommand
-import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
@@ -38,7 +36,10 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
+class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigRepository, private val resources: Resources) {
+
+    private val tangemSdk: TangemSdk
+        get() = cardSdkConfigRepository.sdk
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
@@ -63,7 +64,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
-        val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
+        val message = Message(resources.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(
                 card = null,
@@ -80,7 +81,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.cardTypesResolver),
             scanResponse.card.cardId,
-            Message(context.getString(R.string.initial_message_create_wallet_body)),
+            Message(resources.getString(R.string.initial_message_create_wallet_body)),
         )
     }
 
@@ -92,7 +93,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             is CompletionResult.Success -> runTaskAsync(
                 CreateProductWalletTask(scanResponse.cardTypesResolver, seedResult.data),
                 scanResponse.card.cardId,
-                Message(context.getString(R.string.initial_message_create_wallet_body)),
+                Message(resources.getString(R.string.initial_message_create_wallet_body)),
             )
 
             is CompletionResult.Failure -> CompletionResult.Failure(seedResult.error)
@@ -111,7 +112,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             CreateWalletAndRescanTask(),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)),
+            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
         )
             .map { CardDTO(it) }
     }
@@ -127,7 +128,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             runnable = ResetToFactorySettingsTask(),
             cardId = cardId,
-            initialMessage = Message(context.getString(R.string.card_settings_reset_card_to_factory)),
+            initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
             .map { CardDTO(it) }
     }
@@ -154,7 +155,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changePasscode(null),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_change_passcode_body)),
+            initialMessage = Message(resources.getString(R.string.initial_message_change_passcode_body)),
         )
     }
 
@@ -162,7 +163,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changeAccessCode(null),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_change_access_code_body)),
+            initialMessage = Message(resources.getString(R.string.initial_message_change_access_code_body)),
         )
     }
 
@@ -170,15 +171,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.resetUserCodes(),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
-        )
-    }
-
-    suspend fun checkUserCodes(cardId: String?): CompletionResult<CheckUserCodesResponse> {
-        return runTaskAsyncReturnOnMain(
-            CheckUserCodesCommand(),
-            cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
         )
     }
 
@@ -186,7 +179,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             SetUserCodeRecoveryAllowedTask(enabled),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
         )
     }
 
@@ -197,7 +190,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             runnable = ScanTask(allowRequestAccessCodeFromRepository),
             cardId = cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
         )
             .map { CardDTO(it) }
     }
@@ -233,31 +226,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         }
     }
 
+    @Deprecated("TangemSdkManager shouldn't returns a string from resources")
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        return context.getString(stringResId, *formatArgs)
-    }
-
-    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
-        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
-    }
-
-    fun useBiometricsForAccessCode(): Boolean {
-        val policy = tangemSdk.config.userCodeRequestPolicy
-        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
-    }
-
-    companion object {
-        val config = Config(
-            linkedTerminal = true,
-            allowUntrustedCards = true,
-            filter = CardFilter(
-                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 4, minor = 52),
-            ),
-        )
+        return resources.getString(stringResId, *formatArgs)
     }
 }
