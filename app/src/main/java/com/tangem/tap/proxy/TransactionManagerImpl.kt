@@ -14,6 +14,7 @@ import com.tangem.blockchain.extensions.isNetworkError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
@@ -24,7 +25,6 @@ import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -34,6 +34,7 @@ import java.math.RoundingMode
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val analytics: AnalyticsEventHandler,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
@@ -395,7 +396,7 @@ class TransactionManagerImpl(
         val actualCard = requireNotNull(appStateHolder.getActualCard()) { "no card found" }
         return TangemSigner(
             card = actualCard,
-            tangemSdk = tangemSdk,
+            tangemSdk = cardSdkConfigRepository.sdk,
             initialMessage = Message(),
         ) { signResponse ->
             appStateHolder.mainStore?.dispatch(
