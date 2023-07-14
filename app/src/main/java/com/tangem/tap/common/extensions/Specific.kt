@@ -23,13 +23,17 @@ fun BigDecimal.toFormattedString(
     df.decimalFormatSymbols = symbols
     df.maximumFractionDigits = decimals
     df.minimumFractionDigits = 0
-    df.isGroupingUsed = false
+    df.isGroupingUsed = true
     df.roundingMode = roundingMode
     return df.format(this)
 }
 
+/**
+ * To formatted crypto currency string
+ * Specific method because there is no crypto currency codes in Locale
+ */
 @Suppress("MagicNumber")
-fun BigDecimal.toFormattedCurrencyString(
+fun BigDecimal.toFormattedCryptoCurrencyString(
     decimals: Int,
     currency: String,
     roundingMode: RoundingMode = RoundingMode.DOWN,
@@ -40,16 +44,34 @@ fun BigDecimal.toFormattedCurrencyString(
     } else {
         decimals
     }
+    try {
+        val locale = Locale.getDefault()
+        val formatter = NumberFormat.getCurrencyInstance(locale)
+        // first create currency instance for "USD" with Locale default to replace currency to crypto later
+        Currency.getInstance("USD")?.let { currencyTmp ->
+            formatter.currency = currencyTmp
+            formatter.maximumFractionDigits = decimalsForRounding
+            formatter.minimumFractionDigits = 0
+            formatter.isGroupingUsed = true
+            formatter.roundingMode = roundingMode
+            // cause formatter created for USD, replace Currency with Crypto symbol on right by Locale place
+            return formatter.format(this).replace(currencyTmp.getSymbol(locale), "$currency ")
+        }
+    } catch (e: IllegalArgumentException) {
+        Timber.e(e, "can't parse currency")
+    }
+    // if something went wrong - use old way to format
     val formattedAmount = this.toFormattedString(
         decimals = decimalsForRounding,
         roundingMode = roundingMode,
+        locale = Locale.getDefault(),
     )
-    return "$formattedAmount $currency"
+    return "$formattedAmount $currency "
 }
 
 fun BigDecimal.toFiatRateString(fiatCurrencyName: String, fiatCode: String): String {
     try {
-        val formatter = NumberFormat.getCurrencyInstance()
+        val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
         Currency.getInstance(fiatCode)?.let { currency ->
             formatter.currency = currency
             formatter.maximumFractionDigits = 2
@@ -90,7 +112,7 @@ fun BigDecimal.toFormattedFiatValue(
     formatWithSpaces: Boolean = false,
 ): String {
     try {
-        val formatter = NumberFormat.getCurrencyInstance()
+        val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
         Currency.getInstance(fiatCode)?.let { currency ->
             formatter.currency = currency
             formatter.maximumFractionDigits = 2
