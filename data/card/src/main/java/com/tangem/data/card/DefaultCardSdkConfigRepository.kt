@@ -10,7 +10,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
 
 /**
- * Implementation of repository for managing with CardSDK config
+ * Implementation of repository for managing of CardSDK config
  *
  * @property cardSdkProvider       CardSDK instance provider
  * @property preferencesDataSource application shared preferences

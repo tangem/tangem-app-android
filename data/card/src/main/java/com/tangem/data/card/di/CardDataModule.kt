@@ -22,7 +22,7 @@ internal object CardDataModule {
     ): CardSdkConfigRepository {
         return DefaultCardSdkConfigRepository(
             cardSdkProvider = cardSdkProvider,
-            preferencesDataSource = preferencesDataSource
+            preferencesDataSource = preferencesDataSource,
         )
     }
 }

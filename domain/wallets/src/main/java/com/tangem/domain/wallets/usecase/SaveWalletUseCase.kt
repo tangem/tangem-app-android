@@ -18,7 +18,6 @@ import com.tangem.domain.wallets.models.UserWallet
  */
 class SaveWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
-    @Throws(IllegalArgumentException::class)
     suspend operator fun invoke(userWallet: UserWallet, canOverride: Boolean = false): Either<SaveWalletError, Unit> {
         requireNotNull(walletsStateHolder.userWalletsListManager).save(userWallet, canOverride)
             .doOnSuccess { return Unit.right() }
