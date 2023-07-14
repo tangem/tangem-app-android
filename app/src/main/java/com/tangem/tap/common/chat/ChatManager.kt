@@ -12,6 +12,7 @@ import com.tangem.tap.common.chat.opener.implementation.SprinklrChatOpener
 import com.tangem.tap.common.chat.opener.implementation.ZendeskChatOpener
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Store
+import java.io.File
 
 class ChatManager(
     private val preferencesStorage: PreferencesDataSource,
@@ -20,7 +21,7 @@ class ChatManager(
 ) {
     private val openers = mutableMapOf<ChatConfig, ChatOpener>()
 
-    fun open(config: ChatConfig, feedbackDataBuilder: (Context) -> String) {
+    fun open(config: ChatConfig, createLogsFile: (Context) -> File?, createFeedbackFile: (Context) -> File?) {
         val opener = openers.getOrPut(config) {
             when (config) {
                 is SprinklrConfig -> SprinklrChatOpener(getSprinklrUserId(), config, store, foregroundActivityObserver)
@@ -28,7 +29,10 @@ class ChatManager(
             }
         }
 
-        opener.open(feedbackDataBuilder)
+        opener.open(
+            createFeedbackFile = createFeedbackFile,
+            createLogsFile = createLogsFile,
+        )
     }
 
     private fun getZendeskUserId(): String {
