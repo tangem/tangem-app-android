@@ -1,16 +1,17 @@
 package com.tangem.domain.tokens.repository
 
 import arrow.core.Either
-import arrow.core.right
-import com.tangem.domain.tokens.error.TokensError
+import arrow.core.getOrElse
+import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 internal class MockTokensRepository(
-    private val tokens: Flow<Either<TokensError, Set<Token>>>,
-    private val isGrouped: Flow<Either<TokensError, Boolean>>,
-    private val isSortedByBalance: Flow<Either<TokensError, Boolean>>,
+    private val tokens: Flow<Either<DataError, Set<Token>>>,
+    private val isGrouped: Flow<Either<DataError, Boolean>>,
+    private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
 ) : TokensRepository {
 
     override suspend fun sortTokens(
@@ -18,17 +19,17 @@ internal class MockTokensRepository(
         sortedTokensIds: Set<Token.ID>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
-    ): Either<TokensError, Unit> = Unit.right()
+    ) = Unit
 
-    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Either<TokensError, Set<Token>>> {
-        return tokens
+    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+        return tokens.map { it.getOrElse { e -> throw e } }
     }
 
-    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Either<TokensError, Boolean>> {
-        return isGrouped
+    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
+        return isGrouped.map { it.getOrElse { e -> throw e } }
     }
 
-    override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Either<TokensError, Boolean>> {
-        return isSortedByBalance
+    override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
+        return isSortedByBalance.map { it.getOrElse { e -> throw e } }
     }
 }
