@@ -9,7 +9,6 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
@@ -26,7 +25,11 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -74,8 +77,8 @@ private fun handleHomeAction(action: Action) {
 
 private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     delay(timeMillis = 200)
-    tangemSdkManager.setAccessCodeRequestPolicy(
-        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+    store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+        isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
     )
 
     store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
