@@ -22,6 +22,7 @@ import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.isLockable
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -110,9 +111,10 @@ internal class SaveWalletMiddleware {
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
                         preferencesStorage.shouldSaveAccessCodes = true
-                        tangemSdkManager.setAccessCodeRequestPolicy(
-                            useBiometricsForAccessCode = userWallet.hasAccessCode,
-                        )
+                        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
+                            .setAccessCodeRequestPolicy(
+                                isBiometricsRequestPolicy = userWallet.hasAccessCode,
+                            )
                     }
 
                     val savedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
