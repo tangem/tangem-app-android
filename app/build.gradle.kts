@@ -25,7 +25,7 @@ dependencies {
     implementation(project(":domain:legacy"))
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
-    implementation(project(":domain:card"))
+    implementation(projects.domain.card)
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
     implementation(projects.domain.tokens)
@@ -41,6 +41,7 @@ dependencies {
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
     implementation(project(":data:source:preferences"))
+    implementation(projects.data.card)
     implementation(projects.data.tokens)
 
     /** Features */
