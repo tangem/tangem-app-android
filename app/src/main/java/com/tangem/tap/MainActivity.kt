@@ -159,6 +159,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
+        // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
         navigateToInitialScreenIfNeededOnResume(intent)
