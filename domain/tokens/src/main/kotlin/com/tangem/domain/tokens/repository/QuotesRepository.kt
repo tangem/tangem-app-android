@@ -1,7 +1,5 @@
 package com.tangem.domain.tokens.repository
 
-import arrow.core.Either
-import com.tangem.domain.tokens.error.TokensError
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.Token
 import kotlinx.coroutines.flow.Flow
@@ -14,5 +12,5 @@ import kotlinx.coroutines.flow.Flow
  * */
 interface QuotesRepository {
 
-    fun getQuotes(tokensIds: Set<Token.ID>, refresh: Boolean): Flow<Either<TokensError, Set<Quote>>>
+    fun getQuotes(tokensIds: Set<Token.ID>, refresh: Boolean): Flow<Set<Quote>>
 }
