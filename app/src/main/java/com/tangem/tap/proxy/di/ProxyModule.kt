@@ -56,9 +56,7 @@ class ProxyModule {
     @Singleton
     fun provideLear2earnDependencies(appStateHolder: AppStateHolder): Learn2earnDependencyProvider {
         return object : Learn2earnDependencyProvider {
-            override fun getUserCountryCodeProvider(): () -> String = {
-                appStateHolder.mainStore?.state?.globalState?.userCountryCode ?: Locale.current.language
-            }
+            override fun getLocaleProvider(): () -> String = { Locale.current.language }
 
             override fun getWebViewAuthCredentialsProvider(): () -> String? = {
                 appStateHolder.mainStore?.state?.globalState?.configManager?.config?.tangemComAuthorization
