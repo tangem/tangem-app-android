@@ -117,7 +117,7 @@ internal object MockTokensStates {
         value = TokenStatus.NoAccount,
     )
 
-    val tokenStates = nonEmptySetOf(
+    val failedTokenStates = nonEmptySetOf(
         tokenState1,
         tokenState2,
         tokenState3,
@@ -130,7 +130,7 @@ internal object MockTokensStates {
         tokenState10,
     )
 
-    val loadedTokensStates = tokenStates.map { state ->
+    val loadedTokensStates = failedTokenStates.map { state ->
         val networkStatus = MockNetworks.verifiedNetworksStatuses.first { it.networkId == state.networkId }
         val amount = (networkStatus.value as NetworkStatus.Verified).amounts[state.id]!!
         val quote = MockQuotes.quotes.first { it.tokenId == state.id }
@@ -144,5 +144,5 @@ internal object MockTokensStates {
                 hasTransactionsInProgress = false,
             ),
         )
-    }
+    }.toNonEmptySet()
 }
