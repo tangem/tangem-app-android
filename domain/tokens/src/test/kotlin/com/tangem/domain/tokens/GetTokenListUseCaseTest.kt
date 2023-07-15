@@ -31,7 +31,7 @@ internal class GetTokenListUseCaseTest {
     @Test
     fun `when list ungrouped and unsorted then correct token list should be returned`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.ungroupedTokenList.right()
+        val expectedResult = MockTokenLists.failedUngroupedTokenList.right()
 
         val useCase = getUseCase(
             isGrouped = flowOf(false.right()),
@@ -137,7 +137,7 @@ internal class GetTokenListUseCaseTest {
         // Given
         val error = DataError.NetworkError.NoInternetConnection.left()
         val expectedResult = listOf(
-            MockTokenLists.ungroupedTokenList.right(),
+            MockTokenLists.failedUngroupedTokenList.right(),
             TokenListError.DataError(DataError.NetworkError.NoInternetConnection).left(),
         )
 
@@ -159,7 +159,7 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when list grouped then correct token list should be received`() = runTest {
-        val expectedResult = MockTokenLists.groupedTokenList.right()
+        val expectedResult = MockTokenLists.failedGroupedTokenList.right()
 
         val useCase = getUseCase(isGrouped = flowOf(true.right()))
 
@@ -235,7 +235,7 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when networks is empty and list is grouped then ungrouped list should be received`() = runTest {
-        val expectedResult = TokenListError.UnableToSortTokenList(MockTokenLists.ungroupedTokenList).left()
+        val expectedResult = TokenListError.UnableToSortTokenList(MockTokenLists.failedUngroupedTokenList).left()
 
         val useCase = getUseCase(
             networks = emptySet<Network>().right(),
@@ -326,7 +326,7 @@ internal class GetTokenListUseCaseTest {
         isSortedByBalance: Flow<Either<DataError, Boolean>> = flowOf(MockTokenLists.isSortedByBalance.right()),
     ) = GetTokenListUseCase(
         dispatchers = dispatchers,
-        tokensRepository = MockTokensRepository(tokens, isGrouped, isSortedByBalance),
+        tokensRepository = MockTokensRepository(Unit.right(), tokens, isGrouped, isSortedByBalance),
         quotesRepository = MockQuotesRepository(quotes),
         networksRepository = MockNetworksRepository(networks, statuses),
     )
