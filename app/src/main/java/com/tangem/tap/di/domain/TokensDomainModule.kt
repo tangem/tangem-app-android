@@ -40,4 +40,13 @@ internal object TokensDomainModule {
     fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
         return ToggleTokenListSortingUseCase(dispatchers)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideApplyTokenListSortingUseCase(
+        tokensRepository: TokensRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ApplyTokenListSortingUseCase {
+        return ApplyTokenListSortingUseCase(tokensRepository, dispatchers)
+    }
 }
