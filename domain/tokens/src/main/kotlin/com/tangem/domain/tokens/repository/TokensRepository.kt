@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
  * */
 interface TokensRepository {
 
-    suspend fun sortTokens(
+    suspend fun saveTokens(
         userWalletId: UserWalletId,
-        sortedTokens: Set<Token>,
-        isGrouped: Boolean,
+        tokens: Set<Token>,
+        isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     )
 

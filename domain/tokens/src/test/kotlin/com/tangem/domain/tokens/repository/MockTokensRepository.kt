@@ -9,17 +9,33 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 internal class MockTokensRepository(
+    private val sortTokensResult: Either<DataError, Unit>,
     private val tokens: Flow<Either<DataError, Set<Token>>>,
     private val isGrouped: Flow<Either<DataError, Boolean>>,
     private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
 ) : TokensRepository {
 
-    override suspend fun sortTokens(
+    var tokensIdsAfterSortingApply: Set<Token>? = null
+        private set
+
+    var isTokensGroupedAfterSortingApply: Boolean? = null
+        private set
+
+    var isTokensSortedByBalanceAfterSortingApply: Boolean? = null
+        private set
+
+    override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        sortedTokens: Set<Token>,
-        isGrouped: Boolean,
+        tokens: Set<Token>,
+        isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
-    ) = Unit
+    ) {
+        sortTokensResult.onLeft { throw it }
+
+        tokensIdsAfterSortingApply = tokens
+        isTokensGroupedAfterSortingApply = isGroupedByNetwork
+        isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
+    }
 
     override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
         return tokens.map { it.getOrElse { e -> throw e } }
