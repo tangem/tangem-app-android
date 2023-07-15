@@ -3,8 +3,6 @@ package com.tangem.domain.tokens.repository
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.Token
 import kotlinx.coroutines.flow.Flow
-// [REDACTED_TODO_COMMENT]
-// [REDACTED_JIRA]
 
 /**
  * Repository for everything related to the quotes of tokens

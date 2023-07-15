@@ -16,7 +16,7 @@ internal class MockTokensRepository(
 
     override suspend fun sortTokens(
         userWalletId: UserWalletId,
-        sortedTokensIds: Set<Token.ID>,
+        sortedTokens: Set<Token>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ) = Unit

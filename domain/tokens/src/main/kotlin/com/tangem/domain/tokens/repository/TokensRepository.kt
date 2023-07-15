@@ -3,8 +3,6 @@ package com.tangem.domain.tokens.repository
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
-// [REDACTED_TODO_COMMENT]
-// [REDACTED_JIRA]
 
 /**
  * Repository for everything related to the tokens of user wallet
@@ -13,7 +11,7 @@ interface TokensRepository {
 
     suspend fun sortTokens(
         userWalletId: UserWalletId,
-        sortedTokensIds: Set<Token.ID>,
+        sortedTokens: Set<Token>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     )

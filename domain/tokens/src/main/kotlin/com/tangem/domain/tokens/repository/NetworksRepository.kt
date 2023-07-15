@@ -5,8 +5,6 @@ import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
-// [REDACTED_TODO_COMMENT]
-// [REDACTED_JIRA]
 
 /**
  * Repository for everything related to the blockchain networks
