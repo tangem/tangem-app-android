@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.flowOf
 
 internal class MockTokensRepository : TokensRepository {
 
-    override suspend fun sortTokens(
+    override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        sortedTokens: Set<Token>,
-        isGrouped: Boolean,
+        tokens: Set<Token>,
+        isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) = Unit
 
