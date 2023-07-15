@@ -42,7 +42,7 @@ class ApplyTokenListSortingUseCase(
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
         catch(
-            block = { tokensRepository.sortTokens(userWalletId, tokens, isGrouped, isSortedByBalance) },
+            block = { tokensRepository.saveTokens(userWalletId, tokens, isGrouped, isSortedByBalance) },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
     }
