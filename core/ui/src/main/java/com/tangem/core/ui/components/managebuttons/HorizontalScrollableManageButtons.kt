@@ -1,7 +1,8 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
+package com.tangem.core.ui.components.managebuttons
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -12,25 +13,15 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButton
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
-/**
- * Wallet manage buttons
- *
- * @param buttons  manage buttons
- * @param modifier modifier
- *
- * @author Andrew Khokhlov on 24/06/2023
- */
 @Composable
-internal fun WalletManageButtons(buttons: ImmutableList<WalletManageButton>, modifier: Modifier = Modifier) {
+fun HorizontalScrollableManageButtons(buttons: ImmutableList<ManageButtons>, modifier: Modifier = Modifier) {
     LazyRow(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -44,24 +35,30 @@ internal fun WalletManageButtons(buttons: ImmutableList<WalletManageButton>, mod
 
 @Preview
 @Composable
-private fun Preview_WalletManageButtons_Light(
-    @PreviewParameter(WalletManageButtonProvider::class) buttons: ImmutableList<WalletManageButton>,
+private fun Preview_HorizontalScrollableManageButtons_Light(
+    @PreviewParameter(ManageButtonProvider::class) buttons: ImmutableList<ManageButtons>,
 ) {
     TangemTheme(isDark = false) {
-        WalletManageButtons(buttons = buttons)
+        HorizontalScrollableManageButtons(buttons = buttons)
     }
 }
 
 @Preview
 @Composable
-private fun Preview_WalletManageButtons_Dark(
-    @PreviewParameter(WalletManageButtonProvider::class) buttons: ImmutableList<WalletManageButton>,
+private fun Preview_HorizontalScrollableManageButtons_Dark(
+    @PreviewParameter(ManageButtonProvider::class) buttons: ImmutableList<ManageButtons>,
 ) {
     TangemTheme(isDark = true) {
-        WalletManageButtons(buttons = buttons)
+        HorizontalScrollableManageButtons(buttons = buttons)
     }
 }
 
-private class WalletManageButtonProvider : CollectionPreviewParameterProvider<ImmutableList<WalletManageButton>>(
-    collection = listOf(WalletPreviewData.manageButtons),
+private class ManageButtonProvider : CollectionPreviewParameterProvider<ManageButtons>(
+    collection = persistentListOf(
+        ManageButtons.Buy(onClick = {}),
+        ManageButtons.Send(onClick = {}),
+        ManageButtons.Receive(onClick = {}),
+        ManageButtons.Exchange(onClick = {}),
+        ManageButtons.CopyAddress(onClick = {}),
+    ),
 )

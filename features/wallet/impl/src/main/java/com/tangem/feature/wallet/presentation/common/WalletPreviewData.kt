@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.managebuttons.ManageButtons
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
@@ -200,12 +201,12 @@ internal object WalletPreviewData {
         ),
     )
 
-    val manageButtons = persistentListOf(
-        WalletManageButton.Buy(onClick = {}),
-        WalletManageButton.Send(onClick = {}),
-        WalletManageButton.Receive(onClick = {}),
-        WalletManageButton.Exchange(onClick = {}),
-        WalletManageButton.CopyAddress(onClick = {}),
+    private val manageButtons = persistentListOf(
+        ManageButtons.Buy(onClick = {}),
+        ManageButtons.Send(onClick = {}),
+        ManageButtons.Receive(onClick = {}),
+        ManageButtons.Exchange(onClick = {}),
+        ManageButtons.CopyAddress(onClick = {}),
     )
 
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
