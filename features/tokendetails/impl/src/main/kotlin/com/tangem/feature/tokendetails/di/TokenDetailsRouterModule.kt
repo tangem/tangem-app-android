@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.di
 
+import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.feature.tokendetails.presentation.router.DefaultTokenDetailsRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import dagger.Module
@@ -14,5 +15,7 @@ internal object TokenDetailsRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideTokenDetailsRouter(): TokenDetailsRouter = DefaultTokenDetailsRouter()
+    fun provideTokenDetailsRouter(navigationStateHolder: NavigationStateHolder): TokenDetailsRouter {
+        return DefaultTokenDetailsRouter(navigationStateHolder)
+    }
 }

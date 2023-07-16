@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.coil)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -32,6 +33,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
+    implementation(projects.core.navigation)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
