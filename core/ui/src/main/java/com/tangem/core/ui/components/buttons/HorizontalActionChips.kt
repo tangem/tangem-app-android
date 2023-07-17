@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.buttons
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
@@ -19,13 +21,18 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun HorizontalActionChips(buttons: ImmutableList<ActionButtonConfig>, modifier: Modifier = Modifier) {
+fun HorizontalActionChips(
+    buttons: ImmutableList<ActionButtonConfig>,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
     LazyRow(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
         verticalAlignment = Alignment.CenterVertically,
+        contentPadding = contentPadding,
     ) {
         items(
             items = buttons,

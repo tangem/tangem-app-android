@@ -76,8 +76,8 @@ internal fun WalletScreen(state: WalletStateHolder) {
                     HorizontalActionChips(
                         buttons = state.buttons,
                         modifier = changeableItemModifier
-                            .padding(top = TangemTheme.dimens.spacing14)
-                            .padding(horizontal = TangemTheme.dimens.spacing16),
+                            .padding(top = TangemTheme.dimens.spacing14),
+                        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
                     )
                 }
             }
