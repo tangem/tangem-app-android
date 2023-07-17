@@ -289,9 +289,9 @@ internal class DefaultLearn2earnInteractor(
 
     private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
         return if (promoCode == null) {
-            newCard
-        } else {
             oldCard
+        } else {
+            newCard
         }
     }
 
