@@ -6,11 +6,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.util.Log
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.wallet.AutoResolveHelper
-import com.google.android.gms.wallet.IsReadyToPayRequest
-import com.google.android.gms.wallet.PaymentData
-import com.google.android.gms.wallet.PaymentDataRequest
-import com.google.android.gms.wallet.PaymentsClient
+import com.google.android.gms.wallet.*
 import com.tangem.common.core.TangemSdkError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,7 +20,8 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
 
 //    var responseCallback: ((Result<PaymentData>) -> Unit)? = null
 
-    suspend fun checkIfGooglePayAvailable(): Result<Boolean> {
+    suspend fun checkIfGooglePayAvailable(isMerchantAvailable: Boolean): Result<Boolean> {
+        if (!isMerchantAvailable) return Result.success(false)
         val isReadyToPayJson = GooglePayUtil.isReadyToPayRequest() ?: return Result.success(false)
         val request = IsReadyToPayRequest.fromJson(isReadyToPayJson.toString())
 
