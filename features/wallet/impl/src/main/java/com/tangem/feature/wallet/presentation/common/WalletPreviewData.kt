@@ -261,6 +261,10 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
+        pullToRefreshConfig = WalletPullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
+        ),
         notifications = persistentListOf(
             WalletNotification.UnreachableNetworks,
             WalletNotification.LikeTangemApp(onClick = {}),
@@ -292,6 +296,10 @@ internal object WalletPreviewData {
                     timestamp = "8:41",
                 ),
             ),
+        ),
+        pullToRefreshConfig = WalletPullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
