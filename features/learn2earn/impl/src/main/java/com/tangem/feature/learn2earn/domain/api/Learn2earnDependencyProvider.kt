@@ -7,7 +7,7 @@ package com.tangem.feature.learn2earn.domain.api
  */
 interface Learn2earnDependencyProvider {
 
-    fun getUserCountryCodeProvider(): () -> String
+    fun getLocaleProvider(): () -> String
 
     fun getWebViewAuthCredentialsProvider(): () -> String?
 }
