@@ -5,8 +5,10 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class ShopifyShop(
+    @Json(name = "domain")
     val domain: String,
     @Json(name = "storefrontApiKeyAndroid")
     val storefrontApiKey: String,
-    val merchantID: String,
+    @Json(name = "merchantID")
+    val merchantID: String?,
 )
