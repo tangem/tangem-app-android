@@ -43,7 +43,7 @@ internal class TokensListFragment : Fragment() {
                 TangemTheme {
                     val statusBarColor = TangemTheme.colors.background.secondary
                     SystemBarsEffect {
-                        setStatusBarColor(color = statusBarColor)
+                        setSystemBarsColor(color = statusBarColor)
                     }
                     TokensListScreen(
                         modifier = Modifier.systemBarsPadding(),
