@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import kotlinx.collections.immutable.ImmutableList
 
@@ -58,7 +59,7 @@ internal sealed class WalletStateHolder(
         override val walletsListConfig: WalletsListConfig,
         override val contentItems: ImmutableList<WalletContentItemState.SingleCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
-        val buttons: ImmutableList<WalletManageButton>,
+        val buttons: ImmutableList<ActionButtonConfig>,
         val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletStateHolder(onBackClick, topBarConfig, walletsListConfig, contentItems, notifications)
 }
