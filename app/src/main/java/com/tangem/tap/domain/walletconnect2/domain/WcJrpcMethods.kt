@@ -1,9 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import com.squareup.moshi.*
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WCBinanceTxConfirmParam
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceCancelOrder
@@ -24,6 +21,7 @@ enum class WcJrpcMethods(val code: String) {
     BNB_SIGN("bnb_sign"),
     BNB_TRANSACTION_CONFIRM("bnb_tx_confirmation"),
     SIGN_TRANSACTION("trust_signTransaction"),
+    WALLET_ADD_ETHEREUM_CHAIN("wallet_addEthereumChain"),
     ;
 
     companion object {
@@ -33,13 +31,25 @@ enum class WcJrpcMethods(val code: String) {
 
 @JsonClass(generateAdapter = true)
 data class WCSignTransaction(
+    @Json(name = "network")
     val network: Int,
+
+    @Json(name = "transaction")
     val transaction: String,
 ) : WcRequestData
 
 @JsonClass(generateAdapter = true)
+data class WcAddChain(
+    @Json(name = "chainId")
+    val chainId: String,
+) : WcRequestData
+
+@JsonClass(generateAdapter = true)
 data class WcEthereumSignMessage(
+    @Json(name = "raw")
     val raw: List<String>,
+
+    @Json(name = "type")
     val type: WCSignType,
 ) : WcRequestData {
     enum class WCSignType {
@@ -71,15 +81,34 @@ data class WcEthereumSignMessage(
 
 @JsonClass(generateAdapter = true)
 data class WcEthereumTransaction(
+    @Json(name = "from")
     val from: String,
+
+    @Json(name = "to")
     val to: String?,
+
+    @Json(name = "nonce")
     val nonce: String?,
+
+    @Json(name = "gasPrice")
     val gasPrice: String?,
+
+    @Json(name = "maxFeePerGas")
     val maxFeePerGas: String?,
+
+    @Json(name = "maxPriorityFeePerGas")
     val maxPriorityFeePerGas: String?,
+
+    @Json(name = "gas")
     val gas: String?,
+
+    @Json(name = "gasLimit")
     val gasLimit: String?,
+
+    @Json(name = "value")
     val value: String?,
+
+    @Json(name = "data")
     val data: String,
 ) : WcRequestData
 
@@ -96,6 +125,7 @@ sealed class WcRequest(open val data: WcRequestData) {
     data class BnbTransfer(override val data: WcBinanceTransferOrder) : WcRequest(data)
     data class BnbTxConfirm(override val data: WCBinanceTxConfirmParam) : WcRequest(data)
     data class SignTransaction(override val data: WCSignTransaction) : WcRequest(data)
+    data class AddChain(override val data: WcAddChain) : WcRequest(data)
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
 }
 
@@ -166,6 +196,12 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                     Types.newParameterizedType(List::class.java, WCSignTransaction::class.java),
                 ).fromJsonFirstOrNull(params) ?: return customRequest
                 WcRequest.SignTransaction(data = deserializedParams)
+            }
+            WcJrpcMethods.WALLET_ADD_ETHEREUM_CHAIN -> {
+                val deserializedParams: WcAddChain = moshi.adapter<List<WcAddChain>>(
+                    Types.newParameterizedType(List::class.java, WcAddChain::class.java),
+                ).fromJsonFirstOrNull(params) ?: return customRequest
+                WcRequest.AddChain(data = deserializedParams)
             }
         }
     }
