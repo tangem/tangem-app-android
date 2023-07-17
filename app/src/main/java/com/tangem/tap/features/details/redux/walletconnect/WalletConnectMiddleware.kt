@@ -70,7 +70,7 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.StartWalletConnect -> {
                 val uri = action.copiedUri
-                if (uri != null && WalletConnectManager.isCorrectWcUri(uri)) {
+                if (uri != null && isWalletConnectUri(uri)) {
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.QrScan))
@@ -441,5 +441,9 @@ class WalletConnectMiddleware {
             tokens = emptyList(),
         )
         return walletState.getWalletManager(blockchainNetwork)
+    }
+
+    private fun isWalletConnectUri(uri: String): Boolean {
+        return WalletConnectManager.isCorrectWcUri(uri) || walletConnectInteractor.isWalletConnectUri(uri)
     }
 }
