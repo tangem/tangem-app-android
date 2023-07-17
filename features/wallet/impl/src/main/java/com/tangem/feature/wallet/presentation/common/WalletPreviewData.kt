@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.managebuttons.ManageButtons
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
@@ -202,11 +201,11 @@ internal object WalletPreviewData {
     )
 
     private val manageButtons = persistentListOf(
-        ManageButtons.Buy(onClick = {}),
-        ManageButtons.Send(onClick = {}),
-        ManageButtons.Receive(onClick = {}),
-        ManageButtons.Exchange(onClick = {}),
-        ManageButtons.CopyAddress(onClick = {}),
+        WalletManageButton.Buy(onClick = {}),
+        WalletManageButton.Send(onClick = {}),
+        WalletManageButton.Receive(onClick = {}),
+        WalletManageButton.Exchange(onClick = {}),
+        WalletManageButton.CopyAddress(onClick = {}),
     )
 
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
@@ -295,7 +294,7 @@ internal object WalletPreviewData {
             ),
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
-        buttons = manageButtons,
+        buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
         marketPriceBlockState = MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900.12$",

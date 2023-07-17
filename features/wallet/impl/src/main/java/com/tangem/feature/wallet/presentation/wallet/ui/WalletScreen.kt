@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
-import com.tangem.core.ui.components.managebuttons.HorizontalScrollableManageButtons
+import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
@@ -73,7 +73,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
 
             if (state is WalletStateHolder.SingleCurrencyContent) {
                 item {
-                    HorizontalScrollableManageButtons(
+                    HorizontalActionChips(
                         buttons = state.buttons,
                         modifier = changeableItemModifier
                             .padding(top = TangemTheme.dimens.spacing14)
