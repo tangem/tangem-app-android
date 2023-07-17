@@ -77,7 +77,7 @@ internal fun GetBonusView(state: MainScreenState, modifier: Modifier = Modifier)
                 Text(
                     text = state.description.subtitle.resolveReference(),
                     style = TangemTypography.caption,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors.text.tertiary,
                 )
             }
         }
