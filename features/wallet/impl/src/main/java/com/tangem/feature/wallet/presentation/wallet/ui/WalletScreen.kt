@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
@@ -33,7 +34,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockGroupTitle
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockTitle
-import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.WalletManageButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
@@ -73,9 +73,11 @@ internal fun WalletScreen(state: WalletStateHolder) {
 
             if (state is WalletStateHolder.SingleCurrencyContent) {
                 item {
-                    WalletManageButtons(
+                    HorizontalActionChips(
                         buttons = state.buttons,
-                        modifier = changeableItemModifier.padding(top = TangemTheme.dimens.spacing14),
+                        modifier = changeableItemModifier
+                            .padding(top = TangemTheme.dimens.spacing14),
+                        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
                     )
                 }
             }
