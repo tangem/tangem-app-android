@@ -8,6 +8,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,6 +48,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
  *
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalMaterialApi::class)
 @Suppress("LongMethod")
 @Composable
 internal fun WalletScreen(state: WalletStateHolder) {
@@ -56,88 +61,102 @@ internal fun WalletScreen(state: WalletStateHolder) {
 
         val walletsListState = rememberLazyListState()
         val changeableItemModifier = Modifier.changeWalletAnimator(walletsListState)
+        val pullRefreshState = rememberPullRefreshState(
+            refreshing = state.pullToRefreshConfig.isRefreshing,
+            onRefresh = state.pullToRefreshConfig.onRefresh,
+        )
 
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .padding(paddingValues = scaffoldPaddings)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(vertical = TangemTheme.dimens.spacing8),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .pullRefresh(pullRefreshState),
         ) {
-            item {
-                WalletsList(
-                    config = state.walletsListConfig,
-                    lazyListState = walletsListState,
-                )
-            }
-
-            if (state is WalletStateHolder.SingleCurrencyContent) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = TangemTheme.dimens.spacing8),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 item {
-                    HorizontalActionChips(
-                        buttons = state.buttons,
-                        modifier = changeableItemModifier
-                            .padding(top = TangemTheme.dimens.spacing14),
-                        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+                    WalletsList(
+                        config = state.walletsListConfig,
+                        lazyListState = walletsListState,
                     )
                 }
-            }
 
-            items(
-                items = state.notifications,
-                itemContent = { item ->
-                    Notification(
-                        state = item.state,
-                        modifier = changeableItemModifier
-                            .padding(top = TangemTheme.dimens.spacing14)
-                            .padding(horizontal = TangemTheme.dimens.spacing16),
-                    )
-                },
-            )
-
-            if (state is WalletStateHolder.SingleCurrencyContent) {
-                item {
-                    MarketPriceBlock(
-                        state = state.marketPriceBlockState,
-                        modifier = changeableItemModifier
-                            .padding(top = TangemTheme.dimens.spacing14)
-                            .padding(horizontal = TangemTheme.dimens.spacing16),
-                    )
-                }
-            }
-
-            itemsIndexed(
-                items = state.contentItems,
-                key = { index, item ->
-                    when (item) {
-                        is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> item.networkName
-                        is WalletContentItemState.MultiCurrencyItem.Token -> index
-                        is WalletContentItemState.SingleCurrencyItem.Title -> index
-                        is WalletContentItemState.SingleCurrencyItem.GroupTitle -> item.title
-                        is WalletContentItemState.SingleCurrencyItem.Transaction -> index
-                        is WalletContentItemState.Loading -> index
+                if (state is WalletStateHolder.SingleCurrencyContent) {
+                    item {
+                        HorizontalActionChips(
+                            buttons = state.buttons,
+                            modifier = changeableItemModifier
+                                .padding(top = TangemTheme.dimens.spacing14),
+                            contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+                        )
                     }
-                },
-                itemContent = { index, item ->
-                    ContentItem(
-                        item = item,
-                        modifier = changeableItemModifier.walletContentItemDecoration(
-                            currentIndex = index,
-                            lastIndex = state.contentItems.lastIndex,
-                        ),
-                    )
-                },
-            )
+                }
 
-            if (state is WalletStateHolder.MultiCurrencyContent) {
-                item {
-                    OrganizeTokensButton(
-                        onClick = state.onOrganizeTokensClick,
-                        modifier = changeableItemModifier
-                            .padding(top = TangemTheme.dimens.spacing14)
-                            .padding(horizontal = TangemTheme.dimens.spacing16),
-                    )
+                items(
+                    items = state.notifications,
+                    itemContent = { item ->
+                        Notification(
+                            state = item.state,
+                            modifier = changeableItemModifier
+                                .padding(top = TangemTheme.dimens.spacing14)
+                                .padding(horizontal = TangemTheme.dimens.spacing16),
+                        )
+                    },
+                )
+
+                if (state is WalletStateHolder.SingleCurrencyContent) {
+                    item {
+                        MarketPriceBlock(
+                            state = state.marketPriceBlockState,
+                            modifier = changeableItemModifier
+                                .padding(top = TangemTheme.dimens.spacing14)
+                                .padding(horizontal = TangemTheme.dimens.spacing16),
+                        )
+                    }
+                }
+
+                itemsIndexed(
+                    items = state.contentItems,
+                    key = { index, item ->
+                        when (item) {
+                            is WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle -> item.networkName
+                            is WalletContentItemState.MultiCurrencyItem.Token -> index
+                            is WalletContentItemState.SingleCurrencyItem.Title -> index
+                            is WalletContentItemState.SingleCurrencyItem.GroupTitle -> item.title
+                            is WalletContentItemState.SingleCurrencyItem.Transaction -> index
+                            is WalletContentItemState.Loading -> index
+                        }
+                    },
+                    itemContent = { index, item ->
+                        ContentItem(
+                            item = item,
+                            modifier = changeableItemModifier.walletContentItemDecoration(
+                                currentIndex = index,
+                                lastIndex = state.contentItems.lastIndex,
+                            ),
+                        )
+                    },
+                )
+
+                if (state is WalletStateHolder.MultiCurrencyContent) {
+                    item {
+                        OrganizeTokensButton(
+                            onClick = state.onOrganizeTokensClick,
+                            modifier = changeableItemModifier
+                                .padding(top = TangemTheme.dimens.spacing14)
+                                .padding(horizontal = TangemTheme.dimens.spacing16),
+                        )
+                    }
                 }
             }
+
+            PullRefreshIndicator(
+                refreshing = state.pullToRefreshConfig.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
         }
     }
 }
