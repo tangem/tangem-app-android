@@ -200,7 +200,7 @@ internal object WalletPreviewData {
         ),
     )
 
-    val manageButtons = persistentListOf(
+    private val manageButtons = persistentListOf(
         WalletManageButton.Buy(onClick = {}),
         WalletManageButton.Send(onClick = {}),
         WalletManageButton.Receive(onClick = {}),
@@ -294,7 +294,7 @@ internal object WalletPreviewData {
             ),
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
-        buttons = manageButtons,
+        buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
         marketPriceBlockState = MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900.12$",
