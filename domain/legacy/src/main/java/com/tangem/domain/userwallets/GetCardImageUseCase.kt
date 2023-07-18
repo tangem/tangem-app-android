@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.userWalletList
+package com.tangem.domain.userwallets
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
@@ -6,7 +6,6 @@ import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.attestation.TangemApi
-import com.tangem.tap.features.wallet.redux.Artwork
 
 /**
  * Use case for getting card image url
