@@ -5,18 +5,21 @@ import com.tangem.common.UserCodeType
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
 
 /**
- * Implementation of repository for managing with CardSDK config
+ * Implementation of repository for managing of CardSDK config
  *
- * @property cardSdkProvider CardSDK instance provider
+ * @property cardSdkProvider       CardSDK instance provider
+ * @property preferencesDataSource application shared preferences
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultCardSdkConfigRepository(
     private val cardSdkProvider: CardSdkProvider,
+    private val preferencesDataSource: PreferencesDataSource,
 ) : CardSdkConfigRepository {
 
     @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
@@ -50,4 +53,6 @@ internal class DefaultCardSdkConfigRepository(
             -> CardIdDisplayFormat.Full
         }
     }
+
+    override fun isAccessCodeSavingEnabled(): Boolean = preferencesDataSource.shouldSaveAccessCodes
 }
