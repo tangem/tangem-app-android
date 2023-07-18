@@ -20,7 +20,7 @@ import javax.inject.Inject
 internal class TokenDetailsFragment : Fragment() {
 
     @Inject
-    internal lateinit var tokenDetailsRouter: TokenDetailsRouter
+    lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     private val internalTokenDetailsRouter: InnerTokenDetailsRouter
         get() = requireNotNull(tokenDetailsRouter as? InnerTokenDetailsRouter) {
