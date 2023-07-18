@@ -26,6 +26,7 @@ dependencies {
     implementation(deps.compose.reorderable)
 
     /** Other libraries */
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
