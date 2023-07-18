@@ -283,9 +283,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
             scope.launch {
                 val handler = BackgroundScanIntentHandler(hasSavedUserWalletsProvider = { true })
-                val isBackgroundScanNotHandled = handler.handleIntent(intentWhichStartedActivity)
+                val isBackgroundScanHandled = handler.handleIntent(intentWhichStartedActivity)
                 val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
-                if (isBackgroundScanNotHandled && hasNotIncompletedBackup) {
+                if (!isBackgroundScanHandled && hasNotIncompletedBackup) {
                     store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
                 }
             }
