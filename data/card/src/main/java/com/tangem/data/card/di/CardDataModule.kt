@@ -2,6 +2,7 @@ package com.tangem.data.card.di
 
 import com.tangem.data.card.DefaultCardSdkConfigRepository
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import dagger.Module
 import dagger.Provides
@@ -15,7 +16,13 @@ internal object CardDataModule {
 
     @Provides
     @Singleton
-    fun provideCardSdkConfigRepository(cardSdkProvider: CardSdkProvider): CardSdkConfigRepository {
-        return DefaultCardSdkConfigRepository(cardSdkProvider = cardSdkProvider)
+    fun provideCardSdkConfigRepository(
+        cardSdkProvider: CardSdkProvider,
+        preferencesDataSource: PreferencesDataSource,
+    ): CardSdkConfigRepository {
+        return DefaultCardSdkConfigRepository(
+            cardSdkProvider = cardSdkProvider,
+            preferencesDataSource = preferencesDataSource,
+        )
     }
 }

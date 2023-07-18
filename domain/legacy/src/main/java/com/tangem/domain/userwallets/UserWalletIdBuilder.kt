@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.model.builders
+package com.tangem.domain.userwallets
 
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
