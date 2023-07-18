@@ -2,7 +2,6 @@ package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.api.promotion.models.AbstractPromotionResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
@@ -51,25 +50,18 @@ internal class DefaultLearn2earnInteractor(
         return repository.getUserData().promoCode != null
     }
 
-    override fun isNeedToShowViewOnStoriesScreen(): Boolean {
-        return promotionIsActive()
-    }
-
-    override suspend fun isNeedToShowViewOnMainScreen(): Boolean {
-        if (!promotionIsActive()) return false
-
+    override suspend fun validateUserWallet(): PromotionError? {
         val promoCode = repository.getUserData().promoCode
         val userWalletId = userWalletManager.getWalletId()
-        return if (promoCode == null) {
-            val response = repository.validate(userWalletId)
-            response.valid == true
+
+        val domainError = if (promoCode == null) {
+            repository.validate(userWalletId).error
         } else {
-            val response = repository.validateCode(userWalletId, promoCode)
-            when (val error = response.error?.toDomainError()) {
-                null -> response.valid == true
-                else -> error !is PromotionError.CodeWasNotAppliedInShop
-            }
-        }
+            repository.validateCode(userWalletId, promoCode).error
+        }?.toDomainError()
+
+        return domainError
+            ?.also { handlePromotionError(it) }
     }
 
     override fun isUserRegisteredInPromotion(): Boolean {
@@ -96,22 +88,21 @@ internal class DefaultLearn2earnInteractor(
         val walletId = userWalletManager.getWalletId()
         val promoCode = repository.getUserData().promoCode
 
-        val error = if (promoCode == null) {
+        val domainError = if (promoCode == null) {
             requestAward(walletId, awardCurrency)
         } else {
             requestAwardWithPromoCode(walletId, awardCurrency, promoCode)
         }
 
-        return if (error == null) {
+        return if (domainError == null) {
             Result.success(Unit)
         } else {
-            val domainError = error.toDomainError()
             handlePromotionError(domainError)
             Result.failure(domainError)
         }
     }
 
-    private suspend fun requestAward(walletId: String, awardCurrency: Currency): AbstractPromotionResponse.Error? {
+    private suspend fun requestAward(walletId: String, awardCurrency: Currency): PromotionError? {
         val validateResponse = repository.validate(walletId)
         return if (validateResponse.valid == true) {
             val address = getWalletAddressForAward(awardCurrency)
@@ -124,14 +115,14 @@ internal class DefaultLearn2earnInteractor(
             }
         } else {
             validateResponse.error
-        }
+        }?.toDomainError()
     }
 
     private suspend fun requestAwardWithPromoCode(
         walletId: String,
         awardCurrency: Currency,
         promoCode: String,
-    ): AbstractPromotionResponse.Error? {
+    ): PromotionError? {
         val codeValidateResponse = repository.validateCode(walletId, promoCode)
         return if (codeValidateResponse.valid == true) {
             val address = getWalletAddressForAward(awardCurrency)
@@ -144,7 +135,7 @@ internal class DefaultLearn2earnInteractor(
             }
         } else {
             codeValidateResponse.error
-        }
+        }?.toDomainError()
     }
 
     private suspend fun getWalletAddressForAward(currency: Currency): String {
@@ -215,7 +206,7 @@ internal class DefaultLearn2earnInteractor(
         return result.toWebViewAction()
     }
 
-    private fun promotionIsActive(): Boolean {
+    override fun isPromotionActive(): Boolean {
         val userData = repository.getUserData()
         val isActive = when {
             !featureToggleManager.isLearn2earnEnabled -> false
