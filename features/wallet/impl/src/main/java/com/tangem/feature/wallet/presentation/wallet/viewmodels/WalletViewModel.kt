@@ -9,8 +9,13 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.Either
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.domain.card.GetAccessCodeSavingStatusUseCase
+import com.tangem.domain.card.GetBiometricsStatusUseCase
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.SetAccessCodeRequestPolicyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.tokens.error.TokensError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
@@ -35,8 +40,13 @@ import kotlin.properties.Delegates
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
+    private val saveWalletUseCase: SaveWalletUseCase,
+    private val getBiometricsStatusUseCase: GetBiometricsStatusUseCase,
+    private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
+    private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val scanCardProcessor: ScanCardProcessor,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -85,10 +95,32 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun onScanCardClick() {
+        val prevRequestPolicyStatus = getBiometricsStatusUseCase()
+
+        // Update access the code policy according access code saving status
+        setAccessCodeRequestPolicyUseCase(isBiometricsRequestPolicy = getAccessCodeSavingStatusUseCase())
+
         viewModelScope.launch(dispatchers.io) {
             scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
-                .doOnSuccess { /* [REDACTED_TODO_COMMENT] */ }
-                .doOnFailure { /* [REDACTED_TODO_COMMENT] */ }
+                .doOnSuccess {
+                    // If card's public key is null then user wallet will be null
+                    val userWallet = UserWalletBuilder(scanResponse = it).build()
+
+                    if (userWallet != null) {
+                        saveWalletUseCase(userWallet)
+                            .onLeft {
+                                // Rollback policy if card saving was failed
+                                setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
+                            }
+                    } else {
+                        // Rollback policy if card saving was failed
+                        setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
+                    }
+                }
+                .doOnFailure {
+                    // Rollback policy if card scanning was failed
+                    setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
+                }
         }
     }
 
