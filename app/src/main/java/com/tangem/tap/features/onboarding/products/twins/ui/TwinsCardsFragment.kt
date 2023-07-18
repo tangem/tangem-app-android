@@ -17,15 +17,12 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.ShareElement
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.datasource.asset.AssetReader
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.Artwork
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.getDrawableCompat
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.TwinsCardWidget
@@ -35,7 +32,6 @@ import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletM
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
