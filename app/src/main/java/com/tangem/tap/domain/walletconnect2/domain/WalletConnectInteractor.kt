@@ -227,7 +227,15 @@ class WalletConnectInteractor(
         }
     }
 
+    fun isWalletConnectUri(uri: String): Boolean {
+        return uri.lowercase().startsWith(WC_SCHEME)
+    }
+
     private suspend fun prepareRequestData(sessionRequest: WalletConnectEvents.SessionRequest): WcPreparedRequest? {
         return sessionRequestConverter.prepareRequest(sessionRequest, userWalletId)
+    }
+
+    companion object {
+        private const val WC_SCHEME = "wc"
     }
 }
