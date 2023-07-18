@@ -1,12 +1,10 @@
-package com.tangem.tap.domain.model.builders
+package com.tangem.domain.userwallets
 
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.tap.domain.userWalletList.GetCardImageUseCase
 
 class UserWalletBuilder(
     private val scanResponse: ScanResponse,
@@ -24,7 +22,7 @@ class UserWalletBuilder(
             ProductType.Start2Coin -> "Start2Coin"
             ProductType.Wallet -> when {
                 card.isBackupNotAllowed -> "Tangem card"
-                card.isStart2Coin -> "Start2Coin"
+                cardTypesResolver.isStart2Coin() -> "Start2Coin"
                 else -> "Wallet"
             }
         }
