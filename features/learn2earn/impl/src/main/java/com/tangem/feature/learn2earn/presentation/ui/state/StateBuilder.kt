@@ -43,6 +43,11 @@ internal fun Learn2earnState.updateGetBonusVisibility(isVisible: Boolean): Learn
     }
 }
 
+internal fun Learn2earnState.updateViewsVisibility(isVisible: Boolean): Learn2earnState {
+    return updateStoriesVisibility(isVisible)
+        .updateGetBonusVisibility(isVisible)
+}
+
 internal fun Learn2earnState.changeGetBounsDescription(description: MainScreenState.Description): Learn2earnState {
     return if (mainScreenState.description == description) {
         this

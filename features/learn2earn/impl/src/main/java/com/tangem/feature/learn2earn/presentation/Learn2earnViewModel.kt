@@ -42,7 +42,7 @@ class Learn2earnViewModel @Inject constructor(
         private set
 
     init {
-        uiState = uiState.updateStoriesVisibility(interactor.isNeedToShowViewOnStoriesScreen())
+        uiState = uiState.updateViewsVisibility(isVisible = interactor.isPromotionActive())
     }
 
     fun onMainScreenCreated() {
@@ -54,15 +54,51 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun updateMainScreenViews() {
+        if (!interactor.isPromotionActive()) {
+            uiState = uiState.updateViewsVisibility(isVisible = false)
+            return
+        }
+
         viewModelScope.launch(dispatchers.io) {
-            if (interactor.isNeedToShowViewOnMainScreen()) {
-                updateUi {
-                    uiState.changeGetBounsDescription(getBonusDescription())
-                        .updateGetBonusVisibility(isVisible = true)
+            val error = interactor.validateUserWallet()
+            when {
+                error == null -> {
+                    updateUi { uiState.updateViewsVisibility(isVisible = true) }
                 }
-            } else {
+                // additional check after the error has been handled by interactor
+                !interactor.isPromotionActive() -> {
+                    updateUi { uiState.updateViewsVisibility(isVisible = false) }
+                }
+                else -> {
+                    updateViewsVisibilityOnError(error)
+                }
+            }
+        }
+    }
+
+    private suspend fun updateViewsVisibilityOnError(error: PromotionError) {
+        when (error) {
+            is PromotionError.ProgramNotFound,
+            is PromotionError.ProgramWasEnd,
+            is PromotionError.CodeWasAlreadyUsed,
+            is PromotionError.WalletAlreadyHasAward,
+            is PromotionError.CardAlreadyHasAward,
+            -> {
+                updateUi { uiState.updateViewsVisibility(isVisible = false) }
+            }
+            is PromotionError.CodeWasNotAppliedInShop -> {
                 updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
             }
+            is PromotionError.CodeNotFound,
+            -> {
+                updateUi {
+                    uiState.updateViewsVisibility(isVisible = true)
+                        .changeGetBounsDescription(getBonusDescription())
+                }
+            }
+            is PromotionError.UnknownError,
+            PromotionError.NetworkUnreachable,
+            -> Unit
         }
     }
 
