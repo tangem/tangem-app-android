@@ -9,6 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
@@ -19,7 +20,6 @@ import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
