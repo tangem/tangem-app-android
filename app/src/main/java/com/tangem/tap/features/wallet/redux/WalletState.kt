@@ -1,11 +1,11 @@
 package com.tangem.tap.features.wallet.redux
 
-import android.graphics.Bitmap
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.userwallets.Artwork
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
@@ -118,19 +118,4 @@ enum class ErrorType {
 
 sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class SendButton(enabled: Boolean) : WalletMainButton(enabled)
-}
-
-data class Artwork(
-    val artworkId: String,
-    val artwork: Bitmap? = null,
-) {
-    companion object {
-        const val DEFAULT_IMG_URL = "https://app.tangem.com/cards/card_default.png"
-        const val SERGIO_CARD_URL = "https://app.tangem.com/cards/card_tg059.png"
-        const val MARTA_CARD_URL = "https://app.tangem.com/cards/card_tg083.png"
-        const val SERGIO_CARD_ID = "BC01"
-        const val MARTA_CARD_ID = "BC02"
-        const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
-        const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
-    }
 }
