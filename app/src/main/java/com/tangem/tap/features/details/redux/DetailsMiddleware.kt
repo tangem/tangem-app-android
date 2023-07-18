@@ -12,6 +12,8 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -23,8 +25,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.userWalletList.isLockedSync
