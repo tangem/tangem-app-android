@@ -1,6 +1,7 @@
 package com.tangem.feature.learn2earn.domain.api
 
 import android.net.Uri
+import com.tangem.feature.learn2earn.domain.models.PromotionError
 
 /**
 * [REDACTED_AUTHOR]
@@ -13,9 +14,9 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     fun isUserHadPromoCode(): Boolean
 
-    fun isNeedToShowViewOnStoriesScreen(): Boolean
+    fun isPromotionActive(): Boolean
 
-    suspend fun isNeedToShowViewOnMainScreen(): Boolean
+    suspend fun validateUserWallet(): PromotionError?
 
     fun isUserRegisteredInPromotion(): Boolean
 
