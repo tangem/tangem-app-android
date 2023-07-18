@@ -1,12 +1,19 @@
 package com.tangem.feature.learn2earn.presentation.webView
 
 import android.os.Bundle
-import android.view.MenuItem
-import android.webkit.WebView
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.feature.learn2earn.impl.R
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
+import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.res.TangemTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -17,53 +24,47 @@ class Learn2earnWebViewActivity : AppCompatActivity() {
 
     private val viewModel by viewModels<WebViewViewModel>()
 
-    private lateinit var actionBar: ActionBar
-    private lateinit var webView: WebView
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_web_view)
-
         val webViewData = viewModel.extractData(intent)
 
-        setSupportActionBar(findViewById(R.id.toolbar))
-        actionBar = supportActionBar!!
-        actionBar.setDisplayHomeAsUpEnabled(true)
-        actionBar.setDisplayShowHomeEnabled(true)
-        actionBar.title = webViewData.uri.authority
-        webView = findViewById(R.id.web_view)
-
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.loadsImagesAutomatically = true
-
-        webView.webViewClient = Learn2earnWebViewClient(
-            redirectHandler = viewModel,
-            headers = webViewData.headers,
-            finishSessionHandler = { finish() },
-        )
-        webView.loadUrl(
-            webViewData.uri.toString(),
-            webViewData.headers,
-        )
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
+        setContent {
+            TangemTheme {
+                BackHandler(onBack = { finish() })
+                ScreenContent(webViewData)
             }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    override fun onDestroy() {
-        webView.clearHistory()
-        webView.clearCache(true)
-        webView.destroy()
-
-        super.onDestroy()
+    @Composable
+    private fun ScreenContent(webViewData: WebViewData) {
+        Column {
+            AppBarWithBackButton(
+                modifier = Modifier.background(TangemTheme.colors.background.secondary),
+                text = webViewData.uri.authority,
+                onBackClick = { finish() },
+            )
+            WebView(
+                state = rememberWebViewState(
+                    url = webViewData.uri.toString(),
+                    additionalHttpHeaders = webViewData.headers
+                ),
+                onCreated = {
+                    it.settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        loadsImagesAutomatically = true
+                    }
+                },
+                client = remember {
+                    Learn2earnWebViewClient(
+                        redirectHandler = viewModel,
+                        headers = webViewData.headers,
+                        finishSessionHandler = { finish() },
+                    )
+                },
+            )
+        }
     }
 
     companion object {
