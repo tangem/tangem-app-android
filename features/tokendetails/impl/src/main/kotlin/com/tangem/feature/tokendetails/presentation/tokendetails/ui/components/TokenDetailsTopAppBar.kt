@@ -25,7 +25,11 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
         title = {},
         actions = {
             IconButton(onClick = config.onMoreClick) {
-                Icon(painter = painterResource(id = R.drawable.ic_more_vertical_24), contentDescription = "More")
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_more_vertical_24),
+                    tint = TangemTheme.colors.icon.primary1,
+                    contentDescription = "More",
+                )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

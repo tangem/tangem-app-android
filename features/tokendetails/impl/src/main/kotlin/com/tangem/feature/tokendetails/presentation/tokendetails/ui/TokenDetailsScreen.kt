@@ -7,7 +7,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -23,7 +22,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         Column(
             modifier = Modifier
                 .padding(paddingValues = scaffoldPaddings)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxSize(),
         ) {
             TokenInfoBlock(state = state.tokenInfoBlockState)

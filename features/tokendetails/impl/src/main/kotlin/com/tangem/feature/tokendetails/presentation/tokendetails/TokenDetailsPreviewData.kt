@@ -9,15 +9,15 @@ internal object TokenDetailsPreviewData {
 
     val tokenDetailsTopAppBarConfig = TokenDetailsTopAppBarConfig(onBackClick = {}, onMoreClick = {})
 
-    val tokenInfoBlockStateWithLongNameInMainNetwork = TokenInfoBlockState(
-        name = "Stellar (XLM) with long long long long name test",
+    val tokenInfoBlockStateWithLongNameInMainCurrency = TokenInfoBlockState(
+        name = "Stellar (XLM) with long name test",
         iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
-        network = TokenInfoBlockState.Network.MainNetwork,
+        currency = TokenInfoBlockState.Currency.Native,
     )
     val tokenInfoBlockStateWithLongName = TokenInfoBlockState(
-        name = "Tether (USDT) with long long long long name test",
+        name = "Tether (USDT) with long name test",
         iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
-        network = TokenInfoBlockState.Network.TokenNetwork(
+        currency = TokenInfoBlockState.Currency.Token(
             network = "ERC20",
             networkIcon = R.drawable.img_eth_22,
             blockchain = "Ethereum",
@@ -27,7 +27,7 @@ internal object TokenDetailsPreviewData {
     val tokenInfoBlockState = TokenInfoBlockState(
         name = "Tether USDT",
         iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
-        network = TokenInfoBlockState.Network.TokenNetwork(
+        currency = TokenInfoBlockState.Currency.Token(
             network = "ERC20",
             networkIcon = R.drawable.img_eth_22,
             blockchain = "Ethereum",

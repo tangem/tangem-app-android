@@ -36,9 +36,8 @@ internal class TokenDetailsFragment : Fragment() {
                         setSystemBarsColor(systemBarsColor)
                     }
 
-                    val viewModel = hiltViewModel<TokenDetailsViewModel>().also { vm ->
-                        vm.router = this@TokenDetailsFragment.internalTokenDetailsRouter
-                    }
+                    val viewModel = hiltViewModel<TokenDetailsViewModel>()
+                    viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
                     TokenDetailsScreen(state = viewModel.uiState)
                 }
             }

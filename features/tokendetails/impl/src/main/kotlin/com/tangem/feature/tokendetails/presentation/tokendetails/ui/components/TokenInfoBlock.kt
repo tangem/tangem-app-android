@@ -3,8 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -17,8 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
@@ -35,49 +34,47 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
             )
-            NetworkInfoText(state.network)
+            NetworkInfoText(state.currency)
         }
 
-        // show drawable res in preview
-        if (LocalInspectionMode.current) {
-            Image(
-                modifier = Modifier.size(48.dp),
-                painter = painterResource(id = R.drawable.img_stellar_22),
-                contentDescription = null,
-            )
-        } else {
-            AsyncImage(
-                modifier = Modifier.size(48.dp),
-                model = state.iconUrl,
-                contentDescription = null,
-            )
+        val tokenIconPainter = when (LocalInspectionMode.current) {
+            // show drawable res in preview
+            true -> painterResource(id = R.drawable.img_stellar_22)
+            false -> rememberAsyncImagePainter(model = state.iconUrl)
         }
+
+        Image(
+            modifier = Modifier.size(TangemTheme.dimens.size48),
+            painter = tokenIconPainter,
+            contentDescription = null,
+        )
     }
 }
 
 @Composable
-private fun NetworkInfoText(network: TokenInfoBlockState.Network) {
-    when (network) {
-        TokenInfoBlockState.Network.MainNetwork -> {
+private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
+    when (currency) {
+        TokenInfoBlockState.Currency.Native -> {
             Text(
-                text = "Main network",
-                style = TangemTheme.typography.caption.copy(color = TangemTheme.colors.text.tertiary),
+                text = stringResource(id = R.string.common_main_network),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.caption,
             )
         }
-        is TokenInfoBlockState.Network.TokenNetwork -> {
+        is TokenInfoBlockState.Currency.Token -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
             ) {
-                val state = extractNetwork(tokenNetwork = network)
+                val state = extractNetwork(tokenCurrency = currency)
                 Text(
                     text = state.normalText,
                     style = TangemTheme.typography.caption,
                     color = TangemTheme.colors.text.tertiary,
                 )
                 Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(id = network.networkIcon),
+                    modifier = Modifier.size(TangemTheme.dimens.size16),
+                    painter = painterResource(id = currency.networkIcon),
                     tint = Color.Unspecified,
                     contentDescription = null,
                 )
@@ -94,12 +91,12 @@ private fun NetworkInfoText(network: TokenInfoBlockState.Network) {
 private const val SEPARATOR = " %image% "
 
 @Composable
-private fun extractNetwork(tokenNetwork: TokenInfoBlockState.Network.TokenNetwork): ExtractedTokenNetworkText {
+private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): ExtractedTokenNetworkText {
     val splitString = stringResource(
         id = R.string.token_details_token_type_subtitle,
         formatArgs = arrayOf(
-            tokenNetwork.network,
-            tokenNetwork.blockchain,
+            tokenCurrency.network,
+            tokenCurrency.blockchain,
         ),
     ).split(SEPARATOR)
 
@@ -139,6 +136,6 @@ private class TokenInfoStateProvider : CollectionPreviewParameterProvider<TokenI
     collection = listOf(
         TokenDetailsPreviewData.tokenInfoBlockState,
         TokenDetailsPreviewData.tokenInfoBlockStateWithLongName,
-        TokenDetailsPreviewData.tokenInfoBlockStateWithLongNameInMainNetwork,
+        TokenDetailsPreviewData.tokenInfoBlockStateWithLongNameInMainCurrency,
     ),
 )
