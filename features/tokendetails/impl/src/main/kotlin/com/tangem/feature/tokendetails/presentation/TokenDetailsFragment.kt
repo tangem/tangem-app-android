@@ -24,7 +24,7 @@ internal class TokenDetailsFragment : Fragment() {
 
     private val internalTokenDetailsRouter: InnerTokenDetailsRouter
         get() = requireNotNull(tokenDetailsRouter as? InnerTokenDetailsRouter) {
-            "internalTokenDetailsRouter should be instance of InnerWalletRouter"
+            "internalTokenDetailsRouter should be instance of InnerTokenDetailsRouter"
         }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

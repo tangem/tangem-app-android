@@ -18,9 +18,9 @@ internal object TokenDetailsPreviewData {
         name = "Tether (USDT) with long name test",
         iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
         currency = TokenInfoBlockState.Currency.Token(
-            network = "ERC20",
+            networkName = "ERC20",
             networkIcon = R.drawable.img_eth_22,
-            blockchain = "Ethereum",
+            blockchainName = "Ethereum",
         ),
     )
 
@@ -28,9 +28,9 @@ internal object TokenDetailsPreviewData {
         name = "Tether USDT",
         iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
         currency = TokenInfoBlockState.Currency.Token(
-            network = "ERC20",
+            networkName = "ERC20",
             networkIcon = R.drawable.img_eth_22,
-            blockchain = "Ethereum",
+            blockchainName = "Ethereum",
         ),
     )
 

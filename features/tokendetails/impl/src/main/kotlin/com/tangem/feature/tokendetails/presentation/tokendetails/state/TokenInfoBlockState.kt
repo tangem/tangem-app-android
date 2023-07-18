@@ -10,8 +10,8 @@ data class TokenInfoBlockState(
     sealed class Currency {
         object Native : Currency()
         data class Token(
-            val network: String,
-            val blockchain: String,
+            val networkName: String,
+            val blockchainName: String,
             @DrawableRes val networkIcon: Int,
         ) : Currency()
     }
