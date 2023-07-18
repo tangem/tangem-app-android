@@ -9,6 +9,11 @@ data class TokenInfoBlockState(
 ) {
     sealed class Currency {
         object Native : Currency()
+
+        /**
+         * @param networkName - token standard. Samples: ERC20, BEP20, BEP2, TRC20 and etc.
+         * @param blockchainName - token's blockchain name. Ethereum, Tron and etc.
+         */
         data class Token(
             val networkName: String,
             val blockchainName: String,
