@@ -13,6 +13,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.Artwork
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.operations.backup.BackupService
@@ -29,7 +30,6 @@ import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
-import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
