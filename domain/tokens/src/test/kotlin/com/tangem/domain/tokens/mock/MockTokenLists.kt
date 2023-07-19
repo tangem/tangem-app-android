@@ -14,24 +14,21 @@ internal object MockTokenLists {
     const val isSortedByBalance = false
 
     val networkGroup1 = NetworkGroup(
-        networkId = MockNetworks.network1.id,
-        name = MockNetworks.network1.name,
+        network = MockNetworks.network1,
         tokens = MockTokensStates.tokenStates
             .filter { it.networkId == MockNetworks.network1.id }
             .toNonEmptySetOrNull()!!,
     )
 
     val networkGroup2 = NetworkGroup(
-        networkId = MockNetworks.network2.id,
-        name = MockNetworks.network2.name,
+        network = MockNetworks.network2,
         tokens = MockTokensStates.tokenStates
             .filter { it.networkId == MockNetworks.network2.id }
             .toNonEmptySetOrNull()!!,
     )
 
     val networkGroup3 = NetworkGroup(
-        networkId = MockNetworks.network3.id,
-        name = MockNetworks.network3.name,
+        network = MockNetworks.network3,
         tokens = MockTokensStates.tokenStates
             .filter { it.networkId == MockNetworks.network3.id }
             .toNonEmptySetOrNull()!!,
@@ -42,7 +39,7 @@ internal object MockTokenLists {
     val sortedNetworksGroups = networksGroups.map { group ->
         group.copy(
             tokens = MockTokensStates.loadedTokensStates
-                .filter { it.networkId == group.networkId }
+                .filter { it.networkId == group.network.id }
                 .sortedByDescending { it.value.fiatAmount }
                 .toNonEmptySetOrNull()!!,
         )
