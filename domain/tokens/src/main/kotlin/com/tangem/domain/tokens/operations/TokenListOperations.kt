@@ -78,7 +78,7 @@ internal class TokenListOperations<E>(
         val sortingOperations = TokenListSortingOperations(
             tokens = tokens,
             isAnyTokenLoading = isAnyTokenLoading,
-            isSortedByBalance = isSortedByBalance,
+            sortByBalance = isSortedByBalance,
             dispatchers = dispatchers,
             raise = this,
             transformError = { e ->
