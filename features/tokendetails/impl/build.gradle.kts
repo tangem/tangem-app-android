@@ -26,6 +26,8 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
 
+    implementation(deps.kotlin.immutable.collections)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)

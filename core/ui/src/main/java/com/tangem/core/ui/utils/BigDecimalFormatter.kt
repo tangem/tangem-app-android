@@ -8,6 +8,8 @@ import java.util.Locale
 
 object BigDecimalFormatter {
 
+    const val EMPTY_BALANCE_SIGN = "—"
+
     private const val TEMP_CURRENCY_CODE = "USD"
 
     fun formatCryptoAmount(
