@@ -27,7 +27,10 @@ internal class TokenDetailsViewModel @Inject constructor() : ViewModel() {
         // simulate loading state
         viewModelScope.launch {
             delay(LOADING_DELAY)
-            uiState = uiState.copy(tokenBalanceBlockState = TokenDetailsPreviewData.balanceContent)
+            uiState = uiState.copy(
+                tokenBalanceBlockState = TokenDetailsPreviewData.balanceContent,
+                marketPriceBlockState = TokenDetailsPreviewData.marketPriceContent,
+            )
         }
     }
 
