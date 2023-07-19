@@ -10,6 +10,8 @@ sealed class TokenListSortingError {
 
     object UnableToSortTokenList : TokenListSortingError()
 
+    data class DataError(val cause: Throwable) : TokenListSortingError()
+
     internal companion object {
 
         fun fromTokeListSortingOperations(error: TokenListSortingOperations.Error): TokenListSortingError {
