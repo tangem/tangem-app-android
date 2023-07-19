@@ -76,7 +76,7 @@ private fun FiatBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.DEFAULT_EMPTY_BALANCE_STRING,
+            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -100,7 +100,7 @@ private fun CryptoBalance(state: TokenDetailsBalanceBlockState, modifier: Modifi
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.DEFAULT_EMPTY_BALANCE_STRING,
+            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.caption,
             color = TangemTheme.colors.text.primary1,
         )
