@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -30,6 +31,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         ) {
             TokenInfoBlock(state = state.tokenInfoBlockState)
             TokenDetailsBalanceBlock(state = state.tokenBalanceBlockState)
+            MarketPriceBlock(state = state.marketPriceBlockState)
         }
     }
 }
