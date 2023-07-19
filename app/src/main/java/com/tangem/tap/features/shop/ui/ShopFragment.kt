@@ -17,19 +17,26 @@ import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.shop.domain.models.ProductState
+import com.tangem.tap.features.shop.domain.models.ProductType
+import com.tangem.tap.features.shop.domain.models.SalesProduct
 import com.tangem.tap.features.shop.presentation.ShopViewModel
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.shop.redux.ShopState
+import com.tangem.tap.features.shop.toggles.ShopifyFeatureToggleManager
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentShopBinding
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<ShopState> {
+
+    @Inject
+    lateinit var shopifyFeatureToggleManager: ShopifyFeatureToggleManager
 
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
     private var cardTranslationY = 70f
@@ -50,7 +57,11 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel.checkOrderingDelayBlockVisibility()
+        if (shopifyFeatureToggleManager.isDynamicSalesProductsEnabled) {
+            viewModel.getActualSalesInfo()
+        } else {
+            viewModel.checkOrderingDelayBlockVisibility()
+        }
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
@@ -142,7 +153,11 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
         animateProductSelection(state.selectedProduct)
         handlePriceState(state)
         handlePromoCodeState(state)
-        handleOrderingDelayBlock(isVisible = state.isOrderingDelayBlockVisible)
+        if (shopifyFeatureToggleManager.isDynamicSalesProductsEnabled) {
+            handleNotificationBlock(state)
+        } else {
+            handleOrderingDelayBlock(isVisible = state.isOrderingDelayBlockVisible)
+        }
         handleButtonsState(state)
     }
 
@@ -187,6 +202,17 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
         if (isVisible) binding.tvSoldOutDesc.show() else binding.tvSoldOutDesc.hide()
     }
 
+    private fun handleNotificationBlock(state: ShopState) {
+        if (isVisible) {
+            binding.tvSoldOutDesc.show()
+            getSelectedSalesProduct(state)?.notification?.let { notification ->
+                binding.tvSoldOutDesc.text = notification.description
+            }
+        } else {
+            binding.tvSoldOutDesc.hide()
+        }
+    }
+
     private fun handleButtonsState(state: ShopState) = with(binding) {
         btnPayGooglePay.root.show(state.isGooglePayAvailable)
         btnAlternativePayment.show(state.isGooglePayAvailable)
@@ -194,13 +220,32 @@ internal class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSu
 
         if (state.total != null) {
             btnAlternativePayment.setOnClickListener { store.dispatch(ShopAction.StartWebCheckout) }
-            btnMainAction.setOnClickListener { store.dispatch(ShopAction.StartWebCheckout) }
             btnPayGooglePay.root.setOnClickListener { store.dispatch(ShopAction.BuyWithGooglePay) }
+            btnMainAction.setOnClickListener { store.dispatch(ShopAction.StartWebCheckout) }
+            if (state.salesProducts.isNotEmpty()) {
+                getSelectedSalesProduct(state)?.let { selectedProduct ->
+                    btnMainAction.text = getMainBtnTextByProductState(
+                        productState = selectedProduct.state,
+                    )
+                }
+            }
         }
     }
 
     override fun handleOnBackPressed() {
         store.dispatch(ShopAction.ResetState)
         super.handleOnBackPressed()
+    }
+
+    private fun getSelectedSalesProduct(state: ShopState): SalesProduct? {
+        return state.salesProducts.find {
+            it.productType == state.selectedProduct
+        }
+    }
+
+    private fun getMainBtnTextByProductState(productState: ProductState): String = when (productState) {
+        ProductState.ORDER -> getString(R.string.shop_buy_now)
+        ProductState.SOLD_OUT -> "Sold out" // getString(R.string.sold_out) // todo finalize in next PR
+        ProductState.PRE_ORDER -> "Pre order" // getString(R.string.pre_order) // todo finalize in next PR
     }
 }
