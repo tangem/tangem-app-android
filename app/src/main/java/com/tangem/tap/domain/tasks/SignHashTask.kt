@@ -19,7 +19,7 @@ class SignHashTask(
     private val publicKey: Wallet.PublicKey,
 ) : CardSessionRunnable<TangemSignHashResponse> {
     override fun run(session: CardSession, callback: CompletionCallback<TangemSignHashResponse>) {
-        SignHashCommand(hash, publicKey.seedKey, publicKey.derivationPath).run(session) { response ->
+        SignHashCommand(hash, publicKey.seedKey, publicKey.derivation?.derivationPath).run(session) { response ->
 
             when (response) {
                 is CompletionResult.Success -> {

@@ -1,8 +1,8 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.extensions.guard
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -260,8 +260,8 @@ class WalletConnectMiddleware {
                 }
                 val updatedWallet = action.session.wallet.copy(
                     walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                    derivedPublicKey = walletManager.wallet.publicKey.derivedKey,
-                    derivationPath = walletManager.wallet.publicKey.derivationPath,
+                    derivedPublicKey = walletManager.wallet.publicKey.derivation?.derivedKey,
+                    derivationPath = walletManager.wallet.publicKey.derivation?.derivationPath,
                     blockchain = action.blockchain,
                 )
                 val updatedSession = action.session.copy(wallet = updatedWallet)
@@ -281,7 +281,7 @@ class WalletConnectMiddleware {
                             Account(
                                 chainId,
                                 wallet.address,
-                                wallet.publicKey.derivationPath?.rawPath,
+                                wallet.publicKey.derivation?.derivationPath?.rawPath,
                             )
                         }
                     }
@@ -389,7 +389,7 @@ class WalletConnectMiddleware {
         val walletForSession = WalletForSession(
             walletPublicKey = wallet.publicKey.seedKey,
             derivedPublicKey = derivedKey,
-            derivationPath = wallet.publicKey.derivationPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath,
             derivationStyle = scanResponse.card.derivationStyle,
             blockchain = wallet.blockchain,
         )

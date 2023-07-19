@@ -2,6 +2,7 @@ package com.tangem.tap.domain.model.builders
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -83,7 +84,7 @@ private class WalletMangerWalletStoreBuilderImpl(
         return WalletStoreModel(
             userWalletId = userWallet.walletId,
             blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivationPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath,
             walletsData = listOf(blockchainWalletData) + listOfNotNull(tokenWalletsData),
             walletRent = null,
             walletManager = walletManager,
@@ -140,7 +141,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
     return WalletDataModel(
         currency = Currency.Blockchain(
             blockchain = this,
-            derivationPath = wallet.publicKey.derivationPath?.rawPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
         walletAddresses = wallet.getWalletAddresses(),
@@ -157,7 +158,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager, primaryToken: 
         currency = Currency.Token(
             token = this,
             blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivationPath?.rawPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
         walletAddresses = wallet.getWalletAddresses(),
