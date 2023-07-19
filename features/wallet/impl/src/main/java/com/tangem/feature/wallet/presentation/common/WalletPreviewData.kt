@@ -200,6 +200,15 @@ internal object WalletPreviewData {
         ),
     )
 
+    val bottomSheet = WalletBottomSheetConfig(
+        isShow = false,
+        onDismissRequest = {},
+        content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            onUnlockClick = {},
+            onScanClick = {},
+        ),
+    )
+
     private val manageButtons = persistentListOf(
         WalletManageButton.Buy(onClick = {}),
         WalletManageButton.Send(onClick = {}),
@@ -268,9 +277,10 @@ internal object WalletPreviewData {
         notifications = persistentListOf(
             WalletNotification.UnreachableNetworks,
             WalletNotification.LikeTangemApp(onClick = {}),
-            WalletNotification.NeedToBackup(onClick = {}),
+            WalletNotification.BackupCard(onClick = {}),
             WalletNotification.ScanCard(onClick = {}),
         ),
+        bottomSheet = bottomSheet,
         onOrganizeTokensClick = {},
     )
 
@@ -303,6 +313,7 @@ internal object WalletPreviewData {
         ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
         buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
+        bottomSheet = bottomSheet,
         marketPriceBlockState = MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900.12$",
