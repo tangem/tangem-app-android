@@ -23,6 +23,7 @@ internal sealed class WalletStateHolder(
     open val pullToRefreshConfig: WalletPullToRefreshConfig,
     open val contentItems: ImmutableList<WalletContentItemState>,
     open val notifications: ImmutableList<WalletNotification>,
+    open val bottomSheet: WalletBottomSheetConfig? = null,
 ) {
 
     /**
@@ -43,6 +44,7 @@ internal sealed class WalletStateHolder(
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val contentItems: ImmutableList<WalletContentItemState.MultiCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
+        override val bottomSheet: WalletBottomSheetConfig,
         val onOrganizeTokensClick: () -> Unit,
     ) : WalletStateHolder(
         onBackClick = onBackClick,
@@ -50,6 +52,7 @@ internal sealed class WalletStateHolder(
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
         contentItems = contentItems,
+        bottomSheet = bottomSheet,
         notifications = notifications,
     )
 
@@ -72,6 +75,7 @@ internal sealed class WalletStateHolder(
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val contentItems: ImmutableList<WalletContentItemState.SingleCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
+        override val bottomSheet: WalletBottomSheetConfig,
         val buttons: ImmutableList<ActionButtonConfig>,
         val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletStateHolder(
@@ -81,5 +85,6 @@ internal sealed class WalletStateHolder(
         pullToRefreshConfig = pullToRefreshConfig,
         contentItems = contentItems,
         notifications = notifications,
+        bottomSheet = bottomSheet,
     )
 }
