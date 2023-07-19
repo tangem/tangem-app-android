@@ -22,6 +22,7 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -373,7 +374,7 @@ class SeedPhraseViewModel @Inject constructor(
             )
             updateUi {
                 val mediateState = uiBuilder.importSeedPhrase.insertSuggestionWord(uiState, insertResult)
-                uiBuilder.importSeedPhrase.updateSuggestions(mediateState, emptyList())
+                uiBuilder.importSeedPhrase.updateSuggestions(mediateState, persistentListOf())
             }
         }
     }

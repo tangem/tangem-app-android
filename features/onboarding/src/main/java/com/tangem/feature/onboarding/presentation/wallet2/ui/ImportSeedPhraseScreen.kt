@@ -1,6 +1,7 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.OutlinedTextField
@@ -11,10 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.Notifier
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.TangemTextFieldsDefault
+import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
@@ -23,6 +29,8 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.InvalidWordsColorTransformation
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseErrorConverter
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
 * [REDACTED_AUTHOR]
@@ -48,7 +56,9 @@ fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Mo
                     state = state,
                 )
                 SuggestionsBlock(
-                    state = state,
+                    modifier = Modifier.padding(top = TangemTheme.dimens.size4),
+                    suggestionsList = state.suggestionsList,
+                    onClick = { index -> state.onSuggestedPhraseClick(index) },
                 )
             }
         }
@@ -114,25 +124,86 @@ private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modif
 
 @Suppress("ReusedModifierInstance")
 @Composable
-private fun SuggestionsBlock(state: ImportSeedPhraseState, modifier: Modifier = Modifier) {
+private fun SuggestionsBlock(
+    suggestionsList: ImmutableList<String>,
+    onClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
         enter = fadeIn() + slideIn(initialOffset = { IntOffset(x = 200, y = 0) }),
         exit = slideOut(targetOffset = { IntOffset(x = -200, y = 0) }) + fadeOut(),
-        visible = state.suggestionsList.isNotEmpty(),
+        visible = suggestionsList.isNotEmpty(),
     ) {
         LazyRow(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
             contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
         ) {
-            items(state.suggestionsList.size) { index ->
-                PrimaryButton(
-                    modifier = Modifier
-                        .height(TangemTheme.dimens.size46)
-                        .padding(all = TangemTheme.dimens.size4),
-                    text = state.suggestionsList[index],
-                    onClick = { state.onSuggestedPhraseClick(index) },
+            items(suggestionsList.size) { index ->
+                SuggestionButton(
+                    modifier = Modifier.rowPadding(
+                        index = index,
+                        rowSize = suggestionsList.size,
+                        outSide = TangemTheme.dimens.size0,
+                        inSide = TangemTheme.dimens.size4,
+                    ),
+                    text = suggestionsList[index],
+                    onClick = { onClick(index) },
                 )
             }
         }
     }
 }
+
+@Composable
+private fun SuggestionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.clickable(onClick = onClick)) {
+        Notifier(
+            text = text,
+            backgroundColor = TangemTheme.colors.background.action,
+            textColor = TangemTheme.colors.text.primary2,
+        )
+    }
+}
+
+private fun Modifier.rowPadding(index: Int, rowSize: Int, outSide: Dp, inSide: Dp): Modifier = when (index) {
+    0 -> this.padding(start = outSide, end = inSide)
+    rowSize - 1 -> this.padding(start = inSide, end = outSide)
+    else -> this.padding(horizontal = inSide)
+}
+
+@Preview
+@Composable
+private fun SuggestionsBlockPreview_Light(
+    @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
+) {
+    TangemTheme(isDark = false) {
+        SuggestionsBlock(
+            suggestionsList = suggestions,
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SuggestionsBlockPreview_Dark(
+    @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
+) {
+    TangemTheme(isDark = true) {
+        SuggestionsBlock(
+            suggestionsList = suggestions,
+            onClick = {},
+        )
+    }
+}
+
+private class SuggestionsPreviewParamsProvider : CollectionPreviewParameterProvider<ImmutableList<String>>(
+    collection = listOf(
+        persistentListOf(
+            "one",
+            "each",
+            "explorer",
+            "unknown",
+        ),
+    ),
+)
