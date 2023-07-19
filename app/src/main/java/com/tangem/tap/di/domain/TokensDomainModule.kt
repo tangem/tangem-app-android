@@ -1,6 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
@@ -22,5 +22,13 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ) = GetTokenListUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetTokenListUseCase {
+        return GetTokenListUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
+        return ToggleTokenListSortingUseCase(dispatchers)
+    }
 }
