@@ -1,10 +1,12 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.squareup.moshi.JsonClass
+import com.tangem.blockchain.common.AddressServiceFactory
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.makeAddressOldStyle
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.StateDialog
@@ -39,7 +41,14 @@ data class WalletConnectSession(
 ) {
     fun getAddress(): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey ?: return null
-        return wallet.blockchain?.makeAddresses(key)?.first()?.value
+
+        return wallet.blockchain?.let {
+            val factory = AddressServiceFactory(it)
+            val service = factory.makeAddressService()
+
+            return service.makeAddressOldStyle(key).value
+        }
+
     }
 }
 
