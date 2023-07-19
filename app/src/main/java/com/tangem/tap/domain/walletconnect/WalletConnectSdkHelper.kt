@@ -192,7 +192,7 @@ class WalletConnectSdkHelper {
         val command = SignHashCommand(
             hash = dataToSign.hash,
             walletPublicKey = data.walletManager.wallet.publicKey.seedKey,
-            derivationPath = data.walletManager.wallet.publicKey.derivationPath,
+            derivationPath = data.walletManager.wallet.publicKey.derivation?.derivationPath,
         )
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
@@ -232,7 +232,7 @@ class WalletConnectSdkHelper {
         val command = SignHashCommand(
             hash = data,
             walletPublicKey = wallet.publicKey.seedKey,
-            derivationPath = wallet.publicKey.derivationPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath,
         )
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
@@ -326,7 +326,7 @@ class WalletConnectSdkHelper {
         val command = SignHashCommand(
             hash = hashToSign,
             walletPublicKey = wallet.publicKey.seedKey,
-            derivationPath = wallet.publicKey.derivationPath,
+            derivationPath = wallet.publicKey.derivation?.derivationPath,
         )
         return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
             is CompletionResult.Success -> {

@@ -2,7 +2,7 @@ package com.tangem.tap.features.tokens.impl.domain
 
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard

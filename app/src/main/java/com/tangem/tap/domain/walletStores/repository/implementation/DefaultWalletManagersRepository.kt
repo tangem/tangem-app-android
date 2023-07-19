@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
@@ -202,7 +203,7 @@ internal class DefaultWalletManagersRepository(
                 } else {
                     userWalletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain &&
-                            it.wallet.publicKey.derivationPath?.rawPath == derivationPath
+                            it.wallet.publicKey.derivation?.derivationPath?.rawPath == derivationPath
                     }
                 }
             }

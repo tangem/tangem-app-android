@@ -131,7 +131,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             val balanceIsLoading = noteState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivationPath?.rawPath,
+                    walletManager.wallet.publicKey.derivation?.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
