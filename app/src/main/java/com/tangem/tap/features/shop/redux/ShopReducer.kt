@@ -39,5 +39,11 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         is ShopAction.FinishSuccessfulOrder,
         is ShopAction.LoadProducts.Failure,
         -> state
+        is ShopAction.SalesProductsLoaded -> state.copy(
+            salesProducts = action.salesProducts,
+        )
+        is ShopAction.SalesProductsError -> state.copy(
+            salesProducts = emptyList(),
+        )
     }
 }
