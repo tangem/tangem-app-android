@@ -1,7 +1,7 @@
 package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError

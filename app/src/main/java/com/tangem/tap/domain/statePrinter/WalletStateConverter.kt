@@ -46,8 +46,8 @@ class WalletStateConverter : StringStateConverter<AppState> {
 
         val publicKeyMap = mapOf(
             "seedKey" to wallet.publicKey.seedKey,
-            "derivedKey" to wallet.publicKey.derivedKey,
-            "derivationPath" to wallet.publicKey.derivationPath?.rawPath,
+            "derivedKey" to wallet.publicKey.derivation?.derivedKey,
+            "derivationPath" to wallet.publicKey.derivation?.derivationPath?.rawPath,
             "blockchainKey" to wallet.publicKey.blockchainKey,
         )
 

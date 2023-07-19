@@ -4,7 +4,10 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.solana.SolanaAddressService
 import com.tangem.blockchain.blockchains.tron.TronAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressService
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.address.PlainAddress
 import com.tangem.common.Validator
 import com.tangem.common.card.EllipticCurve
 import com.tangem.domain.AddCustomTokenError
@@ -31,8 +34,9 @@ class TokenContractAddressValidator : CustomTokenValidator<String> {
 
     private var blockchain: Blockchain = Blockchain.Unknown
 
-    private val successAddressValidator = object : AddressService() {
-        override fun makeAddress(walletPublicKey: ByteArray, curve: EllipticCurve?): String {
+    private val successAddressValidator = object : AddressService {
+
+        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType): PlainAddress {
             throw UnsupportedOperationException()
         }
 

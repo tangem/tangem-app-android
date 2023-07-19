@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.crypto.hdWallet.DerivationPath

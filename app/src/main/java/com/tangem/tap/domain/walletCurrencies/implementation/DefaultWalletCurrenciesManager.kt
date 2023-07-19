@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.walletCurrencies.implementation
 
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.*
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.derivationStyle

@@ -1,7 +1,10 @@
 package com.tangem.tap.features.customtoken.impl.presentation.validators
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressService
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.address.PlainAddress
 import com.tangem.common.card.EllipticCurve
 import com.tangem.domain.AddCustomTokenError
 
@@ -32,11 +35,13 @@ object ContactAddressValidator {
         }
     }
 
-    private object SuccessAddressValidator : AddressService() {
-        override fun makeAddress(walletPublicKey: ByteArray, curve: EllipticCurve?): String {
+    private object SuccessAddressValidator : AddressService {
+
+        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType): PlainAddress {
             throw UnsupportedOperationException()
         }
 
         override fun validate(address: String): Boolean = true
+
     }
 }
