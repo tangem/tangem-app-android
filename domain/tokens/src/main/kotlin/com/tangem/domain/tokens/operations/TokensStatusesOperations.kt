@@ -64,7 +64,7 @@ internal class TokensStatusesOperations<E>(
         tokens: Set<Token>,
         quotes: Set<Quote>,
         networkStatuses: Set<NetworkStatus>,
-    ): Set<TokenStatus> = withContext(dispatchers.single) {
+    ): Set<TokenStatus> = withContext(dispatchers.default) {
         tokens.mapTo(hashSetOf()) { token ->
             val quote = quotes.firstOrNull { it.tokenId == token.id }
             val networkStatus = networkStatuses.firstOrNull { it.networkId == token.networkId }
@@ -106,7 +106,7 @@ internal class TokensStatusesOperations<E>(
     }
 
     private suspend fun groupTokens(tokens: NonEmptySet<Token>): Map<Network.ID, NonEmptySet<Token.ID>> =
-        withContext(dispatchers.single) {
+        withContext(dispatchers.default) {
             tokens
                 .groupBy { it.networkId }
                 .mapValues { (_, tokens) ->
