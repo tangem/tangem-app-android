@@ -3,6 +3,8 @@ package com.tangem.tap.features.shop.di
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.tap.features.shop.data.DefaultShopRepository
 import com.tangem.tap.features.shop.domain.DefaultShopifyOrderingAvailabilityUseCase
+import com.tangem.tap.features.shop.domain.GetShopifySalesProductsUseCase
+import com.tangem.tap.features.shop.domain.ShopRepository
 import com.tangem.tap.features.shop.domain.ShopifyOrderingAvailabilityUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -17,12 +19,26 @@ internal object ShopUseCaseModule {
 
     @Provides
     @ViewModelScoped
-    fun provideShopifyOrderingAvailabilityUseCase(
+    fun provideShopifyOrderingAvailabilityUseCase(shopRepository: ShopRepository): ShopifyOrderingAvailabilityUseCase {
+        return DefaultShopifyOrderingAvailabilityUseCase(
+            shopRepository = shopRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetShopifySalesProductsUseCase(shopRepository: ShopRepository): GetShopifySalesProductsUseCase {
+        return GetShopifySalesProductsUseCase(
+            shopRepository = shopRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideDefaultShopRepository(
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
-    ): ShopifyOrderingAvailabilityUseCase {
-        return DefaultShopifyOrderingAvailabilityUseCase(
-            shopRepository = DefaultShopRepository(tangemTechApi, dispatchers),
-        )
+    ): ShopRepository {
+        return DefaultShopRepository(tangemTechApi = tangemTechApi, dispatchers = dispatchers)
     }
 }
