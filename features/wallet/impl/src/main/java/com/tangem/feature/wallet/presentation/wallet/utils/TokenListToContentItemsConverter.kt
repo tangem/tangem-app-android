@@ -44,7 +44,7 @@ internal class TokenListToContentItemsConverter(
     }
 
     private fun MutableList<MultiCurrencyItem>.addGroup(group: NetworkGroup): List<MultiCurrencyItem> {
-        this.add(MultiCurrencyItem.NetworkGroupTitle(group.name))
+        this.add(MultiCurrencyItem.NetworkGroupTitle(group.network.name))
 
         group.tokens.forEach { token ->
             this.addToken(token)
