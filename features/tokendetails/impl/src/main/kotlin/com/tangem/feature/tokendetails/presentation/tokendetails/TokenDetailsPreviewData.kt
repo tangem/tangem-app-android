@@ -1,9 +1,13 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails
 
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal object TokenDetailsPreviewData {
 
@@ -34,8 +38,42 @@ internal object TokenDetailsPreviewData {
         ),
     )
 
+    private val actionButtons = persistentListOf(
+        ActionButtonConfig(
+            text = "Buy",
+            iconResId = R.drawable.ic_plus_24,
+            onClick = {},
+        ),
+        ActionButtonConfig(
+            text = "Send",
+            iconResId = R.drawable.ic_arrow_up_24,
+            onClick = {},
+        ),
+        ActionButtonConfig(
+            text = "Receive",
+            iconResId = R.drawable.ic_arrow_down_24,
+            onClick = {},
+        ),
+        ActionButtonConfig(
+            text = "Exchange",
+            iconResId = R.drawable.ic_exchange_vertical_24,
+            onClick = {},
+        ),
+    )
+
+    private val disabledActionButtons = actionButtons.map { it.copy(enabled = false) }.toPersistentList()
+
+    val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = disabledActionButtons)
+    val balanceContent = TokenDetailsBalanceBlockState.Content(
+        actionButtons = actionButtons,
+        fiatBalance = "123,00$",
+        cryptoBalance = "866,96 USDT",
+    )
+    val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = disabledActionButtons)
+
     val tokenDetailsState = TokenDetailsState(
         topAppBarConfig = tokenDetailsTopAppBarConfig,
         tokenInfoBlockState = tokenInfoBlockState,
+        tokenBalanceBlockState = balanceLoading,
     )
 }
