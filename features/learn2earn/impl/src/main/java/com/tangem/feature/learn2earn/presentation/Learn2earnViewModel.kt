@@ -44,7 +44,9 @@ class Learn2earnViewModel @Inject constructor(
         private set
 
     init {
-        uiState = uiState.updateViewsVisibility(isVisible = interactor.isPromotionActive())
+        uiState = uiState
+            .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
+            .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
     }
 
     fun onMainScreenCreated() {
@@ -56,8 +58,8 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun updateMainScreenViews() {
-        if (!interactor.isPromotionActive()) {
-            uiState = uiState.updateViewsVisibility(isVisible = false)
+        if (!interactor.isPromotionActiveOnMain()) {
+            uiState = uiState.updateGetBonusVisibility(isVisible = false)
             return
         }
 
@@ -65,7 +67,12 @@ class Learn2earnViewModel @Inject constructor(
             val error = interactor.validateUserWallet()
             when {
                 error == null -> {
-                    updateUi { uiState.updateViewsVisibility(isVisible = true) }
+                    updateUi {
+                        uiState
+                            .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
+                            .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
+                            .changeGetBounsDescription(getBonusDescription())
+                    }
                 }
                 // additional check after the error has been handled by interactor
                 !interactor.isPromotionActive() -> {
