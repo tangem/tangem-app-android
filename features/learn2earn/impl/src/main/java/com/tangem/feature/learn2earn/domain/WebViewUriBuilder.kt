@@ -46,13 +46,17 @@ internal class WebViewUriBuilder(
         } else {
             authority(BASE_URL)
         }
-        appendPath(getLocaleLanguage())
+        appendPath(getLocaleLanguage(localeLanguageProvider.invoke()))
         appendPath(PATH_PROMOTION)
     }
 
-    private fun getLocaleLanguage(): String {
-        val lang = localeLanguageProvider.invoke()
-        return if (lang == "ru" || lang == "by") "ru" else "en"
+    // TODO: locale: This can be used by another feature. Move it to the appropriate location
+    private fun getLocaleLanguage(language: String): String {
+        return if (LOCALE_LANG_RU.equals(language, true) || LOCALE_LANG_BY.equals(language, true)) {
+            LOCALE_LANG_RU
+        } else {
+            LOCALE_LANG_EN
+        }
     }
 
     private companion object {
@@ -65,5 +69,9 @@ internal class WebViewUriBuilder(
         const val QUERY_EXISTED_CARD = "existed-card"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
+
+        const val LOCALE_LANG_RU = "ru"
+        const val LOCALE_LANG_BY = "by"
+        const val LOCALE_LANG_EN = "en"
     }
 }
