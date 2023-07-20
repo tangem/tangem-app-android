@@ -3,6 +3,8 @@ package com.tangem.feature.learn2earn.domain
 import android.net.Uri
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
+import com.tangem.feature.learn2earn.analytics.AnalyticsParam
+import com.tangem.feature.learn2earn.analytics.Learn2earnEvents.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
@@ -22,8 +24,8 @@ internal class DefaultLearn2earnInteractor(
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
-    private val analyticsEventHandler: AnalyticsEventHandler,
-    dependencyProvider: Learn2earnDependencyProvider,
+    private val analytics: AnalyticsEventHandler,
+    private val dependencyProvider: Learn2earnDependencyProvider,
 ) : Learn2earnInteractor {
 
     override var webViewResultHandler: WebViewResultHandler? = null
@@ -171,11 +173,11 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun buildUriForNewUser(): Uri {
-        return webViewUriBuilder.buildUriForNewUser()
+        return webViewUriBuilder.buildUriForNewUser(repository.getUserData().isLearningStageFinished)
     }
 
     override fun buildUriForOldUser(): Uri {
-        return webViewUriBuilder.buildUriForOldUser()
+        return webViewUriBuilder.buildUriForOldUser(repository.getUserData().isLearningStageFinished)
     }
 
     override fun getBasicAuthHeaders(): ArrayList<String> {
@@ -185,11 +187,22 @@ internal class DefaultLearn2earnInteractor(
     override fun handleRedirect(uri: Uri): WebViewAction {
         val result = webViewUriParser.parse(uri)
         when (result) {
-            is WebViewResult.PromoCode -> {
+            is WebViewResult.NewUserLearningFinished -> {
+                analytics.send(PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.New()))
                 updateUserData {
                     it.copy(
                         promoCode = result.promoCode,
                         isRegisteredInPromotion = true,
+                        isLearningStageFinished = true,
+                    )
+                }
+            }
+            is WebViewResult.OldUserLearningFinished -> {
+                analytics.send(PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.Old()))
+                updateUserData {
+                    it.copy(
+                        promoCode = null,
+                        isLearningStageFinished = true,
                     )
                 }
             }
@@ -197,7 +210,7 @@ internal class DefaultLearn2earnInteractor(
                 updateUserData { it.copy(isRegisteredInPromotion = true) }
             }
             is WebViewResult.Learn2earnAnalyticsEvent -> {
-                analyticsEventHandler.send(result.event)
+                analytics.send(result.event)
             }
             WebViewResult.Empty -> Unit
         }
@@ -222,6 +235,8 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActiveOnMain(): Boolean {
+        if (dependencyProvider.getCardTypeResolver()?.isTangemWallet() != true) return false
+
         val isActiveStatus = promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
         return isPromotionActive() && isActiveStatus
     }
@@ -293,10 +308,12 @@ internal class DefaultLearn2earnInteractor(
 
     private fun WebViewResult.toWebViewAction(): WebViewAction {
         return when (this) {
-            WebViewResult.Empty -> WebViewAction.PROCEED
+            is WebViewResult.NewUserLearningFinished,
+            WebViewResult.OldUserLearningFinished,
+            is WebViewResult.Learn2earnAnalyticsEvent,
+            -> WebViewAction.NOTHING
             WebViewResult.ReadyForAward -> WebViewAction.FINISH_SESSION
-            is WebViewResult.Learn2earnAnalyticsEvent -> WebViewAction.NOTHING
-            is WebViewResult.PromoCode -> WebViewAction.NOTHING
+            WebViewResult.Empty -> WebViewAction.PROCEED
         }
     }
 }
