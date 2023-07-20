@@ -3,6 +3,7 @@ package com.tangem.feature.learn2earn.domain
 import android.net.Uri
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
+import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.learn2earn.analytics.AnalyticsParam
 import com.tangem.feature.learn2earn.analytics.Learn2earnEvents.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
@@ -19,12 +20,14 @@ import com.tangem.lib.crypto.models.Currency
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultLearn2earnInteractor(
     private val featureToggleManager: Learn2earnFeatureToggleManager,
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
     private val analytics: AnalyticsEventHandler,
+    private val demoModeDatasource: DemoModeDatasource,
     private val dependencyProvider: Learn2earnDependencyProvider,
 ) : Learn2earnInteractor {
 
@@ -221,6 +224,7 @@ internal class DefaultLearn2earnInteractor(
 
     override fun isPromotionActive(): Boolean {
         val isActive = when {
+            demoModeDatasource.isDemoModeActive -> false
             !featureToggleManager.isLearn2earnEnabled -> false
             repository.getUserData().isAlreadyReceivedAward -> false
             else -> !promotion.isError()
@@ -230,15 +234,21 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActiveOnStories(): Boolean {
-        val isActiveStatus = promotion.getPromotionInfo().newCard.status == PromotionInfoResponse.Status.ACTIVE
-        return isPromotionActive() && isActiveStatus
+        return if (isPromotionActive()) {
+            promotion.getPromotionInfo().newCard.status == PromotionInfoResponse.Status.ACTIVE
+        } else {
+            false
+        }
     }
 
     override fun isPromotionActiveOnMain(): Boolean {
-        if (dependencyProvider.getCardTypeResolver()?.isTangemWallet() != true) return false
+        val cardTypesResolver = dependencyProvider.getCardTypeResolver() ?: return false
 
-        val isActiveStatus = promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
-        return isPromotionActive() && isActiveStatus
+        return when {
+            !isPromotionActive() -> false
+            !cardTypesResolver.isTangemWallet() -> false
+            else -> promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
+        }
     }
 
     private suspend fun initPromotionInfo() {

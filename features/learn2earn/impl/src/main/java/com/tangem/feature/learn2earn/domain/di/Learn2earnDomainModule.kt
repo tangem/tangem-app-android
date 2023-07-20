@@ -3,6 +3,7 @@ package com.tangem.feature.learn2earn.domain.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.toggles.DefaultLearn2earnFeatureToggleManager
 import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
@@ -45,6 +46,7 @@ internal class Learn2earnDomainModule {
         userWalletManager: UserWalletManager,
         analyticsEventHandler: AnalyticsEventHandler,
         derivationManager: DerivationManager,
+        demoModeDatasource: DemoModeDatasource,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
             featureToggleManager = featureToggleManager,
@@ -52,6 +54,7 @@ internal class Learn2earnDomainModule {
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
             analytics = analyticsEventHandler,
+            demoModeDatasource = demoModeDatasource,
             dependencyProvider = dependencyProvider,
         )
     }
