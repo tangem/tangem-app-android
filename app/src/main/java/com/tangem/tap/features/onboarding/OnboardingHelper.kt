@@ -6,6 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ProductType
@@ -37,7 +38,10 @@ object OnboardingHelper {
                 }
             }
 
-            response.cardTypesResolver.isWallet2() -> {
+            // TODO for Shiba disabled check wallet 2, and only check canSkipBackup, enable when release wallet 2
+            //  ([REDACTED_TASK_KEY])
+            // response.cardTypesResolver.isWallet2() -> {
+            !response.card.canSkipBackup -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true
