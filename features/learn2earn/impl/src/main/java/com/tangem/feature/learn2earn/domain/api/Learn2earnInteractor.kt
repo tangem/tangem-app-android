@@ -16,6 +16,10 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     fun isPromotionActive(): Boolean
 
+    fun isPromotionActiveOnStories(): Boolean
+
+    fun isPromotionActiveOnMain(): Boolean
+
     suspend fun validateUserWallet(): PromotionError?
 
     fun isUserRegisteredInPromotion(): Boolean
