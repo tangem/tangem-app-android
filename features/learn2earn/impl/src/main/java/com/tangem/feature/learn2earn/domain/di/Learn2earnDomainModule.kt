@@ -51,7 +51,7 @@ internal class Learn2earnDomainModule {
             repository = repository,
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
-            analyticsEventHandler = analyticsEventHandler,
+            analytics = analyticsEventHandler,
             dependencyProvider = dependencyProvider,
         )
     }
