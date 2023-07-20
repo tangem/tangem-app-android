@@ -9,6 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -338,7 +339,9 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Failure -> {
                         val error = result.error
                         if (error is TangemSdkError.BackupFailedNotEmptyWallets &&
-                            onboardingWalletState.wallet2State != null
+                            // todo disabled this check in task with shiba ([REDACTED_TASK_KEY]) and added  canSkipBackup
+                            // && onboardingWalletState.wallet2State != null
+                            card?.canSkipBackup == false
                         ) {
                             store.dispatchOnMain(
                                 GlobalAction.ShowDialog(
