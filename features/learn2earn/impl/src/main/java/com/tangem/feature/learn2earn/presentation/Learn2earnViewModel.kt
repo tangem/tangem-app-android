@@ -6,12 +6,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.learn2earn.analytics.AnalyticsParam
 import com.tangem.feature.learn2earn.analytics.Learn2earnEvents
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.WebViewResult
 import com.tangem.feature.learn2earn.domain.api.WebViewResultHandler
 import com.tangem.feature.learn2earn.domain.models.PromotionError
+import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.state.*
 import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -191,7 +193,7 @@ class Learn2earnViewModel @Inject constructor(
                         .updateGetBonusVisibility(isVisible = false)
                 }
                 MainScreenState.Dialog.Error(
-                    error = error,
+                    textReference = TextReference.Str(error.description),
                     onOk = onHideDialog,
                     onDismissRequest = onHideDialog,
                 )
@@ -199,7 +201,7 @@ class Learn2earnViewModel @Inject constructor(
             is PromotionError.UnknownError, PromotionError.NetworkUnreachable -> {
                 val onHideDialog = { uiState = uiState.hideDialog() }
                 MainScreenState.Dialog.Error(
-                    error = error,
+                    textReference = TextReference.Res(R.string.common_server_unavailable),
                     onOk = onHideDialog,
                     onDismissRequest = onHideDialog,
                 )
