@@ -12,8 +12,8 @@ internal class WebViewUriBuilder(
     private val promoCodeProvider: () -> String?,
 ) {
 
-    fun buildUriForNewUser(): Uri {
-        val builder = makeWebViewUriBuilder()
+    fun buildUriForNewUser(learningIsFinished: Boolean): Uri {
+        val builder = makeWebViewUriBuilder(learningIsFinished)
             .appendQueryParameter("type", QUERY_NEW_CARD)
 
         promoCodeProvider.invoke()?.let {
@@ -23,9 +23,9 @@ internal class WebViewUriBuilder(
         return builder.build()
     }
 
-    fun buildUriForOldUser(): Uri {
-        val builder = makeWebViewUriBuilder()
-            .appendQueryParameter("type", QUERY_EXISTED_CARD)
+    fun buildUriForOldUser(learningIsFinished: Boolean): Uri {
+        val builder = makeWebViewUriBuilder(learningIsFinished)
+            .appendQueryParameter("type", QUERY_EXISTING_CARD)
 
         return builder.build()
     }
@@ -39,7 +39,7 @@ internal class WebViewUriBuilder(
         }
     }
 
-    private fun makeWebViewUriBuilder(): Uri.Builder = Uri.Builder().apply {
+    private fun makeWebViewUriBuilder(learningIsFinished: Boolean): Uri.Builder = Uri.Builder().apply {
         scheme(SCHEME)
         if (BuildConfig.DEBUG) {
             authority(DEV_BASE_URL)
@@ -48,6 +48,7 @@ internal class WebViewUriBuilder(
         }
         appendPath(getLocaleLanguage(localeLanguageProvider.invoke()))
         appendPath(PATH_PROMOTION)
+        appendQueryParameter(QUERY_FINISHED, learningIsFinished.toString())
     }
 // [REDACTED_TODO_COMMENT]
     private fun getLocaleLanguage(language: String): String {
@@ -65,7 +66,8 @@ internal class WebViewUriBuilder(
         const val PATH_PROMOTION = "promotion"
 
         const val QUERY_NEW_CARD = "new-card"
-        const val QUERY_EXISTED_CARD = "existed-card"
+        const val QUERY_EXISTING_CARD = "existing-card"
+        const val QUERY_FINISHED = "finished"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
 
