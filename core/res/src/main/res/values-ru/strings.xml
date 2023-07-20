@@ -163,10 +163,10 @@
     <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
     <string name="main_get_bonus_subtitle">Вы успешно прошли все уроки и теперь можете получить 1INCH токены</string>
     <plurals name="main_learn_subtitle">
-        <item quantity="one">Пройдите 3 урока и получите %d 1INCH токен на свой кошелек</item>
-        <item quantity="few">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
-        <item quantity="many">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
-        <item quantity="other">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
+        <item quantity="one">Пройдите 3 урока и получите %d 1INCH токен на свой кошелек</item>
+        <item quantity="few">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
+        <item quantity="many">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
+        <item quantity="other">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
     </plurals>
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
