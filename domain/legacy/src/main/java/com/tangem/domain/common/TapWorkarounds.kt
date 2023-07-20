@@ -3,6 +3,7 @@ package com.tangem.domain.common
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.Card
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.models.scan.CardDTO
 import java.util.*
 
@@ -22,6 +23,10 @@ object TapWorkarounds {
 
     val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
+
+    // for cards 6.21 and higher backup is not skippable
+    val CardDTO.canSkipBackup: Boolean
+        get() = this.firmwareVersion < FirmwareVersion.KeysImportAvailable
 
     val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
