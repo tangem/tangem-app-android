@@ -137,6 +137,7 @@
     <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
     <string name="disclaimer_title">Terms of Service</string>
     <string name="error_update_app">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
+    <string name="error_wrong_card_type">This application is not designed to work with this card or needs to be updated</string>
     <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
     <string name="exchange_receive_view_header">You Receive</string>
     <string name="exchange_send_view_header">You Send</string>

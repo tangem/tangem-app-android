@@ -138,6 +138,7 @@
     <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
     <string name="disclaimer_title">Условия использования</string>
     <string name="error_update_app">К сожалению, текущая версия приложения не готова к работе с этой картой, проверьте наличие обновлений</string>
+    <string name="error_wrong_card_type">Данное приложение не предназначено для работы с этой картой или требует обновления</string>
     <string name="error_wrong_wallet_tapped">Вы использовали карту от другого кошелька. Приложите карту, связанную с этим кошельком.</string>
     <string name="exchange_receive_view_header">Вы получаете</string>
     <string name="exchange_send_view_header">Вы отправляете</string>
