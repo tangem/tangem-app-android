@@ -10,7 +10,7 @@ import com.tangem.domain.models.scan.CardDTO
  * Created by Anton Zhilenkov on 28/04/2022.
  */
 val FirmwareVersion.Companion.SolanaTokensAvailable
-    get() = FirmwareVersion(4, 52)
+    get() = FirmwareVersion(6, 21)
 
 fun CardDTO.supportedBlockchains(): List<Blockchain> {
     val supportedBlockchains = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {

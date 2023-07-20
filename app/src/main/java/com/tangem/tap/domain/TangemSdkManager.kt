@@ -256,7 +256,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 4, minor = 52),
+                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 21),
             ),
         )
     }
