@@ -207,18 +207,23 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActive(): Boolean {
-        val userData = repository.getUserData()
         val isActive = when {
             !featureToggleManager.isLearn2earnEnabled -> false
-            userData.isAlreadyReceivedAward -> false
-            promotion.isError() -> false
-            else -> {
-                val data = promotion.getPromotionInfo().getData(userData.promoCode)
-                data.status == PromotionInfoResponse.Status.ACTIVE
-            }
+            repository.getUserData().isAlreadyReceivedAward -> false
+            else -> !promotion.isError()
         }
 
         return isActive
+    }
+
+    override fun isPromotionActiveOnStories(): Boolean {
+        val isActiveStatus = promotion.getPromotionInfo().newCard.status == PromotionInfoResponse.Status.ACTIVE
+        return isPromotionActive() && isActiveStatus
+    }
+
+    override fun isPromotionActiveOnMain(): Boolean {
+        val isActiveStatus = promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
+        return isPromotionActive() && isActiveStatus
     }
 
     private suspend fun initPromotionInfo() {
