@@ -8,7 +8,7 @@ import com.tangem.feature.learn2earn.impl.BuildConfig
  */
 internal class WebViewUriBuilder(
     private val authCredentialsProvider: () -> String?,
-    private val userCountryCodeProvider: () -> String,
+    private val localeLanguageProvider: () -> String,
     private val promoCodeProvider: () -> String?,
 ) {
 
@@ -46,8 +46,16 @@ internal class WebViewUriBuilder(
         } else {
             authority(BASE_URL)
         }
-        appendPath(userCountryCodeProvider.invoke())
+        appendPath(getLocaleLanguage(localeLanguageProvider.invoke()))
         appendPath(PATH_PROMOTION)
+    }
+// [REDACTED_TODO_COMMENT]
+    private fun getLocaleLanguage(language: String): String {
+        return if (LOCALE_LANG_RU.equals(language, true) || LOCALE_LANG_BY.equals(language, true)) {
+            LOCALE_LANG_RU
+        } else {
+            LOCALE_LANG_EN
+        }
     }
 
     private companion object {
@@ -60,5 +68,9 @@ internal class WebViewUriBuilder(
         const val QUERY_EXISTED_CARD = "existed-card"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
+
+        const val LOCALE_LANG_RU = "ru"
+        const val LOCALE_LANG_BY = "by"
+        const val LOCALE_LANG_EN = "en"
     }
 }
