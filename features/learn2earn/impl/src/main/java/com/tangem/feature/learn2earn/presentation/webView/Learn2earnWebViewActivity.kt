@@ -36,6 +36,7 @@ class Learn2earnWebViewActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent(webViewData: WebViewData) {
         Column {
@@ -47,7 +48,7 @@ class Learn2earnWebViewActivity : AppCompatActivity() {
             WebView(
                 state = rememberWebViewState(
                     url = webViewData.uri.toString(),
-                    additionalHttpHeaders = webViewData.headers
+                    additionalHttpHeaders = webViewData.headers,
                 ),
                 onCreated = {
                     it.settings.apply {
