@@ -33,7 +33,7 @@ internal class DefaultLearn2earnInteractor(
     private val webViewUriBuilder: WebViewUriBuilder by lazy {
         WebViewUriBuilder(
             authCredentialsProvider = dependencyProvider.getWebViewAuthCredentialsProvider(),
-            userCountryCodeProvider = dependencyProvider.getLocaleProvider(),
+            localeLanguageProvider = dependencyProvider.getLocaleProvider(),
             promoCodeProvider = { repository.getUserData().promoCode },
         )
     }
