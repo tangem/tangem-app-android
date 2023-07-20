@@ -2,6 +2,8 @@ package com.tangem.tap.proxy.di
 
 import androidx.compose.ui.text.intl.Locale
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
@@ -56,6 +58,10 @@ class ProxyModule {
     @Singleton
     fun provideLear2earnDependencies(appStateHolder: AppStateHolder): Learn2earnDependencyProvider {
         return object : Learn2earnDependencyProvider {
+            override fun getCardTypeResolver(): CardTypesResolver? {
+                return appStateHolder.userWalletsListManager?.selectedUserWalletSync?.scanResponse?.cardTypesResolver
+            }
+
             override fun getLocaleProvider(): () -> String = { Locale.current.language }
 
             override fun getWebViewAuthCredentialsProvider(): () -> String? = {
