@@ -85,6 +85,7 @@ include(":domain:tokens")
 // endregion Domain modules
 
 // region Data modules
+include(":data:common")
 include(":data:card")
 include(":data:tokens")
 include(":data:source:preferences")
