@@ -165,7 +165,7 @@
     <plurals name="main_learn_subtitle">
         <item quantity="one">Пройдите 3 урока и получите %d 1INCH токен на свой кошелек</item>
         <item quantity="few">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
-        <item quantity="many">Пройдите 3 урока и получите %d 1INCH токена на свой кошелек</item>
+        <item quantity="many">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
         <item quantity="other">Пройдите 3 урока и получите %d 1INCH токенов на свой кошелек</item>
     </plurals>
     <string name="main_manage_tokens">Управление токенами</string>
