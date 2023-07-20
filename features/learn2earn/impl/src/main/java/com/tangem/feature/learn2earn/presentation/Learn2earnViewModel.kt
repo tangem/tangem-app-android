@@ -220,7 +220,7 @@ class Learn2earnViewModel @Inject constructor(
         interactor.webViewResultHandler = object : WebViewResultHandler {
             override fun handleResult(result: WebViewResult) {
                 when (result) {
-                    is WebViewResult.PromoCode -> {
+                    is WebViewResult.NewUserLearningFinished -> {
                         interactor.webViewResultHandler = null
                     }
                     WebViewResult.ReadyForAward -> {
@@ -228,7 +228,10 @@ class Learn2earnViewModel @Inject constructor(
                         updateMainScreenViews()
                         requestAward()
                     }
-                    WebViewResult.Empty, is WebViewResult.Learn2earnAnalyticsEvent -> Unit
+                    is WebViewResult.OldUserLearningFinished,
+                    is WebViewResult.Learn2earnAnalyticsEvent,
+                    WebViewResult.Empty,
+                    -> Unit
                 }
             }
         }
