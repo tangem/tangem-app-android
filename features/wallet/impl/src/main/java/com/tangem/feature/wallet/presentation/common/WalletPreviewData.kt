@@ -20,7 +20,7 @@ internal object WalletPreviewData {
     val walletTopBarConfig = WalletTopBarConfig(onScanCardClick = {}, onMoreClick = {})
 
     val walletCardContentState = WalletCardState.Content(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         balance = "8923,05 $",
         additionalInfo = "3 cards • Seed enabled",
@@ -29,7 +29,7 @@ internal object WalletPreviewData {
     )
 
     val walletCardLoadingState = WalletCardState.Loading(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
@@ -37,7 +37,7 @@ internal object WalletPreviewData {
     )
 
     val walletCardHiddenContentState = WalletCardState.HiddenContent(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
@@ -45,7 +45,7 @@ internal object WalletPreviewData {
     )
 
     val walletCardErrorState = WalletCardState.Error(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
