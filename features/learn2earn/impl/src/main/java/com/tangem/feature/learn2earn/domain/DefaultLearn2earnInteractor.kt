@@ -235,6 +235,8 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActiveOnMain(): Boolean {
+        if (dependencyProvider.getCardTypeResolver()?.isTangemWallet() != true) return false
+
         val isActiveStatus = promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
         return isPromotionActive() && isActiveStatus
     }
