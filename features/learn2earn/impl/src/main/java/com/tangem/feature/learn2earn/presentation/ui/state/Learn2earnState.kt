@@ -2,7 +2,6 @@ package com.tangem.feature.learn2earn.presentation.ui.state
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
-import com.tangem.feature.learn2earn.domain.models.PromotionError
 import com.tangem.feature.learn2earn.impl.R
 
 /**
@@ -62,7 +61,7 @@ data class MainScreenState(
         ) : Dialog()
 
         data class Error(
-            val error: PromotionError,
+            val textReference: TextReference,
             val onOk: () -> Unit,
             val onDismissRequest: () -> Unit,
         ) : Dialog()
