@@ -8,7 +8,7 @@ import com.tangem.feature.learn2earn.impl.BuildConfig
  */
 internal class WebViewUriBuilder(
     private val authCredentialsProvider: () -> String?,
-    private val userCountryCodeProvider: () -> String,
+    private val localeLanguageProvider: () -> String,
     private val promoCodeProvider: () -> String?,
 ) {
 
@@ -46,8 +46,13 @@ internal class WebViewUriBuilder(
         } else {
             authority(BASE_URL)
         }
-        appendPath(userCountryCodeProvider.invoke())
+        appendPath(getLocaleLanguage())
         appendPath(PATH_PROMOTION)
+    }
+
+    private fun getLocaleLanguage(): String {
+        val lang = localeLanguageProvider.invoke()
+        return if (lang == "ru" || lang == "by") "ru" else "en"
     }
 
     private companion object {
