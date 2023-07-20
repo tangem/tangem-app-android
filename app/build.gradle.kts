@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":data:source:preferences"))
     implementation(projects.data.card)
     implementation(projects.data.tokens)
+    implementation(projects.data.common)
 
     /** Features */
     implementation(project(":features:onboarding"))
