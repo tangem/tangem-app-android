@@ -5,6 +5,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.TextButton
+import com.tangem.feature.learn2earn.domain.models.PromotionError
 import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.state.MainScreenState
 
@@ -67,12 +68,18 @@ private fun PromoCodeNotRegisteredDialog(dialog: MainScreenState.Dialog.PromoCod
 
 @Composable
 private fun ErrorDialog(dialog: MainScreenState.Dialog.Error) {
+    val errorMessage = if (dialog.error is PromotionError.NetworkUnreachable) {
+        stringResource(id = R.string.common_server_unavailable)
+    } else {
+        dialog.error.description
+    }
+
     AlertDialog(
         title = {
             Text(text = stringResource(id = R.string.common_error))
         },
         text = {
-            Text(text = dialog.error.description)
+            Text(text = errorMessage)
         },
         confirmButton = {
             TextButton(
