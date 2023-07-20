@@ -161,8 +161,8 @@
     <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
     <string name="main_get_bonus_subtitle">You have completed all of the lessons, and are now eligible to receive your 1INCH tokens</string>
     <plurals name="main_learn_subtitle">
-        <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
-        <item quantity="other">Complete three lessons and receive %d 1INCH tokens to your wallet</item>
+        <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
+        <item quantity="other">Complete three lessons and receive %d 1INCH tokens to your wallet</item>
     </plurals>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
