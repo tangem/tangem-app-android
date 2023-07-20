@@ -121,6 +121,7 @@ internal class DefaultLearn2earnRepository(
         promoCode = null,
         isRegisteredInPromotion = false,
         isAlreadyReceivedAward = false,
+        isLearningStageFinished = false,
     )
 
     private companion object {
