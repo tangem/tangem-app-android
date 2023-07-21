@@ -18,6 +18,8 @@ import com.tangem.feature.learn2earn.presentation.ui.state.*
 import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -44,9 +46,20 @@ class Learn2earnViewModel @Inject constructor(
         private set
 
     init {
+        subscribeToWalletChanges()
         uiState = uiState
             .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
             .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
+    }
+
+    private fun subscribeToWalletChanges() {
+        viewModelScope.launch(dispatchers.io) {
+            interactor.getIsTangemWalletFlow()
+                .onEach { isTangemWallet ->
+                    updateUi { uiState.updateGetBonusVisibility(isVisible = isTangemWallet) }
+                }
+                .collect()
+        }
     }
 
     fun onMainScreenCreated() {

@@ -16,6 +16,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Singleton
 
 @Module
@@ -58,8 +60,15 @@ class ProxyModule {
     @Singleton
     fun provideLear2earnDependencies(appStateHolder: AppStateHolder): Learn2earnDependencyProvider {
         return object : Learn2earnDependencyProvider {
-            override fun getCardTypeResolver(): CardTypesResolver? {
-                return appStateHolder.userWalletsListManager?.selectedUserWalletSync?.scanResponse?.cardTypesResolver
+
+            @OptIn(ExperimentalCoroutinesApi::class)
+            override fun getCardTypeResolverFlow(): Flow<CardTypesResolver?> {
+                return appStateHolder.userWalletListManagerFlow
+                    .flatMapLatest { manager ->
+                        manager?.selectedUserWallet
+                            ?.map { it.scanResponse.cardTypesResolver }
+                            ?: flowOf(null)
+                    }
             }
 
             override fun getLocaleProvider(): () -> String = { Locale.current.language }
