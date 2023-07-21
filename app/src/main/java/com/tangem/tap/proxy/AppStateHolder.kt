@@ -24,8 +24,6 @@ import javax.inject.Inject
  */
 class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationStateHolder {
 
-    private val _userWalletsListManagerFlow = MutableStateFlow<UserWalletsListManager?>(null)
-
     override var userWalletsListManager: UserWalletsListManager? = null
         set(value) {
             field = value
@@ -34,6 +32,8 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationState
 
     override val userWalletListManagerFlow: Flow<UserWalletsListManager?>
         get() = _userWalletsListManagerFlow
+
+    private val _userWalletsListManagerFlow = MutableStateFlow<UserWalletsListManager?>(null)
 
     @Deprecated("Use scan response from selected user wallet")
     var scanResponse: ScanResponse? = null
