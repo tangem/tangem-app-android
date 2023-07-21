@@ -28,6 +28,15 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideToggleTokenListGroupingUseCase(
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ToggleTokenListGroupingUseCase {
+        return ToggleTokenListGroupingUseCase(networksRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
         return ToggleTokenListSortingUseCase(dispatchers)
     }
