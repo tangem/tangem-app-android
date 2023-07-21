@@ -56,7 +56,10 @@ class Learn2earnViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             interactor.getIsTangemWalletFlow()
                 .onEach { isTangemWallet ->
-                    updateUi { uiState.updateGetBonusVisibility(isVisible = isTangemWallet) }
+                    updateUi { uiState
+                        .updateGetBonusVisibility(isVisible = isTangemWallet)
+                        .changeGetBounsDescription(getBonusDescription())
+                    }
                 }
                 .collect()
         }
