@@ -36,7 +36,7 @@ class TokenContractAddressValidator : CustomTokenValidator<String> {
 
     private val successAddressValidator = object : AddressService {
 
-        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType): PlainAddress {
+        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType, curve: EllipticCurve): PlainAddress {
             throw UnsupportedOperationException()
         }
 

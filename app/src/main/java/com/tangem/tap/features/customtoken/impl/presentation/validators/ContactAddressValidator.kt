@@ -37,11 +37,14 @@ object ContactAddressValidator {
 
     private object SuccessAddressValidator : AddressService {
 
-        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType): PlainAddress {
+        override fun makeAddress(
+            publicKey: Wallet.PublicKey,
+            addressType: AddressType,
+            curve: EllipticCurve,
+        ): PlainAddress {
             throw UnsupportedOperationException()
         }
 
         override fun validate(address: String): Boolean = true
-
     }
 }

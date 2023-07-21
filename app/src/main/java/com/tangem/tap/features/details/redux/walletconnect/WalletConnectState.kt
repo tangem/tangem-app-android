@@ -48,7 +48,6 @@ data class WalletConnectSession(
 
             return service.makeAddressOldStyle(key).value
         }
-
     }
 }
 
