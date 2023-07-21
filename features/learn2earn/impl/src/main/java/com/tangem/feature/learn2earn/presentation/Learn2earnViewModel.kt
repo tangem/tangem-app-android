@@ -137,7 +137,7 @@ class Learn2earnViewModel @Inject constructor(
                         onSuccess = {
                             analytics.send(Learn2earnEvents.MainScreen.NoticeClaimSuccess())
                             val onHideDialog = {
-                                uiState = uiState.updateGetBonusVisibility(isVisible = false)
+                                uiState = uiState.updateViewsVisibility(isVisible = false)
                                     .hideDialog()
                             }
                             val successDialog = MainScreenState.Dialog.Claimed(
