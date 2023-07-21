@@ -13,6 +13,8 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.redux.WalletState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.rekotlin.Store
 import javax.inject.Inject
 
@@ -23,6 +25,15 @@ import javax.inject.Inject
 class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationStateHolder {
 
     override var userWalletsListManager: UserWalletsListManager? = null
+        set(value) {
+            field = value
+            _userWalletsListManagerFlow.value = value
+        }
+
+    override val userWalletListManagerFlow: Flow<UserWalletsListManager?>
+        get() = _userWalletsListManagerFlow
+
+    private val _userWalletsListManagerFlow = MutableStateFlow<UserWalletsListManager?>(null)
 
     @Deprecated("Use scan response from selected user wallet")
     var scanResponse: ScanResponse? = null

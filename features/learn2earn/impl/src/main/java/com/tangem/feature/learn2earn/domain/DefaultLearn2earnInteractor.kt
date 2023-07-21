@@ -16,6 +16,14 @@ import com.tangem.feature.learn2earn.domain.models.toDomainError
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
 * [REDACTED_AUTHOR]
@@ -29,11 +37,18 @@ internal class DefaultLearn2earnInteractor(
     private val analytics: AnalyticsEventHandler,
     private val demoModeDatasource: DemoModeDatasource,
     private val dependencyProvider: Learn2earnDependencyProvider,
+    dispatchers: AppCoroutineDispatcherProvider,
 ) : Learn2earnInteractor {
 
     override var webViewResultHandler: WebViewResultHandler? = null
 
     private lateinit var promotion: Promotion
+
+    private val scope = CoroutineScope(Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("mainScope"))
+
+    private val isTangemWalletFlow = MutableStateFlow(false)
+    private var isTangemWalletFlowJob: Job? = null
+    private var isTangemWalletFlowSync = false
 
     private val webViewUriBuilder: WebViewUriBuilder by lazy {
         WebViewUriBuilder(
@@ -50,6 +65,8 @@ internal class DefaultLearn2earnInteractor(
     override suspend fun init() {
         initPromotionInfo()
     }
+
+    override fun getIsTangemWalletFlow(): Flow<Boolean> = isTangemWalletFlow
 
     override fun isUserHadPromoCode(): Boolean {
         return repository.getUserData().promoCode != null
@@ -223,6 +240,8 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActive(): Boolean {
+        subscribeToCardTypeResolverFlow()
+
         val isActive = when {
             demoModeDatasource.isDemoModeActive -> false
             !featureToggleManager.isLearn2earnEnabled -> false
@@ -242,11 +261,9 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActiveOnMain(): Boolean {
-        val cardTypesResolver = dependencyProvider.getCardTypeResolver() ?: return false
-
         return when {
             !isPromotionActive() -> false
-            !cardTypesResolver.isTangemWallet() -> false
+            !isTangemWalletFlowSync -> false
             else -> promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
         }
     }
@@ -305,6 +322,17 @@ internal class DefaultLearn2earnInteractor(
     private fun updateUserData(updateBlock: (PromoUserData) -> PromoUserData): PromoUserData {
         return updateBlock(repository.getUserData()).apply {
             repository.updateUserData(this)
+        }
+    }
+
+    private fun subscribeToCardTypeResolverFlow() {
+        if (isTangemWalletFlowJob == null || isTangemWalletFlowJob?.isCancelled == true) {
+            isTangemWalletFlowJob = dependencyProvider.getCardTypeResolverFlow()
+                .onEach {
+                    isTangemWalletFlowSync = it?.isTangemWallet() ?: false
+                    isTangemWalletFlow.emit(isTangemWalletFlowSync)
+                }
+                .launchIn(scope)
         }
     }
 
