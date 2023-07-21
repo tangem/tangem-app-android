@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -90,11 +91,12 @@ internal class DefaultLearn2earnInteractor(
         return repository.getUserData().isRegisteredInPromotion
     }
 
-    override fun getAwardAmount(): Int {
+    override fun getAwardAmount(): Int = try {
         val promoCode = repository.getUserData().promoCode
-        val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
-
-        return awardAmount
+        promotion.getPromotionInfo().getData(promoCode).award.toInt()
+    } catch (ex: NullPointerException) {
+        Timber.e(ex)
+        0
     }
 
     override fun getAwardNetworkName(): String {
