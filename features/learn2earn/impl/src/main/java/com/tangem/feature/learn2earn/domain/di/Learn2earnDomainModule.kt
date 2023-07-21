@@ -14,6 +14,7 @@ import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import com.tangem.feature.learn2earn.presentation.Learn2earnRouter
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,6 +48,7 @@ internal class Learn2earnDomainModule {
         analyticsEventHandler: AnalyticsEventHandler,
         derivationManager: DerivationManager,
         demoModeDatasource: DemoModeDatasource,
+        dispatchers: AppCoroutineDispatcherProvider,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
             featureToggleManager = featureToggleManager,
@@ -56,6 +58,7 @@ internal class Learn2earnDomainModule {
             analytics = analyticsEventHandler,
             demoModeDatasource = demoModeDatasource,
             dependencyProvider = dependencyProvider,
+            dispatchers = dispatchers,
         )
     }
 
