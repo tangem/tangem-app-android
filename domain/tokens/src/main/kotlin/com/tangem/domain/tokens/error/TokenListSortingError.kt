@@ -7,4 +7,6 @@ sealed class TokenListSortingError {
     object TokenListIsEmpty : TokenListSortingError()
 
     object UnableToSortTokenList : TokenListSortingError()
+
+    data class DataError(val cause: Throwable) : TokenListSortingError()
 }
