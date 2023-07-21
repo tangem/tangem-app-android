@@ -2,7 +2,7 @@ package com.tangem.feature.learn2earn.presentation.webView
 
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import com.google.accompanist.web.AccompanistWebViewClient
+import android.webkit.WebViewClient
 import com.tangem.feature.learn2earn.domain.api.WebViewAction
 import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import timber.log.Timber
@@ -11,7 +11,7 @@ internal class Learn2earnWebViewClient(
     private val redirectHandler: WebViewRedirectHandler,
     private val headers: Map<String, String>,
     private val finishSessionHandler: () -> Unit,
-) : AccompanistWebViewClient() {
+) : WebViewClient() {
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         Timber.d("url: ${request.url}")
