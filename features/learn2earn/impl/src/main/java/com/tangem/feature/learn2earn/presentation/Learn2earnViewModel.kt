@@ -55,19 +55,13 @@ class Learn2earnViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             interactor.getIsTangemWalletFlow()
                 .collect { isTangemWallet ->
-                    updateUi {
-                        uiState
-                            .updateGetBonusVisibility(
-                                isVisible = isTangemWallet && interactor.isPromotionActiveOnMain(),
-                            )
-                            .changeGetBonusDescription(getBonusDescription())
+                    if (isTangemWallet) {
+                        updateMainScreenViews()
+                    } else {
+                        updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
                     }
                 }
         }
-    }
-
-    fun onMainScreenCreated() {
-        updateMainScreenViews()
     }
 
     fun onMainScreenRefreshed() {
@@ -103,7 +97,7 @@ class Learn2earnViewModel @Inject constructor(
                     )
                 }
                 .onFailure {
-                    Timber.e(it)
+                    Timber.w(it)
                     updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
                 }
         }
