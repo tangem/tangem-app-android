@@ -73,7 +73,7 @@ internal class DefaultLearn2earnInteractor(
         return repository.getUserData().promoCode != null
     }
 
-    override suspend fun validateUserWallet(): PromotionError? {
+    override suspend fun validateUserWallet(): Result<Unit> {
         val promoCode = repository.getUserData().promoCode
         val userWalletId = userWalletManager.getWalletId()
 
@@ -83,8 +83,12 @@ internal class DefaultLearn2earnInteractor(
             repository.validateCode(userWalletId, promoCode).error
         }?.toDomainError()
 
-        return domainError
-            ?.also { handlePromotionError(it) }
+        return if (domainError == null) {
+            Result.success(Unit)
+        } else {
+            handlePromotionError(domainError)
+            Result.failure(domainError)
+        }
     }
 
     override fun isUserRegisteredInPromotion(): Boolean {
