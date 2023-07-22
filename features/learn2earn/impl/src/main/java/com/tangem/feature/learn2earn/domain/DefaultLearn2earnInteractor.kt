@@ -29,7 +29,7 @@ import timber.log.Timber
 /**
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultLearn2earnInteractor(
     private val featureToggleManager: Learn2earnFeatureToggleManager,
     private val repository: Learn2earnRepository,
@@ -43,19 +43,22 @@ internal class DefaultLearn2earnInteractor(
 
     override var webViewResultHandler: WebViewResultHandler? = null
 
+    private val promoUserData: PromoUserData
+        get() = repository.getUserData()
+
     private lateinit var promotion: Promotion
 
     private val scope = CoroutineScope(Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("mainScope"))
 
     private val isTangemWalletFlow = MutableStateFlow(false)
     private var isTangemWalletFlowJob: Job? = null
-    private var isTangemWalletFlowSync = false
+    private var isTangemWalletSync = false
 
     private val webViewUriBuilder: WebViewUriBuilder by lazy {
         WebViewUriBuilder(
             authCredentialsProvider = dependencyProvider.getWebViewAuthCredentialsProvider(),
             localeLanguageProvider = dependencyProvider.getLocaleProvider(),
-            promoCodeProvider = { repository.getUserData().promoCode },
+            promoCodeProvider = { promoUserData.promoCode },
         )
     }
 
@@ -70,12 +73,13 @@ internal class DefaultLearn2earnInteractor(
     override fun getIsTangemWalletFlow(): Flow<Boolean> = isTangemWalletFlow
 
     override fun isUserHadPromoCode(): Boolean {
-        return repository.getUserData().promoCode != null
+        return promoUserData.promoCode != null
     }
 
     override suspend fun validateUserWallet(): Result<Unit> {
-        val promoCode = repository.getUserData().promoCode
+        val promoCode = promoUserData.promoCode
         val userWalletId = userWalletManager.getWalletId()
+        if (userWalletId.isEmpty()) return Result.failure(PromotionError.EmptyUserWalletId)
 
         val domainError = if (promoCode == null) {
             repository.validate(userWalletId).error
@@ -92,14 +96,13 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isUserRegisteredInPromotion(): Boolean {
-        return repository.getUserData().isRegisteredInPromotion
+        return promoUserData.isRegisteredInPromotion
     }
 
     override fun getAwardAmount(): Int = try {
-        val promoCode = repository.getUserData().promoCode
-        promotion.getPromotionInfo().getData(promoCode).award.toInt()
+        promotion.getPromotionInfo().getCardData().award.toInt()
     } catch (ex: NullPointerException) {
-        Timber.e(ex)
+        Timber.w(ex)
         0
     }
 
@@ -114,7 +117,7 @@ internal class DefaultLearn2earnInteractor(
             ?: return Result.failure(PromotionError.UnknownError("Currency for award is null"))
 
         val walletId = userWalletManager.getWalletId()
-        val promoCode = repository.getUserData().promoCode
+        val promoCode = promoUserData.promoCode
 
         val domainError = if (promoCode == null) {
             requestAward(walletId, awardCurrency)
@@ -199,11 +202,11 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun buildUriForNewUser(): Uri {
-        return webViewUriBuilder.buildUriForNewUser(repository.getUserData().isLearningStageFinished)
+        return webViewUriBuilder.buildUriForNewUser(promoUserData.isLearningStageFinished)
     }
 
     override fun buildUriForOldUser(): Uri {
-        return webViewUriBuilder.buildUriForOldUser(repository.getUserData().isLearningStageFinished)
+        return webViewUriBuilder.buildUriForOldUser(promoUserData.isLearningStageFinished)
     }
 
     override fun getBasicAuthHeaders(): ArrayList<String> {
@@ -251,8 +254,8 @@ internal class DefaultLearn2earnInteractor(
         val isActive = when {
             demoModeDatasource.isDemoModeActive -> false
             !featureToggleManager.isLearn2earnEnabled -> false
-            repository.getUserData().isAlreadyReceivedAward -> false
-            else -> !promotion.isError()
+            promoUserData.isAlreadyReceivedAward -> false
+            else -> promotion.isReadyToUse()
         }
 
         return isActive
@@ -267,10 +270,18 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun isPromotionActiveOnMain(): Boolean {
-        return when {
-            !isPromotionActive() -> false
-            !isTangemWalletFlowSync -> false
-            else -> promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
+        if (!isPromotionActive() || !isTangemWalletSync) return false
+
+        val promotionInfo = promotion.getPromotionInfo()
+        return if (isUseLogicForOldCards()) {
+            promotionInfo.oldCard.status == PromotionInfoResponse.Status.ACTIVE
+        } else {
+            when (promotionInfo.newCard.status) {
+                PromotionInfoResponse.Status.PENDING -> false
+                PromotionInfoResponse.Status.ACTIVE -> true
+                // disable promotion for a new user only if they have received an award
+                PromotionInfoResponse.Status.FINISHED -> !promoUserData.isAlreadyReceivedAward
+            }
         }
     }
 
@@ -325,25 +336,35 @@ internal class DefaultLearn2earnInteractor(
         )
     }
 
-    private fun updateUserData(updateBlock: (PromoUserData) -> PromoUserData): PromoUserData {
-        return updateBlock(repository.getUserData()).apply {
-            repository.updateUserData(this)
-        }
-    }
-
     private fun subscribeToCardTypeResolverFlow() {
         if (isTangemWalletFlowJob == null || isTangemWalletFlowJob?.isCancelled == true) {
             isTangemWalletFlowJob = dependencyProvider.getCardTypeResolverFlow()
                 .onEach {
-                    isTangemWalletFlowSync = it?.isTangemWallet() ?: false
-                    isTangemWalletFlow.emit(isTangemWalletFlowSync)
+                    val isTangemWallet = it?.isTangemWallet() ?: false
+                    isTangemWalletSync = isTangemWallet
+                    isTangemWalletFlow.emit(isTangemWallet)
                 }
                 .launchIn(scope)
         }
     }
 
-    private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
-        return if (promoCode == null) {
+    // region Utils
+    private fun updateUserData(updateBlock: (PromoUserData) -> PromoUserData): PromoUserData {
+        return updateBlock(promoUserData).apply {
+            repository.updateUserData(this)
+        }
+    }
+
+    private fun isUseLogicForOldCards(): Boolean {
+        return promoUserData.promoCode == null
+    }
+
+    private fun Promotion.isReadyToUse(): Boolean {
+        return info != null
+    }
+
+    private fun Promotion.PromotionInfo.getCardData(): PromotionInfoResponse.Data {
+        return if (isUseLogicForOldCards()) {
             oldCard
         } else {
             newCard
@@ -360,4 +381,5 @@ internal class DefaultLearn2earnInteractor(
             WebViewResult.Empty -> WebViewAction.PROCEED
         }
     }
+    // endregion Utils
 }
