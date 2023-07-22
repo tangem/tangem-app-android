@@ -20,6 +20,7 @@ sealed class PromotionError(val code: Int, val description: String) : Throwable(
     class ProgramWasEnd(code: Int, description: String) : PromotionError(code, description)
 
     class UnknownError(description: String) : PromotionError(code = -1, description)
+    object EmptyUserWalletId : PromotionError(code = -1, "UserWalletId is empty")
 }
 
 @Suppress("MagicNumber")
