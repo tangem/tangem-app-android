@@ -20,6 +20,7 @@ import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -78,24 +79,31 @@ class Learn2earnViewModel @Inject constructor(
         }
 
         viewModelScope.launch(dispatchers.io) {
-            val error = interactor.validateUserWallet()
-            when {
-                error == null -> {
-                    updateUi {
-                        uiState
-                            .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
-                            .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
-                            .changeGetBounsDescription(getBonusDescription())
-                    }
+            runCatching { interactor.validateUserWallet() }
+                .onSuccess { result ->
+                    result.fold(
+                        onSuccess = {
+                            updateUi {
+                                uiState
+                                    .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
+                                    .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
+                                    .changeGetBounsDescription(getBonusDescription())
+                            }
+                        },
+                        onFailure = {
+                            if (interactor.isPromotionActive()) {
+                                val error = it as? PromotionError ?: return@launch
+                                updateViewsVisibilityOnError(error)
+                            } else {
+                                updateUi { uiState.updateViewsVisibility(isVisible = false) }
+                            }
+                        }
+                    )
                 }
-                // additional check after the error has been handled by interactor
-                !interactor.isPromotionActive() -> {
-                    updateUi { uiState.updateViewsVisibility(isVisible = false) }
+                .onFailure {
+                    Timber.e(it)
+                    updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
                 }
-                else -> {
-                    updateViewsVisibilityOnError(error)
-                }
-            }
         }
     }
 
