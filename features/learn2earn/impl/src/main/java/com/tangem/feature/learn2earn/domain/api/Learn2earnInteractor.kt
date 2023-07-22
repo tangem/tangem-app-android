@@ -1,7 +1,6 @@
 package com.tangem.feature.learn2earn.domain.api
 
 import android.net.Uri
-import com.tangem.feature.learn2earn.domain.models.PromotionError
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -23,7 +22,7 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     fun isPromotionActiveOnMain(): Boolean
 
-    suspend fun validateUserWallet(): PromotionError?
+    suspend fun validateUserWallet(): Result<Unit>
 
     fun isUserRegisteredInPromotion(): Boolean
 
