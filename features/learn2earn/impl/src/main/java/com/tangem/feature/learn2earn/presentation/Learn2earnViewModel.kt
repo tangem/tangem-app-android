@@ -64,6 +64,10 @@ class Learn2earnViewModel @Inject constructor(
         }
     }
 
+    fun onMainScreenCreated() {
+        updateMainScreenViews()
+    }
+
     fun onMainScreenRefreshed() {
         updateMainScreenViews()
     }
@@ -113,7 +117,9 @@ class Learn2earnViewModel @Inject constructor(
             -> {
                 updateUi { uiState.updateViewsVisibility(isVisible = false) }
             }
-            is PromotionError.CodeWasNotAppliedInShop -> {
+            is PromotionError.CodeWasNotAppliedInShop,
+            is PromotionError.EmptyUserWalletId,
+            -> {
                 updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
             }
             is PromotionError.CodeNotFound,
@@ -167,9 +173,13 @@ class Learn2earnViewModel @Inject constructor(
                         },
                         onFailure = {
                             val errorDialog = createErrorDialog(it.toDomainError())
-                            updateUi {
-                                uiState.updateProgress(showProgress = false)
-                                    .showDialog(errorDialog)
+                            if (errorDialog == null) {
+                                updateUi { uiState.updateProgress(showProgress = false) }
+                            } else {
+                                updateUi {
+                                    uiState.updateProgress(showProgress = false)
+                                        .showDialog(errorDialog)
+                                }
                             }
                         },
                     )
@@ -178,8 +188,9 @@ class Learn2earnViewModel @Inject constructor(
                     updateUi { uiState.updateProgress(showProgress = false) }
                     if (exception is UserCancelledException) return@launch
 
-                    val errorDialog = createErrorDialog(exception.toDomainError())
-                    updateUi { uiState.showDialog(errorDialog) }
+                    createErrorDialog(exception.toDomainError())?.let {
+                        updateUi { uiState.showDialog(it) }
+                    }
                 }
         }
     }
@@ -192,7 +203,7 @@ class Learn2earnViewModel @Inject constructor(
         }
     }
 
-    private fun createErrorDialog(error: PromotionError): MainScreenState.Dialog {
+    private fun createErrorDialog(error: PromotionError): MainScreenState.Dialog? {
         return when (error) {
             is PromotionError.CodeWasNotAppliedInShop -> {
                 val onHideDialog = { uiState = uiState.hideDialog() }
@@ -231,6 +242,7 @@ class Learn2earnViewModel @Inject constructor(
                     onDismissRequest = onHideDialog,
                 )
             }
+            is PromotionError.EmptyUserWalletId -> null
         }
     }
 
