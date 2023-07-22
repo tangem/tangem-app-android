@@ -13,8 +13,6 @@ internal data class Promotion(
     @Throws(NullPointerException::class)
     fun getPromotionInfo(): PromotionInfo = info!!
 
-    fun isError(): Boolean = error != null
-
     data class PromotionInfo(
         val newCard: PromotionInfoResponse.Data,
         val oldCard: PromotionInfoResponse.Data,
