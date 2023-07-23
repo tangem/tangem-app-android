@@ -57,7 +57,9 @@ class Learn2earnViewModel @Inject constructor(
                 .collect { isTangemWallet ->
                     updateUi {
                         uiState
-                            .updateGetBonusVisibility(isVisible = isTangemWallet)
+                            .updateGetBonusVisibility(
+                                isVisible = isTangemWallet && interactor.isPromotionActiveOnMain(),
+                            )
                             .changeGetBonusDescription(getBonusDescription())
                     }
                 }
