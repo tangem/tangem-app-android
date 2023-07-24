@@ -7,6 +7,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
 import com.tangem.common.biometric.BiometricManager
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.usersCode.UserCodeRepository
