@@ -14,7 +14,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token1.symbol,
         decimals = MockTokens.token1.decimals,
         iconUrl = MockTokens.token1.iconUrl,
-        isCoin = MockTokens.token1.isCoin,
+        isCoin = MockTokens.token1.contractAddress == null,
         value = TokenStatus.Unreachable,
     )
 
@@ -25,7 +25,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token2.symbol,
         decimals = MockTokens.token2.decimals,
         iconUrl = MockTokens.token2.iconUrl,
-        isCoin = MockTokens.token2.isCoin,
+        isCoin = MockTokens.token2.contractAddress == null,
         value = TokenStatus.Unreachable,
     )
 
@@ -36,7 +36,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token3.symbol,
         decimals = MockTokens.token3.decimals,
         iconUrl = MockTokens.token3.iconUrl,
-        isCoin = MockTokens.token3.isCoin,
+        isCoin = MockTokens.token3.contractAddress == null,
         value = TokenStatus.Unreachable,
     )
 
@@ -47,7 +47,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token4.symbol,
         decimals = MockTokens.token4.decimals,
         iconUrl = MockTokens.token4.iconUrl,
-        isCoin = MockTokens.token4.isCoin,
+        isCoin = MockTokens.token4.contractAddress == null,
         value = TokenStatus.MissedDerivation,
     )
 
@@ -58,7 +58,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token5.symbol,
         decimals = MockTokens.token5.decimals,
         iconUrl = MockTokens.token5.iconUrl,
-        isCoin = MockTokens.token5.isCoin,
+        isCoin = MockTokens.token5.contractAddress == null,
         value = TokenStatus.MissedDerivation,
     )
 
@@ -69,7 +69,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token6.symbol,
         decimals = MockTokens.token6.decimals,
         iconUrl = MockTokens.token6.iconUrl,
-        isCoin = MockTokens.token6.isCoin,
+        isCoin = MockTokens.token6.contractAddress == null,
         value = TokenStatus.MissedDerivation,
     )
 
@@ -80,7 +80,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token7.symbol,
         decimals = MockTokens.token7.decimals,
         iconUrl = MockTokens.token7.iconUrl,
-        isCoin = MockTokens.token7.isCoin,
+        isCoin = MockTokens.token7.contractAddress == null,
         value = TokenStatus.NoAccount,
     )
 
@@ -91,7 +91,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token8.symbol,
         decimals = MockTokens.token8.decimals,
         iconUrl = MockTokens.token8.iconUrl,
-        isCoin = MockTokens.token8.isCoin,
+        isCoin = MockTokens.token8.contractAddress == null,
         value = TokenStatus.NoAccount,
     )
 
@@ -102,7 +102,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token9.symbol,
         decimals = MockTokens.token9.decimals,
         iconUrl = MockTokens.token9.iconUrl,
-        isCoin = MockTokens.token9.isCoin,
+        isCoin = MockTokens.token9.contractAddress == null,
         value = TokenStatus.NoAccount,
     )
 
@@ -113,7 +113,7 @@ internal object MockTokensStates {
         symbol = MockTokens.token10.symbol,
         decimals = MockTokens.token10.decimals,
         iconUrl = MockTokens.token10.iconUrl,
-        isCoin = MockTokens.token10.isCoin,
+        isCoin = MockTokens.token10.contractAddress == null,
         value = TokenStatus.NoAccount,
     )
 
