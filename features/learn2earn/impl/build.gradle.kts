@@ -10,6 +10,7 @@ plugins {
 dependencies {
     /** Core modules */
     implementation(project(":common"))
+    implementation(project(":domain:legacy"))
     implementation(project(":core:analytics"))
     implementation(projects.core.analytics.models)
     implementation(project(":core:featuretoggles"))
@@ -36,6 +37,7 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.accompanist.webView)
 
     /** Preferences */
     implementation(deps.krateSharedPref)
