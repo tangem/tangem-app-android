@@ -4,9 +4,11 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":domain:core"))
+    implementation(projects.domain.core)
     // TODO: Remove after new card scan result was implemented
-    implementation(project(":domain:models"))
+    implementation(projects.domain.models)
+
+    implementation(projects.core.analytics.models)
 
     implementation(deps.tangem.card.core)
 }
