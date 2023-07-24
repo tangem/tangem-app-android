@@ -1,9 +1,9 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.ErrorEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.converters.AnalyticsErrorConverter
 import com.tangem.tap.common.analytics.events.Shop
