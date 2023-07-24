@@ -18,6 +18,7 @@ object DaggerGraphReducer {
                 walletRouter = action.walletRouter,
                 walletConnectInteractor = action.walletConnectInteractor,
                 tokenDetailsRouter = action.tokenDetailsRouter,
+                cardSdkConfigRepository = action.cardSdkConfigRepository,
             )
         }
     }

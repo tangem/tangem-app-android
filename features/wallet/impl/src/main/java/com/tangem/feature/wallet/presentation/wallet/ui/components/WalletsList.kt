@@ -19,10 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
-import kotlinx.coroutines.InternalCoroutinesApi
 
 /**
  * Wallets list component
@@ -32,7 +30,7 @@ import kotlinx.coroutines.InternalCoroutinesApi
  *
 * [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalFoundationApi::class, InternalCoroutinesApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState, modifier: Modifier = Modifier) {
     val horizontalCardPadding = TangemTheme.dimens.spacing16
@@ -45,7 +43,7 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
     ) {
-        items(items = config.wallets, key = WalletCardState::id) { state ->
+        items(items = config.wallets, key = { it.id.stringValue }) { state ->
             WalletCard(state = state, modifier = Modifier.width(itemWidth))
         }
     }

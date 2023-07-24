@@ -13,8 +13,8 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
 
 /**
@@ -72,7 +72,7 @@ class CurrencyExchangeManager(
         return when (action) {
             Action.Buy -> buyService
             Action.Sell -> sellService
-        } as ExchangeUrlBuilder
+        }
     }
 
     enum class Action { Buy, Sell }
@@ -86,31 +86,26 @@ class CurrencyExchangeManager(
     }
 }
 
-suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
-    card: CardDTO,
-    walletManager: EthereumWalletManager,
-    token: Token,
-) {
+suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, token: Token) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult =
-        walletManager.getFee(
-            amountToSend,
-            destinationAddress,
-        ) as? Result.Success ?: return
-    val fee = feeResult.data[0]
+    val feeResult = walletManager.getFee(
+        amountToSend,
+        destinationAddress,
+    ) as? Result.Success ?: return
+    val fee = feeResult.data.minimum
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
-    if (coinValue < fee.value) return
+    if (coinValue < fee.amount.value) return
 
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
         card = card,
-        tangemSdk = tangemSdk,
+        tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
         initialMessage = Message(),
     ) { signResponse ->
         store.dispatch(

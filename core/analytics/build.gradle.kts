@@ -13,5 +13,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Core shouldn't depends on core, but in case with utils and logging its necessary */
-    implementation(project(":core:utils"))
+    implementation(projects.core.utils)
+
+    implementation(projects.core.analytics.models)
 }

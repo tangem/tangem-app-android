@@ -1,42 +1,43 @@
 package com.tangem.tap.di
 
 import android.content.Context
-import androidx.fragment.app.FragmentActivity
-import com.tangem.TangemSdk
 import com.tangem.domain.card.ScanCardUseCase
-import com.tangem.sdk.extensions.initWithBiometrics
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.userTokensRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.qualifiers.ActivityContext
-import dagger.hilt.android.scopes.ActivityScoped
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ActivityComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object ActivityModule {
 
     @Provides
-    @ActivityScoped
-    fun provideTangemSdk(@ActivityContext context: Context): TangemSdk {
-        return TangemSdk.initWithBiometrics(context as FragmentActivity, TangemSdkManager.config)
+    @Singleton
+    fun provideTangemSdkManager(
+        @ApplicationContext context: Context,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): TangemSdkManager {
+        return TangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
     }
 
     @Provides
-    @ActivityScoped
-    fun provideTangemSdkManager(@ActivityContext context: Context, tangemSdk: TangemSdk): TangemSdkManager {
-        return TangemSdkManager(tangemSdk, context)
-    }
-
-    @Provides
-    @ActivityScoped
-    fun provideScanCardUseCase(tangemSdk: TangemSdk, tangemSdkManager: TangemSdkManager): ScanCardUseCase {
+    @Singleton
+    fun provideScanCardUseCase(
+        tangemSdkManager: TangemSdkManager,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): ScanCardUseCase {
         return ScanCardUseCase(
-            tangemSdk = tangemSdk,
-            scanCardRepository = DefaultScanCardRepository(userTokensRepository, tangemSdkManager),
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            scanCardRepository = DefaultScanCardRepository(
+                userTokensRepository = userTokensRepository,
+                tangemSdkManager = tangemSdkManager,
+            ),
         )
     }
 }

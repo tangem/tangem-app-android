@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":domain:legacy"))
     implementation(project(":core:analytics"))
+    implementation(projects.core.analytics.models)
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:datasource"))
     implementation(project(":core:utils"))

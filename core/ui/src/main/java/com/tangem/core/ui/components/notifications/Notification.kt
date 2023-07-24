@@ -19,6 +19,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH2
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 
@@ -43,10 +45,10 @@ fun Notification(state: NotificationState, modifier: Modifier = Modifier) {
             )
             .clickable(
                 enabled = when (state) {
-                    is NotificationState.Simple -> false
-                    is NotificationState.Action -> true
+                    is NotificationState.Clickable -> true
+                    is NotificationState.Simple, is NotificationState.Closable -> false
                 },
-                onClick = if (state is NotificationState.Action) {
+                onClick = if (state is NotificationState.Clickable) {
                     state.onClick
                 } else {
                     {}
@@ -67,12 +69,23 @@ fun Notification(state: NotificationState, modifier: Modifier = Modifier) {
             )
 
             NotificationInfoBlock(
-                title = state.title,
-                subtitle = state.subtitle,
+                title = state.title.resolveReference(),
+                subtitle = state.subtitle?.resolveReference(),
                 modifier = Modifier.align(alignment = Alignment.CenterStart),
             )
 
-            if (state is NotificationState.Action) {
+            if (state is NotificationState.Closable) {
+                Icon(
+                    modifier = Modifier
+                        .size(size = TangemTheme.dimens.size20)
+                        .align(alignment = Alignment.TopEnd),
+                    painter = painterResource(id = R.drawable.ic_close_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.informative,
+                )
+            }
+
+            if (state is NotificationState.Clickable) {
                 Icon(
                     modifier = Modifier
                         .size(size = TangemTheme.dimens.size20)
@@ -149,30 +162,50 @@ private fun Preview_WarningNotification_Dark(
 private class NotificationStateProvider : CollectionPreviewParameterProvider<NotificationState>(
     collection = listOf(
         NotificationState.Simple(
-            title = "Your wallet hasn’t been backed up",
-            subtitle = "Lorem ipsum dolor sit amet, consectetur " +
-                "adipiscing elit, sed do eiusmod tempor incididunt ut labore et...",
+            title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
+            subtitle = TextReference.Str(
+                value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt " +
+                    "ut labore et...",
+            ),
             iconResId = R.drawable.img_attention_20,
         ),
         NotificationState.Simple(
-            title = "Your wallet hasn’t been backed up",
+            title = TextReference.Str("Your wallet hasn’t been backed up"),
             subtitle = null,
             iconResId = R.drawable.ic_alert_circle_24,
             tint = TangemColorPalette.Amaranth,
         ),
-        NotificationState.Action(
-            title = "Your wallet hasn’t been backed up",
-            subtitle = "Lorem ipsum dolor sit amet, consectetur " +
-                "adipiscing elit, sed do eiusmod tempor incididunt ut labore et...",
+        NotificationState.Clickable(
+            title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
+            subtitle = TextReference.Str(
+                value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt " +
+                    "ut labore et...",
+            ),
             iconResId = R.drawable.img_attention_20,
             onClick = {},
         ),
-        NotificationState.Action(
-            title = "Your wallet hasn’t been backed up",
+        NotificationState.Clickable(
+            title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
             subtitle = null,
             iconResId = R.drawable.ic_alert_circle_24,
             tint = TangemColorPalette.Amaranth,
             onClick = {},
+        ),
+        NotificationState.Closable(
+            title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
+            subtitle = TextReference.Str(
+                value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt " +
+                    "ut labore et...",
+            ),
+            iconResId = R.drawable.img_attention_20,
+            onCloseClick = {},
+        ),
+        NotificationState.Closable(
+            title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
+            subtitle = null,
+            iconResId = R.drawable.ic_alert_circle_24,
+            tint = TangemColorPalette.Amaranth,
+            onCloseClick = {},
         ),
     ),
 )

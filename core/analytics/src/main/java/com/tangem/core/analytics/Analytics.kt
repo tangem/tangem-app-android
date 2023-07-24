@@ -1,18 +1,9 @@
 package com.tangem.core.analytics
 
-import com.tangem.core.analytics.api.AnalyticsEventFilter
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsFilterHolder
-import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.core.analytics.api.AnalyticsHandlerHolder
-import com.tangem.core.analytics.api.ParamsInterceptor
-import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.analytics.api.*
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.concurrent.Executors
 
 /**
