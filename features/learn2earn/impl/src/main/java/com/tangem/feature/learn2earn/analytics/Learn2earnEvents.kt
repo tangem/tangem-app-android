@@ -1,6 +1,6 @@
 package com.tangem.feature.learn2earn.analytics
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 internal sealed class Learn2earnEvents(
     category: String,
