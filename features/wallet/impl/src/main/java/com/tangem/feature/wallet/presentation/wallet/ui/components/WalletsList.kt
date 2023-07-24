@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
-import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 
 /**
  * Wallets list component
@@ -46,11 +43,6 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
         items(items = config.wallets, key = { it.id.stringValue }) { state ->
             WalletCard(state = state, modifier = Modifier.width(itemWidth))
         }
-    }
-
-    LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo }
-            .collect(collector = ScrollOffsetCollector(callback = config.onWalletChange))
     }
 }
 
