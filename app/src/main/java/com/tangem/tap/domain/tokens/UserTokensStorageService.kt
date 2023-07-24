@@ -7,6 +7,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.files.FileReader
 import com.tangem.tap.features.wallet.models.Currency
 
+@Deprecated("Use [com.tangem.datasource.local.token.UserTokensStore] instead.")
 class UserTokensStorageService(private val fileReader: FileReader) {
     private val userTokensAdapter: JsonAdapter<UserTokensResponse> =
         MoshiConverter.networkMoshi.adapter(UserTokensResponse::class.java)

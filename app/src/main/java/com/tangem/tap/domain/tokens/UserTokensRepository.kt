@@ -79,8 +79,8 @@ class UserTokensRepository(
     private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
         return UserTokensResponse(
             tokens = CurrencyConverter.convertList(input = this),
-            group = GROUP_DEFAULT_VALUE,
-            sort = SORT_DEFAULT_VALUE,
+            group = UserTokensResponse.GroupType.NONE,
+            sort = UserTokensResponse.SortType.MANUAL,
         )
     }
 
@@ -121,8 +121,6 @@ class UserTokensRepository(
     private fun getUserWalletId(card: CardDTO): String? = UserWalletIdBuilder.card(card).build()?.stringValue
 
     companion object {
-        private const val GROUP_DEFAULT_VALUE = "none"
-        private const val SORT_DEFAULT_VALUE = "manual"
         private const val NOT_FOUND_HTTP_CODE = "404"
 
         // TODO("After adding DI") get dependencies by DI
