@@ -1,5 +1,6 @@
 package com.tangem.domain.txhistory.repository
 
+import androidx.paging.PagingData
 import com.tangem.domain.txhistory.error.TxHistoryListError
 import com.tangem.domain.txhistory.error.TxHistoryStateError
 import com.tangem.domain.txhistory.model.TxHistoryItem
@@ -11,10 +12,5 @@ interface TxHistoryRepository {
     suspend fun getTxHistoryItemsCount(networkId: String, derivationPath: String): Int
 
     @Throws(TxHistoryListError::class)
-    fun getTxHistoryItems(
-        networkId: String,
-        derivationPath: String,
-        page: Int,
-        pageSize: Int,
-    ): Flow<List<TxHistoryItem>>
+    fun getTxHistoryItems(networkId: String, pageSize: Int): Flow<PagingData<TxHistoryItem>>
 }

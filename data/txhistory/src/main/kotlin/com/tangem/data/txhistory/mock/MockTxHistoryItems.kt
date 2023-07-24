@@ -3,7 +3,7 @@ package com.tangem.data.txhistory.mock
 import com.tangem.domain.txhistory.model.TxHistoryItem
 import java.math.BigDecimal
 
-object MockTxHistoryItems {
+internal object MockTxHistoryItems {
 
     private val txHistoryItem1 = TxHistoryItem(
         txHash = "noster",

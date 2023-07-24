@@ -1,5 +1,6 @@
 package com.tangem.domain.txhistory.usecase
 
+import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.Raise
@@ -8,25 +9,29 @@ import arrow.core.right
 import com.tangem.domain.txhistory.error.TxHistoryListError
 import com.tangem.domain.txhistory.model.TxHistoryItem
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collect
 
-class GetTxHistoryItemsUseCase(
-    private val repository: TxHistoryRepository,
-    private val dispatcherProvider: CoroutineDispatcherProvider,
-) {
+private const val DEFAULT_PAGE_SIZE = 20
+
+class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
 
     operator fun invoke(
         networkId: String,
-        derivationPath: String,
-        page: Int,
-        pageSize: Int,
-    ): Flow<Either<TxHistoryListError, List<TxHistoryItem>>> {
+        pageSize: Int = DEFAULT_PAGE_SIZE,
+    ): Flow<Either<TxHistoryListError,
+            PagingData<TxHistoryItem>,>,> {
         return channelFlow {
             recover(
                 block = {
-                    getTxHistoryItems(networkId, derivationPath, page, pageSize)
-                        .collect { items -> send(items.right()) }
+                    getTxHistoryItems(
+                        networkId = networkId,
+                        pageSize = pageSize,
+                    ).collect { items ->
+                        send(items.right())
+                    }
                 },
                 recover = { error -> send(error.left()) },
             )
@@ -35,17 +40,10 @@ class GetTxHistoryItemsUseCase(
 
     private fun Raise<TxHistoryListError>.getTxHistoryItems(
         networkId: String,
-        derivationPath: String,
-        page: Int,
         pageSize: Int,
-    ): Flow<List<TxHistoryItem>> {
-        return repository.getTxHistoryItems(
-            networkId = networkId,
-            derivationPath = derivationPath,
-            page = page,
-            pageSize = pageSize,
-        )
+    ): Flow<PagingData<TxHistoryItem>> {
+        return repository
+            .getTxHistoryItems(networkId = networkId, pageSize = pageSize)
             .catch { raise(TxHistoryListError.DataError(it)) }
-            .flowOn(dispatcherProvider.io)
     }
 }
