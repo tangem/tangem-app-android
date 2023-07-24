@@ -13,8 +13,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
-
+        contractAddress = null,
+        derivationPath = null,
     )
     val token2 = Token(
         id = Token.ID("token2"),
@@ -24,7 +24,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token3 = Token(
         id = Token.ID("token3"),
@@ -34,7 +35,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token4 = Token(
         id = Token.ID("token4"),
@@ -44,8 +46,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
-
+        contractAddress = null,
+        derivationPath = null,
     )
     val token5 = Token(
         id = Token.ID("token5"),
@@ -55,7 +57,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token6 = Token(
         id = Token.ID("token6"),
@@ -65,7 +68,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token7 = Token(
         id = Token.ID("token7"),
@@ -75,7 +79,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
+        contractAddress = null,
+        derivationPath = null,
     )
     val token8 = Token(
         id = Token.ID("token8"),
@@ -85,7 +90,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token9 = Token(
         id = Token.ID("token9"),
@@ -95,7 +101,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
     val token10 = Token(
         id = Token.ID("token10"),
@@ -105,7 +112,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
 
     val tokens = nonEmptySetOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)
