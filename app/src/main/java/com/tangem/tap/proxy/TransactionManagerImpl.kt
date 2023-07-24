@@ -10,7 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.blockchain.extensions.isNetworkError
+import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -361,7 +361,7 @@ class TransactionManagerImpl(
                 return SendTxResult.Success
             }
             is SimpleResult.Failure -> {
-                if (result.isNetworkError()) return SendTxResult.NetworkError(result.error)
+                if (ResultChecker.isNetworkError(result)) return SendTxResult.NetworkError(result.error)
                 val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {
                     is BlockchainSdkError.WrappedTangemError -> {
