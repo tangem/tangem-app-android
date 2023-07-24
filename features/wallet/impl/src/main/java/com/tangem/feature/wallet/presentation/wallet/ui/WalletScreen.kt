@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
@@ -40,6 +41,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockGroupTitle
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockTitle
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
 /**
@@ -54,13 +56,13 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
 @Composable
 internal fun WalletScreen(state: WalletStateHolder) {
     BackHandler(onBack = state.onBackClick)
+    val walletsListState = rememberLazyListState()
 
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
 
-        val walletsListState = rememberLazyListState()
         val changeableItemModifier = Modifier.changeWalletAnimator(walletsListState)
         val pullRefreshState = rememberPullRefreshState(
             refreshing = state.pullToRefreshConfig.isRefreshing,
@@ -153,8 +155,8 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 }
             }
 
-            PullRefreshIndicator(
-                refreshing = state.pullToRefreshConfig.isRefreshing,
+            PullToRefreshIndicator(
+                isRefreshing = state.pullToRefreshConfig.isRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
             )
@@ -164,6 +166,21 @@ internal fun WalletScreen(state: WalletStateHolder) {
     state.bottomSheet?.let { bottomSheetConfig ->
         if (bottomSheetConfig.isShow) WalletBottomSheet(config = bottomSheetConfig)
     }
+
+    LaunchedEffect(key1 = walletsListState, key2 = state.walletsListConfig.onWalletChange) {
+        snapshotFlow { walletsListState.layoutInfo.visibleItemsInfo }
+            .collect(collector = ScrollOffsetCollector(callback = state.walletsListConfig.onWalletChange))
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun PullToRefreshIndicator(isRefreshing: Boolean, state: PullRefreshState, modifier: Modifier = Modifier) {
+    PullRefreshIndicator(
+        refreshing = isRefreshing,
+        state = state,
+        modifier = modifier,
+    )
 }
 
 @Composable
