@@ -21,7 +21,7 @@ internal class TokenStatusOperations(
             networkId = token.networkId,
             name = token.name,
             symbol = token.symbol,
-            isCoin = token.isCoin,
+            isCoin = token.contractAddress == null,
             decimals = token.decimals,
             iconUrl = token.iconUrl,
             value = createStatus(),
