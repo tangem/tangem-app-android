@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +42,8 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
             ) {
                 composable(WalletScreens.WALLET.name) {
                     val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
+                    LocalLifecycleOwner.current.lifecycle.addObserver(observer = viewModel)
+
                     WalletScreen(state = viewModel.uiState)
                 }
 
