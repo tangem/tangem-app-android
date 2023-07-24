@@ -1,0 +1,17 @@
+groups:
+  - name: devs # name of the group
+    reviewers: 3 # how many reviewers do you want to assign?
+    internal_reviewers: 3 # how many reviewers do you want to assign when the PR author belongs to this group?
+    usernames: # github usernames of the reviewers
+      - roman-pv
+      - iiiburnyiii
+      - Mama1emon
+      - kozarezvlad
+      - Yoggam1
+      - Sateetas
+
+  - name: qas # mandatory reviewers
+    reviewers: 1
+    usernames:
+      - Mama1emon
+      - iiiburnyiii
