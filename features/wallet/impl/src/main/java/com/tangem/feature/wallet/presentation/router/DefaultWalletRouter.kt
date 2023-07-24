@@ -15,7 +15,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.NavigationStateHolder
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
@@ -35,29 +34,27 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     override fun Initialize(fragmentManager: FragmentManager) {
         this.fragmentManager = fragmentManager
 
-        TangemTheme {
-            NavHost(
-                navController = rememberNavController().apply { navController = this },
-                startDestination = WalletScreens.WALLET.name,
-            ) {
-                composable(WalletScreens.WALLET.name) {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
-                    LocalLifecycleOwner.current.lifecycle.addObserver(observer = viewModel)
+        NavHost(
+            navController = rememberNavController().apply { navController = this },
+            startDestination = WalletScreens.WALLET.name,
+        ) {
+            composable(WalletScreens.WALLET.name) {
+                val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
+                LocalLifecycleOwner.current.lifecycle.addObserver(observer = viewModel)
 
-                    WalletScreen(state = viewModel.uiState)
-                }
+                WalletScreen(state = viewModel.uiState)
+            }
 
-                composable(WalletScreens.ORGANIZE_TOKENS.name) {
-                    BackHandler(onBack = ::popBackStack)
+            composable(WalletScreens.ORGANIZE_TOKENS.name) {
+                BackHandler(onBack = ::popBackStack)
 
-                    val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
-                        .apply { router = this@DefaultWalletRouter }
+                val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
+                    .apply { router = this@DefaultWalletRouter }
 
-                    OrganizeTokensScreen(
-                        modifier = Modifier.systemBarsPadding(),
-                        state = viewModel.uiState,
-                    )
-                }
+                OrganizeTokensScreen(
+                    modifier = Modifier.systemBarsPadding(),
+                    state = viewModel.uiState,
+                )
             }
         }
     }
