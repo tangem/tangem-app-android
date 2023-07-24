@@ -35,6 +35,7 @@ include(":common")
 
 // region Core modules
 include(":core:analytics")
+include(":core:analytics:models")
 include(":core:datasource")
 include(":core:featuretoggles")
 include(":core:navigation")
@@ -80,8 +81,12 @@ include(":domain:core")
 include(":domain:card")
 include(":domain:wallets")
 include(":domain:wallets:models")
+include(":domain:tokens")
 // endregion Domain modules
 
 // region Data modules
+include(":data:common")
+include(":data:card")
+include(":data:tokens")
 include(":data:source:preferences")
 // endregion Data modules
