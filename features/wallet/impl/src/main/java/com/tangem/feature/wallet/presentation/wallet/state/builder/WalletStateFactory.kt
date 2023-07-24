@@ -37,7 +37,7 @@ internal class WalletStateFactory(
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
             contentItems = persistentListOf(),
-            notifications = persistentListOf(), // TODO: create notifications
+            notifications = persistentListOf(),
             bottomSheet = WalletBottomSheetConfig(
 // [REDACTED_TODO_COMMENT]
                 isShow = false,
@@ -58,7 +58,7 @@ internal class WalletStateFactory(
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
             contentItems = persistentListOf(),
-            notifications = persistentListOf(), // TODO: create notifications
+            notifications = persistentListOf(),
             bottomSheet = WalletBottomSheetConfig(
 // [REDACTED_TODO_COMMENT]
                 isShow = false,

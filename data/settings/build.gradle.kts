@@ -7,20 +7,21 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.data.card"
+    namespace = "com.tangem.data.settings"
 }
 
 dependencies {
+
+    /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    implementation(deps.tangem.card.android)
-    implementation(deps.tangem.card.core)
+    implementation(deps.kotlin.coroutines)
 
     implementation(projects.core.utils)
 
-    implementation(projects.data.source.preferences)
+    implementation(projects.domain.settings)
 
-    implementation(projects.domain.card)
-    implementation(projects.domain.models)
+    implementation(projects.data.source.preferences)
 }
+
