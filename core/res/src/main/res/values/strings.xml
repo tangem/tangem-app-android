@@ -137,6 +137,7 @@
     <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
     <string name="disclaimer_title">Terms of Service</string>
     <string name="error_update_app">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
+    <string name="error_wrong_card_type">This application is not designed to work with this card or needs to be updated</string>
     <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
     <string name="exchange_receive_view_header">You Receive</string>
     <string name="exchange_send_view_header">You Send</string>
@@ -161,8 +162,8 @@
     <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
     <string name="main_get_bonus_subtitle">You have completed all of the lessons, and are now eligible to receive your 1INCH tokens</string>
     <plurals name="main_learn_subtitle">
-        <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
-        <item quantity="other">Complete three lessons and receive %d 1INCH tokens to your wallet</item>
+        <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
+        <item quantity="other">Complete three lessons and receive %d 1INCH tokens to your wallet</item>
     </plurals>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
