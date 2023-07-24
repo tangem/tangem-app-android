@@ -24,7 +24,7 @@ class GetTxHistoryItemsCountUseCase(
                                 is TxHistoryStateError.TxHistoryNotImplemented -> e
                                 is TxHistoryStateError.EmptyTxHistories -> e
                                 else -> TxHistoryStateError.DataError(e)
-                            }
+                            },
                         )
                     },
                 )

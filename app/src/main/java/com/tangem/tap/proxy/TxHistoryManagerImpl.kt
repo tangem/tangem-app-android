@@ -36,7 +36,7 @@ class TxHistoryManagerImpl(
         val itemsResult = walletManager.getTransactionsHistory(
             address = walletManager.wallet.address,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
         )
 
         return when (itemsResult) {

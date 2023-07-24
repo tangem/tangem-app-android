@@ -9,7 +9,6 @@ import com.tangem.domain.txhistory.error.TxHistoryListError
 import com.tangem.domain.txhistory.model.TxHistoryItem
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 class GetTxHistoryItemsUseCase(
@@ -29,7 +28,7 @@ class GetTxHistoryItemsUseCase(
                     getTxHistoryItems(networkId, derivationPath, page, pageSize)
                         .collect { items -> send(items.right()) }
                 },
-                recover = { error -> send(error.left()) }
+                recover = { error -> send(error.left()) },
             )
         }
     }

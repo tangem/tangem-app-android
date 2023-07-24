@@ -12,5 +12,4 @@ sealed class ProxyTransactionHistoryState {
     }
 
     object NotImplemented : ProxyTransactionHistoryState()
-
 }
