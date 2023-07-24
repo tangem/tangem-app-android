@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.presentation.common
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
-import com.tangem.feature.wallet.presentation.common.state.PriceChangeConfig
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
@@ -18,7 +20,7 @@ internal object WalletPreviewData {
     val walletTopBarConfig = WalletTopBarConfig(onScanCardClick = {}, onMoreClick = {})
 
     val walletCardContentState = WalletCardState.Content(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         balance = "8923,05 $",
         additionalInfo = "3 cards • Seed enabled",
@@ -27,7 +29,7 @@ internal object WalletPreviewData {
     )
 
     val walletCardLoadingState = WalletCardState.Loading(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
@@ -35,7 +37,7 @@ internal object WalletPreviewData {
     )
 
     val walletCardHiddenContentState = WalletCardState.HiddenContent(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
@@ -43,21 +45,23 @@ internal object WalletPreviewData {
     )
 
     val walletCardErrorState = WalletCardState.Error(
-        id = UUID.randomUUID().toString(),
+        id = UserWalletId(UUID.randomUUID().toString()),
         title = "Wallet 1",
         additionalInfo = "3 cards • Seed enabled",
         imageResId = R.drawable.ill_businessman_3d,
         onClick = null,
     )
 
+    val wallets = mapOf(
+        UserWalletId(stringValue = "123") to walletCardContentState,
+        UserWalletId(stringValue = "321") to walletCardLoadingState,
+        UserWalletId(stringValue = "42") to walletCardHiddenContentState,
+        UserWalletId(stringValue = "24") to walletCardErrorState,
+    )
+
     val walletListConfig = WalletsListConfig(
         selectedWalletIndex = 0,
-        wallets = persistentListOf(
-            walletCardContentState,
-            walletCardLoadingState,
-            walletCardHiddenContentState,
-            walletCardErrorState,
-        ),
+        wallets = wallets.values.toPersistentList(),
         onWalletChange = {},
     )
 
@@ -196,21 +200,21 @@ internal object WalletPreviewData {
         ),
     )
 
-    val manageButtons = persistentListOf(
+    val bottomSheet = WalletBottomSheetConfig(
+        isShow = false,
+        onDismissRequest = {},
+        content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            onUnlockClick = {},
+            onScanClick = {},
+        ),
+    )
+
+    private val manageButtons = persistentListOf(
         WalletManageButton.Buy(onClick = {}),
         WalletManageButton.Send(onClick = {}),
         WalletManageButton.Receive(onClick = {}),
         WalletManageButton.Exchange(onClick = {}),
         WalletManageButton.CopyAddress(onClick = {}),
-    )
-
-    val marketplaceBlockContent = WalletMarketplaceBlockState.Content(
-        currencyName = "BTC",
-        price = "0.11$",
-        priceChangeConfig = PriceChangeConfig(
-            valueInPercent = "5.16%",
-            type = PriceChangeConfig.Type.UP,
-        ),
     )
 
     val multicurrencyWalletScreenState = WalletStateHolder.MultiCurrencyContent(
@@ -266,12 +270,17 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
+        pullToRefreshConfig = WalletPullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
+        ),
         notifications = persistentListOf(
             WalletNotification.UnreachableNetworks,
             WalletNotification.LikeTangemApp(onClick = {}),
-            WalletNotification.NeedToBackup(onClick = {}),
+            WalletNotification.BackupCard(onClick = {}),
             WalletNotification.ScanCard(onClick = {}),
         ),
+        bottomSheet = bottomSheet,
         onOrganizeTokensClick = {},
     )
 
@@ -298,8 +307,20 @@ internal object WalletPreviewData {
                 ),
             ),
         ),
+        pullToRefreshConfig = WalletPullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
+        ),
         notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
-        buttons = manageButtons,
-        marketplaceBlockState = marketplaceBlockContent,
+        buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
+        bottomSheet = bottomSheet,
+        marketPriceBlockState = MarketPriceBlockState.Content(
+            currencyName = "BTC",
+            price = "98900.12$",
+            priceChangeConfig = PriceChangeConfig(
+                valueInPercent = "5.16%",
+                type = PriceChangeConfig.Type.UP,
+            ),
+        ),
     )
 }
