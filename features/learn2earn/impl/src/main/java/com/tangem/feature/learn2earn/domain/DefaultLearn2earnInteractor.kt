@@ -2,8 +2,10 @@ package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.api.promotion.models.AbstractPromotionResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
+import com.tangem.datasource.demo.DemoModeDatasource
+import com.tangem.feature.learn2earn.analytics.AnalyticsParam
+import com.tangem.feature.learn2earn.analytics.Learn2earnEvents.*
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.models.PromoUserData
 import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
@@ -14,27 +16,45 @@ import com.tangem.feature.learn2earn.domain.models.toDomainError
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultLearn2earnInteractor(
     private val featureToggleManager: Learn2earnFeatureToggleManager,
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
-    private val analyticsEventHandler: AnalyticsEventHandler,
-    dependencyProvider: Learn2earnDependencyProvider,
+    private val analytics: AnalyticsEventHandler,
+    private val demoModeDatasource: DemoModeDatasource,
+    private val dependencyProvider: Learn2earnDependencyProvider,
+    dispatchers: AppCoroutineDispatcherProvider,
 ) : Learn2earnInteractor {
 
     override var webViewResultHandler: WebViewResultHandler? = null
 
     private lateinit var promotion: Promotion
 
+    private val scope = CoroutineScope(Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("mainScope"))
+
+    private val isTangemWalletFlow = MutableStateFlow(false)
+    private var isTangemWalletFlowJob: Job? = null
+    private var isTangemWalletFlowSync = false
+
     private val webViewUriBuilder: WebViewUriBuilder by lazy {
         WebViewUriBuilder(
             authCredentialsProvider = dependencyProvider.getWebViewAuthCredentialsProvider(),
-            userCountryCodeProvider = dependencyProvider.getUserCountryCodeProvider(),
+            localeLanguageProvider = dependencyProvider.getLocaleProvider(),
             promoCodeProvider = { repository.getUserData().promoCode },
         )
     }
@@ -47,28 +67,27 @@ internal class DefaultLearn2earnInteractor(
         initPromotionInfo()
     }
 
+    override fun getIsTangemWalletFlow(): Flow<Boolean> = isTangemWalletFlow
+
     override fun isUserHadPromoCode(): Boolean {
         return repository.getUserData().promoCode != null
     }
 
-    override fun isNeedToShowViewOnStoriesScreen(): Boolean {
-        return promotionIsActive()
-    }
-
-    override suspend fun isNeedToShowViewOnMainScreen(): Boolean {
-        if (!promotionIsActive()) return false
-
+    override suspend fun validateUserWallet(): Result<Unit> {
         val promoCode = repository.getUserData().promoCode
         val userWalletId = userWalletManager.getWalletId()
-        return if (promoCode == null) {
-            val response = repository.validate(userWalletId)
-            response.valid == true
+
+        val domainError = if (promoCode == null) {
+            repository.validate(userWalletId).error
         } else {
-            val response = repository.validateCode(userWalletId, promoCode)
-            when (val error = response.error?.toDomainError()) {
-                null -> response.valid == true
-                else -> error !is PromotionError.CodeWasNotAppliedInShop
-            }
+            repository.validateCode(userWalletId, promoCode).error
+        }?.toDomainError()
+
+        return if (domainError == null) {
+            Result.success(Unit)
+        } else {
+            handlePromotionError(domainError)
+            Result.failure(domainError)
         }
     }
 
@@ -76,11 +95,12 @@ internal class DefaultLearn2earnInteractor(
         return repository.getUserData().isRegisteredInPromotion
     }
 
-    override fun getAwardAmount(): Int {
+    override fun getAwardAmount(): Int = try {
         val promoCode = repository.getUserData().promoCode
-        val awardAmount = promotion.getPromotionInfo().getData(promoCode).award.toInt()
-
-        return awardAmount
+        promotion.getPromotionInfo().getData(promoCode).award.toInt()
+    } catch (ex: NullPointerException) {
+        Timber.e(ex)
+        0
     }
 
     override fun getAwardNetworkName(): String {
@@ -96,22 +116,21 @@ internal class DefaultLearn2earnInteractor(
         val walletId = userWalletManager.getWalletId()
         val promoCode = repository.getUserData().promoCode
 
-        val error = if (promoCode == null) {
+        val domainError = if (promoCode == null) {
             requestAward(walletId, awardCurrency)
         } else {
             requestAwardWithPromoCode(walletId, awardCurrency, promoCode)
         }
 
-        return if (error == null) {
+        return if (domainError == null) {
             Result.success(Unit)
         } else {
-            val domainError = error.toDomainError()
             handlePromotionError(domainError)
             Result.failure(domainError)
         }
     }
 
-    private suspend fun requestAward(walletId: String, awardCurrency: Currency): AbstractPromotionResponse.Error? {
+    private suspend fun requestAward(walletId: String, awardCurrency: Currency): PromotionError? {
         val validateResponse = repository.validate(walletId)
         return if (validateResponse.valid == true) {
             val address = getWalletAddressForAward(awardCurrency)
@@ -124,14 +143,14 @@ internal class DefaultLearn2earnInteractor(
             }
         } else {
             validateResponse.error
-        }
+        }?.toDomainError()
     }
 
     private suspend fun requestAwardWithPromoCode(
         walletId: String,
         awardCurrency: Currency,
         promoCode: String,
-    ): AbstractPromotionResponse.Error? {
+    ): PromotionError? {
         val codeValidateResponse = repository.validateCode(walletId, promoCode)
         return if (codeValidateResponse.valid == true) {
             val address = getWalletAddressForAward(awardCurrency)
@@ -144,7 +163,7 @@ internal class DefaultLearn2earnInteractor(
             }
         } else {
             codeValidateResponse.error
-        }
+        }?.toDomainError()
     }
 
     private suspend fun getWalletAddressForAward(currency: Currency): String {
@@ -180,11 +199,11 @@ internal class DefaultLearn2earnInteractor(
     }
 
     override fun buildUriForNewUser(): Uri {
-        return webViewUriBuilder.buildUriForNewUser()
+        return webViewUriBuilder.buildUriForNewUser(repository.getUserData().isLearningStageFinished)
     }
 
     override fun buildUriForOldUser(): Uri {
-        return webViewUriBuilder.buildUriForOldUser()
+        return webViewUriBuilder.buildUriForOldUser(repository.getUserData().isLearningStageFinished)
     }
 
     override fun getBasicAuthHeaders(): ArrayList<String> {
@@ -194,11 +213,22 @@ internal class DefaultLearn2earnInteractor(
     override fun handleRedirect(uri: Uri): WebViewAction {
         val result = webViewUriParser.parse(uri)
         when (result) {
-            is WebViewResult.PromoCode -> {
+            is WebViewResult.NewUserLearningFinished -> {
+                analytics.send(PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.New()))
                 updateUserData {
                     it.copy(
                         promoCode = result.promoCode,
                         isRegisteredInPromotion = true,
+                        isLearningStageFinished = true,
+                    )
+                }
+            }
+            is WebViewResult.OldUserLearningFinished -> {
+                analytics.send(PromoScreen.SuccessScreenOpened(AnalyticsParam.ClientType.Old()))
+                updateUserData {
+                    it.copy(
+                        promoCode = null,
+                        isLearningStageFinished = true,
                     )
                 }
             }
@@ -206,7 +236,7 @@ internal class DefaultLearn2earnInteractor(
                 updateUserData { it.copy(isRegisteredInPromotion = true) }
             }
             is WebViewResult.Learn2earnAnalyticsEvent -> {
-                analyticsEventHandler.send(result.event)
+                analytics.send(result.event)
             }
             WebViewResult.Empty -> Unit
         }
@@ -215,19 +245,33 @@ internal class DefaultLearn2earnInteractor(
         return result.toWebViewAction()
     }
 
-    private fun promotionIsActive(): Boolean {
-        val userData = repository.getUserData()
+    override fun isPromotionActive(): Boolean {
+        subscribeToCardTypeResolverFlow()
+
         val isActive = when {
+            demoModeDatasource.isDemoModeActive -> false
             !featureToggleManager.isLearn2earnEnabled -> false
-            userData.isAlreadyReceivedAward -> false
-            promotion.isError() -> false
-            else -> {
-                val data = promotion.getPromotionInfo().getData(userData.promoCode)
-                data.status == PromotionInfoResponse.Status.ACTIVE
-            }
+            repository.getUserData().isAlreadyReceivedAward -> false
+            else -> !promotion.isError()
         }
 
         return isActive
+    }
+
+    override fun isPromotionActiveOnStories(): Boolean {
+        return if (isPromotionActive()) {
+            promotion.getPromotionInfo().newCard.status == PromotionInfoResponse.Status.ACTIVE
+        } else {
+            false
+        }
+    }
+
+    override fun isPromotionActiveOnMain(): Boolean {
+        return when {
+            !isPromotionActive() -> false
+            !isTangemWalletFlowSync -> false
+            else -> promotion.getPromotionInfo().oldCard.status == PromotionInfoResponse.Status.ACTIVE
+        }
     }
 
     private suspend fun initPromotionInfo() {
@@ -287,20 +331,33 @@ internal class DefaultLearn2earnInteractor(
         }
     }
 
+    private fun subscribeToCardTypeResolverFlow() {
+        if (isTangemWalletFlowJob == null || isTangemWalletFlowJob?.isCancelled == true) {
+            isTangemWalletFlowJob = dependencyProvider.getCardTypeResolverFlow()
+                .onEach {
+                    isTangemWalletFlowSync = it?.isTangemWallet() ?: false
+                    isTangemWalletFlow.emit(isTangemWalletFlowSync)
+                }
+                .launchIn(scope)
+        }
+    }
+
     private fun Promotion.PromotionInfo.getData(promoCode: String?): PromotionInfoResponse.Data {
         return if (promoCode == null) {
-            newCard
-        } else {
             oldCard
+        } else {
+            newCard
         }
     }
 
     private fun WebViewResult.toWebViewAction(): WebViewAction {
         return when (this) {
-            WebViewResult.Empty -> WebViewAction.PROCEED
+            is WebViewResult.NewUserLearningFinished,
+            WebViewResult.OldUserLearningFinished,
+            is WebViewResult.Learn2earnAnalyticsEvent,
+            -> WebViewAction.NOTHING
             WebViewResult.ReadyForAward -> WebViewAction.FINISH_SESSION
-            is WebViewResult.Learn2earnAnalyticsEvent -> WebViewAction.NOTHING
-            is WebViewResult.PromoCode -> WebViewAction.NOTHING
+            WebViewResult.Empty -> WebViewAction.PROCEED
         }
     }
 }

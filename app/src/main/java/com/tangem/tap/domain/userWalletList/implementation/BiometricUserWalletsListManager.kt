@@ -100,7 +100,7 @@ internal class BiometricUserWalletsListManager(
         } else {
             val isWalletSaved = state.value.userWallets
                 .any {
-                    it.walletId == userWallet.walletId || it.cardsInWallet.contains(userWallet.cardId)
+                    it.walletId == userWallet.walletId
                 }
 
             if (isWalletSaved) {

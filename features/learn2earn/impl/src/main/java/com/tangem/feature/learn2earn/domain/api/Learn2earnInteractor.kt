@@ -1,6 +1,7 @@
 package com.tangem.feature.learn2earn.domain.api
 
 import android.net.Uri
+import kotlinx.coroutines.flow.Flow
 
 /**
 * [REDACTED_AUTHOR]
@@ -11,11 +12,17 @@ interface Learn2earnInteractor : WebViewRedirectHandler {
 
     suspend fun init()
 
+    fun getIsTangemWalletFlow(): Flow<Boolean>
+
     fun isUserHadPromoCode(): Boolean
 
-    fun isNeedToShowViewOnStoriesScreen(): Boolean
+    fun isPromotionActive(): Boolean
 
-    suspend fun isNeedToShowViewOnMainScreen(): Boolean
+    fun isPromotionActiveOnStories(): Boolean
+
+    fun isPromotionActiveOnMain(): Boolean
+
+    suspend fun validateUserWallet(): Result<Unit>
 
     fun isUserRegisteredInPromotion(): Boolean
 

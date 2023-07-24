@@ -29,7 +29,8 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+// [REDACTED_TODO_COMMENT]
+        return false // card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
