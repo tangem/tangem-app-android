@@ -8,12 +8,12 @@ import com.tangem.feature.learn2earn.impl.BuildConfig
  */
 internal class WebViewUriBuilder(
     private val authCredentialsProvider: () -> String?,
-    private val userCountryCodeProvider: () -> String,
+    private val localeLanguageProvider: () -> String,
     private val promoCodeProvider: () -> String?,
 ) {
 
-    fun buildUriForNewUser(): Uri {
-        val builder = makeWebViewUriBuilder()
+    fun buildUriForNewUser(learningIsFinished: Boolean): Uri {
+        val builder = makeWebViewUriBuilder(learningIsFinished)
             .appendQueryParameter("type", QUERY_NEW_CARD)
 
         promoCodeProvider.invoke()?.let {
@@ -23,9 +23,9 @@ internal class WebViewUriBuilder(
         return builder.build()
     }
 
-    fun buildUriForOldUser(): Uri {
-        val builder = makeWebViewUriBuilder()
-            .appendQueryParameter("type", QUERY_EXISTED_CARD)
+    fun buildUriForOldUser(learningIsFinished: Boolean): Uri {
+        val builder = makeWebViewUriBuilder(learningIsFinished)
+            .appendQueryParameter("type", QUERY_EXISTING_CARD)
 
         return builder.build()
     }
@@ -39,15 +39,25 @@ internal class WebViewUriBuilder(
         }
     }
 
-    private fun makeWebViewUriBuilder(): Uri.Builder = Uri.Builder().apply {
+    private fun makeWebViewUriBuilder(learningIsFinished: Boolean): Uri.Builder = Uri.Builder().apply {
         scheme(SCHEME)
         if (BuildConfig.DEBUG) {
             authority(DEV_BASE_URL)
         } else {
             authority(BASE_URL)
         }
-        appendPath(userCountryCodeProvider.invoke())
+        appendPath(getLocaleLanguage(localeLanguageProvider.invoke()))
         appendPath(PATH_PROMOTION)
+        appendQueryParameter(QUERY_FINISHED, learningIsFinished.toString())
+    }
+
+    // TODO: locale: This can be used by another feature. Move it to the appropriate location
+    private fun getLocaleLanguage(language: String): String {
+        return if (LOCALE_LANG_RU.equals(language, true) || LOCALE_LANG_BY.equals(language, true)) {
+            LOCALE_LANG_RU
+        } else {
+            LOCALE_LANG_EN
+        }
     }
 
     private companion object {
@@ -57,8 +67,13 @@ internal class WebViewUriBuilder(
         const val PATH_PROMOTION = "promotion"
 
         const val QUERY_NEW_CARD = "new-card"
-        const val QUERY_EXISTED_CARD = "existed-card"
+        const val QUERY_EXISTING_CARD = "existing-card"
+        const val QUERY_FINISHED = "finished"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
+
+        const val LOCALE_LANG_RU = "ru"
+        const val LOCALE_LANG_BY = "by"
+        const val LOCALE_LANG_EN = "en"
     }
 }
