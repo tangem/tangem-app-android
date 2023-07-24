@@ -13,10 +13,14 @@ android {
 dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
     implementation(deps.tangem.card.android)
     implementation(deps.tangem.card.core)
 
+    implementation(projects.core.utils)
+
     implementation(projects.data.source.preferences)
+
     implementation(projects.domain.card)
     implementation(projects.domain.models)
 }
