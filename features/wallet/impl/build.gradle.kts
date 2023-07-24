@@ -37,20 +37,21 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Core modules */
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:navigation"))
-    implementation(project(":core:ui"))
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
+    implementation(projects.core.ui)
     implementation(projects.core.utils)
 
-    /** Feature Apis */
-    implementation(project(":features:wallet:api"))
-
     /** Domain modules */
-    implementation(project(":common"))
+    implementation(projects.common)
     implementation(projects.domain.card)
-    implementation(project(":domain:legacy"))
-    implementation(project(":domain:models"))
-    implementation(project(":domain:wallets"))
-    implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+
+    /** Feature Apis */
+    implementation(projects.features.wallet.api)
 }
