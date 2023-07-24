@@ -1,11 +1,11 @@
 package com.tangem.datasource.local.cache
 
 import com.tangem.datasource.local.cache.model.CacheKey
-import com.tangem.datasource.local.store.RuntimeStore
+import com.tangem.datasource.local.datastore.RuntimeDataStore
 
 internal class RuntimeCacheKeysStore : CacheKeysStore {
 
-    private val store = RuntimeStore(keyProvider = CacheKey::id)
+    private val store = RuntimeDataStore(keyProvider = CacheKey::id)
 
     override fun get(id: String): CacheKey? {
         return store.getSync { it.id == id }.firstOrNull()
