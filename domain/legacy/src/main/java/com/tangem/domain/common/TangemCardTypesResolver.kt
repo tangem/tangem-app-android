@@ -29,7 +29,8 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+        // todo for now disabled to prevent Shiba cards using as wallet 2, enable when release wallet 2.0 ([REDACTED_TASK_KEY])
+        return false // card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins

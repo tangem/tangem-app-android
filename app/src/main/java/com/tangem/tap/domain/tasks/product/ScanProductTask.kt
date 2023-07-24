@@ -51,7 +51,7 @@ class ScanProductTask(
         }
         val cardDto = CardDTO(card)
 
-        val error = getErrorIfExcludedCard(cardDto)
+        val error = getErrorIfExcludedCard(cardDto, card)
         if (error != null) {
             callback(CompletionResult.Failure(error))
             return
@@ -81,9 +81,11 @@ class ScanProductTask(
         }
     }
 
-    private fun getErrorIfExcludedCard(card: CardDTO): TangemError? {
-        if (card.isExcluded) return TapSdkError.CardForDifferentApp
-        if (card.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+    private fun getErrorIfExcludedCard(cardDto: CardDTO, card: Card): TangemError? {
+        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp
+        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+        // todo check isImported to prevent using old app with imported wallet, remove before wallet 2.0 enabled ([REDACTED_TASK_KEY])
+        if (card.wallets.any { it.isImported }) return TapSdkError.CardNotSupportedByRelease
         return null
     }
 }
