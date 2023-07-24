@@ -45,6 +45,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.Cronos -> R.drawable.ic_cronos_no_color
         Blockchain.Telos, Blockchain.TelosTestnet -> R.drawable.ic_telos_no_color
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> R.drawable.ic_azero_no_color
+        Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> R.drawable.ic_octaspace_no_color
         else -> R.drawable.ic_tangem_logo
     }
 }
