@@ -5,7 +5,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 internal object MockTokens {
 
-    val token1 get() = Token(
+    val token1 = Token(
         id = Token.ID("token1"),
         networkId = MockNetworks.network1.id,
         name = "Token 1",
@@ -13,9 +13,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
+        contractAddress = null,
+        derivationPath = null,
     )
-    val token2 get() = Token(
+    val token2 = Token(
         id = Token.ID("token2"),
         networkId = MockNetworks.network1.id,
         name = "Token 2",
@@ -23,9 +24,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token3 get() = Token(
+    val token3 = Token(
         id = Token.ID("token3"),
         networkId = MockNetworks.network1.id,
         name = "Token 3",
@@ -33,9 +35,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token4 get() = Token(
+    val token4 = Token(
         id = Token.ID("token4"),
         networkId = MockNetworks.network2.id,
         name = "Token 4",
@@ -43,9 +46,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
+        contractAddress = null,
+        derivationPath = null,
     )
-    val token5 get() = Token(
+    val token5 = Token(
         id = Token.ID("token5"),
         networkId = MockNetworks.network2.id,
         name = "Token 5",
@@ -53,9 +57,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token6 get() = Token(
+    val token6 = Token(
         id = Token.ID("token6"),
         networkId = MockNetworks.network2.id,
         name = "Token 6",
@@ -63,9 +68,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token7 get() = Token(
+    val token7 = Token(
         id = Token.ID("token7"),
         networkId = MockNetworks.network3.id,
         name = "Token 7",
@@ -73,9 +79,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = true,
+        contractAddress = null,
+        derivationPath = null,
     )
-    val token8 get() = Token(
+    val token8 = Token(
         id = Token.ID("token8"),
         networkId = MockNetworks.network3.id,
         name = "Token 8",
@@ -83,9 +90,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token9 get() = Token(
+    val token9 = Token(
         id = Token.ID("token9"),
         networkId = MockNetworks.network3.id,
         name = "Token 9",
@@ -93,9 +101,10 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
-    val token10 get() = Token(
+    val token10 = Token(
         id = Token.ID("token10"),
         networkId = MockNetworks.network3.id,
         name = "Token 10",
@@ -103,7 +112,8 @@ internal object MockTokens {
         isCustom = false,
         decimals = 8,
         iconUrl = null,
-        isCoin = false,
+        contractAddress = "address",
+        derivationPath = null,
     )
 
     val tokens get() = mapOf(
