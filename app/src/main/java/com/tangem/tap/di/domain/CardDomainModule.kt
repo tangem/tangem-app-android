@@ -1,9 +1,7 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.card.GetAccessCodeSavingStatusUseCase
-import com.tangem.domain.card.GetBiometricsStatusUseCase
-import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.SetAccessCodeRequestPolicyUseCase
+import com.tangem.domain.card.*
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import dagger.Module
@@ -42,5 +40,11 @@ internal object CardDomainModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): GetAccessCodeSavingStatusUseCase {
         return GetAccessCodeSavingStatusUseCase(cardSdkConfigRepository = cardSdkConfigRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCardWasScannedUseCase(cardRepository: CardRepository): GetCardWasScannedUseCase {
+        return GetCardWasScannedUseCase(cardRepository = cardRepository)
     }
 }
