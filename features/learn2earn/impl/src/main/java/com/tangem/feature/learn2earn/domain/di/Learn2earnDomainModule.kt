@@ -3,6 +3,7 @@ package com.tangem.feature.learn2earn.domain.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.learn2earn.data.api.Learn2earnRepository
 import com.tangem.feature.learn2earn.data.toggles.DefaultLearn2earnFeatureToggleManager
 import com.tangem.feature.learn2earn.data.toggles.Learn2earnFeatureToggleManager
@@ -13,6 +14,7 @@ import com.tangem.feature.learn2earn.domain.api.WebViewRedirectHandler
 import com.tangem.feature.learn2earn.presentation.Learn2earnRouter
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,14 +47,18 @@ internal class Learn2earnDomainModule {
         userWalletManager: UserWalletManager,
         analyticsEventHandler: AnalyticsEventHandler,
         derivationManager: DerivationManager,
+        demoModeDatasource: DemoModeDatasource,
+        dispatchers: AppCoroutineDispatcherProvider,
     ): Learn2earnInteractor {
         return DefaultLearn2earnInteractor(
             featureToggleManager = featureToggleManager,
             repository = repository,
             userWalletManager = userWalletManager,
             derivationManager = derivationManager,
-            analyticsEventHandler = analyticsEventHandler,
+            analytics = analyticsEventHandler,
+            demoModeDatasource = demoModeDatasource,
             dependencyProvider = dependencyProvider,
+            dispatchers = dispatchers,
         )
     }
 

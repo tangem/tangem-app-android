@@ -7,6 +7,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
 import com.tangem.common.biometric.BiometricManager
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.usersCode.UserCodeRepository
@@ -229,5 +230,29 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
         return resources.getString(stringResId, *formatArgs)
+    }
+
+    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
+        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
+            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
+        } else {
+            UserCodeRequestPolicy.Default
+        }
+    }
+
+    fun useBiometricsForAccessCode(): Boolean {
+        val policy = tangemSdk.config.userCodeRequestPolicy
+        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
+    }
+
+    companion object {
+        val config = Config(
+            linkedTerminal = true,
+            allowUntrustedCards = true,
+            filter = CardFilter(
+                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
+                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 21),
+            ),
+        )
     }
 }
