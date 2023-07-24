@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.WalletConnect
@@ -36,7 +37,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -56,8 +56,9 @@ class WalletConnectManager {
             .addInterceptor(RetryInterceptor())
             .build()
     }
+
     private val interceptor by lazy {
-        HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+        createNetworkLoggingInterceptor()
     }
 
     private var sessions: MutableMap<Topic, WalletConnectActiveData> = mutableMapOf()
