@@ -64,11 +64,28 @@ sealed class WalletNotification(open val state: NotificationState) {
     )
 
     /**
+     * "Remaining signatures left" notification
+     *
+     * @param count number of remaining signatures
+     */
+    class RemainingSignaturesLeft(count: Int) : WalletNotification(
+        state = NotificationState.Simple(
+            title = TextReference.Res(id = R.string.common_warning),
+            subtitle = TextReference.Res(
+                id = R.string.warning_low_signatures_format,
+                formatArgs = WrappedList(data = listOf(count)),
+            ),
+            iconResId = R.drawable.ic_alert_circle_24,
+            tint = TangemColorPalette.Amaranth,
+        ),
+    )
+
+    /**
      * "Wallet already signed hashes" notification
      *
      * @property onClick lambda be invoked when notification is clicked
      */
-    data class WalletAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
+    data class AlreadyToppedUpAndSignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
         state = NotificationState.Clickable(
             title = TextReference.Res(id = R.string.common_warning),
             subtitle = TextReference.Res(id = R.string.alert_card_signed_transactions),
@@ -83,7 +100,7 @@ sealed class WalletNotification(open val state: NotificationState) {
      *
      * @property onClick lambda be invoked when notification is clicked
      */
-    data class MultiWalletAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
+    data class SignedTransactionsInThePast(override val onClick: () -> Unit) : Clickable, WalletNotification(
         state = NotificationState.Clickable(
             title = TextReference.Res(
                 id = R.string.warning_important_security_info,
