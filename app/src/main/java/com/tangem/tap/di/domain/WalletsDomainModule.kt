@@ -1,4 +1,4 @@
-package com.tangem.tap.common.di.domain.wallets
+package com.tangem.tap.di.domain
 
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -11,7 +11,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
 @InstallIn(ViewModelComponent::class)
-object WalletsDomainModule {
+internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
