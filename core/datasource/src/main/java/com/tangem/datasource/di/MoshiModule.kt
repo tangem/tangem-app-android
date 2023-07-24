@@ -19,8 +19,8 @@ class MoshiModule {
     @NetworkMoshi
     fun provideNetworkMoshi(): Moshi {
         return Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
             .add(BigDecimalAdapter())
+            .add(KotlinJsonAdapterFactory())
             .build()
     }
 
