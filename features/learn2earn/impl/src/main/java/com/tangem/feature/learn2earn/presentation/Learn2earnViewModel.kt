@@ -6,18 +6,21 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.learn2earn.analytics.AnalyticsParam
 import com.tangem.feature.learn2earn.analytics.Learn2earnEvents
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.feature.learn2earn.domain.api.WebViewResult
 import com.tangem.feature.learn2earn.domain.api.WebViewResultHandler
 import com.tangem.feature.learn2earn.domain.models.PromotionError
+import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.state.*
 import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -42,7 +45,25 @@ class Learn2earnViewModel @Inject constructor(
         private set
 
     init {
-        uiState = uiState.updateStoriesVisibility(interactor.isNeedToShowViewOnStoriesScreen())
+        subscribeToWalletChanges()
+        uiState = uiState
+            .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
+            .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
+    }
+
+    private fun subscribeToWalletChanges() {
+        viewModelScope.launch(dispatchers.io) {
+            interactor.getIsTangemWalletFlow()
+                .collect { isTangemWallet ->
+                    updateUi {
+                        uiState
+                            .updateGetBonusVisibility(
+                                isVisible = isTangemWallet && interactor.isPromotionActiveOnMain(),
+                            )
+                            .changeGetBonusDescription(getBonusDescription())
+                    }
+                }
+        }
     }
 
     fun onMainScreenCreated() {
@@ -54,15 +75,63 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun updateMainScreenViews() {
+        if (!interactor.isPromotionActiveOnMain()) {
+            uiState = uiState.updateGetBonusVisibility(isVisible = false)
+            return
+        }
+
         viewModelScope.launch(dispatchers.io) {
-            if (interactor.isNeedToShowViewOnMainScreen()) {
-                updateUi {
-                    uiState.changeGetBounsDescription(getBonusDescription())
-                        .updateGetBonusVisibility(isVisible = true)
+            runCatching { interactor.validateUserWallet() }
+                .onSuccess { result ->
+                    result.fold(
+                        onSuccess = {
+                            updateUi {
+                                uiState
+                                    .updateStoriesVisibility(isVisible = interactor.isPromotionActiveOnStories())
+                                    .updateGetBonusVisibility(isVisible = interactor.isPromotionActiveOnMain())
+                                    .changeGetBonusDescription(getBonusDescription())
+                            }
+                        },
+                        onFailure = {
+                            if (interactor.isPromotionActive()) {
+                                val error = it as? PromotionError ?: return@launch
+                                updateViewsVisibilityOnError(error)
+                            } else {
+                                updateUi { uiState.updateViewsVisibility(isVisible = false) }
+                            }
+                        },
+                    )
                 }
-            } else {
+                .onFailure {
+                    Timber.e(it)
+                    updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
+                }
+        }
+    }
+
+    private suspend fun updateViewsVisibilityOnError(error: PromotionError) {
+        when (error) {
+            is PromotionError.ProgramNotFound,
+            is PromotionError.ProgramWasEnd,
+            is PromotionError.CodeWasAlreadyUsed,
+            is PromotionError.WalletAlreadyHasAward,
+            is PromotionError.CardAlreadyHasAward,
+            -> {
+                updateUi { uiState.updateViewsVisibility(isVisible = false) }
+            }
+            is PromotionError.CodeWasNotAppliedInShop -> {
                 updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
             }
+            is PromotionError.CodeNotFound,
+            -> {
+                updateUi {
+                    uiState.updateViewsVisibility(isVisible = true)
+                        .changeGetBonusDescription(getBonusDescription())
+                }
+            }
+            is PromotionError.UnknownError,
+            PromotionError.NetworkUnreachable,
+            -> Unit
         }
     }
 
@@ -72,14 +141,17 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun onButtonMainClick() {
-        if (!interactor.isUserHadPromoCode() && !interactor.isUserRegisteredInPromotion()) {
+        if (interactor.isUserHadPromoCode() || interactor.isUserRegisteredInPromotion()) {
+            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
+            requestAward()
+        } else {
             analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New()))
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
-            return
         }
+    }
 
-        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
+    private fun requestAward() {
         viewModelScope.launch(dispatchers.io) {
             updateUi { uiState.updateProgress(showProgress = true) }
 
@@ -89,7 +161,7 @@ class Learn2earnViewModel @Inject constructor(
                         onSuccess = {
                             analytics.send(Learn2earnEvents.MainScreen.NoticeClaimSuccess())
                             val onHideDialog = {
-                                uiState = uiState.updateGetBonusVisibility(isVisible = false)
+                                uiState = uiState.updateViewsVisibility(isVisible = false)
                                     .hideDialog()
                             }
                             val successDialog = MainScreenState.Dialog.Claimed(
@@ -152,7 +224,7 @@ class Learn2earnViewModel @Inject constructor(
                         .updateGetBonusVisibility(isVisible = false)
                 }
                 MainScreenState.Dialog.Error(
-                    error = error,
+                    textReference = TextReference.Str(error.description),
                     onOk = onHideDialog,
                     onDismissRequest = onHideDialog,
                 )
@@ -160,7 +232,7 @@ class Learn2earnViewModel @Inject constructor(
             is PromotionError.UnknownError, PromotionError.NetworkUnreachable -> {
                 val onHideDialog = { uiState = uiState.hideDialog() }
                 MainScreenState.Dialog.Error(
-                    error = error,
+                    textReference = TextReference.Res(R.string.common_server_unavailable),
                     onOk = onHideDialog,
                     onDismissRequest = onHideDialog,
                 )
@@ -171,9 +243,19 @@ class Learn2earnViewModel @Inject constructor(
     private fun subscribeToWebViewResultEvents() {
         interactor.webViewResultHandler = object : WebViewResultHandler {
             override fun handleResult(result: WebViewResult) {
-                interactor.webViewResultHandler = null
-                if (result is WebViewResult.ReadyForAward) {
-                    updateMainScreenViews()
+                when (result) {
+                    is WebViewResult.NewUserLearningFinished -> {
+                        interactor.webViewResultHandler = null
+                    }
+                    WebViewResult.ReadyForAward -> {
+                        interactor.webViewResultHandler = null
+                        updateMainScreenViews()
+                        requestAward()
+                    }
+                    is WebViewResult.OldUserLearningFinished,
+                    is WebViewResult.Learn2earnAnalyticsEvent,
+                    WebViewResult.Empty,
+                    -> Unit
                 }
             }
         }
