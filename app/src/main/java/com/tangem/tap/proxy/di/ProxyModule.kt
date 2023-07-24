@@ -2,6 +2,7 @@ package com.tangem.tap.proxy.di
 
 import androidx.compose.ui.text.intl.Locale
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
@@ -43,8 +44,13 @@ class ProxyModule {
     fun provideTransactionManager(
         appStateHolder: AppStateHolder,
         analytics: AnalyticsEventHandler,
+        cardSdkConfigRepository: CardSdkConfigRepository,
     ): TransactionManager {
-        return TransactionManagerImpl(appStateHolder, analytics)
+        return TransactionManagerImpl(
+            appStateHolder = appStateHolder,
+            analytics = analytics,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+        )
     }
 
     @Provides
