@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.store
+package com.tangem.datasource.local.datastore
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-internal class RuntimeStore<Key, Data>(private val keyProvider: (Data) -> Key) {
+internal class RuntimeDataStore<Key, Data>(private val keyProvider: (Data) -> Key) {
 
     private val store = MutableStateFlow<HashMap<Key, Data>>(hashMapOf())
 
