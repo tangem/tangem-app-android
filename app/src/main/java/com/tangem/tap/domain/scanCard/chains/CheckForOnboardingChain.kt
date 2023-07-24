@@ -7,6 +7,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.domain.card.ScanCardException
+import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
@@ -50,7 +51,13 @@ class CheckForOnboardingChain(
         return when {
             OnboardingHelper.isOnboardingCase(previousChainResult) -> {
                 Analytics.addContext(previousChainResult)
-                store.dispatchOnMain(GlobalAction.Onboarding.Start(previousChainResult, canSkipBackup = true))
+                // must check skip backup using card canSkipBackup
+                store.dispatchOnMain(
+                    GlobalAction.Onboarding.Start(
+                        scanResponse = previousChainResult,
+                        canSkipBackup = previousChainResult.card.canSkipBackup,
+                    ),
+                )
                 val appScreen = OnboardingHelper.whereToNavigate(previousChainResult)
                 ScanChainException.OnboardingNeeded(appScreen).left()
             }
