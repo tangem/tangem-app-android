@@ -187,6 +187,7 @@
     <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
     <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
     <string name="onboarding_getting_started">開始</string>
+    <string name="onboarding_linking_error_card_with_wallets">您要添加的卡上已經創建了另一個錢包。你想重置它並將卡用於新錢包嗎</string>
     <string name="onboarding_navbar_pin">PIN 碼</string>
     <string name="onboarding_navbar_register_wallet">連接</string>
     <string name="onboarding_navbar_title_creating_backup">創建備份</string>
