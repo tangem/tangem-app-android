@@ -44,7 +44,7 @@ internal object WalletImageResolver {
             Blockchain.Ethereum -> R.drawable.ill_note_ethereum_120_106
             Blockchain.Binance -> R.drawable.ill_note_binance_120_106
             Blockchain.Dogecoin -> R.drawable.ill_note_doge_120_106
-            Blockchain.Cardano -> R.drawable.ill_note_cardano_120_106
+            Blockchain.CardanoShelley -> R.drawable.ill_note_cardano_120_106
             Blockchain.XRP -> R.drawable.ill_note_xrp_120_106
             else -> null
         }
