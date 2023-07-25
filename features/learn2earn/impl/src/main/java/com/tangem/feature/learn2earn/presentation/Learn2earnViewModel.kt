@@ -141,11 +141,11 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun onButtonMainClick() {
-        if (interactor.isUserHadPromoCode() || interactor.isUserRegisteredInPromotion()) {
-            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
+        val isUserHasPromo = interactor.isUserHadPromoCode()
+        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(getAnalyticsClientType(isUserHasPromo)))
+        if (isUserHasPromo || interactor.isUserRegisteredInPromotion()) {
             requestAward()
         } else {
-            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New()))
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
         }
@@ -159,7 +159,13 @@ class Learn2earnViewModel @Inject constructor(
                 .onSuccess { requestAwardResult ->
                     requestAwardResult.fold(
                         onSuccess = {
-                            analytics.send(Learn2earnEvents.MainScreen.NoticeClaimSuccess())
+                            analytics.send(
+                                Learn2earnEvents.MainScreen.NoticeClaimSuccess(
+                                    clientType = getAnalyticsClientType(
+                                        isUserHasPromo = interactor.isUserHadPromoCode(),
+                                    ),
+                                ),
+                            )
                             val onHideDialog = {
                                 uiState = uiState.updateViewsVisibility(isVisible = false)
                                     .hideDialog()
@@ -200,6 +206,14 @@ class Learn2earnViewModel @Inject constructor(
             MainScreenState.Description.GetBonus
         } else {
             MainScreenState.Description.Learn(interactor.getAwardAmount())
+        }
+    }
+
+    private fun getAnalyticsClientType(isUserHasPromo: Boolean): AnalyticsParam.ClientType {
+        return if (isUserHasPromo) {
+            AnalyticsParam.ClientType.New()
+        } else {
+            AnalyticsParam.ClientType.Old()
         }
     }
 
