@@ -38,7 +38,10 @@ internal sealed class Learn2earnEvents(
             params = mapOf(AnalyticsParam.CLIENT_TYPE to clientType.value),
         )
 
-        class NoticeClaimSuccess : MainScreen("Notice - Claim Successed")
+        class NoticeClaimSuccess(clientType: AnalyticsParam.ClientType) : MainScreen(
+            event = "Notice - Successful Claim",
+            params = mapOf(AnalyticsParam.CLIENT_TYPE to clientType.value),
+        )
     }
 
     sealed class PromoScreen(
@@ -65,6 +68,6 @@ internal sealed class AnalyticsParam {
     }
 
     companion object Key {
-        const val CLIENT_TYPE = "Client type"
+        const val CLIENT_TYPE = "Client Type"
     }
 }
