@@ -8,11 +8,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
+import com.tangem.lib.crypto.TxHistoryManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.DerivationManagerImpl
-import com.tangem.tap.proxy.TransactionManagerImpl
-import com.tangem.tap.proxy.UserWalletManagerImpl
+import com.tangem.tap.proxy.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,6 +57,12 @@ class ProxyModule {
         return DerivationManagerImpl(
             appStateHolder = appStateHolder,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTxHistoryManager(appStateHolder: AppStateHolder): TxHistoryManager {
+        return TxHistoryManagerImpl(appStateHolder = appStateHolder)
     }
 
     // regions FeatureConsumers
