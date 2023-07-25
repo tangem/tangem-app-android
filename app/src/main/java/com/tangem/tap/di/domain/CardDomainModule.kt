@@ -4,6 +4,7 @@ import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.IsDemoCardUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

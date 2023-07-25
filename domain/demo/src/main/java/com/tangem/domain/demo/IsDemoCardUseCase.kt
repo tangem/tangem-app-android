@@ -1,6 +1,4 @@
-package com.tangem.domain.card
-
-import com.tangem.domain.demo.DemoConfig
+package com.tangem.domain.demo
 
 class IsDemoCardUseCase(private val config: DemoConfig) {
 
