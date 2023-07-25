@@ -173,7 +173,7 @@
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
-    <string name="main_promotion_credited">1INCH токены будут зачислены на адрес вашего кошелька в сети %s в течение 24 часов</string>
+    <string name="main_promotion_credited">1INCH токены будут зачислены на адрес вашего кошелька в сети %s в течение 48 часов</string>
     <string name="main_promotion_no_purchase">По вашему промокоду не было покупки кошелька, а значит вы не можете получить бонус. Купите кошелек Tangem, отсканируйте его в приложении и получите бонус.</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
