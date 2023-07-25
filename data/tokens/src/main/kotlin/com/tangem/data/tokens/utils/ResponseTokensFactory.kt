@@ -11,7 +11,6 @@ import com.tangem.domain.tokens.model.Token
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-@Suppress("unused") // TODO: Will be used in next MR
 internal class ResponseTokensFactory(private val demoConfig: DemoConfig) {
 
     fun createTokens(response: UserTokensResponse, card: CardDTO): Set<Token> {

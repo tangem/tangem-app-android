@@ -116,27 +116,14 @@ internal object MockTokens {
         derivationPath = null,
     )
 
-    val tokens get() = mapOf(
-        UserWalletId(stringValue = "123") to setOf(
-            token1, token2, token3, token4, token5,
-            token6, token7, token8, token9, token10,
-        ),
-        UserWalletId(stringValue = "321") to setOf(token1, token2, token3),
-        UserWalletId(stringValue = "42") to setOf(token7, token8, token9, token10),
-        UserWalletId(stringValue = "24") to setOf(token4, token5, token6),
-    )
-
-    val isGrouped get() = mapOf(
-        UserWalletId(stringValue = "123") to true,
-        UserWalletId(stringValue = "321") to false,
-        UserWalletId(stringValue = "42") to false,
-        UserWalletId(stringValue = "24") to true,
-    )
-
-    val isSortedByBalance get() = mapOf(
-        UserWalletId(stringValue = "123") to true,
-        UserWalletId(stringValue = "321") to false,
-        UserWalletId(stringValue = "42") to true,
-        UserWalletId(stringValue = "24") to false,
-    )
+    val tokens
+        get() = mapOf(
+            UserWalletId(stringValue = "123") to setOf(
+                token1, token2, token3, token4, token5,
+                token6, token7, token8, token9, token10,
+            ),
+            UserWalletId(stringValue = "321") to setOf(token1, token2, token3),
+            UserWalletId(stringValue = "42") to setOf(token7, token8, token9, token10),
+            UserWalletId(stringValue = "24") to setOf(token4, token5, token6),
+        )
 }
