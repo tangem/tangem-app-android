@@ -11,7 +11,6 @@ import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.domain.tokens.model.Token as DomainToken
 
-@Suppress("unused") // TODO: Will be used in next MR
 internal class CardTokensFactory(private val demoConfig: DemoConfig) {
 
     fun createDefaultTokensForMultiCurrencyCard(card: CardDTO): Set<DomainToken> {
