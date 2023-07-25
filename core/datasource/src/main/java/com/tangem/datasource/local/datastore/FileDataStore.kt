@@ -2,12 +2,11 @@ package com.tangem.datasource.local.datastore
 
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.files.FileReader
+import com.tangem.datasource.local.datastore.model.WriteTrigger
 import com.tangem.domain.core.error.DataError
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
+import java.io.FileNotFoundException
 
 internal class FileDataStore<Data>(
     private val fileNameProvider: (key: String) -> String,
@@ -15,12 +14,14 @@ internal class FileDataStore<Data>(
     private val adapter: JsonAdapter<Data>,
 ) {
 
-    private val writeTrigger = MutableSharedFlow<Unit>(
+    private val writeTrigger = MutableSharedFlow<WriteTrigger>(
+        replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     fun get(key: String): Flow<Data> {
         return writeTrigger
+            .onEmpty { emit(WriteTrigger) }
             .map { getInternal(fileNameProvider(key)) }
             .filterNotNull()
     }
@@ -34,7 +35,7 @@ internal class FileDataStore<Data>(
             val json = adapter.toJson(content)
 
             fileReader.rewriteFile(json, fileNameProvider(key))
-            writeTrigger.tryEmit(Unit)
+            writeTrigger.tryEmit(WriteTrigger)
         } catch (e: Throwable) {
             throw DataError.PersistenceError.UnableToWriteFile(e)
         }
@@ -42,7 +43,11 @@ internal class FileDataStore<Data>(
 
     private fun getInternal(fileName: String): Data? {
         return try {
-            val json = fileReader.readFile(fileName)
+            val json = try {
+                fileReader.readFile(fileName)
+            } catch (e: FileNotFoundException) {
+                return null
+            }
 
             adapter.fromJson(json)
         } catch (e: Throwable) {

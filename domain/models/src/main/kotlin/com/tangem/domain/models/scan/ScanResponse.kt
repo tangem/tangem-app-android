@@ -5,6 +5,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
+// TODO: Move to :domain:card:models
 /**
  * Created by Anton Zhilenkov on 07/04/2022.
  */
