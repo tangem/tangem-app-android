@@ -5,7 +5,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.Token
 
-@Suppress("unused") // TODO: Will be used in next MR
 internal class UserTokensResponseFactory {
 
     fun createUserTokensResponse(
