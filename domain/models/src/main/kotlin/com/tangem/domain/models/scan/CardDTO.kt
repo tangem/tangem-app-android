@@ -10,7 +10,7 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
 import java.util.*
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
-
+// [REDACTED_TODO_COMMENT]
 /**
  * [Card] copy
  * */
