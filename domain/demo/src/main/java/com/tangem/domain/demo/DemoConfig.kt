@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import java.math.BigDecimal
 
+// FIXME: Move to :domain:demo:models
 @Suppress("LargeClass")
 class DemoConfig {
 
