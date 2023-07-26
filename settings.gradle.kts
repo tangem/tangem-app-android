@@ -79,13 +79,18 @@ include(":domain:legacy")
 
 include(":domain:core")
 include(":domain:card")
+include(":domain:settings")
+include(":domain:tokens")
 include(":domain:wallets")
 include(":domain:wallets:models")
-include(":domain:tokens")
+include(":domain:txhistory")
 // endregion Domain modules
 
 // region Data modules
+include(":data:common")
 include(":data:card")
 include(":data:tokens")
 include(":data:source:preferences")
+include(":data:settings")
+include(":data:txhistory")
 // endregion Data modules

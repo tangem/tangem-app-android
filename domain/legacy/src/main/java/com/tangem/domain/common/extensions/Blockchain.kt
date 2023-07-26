@@ -64,6 +64,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "telos/test" -> Blockchain.TelosTestnet
         "aleph-zero" -> Blockchain.AlephZero
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
+        "octaspace" -> Blockchain.OctaSpace
+        "octaspace/test" -> Blockchain.OctaSpaceTestnet
         else -> null
     }
 }
@@ -131,6 +133,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TelosTestnet -> "telos/test"
         Blockchain.AlephZero -> "aleph-zero"
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
+        Blockchain.OctaSpace -> "octaspace"
+        Blockchain.OctaSpaceTestnet -> "octaspace/test"
     }
 }
 
@@ -174,6 +178,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Cronos -> "crypto-com-chain"
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
+        Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
     }
 }
 
@@ -184,4 +189,6 @@ fun Blockchain.isSupportedInApp(): Boolean {
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
+    Blockchain.Telos, // disable in 4.9
+    Blockchain.TelosTestnet, // disable in 4.9
 )

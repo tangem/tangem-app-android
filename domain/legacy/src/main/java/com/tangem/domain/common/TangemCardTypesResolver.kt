@@ -10,6 +10,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.operations.attestation.Attestation
 
 internal class TangemCardTypesResolver(
     private val card: CardDTO,
@@ -29,7 +30,8 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
+        // todo for now disabled to prevent Shiba cards using as wallet 2, enable when release wallet 2.0 (AND-4057)
+        return false // card.firmwareVersion >= FirmwareVersion.KeysImportAvailable && card.settings.isKeysImportAllowed
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
@@ -71,6 +73,27 @@ internal class TangemCardTypesResolver(
     }
 
     override fun getBackupCardsCount(): Int = card.wallets.size
+
+    override fun isReleaseFirmwareType(): Boolean = card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release
+
+    override fun getRemainingSignatures(): Int? = card.wallets.firstOrNull()?.remainingSignatures
+
+    override fun getCardId(): String = card.cardId
+
+    override fun isTestCard(): Boolean = card.isTestCard
+
+    override fun isAttestationFailed(): Boolean = card.attestation.status == Attestation.Status.Failed
+
+    override fun hasWalletSignedHashes(): Boolean {
+        return card.wallets.any {
+            val totalSignedHashes = it.totalSignedHashes ?: 0
+            totalSignedHashes > 0
+        }
+    }
+
+    override fun hasBackup(): Boolean = card.backupStatus != CardDTO.BackupStatus.NoBackup
+
+    override fun isBackupForbidden(): Boolean = !(card.settings.isBackupAllowed || card.settings.isHDWalletAllowed)
 
     private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
         // workaround for BSC (BNB) notes cards

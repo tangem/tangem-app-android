@@ -51,7 +51,7 @@ internal class TokenListOperations<E>(
     }
 
     private suspend fun createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
-        return withContext(dispatchers.single) {
+        return withContext(dispatchers.default) {
             val tokensNes = tokens.toNonEmptySetOrNull()
                 ?: return@withContext TokenList.NotInitialized
 
@@ -78,7 +78,7 @@ internal class TokenListOperations<E>(
         val sortingOperations = TokenListSortingOperations(
             tokens = tokens,
             isAnyTokenLoading = isAnyTokenLoading,
-            isSortedByBalance = isSortedByBalance,
+            sortByBalance = isSortedByBalance,
             dispatchers = dispatchers,
             raise = this,
             transformError = { e ->

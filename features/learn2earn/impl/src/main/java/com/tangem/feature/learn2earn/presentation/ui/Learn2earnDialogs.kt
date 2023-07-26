@@ -5,6 +5,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.TextButton
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.state.MainScreenState
 
@@ -72,7 +73,7 @@ private fun ErrorDialog(dialog: MainScreenState.Dialog.Error) {
             Text(text = stringResource(id = R.string.common_error))
         },
         text = {
-            Text(text = dialog.error.description)
+            Text(text = dialog.textReference.resolveReference())
         },
         confirmButton = {
             TextButton(

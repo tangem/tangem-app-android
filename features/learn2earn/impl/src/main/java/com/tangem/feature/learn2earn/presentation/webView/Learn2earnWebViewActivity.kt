@@ -42,6 +42,7 @@ class Learn2earnWebViewActivity : AppCompatActivity() {
             headers = webViewData.headers,
             finishSessionHandler = { finish() },
         )
+
         webView.loadUrl(
             webViewData.uri.toString(),
             webViewData.headers,

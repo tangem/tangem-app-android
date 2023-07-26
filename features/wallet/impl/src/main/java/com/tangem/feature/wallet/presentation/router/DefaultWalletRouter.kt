@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -14,7 +15,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.NavigationStateHolder
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
@@ -34,28 +34,27 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     override fun Initialize(fragmentManager: FragmentManager) {
         this.fragmentManager = fragmentManager
 
-        TangemTheme {
-            NavHost(
-                navController = rememberNavController().apply { navController = this },
-                startDestination = WalletScreens.WALLET.name,
-            ) {
-                composable(WalletScreens.WALLET.name) {
-                    val viewModel = hiltViewModel<WalletViewModel>()
-                        .apply { router = this@DefaultWalletRouter }
-                    WalletScreen(state = viewModel.uiState)
-                }
+        NavHost(
+            navController = rememberNavController().apply { navController = this },
+            startDestination = WalletScreens.WALLET.name,
+        ) {
+            composable(WalletScreens.WALLET.name) {
+                val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
+                LocalLifecycleOwner.current.lifecycle.addObserver(observer = viewModel)
 
-                composable(WalletScreens.ORGANIZE_TOKENS.name) {
-                    BackHandler(onBack = ::popBackStack)
+                WalletScreen(state = viewModel.uiState)
+            }
 
-                    val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
-                        .apply { router = this@DefaultWalletRouter }
+            composable(WalletScreens.ORGANIZE_TOKENS.name) {
+                BackHandler(onBack = ::popBackStack)
 
-                    OrganizeTokensScreen(
-                        modifier = Modifier.systemBarsPadding(),
-                        state = viewModel.uiState,
-                    )
-                }
+                val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
+                    .apply { router = this@DefaultWalletRouter }
+
+                OrganizeTokensScreen(
+                    modifier = Modifier.systemBarsPadding(),
+                    state = viewModel.uiState,
+                )
             }
         }
     }

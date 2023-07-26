@@ -18,7 +18,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
-import java.util.*
+import java.util.Currency
+import java.util.UUID
 
 class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
@@ -82,16 +83,18 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     suspend fun checkIfGooglePayAvailable(googlePayService: GooglePayService): Result<Boolean> {
         this.googlePayService = googlePayService
-        return googlePayService.checkIfGooglePayAvailable()
+        return googlePayService.checkIfGooglePayAvailable(shopifyService.shop.merchantID != null)
     }
 
     fun buyWithGooglePay(productType: ProductType) {
-        val totalPrice = checkouts[productType]!!.totalPriceV2.amount
-        googlePayService.payWithGooglePay(
-            totalPriceCents = totalPrice,
-            currencyCode = checkouts[productType]!!.currencyCode.name,
-            merchantID = shopifyService.shop.merchantID,
-        )
+        shopifyService.shop.merchantID?.let { merchantId ->
+            val totalPrice = checkouts[productType]!!.totalPriceV2.amount
+            googlePayService.payWithGooglePay(
+                totalPriceCents = totalPrice,
+                currencyCode = checkouts[productType]!!.currencyCode.name,
+                merchantID = merchantId,
+            )
+        }
     }
 
 //    fun subscribeToGooglePayResult(
@@ -185,7 +188,6 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
                     ),
                     appliedDiscount = it.getAppliedDiscount(),
                 ),
-
             )
         }
         return Result.failure(result.exceptionOrNull()!!)

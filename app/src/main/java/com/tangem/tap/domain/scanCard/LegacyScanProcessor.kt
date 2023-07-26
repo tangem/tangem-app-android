@@ -9,6 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
@@ -153,7 +154,13 @@ internal object LegacyScanProcessor {
         if (OnboardingHelper.isOnboardingCase(scanResponse)) {
             Analytics.addContext(scanResponse)
             onWalletNotCreated()
-            store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
+            // must check skip backup using card canSkipBackup
+            store.dispatchOnMain(
+                GlobalAction.Onboarding.Start(
+                    scanResponse = scanResponse,
+                    canSkipBackup = scanResponse.card.canSkipBackup,
+                ),
+            )
             val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
             navigateTo(appScreen) { onProgressStateChange(it) }
         } else {

@@ -46,7 +46,7 @@ data class WalletConnectSession(
             val factory = AddressServiceFactory(it)
             val service = factory.makeAddressService()
 
-            return service.makeAddressOldStyle(key).value
+            service.makeAddressOldStyle(key).value
         }
     }
 }

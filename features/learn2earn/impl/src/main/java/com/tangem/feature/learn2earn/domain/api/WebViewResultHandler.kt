@@ -12,8 +12,14 @@ interface WebViewResultHandler {
 }
 
 sealed class WebViewResult {
+
     object Empty : WebViewResult()
-    data class PromoCode(val promoCode: String) : WebViewResult()
+
+    data class NewUserLearningFinished(val promoCode: String?) : WebViewResult()
+
+    object OldUserLearningFinished : WebViewResult()
+
     object ReadyForAward : WebViewResult()
+
     data class Learn2earnAnalyticsEvent(val event: AnalyticsEvent) : WebViewResult()
 }

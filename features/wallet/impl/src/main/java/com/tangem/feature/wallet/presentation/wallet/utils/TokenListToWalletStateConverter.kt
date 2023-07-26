@@ -19,6 +19,9 @@ internal class TokenListToWalletStateConverter(
         return when (currentState) {
             is MultiCurrencyContent -> currentState.updateWithTokenList(value)
             is SingleCurrencyContent -> currentState.updateWithTokenList(value)
+            is WalletStateHolder.Loading,
+            is WalletStateHolder.UnlockWalletContent,
+            -> currentState
         }
     }
 

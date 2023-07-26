@@ -6,6 +6,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.recover
 import arrow.core.right
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.domain.tokens.operations.TokenListOperations
@@ -55,7 +56,7 @@ class GetTokenListUseCase(
             refresh = refresh,
             useCase = this@GetTokenListUseCase,
             raise = this,
-            transformError = TokenListError::fromTokenStatusesOperations,
+            transformError = TokensStatusesOperations.Error::mapToTokenListError,
         )
 
         return operations.getTokensStatusesFlow()
@@ -70,7 +71,7 @@ class GetTokenListUseCase(
             tokens = tokens,
             useCase = this@GetTokenListUseCase,
             raise = this,
-            transform = TokenListError::fromTokenListOperations,
+            transform = TokenListOperations.Error::mapToTokenListError,
         )
 
         return operations.getTokenListFlow()

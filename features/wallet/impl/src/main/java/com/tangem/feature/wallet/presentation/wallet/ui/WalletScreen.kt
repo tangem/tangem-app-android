@@ -10,19 +10,20 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
-import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
@@ -34,11 +35,13 @@ import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockGroupTitle
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TransactionsBlockTitle
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
 /**
@@ -53,13 +56,13 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
 @Composable
 internal fun WalletScreen(state: WalletStateHolder) {
     BackHandler(onBack = state.onBackClick)
+    val walletsListState = rememberLazyListState()
 
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
 
-        val walletsListState = rememberLazyListState()
         val changeableItemModifier = Modifier.changeWalletAnimator(walletsListState)
         val pullRefreshState = rememberPullRefreshState(
             refreshing = state.pullToRefreshConfig.isRefreshing,
@@ -152,13 +155,32 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 }
             }
 
-            PullRefreshIndicator(
-                refreshing = state.pullToRefreshConfig.isRefreshing,
+            PullToRefreshIndicator(
+                isRefreshing = state.pullToRefreshConfig.isRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
             )
         }
     }
+
+    state.bottomSheet?.let { bottomSheetConfig ->
+        if (bottomSheetConfig.isShow) WalletBottomSheet(config = bottomSheetConfig)
+    }
+
+    LaunchedEffect(key1 = walletsListState, key2 = state.walletsListConfig.onWalletChange) {
+        snapshotFlow { walletsListState.layoutInfo.visibleItemsInfo }
+            .collect(collector = ScrollOffsetCollector(callback = state.walletsListConfig.onWalletChange))
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun PullToRefreshIndicator(isRefreshing: Boolean, state: PullRefreshState, modifier: Modifier = Modifier) {
+    PullRefreshIndicator(
+        refreshing = isRefreshing,
+        state = state,
+        modifier = modifier,
+    )
 }
 
 @Composable

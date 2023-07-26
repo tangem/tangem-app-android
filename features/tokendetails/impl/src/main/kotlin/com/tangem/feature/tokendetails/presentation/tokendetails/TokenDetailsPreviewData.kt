@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
@@ -71,9 +73,21 @@ internal object TokenDetailsPreviewData {
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = disabledActionButtons)
 
+    val marketPriceContent = MarketPriceBlockState.Content(
+        currencyName = "USDT",
+        price = "98900 $",
+        priceChangeConfig = PriceChangeConfig(
+            valueInPercent = "10.89%",
+            type = PriceChangeConfig.Type.UP,
+        ),
+    )
+
+    private val marketPriceLoading = MarketPriceBlockState.Loading(currencyName = "USDT")
+
     val tokenDetailsState = TokenDetailsState(
         topAppBarConfig = tokenDetailsTopAppBarConfig,
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
+        marketPriceBlockState = marketPriceLoading,
     )
 }
