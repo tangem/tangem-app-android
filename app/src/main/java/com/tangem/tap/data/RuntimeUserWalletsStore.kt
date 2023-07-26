@@ -11,10 +11,10 @@ internal class RuntimeUserWalletsStore(
     private val walletsStateHolder: WalletsStateHolder,
 ) : UserWalletsStore {
 
-    override suspend fun getSync(userWalletId: UserWalletId): UserWallet? {
+    override suspend fun getOrNull(userWalletId: UserWalletId): UserWallet? {
         return walletsStateHolder.userWalletsListManager
             ?.userWallets
             ?.firstOrNull()
-            ?.firstOrNull { it.walletId == userWalletId }
+            ?.singleOrNull { it.walletId == userWalletId }
     }
 }

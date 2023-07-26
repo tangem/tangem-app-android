@@ -7,8 +7,8 @@ internal class RuntimeCacheKeysStore : CacheKeysStore {
 
     private val store = RuntimeDataStore(keyProvider = CacheKey::id)
 
-    override fun get(id: String): CacheKey? {
-        return store.getSync { it.id == id }.firstOrNull()
+    override fun getOrNull(id: String): CacheKey? {
+        return store.getSync { it.id == id }.singleOrNull()
     }
 
     override fun addOrReplace(key: CacheKey) {
