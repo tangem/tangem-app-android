@@ -3,23 +3,20 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.IsDemoCardUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ViewModelComponent::class)
 internal object CardDomainModule {
 
     @Provides
-    @Singleton
-    fun provideScanCardUseCase(): ScanCardProcessor = DefaultScanCardProcessor()
-
-    @Provides
-    @Singleton
+    @ViewModelScoped
     fun provideGetBiometricsStatusUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): GetBiometricsStatusUseCase {
@@ -27,7 +24,7 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @Singleton
+    @ViewModelScoped
     fun provideSetAccessCodeRequestPolicyUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): SetAccessCodeRequestPolicyUseCase {
@@ -35,7 +32,7 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @Singleton
+    @ViewModelScoped
     fun provideGetAccessCodeSavingStatusUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): GetAccessCodeSavingStatusUseCase {
@@ -43,8 +40,12 @@ internal object CardDomainModule {
     }
 
     @Provides
-    @Singleton
+    @ViewModelScoped
     fun provideGetCardWasScannedUseCase(cardRepository: CardRepository): GetCardWasScannedUseCase {
         return GetCardWasScannedUseCase(cardRepository = cardRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig())
 }
