@@ -7,7 +7,7 @@ interface UserTokensStore {
 
     fun get(userWalletId: String): Flow<UserTokensResponse>
 
-    suspend fun getSync(userWalletId: String): UserTokensResponse?
+    suspend fun getSyncOrNull(userWalletId: String): UserTokensResponse?
 
     suspend fun store(userWalletId: String, tokens: UserTokensResponse)
 }
