@@ -277,7 +277,7 @@ internal class DefaultLearn2earnInteractor(
             promotionInfo.oldCard.status == PromotionInfoResponse.Status.ACTIVE
         } else {
             when (promotionInfo.newCard.status) {
-                PromotionInfoResponse.Status.PENDING -> false
+                PromotionInfoResponse.Status.PENDING -> !promoUserData.isAlreadyReceivedAward
                 PromotionInfoResponse.Status.ACTIVE -> true
                 // disable promotion for a new user only if they have received an award
                 PromotionInfoResponse.Status.FINISHED -> !promoUserData.isAlreadyReceivedAward
