@@ -3,12 +3,11 @@ package com.tangem.datasource.local.datastore
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.files.FileReader
 import com.tangem.datasource.local.datastore.model.WriteTrigger
-import com.tangem.domain.core.error.DataError
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
-import java.io.FileNotFoundException
+import timber.log.Timber
 
-internal class FileDataStore<Data>(
+internal class FileDataStore<Data : Any>(
     private val fileNameProvider: (key: String) -> String,
     private val fileReader: FileReader,
     private val adapter: JsonAdapter<Data>,
@@ -26,32 +25,31 @@ internal class FileDataStore<Data>(
             .filterNotNull()
     }
 
-    fun getSync(key: String): Data? {
+    fun getSyncOrNull(key: String): Data? {
         return getInternal(fileNameProvider(key))
     }
 
     fun store(key: String, content: Data) {
+        val fileName = fileNameProvider(key)
+
         try {
             val json = adapter.toJson(content)
 
-            fileReader.rewriteFile(json, fileNameProvider(key))
+            fileReader.rewriteFile(json, fileName)
             writeTrigger.tryEmit(WriteTrigger)
         } catch (e: Throwable) {
-            throw DataError.PersistenceError.UnableToWriteFile(e)
+            Timber.e(e, "Unable to write file: $fileName")
         }
     }
 
     private fun getInternal(fileName: String): Data? {
         return try {
-            val json = try {
-                fileReader.readFile(fileName)
-            } catch (e: FileNotFoundException) {
-                return null
-            }
+            val json = fileReader.readFile(fileName)
 
             adapter.fromJson(json)
         } catch (e: Throwable) {
-            throw DataError.PersistenceError.UnableToReadFile(e)
+            Timber.e(e, "Unable to read file: $fileName")
+            null
         }
     }
 }

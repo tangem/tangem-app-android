@@ -4,7 +4,7 @@ import com.tangem.datasource.local.cache.model.CacheKey
 
 interface CacheKeysStore {
 
-    fun get(id: String): CacheKey?
+    fun getOrNull(id: String): CacheKey?
 
     fun addOrReplace(key: CacheKey)
 
