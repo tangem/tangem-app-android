@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-internal class RuntimeDataStore<Key, Data>(private val keyProvider: (Data) -> Key) {
+internal class RuntimeDataStore<Key : Any, Data : Any>(private val keyProvider: (Data) -> Key) {
 
     private val store = MutableStateFlow<HashMap<Key, Data>>(hashMapOf())
 
