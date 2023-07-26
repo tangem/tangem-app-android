@@ -1,8 +1,8 @@
-package com.tangem.domain.common.demo
+package com.tangem.domain.demo
 
+import com.tangem.blockchain.BuildConfig
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.features.BuildConfig
 import java.math.BigDecimal
 
 @Suppress("LargeClass")
@@ -15,7 +15,7 @@ class DemoConfig {
         Blockchain.Solana,
     )
 
-    val demoCardIds: List<String> by lazy {
+    private val demoCardIds: List<String> by lazy {
         val demoIds = getReleaseIds().toMutableList()
         if (BuildConfig.DEBUG) demoIds.addAll(debugTestDemoCardIds)
 
