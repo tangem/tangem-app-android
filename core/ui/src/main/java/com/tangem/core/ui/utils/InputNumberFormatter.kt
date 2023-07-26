@@ -20,7 +20,7 @@ class InputNumberFormatter(
         val thousandsSeparator = symbols.groupingSeparator
         val decimalSeparator = symbols.decimalSeparator
 
-        val lastChar = text.last()
+        val lastChar = text.lastOrNull()
         val trimmedText = if (text.isNotEmpty() && (lastChar == thousandsSeparator || lastChar == POINT_SEPARATOR)) {
             text.dropLast(1) + decimalSeparator
         } else {
@@ -32,8 +32,10 @@ class InputNumberFormatter(
         }
 
         val filteredChars = trimmedText.replace(thousandsSeparator.toString(), "").filterIndexed { index, c ->
-            val isOneOrZeroPoint = c == decimalSeparator && index != 0 && trimmedText.count { it == decimalSeparator } <= 1
-            val isIndexPointIndex = c == decimalSeparator && index != 0 && trimmedText.indexOf(decimalSeparator) == index
+            val isOneOrZeroPoint =
+                c == decimalSeparator && index != 0 && trimmedText.count { it == decimalSeparator } <= 1
+            val isIndexPointIndex =
+                c == decimalSeparator && index != 0 && trimmedText.indexOf(decimalSeparator) == index
             c.isDigit() || isIndexPointIndex || isOneOrZeroPoint
         }
         // If dot is present, take first digits before decimal and first decimals digits after decimal
