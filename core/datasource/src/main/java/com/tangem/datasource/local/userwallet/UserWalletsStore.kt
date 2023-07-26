@@ -5,5 +5,5 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface UserWalletsStore {
 
-    suspend fun getSync(userWalletId: UserWalletId): UserWallet?
+    suspend fun getOrNull(userWalletId: UserWalletId): UserWallet?
 }
