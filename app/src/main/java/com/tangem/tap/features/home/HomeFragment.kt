@@ -19,6 +19,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
 import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
@@ -40,7 +41,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         store.dispatch(HomeAction.OnCreate)
         store.dispatch(HomeAction.Init)
         if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
-            store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
+            store.dispatchOnMain(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
             // re init homeState after inserting learn2earn story
             homeState = mutableStateOf(store.state.homeState)
         }
