@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
     implementation(projects.domain.card)
+    implementation(projects.domain.demo)
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
     implementation(projects.domain.settings)
