@@ -42,6 +42,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "cronos" -> R.drawable.img_cronos_22
         "TELOS", "TELOS/test" -> R.drawable.img_telos_22
         "aleph-zero", "aleph-zero/test" -> R.drawable.img_azero_22
+        "octaspace", "octaspace/test" -> R.drawable.img_octaspace_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -87,6 +88,7 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         "terra" -> R.drawable.img_terra_22
         "terra-2" -> R.drawable.img_terra2_22
         "telos" -> R.drawable.img_telos_22
+        "octaspace" -> R.drawable.img_octaspace_22
         else -> R.drawable.ic_alert_24
     }
 }
