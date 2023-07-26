@@ -18,8 +18,8 @@ internal class FileUserTokensStore(fileReader: FileReader, moshi: Moshi) : UserT
         return store.get(userWalletId)
     }
 
-    override suspend fun getSync(userWalletId: String): UserTokensResponse? {
-        return store.getSync(userWalletId)
+    override suspend fun getSyncOrNull(userWalletId: String): UserTokensResponse? {
+        return store.getSyncOrNull(userWalletId)
     }
 
     override suspend fun store(userWalletId: String, tokens: UserTokensResponse) {
