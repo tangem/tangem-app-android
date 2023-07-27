@@ -25,7 +25,6 @@ dependencies {
 
     /** Project - Utils */
     implementation(projects.core.utils)
-    // FIXME: For blockchain extensions, remove after refactoring
     implementation(projects.domain.legacy)
 
     /** Tangem SDKs */
