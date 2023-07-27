@@ -7,4 +7,6 @@ sealed class WalletConnectError : Exception() {
     data class ExternalApprovalError(override val message: String?) : WalletConnectError()
     object WrongUserWallet : WalletConnectError()
     object UnsupportedMethod : WalletConnectError()
+    object SigningError : WalletConnectError()
+    object ValidationError : WalletConnectError()
 }
