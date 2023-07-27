@@ -9,6 +9,7 @@ sealed class CryptoCurrencyAmount {
     data class Coin(override val value: BigDecimal) : CryptoCurrencyAmount()
 
     data class Token(
+        val id: String?,
         val tokenContractAddress: String,
         override val value: BigDecimal,
     ) : CryptoCurrencyAmount()
