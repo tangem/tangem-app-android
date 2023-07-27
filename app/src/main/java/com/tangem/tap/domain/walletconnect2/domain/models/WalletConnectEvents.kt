@@ -24,5 +24,6 @@ sealed interface WalletConnectEvents {
         val id: Long,
         val metaName: String,
         val metaUrl: String,
+        val method: String,
     ) : WalletConnectEvents
 }
