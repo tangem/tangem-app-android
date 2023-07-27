@@ -6,7 +6,11 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface WalletManagersStore {
 
-    suspend fun getOrNull(userWalletId: UserWalletId, blockchain: Blockchain, derivationPath: String?): WalletManager?
+    suspend fun getSyncOrNull(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager?
 
     suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager)
 

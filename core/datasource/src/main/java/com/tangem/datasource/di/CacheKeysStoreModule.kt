@@ -1,7 +1,8 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.cache.CacheKeysStore
-import com.tangem.datasource.local.cache.RuntimeCacheKeysStore
+import com.tangem.datasource.local.cache.DefaultCacheKeysStore
+import com.tangem.datasource.local.datastore.RuntimeDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +16,8 @@ internal object CacheKeysStoreModule {
     @Provides
     @Singleton
     fun provideCacheKeysStore(): CacheKeysStore {
-        return RuntimeCacheKeysStore()
+        return DefaultCacheKeysStore(
+            dataStore = RuntimeDataStore(),
+        )
     }
 }

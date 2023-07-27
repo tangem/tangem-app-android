@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.walletmanager.RuntimeWalletManagersStore
+import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.walletmanager.DefaultWalletManagersStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import dagger.Module
 import dagger.Provides
@@ -15,6 +16,8 @@ internal object WalletManagersStoreModule {
     @Provides
     @Singleton
     fun provideWalletManagersStore(): WalletManagersStore {
-        return RuntimeWalletManagersStore()
+        return DefaultWalletManagersStore(
+            dataStore = RuntimeDataStore(),
+        )
     }
 }

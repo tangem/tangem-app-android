@@ -2,25 +2,25 @@ package com.tangem.datasource.local.walletmanager
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.walletmanager.model.StoredWalletManagers
+import com.tangem.datasource.local.datastore.core.StringKeyDataStore
+import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.plusOrReplace
 
-internal class RuntimeWalletManagersStore : WalletManagersStore {
+internal class DefaultWalletManagersStore(
+    dataStore: StringKeyDataStore<List<WalletManager>>,
+) : WalletManagersStore, StringKeyDataStoreDecorator<UserWalletId, List<WalletManager>>(dataStore) {
 
-    private val store = RuntimeDataStore(
-        keyProvider = StoredWalletManagers::userWalletId,
-    )
+    override fun provideStringKey(key: UserWalletId): String {
+        return key.stringValue
+    }
 
-    override suspend fun getOrNull(
+    override suspend fun getSyncOrNull(
         userWalletId: UserWalletId,
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val walletManagers = store.getSync { it.userWalletId == userWalletId }
-            .singleOrNull()
-            ?.walletManagers
+        val walletManagers = getSyncOrNull(userWalletId)
 
         return walletManagers?.singleOrNull {
             it.wallet.blockchain == blockchain &&
@@ -29,9 +29,7 @@ internal class RuntimeWalletManagersStore : WalletManagersStore {
     }
 
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {
-        val walletManagers = store.getSync { it.userWalletId == userWalletId }
-            .singleOrNull()
-            ?.walletManagers
+        val walletManagers = getSyncOrNull(userWalletId)
 
         val updatedWalletManagers = walletManagers
             ?.plusOrReplace(walletManager) {
@@ -40,10 +38,6 @@ internal class RuntimeWalletManagersStore : WalletManagersStore {
             }
             ?: listOf(walletManager)
 
-        store.addOrReplace(item = StoredWalletManagers(userWalletId, updatedWalletManagers))
-    }
-
-    override suspend fun clear() {
-        store.clear()
+        store(userWalletId, updatedWalletManagers)
     }
 }
