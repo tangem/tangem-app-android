@@ -122,20 +122,13 @@ internal class WalletNotificationsListFactory(
     }
 
     private fun TokenList.hasMissedDerivations(): Boolean {
-        val hasMissedDerivation: List<TokenStatus.Status>.() -> Boolean = { any { it is TokenStatus.MissedDerivation } }
+        val statuses = when (this) {
+            is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::tokens).map(TokenStatus::value)
+            is TokenList.Ungrouped -> tokens.map(TokenStatus::value)
+            TokenList.NotInitialized -> emptyList()
+        }
 
-        val groupedListStatuses = (this as? TokenList.GroupedByNetwork)
-            ?.groups
-            ?.flatMap(NetworkGroup::tokens)
-            ?.map(TokenStatus::value)
-            .orEmpty()
-
-        val ungroupedListStatuses = (this as? TokenList.Ungrouped)
-            ?.tokens
-            ?.map(TokenStatus::value)
-            .orEmpty()
-
-        return groupedListStatuses.hasMissedDerivation() || ungroupedListStatuses.hasMissedDerivation()
+        return statuses.any { it is TokenStatus.MissedDerivation }
     }
 
     private companion object {

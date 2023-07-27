@@ -71,6 +71,9 @@ internal class WalletViewModel @Inject constructor(
 
     private var cardTypeResolverMap: Map<UserWalletId, CardTypesResolver> by Delegates.notNull()
 
+    private val getTokensJobHolder = JobHolder()
+    private val getNotificationJobHolder = JobHolder()
+
     override fun onCreate(owner: LifecycleOwner) {
         getWalletsUseCase()
             .flowWithLifecycle(owner.lifecycle)
@@ -110,6 +113,7 @@ internal class WalletViewModel @Inject constructor(
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+            .saveIn(jobHolder = getTokensJobHolder)
     }
 
     private fun updateNotifications(index: Int, tokenList: TokenList) {
@@ -126,6 +130,7 @@ internal class WalletViewModel @Inject constructor(
             .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+            .saveIn(jobHolder = getNotificationJobHolder)
     }
 
     override fun onBackClick() = router.popBackStack()

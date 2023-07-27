@@ -7,6 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemStat
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder.MultiCurrencyContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
@@ -15,15 +16,24 @@ internal class TokenListToWalletStateConverter(
     private val isWalletContentHidden: Boolean,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
-    private val isRefreshing: Boolean,
-) : Converter<TokenList, WalletStateHolder> {
+) : Converter<TokensListModel, WalletStateHolder> {
 
-    override fun convert(value: TokenList): WalletStateHolder {
-        val state = if (currentState is MultiCurrencyContent) currentState.updateWithTokenList(value) else currentState
+    private val tokenListToContentConverter = TokenListToContentItemsConverter(
+        isWalletContentHidden = isWalletContentHidden,
+        fiatCurrencyCode = fiatCurrencyCode,
+        fiatCurrencySymbol = fiatCurrencySymbol,
+    )
+
+    override fun convert(value: TokensListModel): WalletStateHolder {
+        val state = if (currentState is MultiCurrencyContent) {
+            currentState.updateWithTokenList(tokenList = value.tokenList)
+        } else {
+            currentState
+        }
 
         return state.copySealed(
-            walletsListConfig = state.updateSelectedWallet(value.totalFiatBalance),
-            pullToRefreshConfig = if (isRefreshing) {
+            walletsListConfig = state.updateSelectedWallet(value.tokenList.totalFiatBalance),
+            pullToRefreshConfig = if (value.isRefreshing) {
                 state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
             } else {
                 state.pullToRefreshConfig
@@ -32,13 +42,7 @@ internal class TokenListToWalletStateConverter(
     }
 
     private fun MultiCurrencyContent.updateWithTokenList(tokenList: TokenList): MultiCurrencyContent {
-        return this.copy(
-            contentItems = TokenListToContentItemsConverter(
-                isWalletContentHidden = isWalletContentHidden,
-                fiatCurrencyCode = fiatCurrencyCode,
-                fiatCurrencySymbol = fiatCurrencySymbol,
-            ).convert(value = tokenList),
-        )
+        return this.copy(contentItems = tokenListToContentConverter.convert(value = tokenList))
     }
 
     private fun WalletStateHolder.updateSelectedWallet(fiatBalance: TokenList.FiatBalance): WalletsListConfig {
@@ -68,4 +72,6 @@ internal class TokenListToWalletStateConverter(
                 state is WalletContentItemState.Loading
         }
     }
+
+    data class TokensListModel(val tokenList: TokenList, val isRefreshing: Boolean)
 }

@@ -21,17 +21,29 @@ internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletStateHolder>,
 ) : Converter<LoadedTokensListModel, WalletStateHolder> {
 
-    override fun convert(value: LoadedTokensListModel): WalletStateHolder {
-        val updateStateWithError = TokenListErrorToWalletStateConverter(currentState = currentStateProvider())::convert
-        val updateState = TokenListToWalletStateConverter(
-            currentState = currentStateProvider(),
-            isRefreshing = value.isRefreshing,
-            isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
-            fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
-            fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
-        )::convert
+    private val tokenListStateConverter = TokenListToWalletStateConverter(
+        currentState = currentStateProvider(),
+        isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
+        fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
+        fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
+    )
 
-        return value.tokenListEither.fold(ifLeft = updateStateWithError, ifRight = updateState)
+    private val tokenListErrorStateConverter = TokenListErrorToWalletStateConverter(
+        currentState = currentStateProvider(),
+    )
+
+    override fun convert(value: LoadedTokensListModel): WalletStateHolder {
+        return value.tokenListEither.fold(
+            ifLeft = tokenListErrorStateConverter::convert,
+            ifRight = {
+                tokenListStateConverter.convert(
+                    value = TokenListToWalletStateConverter.TokensListModel(
+                        tokenList = it,
+                        isRefreshing = value.isRefreshing,
+                    ),
+                )
+            },
+        )
     }
 
     data class LoadedTokensListModel(
