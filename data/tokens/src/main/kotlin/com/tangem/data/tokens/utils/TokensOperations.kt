@@ -49,7 +49,7 @@ internal fun getTokenId(blockchain: Blockchain, token: SdkToken): CryptoCurrency
     return getTokenOrCoinId(blockchain, token)
 }
 
-internal fun getResponseTokenId(currency: CryptoCurrency): String? {
+internal fun getTokenIdString(currency: CryptoCurrency): String? {
     return currency.id.value.substringAfter(TOKEN_ID_DELIMITER)
         .takeUnless { currency is CryptoCurrency.Token && currency.isCustom }
 }
