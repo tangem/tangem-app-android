@@ -86,7 +86,7 @@ class DefaultWalletManagersFacade(
 
         return try {
             if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
-                updateDemoWalletManager(walletManager, extraTokens)
+                updateDemoWalletManager(walletManager)
             } else {
                 updateWalletManager(walletManager)
             }
@@ -95,14 +95,11 @@ class DefaultWalletManagersFacade(
         }
     }
 
-    private fun updateDemoWalletManager(
-        walletManager: WalletManager,
-        tokens: Set<CryptoCurrency.Token>,
-    ): UpdateWalletManagerResult {
+    private fun updateDemoWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
         val amount = demoConfig.getBalance(walletManager.wallet.blockchain)
         walletManager.wallet.setAmount(amount)
 
-        return resultFactory.getDemoResult(amount, tokens)
+        return resultFactory.getDemoResult(walletManager, amount)
     }
 
     private suspend fun updateWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
@@ -149,7 +146,7 @@ class DefaultWalletManagersFacade(
         if (tokens.isEmpty()) return
 
         val tokensToAdd = sdkTokenConverter
-            .convertList(tokens.toList())
+            .convertList(tokens)
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
