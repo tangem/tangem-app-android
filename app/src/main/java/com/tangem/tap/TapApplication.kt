@@ -10,6 +10,7 @@ import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
@@ -31,6 +32,7 @@ import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggle
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -157,6 +159,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var scanCardProcessor: ScanCardProcessor
 
+    @Inject
+    lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
+
     override fun onCreate() {
         super.onCreate()
 
@@ -280,6 +285,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
+        ExceptionHandler.append(blockchainExceptionHandler)
     }
 
     private fun initFeedbackManager(
