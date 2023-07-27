@@ -50,14 +50,6 @@ internal fun ParticipateBottomBlock(
             .padding(horizontal = TangemTheme.dimens.spacing16),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        SmallInfoCard(
-            startText = stringResource(id = R.string.referral_friends_bought_title),
-            endText = pluralStringResource(
-                id = R.plurals.referral_wallets_purchased_count,
-                count = purchasedWalletCount,
-                purchasedWalletCount,
-            ),
-        )
         PersonalCodeCard(code = code)
         AdditionalButtons(
             code = code,
@@ -65,6 +57,14 @@ internal fun ParticipateBottomBlock(
             onShowCopySnackbar = onShowCopySnackbar,
             onCopyClick = onCopyClick,
             onShareClick = onShareClick,
+        )
+        SmallInfoCard(
+            startText = stringResource(id = R.string.referral_friends_bought_title),
+            endText = pluralStringResource(
+                id = R.plurals.referral_wallets_purchased_count,
+                count = purchasedWalletCount,
+                purchasedWalletCount,
+            ),
         )
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
     }

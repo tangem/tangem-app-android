@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
@@ -464,6 +465,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
+                    expectedAwards = null
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
@@ -492,6 +494,7 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
+                    expectedAwards = null
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(

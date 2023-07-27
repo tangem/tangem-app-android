@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.domain.models
 
 import org.joda.time.DateTime
+import org.joda.time.LocalDate
 
 sealed interface ReferralData {
 
@@ -18,6 +19,7 @@ sealed interface ReferralData {
         override val tosLink: String,
         override val tokens: List<TokenData>,
         val referral: ReferralInfo,
+        val expectedAwards: ExpectedAwards?
     ) : ReferralData
 
     /** Data class that used if user is not participant of program */
@@ -45,6 +47,17 @@ data class ReferralInfo(
     val promocode: String,
     val walletsPurchased: Int,
     val termsAcceptedAt: DateTime?,
+)
+
+data class ExpectedAwards(
+    val numberOfWallets: Int,
+    val expectedAwards: List<ExpectedAward>
+)
+
+data class ExpectedAward(
+    val currency: String,
+    val paymentDate: LocalDate,
+    val amount: Int
 )
 
 enum class DiscountType {

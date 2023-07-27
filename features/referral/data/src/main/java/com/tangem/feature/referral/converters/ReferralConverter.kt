@@ -1,10 +1,7 @@
 package com.tangem.feature.referral.converters
 
 import com.tangem.datasource.api.tangemTech.models.ReferralResponse
-import com.tangem.feature.referral.domain.models.DiscountType
-import com.tangem.feature.referral.domain.models.ReferralData
-import com.tangem.feature.referral.domain.models.ReferralInfo
-import com.tangem.feature.referral.domain.models.TokenData
+import com.tangem.feature.referral.domain.models.*
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.safeValueOf
 import org.joda.time.format.ISODateTimeFormat
@@ -16,6 +13,7 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
         val conditions = value.conditions
         val referral = value.referral
         val tokenConverter = TokenConverter()
+        val expectedAwardsConverter = ExpectedAwardsConverter()
         return if (referral != null) {
             ReferralData.ParticipantData(
                 award = conditions.awards.firstOrNull()?.amount ?: 0,
@@ -32,6 +30,9 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
                         ISODateTimeFormat.dateTimeParser().parseDateTime(referral.termsAcceptedAt)
                     },
                 ),
+                expectedAwards = value.expectedAwards?.let {
+                    expectedAwardsConverter.convert(it)
+                }
             )
         } else {
             ReferralData.NonParticipantData(
@@ -42,6 +43,22 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
                 tokens = tokenConverter.convertList(conditions.awards.map { it.token }),
             )
         }
+    }
+}
+
+private class ExpectedAwardsConverter : Converter<ReferralResponse.ExpectedAwards, ExpectedAwards> {
+
+    override fun convert(value: ReferralResponse.ExpectedAwards): ExpectedAwards {
+        return ExpectedAwards(
+            numberOfWallets = value.numberOfWallets,
+            expectedAwards = value.list.map {
+                ExpectedAward(
+                    currency = it.currency,
+                    paymentDate = it.paymentDate,
+                    amount = it.amount
+                )
+            }
+        )
     }
 }
 
