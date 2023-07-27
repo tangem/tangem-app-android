@@ -12,7 +12,7 @@ internal class MockQuotesRepository(
     private val quotes: Flow<Either<DataError, Set<Quote>>>,
 ) : QuotesRepository {
 
-    override fun getQuotes(tokensIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>> {
         return quotes.map { it.getOrElse { e -> throw e } }
     }
 }
