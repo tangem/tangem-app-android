@@ -25,7 +25,6 @@ dependencies {
 
     /** Project - Utils */
     implementation(projects.core.utils)
-// [REDACTED_TODO_COMMENT]
     implementation(projects.domain.legacy)
 
     /** Tangem SDKs */
