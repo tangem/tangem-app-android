@@ -12,7 +12,6 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
@@ -23,7 +22,6 @@ import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
-import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
@@ -175,7 +173,6 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.TransactionError(it)) }
                 Timber.e(result.error as BlockchainSdkError)
                 null
             }
@@ -205,7 +202,6 @@ class WalletConnectSdkHelper {
                 ).toHexString()
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
@@ -244,7 +240,6 @@ class WalletConnectSdkHelper {
                 )
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.TransactionError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
@@ -338,7 +333,6 @@ class WalletConnectSdkHelper {
                 )
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
