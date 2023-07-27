@@ -46,36 +46,43 @@ internal class CurrenciesStatusesOperations<E>(
 
     fun getMultiCurrencyWalletStatusesFlow(): Flow<Set<CryptoCurrencyStatus>> {
         return getMultiCurrencyWalletCurrencies().flatMapConcat {
-            val tokens = it.toNonEmptySetOrNull()
+            val currencies = it.toNonEmptySetOrNull()
 
-            if (tokens == null) {
+            if (currencies == null) {
                 flowOf(emptySet())
             } else {
-                val tokensIds = tokens.map { token -> token.id }.toNonEmptySet()
-                val groupedTokens = groupTokens(tokens)
+                val currencyIdToNetworkId = currencies.associate { currency ->
+                    currency.id to currency.networkId
+                }
+                val currenciesIds = requireNotNull(currencyIdToNetworkId.keys.toNonEmptySetOrNull()) {
+                    "Currencies IDs cannot be empty"
+                }
+                val networksIds = requireNotNull(currencyIdToNetworkId.values.toNonEmptySetOrNull()) {
+                    "Networks IDs cannot be empty"
+                }
 
-                combine(getQuotes(tokensIds), getNetworksStatues(groupedTokens)) { quotes, networksStatuses ->
-                    createTokensStatuses(tokens, quotes, networksStatuses)
+                combine(getQuotes(currenciesIds), getNetworksStatues(networksIds)) { quotes, networksStatuses ->
+                    createTokensStatuses(currencies, quotes, networksStatuses)
                 }
             }
         }
     }
 
     suspend fun getPrimaryCurrencyStatusFlow(): Flow<CryptoCurrencyStatus> {
-        val token = getPrimaryCurrency()
+        val currency = getPrimaryCurrency()
 
-        val quoteFlow = getQuotes(nonEmptySetOf(token.id))
+        val quoteFlow = getQuotes(nonEmptySetOf(currency.id))
             .map { quotes ->
-                quotes.singleOrNull { it.currencyId == token.id }
+                quotes.singleOrNull { it.currencyId == currency.id }
             }
 
-        val statusFlow = getNetworksStatues(groupTokens(nonEmptySetOf(token)))
+        val statusFlow = getNetworksStatues(nonEmptySetOf(currency.networkId))
             .map { statuses ->
-                statuses.singleOrNull { it.networkId == token.networkId }
+                statuses.singleOrNull { it.networkId == currency.networkId }
             }
 
         return combine(quoteFlow, statusFlow) { quote, networkStatus ->
-            createStatus(token, quote, networkStatus)
+            createStatus(currency, quote, networkStatus)
         }
     }
 
@@ -132,28 +139,11 @@ internal class CurrenciesStatusesOperations<E>(
             .flowOn(dispatchers.io)
     }
 
-    private fun getNetworksStatues(
-        groupedTokens: Map<Network.ID, NonEmptySet<CryptoCurrency.ID>>,
-    ): Flow<Set<NetworkStatus>> {
-        return networksRepository.getNetworkStatuses(userWalletId, groupedTokens, refresh)
+    private fun getNetworksStatues(networks: NonEmptySet<Network.ID>): Flow<Set<NetworkStatus>> {
+        return networksRepository.getNetworkStatuses(userWalletId, networks, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyNetworksStatuses) }
             .flowOn(dispatchers.io)
-    }
-
-    private suspend fun groupTokens(
-        tokens: NonEmptySet<CryptoCurrency>,
-    ): Map<Network.ID, NonEmptySet<CryptoCurrency.ID>> {
-        return withContext(dispatchers.default) {
-            tokens
-                .groupBy { it.networkId }
-                .mapValues { (_, tokens) ->
-                    // Can not be empty
-                    tokens.toNonEmptySetOrNull()!!
-                        .map { it.id }
-                        .toNonEmptySet()
-                }
-        }
     }
 
     sealed class Error {
