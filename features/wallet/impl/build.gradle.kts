@@ -45,6 +45,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.common)
     implementation(projects.domain.card)
+    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
