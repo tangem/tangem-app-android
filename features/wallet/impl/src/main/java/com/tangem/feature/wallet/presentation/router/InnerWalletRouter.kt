@@ -33,4 +33,7 @@ internal interface InnerWalletRouter : WalletRouter {
 
     /** Open details screen */
     fun openDetailsScreen()
+
+    /** Open onboarding screen */
+    fun openOnboardingScreen()
 }
