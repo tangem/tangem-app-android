@@ -74,11 +74,15 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     }
 
     override fun openOrganizeTokensScreen() {
-        navController.navigate(WalletScreens.ORGANIZE_TOKENS.name)
+        navController.navigate(route = WalletScreens.ORGANIZE_TOKENS.name)
     }
 
     override fun openDetailsScreen() {
-        navigationStateHolder.navigate(NavigationAction.NavigateTo(AppScreen.Details))
+        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
+    }
+
+    override fun openOnboardingScreen() {
+        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
     }
 
     private companion object {
