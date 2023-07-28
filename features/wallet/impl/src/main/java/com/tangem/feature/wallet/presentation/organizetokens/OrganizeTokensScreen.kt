@@ -34,7 +34,7 @@ import com.tangem.feature.wallet.presentation.common.component.DraggableTokenIte
 import org.burnoutcrew.reorderable.*
 
 @Composable
-internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Modifier = Modifier) {
+internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
     val tokensListState = rememberLazyListState()
 
     Scaffold(
@@ -47,7 +47,7 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Mo
                 modifier = Modifier.padding(paddingValues),
                 listState = tokensListState,
                 state = state.itemsState,
-                dragConfig = state.dragConfig,
+                dragConfig = state.dndConfig,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -62,7 +62,7 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Mo
 private fun TokenList(
     listState: LazyListState,
     state: OrganizeTokensListState,
-    dragConfig: OrganizeTokensStateHolder.DragConfig,
+    dragConfig: OrganizeTokensState.DragAndDropConfig,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -166,7 +166,7 @@ private fun BottomGradient(modifier: Modifier = Modifier) {
 
 @Composable
 private fun TopBar(
-    config: OrganizeTokensStateHolder.HeaderConfig,
+    config: OrganizeTokensState.HeaderConfig,
     tokensListState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
@@ -211,7 +211,7 @@ private fun TopBar(
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
-                    onClick = config.onSortByBalanceClick,
+                    onClick = config.onSortClick,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
@@ -220,7 +220,7 @@ private fun TopBar(
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_group),
                     iconResId = R.drawable.ic_group_24,
-                    onClick = config.onGroupByNetworkClick,
+                    onClick = config.onGroupClick,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
@@ -230,7 +230,7 @@ private fun TopBar(
 }
 
 @Composable
-private fun Actions(config: OrganizeTokensStateHolder.ActionsConfig, modifier: Modifier = Modifier) {
+private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -308,7 +308,7 @@ private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMod
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun OrganizeTokensScreenPreview_Light(
-    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensStateHolder,
+    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
 ) {
     TangemTheme {
         OrganizeTokensScreen(state)
@@ -318,14 +318,14 @@ private fun OrganizeTokensScreenPreview_Light(
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun OrganizeTokensScreenPreview_Dark(
-    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensStateHolder,
+    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
 ) {
     TangemTheme(isDark = true) {
         OrganizeTokensScreen(state)
     }
 }
 
-private class OrganizeTokensStateProvider : CollectionPreviewParameterProvider<OrganizeTokensStateHolder>(
+private class OrganizeTokensStateProvider : CollectionPreviewParameterProvider<OrganizeTokensState>(
     collection = listOf(
         WalletPreviewData.organizeTokensState,
         WalletPreviewData.groupedOrganizeTokensState,
