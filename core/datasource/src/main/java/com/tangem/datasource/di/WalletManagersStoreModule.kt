@@ -1,8 +1,8 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.cache.CacheKeysStore
-import com.tangem.datasource.local.cache.DefaultCacheKeysStore
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.walletmanager.DefaultWalletManagersStore
+import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,12 +11,12 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object CacheKeysStoreModule {
+internal object WalletManagersStoreModule {
 
     @Provides
     @Singleton
-    fun provideCacheKeysStore(): CacheKeysStore {
-        return DefaultCacheKeysStore(
+    fun provideWalletManagersStore(): WalletManagersStore {
+        return DefaultWalletManagersStore(
             dataStore = RuntimeDataStore(),
         )
     }
