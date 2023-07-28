@@ -19,4 +19,8 @@ class AndroidFileReader @Inject constructor(@ApplicationContext private val cont
             stream.write(content.toByteArray(), 0, content.length)
         }
     }
+
+    override fun removeFile(fileName: String) {
+        context.deleteFile(fileName)
+    }
 }
