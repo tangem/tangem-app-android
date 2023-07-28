@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserTokensStore {
 
-    fun get(userWalletId: UserWalletId): Flow<UserTokensResponse>
+    fun get(key: UserWalletId): Flow<UserTokensResponse>
 
-    suspend fun getSyncOrNull(userWalletId: UserWalletId): UserTokensResponse?
+    suspend fun getSyncOrNull(key: UserWalletId): UserTokensResponse?
 
-    suspend fun store(userWalletId: UserWalletId, tokens: UserTokensResponse)
+    suspend fun store(key: UserWalletId, item: UserTokensResponse)
 }
