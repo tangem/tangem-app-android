@@ -243,5 +243,10 @@ internal class WalletViewModel @Inject constructor(
         updateContentItems(index = uiState.walletsListConfig.selectedWalletIndex, isRefreshing = true)
     }
 
-    override fun onOrganizeTokensClick() = router.openOrganizeTokensScreen()
+    override fun onOrganizeTokensClick() {
+        val index = uiState.walletsListConfig.selectedWalletIndex
+        val walletId = uiState.walletsListConfig.wallets[index].id
+
+        router.openOrganizeTokensScreen(walletId)
+    }
 }
