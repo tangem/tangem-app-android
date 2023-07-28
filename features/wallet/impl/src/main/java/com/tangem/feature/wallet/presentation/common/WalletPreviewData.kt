@@ -11,7 +11,7 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
@@ -205,21 +205,21 @@ internal object WalletPreviewData {
     }
 
     val groupedOrganizeTokensState by lazy {
-        OrganizeTokensStateHolder(
+        OrganizeTokensState(
             itemsState = OrganizeTokensListState.GroupedByNetwork(
                 items = draggableItems,
             ),
-            header = OrganizeTokensStateHolder.HeaderConfig(
+            header = OrganizeTokensState.HeaderConfig(
                 onSortByBalanceClick = {},
                 onGroupByNetworkClick = {},
             ),
-            dragConfig = OrganizeTokensStateHolder.DragConfig(
+            dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = { _, _ -> },
                 onDragStart = {},
                 canDragItemOver = { _, _ -> false },
                 onItemDragEnd = {},
             ),
-            actions = OrganizeTokensStateHolder.ActionsConfig(
+            actions = OrganizeTokensState.ActionsConfig(
                 onApplyClick = {},
                 onCancelClick = {},
             ),
