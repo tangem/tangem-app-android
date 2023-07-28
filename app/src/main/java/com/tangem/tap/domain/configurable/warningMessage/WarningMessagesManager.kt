@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.extensions.removeBy
+import com.tangem.utils.extensions.removeBy
 import com.tangem.wallet.R
 import java.util.concurrent.CopyOnWriteArrayList
 
