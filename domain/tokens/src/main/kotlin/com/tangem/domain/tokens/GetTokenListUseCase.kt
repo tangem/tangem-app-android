@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapConcat
 
 class GetTokenListUseCase(
@@ -31,7 +32,7 @@ class GetTokenListUseCase(
         return channelFlow {
             recover(
                 block = {
-                    getTokenList(userWalletId, refresh).collect { list ->
+                    getTokenList(userWalletId, refresh).collectLatest { list ->
                         send(list.right())
                     }
                 },
@@ -59,7 +60,7 @@ class GetTokenListUseCase(
             transformError = TokensStatusesOperations.Error::mapToTokenListError,
         )
 
-        return operations.getTokensStatusesFlow()
+        return operations.getMultiCurrencyWalletTokensStatusesFlow()
     }
 
     private fun Raise<TokenListError>.createTokenList(

@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +38,11 @@ internal class MockTokensRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+    override suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token {
+        return MockTokens.token1
+    }
+
+    override fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
 
