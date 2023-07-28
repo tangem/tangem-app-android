@@ -6,11 +6,4 @@ sealed class DataError : Exception() {
 
         object NoInternetConnection : NetworkError()
     }
-
-    sealed class PersistenceError : DataError() {
-
-        data class UnableToReadFile(override val cause: Throwable) : DataError()
-
-        data class UnableToWriteFile(override val cause: Throwable) : DataError()
-    }
 }
