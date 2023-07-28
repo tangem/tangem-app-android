@@ -1,27 +1,38 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TokenStatus
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
+ * Wallet notifications list factory
+ *
+ * @property wasCardScannedCallback         callback that check if card was scanned
+ * @property isUserAlreadyRateAppCallback   callback that check if card is user already rate app
+ * @property isDemoCardCallback             callback that check if card is demo
+ * @property clickCallbacks                 screen click callbacks
+ *
 * [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 internal class WalletNotificationsListFactory(
+    private val currentStateProvider: Provider<WalletStateHolder>,
     private val wasCardScannedCallback: suspend (String) -> Boolean,
     private val isUserAlreadyRateAppCallback: suspend () -> Boolean,
-    private val onWalletAlreadySignedHashesClick: () -> Unit,
-    private val onMultiWalletAlreadySignedHashesClick: () -> Unit,
-    private val onBackupCardClick: () -> Unit,
-    private val hasUnreachableNetworksCallback: () -> Boolean,
-    private val onLikeTangemAppClick: () -> Unit,
+    private val isDemoCardCallback: (String) -> Boolean,
+    private val clickCallbacks: WalletClickCallbacks,
 ) {
 
-    fun create(cardTypesResolver: CardTypesResolver): Flow<ImmutableList<WalletNotification>> {
+    fun create(cardTypesResolver: CardTypesResolver, tokenList: TokenList): Flow<ImmutableList<WalletNotification>> {
 // [REDACTED_TODO_COMMENT]
         return flow {
             emit(
@@ -33,29 +44,31 @@ internal class WalletNotificationsListFactory(
 
                     addRemainingSignaturesLeftNotifications(cardTypesResolver)
 
+                    val isDemo = isDemoCardCallback(cardTypesResolver.getCardId())
                     if (!cardTypesResolver.isReleaseFirmwareType()) {
                         add(element = WalletNotification.DevCard)
                     } else {
-                        addReleaseSpecialNotifications(cardTypesResolver)
+                        addReleaseSpecialNotifications(cardTypesResolver = cardTypesResolver, isDemo = isDemo)
                     }
-// [REDACTED_TODO_COMMENT]
 
-                    if (hasUnreachableNetworksCallback()) {
+                    if (isDemo) {
+                        add(element = WalletNotification.DemoCard)
+                    }
+
+                    if (hasUnreachableNetworks()) {
                         add(element = WalletNotification.UnreachableNetworks)
                     }
 
                     if (!cardTypesResolver.isBackupForbidden() && !cardTypesResolver.hasBackup()) {
-                        add(element = WalletNotification.BackupCard(onClick = onBackupCardClick))
+                        add(element = WalletNotification.BackupCard(onClick = clickCallbacks::onBackupCardClick))
                     }
-/* [REDACTED_TODO_COMMENT]
-                     * List<WalletStoreModel>
-                     *     .filter { store ->
-                     *         store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
-                     *     }
-                     */
+
+                    if (tokenList.hasMissedDerivations()) {
+                        add(element = WalletNotification.ScanCard(onClick = clickCallbacks::onScanCardClick))
+                    }
 
                     if (isUserAlreadyRateAppCallback()) {
-                        add(element = WalletNotification.LikeTangemApp(onClick = onLikeTangemAppClick))
+                        add(element = WalletNotification.LikeTangemApp(onClick = clickCallbacks::onLikeTangemAppClick))
                     }
                 }.toImmutableList(),
             )
@@ -73,19 +86,21 @@ internal class WalletNotificationsListFactory(
 
     private suspend fun MutableList<WalletNotification>.addReleaseSpecialNotifications(
         cardTypesResolver: CardTypesResolver,
+        isDemo: Boolean,
     ) {
-// [REDACTED_TODO_COMMENT]
-        if (!wasCardScannedCallback(cardTypesResolver.getCardId()) && cardTypesResolver.isMultiwalletAllowed()) {
+        if (!wasCardScannedCallback(cardTypesResolver.getCardId()) && cardTypesResolver.isMultiwalletAllowed() &&
+            !isDemo
+        ) {
             if (cardTypesResolver.isBackupForbidden() && cardTypesResolver.hasWalletSignedHashes()) {
                 add(
-                    element = WalletNotification.SignedTransactionsInThePast(
-                        onClick = onMultiWalletAlreadySignedHashesClick,
+                    element = WalletNotification.CriticalWarningAlreadySignedHashes(
+                        onClick = clickCallbacks::onCriticalWarningAlreadySignedHashesClick,
                     ),
                 )
             } else if (cardTypesResolver.hasWalletSignedHashes()) {
                 add(
-                    element = WalletNotification.AlreadyToppedUpAndSignedHashes(
-                        onClick = onWalletAlreadySignedHashesClick,
+                    element = WalletNotification.WarningAlreadySignedHashes(
+                        onClick = clickCallbacks::onCloseWarningAlreadySignedHashesClick,
                     ),
                 )
             }
@@ -94,6 +109,26 @@ internal class WalletNotificationsListFactory(
         if (cardTypesResolver.isAttestationFailed()) {
             add(element = WalletNotification.CardVerificationFailed)
         }
+    }
+
+    private fun hasUnreachableNetworks(): Boolean {
+        val isUnreachableState = { item: WalletContentItemState.MultiCurrencyItem ->
+            (item as? WalletContentItemState.MultiCurrencyItem.Token)?.state is TokenItemState.Unreachable
+        }
+
+        return currentStateProvider().let { state ->
+            state is WalletStateHolder.MultiCurrencyContent && state.contentItems.any(isUnreachableState)
+        }
+    }
+
+    private fun TokenList.hasMissedDerivations(): Boolean {
+        val statuses = when (this) {
+            is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::tokens).map(TokenStatus::value)
+            is TokenList.Ungrouped -> tokens.map(TokenStatus::value)
+            TokenList.NotInitialized -> emptyList()
+        }
+
+        return statuses.any { it is TokenStatus.MissedDerivation }
     }
 
     private companion object {
