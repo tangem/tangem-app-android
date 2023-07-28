@@ -4,11 +4,11 @@ import com.tangem.datasource.local.cache.model.CacheKey
 
 interface CacheKeysStore {
 
-    fun getOrNull(id: String): CacheKey?
+    suspend fun getSyncOrNull(key: String): CacheKey?
 
-    fun addOrReplace(key: CacheKey)
+    suspend fun store(key: CacheKey)
 
-    fun remove(id: String)
+    suspend fun remove(key: String)
 
-    fun clear()
+    suspend fun clear()
 }
