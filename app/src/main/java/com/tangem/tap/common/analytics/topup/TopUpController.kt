@@ -14,7 +14,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.analytics.converters.TopUpEventConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.extensions.copy
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -22,6 +21,7 @@ import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.scope
+import com.tangem.utils.extensions.copy
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
