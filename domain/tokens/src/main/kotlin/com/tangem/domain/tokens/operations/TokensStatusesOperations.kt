@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.NonEmptySet
+import arrow.core.*
 import arrow.core.raise.Raise
-import arrow.core.toNonEmptySetOrNull
+import arrow.core.raise.catch
 import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.*
@@ -43,8 +43,8 @@ internal class TokensStatusesOperations<E>(
         transformError = transformError,
     )
 
-    fun getTokensStatusesFlow(): Flow<Set<TokenStatus>> {
-        return getTokens().flatMapConcat {
+    fun getMultiCurrencyWalletTokensStatusesFlow(): Flow<Set<TokenStatus>> {
+        return getMultiCurrencyWalletTokens().flatMapConcat {
             val tokens = it.toNonEmptySetOrNull()
 
             if (tokens == null) {
@@ -57,6 +57,24 @@ internal class TokensStatusesOperations<E>(
                     createTokensStatuses(tokens, quotes, networksStatuses)
                 }
             }
+        }
+    }
+
+    suspend fun getSingleCurrencyWalletTokenStatusFlow(): Flow<TokenStatus> {
+        val token = getSingleCurrencyWalletToken()
+
+        val quoteFlow = getQuotes(nonEmptySetOf(token.id))
+            .map { quotes ->
+                quotes.singleOrNull { it.tokenId == token.id }
+            }
+
+        val statusFlow = getNetworksStatues(groupTokens(nonEmptySetOf(token)))
+            .map { statuses ->
+                statuses.singleOrNull { it.networkId == token.networkId }
+            }
+
+        return combine(quoteFlow, statusFlow) { quote, networkStatus ->
+            createStatus(token, quote, networkStatus)
         }
     }
 
@@ -84,11 +102,20 @@ internal class TokensStatusesOperations<E>(
         return tokenStatusOperations.createTokenStatus()
     }
 
-    private fun getTokens(): Flow<Set<Token>> {
-        return tokensRepository.getTokens(userWalletId, refresh)
+    private fun getMultiCurrencyWalletTokens(): Flow<Set<Token>> {
+        return tokensRepository.getMultiCurrencyWalletTokens(userWalletId, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyTokens) }
             .flowOn(dispatchers.io)
+    }
+
+    private suspend fun getSingleCurrencyWalletToken(): Token {
+        return withContext(dispatchers.io) {
+            catch(
+                block = { tokensRepository.getSingleCurrencyWalletToken(userWalletId) },
+                catch = { raise(Error.DataError(it)) },
+            )
+        }
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<Token.ID>): Flow<Set<Quote>> {
