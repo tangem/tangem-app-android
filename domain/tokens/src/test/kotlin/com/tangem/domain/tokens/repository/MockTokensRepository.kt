@@ -3,7 +3,6 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal class MockTokensRepository(
     private val sortTokensResult: Either<DataError, Unit>,
+    private val token: Either<DataError, CryptoCurrency>,
     private val tokens: Flow<Either<DataError, Set<CryptoCurrency>>>,
     private val isGrouped: Flow<Either<DataError, Boolean>>,
     private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
@@ -39,7 +39,7 @@ internal class MockTokensRepository(
     }
 
     override suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
-        return MockTokens.token1
+        return token.getOrElse { e -> throw e }
     }
 
     override fun getMultiCurrencyWalletCurrencies(

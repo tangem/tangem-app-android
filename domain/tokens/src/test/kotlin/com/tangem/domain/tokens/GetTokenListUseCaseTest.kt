@@ -326,7 +326,13 @@ internal class GetTokenListUseCaseTest {
         isSortedByBalance: Flow<Either<DataError, Boolean>> = flowOf(MockTokenLists.isSortedByBalance.right()),
     ) = GetTokenListUseCase(
         dispatchers = dispatchers,
-        tokensRepository = MockTokensRepository(Unit.right(), tokens, isGrouped, isSortedByBalance),
+        tokensRepository = MockTokensRepository(
+            sortTokensResult = Unit.right(),
+            token = MockTokens.token1.right(),
+            tokens = tokens,
+            isGrouped = isGrouped,
+            isSortedByBalance = isSortedByBalance,
+        ),
         quotesRepository = MockQuotesRepository(quotes),
         networksRepository = MockNetworksRepository(networks, statuses),
     )
