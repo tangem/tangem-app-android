@@ -8,9 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder.DragConfig
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder.HeaderConfig
-import com.tangem.feature.wallet.presentation.organizetokens.utils.*
+import com.tangem.feature.wallet.presentation.organizetokens.utils.common.*
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,22 +32,22 @@ internal class OrganizeTokensViewModel @Inject constructor(savedStateHandle: Sav
         UserWalletId(userWalletIdValue)
     }
 
-    var uiState: OrganizeTokensStateHolder by mutableStateOf(getInitialState())
+    var uiState: OrganizeTokensState by mutableStateOf(getInitialState())
         private set
 
-    private fun getInitialState(): OrganizeTokensStateHolder = WalletPreviewData.organizeTokensState.copy(
+    private fun getInitialState(): OrganizeTokensState = WalletPreviewData.organizeTokensState.copy(
         itemsState = OrganizeTokensListState.Ungrouped(
             items = WalletPreviewData.draggableTokens,
         ),
-        dragConfig = DragConfig(
+        dndConfig = OrganizeTokensState.DragAndDropConfig(
             onItemDragged = this::moveItem,
             canDragItemOver = this::checkCanMoveItemOver,
             onItemDragEnd = this::endMoving,
             onDragStart = this::startMoving,
         ),
-        header = HeaderConfig(
-            onSortByBalanceClick = { /* no-op */ },
-            onGroupByNetworkClick = this::toggleTokensByNetworkGrouping,
+        header = OrganizeTokensState.HeaderConfig(
+            onSortClick = { /* no-op */ },
+            onGroupClick = this::toggleTokensByNetworkGrouping,
         ),
     )
 
@@ -61,6 +59,7 @@ internal class OrganizeTokensViewModel @Inject constructor(savedStateHandle: Sav
             is OrganizeTokensListState.Ungrouped -> OrganizeTokensListState.GroupedByNetwork(
                 items = WalletPreviewData.draggableItems,
             )
+            is OrganizeTokensListState.Empty -> itemsState
         }
 
         uiState = uiState.copy(itemsState = newListState)
@@ -94,6 +93,7 @@ internal class OrganizeTokensViewModel @Inject constructor(savedStateHandle: Sav
                 is DraggableItem.Token -> when (uiState.itemsState) {
                     is OrganizeTokensListState.GroupedByNetwork -> items.divideGroups(movingItem)
                     is OrganizeTokensListState.Ungrouped -> items.divideItems(movingItem)
+                    is OrganizeTokensListState.Empty -> uiState.itemsState.items
                 }
                 is DraggableItem.GroupPlaceholder -> items
             }

@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.organizetokens.utils
+package com.tangem.feature.wallet.presentation.organizetokens.utils.common
 
 import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
 import kotlinx.collections.immutable.PersistentList
@@ -59,13 +59,15 @@ internal fun PersistentList<DraggableItem>.moveItem(fromIndex: Int, toIndex: Int
 internal fun List<DraggableItem>.divideItems(movingItem: DraggableItem): List<DraggableItem> {
     return this.map {
         it
-            .roundingMode(DraggableItem.RoundingMode.All(showGap = true))
-            .showShadow(show = it.id == movingItem.id)
+            .updateRoundingMode(DraggableItem.RoundingMode.All(showGap = true))
+            .updateShadowVisibility(show = it.id == movingItem.id)
     }
 }
 
-internal fun List<DraggableItem>.uniteItems(): List<DraggableItem> {
+@Suppress("UNCHECKED_CAST") // Erased type
+internal fun <T : DraggableItem> List<T>.uniteItems(): List<T> {
     val lastItemIndex = this.lastIndex
+
     return this.mapIndexed { index, item ->
         val mode = when (index) {
             0 -> DraggableItem.RoundingMode.Top()
@@ -74,9 +76,9 @@ internal fun List<DraggableItem>.uniteItems(): List<DraggableItem> {
         }
 
         item
-            .roundingMode(mode)
-            .showShadow(show = false)
-    }
+            .updateRoundingMode(mode)
+            .updateShadowVisibility(show = false)
+    } as List<T>
 }
 // [REDACTED_TODO_COMMENT]
 @Volatile
@@ -130,51 +132,51 @@ internal fun List<DraggableItem>.divideGroups(movingItem: DraggableItem): List<D
             // Case when current item is the moving item
             item.id == movingItem.id -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.All(showGap = true))
-                    .showShadow(show = true)
+                    .updateRoundingMode(DraggableItem.RoundingMode.All(showGap = true))
+                    .updateShadowVisibility(show = true)
             }
             // Case when moving item is a token and current item is the group of the moving token
             movingItem is DraggableItem.Token && item.id == movingItem.groupId -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.All(showGap = true))
-                    .showShadow(show = true)
+                    .updateRoundingMode(DraggableItem.RoundingMode.All(showGap = true))
+                    .updateShadowVisibility(show = true)
             }
             // Case when both moving item and current item are tokens and belong to the same group
             movingItem is DraggableItem.Token &&
                 item is DraggableItem.Token && item.groupId == movingItem.groupId -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.All(showGap = true))
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.All(showGap = true))
+                    .updateShadowVisibility(show = false)
             }
             // Case when current item is the first item in the list
             index == 0 -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.Top())
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.Top())
+                    .updateShadowVisibility(show = false)
             }
             // Case when current item is the last item in the list
             index == lastItemIndex -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.Bottom())
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.Bottom())
+                    .updateShadowVisibility(show = false)
             }
             // Case when previous item is a GroupPlaceholder
             this[index - 1] is DraggableItem.GroupPlaceholder -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.Top(showGap = true))
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.Top(showGap = true))
+                    .updateShadowVisibility(show = false)
             }
             // Case when next item is a GroupPlaceholder
             this[index + 1] is DraggableItem.GroupPlaceholder -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.Bottom(showGap = true))
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.Bottom(showGap = true))
+                    .updateShadowVisibility(show = false)
             }
             // Default case when none of the above conditions are met
             else -> {
                 item
-                    .roundingMode(DraggableItem.RoundingMode.None)
-                    .showShadow(show = false)
+                    .updateRoundingMode(DraggableItem.RoundingMode.None)
+                    .updateShadowVisibility(show = false)
             }
         }
     }
