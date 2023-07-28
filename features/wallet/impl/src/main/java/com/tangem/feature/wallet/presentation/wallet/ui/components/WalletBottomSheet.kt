@@ -81,11 +81,10 @@ private fun BottomSheetContent(config: WalletBottomSheetConfig.BottomSheetConten
 
         Column(verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing10)) {
             val buttonModifier = Modifier.fillMaxWidth()
+
             PrimaryButton(config = config.primaryButtonConfig, modifier = buttonModifier)
 
-            if (config.secondaryButtonConfig != null) {
-                SecondaryButton(config = config.secondaryButtonConfig, modifier = buttonModifier)
-            }
+            SecondaryButton(config = config.secondaryButtonConfig, modifier = buttonModifier)
         }
     }
 }
@@ -97,13 +96,13 @@ private fun PrimaryButton(
 ) {
     if (config.iconResId == null) {
         PrimaryButton(
-            text = config.text,
+            text = config.text.resolveReference(),
             onClick = config.onClick,
             modifier = modifier,
         )
     } else {
         PrimaryButtonIconStart(
-            text = config.text,
+            text = config.text.resolveReference(),
             iconResId = config.iconResId,
             onClick = config.onClick,
             modifier = modifier,
@@ -118,13 +117,13 @@ private fun SecondaryButton(
 ) {
     if (config.iconResId == null) {
         SecondaryButton(
-            text = config.text,
+            text = config.text.resolveReference(),
             onClick = config.onClick,
             modifier = modifier,
         )
     } else {
         SecondaryButtonIconStart(
-            text = config.text,
+            text = config.text.resolveReference(),
             iconResId = config.iconResId,
             onClick = config.onClick,
             modifier = modifier,
