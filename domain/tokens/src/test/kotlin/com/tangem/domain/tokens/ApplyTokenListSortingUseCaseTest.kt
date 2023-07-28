@@ -193,6 +193,6 @@ internal class ApplyTokenListSortingUseCaseTest {
         sortTokensResult: Either<DataError, Unit> = Unit.right(),
         tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
     ): MockTokensRepository {
-        return MockTokensRepository(sortTokensResult, tokens, emptyFlow(), emptyFlow())
+        return MockTokensRepository(sortTokensResult, MockTokens.token1.right(), tokens, emptyFlow(), emptyFlow())
     }
 }
