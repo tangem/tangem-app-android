@@ -81,26 +81,26 @@ sealed class WalletNotification(open val state: NotificationState) {
     )
 
     /**
-     * "Wallet already signed hashes" notification
+     * "Already topped up and signed hashes" warning notification
      *
-     * @property onClick lambda be invoked when notification is clicked
+     * @property onClick lambda be invoked when notification's close button is clicked
      */
-    data class AlreadyToppedUpAndSignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
+    data class WarningAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
+        state = NotificationState.Closable(
             title = TextReference.Res(id = R.string.common_warning),
             subtitle = TextReference.Res(id = R.string.alert_card_signed_transactions),
             iconResId = R.drawable.img_attention_20,
-            onClick = onClick,
             tint = null,
+            onCloseClick = onClick,
         ),
     )
 
     /**
-     * "Multi wallet already signed hashes" notification
+     * "Already signed hashes" critical warning notification
      *
      * @property onClick lambda be invoked when notification is clicked
      */
-    data class SignedTransactionsInThePast(override val onClick: () -> Unit) : Clickable, WalletNotification(
+    data class CriticalWarningAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
         state = NotificationState.Clickable(
             title = TextReference.Res(
                 id = R.string.warning_important_security_info,
