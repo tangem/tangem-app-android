@@ -48,7 +48,7 @@ internal class DefaultTokensRepository(
 
     override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> = channelFlow {
         val userWallet = withContext(dispatchers.io) {
-            requireNotNull(userWalletsStore.getOrNull(userWalletId)) {
+            requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
                 "Unable to find a user wallet with provided ID: $userWalletId"
             }
         }
