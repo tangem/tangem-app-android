@@ -29,10 +29,14 @@ internal data class WalletBottomSheetConfig(
         @DrawableRes open val iconResId: Int,
         open val tint: Color? = null,
         val primaryButtonConfig: ButtonConfig,
-        val secondaryButtonConfig: ButtonConfig? = null,
+        val secondaryButtonConfig: ButtonConfig,
     ) {
 
-        data class ButtonConfig(val text: String, val onClick: () -> Unit, @DrawableRes val iconResId: Int? = null)
+        data class ButtonConfig(
+            val text: TextReference,
+            val onClick: () -> Unit,
+            @DrawableRes val iconResId: Int? = null,
+        )
 
         data class UnlockWallets(
             val onUnlockClick: () -> Unit,
@@ -45,9 +49,9 @@ internal data class WalletBottomSheetConfig(
             ),
             iconResId = R.drawable.ic_locked_24,
             tint = TangemColorPalette.Black,
-            primaryButtonConfig = ButtonConfig(text = "Unlock", onClick = onUnlockClick),
+            primaryButtonConfig = ButtonConfig(text = TextReference.Str(value = "Unlock"), onClick = onUnlockClick),
             secondaryButtonConfig = ButtonConfig(
-                text = "Scan card",
+                text = TextReference.Str(value = "Scan card"),
                 onClick = onScanClick,
                 iconResId = R.drawable.ic_tangem_24,
             ),
@@ -61,19 +65,35 @@ internal data class WalletBottomSheetConfig(
             subtitle = TextReference.Str(value = "How was your experience with our app? Let us know:"),
             iconResId = R.drawable.ic_star_24,
             tint = TangemColorPalette.Tangerine,
-            primaryButtonConfig = ButtonConfig(text = "Rate the app", onClick = onRateTheAppClick),
-            secondaryButtonConfig = ButtonConfig(text = "Share feedback", onClick = onShareClick),
+            primaryButtonConfig = ButtonConfig(
+                text = TextReference.Str(value = "Rate the app"),
+                onClick = onRateTheAppClick,
+            ),
+            secondaryButtonConfig = ButtonConfig(
+                text = TextReference.Str(value = "Share feedback"),
+                onClick = onShareClick,
+            ),
         )
 
-        data class MultiWalletAlreadySignedHashes(val onLearnClick: () -> Unit) : BottomSheetContentConfig(
+        data class CriticalWarningAlreadySignedHashes(
+            val onOkClick: () -> Unit,
+            val onCancelClick: () -> Unit,
+        ) : BottomSheetContentConfig(
             title = TextReference.Res(
                 id = R.string.warning_important_security_info,
                 formatArgs = WrappedList(listOf("\u26A0")),
             ),
-            subtitle = TextReference.Res(id = R.string.warning_signed_tx_previously),
+            subtitle = TextReference.Res(id = R.string.alert_signed_hashes_message),
             iconResId = R.drawable.img_attention_20,
             tint = null,
-            primaryButtonConfig = ButtonConfig(text = "Learn more", onClick = onLearnClick),
+            primaryButtonConfig = ButtonConfig(
+                text = TextReference.Res(id = R.string.common_ok),
+                onClick = onOkClick,
+            ),
+            secondaryButtonConfig = ButtonConfig(
+                text = TextReference.Res(id = R.string.common_cancel),
+                onClick = onCancelClick,
+            ),
         )
     }
 }
