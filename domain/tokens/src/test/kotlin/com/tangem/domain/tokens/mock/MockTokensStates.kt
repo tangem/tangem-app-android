@@ -140,6 +140,7 @@ internal object MockTokensStates {
             value = TokenStatus.Loaded(
                 amount = amount,
                 fiatAmount = fiatAmount,
+                fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
                 hasTransactionsInProgress = false,
             ),
