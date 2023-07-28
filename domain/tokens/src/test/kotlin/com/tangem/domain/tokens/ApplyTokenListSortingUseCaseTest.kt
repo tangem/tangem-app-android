@@ -6,13 +6,17 @@ import arrow.core.right
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockTokens
+import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.MockTokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.random.Random
 
 internal class ApplyTokenListSortingUseCaseTest {
 
@@ -28,8 +32,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokens = emptySet(),
-            isGrouped = false,
+            sortedTokensIds = emptySet(),
+            isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
 
@@ -50,8 +54,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokens = MockTokens.tokens,
-            isGrouped = false,
+            sortedTokensIds = MockTokens.tokens.map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
 
@@ -62,7 +66,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when apply sorting for sorted and grouped list then correct args should be used`() = runTest {
         // Given
-        val expectedTokens = MockTokens.tokens
+        val expectedTokens = getSortedTokens()
         val expectedIsGrouped = true
         val expectedIsSorted = true
 
@@ -72,8 +76,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokens = expectedTokens,
-            isGrouped = expectedIsGrouped,
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
 
@@ -86,7 +90,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when apply sorting for unsorted and grouped list then correct args should be used`() = runTest {
         // Given
-        val expectedTokens = MockTokens.tokens
+        val expectedTokens = getSortedTokens()
         val expectedIsGrouped = true
         val expectedIsSorted = false
 
@@ -96,8 +100,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokens = expectedTokens,
-            isGrouped = expectedIsGrouped,
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
 
@@ -110,7 +114,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when apply sorting for sorted and ungrouped list then correct args should be used`() = runTest {
         // Given
-        val expectedTokens = MockTokens.tokens
+        val expectedTokens = getSortedTokens()
         val expectedIsGrouped = false
         val expectedIsSorted = true
 
@@ -120,8 +124,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokens = expectedTokens,
-            isGrouped = expectedIsGrouped,
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
 
@@ -134,7 +138,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when apply sorting for unsorted and ungrouped list then correct args should be used`() = runTest {
         // Given
-        val expectedTokens = MockTokens.tokens
+        val expectedTokens = getSortedTokens()
         val expectedIsGrouped = false
         val expectedIsSorted = false
 
@@ -144,8 +148,8 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokens = expectedTokens,
-            isGrouped = expectedIsGrouped,
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
 
@@ -155,12 +159,40 @@ internal class ApplyTokenListSortingUseCaseTest {
         assertEquals(expectedIsSorted, repository.isTokensSortedByBalanceAfterSortingApply)
     }
 
+    @Test
+    fun `when sorted tokens IDs do not contain all tokens IDs then error should be received`() = runTest {
+        // Given
+        val expectedResult = TokenListSortingError.UnableToSortTokenList.left()
+
+        val repository = getTokensRepository()
+        val useCase = getUseCase(repository)
+
+        // When
+        val result = useCase(
+            userWalletId = userWalletId,
+            sortedTokensIds = getSortedTokens().drop(n = 3).map { it.networkId to it.id }.toSet(),
+            isGroupedByNetwork = false,
+            isSortedByBalance = false,
+        )
+
+        // Then
+        assertEquals(expectedResult, result)
+    }
+
+    private fun getSortedTokens() = MockTokens.tokens
+        .sortedBy { Random.nextInt(0, MockTokens.tokens.size) }
+        .toSet()
+
     private fun getUseCase(tokensRepository: MockTokensRepository = getTokensRepository()) =
         ApplyTokenListSortingUseCase(
             tokensRepository = tokensRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-    private fun getTokensRepository(sortTokensResult: Either<DataError, Unit> = Unit.right()) =
-        MockTokensRepository(sortTokensResult, emptyFlow(), emptyFlow(), emptyFlow())
+    private fun getTokensRepository(
+        sortTokensResult: Either<DataError, Unit> = Unit.right(),
+        tokens: Flow<Either<DataError, Set<Token>>> = flowOf(MockTokens.tokens.right()),
+    ): MockTokensRepository {
+        return MockTokensRepository(sortTokensResult, tokens, emptyFlow(), emptyFlow())
+    }
 }
