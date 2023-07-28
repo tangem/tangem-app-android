@@ -16,7 +16,9 @@ interface TokensRepository {
         isSortedByBalance: Boolean,
     )
 
-    fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>>
+    suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token
+
+    fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>>
 
     fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
 
