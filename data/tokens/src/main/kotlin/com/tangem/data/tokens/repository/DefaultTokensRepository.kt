@@ -46,14 +46,31 @@ internal class DefaultTokensRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
-    override fun getTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> = channelFlow {
+    override suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token {
         val userWallet = withContext(dispatchers.io) {
             requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
                 "Unable to find a user wallet with provided ID: $userWalletId"
             }
         }
+        require(!userWallet.isMultiCurrency) {
+            "Single currency wallet excepted, but multi currency wallet was found: $userWalletId"
+        }
 
-        if (userWallet.isMultiCurrency) {
+        return cardTokensFactory
+            .createPrimaryTokenForSingleCurrencyCard(userWallet.scanResponse)
+    }
+
+    override fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+        return channelFlow {
+            val userWallet = withContext(dispatchers.io) {
+                requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+                    "Unable to find a user wallet with provided ID: $userWalletId"
+                }
+            }
+            require(!userWallet.isMultiCurrency) {
+                "Multi currency wallet excepted, but single currency wallet was found: $userWalletId"
+            }
+
             launch(dispatchers.io) {
                 getMultiCurrencyWalletTokens(userWallet).collectLatest(::send)
             }
@@ -61,8 +78,6 @@ internal class DefaultTokensRepository(
             launch(dispatchers.io) {
                 fetchTokensIfCacheExpired(userWallet, refresh)
             }
-        } else {
-            send(getSingleCurrencyWalletTokens(userWallet))
         }
     }
 
@@ -85,22 +100,6 @@ internal class DefaultTokensRepository(
                 card = userWallet.scanResponse.card,
             )
         }
-    }
-
-    private suspend fun getSingleCurrencyWalletTokens(userWallet: UserWallet): Set<Token> {
-        var response = userTokensStore.getSyncOrNull(userWallet.walletId)
-
-        if (response == null) {
-            response = userTokensResponseFactory.createUserTokensResponse(
-                tokens = cardTokensFactory.createTokensForSingleCurrencyCard(userWallet.scanResponse),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
-            )
-
-            userTokensStore.store(userWallet.walletId, response)
-        }
-
-        return responseTokensFactory.createTokens(response, userWallet.scanResponse.card)
     }
 
     private suspend fun fetchTokensIfCacheExpired(userWallet: UserWallet, refresh: Boolean) {
