@@ -27,7 +27,7 @@ internal class CardTokensFactory(private val demoConfig: DemoConfig) {
         return blockchains.mapNotNull { createCoin(it, card) }.toSet()
     }
 
-    fun createTokensForSingleCurrencyCard(scanResponse: ScanResponse): Set<DomainToken> {
+    fun createPrimaryTokenForSingleCurrencyCard(scanResponse: ScanResponse): DomainToken {
         val card = scanResponse.card
         val resolver = scanResponse.cardTypesResolver
         val blockchain = resolver.getBlockchain()
@@ -39,13 +39,7 @@ internal class CardTokensFactory(private val demoConfig: DemoConfig) {
             createToken(token, blockchain, card)
         }
 
-        return buildSet {
-            add(coin)
-
-            if (primaryToken != null) {
-                add(primaryToken)
-            }
-        }
+        return primaryToken ?: coin
     }
 
     private fun createToken(sdkToken: SdkToken, blockchain: Blockchain, card: CardDTO): DomainToken? {
