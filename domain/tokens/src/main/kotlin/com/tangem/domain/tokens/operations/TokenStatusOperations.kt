@@ -48,6 +48,7 @@ internal class TokenStatusOperations(
             token.isCustom -> TokenStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
+                fiatRate = quote?.fiatRate,
                 priceChange = quote?.priceChange,
                 hasTransactionsInProgress = hasTransactionsInProgress,
             )
@@ -55,6 +56,7 @@ internal class TokenStatusOperations(
             else -> TokenStatus.Loaded(
                 amount = amount,
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
+                fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
                 hasTransactionsInProgress = hasTransactionsInProgress,
             )
