@@ -10,7 +10,7 @@ internal class DefaultCacheRegistry(
 ) : CacheRegistry {
 
     override suspend fun isExpired(key: String): Boolean {
-        val cacheKey = cacheKeysStore.getOrNull(key) ?: return true
+        val cacheKey = cacheKeysStore.getSyncOrNull(key) ?: return true
 
         return cacheKey.updatedAt
             .plus(cacheKey.expiresIn)
@@ -34,7 +34,7 @@ internal class DefaultCacheRegistry(
         val isExpired = isExpired(key) || skipCache
         if (!isExpired) return
 
-        cacheKeysStore.addOrReplace(
+        cacheKeysStore.store(
             key = CacheKey(
                 id = key,
                 updatedAt = LocalDateTime.now(),
