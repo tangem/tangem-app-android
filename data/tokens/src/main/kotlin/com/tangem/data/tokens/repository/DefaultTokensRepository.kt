@@ -67,7 +67,7 @@ internal class DefaultTokensRepository(
                     "Unable to find a user wallet with provided ID: $userWalletId"
                 }
             }
-            require(!userWallet.isMultiCurrency) {
+            require(userWallet.isMultiCurrency) {
                 "Multi currency wallet excepted, but single currency wallet was found: $userWalletId"
             }
 

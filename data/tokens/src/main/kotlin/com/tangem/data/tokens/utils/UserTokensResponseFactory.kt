@@ -1,6 +1,5 @@
 package com.tangem.data.tokens.utils
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.Token
@@ -28,10 +27,10 @@ internal class UserTokensResponseFactory {
     }
 
     private fun createResponseToken(domainToken: Token): UserTokensResponse.Token {
-        val blockchain = Blockchain.fromId(domainToken.networkId.value)
+        val blockchain = getBlockchain(domainToken.networkId)
 
         return UserTokensResponse.Token(
-            id = domainToken.id.value.takeUnless { domainToken.isCustom },
+            id = getResponseTokenId(domainToken),
             networkId = blockchain.toNetworkId(),
             derivationPath = domainToken.derivationPath,
             name = domainToken.name,
