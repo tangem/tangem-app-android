@@ -27,4 +27,11 @@ sealed class EmptyTransactionsBlockState {
         override val iconRes: Int = R.drawable.img_coin_64
         override val text: TextReference = TextReference.Res(R.string.transaction_history_empty_transactions)
     }
+
+    data class NotImplemented(
+        override val actionButtonConfig: ActionButtonConfig,
+    ) : EmptyTransactionsBlockState() {
+        override val iconRes: Int = R.drawable.ic_compass_64
+        override val text: TextReference = TextReference.Res(R.string.transaction_history_not_supported_description)
+    }
 }

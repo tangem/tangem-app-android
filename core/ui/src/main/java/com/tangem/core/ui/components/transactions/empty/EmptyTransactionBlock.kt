@@ -81,5 +81,12 @@ private class EmptyTransactionBlockStateProvider : CollectionPreviewParameterPro
                 onClick = {},
             ),
         ),
+        EmptyTransactionsBlockState.NotImplemented(
+            actionButtonConfig = ActionButtonConfig(
+                text = "Explore transaction history",
+                iconResId = R.drawable.ic_arrow_top_right_24,
+                onClick = {},
+            ),
+        ),
     ),
 )
