@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.common
 
+import androidx.paging.PagingData
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
@@ -11,8 +12,11 @@ import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.*
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 
 internal object WalletPreviewData {
@@ -221,54 +225,57 @@ internal object WalletPreviewData {
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
         walletsListConfig = walletListConfig,
-        contentItems = persistentListOf(
-            WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Bitcoin"),
-            WalletContentItemState.MultiCurrencyItem.Token(
-                tokenItemVisibleState.copy(
-                    id = "token_1",
-                    name = "Ethereum",
-                    tokenIconResId = R.drawable.img_eth_22,
-                    networkIconResId = null,
-                    amount = "1,89340821 ETH",
+        tokensListState = WalletTokensListState.Content(
+            persistentListOf(
+                WalletTokensListState.TokensListItemState.NetworkGroupTitle("Bitcoin"),
+                WalletTokensListState.TokensListItemState.Token(
+                    tokenItemVisibleState.copy(
+                        id = "token_1",
+                        name = "Ethereum",
+                        tokenIconResId = R.drawable.img_eth_22,
+                        networkIconResId = null,
+                        amount = "1,89340821 ETH",
+                    ),
+                ),
+                WalletTokensListState.TokensListItemState.Token(
+                    tokenItemVisibleState.copy(
+                        id = "token_2",
+                        name = "Ethereum",
+                        tokenIconResId = R.drawable.img_eth_22,
+                        networkIconResId = null,
+                        amount = "1,89340821 ETH",
+                    ),
+                ),
+                WalletTokensListState.TokensListItemState.Token(
+                    tokenItemVisibleState.copy(
+                        id = "token_3",
+                        name = "Ethereum",
+                        tokenIconResId = R.drawable.img_eth_22,
+                        networkIconResId = null,
+                        amount = "1,89340821 ETH",
+                    ),
+                ),
+                WalletTokensListState.TokensListItemState.Token(
+                    tokenItemVisibleState.copy(
+                        id = "token_4",
+                        name = "Ethereum",
+                        tokenIconResId = R.drawable.img_eth_22,
+                        networkIconResId = null,
+                        amount = "1,89340821 ETH",
+                    ),
+                ),
+                WalletTokensListState.TokensListItemState.NetworkGroupTitle("Ethereum"),
+                WalletTokensListState.TokensListItemState.Token(
+                    tokenItemVisibleState.copy(
+                        id = "token_5",
+                        name = "Ethereum",
+                        tokenIconResId = R.drawable.img_eth_22,
+                        networkIconResId = null,
+                        amount = "1,89340821 ETH",
+                    ),
                 ),
             ),
-            WalletContentItemState.MultiCurrencyItem.Token(
-                tokenItemVisibleState.copy(
-                    id = "token_2",
-                    name = "Ethereum",
-                    tokenIconResId = R.drawable.img_eth_22,
-                    networkIconResId = null,
-                    amount = "1,89340821 ETH",
-                ),
-            ),
-            WalletContentItemState.MultiCurrencyItem.Token(
-                tokenItemVisibleState.copy(
-                    id = "token_3",
-                    name = "Ethereum",
-                    tokenIconResId = R.drawable.img_eth_22,
-                    networkIconResId = null,
-                    amount = "1,89340821 ETH",
-                ),
-            ),
-            WalletContentItemState.MultiCurrencyItem.Token(
-                tokenItemVisibleState.copy(
-                    id = "token_4",
-                    name = "Ethereum",
-                    tokenIconResId = R.drawable.img_eth_22,
-                    networkIconResId = null,
-                    amount = "1,89340821 ETH",
-                ),
-            ),
-            WalletContentItemState.MultiCurrencyItem.NetworkGroupTitle("Ethereum"),
-            WalletContentItemState.MultiCurrencyItem.Token(
-                tokenItemVisibleState.copy(
-                    id = "token_5",
-                    name = "Ethereum",
-                    tokenIconResId = R.drawable.img_eth_22,
-                    networkIconResId = null,
-                    amount = "1,89340821 ETH",
-                ),
-            ),
+            onOrganizeTokensClick = {},
         ),
         pullToRefreshConfig = WalletPullToRefreshConfig(
             isRefreshing = false,
@@ -281,32 +288,12 @@ internal object WalletPreviewData {
             WalletNotification.ScanCard(onClick = {}),
         ),
         bottomSheet = bottomSheet,
-        onOrganizeTokensClick = {},
     )
 
     val singleWalletScreenState = WalletStateHolder.SingleCurrencyContent(
         onBackClick = {},
         topBarConfig = walletTopBarConfig,
         walletsListConfig = walletListConfig,
-        contentItems = persistentListOf(
-            WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
-            WalletContentItemState.SingleCurrencyItem.GroupTitle("Today"),
-            WalletContentItemState.SingleCurrencyItem.Transaction(
-                TransactionState.Sending(
-                    address = "33BddS...ga2B",
-                    amount = "-0.500913 BTC",
-                    timestamp = "8:41",
-                ),
-            ),
-            WalletContentItemState.SingleCurrencyItem.GroupTitle("Yesterday"),
-            WalletContentItemState.SingleCurrencyItem.Transaction(
-                TransactionState.Sending(
-                    address = "33BddS...ga2B",
-                    amount = "-0.500913 BTC",
-                    timestamp = "8:41",
-                ),
-            ),
-        ),
         pullToRefreshConfig = WalletPullToRefreshConfig(
             isRefreshing = false,
             onRefresh = {},
@@ -320,6 +307,31 @@ internal object WalletPreviewData {
             priceChangeConfig = PriceChangeConfig(
                 valueInPercent = "5.16%",
                 type = PriceChangeConfig.Type.UP,
+            ),
+        ),
+        txHistoryState = WalletTxHistoryState.Content(
+            flowOf(
+                PagingData.from(
+                    listOf(
+                        WalletTxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
+                        WalletTxHistoryState.TxHistoryItemState.GroupTitle("Today"),
+                        WalletTxHistoryState.TxHistoryItemState.Transaction(
+                            TransactionState.Sending(
+                                address = "33BddS...ga2B",
+                                amount = "-0.500913 BTC",
+                                timestamp = "8:41",
+                            ),
+                        ),
+                        WalletTxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
+                        WalletTxHistoryState.TxHistoryItemState.Transaction(
+                            TransactionState.Sending(
+                                address = "33BddS...ga2B",
+                                amount = "-0.500913 BTC",
+                                timestamp = "8:41",
+                            ),
+                        ),
+                    ),
+                ),
             ),
         ),
     )
