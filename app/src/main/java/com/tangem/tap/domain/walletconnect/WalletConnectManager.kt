@@ -3,11 +3,9 @@ package com.tangem.tap.domain.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
-import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
@@ -227,7 +225,6 @@ class WalletConnectManager {
     }
 
     private fun onSessionClosed(session: WCSession) {
-        Analytics.send(WalletConnect.SessionDisconnected())
         sessions.remove(session.topic)
         walletConnectRepository.removeSession(session)
         store.dispatchOnMain(WalletConnectAction.RemoveSession(session))
@@ -395,7 +392,6 @@ class WalletConnectManager {
                             ),
                         )
                     }
-                    Analytics.send(WalletConnect.NewSessionEstablished(""))
                 }
             }
         }
