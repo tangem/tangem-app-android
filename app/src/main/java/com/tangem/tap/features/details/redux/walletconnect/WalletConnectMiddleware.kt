@@ -182,7 +182,7 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.RejectRequest -> {
                 walletConnectManager.rejectRequest(action.topic, action.id)
-                walletConnectInteractor.rejectRequest(action.topic, action.id)
+                walletConnectInteractor.cancelRequest(action.topic, action.id)
             }
             is WalletConnectAction.SendTransaction -> {
                 walletConnectManager.completeTransaction(action.topic)
