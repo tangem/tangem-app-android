@@ -30,20 +30,28 @@ internal class WalletStateFactory(
     private val clickCallbacks: WalletClickCallbacks,
 ) {
 
-    private val skeletonConverter = WalletSkeletonStateConverter(clickCallbacks = clickCallbacks)
-    private val loadedTokensListConverter = WalletLoadedTokensListConverter(
-        currentStateProvider = currentStateProvider,
-        clickCallbacks = clickCallbacks,
-    )
-    private val loadingTransactionsStateConverter = WalletLoadingTxHistoryConverter(
-        currentStateProvider = currentStateProvider,
-        currentCardTypeResolverProvider = currentCardTypeResolverProvider,
-    )
+    private val skeletonConverter by lazy { WalletSkeletonStateConverter(clickCallbacks = clickCallbacks) }
 
-    private val loadedTxHistoryConverter = WalletLoadedTxHistoryConverter(
-        currentStateProvider = currentStateProvider,
-        currentCardTypeResolverProvider = currentCardTypeResolverProvider,
-    )
+    private val loadedTokensListConverter by lazy {
+        WalletLoadedTokensListConverter(
+            currentStateProvider = currentStateProvider,
+            clickCallbacks = clickCallbacks,
+        )
+    }
+
+    private val loadingTransactionsStateConverter by lazy {
+        WalletLoadingTxHistoryConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+        )
+    }
+
+    private val loadedTxHistoryConverter by lazy {
+        WalletLoadedTxHistoryConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+        )
+    }
 
     fun getInitialState(): WalletStateHolder = WalletStateHolder.Loading(onBackClick = clickCallbacks::onBackClick)
 

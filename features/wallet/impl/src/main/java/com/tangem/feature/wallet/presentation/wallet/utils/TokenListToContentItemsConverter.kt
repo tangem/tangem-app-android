@@ -32,7 +32,11 @@ internal class TokenListToContentItemsConverter(
                 is TokenList.Ungrouped -> value.mapToMultiCurrencyItems()
                 is TokenList.NotInitialized -> getLoadingMultiCurrencyTokens()
             },
-            onOrganizeTokensClick = clickCallbacks::onOrganizeTokensClick,
+            onOrganizeTokensClick = if (value.totalFiatBalance is TokenList.FiatBalance.Loaded) {
+                clickCallbacks::onOrganizeTokensClick
+            } else {
+                null
+            },
         )
     }
 

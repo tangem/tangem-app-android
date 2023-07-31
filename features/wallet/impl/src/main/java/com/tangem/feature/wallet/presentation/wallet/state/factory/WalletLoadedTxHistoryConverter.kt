@@ -83,44 +83,48 @@ internal class WalletLoadedTxHistoryConverter(
             marketPriceBlockState = MarketPriceBlockState.Loading(
                 currencyName = currentCardTypeResolverProvider().getBlockchain().currency,
             ),
-            txHistoryState = WalletTxHistoryState.Content(
-                items = items.map { pagingData ->
-                    pagingData.map { item ->
-                        TxHistoryItemState.Transaction(
-                            state = when (val direction = item.direction) {
-                                is TxHistoryItem.TransactionDirection.Incoming -> {
-                                    when (item.status) {
-                                        TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
-                                            address = direction.from,
-                                            amount = item.amount.toPlainString(),
-                                            timestamp = item.timestamp.toString(),
-                                        )
-                                        TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
-                                            address = direction.from,
-                                            amount = item.amount.toPlainString(),
-                                            timestamp = item.timestamp.toString(),
-                                        )
-                                    }
+            txHistoryState = createContentTxHistory(items),
+        )
+    }
+
+    private fun createContentTxHistory(items: Flow<PagingData<TxHistoryItem>>): WalletTxHistoryState {
+        return WalletTxHistoryState.Content(
+            items = items.map { pagingData ->
+                pagingData.map { item ->
+                    TxHistoryItemState.Transaction(
+                        state = when (val direction = item.direction) {
+                            is TxHistoryItem.TransactionDirection.Incoming -> {
+                                when (item.status) {
+                                    TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
+                                        address = direction.from,
+                                        amount = item.amount.toPlainString(),
+                                        timestamp = item.timestamp.toString(),
+                                    )
+                                    TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
+                                        address = direction.from,
+                                        amount = item.amount.toPlainString(),
+                                        timestamp = item.timestamp.toString(),
+                                    )
                                 }
-                                is TxHistoryItem.TransactionDirection.Outgoing -> {
-                                    when (item.status) {
-                                        TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
-                                            address = direction.to,
-                                            amount = item.amount.toPlainString(),
-                                            timestamp = item.timestamp.toString(),
-                                        )
-                                        TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
-                                            address = direction.to,
-                                            amount = item.amount.toPlainString(),
-                                            timestamp = item.timestamp.toString(),
-                                        )
-                                    }
+                            }
+                            is TxHistoryItem.TransactionDirection.Outgoing -> {
+                                when (item.status) {
+                                    TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
+                                        address = direction.to,
+                                        amount = item.amount.toPlainString(),
+                                        timestamp = item.timestamp.toString(),
+                                    )
+                                    TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
+                                        address = direction.to,
+                                        amount = item.amount.toPlainString(),
+                                        timestamp = item.timestamp.toString(),
+                                    )
                                 }
-                            },
-                        )
-                    }
-                },
-            ),
+                            }
+                        },
+                    )
+                }
+            },
         )
     }
 }

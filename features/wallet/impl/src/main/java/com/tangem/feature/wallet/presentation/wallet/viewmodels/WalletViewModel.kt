@@ -101,34 +101,41 @@ internal class WalletViewModel @Inject constructor(
     private fun updateContentItems(index: Int, isRefreshing: Boolean = false) {
         val cardTypeResolver = getCardTypeResolver(index)
         if (cardTypeResolver.isMultiwalletAllowed()) {
-            getTokenListUseCase(userWalletId = uiState.walletsListConfig.wallets[index].id)
-                .distinctUntilChanged()
-                .onEach { tokenListEither ->
-                    uiState = stateFactory.getStateByTokensList(
-                        tokenListEither = tokenListEither,
-                        isRefreshing = isRefreshing,
-                    )
-
-                    tokenListEither.onRight { updateNotifications(index = index, tokenList = it) }
-                }
-                .flowOn(dispatchers.io)
-                .launchIn(viewModelScope)
-                .saveIn(tokensJobHolder)
+            updateByTokensList(index, isRefreshing)
         } else {
-            viewModelScope.launch(dispatchers.io) {
-                val wallet = getWallet(index)
-                val blockchain = wallet.scanResponse.cardTypesResolver.getBlockchain()
-                uiState = stateFactory.getLoadingTxHistoryState(
-                    itemsCountEither = txHistoryItemsCountUseCase(
-                        networkId = blockchain.id,
-                        derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY))
-                            .rawPath,
-                    ),
+            updateByTxHistory(index)
+        }
+    }
+
+    private fun updateByTokensList(index: Int, isRefreshing: Boolean) {
+        getTokenListUseCase(userWalletId = uiState.walletsListConfig.wallets[index].id)
+            .distinctUntilChanged()
+            .onEach { tokenListEither ->
+                uiState = stateFactory.getStateByTokensList(
+                    tokenListEither = tokenListEither,
+                    isRefreshing = isRefreshing,
                 )
 
-                updateTxHistory(networkId = blockchain.id)
-                updateNotifications(index)
+                tokenListEither.onRight { updateNotifications(index = index, tokenList = it) }
             }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(tokensJobHolder)
+    }
+
+    private fun updateByTxHistory(index: Int) {
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getWallet(index)
+            val blockchain = wallet.scanResponse.cardTypesResolver.getBlockchain()
+            uiState = stateFactory.getLoadingTxHistoryState(
+                itemsCountEither = txHistoryItemsCountUseCase(
+                    networkId = blockchain.id,
+                    derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY)).rawPath,
+                ),
+            )
+
+            updateTxHistory(networkId = blockchain.id)
+            updateNotifications(index)
         }
     }
 

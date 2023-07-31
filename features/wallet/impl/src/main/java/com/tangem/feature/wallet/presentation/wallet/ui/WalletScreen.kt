@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
@@ -161,49 +162,64 @@ private fun LazyListScope.contentItems(
 ) {
     when (state) {
         is WalletStateHolder.MultiCurrencyContent -> {
+            tokensListItems(state = state.tokensListState, modifier = modifier)
+        }
+        is WalletStateHolder.SingleCurrencyContent -> {
+            txHistoryItems(
+                state = state.txHistoryState,
+                txHistoryItems = txHistoryItems,
+                modifier = modifier,
+            )
+        }
+        is WalletStateHolder.Loading,
+        is WalletStateHolder.UnlockWalletContent,
+        -> Unit
+    }
+}
+
+private fun LazyListScope.tokensListItems(state: WalletTokensListState, modifier: Modifier = Modifier) {
+    itemsIndexed(
+        items = state.items,
+        key = { index, _ -> index },
+        itemContent = { index, item ->
+            MultiCurrencyContentItem(
+                state = item,
+                modifier = modifier.walletContentItemDecoration(
+                    currentIndex = index,
+                    lastIndex = state.items.lastIndex,
+                ),
+            )
+        },
+    )
+}
+
+private fun LazyListScope.txHistoryItems(
+    state: WalletTxHistoryState,
+    txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>?,
+    modifier: Modifier = Modifier,
+) {
+    when (state) {
+        is WalletTxHistoryState.ContentItemsState -> {
+            checkNotNull(txHistoryItems)
             itemsIndexed(
-                items = state.tokensListState.items,
+                items = txHistoryItems,
                 key = { index, _ -> index },
                 itemContent = { index, item ->
-                    MultiCurrencyContentItem(
+                    if (item == null) return@itemsIndexed
+
+                    SingleCurrencyContentItem(
                         state = item,
                         modifier = modifier.walletContentItemDecoration(
                             currentIndex = index,
-                            lastIndex = state.tokensListState.items.lastIndex,
+                            lastIndex = txHistoryItems.itemCount,
                         ),
                     )
                 },
             )
         }
-        is WalletStateHolder.SingleCurrencyContent -> {
-            when (state.txHistoryState) {
-                is WalletTxHistoryState.ContentItemsState -> {
-                    if (txHistoryItems != null) {
-                        itemsIndexed(
-                            items = txHistoryItems,
-                            key = { index, _ -> index },
-                            itemContent = { index, item ->
-                                if (item == null) return@itemsIndexed
-
-                                SingleCurrencyContentItem(
-                                    state = item,
-                                    modifier = modifier.walletContentItemDecoration(
-                                        currentIndex = index,
-                                        lastIndex = txHistoryItems.itemCount,
-                                    ),
-                                )
-                            },
-                        )
-                    }
-                }
-                is WalletTxHistoryState.Empty -> TODO("https://tangem.atlassian.net/browse/AND-4133")
-                is WalletTxHistoryState.Error -> TODO("https://tangem.atlassian.net/browse/AND-4133")
-                is WalletTxHistoryState.NotSupported -> TODO("https://tangem.atlassian.net/browse/AND-4133")
-            }
-        }
-        is WalletStateHolder.Loading,
-        is WalletStateHolder.UnlockWalletContent,
-        -> Unit
+        is WalletTxHistoryState.Empty -> TODO("https://tangem.atlassian.net/browse/AND-4133")
+        is WalletTxHistoryState.Error -> TODO("https://tangem.atlassian.net/browse/AND-4133")
+        is WalletTxHistoryState.NotSupported -> TODO("https://tangem.atlassian.net/browse/AND-4133")
     }
 }
 
