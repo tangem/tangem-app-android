@@ -249,4 +249,16 @@ internal class WalletViewModel @Inject constructor(
 
         router.openOrganizeTokensScreen(walletId)
     }
+
+    override fun onBuyClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onReloadClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onExploreClick() {
+        // TODO: [REDACTED_JIRA]
+    }
 }
