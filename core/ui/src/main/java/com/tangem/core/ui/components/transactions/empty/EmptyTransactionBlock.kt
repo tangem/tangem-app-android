@@ -3,7 +3,6 @@ package com.tangem.core.ui.components.transactions.empty
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +23,7 @@ import com.tangem.core.ui.R
 fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(size = TangemTheme.dimens.radius16))
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(color = TangemTheme.colors.background.primary)
             .padding(vertical = TangemTheme.dimens.spacing24),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),

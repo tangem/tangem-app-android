@@ -17,7 +17,7 @@ sealed class EmptyTransactionsBlockState {
     data class FailedToLoad(
         override val actionButtonConfig: ActionButtonConfig,
     ) : EmptyTransactionsBlockState() {
-        override val iconRes: Int = R.drawable.img_alert_history_64
+        override val iconRes: Int = R.drawable.ic_alert_history_64
         override val text: TextReference = TextReference.Res(R.string.transaction_history_error_failed_to_load)
     }
 
