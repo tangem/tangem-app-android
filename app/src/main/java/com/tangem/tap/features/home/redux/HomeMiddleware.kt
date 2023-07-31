@@ -35,7 +35,7 @@ object HomeMiddleware {
     val handler = homeMiddleware
 
     const val BUY_WALLET_URL = "https://tangem.com/ru/resellers/"
-    const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/ru/"
+    const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/"
 }
 
 private val homeMiddleware: Middleware<AppState> = { _, _ ->
