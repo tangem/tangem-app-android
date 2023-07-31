@@ -28,10 +28,10 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
-    implementation(deps.arrow.core)
 
     /** DI */
     implementation(deps.hilt.android)
