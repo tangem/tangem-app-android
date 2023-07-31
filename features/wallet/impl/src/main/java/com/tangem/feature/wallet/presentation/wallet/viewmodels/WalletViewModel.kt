@@ -249,4 +249,16 @@ internal class WalletViewModel @Inject constructor(
 
         router.openOrganizeTokensScreen(walletId)
     }
+
+    override fun onBuyClick() {
+        // TODO: https://tangem.atlassian.net/browse/AND-3962
+    }
+
+    override fun onReloadClick() {
+        // TODO: https://tangem.atlassian.net/browse/AND-4133
+    }
+
+    override fun onExploreClick() {
+        // TODO: https://tangem.atlassian.net/browse/AND-4133
+    }
 }
