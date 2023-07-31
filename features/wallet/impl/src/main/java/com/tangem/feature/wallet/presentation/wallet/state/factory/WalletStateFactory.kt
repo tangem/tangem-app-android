@@ -14,28 +14,30 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletBottomSheetConf
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletLoadedTokensListConverter.LoadedTokensListModel
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Main factory for creating [WalletStateHolder]
  *
- * @property currentStateProvider current ui state provider
- * @property clickCallbacks       screen click callbacks
+ * @property currentStateProvider            current ui state provider
+ * @param currentCardTypeResolverProvider current card type resolver
+ * @property clickIntents                    screen click intents
  */
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletStateHolder>,
     currentCardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val clickCallbacks: WalletClickCallbacks,
+    private val clickIntents: WalletClickIntents,
 ) {
 
-    private val skeletonConverter by lazy { WalletSkeletonStateConverter(clickCallbacks = clickCallbacks) }
+    private val skeletonConverter by lazy { WalletSkeletonStateConverter(clickIntents = clickIntents) }
 
     private val loadedTokensListConverter by lazy {
         WalletLoadedTokensListConverter(
             currentStateProvider = currentStateProvider,
-            clickCallbacks = clickCallbacks,
+            cardTypeResolverProvider = currentCardTypeResolverProvider,
+            clickIntents = clickIntents,
         )
     }
 
@@ -53,7 +55,7 @@ internal class WalletStateFactory(
         )
     }
 
-    fun getInitialState(): WalletStateHolder = WalletStateHolder.Loading(onBackClick = clickCallbacks::onBackClick)
+    fun getInitialState(): WalletStateHolder = WalletStateHolder.Loading(onBackClick = clickIntents::onBackClick)
 
     fun getSkeletonState(wallets: List<UserWallet>): WalletStateHolder = skeletonConverter.convert(wallets)
 
