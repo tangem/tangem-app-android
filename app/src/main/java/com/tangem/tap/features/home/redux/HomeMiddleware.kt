@@ -22,9 +22,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
-import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
-import com.tangem.tap.features.home.redux.HomeMiddleware.BUY_WALLET_URL
+import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
 import kotlinx.coroutines.delay
@@ -37,6 +35,7 @@ object HomeMiddleware {
     val handler = homeMiddleware
 
     const val BUY_WALLET_URL = "https://tangem.com/ru/resellers/"
+    const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/ru/"
 }
 
 private val homeMiddleware: Middleware<AppState> = { _, _ ->
@@ -64,10 +63,13 @@ private fun handleHomeAction(action: Action) {
         }
         is HomeAction.GoToShop -> {
             Analytics.send(Shop.ScreenOpened())
-            when (action.userCountryCode) {
-                RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
-                else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
-            }
+            store.dispatchOpenUrl(NEW_BUY_WALLET_URL)
+
+            // disabled for now in task https://tangem.atlassian.net/browse/AND-4135
+            // when (action.userCountryCode) {
+            //     RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
+            //     else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+            // }
         }
     }
 }
