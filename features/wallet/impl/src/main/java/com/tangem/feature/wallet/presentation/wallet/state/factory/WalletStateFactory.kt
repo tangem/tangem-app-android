@@ -14,6 +14,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletBottomSheetConf
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletLoadedTokensListConverter.LoadedTokensListModel
+import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
+import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +47,7 @@ internal class WalletStateFactory(
         WalletLoadingTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+            clickIntents = clickIntents,
         )
     }
 
@@ -52,6 +55,7 @@ internal class WalletStateFactory(
         WalletLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+            clickIntents = clickIntents,
         )
     }
 
