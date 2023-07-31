@@ -25,4 +25,10 @@ internal interface WalletClickIntents {
     fun onRefreshSwipe()
 
     fun onOrganizeTokensClick()
+
+    fun onBuyClick()
+
+    fun onReloadClick()
+
+    fun onExploreClick()
 }
