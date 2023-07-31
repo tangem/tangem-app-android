@@ -6,7 +6,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.domain.tokens.model.Token as DomainToken
@@ -49,11 +48,11 @@ internal class CardTokensFactory(private val demoConfig: DemoConfig) {
         }
 
         return DomainToken(
-            id = getTokenId(sdkToken, blockchain),
-            networkId = Network.ID(blockchain.id),
+            id = getTokenId(blockchain, sdkToken),
+            networkId = getNetworkId(blockchain),
             name = sdkToken.name,
             symbol = sdkToken.symbol,
-            iconUrl = getCoinOrTokenIconUrl(sdkToken, blockchain),
+            iconUrl = getTokenIconUrl(blockchain, sdkToken),
             decimals = sdkToken.decimals,
             isCustom = false,
             contractAddress = sdkToken.contractAddress,
@@ -69,10 +68,10 @@ internal class CardTokensFactory(private val demoConfig: DemoConfig) {
 
         return DomainToken(
             id = getCoinId(blockchain),
-            networkId = Network.ID(blockchain.id),
+            networkId = getNetworkId(blockchain),
             name = blockchain.fullName,
             symbol = blockchain.currency,
-            iconUrl = getCoinIconId(blockchain),
+            iconUrl = getCoinIconUrl(blockchain),
             decimals = blockchain.decimals(),
             isCustom = false,
             contractAddress = null,
