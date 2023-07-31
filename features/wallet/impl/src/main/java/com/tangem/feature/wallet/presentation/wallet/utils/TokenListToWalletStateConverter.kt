@@ -1,48 +1,56 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.common.Provider
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder.MultiCurrencyContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
 internal class TokenListToWalletStateConverter(
-    private val currentState: WalletStateHolder,
+    private val currentStateProvider: Provider<WalletStateHolder>,
     private val isWalletContentHidden: Boolean,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
+    clickCallbacks: WalletClickCallbacks,
 ) : Converter<TokensListModel, WalletStateHolder> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
         fiatCurrencyCode = fiatCurrencyCode,
         fiatCurrencySymbol = fiatCurrencySymbol,
+        clickCallbacks = clickCallbacks,
     )
 
     override fun convert(value: TokensListModel): WalletStateHolder {
-        val state = if (currentState is MultiCurrencyContent) {
-            currentState.updateWithTokenList(tokenList = value.tokenList)
-        } else {
-            currentState
-        }
-
-        return state.copySealed(
-            walletsListConfig = state.updateSelectedWallet(value.tokenList.totalFiatBalance),
-            pullToRefreshConfig = if (value.isRefreshing) {
-                state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
-            } else {
-                state.pullToRefreshConfig
-            },
-        )
+        val state = currentStateProvider()
+        return state
+            .updateWithTokenList(tokenList = value.tokenList)
+            .copySealed(
+                walletsListConfig = state.updateSelectedWallet(value.tokenList.totalFiatBalance),
+                pullToRefreshConfig = if (value.isRefreshing) {
+                    state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
+                } else {
+                    state.pullToRefreshConfig
+                },
+            )
     }
 
-    private fun MultiCurrencyContent.updateWithTokenList(tokenList: TokenList): MultiCurrencyContent {
-        return this.copy(contentItems = tokenListToContentConverter.convert(value = tokenList))
+    private fun WalletStateHolder.updateWithTokenList(tokenList: TokenList): MultiCurrencyContent {
+        return MultiCurrencyContent(
+            onBackClick = onBackClick,
+            topBarConfig = topBarConfig,
+            walletsListConfig = walletsListConfig,
+            pullToRefreshConfig = pullToRefreshConfig,
+            notifications = notifications,
+            bottomSheet = bottomSheet,
+            tokensListState = tokenListToContentConverter.convert(value = tokenList),
+        )
     }
 
     private fun WalletStateHolder.updateSelectedWallet(fiatBalance: TokenList.FiatBalance): WalletsListConfig {
@@ -63,13 +71,13 @@ internal class TokenListToWalletStateConverter(
     }
 
     private fun WalletStateHolder.getRefreshingStatus(): Boolean {
-        return contentItems.any { state ->
-            val isMultiCurrencyItem = state as? WalletContentItemState.MultiCurrencyItem.Token
-            val isSingleCurrencyItem = state as? WalletContentItemState.SingleCurrencyItem.Transaction
-
-            isMultiCurrencyItem?.state is TokenItemState.Loading ||
-                isSingleCurrencyItem?.state is TransactionState.Loading ||
-                state is WalletContentItemState.Loading
+        return if (this is MultiCurrencyContent) {
+            tokensListState.items.any { tokensListItemState ->
+                tokensListItemState is WalletTokensListState.TokensListItemState.Token &&
+                    tokensListItemState.state is TokenItemState.Loading
+            }
+        } else {
+            false
         }
     }
 
