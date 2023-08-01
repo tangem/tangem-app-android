@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState.TxHistoryItemState
 
 /**
  * Transactions block group title
@@ -18,10 +18,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemStat
  * @param modifier modifier
  */
 @Composable
-internal fun TransactionsBlockGroupTitle(
-    config: WalletContentItemState.SingleCurrencyItem.GroupTitle,
-    modifier: Modifier = Modifier,
-) {
+internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
     Text(
         text = config.title,
         modifier = modifier
@@ -41,7 +38,7 @@ internal fun TransactionsBlockGroupTitle(
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Light() {
     TangemTheme(isDark = false) {
-        TransactionsBlockGroupTitle(config = WalletContentItemState.SingleCurrencyItem.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
     }
 }
 
@@ -49,6 +46,6 @@ private fun Preview_TransactionsBlockGroupTitle_Light() {
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Dark() {
     TangemTheme(isDark = true) {
-        TransactionsBlockGroupTitle(config = WalletContentItemState.SingleCurrencyItem.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
     }
 }
