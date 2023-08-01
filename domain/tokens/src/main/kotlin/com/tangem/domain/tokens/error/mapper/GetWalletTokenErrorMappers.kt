@@ -9,6 +9,7 @@ internal fun CurrenciesStatusesOperations.Error.mapToTokenError(): TokenError {
         is CurrenciesStatusesOperations.Error.EmptyNetworksStatuses,
         is CurrenciesStatusesOperations.Error.EmptyQuotes,
         is CurrenciesStatusesOperations.Error.EmptyCurrencies,
+        is CurrenciesStatusesOperations.Error.UnableToCreateCurrencyStatus,
         -> TokenError.UnableToCreateToken
     }
 }
