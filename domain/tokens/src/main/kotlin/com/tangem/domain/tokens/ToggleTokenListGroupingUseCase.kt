@@ -41,7 +41,7 @@ class ToggleTokenListGroupingUseCase(
         val sortingOperations = getSortingOperations(tokenList)
         val tokens = sortingOperations.getTokens()
 
-        val networks = getNetworks(tokens.map { it.networkId }.toSet())
+        val networks = getNetworks(tokens.map { it.currency.networkId }.toSet())
         return TokenList.GroupedByNetwork(
             groups = sortingOperations.getGroupedTokens(networks),
             totalFiatBalance = tokenList.totalFiatBalance,
@@ -55,7 +55,7 @@ class ToggleTokenListGroupingUseCase(
         val sortingOperations = getSortingOperations(tokenList)
 
         return TokenList.Ungrouped(
-            tokens = sortingOperations.getTokens(),
+            currencies = sortingOperations.getTokens(),
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
         )

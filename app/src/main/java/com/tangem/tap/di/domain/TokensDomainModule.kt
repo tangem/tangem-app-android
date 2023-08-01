@@ -28,13 +28,13 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetTokenUseCase(
+    fun provideGetPrimaryCurrencyUseCase(
         tokensRepository: TokensRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetTokenUseCase {
-        return GetTokenUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetPrimaryCurrencyUseCase {
+        return GetPrimaryCurrencyUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides

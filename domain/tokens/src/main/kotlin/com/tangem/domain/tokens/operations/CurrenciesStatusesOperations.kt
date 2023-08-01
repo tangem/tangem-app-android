@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
-internal class TokensStatusesOperations<E>(
+internal class CurrenciesStatusesOperations<E>(
     private val tokensRepository: TokensRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
@@ -24,7 +24,7 @@ internal class TokensStatusesOperations<E>(
     private val dispatchers: CoroutineDispatcherProvider,
     raise: Raise<E>,
     transformError: (Error) -> E,
-) : DelegatedRaise<TokensStatusesOperations.Error, E>(raise, transformError) {
+) : DelegatedRaise<CurrenciesStatusesOperations.Error, E>(raise, transformError) {
 
     constructor(
         userWalletId: UserWalletId,
@@ -43,8 +43,8 @@ internal class TokensStatusesOperations<E>(
         transformError = transformError,
     )
 
-    fun getMultiCurrencyWalletTokensStatusesFlow(): Flow<Set<TokenStatus>> {
-        return getMultiCurrencyWalletTokens().flatMapConcat {
+    fun getMultiCurrencyWalletStatusesFlow(): Flow<Set<CryptoCurrencyStatus>> {
+        return getMultiCurrencyWalletCurrencies().flatMapConcat {
             val tokens = it.toNonEmptySetOrNull()
 
             if (tokens == null) {
@@ -60,12 +60,12 @@ internal class TokensStatusesOperations<E>(
         }
     }
 
-    suspend fun getSingleCurrencyWalletTokenStatusFlow(): Flow<TokenStatus> {
-        val token = getSingleCurrencyWalletToken()
+    suspend fun getPrimaryCurrencyStatusFlow(): Flow<CryptoCurrencyStatus> {
+        val token = getPrimaryCurrency()
 
         val quoteFlow = getQuotes(nonEmptySetOf(token.id))
             .map { quotes ->
-                quotes.singleOrNull { it.tokenId == token.id }
+                quotes.singleOrNull { it.currencyId == token.id }
             }
 
         val statusFlow = getNetworksStatues(groupTokens(nonEmptySetOf(token)))
@@ -79,61 +79,69 @@ internal class TokensStatusesOperations<E>(
     }
 
     private suspend fun createTokensStatuses(
-        tokens: Set<Token>,
+        tokens: Set<CryptoCurrency>,
         quotes: Set<Quote>,
         networkStatuses: Set<NetworkStatus>,
-    ): Set<TokenStatus> = withContext(dispatchers.default) {
+    ): Set<CryptoCurrencyStatus> = withContext(dispatchers.default) {
         tokens.mapTo(hashSetOf()) { token ->
-            val quote = quotes.firstOrNull { it.tokenId == token.id }
+            val quote = quotes.firstOrNull { it.currencyId == token.id }
             val networkStatus = networkStatuses.firstOrNull { it.networkId == token.networkId }
 
             createStatus(token, quote, networkStatus)
         }
     }
 
-    private suspend fun createStatus(token: Token, quote: Quote?, networkStatus: NetworkStatus?): TokenStatus {
-        val tokenStatusOperations = TokenStatusOperations(
-            token = token,
+    private suspend fun createStatus(
+        token: CryptoCurrency,
+        quote: Quote?,
+        networkStatus: NetworkStatus?,
+    ): CryptoCurrencyStatus {
+        val currencyStatusOperations = CurrencyStatusOperations(
+            currency = token,
             quote = quote,
             networkStatus = networkStatus,
             dispatchers = dispatchers,
         )
 
-        return tokenStatusOperations.createTokenStatus()
+        return currencyStatusOperations.createTokenStatus()
     }
 
-    private fun getMultiCurrencyWalletTokens(): Flow<Set<Token>> {
-        return tokensRepository.getMultiCurrencyWalletTokens(userWalletId, refresh)
+    private fun getMultiCurrencyWalletCurrencies(): Flow<Set<CryptoCurrency>> {
+        return tokensRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh)
             .catch { raise(Error.DataError(it)) }
-            .onEmpty { raise(Error.EmptyTokens) }
+            .onEmpty { raise(Error.EmptyCurrencies) }
             .flowOn(dispatchers.io)
     }
 
-    private suspend fun getSingleCurrencyWalletToken(): Token {
+    private suspend fun getPrimaryCurrency(): CryptoCurrency {
         return withContext(dispatchers.io) {
             catch(
-                block = { tokensRepository.getSingleCurrencyWalletToken(userWalletId) },
+                block = { tokensRepository.getPrimaryCurrency(userWalletId) },
                 catch = { raise(Error.DataError(it)) },
             )
         }
     }
 
-    private fun getQuotes(tokensIds: NonEmptySet<Token.ID>): Flow<Set<Quote>> {
+    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Set<Quote>> {
         return quotesRepository.getQuotes(tokensIds, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyQuotes) }
             .flowOn(dispatchers.io)
     }
 
-    private fun getNetworksStatues(groupedTokens: Map<Network.ID, NonEmptySet<Token.ID>>): Flow<Set<NetworkStatus>> {
+    private fun getNetworksStatues(
+        groupedTokens: Map<Network.ID, NonEmptySet<CryptoCurrency.ID>>,
+    ): Flow<Set<NetworkStatus>> {
         return networksRepository.getNetworkStatuses(userWalletId, groupedTokens, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyNetworksStatuses) }
             .flowOn(dispatchers.io)
     }
 
-    private suspend fun groupTokens(tokens: NonEmptySet<Token>): Map<Network.ID, NonEmptySet<Token.ID>> =
-        withContext(dispatchers.default) {
+    private suspend fun groupTokens(
+        tokens: NonEmptySet<CryptoCurrency>,
+    ): Map<Network.ID, NonEmptySet<CryptoCurrency.ID>> {
+        return withContext(dispatchers.default) {
             tokens
                 .groupBy { it.networkId }
                 .mapValues { (_, tokens) ->
@@ -143,10 +151,11 @@ internal class TokensStatusesOperations<E>(
                         .toNonEmptySet()
                 }
         }
+    }
 
     sealed class Error {
 
-        object EmptyTokens : Error()
+        object EmptyCurrencies : Error()
 
         object EmptyQuotes : Error()
 
