@@ -70,11 +70,13 @@ class WalletManagersFacade(
             return UpdateWalletManagerResult.MissedDerivation
         }
 
-        val walletManager = getWalletManager(userWallet, blockchain, derivationPath, extraTokens)
+        val walletManager = getOrCreateWalletManager(userWallet, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
             Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable
         }
+
+        updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
 
         return try {
             if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
@@ -111,11 +113,10 @@ class WalletManagersFacade(
         }
     }
 
-    private suspend fun getWalletManager(
+    private suspend fun getOrCreateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
         derivationPath: DerivationPath?,
-        tokens: Set<DomainToken> = emptySet(),
     ): WalletManager? {
         val userWalletId = userWallet.walletId
 
@@ -134,8 +135,6 @@ class WalletManagersFacade(
 
             walletManagersStore.store(userWalletId, walletManager)
         }
-
-        updateWalletManagerTokensIfNeeded(walletManager, tokens)
 
         return walletManager
     }

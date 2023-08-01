@@ -9,7 +9,7 @@ sealed class UpdateWalletManagerResult {
     object Unreachable : UpdateWalletManagerResult()
 
     data class Verified(
-        val tokensAmounts: Set<TokenAmount>,
+        val tokensAmounts: Set<CryptoCurrencyAmount>,
         val hasTransactionsInProgress: Boolean, // TODO: May be add recent transactions
     ) : UpdateWalletManagerResult()
 

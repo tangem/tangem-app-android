@@ -2,14 +2,14 @@ package com.tangem.domain.walletmanager.model
 
 import java.math.BigDecimal
 
-sealed class TokenAmount {
+sealed class CryptoCurrencyAmount {
 
     abstract val value: BigDecimal
 
-    data class Coin(override val value: BigDecimal) : TokenAmount()
+    data class Coin(override val value: BigDecimal) : CryptoCurrencyAmount()
 
     data class Token(
         val tokenContractAddress: String,
         override val value: BigDecimal,
-    ) : TokenAmount()
+    ) : CryptoCurrencyAmount()
 }
