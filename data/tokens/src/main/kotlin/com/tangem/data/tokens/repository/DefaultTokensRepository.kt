@@ -1,15 +1,15 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.tokens.utils.CardTokensFactory
-import com.tangem.data.tokens.utils.ResponseTokensFactory
+import com.tangem.data.tokens.utils.CardCurrenciesFactory
+import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
 import com.tangem.data.tokens.utils.UserTokensResponseFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.model.Token
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -27,18 +27,18 @@ internal class DefaultTokensRepository(
 ) : TokensRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseTokensFactory = ResponseTokensFactory(demoConfig)
-    private val cardTokensFactory = CardTokensFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCurrenciesFactory(demoConfig)
+    private val cardCurrenciesFactory = CardCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        tokens: Set<Token>,
+        currencies: Set<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
         val response = userTokensResponseFactory.createUserTokensResponse(
-            tokens = tokens,
+            currencies = currencies,
             isGroupedByNetwork = isGroupedByNetwork,
             isSortedByBalance = isSortedByBalance,
         )
@@ -46,7 +46,7 @@ internal class DefaultTokensRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
-    override suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token {
+    override suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         val userWallet = withContext(dispatchers.io) {
             requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
                 "Unable to find a user wallet with provided ID: $userWalletId"
@@ -56,11 +56,13 @@ internal class DefaultTokensRepository(
             "Single currency wallet excepted, but multi currency wallet was found: $userWalletId"
         }
 
-        return cardTokensFactory
-            .createPrimaryTokenForSingleCurrencyCard(userWallet.scanResponse)
+        return cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
     }
 
-    override fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+    override fun getMultiCurrencyWalletCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): Flow<Set<CryptoCurrency>> {
         return channelFlow {
             val userWallet = withContext(dispatchers.io) {
                 requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
@@ -72,7 +74,7 @@ internal class DefaultTokensRepository(
             }
 
             launch(dispatchers.io) {
-                getMultiCurrencyWalletTokens(userWallet).collectLatest(::send)
+                getMultiCurrencyWalletCurrencies(userWallet).collectLatest(::send)
             }
 
             launch(dispatchers.io) {
@@ -93,9 +95,9 @@ internal class DefaultTokensRepository(
             .flowOn(dispatchers.io)
     }
 
-    private fun getMultiCurrencyWalletTokens(userWallet: UserWallet): Flow<Set<Token>> {
+    private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<Set<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
-            responseTokensFactory.createTokens(
+            responseCurrenciesFactory.createTokens(
                 response = storedTokens,
                 card = userWallet.scanResponse.card,
             )
@@ -131,7 +133,9 @@ internal class DefaultTokensRepository(
         if (NOT_FOUND_HTTP_CODE in errorMessage) {
             val response = userTokensStore.getSyncOrNull(userWallet.walletId)
                 ?: userTokensResponseFactory.createUserTokensResponse(
-                    tokens = cardTokensFactory.createDefaultTokensForMultiCurrencyCard(userWallet.scanResponse.card),
+                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(
+                        userWallet.scanResponse.card,
+                    ),
                     isGroupedByNetwork = false,
                     isSortedByBalance = false,
                 )

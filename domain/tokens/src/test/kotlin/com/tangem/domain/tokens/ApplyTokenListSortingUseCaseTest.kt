@@ -6,7 +6,7 @@ import arrow.core.right
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockTokens
-import com.tangem.domain.tokens.model.Token
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.MockTokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -191,7 +191,7 @@ internal class ApplyTokenListSortingUseCaseTest {
 
     private fun getTokensRepository(
         sortTokensResult: Either<DataError, Unit> = Unit.right(),
-        tokens: Flow<Either<DataError, Set<Token>>> = flowOf(MockTokens.tokens.right()),
+        tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
     ): MockTokensRepository {
         return MockTokensRepository(sortTokensResult, tokens, emptyFlow(), emptyFlow())
     }
