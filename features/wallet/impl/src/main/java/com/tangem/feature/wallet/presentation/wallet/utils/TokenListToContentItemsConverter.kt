@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState.TokensListItemState
 import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
@@ -19,7 +19,7 @@ internal class TokenListToContentItemsConverter(
     private val clickCallbacks: WalletClickCallbacks,
 ) : Converter<TokenList, WalletTokensListState> {
 
-    private val tokenStatusConverter = TokenStatusToTokenItemConverter(
+    private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
         isWalletContentHidden = isWalletContentHidden,
         fiatCurrencyCode = fiatCurrencyCode,
         fiatCurrencySymbol = fiatCurrencySymbol,
@@ -47,7 +47,7 @@ internal class TokenListToContentItemsConverter(
     }
 
     private fun TokenList.Ungrouped.mapToMultiCurrencyItems(): PersistentList<TokensListItemState> {
-        return tokens.fold(initial = persistentListOf()) { acc, token ->
+        return currencies.fold(initial = persistentListOf()) { acc, token ->
             acc.mutate { it.addToken(token) }
         }
     }
@@ -55,14 +55,14 @@ internal class TokenListToContentItemsConverter(
     private fun MutableList<TokensListItemState>.addGroup(group: NetworkGroup): List<TokensListItemState> {
         this.add(TokensListItemState.NetworkGroupTitle(group.network.name))
 
-        group.tokens.forEach { token ->
+        group.currencies.forEach { token ->
             this.addToken(token)
         }
 
         return this
     }
 
-    private fun MutableList<TokensListItemState>.addToken(token: TokenStatus): List<TokensListItemState> {
+    private fun MutableList<TokensListItemState>.addToken(token: CryptoCurrencyStatus): List<TokensListItemState> {
         val tokenItemState = tokenStatusConverter.convert(token)
 
         this.add(TokensListItemState.Token(tokenItemState))
