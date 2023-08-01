@@ -101,6 +101,8 @@ internal class CurrenciesStatusesOperations<E>(
             quote = quote,
             networkStatus = networkStatus,
             dispatchers = dispatchers,
+            raise = this,
+            transformError = { Error.UnableToCreateCurrencyStatus },
         )
 
         return currencyStatusOperations.createTokenStatus()
@@ -160,6 +162,8 @@ internal class CurrenciesStatusesOperations<E>(
         object EmptyQuotes : Error()
 
         object EmptyNetworksStatuses : Error()
+
+        object UnableToCreateCurrencyStatus : Error()
 
         data class DataError(val cause: Throwable) : Error()
     }
