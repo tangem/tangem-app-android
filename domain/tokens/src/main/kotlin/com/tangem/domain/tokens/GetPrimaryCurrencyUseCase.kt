@@ -7,8 +7,8 @@ import arrow.core.raise.recover
 import arrow.core.right
 import com.tangem.domain.tokens.error.TokenError
 import com.tangem.domain.tokens.error.mapper.mapToTokenError
-import com.tangem.domain.tokens.model.TokenStatus
-import com.tangem.domain.tokens.operations.TokensStatusesOperations
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
@@ -18,14 +18,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 
-class GetTokenUseCase(
+class GetPrimaryCurrencyUseCase(
     private val tokensRepository: TokensRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Flow<Either<TokenError, TokenStatus>> {
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): Flow<Either<TokenError, CryptoCurrencyStatus>> {
         return channelFlow {
             recover(
                 block = {
@@ -40,8 +43,11 @@ class GetTokenUseCase(
         }
     }
 
-    private suspend fun Raise<TokenError>.getToken(userWalletId: UserWalletId, refresh: Boolean): Flow<TokenStatus> {
-        val operations = TokensStatusesOperations(
+    private suspend fun Raise<TokenError>.getToken(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): Flow<CryptoCurrencyStatus> {
+        val operations = CurrenciesStatusesOperations(
             tokensRepository = tokensRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
@@ -49,9 +55,9 @@ class GetTokenUseCase(
             refresh = refresh,
             dispatchers = dispatchers,
             raise = this,
-            transformError = TokensStatusesOperations.Error::mapToTokenError,
+            transformError = CurrenciesStatusesOperations.Error::mapToTokenError,
         )
 
-        return operations.getSingleCurrencyWalletTokenStatusFlow()
+        return operations.getPrimaryCurrencyStatusFlow()
     }
 }

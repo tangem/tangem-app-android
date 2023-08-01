@@ -7,10 +7,10 @@ import arrow.core.raise.recover
 import arrow.core.right
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
+import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListOperations
-import com.tangem.domain.tokens.operations.TokensStatusesOperations
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
@@ -51,21 +51,21 @@ class GetTokenListUseCase(
     private fun Raise<TokenListError>.getTokensStatuses(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<Set<TokenStatus>> {
-        val operations = TokensStatusesOperations(
+    ): Flow<Set<CryptoCurrencyStatus>> {
+        val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             refresh = refresh,
             useCase = this@GetTokenListUseCase,
             raise = this,
-            transformError = TokensStatusesOperations.Error::mapToTokenListError,
+            transformError = CurrenciesStatusesOperations.Error::mapToTokenListError,
         )
 
-        return operations.getMultiCurrencyWalletTokensStatusesFlow()
+        return operations.getMultiCurrencyWalletStatusesFlow()
     }
 
     private fun Raise<TokenListError>.createTokenList(
         userWalletId: UserWalletId,
-        tokens: Set<TokenStatus>,
+        tokens: Set<CryptoCurrencyStatus>,
     ): Flow<TokenList> {
         val operations = TokenListOperations(
             userWalletId = userWalletId,

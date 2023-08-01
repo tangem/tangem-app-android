@@ -7,9 +7,9 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -22,7 +22,7 @@ internal class TokenListOperations<E>(
     private val tokensRepository: TokensRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
-    private val tokens: Set<TokenStatus>,
+    private val tokens: Set<CryptoCurrencyStatus>,
     private val dispatchers: CoroutineDispatcherProvider,
     raise: Raise<E>,
     transform: (Error) -> E,
@@ -30,7 +30,7 @@ internal class TokenListOperations<E>(
 
     constructor(
         userWalletId: UserWalletId,
-        tokens: Set<TokenStatus>,
+        tokens: Set<CryptoCurrencyStatus>,
         useCase: GetTokenListUseCase,
         raise: Raise<E>,
         transform: (Error) -> E,
@@ -55,7 +55,7 @@ internal class TokenListOperations<E>(
             val tokensNes = tokens.toNonEmptySetOrNull()
                 ?: return@withContext TokenList.NotInitialized
 
-            val isAnyTokenLoading = tokensNes.any { it.value is TokenStatus.Loading }
+            val isAnyTokenLoading = tokensNes.any { it.value is CryptoCurrencyStatus.Loading }
             val fiatBalanceOperations = TokenListFiatBalanceOperations(tokensNes, isAnyTokenLoading, dispatchers)
 
             createTokenList(
@@ -69,14 +69,14 @@ internal class TokenListOperations<E>(
     }
 
     private suspend fun createTokenList(
-        tokens: NonEmptySet<TokenStatus>,
+        tokens: NonEmptySet<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
         isAnyTokenLoading: Boolean,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ): TokenList {
         val sortingOperations = TokenListSortingOperations(
-            tokens = tokens,
+            currencies = tokens,
             isAnyTokenLoading = isAnyTokenLoading,
             sortByBalance = isSortedByBalance,
             dispatchers = dispatchers,
@@ -90,7 +90,7 @@ internal class TokenListOperations<E>(
     }
 
     private suspend fun createTokenList(
-        tokens: NonEmptySet<TokenStatus>,
+        tokens: NonEmptySet<CryptoCurrencyStatus>,
         sortingOperations: TokenListSortingOperations<*>,
         fiatBalance: TokenList.FiatBalance,
         isGrouped: Boolean,
@@ -108,9 +108,9 @@ internal class TokenListOperations<E>(
         }
     }
 
-    private suspend fun getNetworks(tokensNes: NonEmptySet<TokenStatus>): Set<Network> {
+    private suspend fun getNetworks(tokensNes: NonEmptySet<CryptoCurrencyStatus>): Set<Network> {
         return withContext(dispatchers.io) {
-            val networksIds = tokensNes.map { it.networkId }.toNonEmptySet()
+            val networksIds = tokensNes.map { it.currency.networkId }.toNonEmptySet()
             catch(
                 block = { networksRepository.getNetworks(networksIds) },
                 catch = { raise(Error.DataError(it)) },
@@ -124,7 +124,7 @@ internal class TokenListOperations<E>(
     ): TokenList.Ungrouped = TokenList.Ungrouped(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
-        tokens = sortingOperations.getTokens(),
+        currencies = sortingOperations.getTokens(),
     )
 
     private suspend fun createGroupedTokenList(
@@ -138,13 +138,13 @@ internal class TokenListOperations<E>(
     )
 
     private fun createUnsortedUngroupedTokenList(
-        tokens: NonEmptySet<TokenStatus>,
+        tokens: NonEmptySet<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
     ): TokenList.Ungrouped {
         return TokenList.Ungrouped(
             sortedBy = TokenList.SortType.NONE,
             totalFiatBalance = fiatBalance,
-            tokens = tokens,
+            currencies = tokens,
         )
     }
 

@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.repository
 
-import com.tangem.domain.tokens.model.Token
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -11,14 +11,14 @@ interface TokensRepository {
 
     suspend fun saveTokens(
         userWalletId: UserWalletId,
-        tokens: Set<Token>,
+        currencies: Set<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     )
 
-    suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token
+    suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
-    fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>>
+    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<CryptoCurrency>>
 
     fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
 

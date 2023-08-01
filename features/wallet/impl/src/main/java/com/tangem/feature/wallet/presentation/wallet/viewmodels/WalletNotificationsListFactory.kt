@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
@@ -123,12 +123,12 @@ internal class WalletNotificationsListFactory(
 
     private fun TokenList.hasMissedDerivations(): Boolean {
         val statuses = when (this) {
-            is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::tokens).map(TokenStatus::value)
-            is TokenList.Ungrouped -> tokens.map(TokenStatus::value)
+            is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::currencies).map(CryptoCurrencyStatus::value)
+            is TokenList.Ungrouped -> currencies.map(CryptoCurrencyStatus::value)
             TokenList.NotInitialized -> emptyList()
         }
 
-        return statuses.any { it is TokenStatus.MissedDerivation }
+        return statuses.any { it is CryptoCurrencyStatus.MissedDerivation }
     }
 
     private companion object {
