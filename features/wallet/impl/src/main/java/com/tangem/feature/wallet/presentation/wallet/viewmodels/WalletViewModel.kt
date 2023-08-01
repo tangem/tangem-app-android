@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -14,8 +15,10 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -46,6 +49,8 @@ internal class WalletViewModel @Inject constructor(
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardProcessor: ScanCardProcessor,
+    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickCallbacks {
 
@@ -62,6 +67,9 @@ internal class WalletViewModel @Inject constructor(
 
     private val stateFactory = WalletStateFactory(
         currentStateProvider = Provider { uiState },
+        currentCardTypeResolverProvider = Provider {
+            getCardTypeResolver(index = uiState.walletsListConfig.selectedWalletIndex)
+        },
         clickCallbacks = this,
     )
 
@@ -69,10 +77,10 @@ internal class WalletViewModel @Inject constructor(
     var uiState: WalletStateHolder by mutableStateOf(stateFactory.getInitialState())
         private set
 
-    private var cardTypeResolverMap: Map<UserWalletId, CardTypesResolver> by Delegates.notNull()
+    private var wallets: List<UserWallet> by Delegates.notNull()
 
-    private val getTokensJobHolder = JobHolder()
-    private val getNotificationJobHolder = JobHolder()
+    private val tokensJobHolder = JobHolder()
+    private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         getWalletsUseCase()
@@ -80,15 +88,7 @@ internal class WalletViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { wallets ->
                 if (wallets.isEmpty()) return@onEach
-
-                cardTypeResolverMap = wallets.associate { wallet ->
-                    // TODO remove after adding release logic for GetTokenListUseCase
-                    if (wallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
-                        UserWalletId("123")
-                    } else {
-                        UserWalletId("321")
-                    } to wallet.scanResponse.cardTypesResolver
-                }
+                this.wallets = wallets
 
                 uiState = stateFactory.getSkeletonState(wallets = wallets)
 
@@ -99,8 +99,15 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun updateContentItems(index: Int, isRefreshing: Boolean = false) {
-        // TODO: use GetTransactionsUseCase
+        val cardTypeResolver = getCardTypeResolver(index)
+        if (cardTypeResolver.isMultiwalletAllowed()) {
+            updateByTokensList(index, isRefreshing)
+        } else {
+            updateByTxHistory(index)
+        }
+    }
 
+    private fun updateByTokensList(index: Int, isRefreshing: Boolean) {
         getTokenListUseCase(userWalletId = uiState.walletsListConfig.wallets[index].id)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
@@ -113,25 +120,49 @@ internal class WalletViewModel @Inject constructor(
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
-            .saveIn(jobHolder = getTokensJobHolder)
+            .saveIn(tokensJobHolder)
     }
 
-    private fun updateNotifications(index: Int, tokenList: TokenList) {
+    private fun updateByTxHistory(index: Int) {
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getWallet(index)
+            val blockchain = wallet.scanResponse.cardTypesResolver.getBlockchain()
+            uiState = stateFactory.getLoadingTxHistoryState(
+                itemsCountEither = txHistoryItemsCountUseCase(
+                    networkId = blockchain.id,
+                    derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY)).rawPath,
+                ),
+            )
+
+            updateTxHistory(networkId = blockchain.id)
+            updateNotifications(index)
+        }
+    }
+
+    private fun updateTxHistory(networkId: String) {
+        uiState = stateFactory.getLoadedTxHistoryState(txHistoryEither = txHistoryItemsUseCase(networkId))
+    }
+
+    private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
         notificationsListFactory.create(
-            cardTypesResolver = requireNotNull(
-                value = cardTypeResolverMap[uiState.walletsListConfig.wallets[index].id],
-                lazyMessage = {
-                    "CardTypeResolverMap doesn't contain this id = ${uiState.walletsListConfig.wallets[index].id}"
-                },
-            ),
+            cardTypesResolver = getCardTypeResolver(index = index),
             tokenList = tokenList,
         )
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
-            .saveIn(jobHolder = getNotificationJobHolder)
+            .saveIn(jobHolder = notificationsJobHolder)
     }
+
+    private fun getWallet(index: Int): UserWallet {
+        return requireNotNull(
+            value = wallets.getOrNull(index),
+            lazyMessage = { "WalletsList doesn't contain element with index = $index" },
+        )
+    }
+
+    private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
 
     override fun onBackClick() = router.popBackStack()
 
