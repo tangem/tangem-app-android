@@ -1,9 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
+import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.txhistory.error.TxHistoryListError
+import com.tangem.domain.txhistory.error.TxHistoryStateError
+import com.tangem.domain.txhistory.model.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
@@ -11,6 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletLoadedTokensListConverter.LoadedTokensListModel
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Main factory for creating [WalletStateHolder]
@@ -20,11 +26,32 @@ import kotlinx.collections.immutable.ImmutableList
  */
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletStateHolder>,
+    currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val clickCallbacks: WalletClickCallbacks,
 ) {
 
-    private val skeletonConverter = WalletSkeletonStateConverter(clickCallbacks = clickCallbacks)
-    private val loadedTokensListConverter = WalletLoadedTokensListConverter(currentStateProvider = currentStateProvider)
+    private val skeletonConverter by lazy { WalletSkeletonStateConverter(clickCallbacks = clickCallbacks) }
+
+    private val loadedTokensListConverter by lazy {
+        WalletLoadedTokensListConverter(
+            currentStateProvider = currentStateProvider,
+            clickCallbacks = clickCallbacks,
+        )
+    }
+
+    private val loadingTransactionsStateConverter by lazy {
+        WalletLoadingTxHistoryConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+        )
+    }
+
+    private val loadedTxHistoryConverter by lazy {
+        WalletLoadedTxHistoryConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+        )
+    }
 
     fun getInitialState(): WalletStateHolder = WalletStateHolder.Loading(onBackClick = clickCallbacks::onBackClick)
 
@@ -65,5 +92,15 @@ internal class WalletStateFactory(
                 ),
             )
         }
+    }
+
+    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletStateHolder {
+        return loadingTransactionsStateConverter.convert(value = itemsCountEither)
+    }
+
+    fun getLoadedTxHistoryState(
+        txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
+    ): WalletStateHolder {
+        return loadedTxHistoryConverter.convert(txHistoryEither)
     }
 }
