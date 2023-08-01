@@ -8,16 +8,16 @@ data class NetworkStatus(
 ) {
 
     sealed class Status {
-        open val amounts: Map<Token.ID, BigDecimal>? = null
+        open val amounts: Map<CryptoCurrency.ID, BigDecimal>? = null
     }
 
     object Unreachable : Status()
 
     object MissedDerivation : Status()
 
-    data class TransactionInProgress(override val amounts: Map<Token.ID, BigDecimal>) : Status()
+    data class TransactionInProgress(override val amounts: Map<CryptoCurrency.ID, BigDecimal>) : Status()
 
-    data class Verified(override val amounts: Map<Token.ID, BigDecimal>) : Status()
+    data class Verified(override val amounts: Map<CryptoCurrency.ID, BigDecimal>) : Status()
 
     data class NoAccount(val amountToCreateAccount: BigDecimal) : Status()
 }
