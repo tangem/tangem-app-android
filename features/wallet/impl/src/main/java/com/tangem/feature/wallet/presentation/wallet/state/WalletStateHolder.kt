@@ -3,6 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletLockedContentState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -13,7 +16,6 @@ import kotlinx.collections.immutable.persistentListOf
  * @property topBarConfig           top bar config
  * @property walletsListConfig      wallets list config
  * @property pullToRefreshConfig    pull to refresh config
- * @property contentItems           content items
  * @property notifications          notifications
  *
 * [REDACTED_AUTHOR]
@@ -23,7 +25,6 @@ internal sealed class WalletStateHolder(
     open val topBarConfig: WalletTopBarConfig,
     open val walletsListConfig: WalletsListConfig,
     open val pullToRefreshConfig: WalletPullToRefreshConfig,
-    open val contentItems: ImmutableList<WalletContentItemState>,
     open val notifications: ImmutableList<WalletNotification>,
     open val bottomSheet: WalletBottomSheetConfig? = null,
 ) {
@@ -33,7 +34,6 @@ internal sealed class WalletStateHolder(
         topBarConfig: WalletTopBarConfig = this.topBarConfig,
         walletsListConfig: WalletsListConfig = this.walletsListConfig,
         pullToRefreshConfig: WalletPullToRefreshConfig = this.pullToRefreshConfig,
-        contentItems: ImmutableList<WalletContentItemState> = this.contentItems,
         notifications: ImmutableList<WalletNotification> = this.notifications,
         bottomSheet: WalletBottomSheetConfig? = this.bottomSheet,
     ): WalletStateHolder {
@@ -43,7 +43,6 @@ internal sealed class WalletStateHolder(
                 topBarConfig = topBarConfig,
                 walletsListConfig = walletsListConfig,
                 pullToRefreshConfig = pullToRefreshConfig,
-                contentItems = contentItems as ImmutableList<WalletContentItemState.MultiCurrencyItem>,
                 notifications = notifications,
                 bottomSheet = bottomSheet,
             )
@@ -52,7 +51,6 @@ internal sealed class WalletStateHolder(
                 topBarConfig = topBarConfig,
                 walletsListConfig = walletsListConfig,
                 pullToRefreshConfig = pullToRefreshConfig,
-                contentItems = contentItems as ImmutableList<WalletContentItemState.SingleCurrencyItem>,
                 notifications = notifications,
                 bottomSheet = bottomSheet,
             )
@@ -73,27 +71,24 @@ internal sealed class WalletStateHolder(
      * @property topBarConfig           top bar config
      * @property walletsListConfig      wallets list config
      * @property pullToRefreshConfig    pull to refresh config
-     * @property contentItems           content items
+     * @property tokensListState        token list state
      * @property notifications          notifications
-     * @property onOrganizeTokensClick  lambda be invoked when organize tokens button is clicked
      */
     data class MultiCurrencyContent(
         override val onBackClick: () -> Unit,
         override val topBarConfig: WalletTopBarConfig,
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        override val contentItems: ImmutableList<WalletContentItemState.MultiCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
         override val bottomSheet: WalletBottomSheetConfig? = null,
-        val onOrganizeTokensClick: () -> Unit,
+        val tokensListState: WalletTokensListState,
     ) : WalletStateHolder(
         onBackClick = onBackClick,
         topBarConfig = topBarConfig,
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
-        contentItems = contentItems,
-        bottomSheet = bottomSheet,
         notifications = notifications,
+        bottomSheet = bottomSheet,
     )
 
     /**
@@ -103,27 +98,26 @@ internal sealed class WalletStateHolder(
      * @property topBarConfig           top bar config
      * @property walletsListConfig      wallets list config
      * @property pullToRefreshConfig    pull to refresh config
-     * @property contentItems           content items
      * @property notifications          notifications
      * @property buttons                manage buttons
      * @property marketPriceBlockState  market price block state
+     * @property txHistoryState         transactions history state
      */
     data class SingleCurrencyContent(
         override val onBackClick: () -> Unit,
         override val topBarConfig: WalletTopBarConfig,
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        override val contentItems: ImmutableList<WalletContentItemState.SingleCurrencyItem>,
         override val notifications: ImmutableList<WalletNotification>,
         override val bottomSheet: WalletBottomSheetConfig? = null,
         val buttons: ImmutableList<ActionButtonConfig>,
         val marketPriceBlockState: MarketPriceBlockState,
+        val txHistoryState: WalletTxHistoryState,
     ) : WalletStateHolder(
         onBackClick = onBackClick,
         topBarConfig = topBarConfig,
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
-        contentItems = contentItems,
         notifications = notifications,
         bottomSheet = bottomSheet,
     )
@@ -134,6 +128,8 @@ internal sealed class WalletStateHolder(
      * @property onBackClick                      lambda be invoked when back button is clicked
      * @property topBarConfig                     top bar config
      * @property walletsListConfig                wallets list config
+     * @property pullToRefreshConfig              pull to refresh config
+     * @property lockedContentState               locked content state
      * @property onUnlockWalletsNotificationClick lambda be invoked when unlock wallets notification is clicked
      * @property onBottomSheetDismissRequest      lambda be invoked when bottom sheet is dismissed
      * @property onUnlockClick                    lambda be invoked when unlock button is clicked
@@ -144,6 +140,7 @@ internal sealed class WalletStateHolder(
         override val topBarConfig: WalletTopBarConfig,
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
+        val lockedContentState: WalletLockedContentState,
         val onUnlockWalletsNotificationClick: () -> Unit,
         val onBottomSheetDismissRequest: () -> Unit,
         val onUnlockClick: () -> Unit,
@@ -153,7 +150,6 @@ internal sealed class WalletStateHolder(
         topBarConfig = topBarConfig,
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
-        contentItems = persistentListOf(WalletContentItemState.Loading),
         notifications = persistentListOf(WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick)),
         bottomSheet = WalletBottomSheetConfig(
             isShow = false,
@@ -186,7 +182,6 @@ internal sealed class WalletStateHolder(
             onWalletChange = {},
         ),
         pullToRefreshConfig = WalletPullToRefreshConfig(isRefreshing = false, onRefresh = {}),
-        contentItems = persistentListOf(WalletContentItemState.Loading),
         notifications = persistentListOf(),
         bottomSheet = null,
     )

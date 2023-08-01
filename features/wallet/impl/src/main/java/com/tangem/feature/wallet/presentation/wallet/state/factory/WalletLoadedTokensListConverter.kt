@@ -8,6 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletLoadedTokensListConverter.LoadedTokensListModel
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorToWalletStateConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
 import com.tangem.utils.converter.Converter
 
 /**
@@ -19,17 +20,19 @@ import com.tangem.utils.converter.Converter
  */
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletStateHolder>,
+    clickCallbacks: WalletClickCallbacks,
 ) : Converter<LoadedTokensListModel, WalletStateHolder> {
 
     private val tokenListStateConverter = TokenListToWalletStateConverter(
-        currentState = currentStateProvider(),
+        currentStateProvider = currentStateProvider,
         isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
         fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
         fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
+        clickCallbacks = clickCallbacks,
     )
 
     private val tokenListErrorStateConverter = TokenListErrorToWalletStateConverter(
-        currentState = currentStateProvider(),
+        currentStateProvider = currentStateProvider,
     )
 
     override fun convert(value: LoadedTokensListModel): WalletStateHolder {

@@ -6,9 +6,9 @@ import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +32,7 @@ internal class WalletNotificationsListFactory(
     private val clickCallbacks: WalletClickCallbacks,
 ) {
 
-    fun create(cardTypesResolver: CardTypesResolver, tokenList: TokenList): Flow<ImmutableList<WalletNotification>> {
+    fun create(cardTypesResolver: CardTypesResolver, tokenList: TokenList?): Flow<ImmutableList<WalletNotification>> {
 // [REDACTED_TODO_COMMENT]
         return flow {
             emit(
@@ -63,7 +63,7 @@ internal class WalletNotificationsListFactory(
                         add(element = WalletNotification.BackupCard(onClick = clickCallbacks::onBackupCardClick))
                     }
 
-                    if (tokenList.hasMissedDerivations()) {
+                    if (tokenList != null && tokenList.hasMissedDerivations()) {
                         add(element = WalletNotification.ScanCard(onClick = clickCallbacks::onScanCardClick))
                     }
 
@@ -112,12 +112,12 @@ internal class WalletNotificationsListFactory(
     }
 
     private fun hasUnreachableNetworks(): Boolean {
-        val isUnreachableState = { item: WalletContentItemState.MultiCurrencyItem ->
-            (item as? WalletContentItemState.MultiCurrencyItem.Token)?.state is TokenItemState.Unreachable
+        val isUnreachableState = { item: WalletTokensListState.TokensListItemState ->
+            (item as? WalletTokensListState.TokensListItemState.Token)?.state is TokenItemState.Unreachable
         }
 
         return currentStateProvider().let { state ->
-            state is WalletStateHolder.MultiCurrencyContent && state.contentItems.any(isUnreachableState)
+            state is WalletStateHolder.MultiCurrencyContent && state.tokensListState.items.any(isUnreachableState)
         }
     }
 
