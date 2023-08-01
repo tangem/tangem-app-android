@@ -12,12 +12,12 @@ class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository)
         return either {
             catch(
                 block = { repository.getTxHistoryItemsCount(networkId, derivationPath) },
-                catch = { e ->
+                catch = { throwable ->
                     raise(
-                        when (e) {
-                            is TxHistoryStateError.TxHistoryNotImplemented -> e
-                            is TxHistoryStateError.EmptyTxHistories -> e
-                            else -> TxHistoryStateError.DataError(e)
+                        when (throwable) {
+                            is TxHistoryStateError.TxHistoryNotImplemented -> throwable
+                            is TxHistoryStateError.EmptyTxHistories -> throwable
+                            else -> TxHistoryStateError.DataError(throwable)
                         },
                     )
                 },
