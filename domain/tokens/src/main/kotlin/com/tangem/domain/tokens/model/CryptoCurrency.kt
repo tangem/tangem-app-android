@@ -1,5 +1,17 @@
 package com.tangem.domain.tokens.model
 
+/**
+ * Represents a generic cryptocurrency.
+ *
+ * @property id Unique identifier for the cryptocurrency.
+ * @property networkId Identifier for the network to which the cryptocurrency belongs.
+ * @property name Human-readable name of the cryptocurrency.
+ * @property symbol Symbol of the cryptocurrency.
+ * @property decimals Number of decimal places used by the cryptocurrency.
+ * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
+ * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
+ * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
+ */
 sealed class CryptoCurrency {
 
     abstract val id: ID
@@ -10,6 +22,9 @@ sealed class CryptoCurrency {
     abstract val iconUrl: String?
     abstract val derivationPath: String?
 
+    /**
+     * Represents a native coin in the blockchain network.
+     */
     data class Coin(
         override val id: ID,
         override val networkId: Network.ID,
@@ -25,6 +40,12 @@ sealed class CryptoCurrency {
         }
     }
 
+    /**
+     * Represents a token in the blockchain network, typically a non-native asset.
+     *
+     * @property contractAddress Address of the contract managing the token.
+     * @property isCustom Indicates whether the token is a custom user-added token or not.
+     */
     data class Token(
         override val id: ID,
         override val networkId: Network.ID,
@@ -43,6 +64,11 @@ sealed class CryptoCurrency {
         }
     }
 
+    /**
+     * Value class for uniquely identifying a cryptocurrency.
+     *
+     * @property value The unique identifier value.
+     */
     @JvmInline
     value class ID(val value: String) {
 
