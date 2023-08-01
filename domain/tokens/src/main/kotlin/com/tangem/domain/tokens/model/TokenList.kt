@@ -13,7 +13,7 @@ sealed class TokenList {
     ) : TokenList()
 
     data class Ungrouped(
-        val tokens: Set<TokenStatus>,
+        val currencies: Set<CryptoCurrencyStatus>,
         override val totalFiatBalance: FiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
