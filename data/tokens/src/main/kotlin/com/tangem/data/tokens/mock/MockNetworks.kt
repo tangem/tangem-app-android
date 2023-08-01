@@ -32,6 +32,7 @@ internal object MockNetworks {
                 MockTokens.token2.id to BigDecimal("42.2"),
                 MockTokens.token3.id to BigDecimal("1000000000.5"),
             ),
+            hasTransactionsInProgress = false,
         ),
     )
 
@@ -49,6 +50,7 @@ internal object MockNetworks {
                 MockTokens.token9.id to BigDecimal.TEN,
                 MockTokens.token10.id to BigDecimal.TEN,
             ),
+            hasTransactionsInProgress = false,
         ),
     )
 
