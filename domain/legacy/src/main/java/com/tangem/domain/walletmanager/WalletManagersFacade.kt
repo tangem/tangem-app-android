@@ -9,6 +9,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.hasDerivation
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.SdkTokenConverter
@@ -26,6 +27,7 @@ import com.tangem.domain.tokens.model.Token as DomainToken
 class WalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
+    private val demoConfig: DemoConfig,
     configManager: ConfigManager,
 ) {
 
@@ -75,17 +77,37 @@ class WalletManagersFacade(
         }
 
         return try {
+            if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                updateDemoWalletManager(walletManager, extraTokens)
+            } else {
+                updateWalletManager(walletManager)
+            }
+        } finally {
+            walletManagersStore.store(userWallet.walletId, walletManager)
+        }
+    }
+
+    private fun updateDemoWalletManager(
+        walletManager: WalletManager,
+        tokens: Set<DomainToken>,
+    ): UpdateWalletManagerResult {
+        val amount = demoConfig.getBalance(walletManager.wallet.blockchain)
+        walletManager.wallet.setAmount(amount)
+
+        return resultFactory.getDemoResult(amount, tokens)
+    }
+
+    private suspend fun updateWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
+        return try {
             walletManager.update()
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
             resultFactory.getNoAccountResult(walletManager)
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to update a wallet manager for: $blockchain")
+            Timber.e(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
             UpdateWalletManagerResult.Unreachable
-        } finally {
-            walletManagersStore.store(userWallet.walletId, walletManager)
         }
     }
 

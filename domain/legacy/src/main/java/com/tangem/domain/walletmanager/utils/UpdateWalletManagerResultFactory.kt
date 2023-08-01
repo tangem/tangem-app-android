@@ -8,6 +8,7 @@ import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.domain.walletmanager.model.TokenAmount
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import java.math.BigDecimal
+import com.tangem.domain.tokens.model.Token as DomainToken
 
 internal class UpdateWalletManagerResultFactory {
 
@@ -21,6 +22,13 @@ internal class UpdateWalletManagerResultFactory {
         return UpdateWalletManagerResult.Verified(
             tokensAmounts = getTokensAmounts(amounts.values.toSet()),
             hasTransactionsInProgress = hasNotConfirmedTransactions,
+        )
+    }
+
+    fun getDemoResult(demoAmount: Amount, tokens: Set<DomainToken>): UpdateWalletManagerResult.Verified {
+        return UpdateWalletManagerResult.Verified(
+            tokensAmounts = getDemoTokensAmounts(demoAmount, tokens),
+            hasTransactionsInProgress = false,
         )
     }
 
@@ -42,6 +50,20 @@ internal class UpdateWalletManagerResultFactory {
         val mutableAmounts = hashSetOf<TokenAmount>()
 
         return amounts.mapNotNullTo(mutableAmounts, ::getTokenAmount)
+    }
+
+    private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<DomainToken>): Set<TokenAmount> {
+        val amountValue = demoAmount.value ?: BigDecimal.ZERO
+
+        return tokens.map { token ->
+            val tokenContractAddress = token.contractAddress
+
+            if (tokenContractAddress == null) {
+                TokenAmount.Coin(amountValue)
+            } else {
+                TokenAmount.Token(tokenContractAddress, amountValue)
+            }
+        }.toSet()
     }
 
     private fun getTokenAmount(amount: Amount): TokenAmount? {
