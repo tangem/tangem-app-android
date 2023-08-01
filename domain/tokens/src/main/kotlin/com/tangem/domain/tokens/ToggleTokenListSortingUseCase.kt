@@ -49,7 +49,7 @@ class ToggleTokenListSortingUseCase(
         val operations = getSortingOperations(tokenList)
 
         return tokenList.copy(
-            tokens = operations.getTokens(),
+            currencies = operations.getTokens(),
             sortedBy = operations.getSortType(),
         )
     }

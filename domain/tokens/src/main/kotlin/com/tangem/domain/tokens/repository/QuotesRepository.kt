@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.model.Token
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -9,5 +9,5 @@ import kotlinx.coroutines.flow.Flow
  * */
 interface QuotesRepository {
 
-    fun getQuotes(tokensIds: Set<Token.ID>, refresh: Boolean): Flow<Set<Quote>>
+    fun getQuotes(tokensIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>>
 }

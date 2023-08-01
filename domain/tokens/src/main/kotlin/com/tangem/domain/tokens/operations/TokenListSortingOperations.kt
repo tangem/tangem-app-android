@@ -6,16 +6,16 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.core.raise.DelegatedRaise
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class TokenListSortingOperations<E>(
-    private val tokens: Set<TokenStatus>,
+    private val currencies: Set<CryptoCurrencyStatus>,
     private val isAnyTokenLoading: Boolean,
     private val sortByBalance: Boolean,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -31,9 +31,9 @@ internal class TokenListSortingOperations<E>(
         sortByBalance: Boolean = tokenList.sortedBy == TokenList.SortType.BALANCE,
         isAnyTokenLoading: Boolean = tokenList.totalFiatBalance is TokenList.FiatBalance.Loading,
     ) : this(
-        tokens = when (tokenList) {
-            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.tokens }.toSet()
-            is TokenList.Ungrouped -> tokenList.tokens
+        currencies = when (tokenList) {
+            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }.toSet()
+            is TokenList.Ungrouped -> tokenList.currencies
             is TokenList.NotInitialized -> emptySet()
         },
         isAnyTokenLoading = isAnyTokenLoading,
@@ -45,7 +45,7 @@ internal class TokenListSortingOperations<E>(
 
     suspend fun getGroupedTokens(networks: Set<Network>): NonEmptySet<NetworkGroup> {
         return withContext(dispatchers.default) {
-            ensure(tokens.isNotEmpty()) { Error.EmptyTokens }
+            ensure(currencies.isNotEmpty()) { Error.EmptyTokens }
             val networksNes = ensureNotNull(networks.toNonEmptySetOrNull()) {
                 Error.EmptyNetworks
             }
@@ -58,9 +58,9 @@ internal class TokenListSortingOperations<E>(
         }
     }
 
-    suspend fun getTokens(): NonEmptySet<TokenStatus> {
+    suspend fun getTokens(): NonEmptySet<CryptoCurrencyStatus> {
         return withContext(dispatchers.default) {
-            val tokensNes = ensureNotNull(tokens.toNonEmptySetOrNull()) {
+            val tokensNes = ensureNotNull(currencies.toNonEmptySetOrNull()) {
                 Error.EmptyTokens
             }
 
@@ -71,8 +71,8 @@ internal class TokenListSortingOperations<E>(
     fun getSortType() = if (sortByBalance) TokenList.SortType.BALANCE else TokenList.SortType.NONE
 
     private fun groupTokens(networks: NonEmptySet<Network>): NonEmptySet<NetworkGroup> {
-        val groupedTokens = tokens
-            .groupBy { it.networkId }
+        val groupedTokens = currencies
+            .groupBy { it.currency.networkId }
             .map { (networkId, tokens) ->
                 val network = ensureNotNull(networks.firstOrNull { it.id == networkId }) {
                     Error.NetworkNotFound(networkId)
@@ -80,7 +80,7 @@ internal class TokenListSortingOperations<E>(
 
                 NetworkGroup(
                     network = network,
-                    tokens = ensureNotNull(tokens.toNonEmptySetOrNull()) { Error.EmptyTokens },
+                    currencies = ensureNotNull(tokens.toNonEmptySetOrNull()) { Error.EmptyTokens },
                 )
             }
             .toNonEmptySetOrNull()
@@ -91,9 +91,9 @@ internal class TokenListSortingOperations<E>(
     private fun groupAndSortTokensByBalance(networks: NonEmptySet<Network>): NonEmptySet<NetworkGroup> {
         val groupsWithSortedTokens = groupTokens(networks)
             .map { group ->
-                val tokens = group.tokens as? NonEmptySet<TokenStatus>
+                val tokens = group.currencies as? NonEmptySet<CryptoCurrencyStatus>
                     ?: error("Tokens can not be empty here")
-                group.copy(tokens = sortTokensByBalance(tokens))
+                group.copy(currencies = sortTokensByBalance(tokens))
             }
             .toNonEmptySet()
 
@@ -104,7 +104,7 @@ internal class TokenListSortingOperations<E>(
         }
     }
 
-    private fun sortTokensByBalance(tokens: NonEmptySet<TokenStatus>): NonEmptySet<TokenStatus> {
+    private fun sortTokensByBalance(tokens: NonEmptySet<CryptoCurrencyStatus>): NonEmptySet<CryptoCurrencyStatus> {
         return if (isAnyTokenLoading) {
             tokens
         } else {
@@ -117,7 +117,7 @@ internal class TokenListSortingOperations<E>(
     private fun sortGroupsByBalance(groupsWithSortedTokens: NonEmptySet<NetworkGroup>): NonEmptySet<NetworkGroup> {
         return groupsWithSortedTokens
             .sortedByDescending { group ->
-                group.tokens.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO }
+                group.currencies.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO }
             }
             .toNonEmptySetOrNull()
             ?: error("Tokens can not be empty here")
