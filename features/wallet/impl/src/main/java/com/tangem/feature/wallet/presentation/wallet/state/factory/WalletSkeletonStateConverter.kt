@@ -1,17 +1,20 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
+import androidx.paging.PagingData
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.*
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.flow
 
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletStateHolder]
@@ -40,10 +43,12 @@ internal class WalletSkeletonStateConverter(
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            contentItems = persistentListOf(),
+            tokensListState = WalletTokensListState.Content(
+                items = persistentListOf(),
+                onOrganizeTokensClick = clickCallbacks::onOrganizeTokensClick,
+            ),
             notifications = persistentListOf(),
             bottomSheet = null,
-            onOrganizeTokensClick = clickCallbacks::onOrganizeTokensClick,
         )
     }
 
@@ -56,12 +61,14 @@ internal class WalletSkeletonStateConverter(
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            contentItems = persistentListOf(),
             notifications = persistentListOf(),
             bottomSheet = null,
             buttons = WalletPreviewData.singleWalletScreenState.buttons, // TODO: create buttons
             marketPriceBlockState = MarketPriceBlockState.Loading(
                 currencyName = cardTypeResolver.getBlockchain().currency,
+            ),
+            txHistoryState = WalletTxHistoryState.Content(
+                items = flow { PagingData.empty<WalletTxHistoryState.TxHistoryItemState>() },
             ),
         )
     }
@@ -78,12 +85,7 @@ internal class WalletSkeletonStateConverter(
             selectedWalletIndex = 0,
             wallets = wallets.map { wallet ->
                 WalletCardState.Loading(
-                    // TODO remove after adding release logic for GetTokenListUseCase
-                    id = if (wallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
-                        UserWalletId("123")
-                    } else {
-                        UserWalletId("321")
-                    },
+                    id = wallet.walletId,
                     title = wallet.name,
                     additionalInfo = "", // TODO add additional info resolver
                     imageResId = WalletImageResolver.resolve(cardTypesResolver = wallet.scanResponse.cardTypesResolver),
