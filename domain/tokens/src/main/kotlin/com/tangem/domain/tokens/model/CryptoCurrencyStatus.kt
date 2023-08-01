@@ -2,14 +2,8 @@ package com.tangem.domain.tokens.model
 
 import java.math.BigDecimal
 
-data class TokenStatus(
-    val id: Token.ID,
-    val networkId: Network.ID,
-    val name: String,
-    val symbol: String,
-    val decimals: Int,
-    val iconUrl: String?,
-    val isCoin: Boolean,
+data class CryptoCurrencyStatus(
+    val currency: CryptoCurrency,
     val value: Status,
 ) {
 
