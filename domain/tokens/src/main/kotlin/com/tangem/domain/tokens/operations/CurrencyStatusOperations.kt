@@ -1,39 +1,33 @@
 package com.tangem.domain.tokens.operations
 
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.model.Token
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
-internal class TokenStatusOperations(
-    private val token: Token,
+internal class CurrencyStatusOperations(
+    private val currency: CryptoCurrency,
     private val quote: Quote?,
     private val networkStatus: NetworkStatus?,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    suspend fun createTokenStatus(): TokenStatus = withContext(dispatchers.default) {
-        TokenStatus(
-            id = token.id,
-            networkId = token.networkId,
-            name = token.name,
-            symbol = token.symbol,
-            isCoin = token.contractAddress == null,
-            decimals = token.decimals,
-            iconUrl = token.iconUrl,
+    suspend fun createTokenStatus(): CryptoCurrencyStatus = withContext(dispatchers.default) {
+        CryptoCurrencyStatus(
+            currency = currency,
             value = createStatus(),
         )
     }
 
-    private fun createStatus(): TokenStatus.Status {
+    private fun createStatus(): CryptoCurrencyStatus.Status {
         return when (val status = networkStatus?.value) {
-            null -> TokenStatus.Loading
-            is NetworkStatus.MissedDerivation -> TokenStatus.MissedDerivation
-            is NetworkStatus.Unreachable -> TokenStatus.Unreachable
-            is NetworkStatus.NoAccount -> TokenStatus.NoAccount
+            null -> CryptoCurrencyStatus.Loading
+            is NetworkStatus.MissedDerivation -> CryptoCurrencyStatus.MissedDerivation
+            is NetworkStatus.Unreachable -> CryptoCurrencyStatus.Unreachable
+            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount
             is NetworkStatus.TransactionInProgress,
             is NetworkStatus.Verified,
             -> createStatus(
@@ -43,17 +37,17 @@ internal class TokenStatusOperations(
         }
     }
 
-    private fun createStatus(amount: BigDecimal, hasTransactionsInProgress: Boolean): TokenStatus.Status {
+    private fun createStatus(amount: BigDecimal, hasTransactionsInProgress: Boolean): CryptoCurrencyStatus.Status {
         return when {
-            token.isCustom -> TokenStatus.Custom(
+            currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
                 fiatRate = quote?.fiatRate,
                 priceChange = quote?.priceChange,
                 hasTransactionsInProgress = hasTransactionsInProgress,
             )
-            quote == null -> TokenStatus.Loading
-            else -> TokenStatus.Loaded(
+            quote == null -> CryptoCurrencyStatus.Loading
+            else -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
                 fiatRate = quote.fiatRate,
@@ -64,7 +58,7 @@ internal class TokenStatusOperations(
     }
 
     private fun getTokenAmount(): BigDecimal {
-        val amount = networkStatus?.value?.amounts?.get(token.id)
+        val amount = networkStatus?.value?.amounts?.get(currency.id)
         return amount ?: error("Incorrect network status: $networkStatus")
     }
 
