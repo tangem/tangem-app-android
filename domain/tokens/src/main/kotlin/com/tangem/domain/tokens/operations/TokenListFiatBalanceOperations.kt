@@ -1,14 +1,14 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptySet
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
-    private val tokens: NonEmptySet<TokenStatus>,
+    private val currencies: NonEmptySet<CryptoCurrencyStatus>,
     private val isAnyTokenLoading: Boolean,
     private val dispatcher: CoroutineDispatcherProvider,
 ) {
@@ -18,25 +18,25 @@ internal class TokenListFiatBalanceOperations(
             var fiatBalance: TokenList.FiatBalance = TokenList.FiatBalance.Loading
             if (isAnyTokenLoading) return@withContext fiatBalance
 
-            for (token in tokens) {
+            for (token in currencies) {
                 when (val status = token.value) {
-                    is TokenStatus.Loading -> {
+                    is CryptoCurrencyStatus.Loading -> {
                         fiatBalance = TokenList.FiatBalance.Loading
                         break
                     }
-                    is TokenStatus.MissedDerivation,
-                    is TokenStatus.Unreachable,
+                    is CryptoCurrencyStatus.MissedDerivation,
+                    is CryptoCurrencyStatus.Unreachable,
                     -> {
                         fiatBalance = TokenList.FiatBalance.Failed
                         break
                     }
-                    is TokenStatus.NoAccount -> {
+                    is CryptoCurrencyStatus.NoAccount -> {
                         fiatBalance = recalculateBalanceForNoAccountStatus(fiatBalance)
                     }
-                    is TokenStatus.Loaded -> {
+                    is CryptoCurrencyStatus.Loaded -> {
                         fiatBalance = recalculateBalance(status, fiatBalance)
                     }
-                    is TokenStatus.Custom -> {
+                    is CryptoCurrencyStatus.Custom -> {
                         fiatBalance = recalculateBalance(status, fiatBalance)
                     }
                 }
@@ -57,7 +57,7 @@ internal class TokenListFiatBalanceOperations(
     }
 
     private fun recalculateBalance(
-        status: TokenStatus.Loaded,
+        status: CryptoCurrencyStatus.Loaded,
         currentBalance: TokenList.FiatBalance,
     ): TokenList.FiatBalance {
         return with(currentBalance) {
@@ -71,7 +71,7 @@ internal class TokenListFiatBalanceOperations(
     }
 
     private fun recalculateBalance(
-        status: TokenStatus.Custom,
+        status: CryptoCurrencyStatus.Custom,
         currentBalance: TokenList.FiatBalance,
     ): TokenList.FiatBalance {
         return with(currentBalance) {

@@ -1,9 +1,9 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.data.tokens.mock.MockNetworks
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +19,7 @@ internal class MockNetworksRepository : NetworksRepository {
 
     override fun getNetworkStatuses(
         userWalletId: UserWalletId,
-        networks: Map<Network.ID, Set<Token.ID>>,
+        networks: Map<Network.ID, Set<CryptoCurrency.ID>>,
         refresh: Boolean,
     ): Flow<Set<NetworkStatus>> {
         return flowOf(
