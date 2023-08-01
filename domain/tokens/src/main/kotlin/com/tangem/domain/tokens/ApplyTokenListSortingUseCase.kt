@@ -7,8 +7,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.tokens.error.TokenListSortingError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,7 +22,7 @@ class ApplyTokenListSortingUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        sortedTokensIds: Set<Pair<Network.ID, Token.ID>>,
+        sortedTokensIds: Set<Pair<Network.ID, CryptoCurrency.ID>>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): Either<TokenListSortingError, Unit> {
@@ -30,7 +30,7 @@ class ApplyTokenListSortingUseCase(
             either {
                 applySorting(
                     userWalletId = userWalletId,
-                    tokens = sortTokens(sortedTokensIds, getTokens(userWalletId)),
+                    tokens = sortTokens(sortedTokensIds, getCurrencies(userWalletId)),
                     isGrouped = isGroupedByNetwork,
                     isSortedByBalance = isSortedByBalance,
                 )
@@ -39,14 +39,14 @@ class ApplyTokenListSortingUseCase(
     }
 
     private suspend fun Raise<TokenListSortingError>.sortTokens(
-        sortedTokensIds: Set<Pair<Network.ID, Token.ID>>,
-        unsortedTokens: Set<Token>,
-    ): Set<Token> = withContext(dispatchers.default) {
+        sortedTokensIds: Set<Pair<Network.ID, CryptoCurrency.ID>>,
+        unsortedTokens: Set<CryptoCurrency>,
+    ): Set<CryptoCurrency> = withContext(dispatchers.default) {
         val nonEmptySortedTokensIds = ensureNotNull(sortedTokensIds.toNonEmptySetOrNull()) {
             TokenListSortingError.TokenListIsEmpty
         }
 
-        val sortedTokens = sortedMapOf<Int, Token>()
+        val sortedTokens = sortedMapOf<Int, CryptoCurrency>()
 
         unsortedTokens.forEach { token ->
             val index = nonEmptySortedTokensIds.indexOfFirst { (networkId, tokenId) ->
@@ -65,9 +65,9 @@ class ApplyTokenListSortingUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListSortingError>.getTokens(userWalletId: UserWalletId): Set<Token> {
+    private suspend fun Raise<TokenListSortingError>.getCurrencies(userWalletId: UserWalletId): Set<CryptoCurrency> {
         val tokens = catch(
-            block = { tokensRepository.getMultiCurrencyWalletTokens(userWalletId, refresh = false).firstOrNull() },
+            block = { tokensRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh = false).firstOrNull() },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
 
@@ -78,7 +78,7 @@ class ApplyTokenListSortingUseCase(
 
     private suspend fun Raise<TokenListSortingError>.applySorting(
         userWalletId: UserWalletId,
-        tokens: Set<Token>,
+        tokens: Set<CryptoCurrency>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
