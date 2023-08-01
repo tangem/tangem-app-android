@@ -9,10 +9,10 @@ import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokenLists
 import com.tangem.domain.tokens.mock.MockTokens
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
 import com.tangem.domain.tokens.repository.MockTokensRepository
@@ -224,7 +224,7 @@ internal class GetTokenListUseCaseTest {
     fun `when tokens is empty then not initialized token list should be received`() = runTest {
         val expectedResult = MockTokenLists.notInitializedTokenList.right()
 
-        val useCase = getUseCase(tokens = flowOf(emptySet<Token>().right()))
+        val useCase = getUseCase(tokens = flowOf(emptySet<CryptoCurrency>().right()))
 
         // When
         val result = useCase(userWalletId).first()
@@ -318,7 +318,7 @@ internal class GetTokenListUseCaseTest {
     }
 
     private fun getUseCase(
-        tokens: Flow<Either<DataError, Set<Token>>> = flowOf(MockTokens.tokens.right()),
+        tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         networks: Either<DataError, Set<Network>> = MockNetworks.networks.right(),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.errorNetworksStatuses.right()),
