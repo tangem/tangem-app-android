@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemState
+import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState.TxHistoryItemState
 
 /**
  * Transactions block title
@@ -21,10 +21,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletContentItemStat
  * @param modifier modifier
  */
 @Composable
-internal fun TransactionsBlockTitle(
-    config: WalletContentItemState.SingleCurrencyItem.Title,
-    modifier: Modifier = Modifier,
-) {
+internal fun TxHistoryTitle(config: TxHistoryItemState.Title, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -62,9 +59,7 @@ internal fun TransactionsBlockTitle(
 @Composable
 private fun Preview_TransactionsBlockTitle_Light() {
     TangemTheme(isDark = false) {
-        TransactionsBlockTitle(
-            config = WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
-        )
+        TxHistoryTitle(config = TxHistoryItemState.Title(onExploreClick = {}))
     }
 }
 
@@ -72,8 +67,6 @@ private fun Preview_TransactionsBlockTitle_Light() {
 @Composable
 private fun Preview_TransactionsBlockTitle_Dark() {
     TangemTheme(isDark = true) {
-        TransactionsBlockTitle(
-            config = WalletContentItemState.SingleCurrencyItem.Title(onExploreClick = {}),
-        )
+        TxHistoryTitle(config = TxHistoryItemState.Title(onExploreClick = {}))
     }
 }
