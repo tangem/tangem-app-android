@@ -12,18 +12,19 @@ dependencies {
     implementation(deps.material)
 
     /** Compose */
+    implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.paging)
+    implementation(deps.compose.reorderable)
+    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.reorderable)
 
     /** Other libraries */
     implementation(deps.arrow.core)
@@ -50,6 +51,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
