@@ -4,19 +4,19 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.mock.MockTokens
-import com.tangem.domain.tokens.model.Token
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 internal class MockTokensRepository(
     private val sortTokensResult: Either<DataError, Unit>,
-    private val tokens: Flow<Either<DataError, Set<Token>>>,
+    private val tokens: Flow<Either<DataError, Set<CryptoCurrency>>>,
     private val isGrouped: Flow<Either<DataError, Boolean>>,
     private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
 ) : TokensRepository {
 
-    var tokensIdsAfterSortingApply: Set<Token>? = null
+    var tokensIdsAfterSortingApply: Set<CryptoCurrency>? = null
         private set
 
     var isTokensGroupedAfterSortingApply: Boolean? = null
@@ -27,22 +27,25 @@ internal class MockTokensRepository(
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        tokens: Set<Token>,
+        currencies: Set<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) {
         sortTokensResult.onLeft { throw it }
 
-        tokensIdsAfterSortingApply = tokens
+        tokensIdsAfterSortingApply = currencies
         isTokensGroupedAfterSortingApply = isGroupedByNetwork
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override suspend fun getSingleCurrencyWalletToken(userWalletId: UserWalletId): Token {
+    override suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return MockTokens.token1
     }
 
-    override fun getMultiCurrencyWalletTokens(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<Token>> {
+    override fun getMultiCurrencyWalletCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): Flow<Set<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
 
