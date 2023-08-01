@@ -1,15 +1,15 @@
 package com.tangem.domain.tokens.error.mapper
 
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListOperations
-import com.tangem.domain.tokens.operations.TokensStatusesOperations
 
-internal fun TokensStatusesOperations.Error.mapToTokenListError(): TokenListError {
+internal fun CurrenciesStatusesOperations.Error.mapToTokenListError(): TokenListError {
     return when (this) {
-        is TokensStatusesOperations.Error.DataError -> TokenListError.DataError(this.cause)
-        is TokensStatusesOperations.Error.EmptyNetworksStatuses,
-        is TokensStatusesOperations.Error.EmptyQuotes,
-        is TokensStatusesOperations.Error.EmptyTokens,
+        is CurrenciesStatusesOperations.Error.DataError -> TokenListError.DataError(this.cause)
+        is CurrenciesStatusesOperations.Error.EmptyNetworksStatuses,
+        is CurrenciesStatusesOperations.Error.EmptyQuotes,
+        is CurrenciesStatusesOperations.Error.EmptyCurrencies,
         -> TokenListError.EmptyTokens
     }
 }
