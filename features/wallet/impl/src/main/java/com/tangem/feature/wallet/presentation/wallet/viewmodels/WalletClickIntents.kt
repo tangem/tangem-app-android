@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-internal interface WalletClickCallbacks {
+internal interface WalletClickIntents {
 
     fun onBackClick()
 

@@ -6,11 +6,12 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -19,12 +20,12 @@ import kotlinx.coroutines.flow.flow
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletStateHolder]
  *
- * @property clickCallbacks screen click callbacks
+ * @property clickIntents screen click intents
  *
 * [REDACTED_AUTHOR]
  */
 internal class WalletSkeletonStateConverter(
-    private val clickCallbacks: WalletClickCallbacks,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<List<UserWallet>, WalletStateHolder> {
 
     override fun convert(value: List<UserWallet>): WalletStateHolder {
@@ -39,13 +40,13 @@ internal class WalletSkeletonStateConverter(
 
     private fun createMultiCurrencyState(wallets: List<UserWallet>): WalletStateHolder.MultiCurrencyContent {
         return WalletStateHolder.MultiCurrencyContent(
-            onBackClick = clickCallbacks::onBackClick,
+            onBackClick = clickIntents::onBackClick,
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
             tokensListState = WalletTokensListState.Content(
                 items = persistentListOf(),
-                onOrganizeTokensClick = clickCallbacks::onOrganizeTokensClick,
+                onOrganizeTokensClick = clickIntents::onOrganizeTokensClick,
             ),
             notifications = persistentListOf(),
             bottomSheet = null,
@@ -57,7 +58,7 @@ internal class WalletSkeletonStateConverter(
         cardTypeResolver: CardTypesResolver,
     ): WalletStateHolder.SingleCurrencyContent {
         return WalletStateHolder.SingleCurrencyContent(
-            onBackClick = clickCallbacks::onBackClick,
+            onBackClick = clickIntents::onBackClick,
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
@@ -75,8 +76,8 @@ internal class WalletSkeletonStateConverter(
 
     private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
-            onScanCardClick = clickCallbacks::onScanCardClick,
-            onMoreClick = clickCallbacks::onDetailsClick,
+            onScanCardClick = clickIntents::onScanCardClick,
+            onMoreClick = clickIntents::onDetailsClick,
         )
     }
 
@@ -84,18 +85,22 @@ internal class WalletSkeletonStateConverter(
         return WalletsListConfig(
             selectedWalletIndex = 0,
             wallets = wallets.map { wallet ->
+                val cardTypeResolver = wallet.scanResponse.cardTypesResolver
                 WalletCardState.Loading(
                     id = wallet.walletId,
                     title = wallet.name,
-                    additionalInfo = "", // TODO add additional info resolver
-                    imageResId = WalletImageResolver.resolve(cardTypesResolver = wallet.scanResponse.cardTypesResolver),
+                    additionalInfo = WalletAdditionalInfoFactory.resolve(
+                        cardTypesResolver = cardTypeResolver,
+                        isLocked = wallet.isLocked,
+                    ),
+                    imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
                 )
             }.toImmutableList(),
-            onWalletChange = clickCallbacks::onWalletChange,
+            onWalletChange = clickIntents::onWalletChange,
         )
     }
 
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
-        return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickCallbacks::onRefreshSwipe)
+        return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
 }
