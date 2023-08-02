@@ -4,7 +4,8 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.DefaultWalletManagersFacade
+import com.tangem.domain.walletmanager.WalletManagerFacade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +23,7 @@ internal object WalletManagersFacadeModule {
         userWalletsStore: UserWalletsStore,
         demoConfig: DemoConfig,
         configManager: ConfigManager,
-    ): WalletManagersFacade {
-        return WalletManagersFacade(walletManagersStore, userWalletsStore, demoConfig, configManager)
+    ): WalletManagerFacade {
+        return DefaultWalletManagersFacade(walletManagersStore, userWalletsStore, demoConfig, configManager)
     }
 }

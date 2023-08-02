@@ -10,6 +10,7 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.SdkTokenConverter
@@ -18,36 +19,24 @@ import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
-import com.tangem.domain.tokens.model.Token as DomainToken
 
-// TODO: Move to its own module
-/**
- * A facade for managing wallets.
- */
-class WalletManagersFacade(
+// FIXME: Move to its own module and make internal
+@Deprecated("Inject the WalletManagerFacade interface using DI instead")
+class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     private val demoConfig: DemoConfig,
     configManager: ConfigManager,
-) {
+) : WalletManagerFacade {
 
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
 
-    /**
-     * Updates the wallet manager associated with a user's wallet and network.
-     *
-     * @param userWalletId The ID of the user's wallet.
-     * @param networkId The network ID.
-     * @param extraTokens Additional tokens.
-     * @return The result of updating the wallet manager.
-     * @throws IllegalArgumentException if the user's wallet is not found.
-     */
-    suspend fun update(
+    override suspend fun update(
         userWalletId: UserWalletId,
         networkId: Network.ID,
-        extraTokens: Set<DomainToken>,
+        extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find a user wallet with provided ID: $userWalletId"
@@ -60,7 +49,7 @@ class WalletManagersFacade(
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
-        extraTokens: Set<DomainToken>,
+        extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val scanResponse = userWallet.scanResponse
         val derivationPath = blockchain.derivationPath(scanResponse.card.derivationStyle)
@@ -91,7 +80,7 @@ class WalletManagersFacade(
 
     private fun updateDemoWalletManager(
         walletManager: WalletManager,
-        tokens: Set<DomainToken>,
+        tokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val amount = demoConfig.getBalance(walletManager.wallet.blockchain)
         walletManager.wallet.setAmount(amount)
@@ -139,7 +128,7 @@ class WalletManagersFacade(
         return walletManager
     }
 
-    private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<DomainToken>) {
+    private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
         if (tokens.isEmpty()) return
 
         val tokensToAdd = sdkTokenConverter

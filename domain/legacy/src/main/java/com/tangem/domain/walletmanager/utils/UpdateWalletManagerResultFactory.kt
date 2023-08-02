@@ -5,11 +5,11 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.extensions.amountToCreateAccount
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 import java.math.BigDecimal
-import com.tangem.domain.tokens.model.Token as DomainToken
 
 internal class UpdateWalletManagerResultFactory {
 
@@ -26,7 +26,7 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getDemoResult(demoAmount: Amount, tokens: Set<DomainToken>): UpdateWalletManagerResult.Verified {
+    fun getDemoResult(demoAmount: Amount, tokens: Set<CryptoCurrency.Token>): UpdateWalletManagerResult.Verified {
         return UpdateWalletManagerResult.Verified(
             tokensAmounts = getDemoTokensAmounts(demoAmount, tokens),
             hasTransactionsInProgress = false,
@@ -53,18 +53,13 @@ internal class UpdateWalletManagerResultFactory {
         return amounts.mapNotNullTo(mutableAmounts, ::getTokenAmount)
     }
 
-    private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<DomainToken>): Set<CryptoCurrencyAmount> {
+    private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<CryptoCurrency.Token>): Set<CryptoCurrencyAmount> {
         val amountValue = demoAmount.value ?: BigDecimal.ZERO
+        val demoAmounts = hashSetOf<CryptoCurrencyAmount>(CryptoCurrencyAmount.Coin(amountValue))
 
-        return tokens.map { token ->
-            val tokenContractAddress = token.contractAddress
-
-            if (tokenContractAddress == null) {
-                CryptoCurrencyAmount.Coin(amountValue)
-            } else {
-                CryptoCurrencyAmount.Token(tokenContractAddress, amountValue)
-            }
-        }.toSet()
+        return tokens.mapTo(demoAmounts) { token ->
+            CryptoCurrencyAmount.Token(token.contractAddress, amountValue)
+        }
     }
 
     private fun getTokenAmount(amount: Amount): CryptoCurrencyAmount? {
