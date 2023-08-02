@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.flow
  * @property wasCardScannedCallback         callback that check if card was scanned
  * @property isUserAlreadyRateAppCallback   callback that check if card is user already rate app
  * @property isDemoCardCallback             callback that check if card is demo
- * @property clickCallbacks                 screen click callbacks
+ * @property clickIntents                   screen click intents
  *
 [REDACTED_AUTHOR]
  */
@@ -29,7 +29,7 @@ internal class WalletNotificationsListFactory(
     private val wasCardScannedCallback: suspend (String) -> Boolean,
     private val isUserAlreadyRateAppCallback: suspend () -> Boolean,
     private val isDemoCardCallback: (String) -> Boolean,
-    private val clickCallbacks: WalletClickCallbacks,
+    private val clickIntents: WalletClickIntents,
 ) {
 
     fun create(cardTypesResolver: CardTypesResolver, tokenList: TokenList?): Flow<ImmutableList<WalletNotification>> {
@@ -60,15 +60,15 @@ internal class WalletNotificationsListFactory(
                     }
 
                     if (!cardTypesResolver.isBackupForbidden() && !cardTypesResolver.hasBackup()) {
-                        add(element = WalletNotification.BackupCard(onClick = clickCallbacks::onBackupCardClick))
+                        add(element = WalletNotification.BackupCard(onClick = clickIntents::onBackupCardClick))
                     }
 
                     if (tokenList != null && tokenList.hasMissedDerivations()) {
-                        add(element = WalletNotification.ScanCard(onClick = clickCallbacks::onScanCardClick))
+                        add(element = WalletNotification.ScanCard(onClick = clickIntents::onScanCardClick))
                     }
 
                     if (isUserAlreadyRateAppCallback()) {
-                        add(element = WalletNotification.LikeTangemApp(onClick = clickCallbacks::onLikeTangemAppClick))
+                        add(element = WalletNotification.LikeTangemApp(onClick = clickIntents::onLikeTangemAppClick))
                     }
                 }.toImmutableList(),
             )
@@ -94,13 +94,13 @@ internal class WalletNotificationsListFactory(
             if (cardTypesResolver.isBackupForbidden() && cardTypesResolver.hasWalletSignedHashes()) {
                 add(
                     element = WalletNotification.CriticalWarningAlreadySignedHashes(
-                        onClick = clickCallbacks::onCriticalWarningAlreadySignedHashesClick,
+                        onClick = clickIntents::onCriticalWarningAlreadySignedHashesClick,
                     ),
                 )
             } else if (cardTypesResolver.hasWalletSignedHashes()) {
                 add(
                     element = WalletNotification.WarningAlreadySignedHashes(
-                        onClick = clickCallbacks::onCloseWarningAlreadySignedHashesClick,
+                        onClick = clickIntents::onCloseWarningAlreadySignedHashesClick,
                     ),
                 )
             }
