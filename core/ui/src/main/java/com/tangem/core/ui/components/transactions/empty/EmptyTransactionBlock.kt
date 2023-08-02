@@ -14,11 +14,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButton
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.R
 
+/**
+ * Placeholder for transaction's block without content
+ *
+ * @param state    component state
+ * @param modifier modifier
+ */
 @Composable
 fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
     Column(
@@ -34,6 +38,7 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             painter = painterResource(id = state.iconRes),
             contentDescription = null,
         )
+
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing32),
             textAlign = TextAlign.Center,
@@ -41,6 +46,7 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
         )
+
         ActionButton(config = state.actionButtonConfig)
     }
 }
@@ -67,26 +73,8 @@ private fun EmptyTransactionBlock_Dark(
 
 private class EmptyTransactionBlockStateProvider : CollectionPreviewParameterProvider<EmptyTransactionsBlockState>(
     collection = listOf(
-        EmptyTransactionsBlockState.Empty(
-            actionButtonConfig = ActionButtonConfig(
-                text = "Buy",
-                iconResId = R.drawable.ic_plus_24,
-                onClick = {},
-            ),
-        ),
-        EmptyTransactionsBlockState.FailedToLoad(
-            actionButtonConfig = ActionButtonConfig(
-                text = "Reload",
-                iconResId = R.drawable.ic_refresh_24,
-                onClick = {},
-            ),
-        ),
-        EmptyTransactionsBlockState.NotImplemented(
-            actionButtonConfig = ActionButtonConfig(
-                text = "Explore transaction history",
-                iconResId = R.drawable.ic_arrow_top_right_24,
-                onClick = {},
-            ),
-        ),
+        EmptyTransactionsBlockState.Empty(onClick = {}),
+        EmptyTransactionsBlockState.FailedToLoad(onClick = {}),
+        EmptyTransactionsBlockState.NotImplemented(onClick = {}),
     ),
 )
