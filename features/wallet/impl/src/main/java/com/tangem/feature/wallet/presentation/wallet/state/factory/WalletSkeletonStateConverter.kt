@@ -6,7 +6,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoResolver
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
@@ -89,7 +89,7 @@ internal class WalletSkeletonStateConverter(
                 WalletCardState.Loading(
                     id = wallet.walletId,
                     title = wallet.name,
-                    additionalInfo = WalletAdditionalInfoResolver.resolve(
+                    additionalInfo = WalletAdditionalInfoFactory.resolve(
                         cardTypesResolver = cardTypeResolver,
                         isLocked = wallet.isLocked,
                     ),

@@ -4,7 +4,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoResolver
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
 import com.tangem.utils.converter.Converter
 
@@ -18,7 +18,7 @@ internal class FiatBalanceToWalletCardConverter(
 ) : Converter<TokenList.FiatBalance, WalletCardState> {
 
     override fun convert(value: TokenList.FiatBalance): WalletCardState {
-        val additionalInfo = WalletAdditionalInfoResolver.resolve(
+        val additionalInfo = WalletAdditionalInfoFactory.resolve(
             cardTypesResolver = cardTypeResolverProvider(),
             isLocked = isLockedState,
         )

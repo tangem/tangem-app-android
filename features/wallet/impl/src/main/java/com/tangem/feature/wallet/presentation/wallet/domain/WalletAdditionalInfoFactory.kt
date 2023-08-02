@@ -5,12 +5,12 @@ import com.tangem.utils.toFormattedCurrencyString
 import java.math.BigDecimal
 
 /**
- * Wallet additional info resolver
+ * Wallet additional info factory
  *
  * @author Andrew Khokhlov on 31/07/2023
  */
 // TODO: Finalize strings https://tangem.atlassian.net/browse/AND-4040
-internal object WalletAdditionalInfoResolver {
+internal object WalletAdditionalInfoFactory {
 
     /**
      * Get additional info
