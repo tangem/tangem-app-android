@@ -6,6 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
@@ -19,7 +20,6 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.userWalletList.isLockedSync
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
