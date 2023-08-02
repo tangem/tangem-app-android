@@ -52,7 +52,7 @@ internal class WalletViewModel @Inject constructor(
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
-) : ViewModel(), DefaultLifecycleObserver, WalletClickCallbacks {
+) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()
@@ -62,7 +62,7 @@ internal class WalletViewModel @Inject constructor(
         wasCardScannedCallback = getCardWasScannedUseCase::invoke,
         isUserAlreadyRateAppCallback = isUserAlreadyRateAppUseCase::invoke,
         isDemoCardCallback = isDemoCardUseCase::invoke,
-        clickCallbacks = this,
+        clickIntents = this,
     )
 
     private val stateFactory = WalletStateFactory(
@@ -70,7 +70,7 @@ internal class WalletViewModel @Inject constructor(
         currentCardTypeResolverProvider = Provider {
             getCardTypeResolver(index = uiState.walletsListConfig.selectedWalletIndex)
         },
-        clickCallbacks = this,
+        clickIntents = this,
     )
 
     /** Screen state */

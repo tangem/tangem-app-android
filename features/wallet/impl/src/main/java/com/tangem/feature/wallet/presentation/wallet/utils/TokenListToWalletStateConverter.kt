@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
@@ -8,23 +9,24 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder.Mul
 import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
 internal class TokenListToWalletStateConverter(
     private val currentStateProvider: Provider<WalletStateHolder>,
+    private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val isWalletContentHidden: Boolean,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
-    clickCallbacks: WalletClickCallbacks,
+    clickIntents: WalletClickIntents,
 ) : Converter<TokensListModel, WalletStateHolder> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
         fiatCurrencyCode = fiatCurrencyCode,
         fiatCurrencySymbol = fiatCurrencySymbol,
-        clickCallbacks = clickCallbacks,
+        clickIntents = clickIntents,
     )
 
     override fun convert(value: TokensListModel): WalletStateHolder {
@@ -58,6 +60,8 @@ internal class TokenListToWalletStateConverter(
         val selectedWalletCard = walletsListConfig.wallets[selectedWalletIndex]
         val converter = FiatBalanceToWalletCardConverter(
             currentState = selectedWalletCard,
+            isLockedState = this is WalletStateHolder.UnlockWalletContent,
+            cardTypeResolverProvider = cardTypeResolverProvider,
             isWalletContentHidden = isWalletContentHidden,
             fiatCurrencyCode = fiatCurrencyCode,
             fiatCurrencySymbol = fiatCurrencySymbol,
