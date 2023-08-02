@@ -25,10 +25,10 @@ import timber.log.Timber
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    private val demoConfig: DemoConfig,
     configManager: ConfigManager,
-) : WalletManagerFacade {
+) : WalletManagersFacade {
 
+    private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
