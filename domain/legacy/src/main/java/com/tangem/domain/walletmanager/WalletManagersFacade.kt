@@ -9,7 +9,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 /**
  * A facade for managing wallets.
  */
-interface WalletManagerFacade {
+interface WalletManagersFacade {
 
     /**
      * Updates the wallet manager associated with a user's wallet and network.
