@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState.TokensListItemState
 import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickCallbacks
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
@@ -16,7 +16,7 @@ internal class TokenListToContentItemsConverter(
     isWalletContentHidden: Boolean,
     fiatCurrencyCode: String,
     fiatCurrencySymbol: String,
-    private val clickCallbacks: WalletClickCallbacks,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<TokenList, WalletTokensListState> {
 
     private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
@@ -33,7 +33,7 @@ internal class TokenListToContentItemsConverter(
                 is TokenList.NotInitialized -> getLoadingMultiCurrencyTokens()
             },
             onOrganizeTokensClick = if (value.totalFiatBalance is TokenList.FiatBalance.Loaded) {
-                clickCallbacks::onOrganizeTokensClick
+                clickIntents::onOrganizeTokensClick
             } else {
                 null
             },
