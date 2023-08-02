@@ -16,6 +16,7 @@ import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.*
@@ -31,7 +32,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.*
