@@ -19,22 +19,19 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemsIndexed
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
-import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.MultiCurrencyContentItem
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.OrganizeTokensButton
-import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.SingleCurrencyContentItem
-import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
+import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
+import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.txHistoryItems
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 
@@ -69,7 +66,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 .pullRefresh(pullRefreshState),
         ) {
             val txHistoryItems = if (state is WalletStateHolder.SingleCurrencyContent) {
-                if (state.txHistoryState is WalletTxHistoryState.ContentItemsState) {
+                if (state.txHistoryState is WalletTxHistoryState.ContentState) {
                     state.txHistoryState.items.collectAsLazyPagingItems()
                 } else {
                     null
@@ -174,52 +171,6 @@ private fun LazyListScope.contentItems(
         is WalletStateHolder.Loading,
         is WalletStateHolder.UnlockWalletContent,
         -> Unit
-    }
-}
-
-private fun LazyListScope.tokensListItems(state: WalletTokensListState, modifier: Modifier = Modifier) {
-    itemsIndexed(
-        items = state.items,
-        key = { index, _ -> index },
-        itemContent = { index, item ->
-            MultiCurrencyContentItem(
-                state = item,
-                modifier = modifier.walletContentItemDecoration(
-                    currentIndex = index,
-                    lastIndex = state.items.lastIndex,
-                ),
-            )
-        },
-    )
-}
-
-private fun LazyListScope.txHistoryItems(
-    state: WalletTxHistoryState,
-    txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>?,
-    modifier: Modifier = Modifier,
-) {
-    when (state) {
-        is WalletTxHistoryState.ContentItemsState -> {
-            checkNotNull(txHistoryItems)
-            itemsIndexed(
-                items = txHistoryItems,
-                key = { index, _ -> index },
-                itemContent = { index, item ->
-                    if (item == null) return@itemsIndexed
-
-                    SingleCurrencyContentItem(
-                        state = item,
-                        modifier = modifier.walletContentItemDecoration(
-                            currentIndex = index,
-                            lastIndex = txHistoryItems.itemCount,
-                        ),
-                    )
-                },
-            )
-        }
-        is WalletTxHistoryState.Empty -> TODO("[REDACTED_JIRA]")
-        is WalletTxHistoryState.Error -> TODO("[REDACTED_JIRA]")
-        is WalletTxHistoryState.NotSupported -> TODO("[REDACTED_JIRA]")
     }
 }
 
