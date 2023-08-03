@@ -90,6 +90,10 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
         navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
     }
 
+    override fun openTxHistoryWebsite(url: String) {
+        navigationStateHolder.navigate(action = NavigationAction.OpenUrl(url))
+    }
+
     private companion object {
         const val BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN = 2
     }

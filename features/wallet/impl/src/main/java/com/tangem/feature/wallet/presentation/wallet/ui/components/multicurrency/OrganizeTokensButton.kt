@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.impl.R
 internal fun OrganizeTokensButton(onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     RoundedActionButton(
         config = ActionButtonConfig(
-            text = stringResource(id = R.string.organize_tokens_title),
+            text = TextReference.Res(id = R.string.organize_tokens_title),
             iconResId = R.drawable.ic_filter_24,
             onClick = onClick ?: {},
             enabled = onClick != null,

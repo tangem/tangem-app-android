@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
+import androidx.paging.cachedIn
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
@@ -125,22 +126,24 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateByTxHistory(index: Int) {
         viewModelScope.launch(dispatchers.io) {
-            val wallet = getWallet(index)
-            val blockchain = wallet.scanResponse.cardTypesResolver.getBlockchain()
-            uiState = stateFactory.getLoadingTxHistoryState(
-                itemsCountEither = txHistoryItemsCountUseCase(
-                    networkId = blockchain.id,
-                    derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY)).rawPath,
-                ),
+            val blockchain = getWallet(index).scanResponse.cardTypesResolver.getBlockchain()
+
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
+                networkId = blockchain.id,
+                derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY)).rawPath,
             )
 
-            updateTxHistory(networkId = blockchain.id)
+            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+
+            txHistoryItemsCountEither.onRight { updateTxHistory(networkId = blockchain.id) }
             updateNotifications(index)
         }
     }
 
     private fun updateTxHistory(networkId: String) {
-        uiState = stateFactory.getLoadedTxHistoryState(txHistoryEither = txHistoryItemsUseCase(networkId))
+        uiState = stateFactory.getLoadedTxHistoryState(
+            txHistoryEither = txHistoryItemsUseCase(networkId = networkId).map { it.cachedIn(viewModelScope) },
+        )
     }
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
@@ -255,10 +258,11 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onReloadClick() {
-// [REDACTED_TODO_COMMENT]
+        uiState = stateFactory.getStateAfterContentRefreshing()
+        updateByTxHistory(index = uiState.walletsListConfig.selectedWalletIndex)
     }
 
     override fun onExploreClick() {
-// [REDACTED_TODO_COMMENT]
+        router.openTxHistoryWebsite(url = "") // TODO
     }
 }
