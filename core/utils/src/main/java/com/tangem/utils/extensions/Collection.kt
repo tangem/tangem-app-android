@@ -53,11 +53,12 @@ inline fun <T> MutableCollection<T>.addOrReplace(item: T, predicate: (T) -> Bool
 
 /**
  * Removes an element from the collection based on the provided predicate.
+ * Uses iterator, avoid using it in COW collections
  *
  * @param predicate The condition to remove an element.
  * @return [Boolean] indicating whether an element was removed.
  */
-inline fun <T> MutableCollection<T>.removeBy(predicate: (T) -> Boolean): Boolean {
+inline fun <T> MutableCollection<T>.removeByIterate(predicate: (T) -> Boolean): Boolean {
     var removed = false
     val iterator = this.iterator()
 
@@ -71,6 +72,19 @@ inline fun <T> MutableCollection<T>.removeBy(predicate: (T) -> Boolean): Boolean
     }
 
     return removed
+}
+
+/**
+ * Removes an element from the collection based on the provided predicate.
+ * Uses removeAll() method and could be used for COW collections
+ *
+ * @param predicate The condition to remove an element.
+ * @return [Boolean] indicating whether an element was removed.
+ */
+fun <T> MutableList<T>.removeByReplace(predicate: (T) -> Boolean): Boolean {
+    val toRemove = this.filter(predicate)
+    this.removeAll(toRemove)
+    return toRemove.isNotEmpty()
 }
 
 /**
