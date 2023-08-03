@@ -18,6 +18,7 @@ object TokenListPreviewData {
             fullName = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createManageNetworksList(),
+            composedId = "11231",
             id = "",
             name = "Tether",
             symbol = "",
@@ -30,6 +31,7 @@ object TokenListPreviewData {
             fullName = "Tether (USDT)",
             iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/tether.png",
             networks = createReadNetworksList(),
+            composedId = "11231",
         )
     }
 
