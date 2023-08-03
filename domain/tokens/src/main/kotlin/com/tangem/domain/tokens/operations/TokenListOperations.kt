@@ -8,8 +8,8 @@ import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId

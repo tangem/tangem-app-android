@@ -7,9 +7,9 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.Network
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
