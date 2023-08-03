@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,11 +31,7 @@ fun HorizontalActionChips(
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
     ) {
-        items(
-            items = buttons,
-            key = { it.text },
-            itemContent = { ActionButton(config = it) },
-        )
+        items(items = buttons, itemContent = { ActionButton(config = it) })
     }
 }
 
@@ -61,22 +58,22 @@ private fun Preview_HorizontalActionChips_Dark(
 private class ActionButtonConfigProvider : CollectionPreviewParameterProvider<ActionButtonConfig>(
     collection = persistentListOf(
         ActionButtonConfig(
-            text = "Buy",
+            text = TextReference.Str(value = "Buy"),
             iconResId = R.drawable.ic_plus_24,
             onClick = {},
         ),
         ActionButtonConfig(
-            text = "Send",
+            text = TextReference.Str(value = "Send"),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = {},
         ),
         ActionButtonConfig(
-            text = "Receive",
+            text = TextReference.Str(value = "Receive"),
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = {},
         ),
         ActionButtonConfig(
-            text = "Exchange",
+            text = TextReference.Str(value = "Exchange"),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = {},
         ),
