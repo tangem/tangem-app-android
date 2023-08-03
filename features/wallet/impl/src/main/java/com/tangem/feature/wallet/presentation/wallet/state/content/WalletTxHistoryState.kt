@@ -17,14 +17,32 @@ internal sealed interface WalletTxHistoryState {
      *
      * @property items content items
      */
-    sealed class ContentItemsState(open val items: Flow<PagingData<TxHistoryItemState>>) : WalletTxHistoryState
+    sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : WalletTxHistoryState
 
     /**
      * Content state
      *
      * @property items content items
      */
-    data class Content(override val items: Flow<PagingData<TxHistoryItemState>>) : ContentItemsState(items)
+    data class Content(override val items: Flow<PagingData<TxHistoryItemState>>) : ContentState(items)
+
+    /**
+     * Locked state
+     *
+     * @property onExploreClick lambda be invoke when explore button was clicked
+     */
+    data class Locked(val onExploreClick: () -> Unit) :
+        ContentState(
+            items = flowOf(
+                PagingData.from(
+                    listOf(
+                        TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                        TxHistoryItemState.Transaction(state = TransactionState.Loading),
+                    ),
+                ),
+            ),
+        ),
+        WalletLockedContentState
 
     /**
      * Empty state
@@ -46,24 +64,6 @@ internal sealed interface WalletTxHistoryState {
      * @property onReloadClick lambda be invoke when reload button was clicked
      */
     data class Error(val onReloadClick: () -> Unit) : WalletTxHistoryState
-
-    /**
-     * Locked state
-     *
-     * @property onExploreClick lambda be invoke when explore button was clicked
-     */
-    data class Locked(val onExploreClick: () -> Unit) :
-        ContentItemsState(
-            items = flowOf(
-                PagingData.from(
-                    listOf(
-                        TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                        TxHistoryItemState.Transaction(state = TransactionState.Loading),
-                    ),
-                ),
-            ),
-        ),
-        WalletLockedContentState
 
     /** Transactions history item state */
     sealed interface TxHistoryItemState {
