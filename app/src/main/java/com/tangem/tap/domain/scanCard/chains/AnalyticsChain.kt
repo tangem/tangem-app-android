@@ -3,7 +3,7 @@ package com.tangem.tap.domain.scanCard.chains
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
