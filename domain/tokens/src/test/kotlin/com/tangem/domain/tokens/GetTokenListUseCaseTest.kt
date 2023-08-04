@@ -10,9 +10,9 @@ import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokenLists
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
 import com.tangem.domain.tokens.repository.MockTokensRepository
