@@ -54,7 +54,6 @@ private fun Content(screen: SeedPhraseScreen, uiState: OnboardingSeedPhraseState
                 state = uiState.introState,
             )
         }
-
         SeedPhraseScreen.AboutSeedPhrase -> {
             AboutSeedPhraseScreen(
                 state = uiState.aboutState,
