@@ -8,12 +8,13 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.models.ShopifyShop
 import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.extensions.filterNotNull
-import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.data.TotalSum
 import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.shopify.ShopifyService
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
+import com.tangem.tap.features.shop.domain.models.ProductType
+import com.tangem.tap.features.shop.domain.models.ProductType.Companion.SKUS_TO_DISPLAY
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -205,12 +206,6 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
                 Analytics.send(event)
             }
         }
-    }
-
-    companion object {
-        const val TANGEM_WALLET_2_CARDS_SKU = "TG115X2-S"
-        const val TANGEM_WALLET_3_CARDS_SKU = "TG115X3-S"
-        val SKUS_TO_DISPLAY = listOf(TANGEM_WALLET_2_CARDS_SKU, TANGEM_WALLET_3_CARDS_SKU)
     }
 }
 
