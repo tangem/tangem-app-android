@@ -170,7 +170,7 @@
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
-    <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 24 hours</string>
+    <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 48 hours</string>
     <string name="main_promotion_no_purchase">There was no purchase of a wallet using your promo code, which means you cannot receive a bonus. Buy Tangem wallet, scan it in the app, and get the bonus.</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
