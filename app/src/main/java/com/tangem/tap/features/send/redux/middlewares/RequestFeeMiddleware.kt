@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
@@ -53,15 +54,18 @@ class RequestFeeMiddleware {
                         val result = feeResult.data
 //                    val result = FeeMock.getFee(walletManager.wallet.blockchain)
                         dispatch(FeeAction.FeeCalculation.SetFeeResult(result))
-                        if (result.size == 1) {
-                            val fee = result[0].value ?: BigDecimal.ZERO
-                            if (fee.isZero()) {
-                                dispatch(FeeAction.ChangeLayoutVisibility(main = false))
-                            } else {
-                                dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = false))
+                        when (result) {
+                            is TransactionFee.Single -> {
+                                val fee = result.normal.amount.value ?: BigDecimal.ZERO
+                                if (fee.isZero()) {
+                                    dispatch(FeeAction.ChangeLayoutVisibility(main = false))
+                                } else {
+                                    dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = false))
+                                }
                             }
-                        } else {
-                            dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = true))
+                            is TransactionFee.Choosable -> {
+                                dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = true))
+                            }
                         }
                     }
                     is Result.Failure -> {
