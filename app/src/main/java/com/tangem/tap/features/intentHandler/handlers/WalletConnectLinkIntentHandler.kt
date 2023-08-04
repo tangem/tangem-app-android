@@ -1,6 +1,7 @@
 package com.tangem.tap.features.intentHandler.handlers
 
 import android.content.Intent
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -25,7 +26,7 @@ class WalletConnectLinkIntentHandler : IntentHandler {
         return if (wcUri == null) {
             false
         } else {
-            store.dispatch(WalletConnectAction.HandleDeepLink(wcUri))
+            store.dispatchWithMain(WalletConnectAction.HandleDeepLink(wcUri))
             true
         }
     }
