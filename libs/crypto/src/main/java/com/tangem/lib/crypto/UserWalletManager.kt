@@ -19,7 +19,7 @@ interface UserWalletManager {
     fun getNativeTokenForNetwork(networkId: String): Currency
 
     /**
-     * Returns user walletId
+     * Returns user walletId or empty string
      */
     fun getWalletId(): String
 
