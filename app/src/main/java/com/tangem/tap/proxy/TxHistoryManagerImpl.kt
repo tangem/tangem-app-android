@@ -40,7 +40,7 @@ class TxHistoryManagerImpl(
         )
 
         return when (itemsResult) {
-            is Result.Success -> itemsResult.data.map { historyItem -> historyItem.mapToProxy() }
+            is Result.Success -> itemsResult.data.items.map { historyItem -> historyItem.mapToProxy() }
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
         }
     }
