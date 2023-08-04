@@ -4,6 +4,7 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -41,10 +42,10 @@ class BackgroundScanIntentHandler(
             // TODO: Remove delay after [REDACTED_JIRA]
             scope.launch {
                 delay(timeMillis = 200)
-                store.dispatch(WelcomeAction.ProceedWithCard)
+                store.dispatchWithMain(WelcomeAction.ProceedWithCard)
             }
         } else {
-            store.dispatch(HomeAction.ReadCard())
+            store.dispatchWithMain(HomeAction.ReadCard())
         }
 
         return true
