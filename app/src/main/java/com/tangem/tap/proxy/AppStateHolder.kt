@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy
 
-import com.tangem.TangemSdk
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.NavigationStateHolder
 import com.tangem.domain.models.scan.CardDTO
@@ -41,7 +40,6 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, NavigationState
     var userTokensRepository: UserTokensRepository? = null
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
-    var tangemSdk: TangemSdk? = null
     var walletStoresManager: WalletStoresManager? = null
     var appFiatCurrency: FiatCurrency = FiatCurrency.Default
 
