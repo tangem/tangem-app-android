@@ -12,6 +12,8 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -23,9 +25,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
-import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.userWalletList.isLockedSync
@@ -33,6 +32,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.tangemSdkManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +74,8 @@ class DetailsMiddleware {
             is DetailsAction.AccessCodeRecovery -> accessCodeRecoveryMiddleware.handle(state, action)
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    ScanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
+                    store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor)
+                        .scan(allowsRequestAccessCodeFromRepository = true)
                         .doOnSuccess { scanResponse ->
                             // if we use biometric, scanResponse in GlobalState is null, and crashes NPE on twin cards
                             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
@@ -371,9 +372,9 @@ class DetailsMiddleware {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
             preferencesStorage.shouldSaveAccessCodes = true
-            tangemSdkManager.setAccessCodeRequestPolicy(
-                useBiometricsForAccessCode = scanResponse?.card?.isAccessCodeSet == true,
-            )
+            store.state.daggerGraphState
+                .get(DaggerGraphState::cardSdkConfigRepository)
+                .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true)
 
             return CompletionResult.Success(Unit)
         }
@@ -384,9 +385,9 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
                     preferencesStorage.shouldSaveAccessCodes = false
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = false,
-                    )
+                    store.state.daggerGraphState
+                        .get(DaggerGraphState::cardSdkConfigRepository)
+                        .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = false)
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")
