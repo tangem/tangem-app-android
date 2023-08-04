@@ -22,5 +22,9 @@
     {
         "name": "REDESIGNED_TOKEN_DETAIL_SCREEN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SHOPIFY_DYNAMIC_ENABLED",
+        "version": "undefined"
     }
 ]

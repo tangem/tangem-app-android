@@ -12,21 +12,25 @@ dependencies {
     implementation(deps.material)
 
     /** Compose */
+    implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.paging)
+    implementation(deps.compose.reorderable)
+    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.reorderable)
 
     /** Other libraries */
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
 
     /** DI */
@@ -34,17 +38,24 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Core modules */
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:navigation"))
-    implementation(project(":core:ui"))
-
-    /** Feature Apis */
-    implementation(project(":features:wallet:api"))
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain modules */
-    implementation(project(":common"))
-    implementation(project(":domain:legacy"))
-    implementation(project(":domain:models"))
-    implementation(project(":domain:wallets"))
-    implementation(project(":domain:wallets:models"))
+    implementation(projects.common)
+    implementation(projects.domain.card)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+
+    /** Feature Apis */
+    implementation(projects.features.wallet.api)
 }
