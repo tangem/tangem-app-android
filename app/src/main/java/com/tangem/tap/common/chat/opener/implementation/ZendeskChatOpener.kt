@@ -2,34 +2,34 @@ package com.tangem.tap.common.chat.opener.implementation
 
 import android.content.Context
 import com.tangem.core.analytics.Analytics
+import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.tap.common.chat.opener.ChatOpener
-import com.tangem.datasource.config.models.ZendeskConfig
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 import com.zendesk.logger.Logger
-import zendesk.chat.Chat
-import zendesk.chat.ChatConfiguration
-import zendesk.chat.ChatEngine
-import zendesk.chat.ChatProvidersConfiguration
-import zendesk.chat.VisitorInfo
+import timber.log.Timber
+import zendesk.chat.*
 import zendesk.configurations.Configuration
 import zendesk.messaging.MessagingActivity
+import java.io.File
 
 internal class ZendeskChatOpener(
     private val userId: String,
     private val config: ZendeskConfig,
     private val foregroundActivityObserver: ForegroundActivityObserver,
 ) : ChatOpener {
+
     private var isInitialized = false
 
-    override fun open(feedbackDataBuilder: (Context) -> String) {
+    override fun open(createFeedbackFile: (Context) -> File?, createLogsFile: (Context) -> File?) {
         foregroundActivityObserver.withForegroundActivity { activity ->
             initZendeskIfNeeded(activity.applicationContext)
             setChatVisitorInfo()
-            setChatVisitorNote(feedbackDataBuilder(activity))
             showMessagingActivity(activity)
+            sendFeedbackFile(createFeedbackFile(activity))
+            sendLogsFile(createLogsFile(activity))
         }
     }
 
@@ -48,8 +48,20 @@ internal class ZendeskChatOpener(
             ChatProvidersConfiguration.builder().withVisitorInfo(visitorInfo).build()
     }
 
-    private fun setChatVisitorNote(note: String) {
-        Chat.INSTANCE.providers()?.profileProvider()?.setVisitorNote(note)
+    private fun sendFeedbackFile(feedbackFile: File?) {
+        if (isInitialized && feedbackFile != null) {
+            Chat.INSTANCE.providers()?.chatProvider()?.sendFile(feedbackFile) { _, bytesUploaded, _ ->
+                Timber.d("Log file sent", "bytesUploaded: $bytesUploaded")
+            }
+        }
+    }
+
+    private fun sendLogsFile(logsFile: File?) {
+        if (isInitialized && logsFile != null) {
+            Chat.INSTANCE.providers()?.chatProvider()?.sendFile(logsFile) { _, bytesUploaded, _ ->
+                Timber.d("Log file sent", "bytesUploaded: $bytesUploaded")
+            }
+        }
     }
 
     private fun showMessagingActivity(context: Context) {
