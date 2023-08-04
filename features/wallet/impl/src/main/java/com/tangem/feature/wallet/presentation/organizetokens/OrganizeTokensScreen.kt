@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -208,7 +209,7 @@ private fun TopBar(
         ) {
             RoundedActionButton(
                 config = ActionButtonConfig(
-                    text = stringResource(id = R.string.organize_tokens_sort_by_balance),
+                    text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
                     onClick = config.onSortByBalanceClick,
                 ),
@@ -217,7 +218,7 @@ private fun TopBar(
             )
             RoundedActionButton(
                 config = ActionButtonConfig(
-                    text = stringResource(id = R.string.organize_tokens_group),
+                    text = TextReference.Res(id = R.string.organize_tokens_group),
                     iconResId = R.drawable.ic_group_24,
                     onClick = config.onGroupByNetworkClick,
                 ),
