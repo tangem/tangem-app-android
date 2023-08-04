@@ -12,21 +12,27 @@ import com.tangem.core.ui.res.TangemTheme
  */
 internal fun Modifier.walletContentItemDecoration(currentIndex: Int, lastIndex: Int): Modifier = composed {
     val modifierWithHorizontalPadding = this.padding(horizontal = TangemTheme.dimens.spacing16)
-    when (currentIndex) {
-        0 -> {
+    val isSingleItem = currentIndex == 0 && lastIndex == 0
+    when {
+        isSingleItem -> {
+            modifierWithHorizontalPadding
+                .padding(top = TangemTheme.dimens.spacing14)
+                .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+        }
+        currentIndex == 0 -> {
             modifierWithHorizontalPadding
                 .padding(top = TangemTheme.dimens.spacing14)
                 .clip(
-                    RoundedCornerShape(
+                    shape = RoundedCornerShape(
                         topStart = TangemTheme.dimens.radius16,
                         topEnd = TangemTheme.dimens.radius16,
                     ),
                 )
         }
-        lastIndex -> {
+        currentIndex == lastIndex -> {
             modifierWithHorizontalPadding
                 .clip(
-                    RoundedCornerShape(
+                    shape = RoundedCornerShape(
                         bottomStart = TangemTheme.dimens.radius16,
                         bottomEnd = TangemTheme.dimens.radius16,
                     ),

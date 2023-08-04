@@ -25,6 +25,9 @@ sealed interface TokenItemState {
     /** List of networks */
     val networks: ImmutableList<NetworkItemState>
 
+    /** Token composed id that unique for tokens in different networks  */
+    val composedId: String
+
     /**
      * Token item state that is available for read
      *
@@ -32,12 +35,14 @@ sealed interface TokenItemState {
      * @property fullName token name
      * @property iconUrl  token icon url
      * @property networks list of networks that is available for read
+     * @property composedId token composed id to use in lists
      */
     data class ReadContent(
         override val id: String,
         override val fullName: String,
         override val iconUrl: String,
         override val networks: ImmutableList<NetworkItemState.ReadContent>,
+        override val composedId: String,
     ) : TokenItemState
 
     /**
@@ -47,6 +52,7 @@ sealed interface TokenItemState {
      * @property fullName     token name
      * @property iconUrl  token icon url
      * @property networks list of networks is available for read and edit
+     * @property composedId token composed id to use in lists
      * @property name     token name
      * @property symbol   token brief name
      */
@@ -55,6 +61,7 @@ sealed interface TokenItemState {
         override val fullName: String,
         override val iconUrl: String,
         override val networks: ImmutableList<NetworkItemState.ManageContent>,
+        override val composedId: String,
         val name: String,
         val symbol: String,
     ) : TokenItemState

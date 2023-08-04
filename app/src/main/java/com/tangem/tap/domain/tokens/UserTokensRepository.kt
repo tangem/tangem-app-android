@@ -10,7 +10,7 @@ import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.files.AndroidFileReader
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.converters.CurrencyConverter
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
@@ -77,8 +77,8 @@ class UserTokensRepository(
     private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
         return UserTokensResponse(
             tokens = CurrencyConverter.convertList(input = this),
-            group = GROUP_DEFAULT_VALUE,
-            sort = SORT_DEFAULT_VALUE,
+            group = UserTokensResponse.GroupType.NONE,
+            sort = UserTokensResponse.SortType.MANUAL,
         )
     }
 
@@ -119,8 +119,6 @@ class UserTokensRepository(
     private fun getUserWalletId(card: CardDTO): String? = UserWalletIdBuilder.card(card).build()?.stringValue
 
     companion object {
-        private const val GROUP_DEFAULT_VALUE = "none"
-        private const val SORT_DEFAULT_VALUE = "manual"
         private const val NOT_FOUND_HTTP_CODE = "404"
 // [REDACTED_TODO_COMMENT]
         fun init(

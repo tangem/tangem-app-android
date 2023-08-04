@@ -11,12 +11,12 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
 import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

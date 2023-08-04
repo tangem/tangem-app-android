@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.DescriptionResource
@@ -62,9 +63,13 @@ fun DescriptionTitleText(text: String) {
 
 @Composable
 fun DescriptionSubTitleText(text: String) {
+    // the text style made similar to TextViewOnboarding.Body
     Text(
         text = text,
-        style = TangemTheme.typography.subtitle1,
+        style = TangemTheme.typography.body1.copy(
+            lineHeight = 20.sp,
+            letterSpacing = 0.03.sp,
+        ),
         color = TangemTheme.colors.text.secondary,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth(),

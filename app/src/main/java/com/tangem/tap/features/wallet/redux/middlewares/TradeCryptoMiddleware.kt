@@ -72,7 +72,7 @@ class TradeCryptoMiddleware {
             }
 
             scope.launch {
-                exchangeManager.buyErc20TestnetTokens(
+                buyErc20TestnetTokens(
                     card = card,
                     walletManager = walletManager,
                     token = currency.token,
