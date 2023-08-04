@@ -2,11 +2,11 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
-import com.tangem.tap.common.extensions.replaceBy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
 
 @Suppress("LongMethod", "ComplexMethod")
