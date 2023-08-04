@@ -157,5 +157,10 @@ sealed class AnalyticsParam {
         const val ERROR_KEY = "Error Key"
         const val CREATION_TYPE = "Creation type"
         const val DAPP_NAME = "DApp Name"
+        const val DAPP_URL = "DApp Url"
+        const val METHOD_NAME = "Method Name"
+        const val VALIDATION = "Validation"
+        const val BLOCKCHAIN_EXCEPTION_HOST = "exception_host"
+        const val BLOCKCHAIN_SELECTED_HOST = "selected_host"
     }
 }
