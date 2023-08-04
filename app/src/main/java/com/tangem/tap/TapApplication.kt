@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.orhanobut.logger.AndroidLogAdapter
+import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.common.BlockchainSdkConfig
@@ -14,12 +16,14 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
@@ -27,6 +31,7 @@ import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggle
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -59,7 +64,6 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.runBlocking
-import okhttp3.logging.HttpLoggingInterceptor
 import org.rekotlin.Store
 import timber.log.Timber
 import javax.inject.Inject
@@ -151,6 +155,12 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
 
+    @Inject
+    lateinit var scanCardProcessor: ScanCardProcessor
+
+    @Inject
+    lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
+
     override fun onCreate() {
         super.onCreate()
 
@@ -168,12 +178,20 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
+                    scanCardProcessor = scanCardProcessor,
                 ),
             ),
         )
 
         if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
+            Logger.addLogAdapter(AndroidLogAdapter())
+            Timber.plant(
+                object : Timber.DebugTree() {
+                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                        Logger.log(priority, tag, message, t)
+                    }
+                },
+            )
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
@@ -192,7 +210,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY },
+                createNetworkLoggingInterceptor(),
             )
         }
 
@@ -266,6 +284,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
+        // ExceptionHandler.append(blockchainExceptionHandler) TODO: [REDACTED_JIRA]
     }
 
     private fun initFeedbackManager(
