@@ -52,7 +52,7 @@ data class ImportSeedPhraseState(
     val onSuggestedPhraseClick: (Int) -> Unit,
     val buttonCreateWallet: ButtonState,
     val invalidWords: Set<String> = emptySet(),
-    val suggestionsList: List<String> = emptyList(),
+    val suggestionsList: ImmutableList<String> = persistentListOf(),
     val error: SeedPhraseError? = null,
 )
 
