@@ -2,13 +2,14 @@ package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import com.tangem.domain.wallets.models.UserWalletId
 
 /** Wallet card state */
 @Immutable
 internal sealed interface WalletCardState {
 
     /** Id */
-    val id: String
+    val id: UserWalletId
 
     /** Title */
     val title: String
@@ -34,7 +35,7 @@ internal sealed interface WalletCardState {
      * @property balance        wallet balance
      */
     data class Content(
-        override val id: String,
+        override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: String,
         override val imageResId: Int?,
@@ -52,7 +53,7 @@ internal sealed interface WalletCardState {
      * @property onClick        lambda be invoked when wallet card is clicked
      */
     data class Loading(
-        override val id: String,
+        override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: String,
         override val imageResId: Int?,
@@ -69,7 +70,7 @@ internal sealed interface WalletCardState {
      * @property onClick        lambda be invoked when wallet card is clicked
      */
     data class HiddenContent(
-        override val id: String,
+        override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: String,
         override val imageResId: Int?,
@@ -86,7 +87,7 @@ internal sealed interface WalletCardState {
      * @property onClick        lambda be invoked when wallet card is clicked
      */
     data class Error(
-        override val id: String,
+        override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: String,
         override val imageResId: Int?,
