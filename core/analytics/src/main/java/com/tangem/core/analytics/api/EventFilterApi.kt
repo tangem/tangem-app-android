@@ -1,6 +1,6 @@
 package com.tangem.core.analytics.api
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
