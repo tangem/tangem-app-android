@@ -1,14 +1,19 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.userwallets.Artwork
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.userWalletsListManager
 import org.rekotlin.Action
@@ -114,7 +119,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
 
             if (selectedUserWallet == action.userWalletId) {
                 newState = newState.copy(
-                    cardImage = Artwork(artworkId = action.url, artwork = newState.cardImage?.artwork),
+                    cardImage = Artwork(artworkId = action.url),
                 )
             }
         }
@@ -151,7 +156,7 @@ fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
             getShareUri(it.value),
             getExploreUrl(it.value),
         )
-        if (it.type == blockchain.defaultAddressType()) {
+        if (it.type == AddressType.Default) {
             listOfAddressData.add(0, addressData)
         } else {
             listOfAddressData.add(addressData)
