@@ -19,6 +19,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.buttons.common.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -103,7 +105,7 @@ private fun Button(
         SpacerW8()
 
         Text(
-            text = config.text,
+            text = config.text.resolveReference(),
             color = if (config.enabled) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.disabled,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
@@ -146,7 +148,17 @@ private fun Preview_ActionButton_Dark(@PreviewParameter(ActionStateProvider::cla
 
 private class ActionStateProvider : CollectionPreviewParameterProvider<ActionButtonConfig>(
     collection = listOf(
-        ActionButtonConfig(text = "Enabled", iconResId = R.drawable.ic_arrow_up_24, enabled = true, onClick = {}),
-        ActionButtonConfig(text = "Disabled", iconResId = R.drawable.ic_arrow_down_24, enabled = false, onClick = {}),
+        ActionButtonConfig(
+            text = TextReference.Str(value = "Enabled"),
+            iconResId = R.drawable.ic_arrow_up_24,
+            enabled = true,
+            onClick = {},
+        ),
+        ActionButtonConfig(
+            text = TextReference.Str(value = "Disabled"),
+            iconResId = R.drawable.ic_arrow_down_24,
+            enabled = false,
+            onClick = {},
+        ),
     ),
 )
