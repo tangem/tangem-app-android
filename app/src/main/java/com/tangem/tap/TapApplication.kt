@@ -10,7 +10,6 @@ import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
@@ -285,7 +284,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
-        ExceptionHandler.append(blockchainExceptionHandler)
+        // ExceptionHandler.append(blockchainExceptionHandler) TODO: [REDACTED_JIRA]
     }
 
     private fun initFeedbackManager(
