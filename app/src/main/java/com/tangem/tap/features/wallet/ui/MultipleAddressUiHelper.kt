@@ -1,44 +1,38 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.view.View
-import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
-import com.tangem.blockchain.blockchains.cardano.CardanoAddressType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.wallet.R
 
 object MultipleAddressUiHelper {
-    fun typeToId(type: AddressType): Int {
-        return when (type) {
-            is BitcoinAddressType.Legacy -> R.id.chip_legacy
-            is BitcoinAddressType.Segwit -> R.id.chip_default
-            is CardanoAddressType.Byron -> R.id.chip_legacy
-            is CardanoAddressType.Shelley -> R.id.chip_default
-            else -> View.NO_ID
+
+    private val blockchainsSupportingSplit = listOf(
+        Blockchain.Bitcoin,
+        Blockchain.BitcoinTestnet,
+        Blockchain.Litecoin,
+        Blockchain.BitcoinCash,
+        Blockchain.CardanoShelley,
+    )
+
+    fun typeToId(type: AddressType, blockchain: Blockchain): Int {
+        return if (blockchain in blockchainsSupportingSplit) {
+            if (type == AddressType.Legacy) {
+                R.id.chip_legacy
+            } else {
+                R.id.chip_default
+            }
+        } else {
+            View.NO_ID
         }
     }
 
-    fun idToType(id: Int, blockchain: Blockchain?): AddressType? {
-        return when (id) {
-            R.id.chip_default -> {
-                when (blockchain) {
-                    Blockchain.Bitcoin,
-                    Blockchain.BitcoinTestnet,
-                    Blockchain.Litecoin,
-                    Blockchain.BitcoinCash,
-                    -> BitcoinAddressType.Segwit
-                    Blockchain.CardanoShelley -> CardanoAddressType.Shelley
-                    else -> null
-                }
-            }
-            R.id.chip_legacy -> {
-                when (blockchain) {
-                    Blockchain.Bitcoin,
-                    Blockchain.BitcoinTestnet,
-                    Blockchain.Litecoin,
-                    Blockchain.BitcoinCash,
-                    -> BitcoinAddressType.Legacy
-                    Blockchain.CardanoShelley -> CardanoAddressType.Byron
+    fun idToType(id: Int, blockchain: Blockchain): AddressType? {
+        return when (blockchain) {
+            in blockchainsSupportingSplit -> {
+                when (id) {
+                    R.id.chip_default -> AddressType.Default
+                    R.id.chip_legacy -> AddressType.Legacy
                     else -> null
                 }
             }

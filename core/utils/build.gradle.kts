@@ -6,10 +6,16 @@ plugins {
 
 dependencies {
 
-    /** DI */
+    // region DI
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Coroutines */
+    // region Coroutines
     implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Time dependencies
+    implementation(deps.jodatime)
+    // endregion
 }

@@ -4,7 +4,7 @@ import androidx.annotation.IdRes
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.model.WalletDataModel
-import com.tangem.tap.features.wallet.ui.utils.getFormattedAmount
+import com.tangem.tap.features.wallet.ui.utils.getFormattedCryptoAmount
 import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -102,8 +102,8 @@ class BalanceWidget(
         groupBaseCurrency.show()
         tvCurrency.text = tokenWalletData?.currency?.currencySymbol
         tvBaseCurrency.text = data.currency.currencyName
-        tvAmount.text = if (showAmount) tokenWalletData?.getFormattedAmount() else ""
-        tvBaseAmount.text = if (showAmount) data.getFormattedAmount() else ""
+        tvAmount.text = if (showAmount) tokenWalletData?.getFormattedCryptoAmount() else ""
+        tvBaseAmount.text = if (showAmount) data.getFormattedCryptoAmount() else ""
         if (showAmount) {
             tvFiatAmount.show()
             tvFiatAmount.text = tokenWalletData?.getFormattedFiatAmount(store.state.globalState.appCurrency)
@@ -113,7 +113,7 @@ class BalanceWidget(
     private fun showBalanceWithoutToken(data: WalletDataModel, showAmount: Boolean) = with(binding.lBalance) {
         groupBaseCurrency.hide()
         tvCurrency.text = data.currency.currencyName
-        tvAmount.text = if (showAmount) data.getFormattedAmount() else ""
+        tvAmount.text = if (showAmount) data.getFormattedCryptoAmount() else ""
         if (showAmount) {
             tvFiatAmount.show()
             tvFiatAmount.text = data.getFormattedFiatAmount(store.state.globalState.appCurrency)
