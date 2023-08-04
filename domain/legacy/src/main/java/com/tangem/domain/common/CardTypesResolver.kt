@@ -26,4 +26,20 @@ interface CardTypesResolver {
     fun getPrimaryToken(): Token?
 
     fun getBackupCardsCount(): Int
+
+    fun isReleaseFirmwareType(): Boolean
+
+    fun getRemainingSignatures(): Int?
+
+    fun getCardId(): String
+
+    fun isTestCard(): Boolean
+
+    fun isAttestationFailed(): Boolean
+
+    fun hasWalletSignedHashes(): Boolean
+
+    fun hasBackup(): Boolean
+
+    fun isBackupForbidden(): Boolean
 }

@@ -18,7 +18,25 @@ sealed interface TransactionState {
         open val address: String,
         open val amount: String,
         open val timestamp: String,
-    ) : TransactionState
+    ) : TransactionState {
+
+        fun copySealed(
+            address: String = this.address,
+            amount: String = this.amount,
+            timestamp: String = this.timestamp,
+        ): Content {
+            return when (this) {
+                is Approved -> copy(address, amount, timestamp)
+                is Receive -> copy(address, amount, timestamp)
+                is Send -> copy(address, amount, timestamp)
+                is Swapped -> copy(address, amount, timestamp)
+                is Approving -> copy(address, amount, timestamp)
+                is Receiving -> copy(address, amount, timestamp)
+                is Sending -> copy(address, amount, timestamp)
+                is Swapping -> copy(address, amount, timestamp)
+            }
+        }
+    }
 
     /**
      * Content state for processed transaction
