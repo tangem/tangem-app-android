@@ -1,6 +1,6 @@
 package com.tangem.feature.referral.analytics
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 sealed class ReferralEvents(event: String) : AnalyticsEvent(REFERRAL_PROGRAM_CATEGORY, event) {
 
