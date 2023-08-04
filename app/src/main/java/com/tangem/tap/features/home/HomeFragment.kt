@@ -39,14 +39,14 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         super.onCreate(savedInstanceState)
         store.dispatch(HomeAction.OnCreate)
         store.dispatch(HomeAction.Init)
-        if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
-            store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
-            // re init homeState after inserting learn2earn story
-            homeState = mutableStateOf(store.state.homeState)
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        // sync adding story before screen creation
+        if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
+            store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
+            homeState.value = store.state.homeState
+        }
         return ComposeView(inflater.context).apply {
             setContent {
                 TangemTheme {
