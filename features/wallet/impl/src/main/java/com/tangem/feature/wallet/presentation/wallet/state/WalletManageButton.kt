@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -19,7 +20,7 @@ sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class Buy(val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = "Buy",
+            text = TextReference.Res(id = R.string.common_buy),
             iconResId = R.drawable.ic_plus_24,
             onClick = onClick,
         ),
@@ -32,7 +33,7 @@ sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class Send(val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = "Send",
+            text = TextReference.Res(id = R.string.common_send),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
         ),
@@ -45,7 +46,7 @@ sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class Receive(val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = "Receive",
+            text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
         ),
@@ -58,7 +59,7 @@ sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class Exchange(val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = "Exchange",
+            text = TextReference.Res(id = R.string.common_exchange),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
         ),
@@ -71,7 +72,7 @@ sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class CopyAddress(val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = "Copy address",
+            text = TextReference.Res(id = R.string.common_copy_address),
             iconResId = R.drawable.ic_copy_24,
             onClick = onClick,
         ),
