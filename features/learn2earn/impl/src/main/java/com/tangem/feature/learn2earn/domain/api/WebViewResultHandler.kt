@@ -1,6 +1,6 @@
 package com.tangem.feature.learn2earn.domain.api
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
  * Handler that helps determine a result of the Learn2earnWebViewActivity webView actions.
