@@ -9,13 +9,13 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.extensions.makeWalletManagerForApp
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import kotlinx.coroutines.Dispatchers
