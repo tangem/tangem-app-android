@@ -54,4 +54,10 @@ interface TangemTechApi {
 
     @GET("shops")
     suspend fun getShopInfo(@Query(value = "name") name: String): ShopResponse
+
+    @GET("sales")
+    suspend fun getSalesInfo(
+        @Query(value = "locale") locale: String,
+        @Query(value = "shops") shops: String,
+    ): SalesResponse
 }
