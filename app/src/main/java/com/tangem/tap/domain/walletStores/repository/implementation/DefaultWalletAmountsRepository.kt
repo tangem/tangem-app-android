@@ -16,7 +16,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.extensions.replaceByOrAdd
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
@@ -32,6 +31,7 @@ import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.plusOrReplace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
@@ -428,11 +428,10 @@ internal class DefaultWalletAmountsRepository(
     private suspend fun updateWalletManagerInStorage(userWalletId: UserWalletId, walletManager: WalletManager) =
         withContext(Dispatchers.Default) {
             WalletManagerStorage.update { prevManagers ->
-                val newManagersForUserWallet = prevManagers[userWalletId].orEmpty().toMutableList().apply {
-                    replaceByOrAdd(walletManager) {
+                val newManagersForUserWallet = prevManagers[userWalletId].orEmpty()
+                    .plusOrReplace(walletManager) {
                         it.wallet.blockchain == walletManager.wallet.blockchain
                     }
-                }
 
                 prevManagers.apply {
                     set(userWalletId, newManagersForUserWallet)
