@@ -6,6 +6,7 @@ import arrow.core.raise.catch
 import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.repository.TokensRepository
