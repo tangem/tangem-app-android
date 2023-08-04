@@ -11,9 +11,10 @@ android {
 dependencies {
 
     // region Domain modules
-    implementation(project(":domain:legacy"))
-    implementation(project(":domain:models"))
-    implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Tangem libraries
@@ -22,6 +23,7 @@ dependencies {
     // endregion
 
     // region Other libraries
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     // endregion
 }
