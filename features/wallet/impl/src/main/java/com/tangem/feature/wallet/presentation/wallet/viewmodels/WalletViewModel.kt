@@ -16,10 +16,12 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -52,6 +54,7 @@ internal class WalletViewModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -263,6 +266,16 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        router.openTxHistoryWebsite(url = "") // TODO
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getWallet(uiState.walletsListConfig.selectedWalletIndex)
+            router.openTxHistoryWebsite(
+                url = getExploreUrlUseCase(
+                    userWalletId = wallet.walletId,
+                    networkId = Network.ID(
+                        value = wallet.scanResponse.cardTypesResolver.getBlockchain().id,
+                    ),
+                ),
+            )
+        }
     }
 }
