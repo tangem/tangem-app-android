@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.demo)
     implementation(projects.domain.wallets.models)
 
