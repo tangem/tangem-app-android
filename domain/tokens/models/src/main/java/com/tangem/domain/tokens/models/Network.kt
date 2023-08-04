@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.model
+package com.tangem.domain.tokens.models
 
 /**
  * Represents a blockchain network, identified by a unique ID and a human-readable name.
@@ -8,10 +8,7 @@ package com.tangem.domain.tokens.model
  *
  * @throws IllegalArgumentException If the name or ID is blank.
  */
-data class Network(
-    val id: ID,
-    val name: String,
-) {
+data class Network(val id: ID, val name: String) {
 
     init {
         require(name.isNotBlank()) { "Network name must not be blank" }
