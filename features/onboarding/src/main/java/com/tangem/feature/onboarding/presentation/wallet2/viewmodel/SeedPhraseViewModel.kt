@@ -22,10 +22,10 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
@@ -67,7 +67,6 @@ class SeedPhraseViewModel @Inject constructor(
     )
 
     private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
-    private var suggestionWordInserted: AtomicBoolean = AtomicBoolean(false)
 
     private var generatedMnemonicComponents: List<String>? = null
     private var importedMnemonicComponents: List<String>? = null
@@ -171,13 +170,17 @@ class SeedPhraseViewModel @Inject constructor(
                 if (fieldState.isError != hasError) {
                     updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
-
-                val allFieldsWithoutError = SeedPhraseField.values()
+                val isCreateWalletButtonEnabled = SeedPhraseField.values()
                     .map { field -> field.getState(uiState) }
-                    .all { fieldState -> !fieldState.isError }
+                    .all { fieldState -> fieldState.textFieldValue.text.isNotEmpty() && !fieldState.isError }
 
-                if (uiState.checkSeedPhraseState.buttonCreateWallet.enabled != allFieldsWithoutError) {
-                    updateUi { uiBuilder.checkSeedPhrase.updateCreateWalletButton(uiState, allFieldsWithoutError) }
+                if (uiState.checkSeedPhraseState.buttonCreateWallet.enabled != isCreateWalletButtonEnabled) {
+                    updateUi {
+                        uiBuilder.checkSeedPhrase.updateCreateWalletButton(
+                            uiState = uiState,
+                            enabled = isCreateWalletButtonEnabled,
+                        )
+                    }
                 }
             }
         }
@@ -197,18 +200,13 @@ class SeedPhraseViewModel @Inject constructor(
 
         val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
         when {
-            suggestionWordInserted.getAndSet(false) -> {
-                debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
-                    validateMnemonic(inputMnemonic)
-                }
-            }
-            isSameText && !isCursorMoved -> {
-                // do nothing
-            }
             isSameText && isCursorMoved -> {
                 debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
                     updateSuggestions(fieldState)
                 }
+            }
+            isSameText && !isCursorMoved -> {
+                // do nothing
             }
             else -> {
                 debouncer.debounce(viewModelScope, MNEMONIC_DEBOUNCE_DELAY, dispatchers.single) {
@@ -243,7 +241,6 @@ class SeedPhraseViewModel @Inject constructor(
                     is SeedPhraseError.InvalidWords -> {
                         uiBuilder.importSeedPhrase.updateInvalidWords(uiState, error.words)
                     }
-
                     else -> uiState
                 }
                 updateUi { uiBuilder.importSeedPhrase.updateError(mediateState, error) }
@@ -366,7 +363,6 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
         viewModelScope.launchSingle {
-            suggestionWordInserted.set(true)
             val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
             val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
             val cursorPosition = textFieldValue.selection.end
@@ -378,7 +374,7 @@ class SeedPhraseViewModel @Inject constructor(
             )
             updateUi {
                 val mediateState = uiBuilder.importSeedPhrase.insertSuggestionWord(uiState, insertResult)
-                uiBuilder.importSeedPhrase.updateSuggestions(mediateState, emptyList())
+                uiBuilder.importSeedPhrase.updateSuggestions(mediateState, persistentListOf())
             }
         }
     }
