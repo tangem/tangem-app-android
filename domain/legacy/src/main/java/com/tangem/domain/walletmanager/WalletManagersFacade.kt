@@ -1,7 +1,7 @@
 package com.tangem.domain.walletmanager
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -24,4 +24,6 @@ interface WalletManagersFacade {
         networkId: Network.ID,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult
+
+    suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String
 }

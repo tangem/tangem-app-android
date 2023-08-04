@@ -8,7 +8,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
