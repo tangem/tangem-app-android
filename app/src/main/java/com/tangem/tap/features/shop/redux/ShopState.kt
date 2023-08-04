@@ -1,12 +1,14 @@
 package com.tangem.tap.features.shop.redux
 
-import com.tangem.tap.common.shop.data.ProductType
+import com.tangem.tap.features.shop.domain.models.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
+import com.tangem.tap.features.shop.domain.models.SalesProduct
 import org.rekotlin.StateType
 
 data class ShopState(
     val availableProducts: List<TangemProduct> = emptyList(),
     val selectedProduct: ProductType = ProductType.WALLET_3_CARDS,
+    val salesProducts: List<SalesProduct> = emptyList(),
     val promoCode: String? = null,
     val promoCodeLoading: Boolean = false,
     val isGooglePayAvailable: Boolean = false, // TODO: change when we add support for GPay
