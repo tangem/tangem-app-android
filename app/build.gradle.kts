@@ -25,11 +25,17 @@ dependencies {
     implementation(project(":domain:legacy"))
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
-    implementation(project(":domain:card"))
+    implementation(projects.domain.card)
+    implementation(projects.domain.demo)
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.settings)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.txhistory)
+
     implementation(project(":common"))
     implementation(project(":core:analytics"))
+    implementation(projects.core.analytics.models)
     implementation(project(":core:navigation"))
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:res"))
@@ -38,7 +44,13 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
+
     implementation(project(":data:source:preferences"))
+    implementation(projects.data.card)
+    implementation(projects.data.common)
+    implementation(projects.data.settings)
+    implementation(projects.data.tokens)
+    implementation(projects.data.txhistory)
 
     /** Features */
     implementation(project(":features:onboarding"))
@@ -119,13 +131,6 @@ dependencies {
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-    //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(deps.retrofit)
-    implementation(deps.retrofit.moshi)
-    implementation(deps.moshi)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.okHttp)
-    implementation(deps.okHttp.logging)
     implementation(deps.zendesk.chat)
     implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
@@ -144,6 +149,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
+    implementation(deps.prettyLogger)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
