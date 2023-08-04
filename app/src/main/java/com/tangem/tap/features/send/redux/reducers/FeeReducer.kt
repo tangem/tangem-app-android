@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.reducers
 
-import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
@@ -13,6 +14,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 [REDACTED_AUTHOR]
  */
 class FeeReducer : SendInternalReducer {
+
     override fun handle(action: SendScreenAction, sendState: SendState): SendState = when (action) {
         is FeeActionUi -> handleUiAction(action, sendState, sendState.feeState)
         is FeeAction -> handleAction(action, sendState, sendState.feeState)
@@ -25,7 +27,9 @@ class FeeReducer : SendInternalReducer {
                 state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
             }
             is FeeActionUi.ChangeSelectedFee -> {
-                val currentFee = createValueOfFeeAmount(action.feeType, state.feeList)
+                val currentFee = state.fees?.let {
+                    createValueOfFeeAmount(action.feeType, it)
+                }
                 state.copy(
                     selectedFeeType = action.feeType,
                     currentFee = currentFee,
@@ -50,34 +54,36 @@ class FeeReducer : SendInternalReducer {
                 )
             }
             is FeeAction.FeeCalculation.SetFeeResult -> {
-                val fees = action.fee
-                if (fees.size == 1) {
-                    val feeType = FeeType.SINGLE
-                    val currentFee = createValueOfFeeAmount(feeType, fees)
+                when (val fees = action.fee) {
+                    is TransactionFee.Single -> {
+                        val feeType = FeeType.SINGLE
+                        val currentFee = createValueOfFeeAmount(feeType, fees)
 
-                    state.copy(
-                        selectedFeeType = feeType,
-                        feeList = fees,
-                        currentFee = currentFee,
-                        feeIsApproximate = isFeeApproximate(sendState),
-                    )
-                } else {
-                    val feeType = getCurrentFeeType(state)
-                    val currentFee = createValueOfFeeAmount(feeType, fees)
+                        state.copy(
+                            selectedFeeType = feeType,
+                            fees = fees,
+                            currentFee = currentFee,
+                            feeIsApproximate = isFeeApproximate(sendState),
+                        )
+                    }
+                    is TransactionFee.Choosable -> {
+                        val feeType = getCurrentFeeType(state)
+                        val currentFee = createValueOfFeeAmount(feeType, fees)
 
-                    state.copy(
-                        selectedFeeType = feeType,
-                        feeList = fees,
-                        currentFee = currentFee,
-                        feeIsApproximate = isFeeApproximate(sendState),
-                    )
+                        state.copy(
+                            selectedFeeType = feeType,
+                            fees = fees,
+                            currentFee = currentFee,
+                            feeIsApproximate = isFeeApproximate(sendState),
+                        )
+                    }
                 }.copy(
                     progressState = ProgressState.Done,
                 )
             }
             FeeAction.FeeCalculation.ClearResult -> {
                 state.copy(
-                    feeList = null,
+                    fees = null,
                     currentFee = null,
                     progressState = ProgressState.Done,
                 )
@@ -87,17 +93,18 @@ class FeeReducer : SendInternalReducer {
         return updateLastState(sendState.copy(feeState = result), result)
     }
 
-    private fun createValueOfFeeAmount(feeType: FeeType, list: List<Amount>?): Amount? {
-        if (list == null || list.isEmpty()) return null
-
-        return if (list.size == 1) {
-            list[0]
-        } else {
-            when (feeType) {
-                FeeType.SINGLE -> list[1]
-                FeeType.LOW -> list[0]
-                FeeType.NORMAL -> list[1]
-                FeeType.PRIORITY -> list[2]
+    private fun createValueOfFeeAmount(feeType: FeeType, transactionFee: TransactionFee): Fee {
+        return when (transactionFee) {
+            is TransactionFee.Single -> {
+                transactionFee.normal
+            }
+            is TransactionFee.Choosable -> {
+                when (feeType) {
+                    FeeType.SINGLE -> transactionFee.normal
+                    FeeType.LOW -> transactionFee.minimum
+                    FeeType.NORMAL -> transactionFee.normal
+                    FeeType.PRIORITY -> transactionFee.priority
+                }
             }
         }
     }
