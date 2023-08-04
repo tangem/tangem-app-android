@@ -11,7 +11,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.SdkTokenConverter
 import com.tangem.domain.walletmanager.utils.UpdateWalletManagerResultFactory
@@ -43,6 +43,23 @@ class DefaultWalletManagersFacade(
         val blockchain = Blockchain.fromId(networkId.value)
 
         return getAndUpdateWalletManager(userWallet, blockchain, extraTokens)
+    }
+
+    override suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String {
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "Unable to find a user wallet with provided ID: $userWalletId"
+        }
+
+        val blockchain = Blockchain.fromId(networkId.value)
+
+        return getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = blockchain.derivationPath(userWallet.scanResponse.card.derivationStyle),
+        )
+            ?.wallet
+            ?.getExploreUrl()
+            .orEmpty()
     }
 
     private suspend fun getAndUpdateWalletManager(

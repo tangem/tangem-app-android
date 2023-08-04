@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 

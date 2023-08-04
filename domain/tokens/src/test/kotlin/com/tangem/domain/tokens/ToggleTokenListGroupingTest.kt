@@ -7,7 +7,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockTokenLists
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals

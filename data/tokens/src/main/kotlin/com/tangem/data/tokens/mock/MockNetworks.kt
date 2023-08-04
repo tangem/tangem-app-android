@@ -1,7 +1,7 @@
 package com.tangem.data.tokens.mock
 
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.models.Network
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")

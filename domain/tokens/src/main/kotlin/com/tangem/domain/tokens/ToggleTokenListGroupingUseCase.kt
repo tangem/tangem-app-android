@@ -7,8 +7,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.operations.TokenListSortingOperations
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
