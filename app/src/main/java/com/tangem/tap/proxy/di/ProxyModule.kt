@@ -2,16 +2,15 @@ package com.tangem.tap.proxy.di
 
 import androidx.compose.ui.text.intl.Locale
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
+import com.tangem.lib.crypto.TxHistoryManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.DerivationManagerImpl
-import com.tangem.tap.proxy.TransactionManagerImpl
-import com.tangem.tap.proxy.UserWalletManagerImpl
+import com.tangem.tap.proxy.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,8 +42,13 @@ class ProxyModule {
     fun provideTransactionManager(
         appStateHolder: AppStateHolder,
         analytics: AnalyticsEventHandler,
+        cardSdkConfigRepository: CardSdkConfigRepository,
     ): TransactionManager {
-        return TransactionManagerImpl(appStateHolder, analytics)
+        return TransactionManagerImpl(
+            appStateHolder = appStateHolder,
+            analytics = analytics,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+        )
     }
 
     @Provides
@@ -53,6 +57,12 @@ class ProxyModule {
         return DerivationManagerImpl(
             appStateHolder = appStateHolder,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTxHistoryManager(appStateHolder: AppStateHolder): TxHistoryManager {
+        return TxHistoryManagerImpl(appStateHolder = appStateHolder)
     }
 
     // regions FeatureConsumers
