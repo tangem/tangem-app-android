@@ -5,6 +5,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.feature.onboarding.domain.InsertSuggestionResult
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
+import kotlinx.collections.immutable.ImmutableList
 
 /**
 [REDACTED_AUTHOR]
@@ -39,12 +40,14 @@ class ImportSeedPhraseStateBuilder {
             ),
         )
 
-    fun updateSuggestions(uiState: OnboardingSeedPhraseState, suggestions: List<String>): OnboardingSeedPhraseState =
-        uiState.copy(
-            importSeedPhraseState = uiState.importSeedPhraseState.copy(
-                suggestionsList = suggestions,
-            ),
-        )
+    fun updateSuggestions(
+        uiState: OnboardingSeedPhraseState,
+        suggestions: ImmutableList<String>,
+    ): OnboardingSeedPhraseState = uiState.copy(
+        importSeedPhraseState = uiState.importSeedPhraseState.copy(
+            suggestionsList = suggestions,
+        ),
+    )
 
     fun insertSuggestionWord(
         uiState: OnboardingSeedPhraseState,
