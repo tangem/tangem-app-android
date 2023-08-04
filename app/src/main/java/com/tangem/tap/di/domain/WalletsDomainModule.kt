@@ -1,6 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import dagger.Module
@@ -23,5 +25,11 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesSaveWalletUseCase(walletsStateHolder: WalletsStateHolder): SaveWalletUseCase {
         return SaveWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetExploreUrlUseCase(walletsManagersFacade: WalletManagersFacade): GetExploreUrlUseCase {
+        return GetExploreUrlUseCase(walletsManagersFacade = walletsManagersFacade)
     }
 }
