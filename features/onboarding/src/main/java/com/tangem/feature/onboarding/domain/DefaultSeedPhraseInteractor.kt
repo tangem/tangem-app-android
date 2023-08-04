@@ -5,6 +5,9 @@ import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
 import com.tangem.feature.onboarding.data.MnemonicRepository
 import com.tangem.utils.extensions.isNotWhitespace
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 /**
 * [REDACTED_AUTHOR]
@@ -58,14 +61,18 @@ internal class DefaultSeedPhraseInteractor constructor(
         }
     }
 
-    override suspend fun getSuggestions(text: String, hasSelection: Boolean, cursorPosition: Int): List<String> {
-        if (text.isEmpty() || cursorPosition == 0 || hasSelection) return emptyList()
+    override suspend fun getSuggestions(
+        text: String,
+        hasSelection: Boolean,
+        cursorPosition: Int,
+    ): ImmutableList<String> {
+        if (text.isEmpty() || cursorPosition == 0 || hasSelection) return persistentListOf()
         val word = partWordFinder.getLeadPartOfWord(text, cursorPosition)
-            ?: return emptyList()
+            ?: return persistentListOf()
 
         val suggestions = repository.getWordsDictionary()
             .filter { it.startsWith(word, ignoreCase = false) && it != word }
-            .toList()
+            .toPersistentList()
 
         return suggestions
     }
@@ -96,7 +103,7 @@ internal class DefaultSeedPhraseInteractor constructor(
 }
 
 private fun MnemonicErrorResult.mapToError(): SeedPhraseError = when (this) {
-    MnemonicErrorResult.InvalidWordCount -> SeedPhraseError.InvalidEntropyLength
+    MnemonicErrorResult.InvalidWordCount -> SeedPhraseError.InvalidWordCount
     MnemonicErrorResult.InvalidEntropyLength -> SeedPhraseError.InvalidEntropyLength
     MnemonicErrorResult.InvalidWordsFile -> SeedPhraseError.InvalidWordsFile
     MnemonicErrorResult.InvalidChecksum -> SeedPhraseError.InvalidChecksum

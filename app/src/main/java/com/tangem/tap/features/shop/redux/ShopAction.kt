@@ -2,9 +2,10 @@ package com.tangem.tap.features.shop.redux
 
 import android.content.Intent
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.shop.data.ProductType
+import com.tangem.tap.features.shop.domain.models.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.googlepay.GooglePayService
+import com.tangem.tap.features.shop.domain.models.SalesProduct
 import com.tangem.wallet.R
 import org.rekotlin.Action
 
@@ -44,4 +45,8 @@ sealed interface ShopAction : Action {
     object ResetState : ShopAction
 
     data class SetOrderingDelayBlockVisibility(val visibility: Boolean) : ShopAction
+
+    data class SalesProductsLoaded(val salesProducts: List<SalesProduct>) : ShopAction
+
+    object SalesProductsError : ShopAction
 }
