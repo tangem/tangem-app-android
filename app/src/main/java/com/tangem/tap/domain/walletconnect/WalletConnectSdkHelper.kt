@@ -6,12 +6,12 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.hexToBigDecimal
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
@@ -22,7 +22,6 @@ import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
-import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
@@ -35,8 +34,8 @@ import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTrans
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
@@ -76,7 +75,8 @@ class WalletConnectSdkHelper {
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
-            fee = Amount(fee, wallet.blockchain),
+            // TODO refactoring
+            fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
             destinationAddress = transaction.to!!,
             extras = EthereumTransactionExtras(
@@ -161,7 +161,10 @@ class WalletConnectSdkHelper {
     private suspend fun sendTransaction(data: WcTransactionData, cardId: String?): String? {
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
-            signer = CommonSigner(tangemSdk, cardId),
+            signer = CommonSigner(
+                tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
+                cardId = cardId,
+            ),
         )
         return when (result) {
             SimpleResult.Success -> {
@@ -170,7 +173,6 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.TransactionError(it)) }
                 Timber.e(result.error as BlockchainSdkError)
                 null
             }
@@ -182,7 +184,6 @@ class WalletConnectSdkHelper {
             transactionData = data.transaction,
             nonce = null,
             blockchain = data.walletManager.wallet.blockchain,
-            gasLimit = null,
         ) ?: return null
 
         val command = SignHashCommand(
@@ -201,7 +202,6 @@ class WalletConnectSdkHelper {
                 ).toHexString()
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
@@ -240,7 +240,6 @@ class WalletConnectSdkHelper {
                 )
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.TransactionError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
@@ -334,7 +333,6 @@ class WalletConnectSdkHelper {
                 )
             }
             is CompletionResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { Analytics.send(WalletConnect.SignError(it)) }
                 Timber.e(result.error.customMessage)
                 null
             }
