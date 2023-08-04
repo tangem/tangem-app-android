@@ -11,6 +11,7 @@ import com.tangem.operations.attestation.Attestation
 import java.util.*
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
+// TODO: Move to :domain:card:models
 /**
  * [Card] copy
  * */
@@ -304,7 +305,7 @@ data class CardDTO(
         object NoBackup : BackupStatus()
 
         val isActive: Boolean
-            get() = this is Active || this is CardLinked
+            get() = this is Active
 
         companion object {
             internal fun fromSdkStatus(sdkStatus: Card.BackupStatus?): BackupStatus? {

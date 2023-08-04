@@ -1,6 +1,9 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.common.card.EllipticCurve
+import java.math.BigDecimal
 
 @Suppress("ComplexMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
@@ -64,6 +67,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "telos/test" -> Blockchain.TelosTestnet
         "aleph-zero" -> Blockchain.AlephZero
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
+        "octaspace" -> Blockchain.OctaSpace
+        "octaspace/test" -> Blockchain.OctaSpaceTestnet
         else -> null
     }
 }
@@ -132,6 +137,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TelosTestnet -> "telos/test"
         Blockchain.AlephZero -> "aleph-zero"
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
+        Blockchain.OctaSpace -> "octaspace"
+        Blockchain.OctaSpaceTestnet -> "octaspace/test"
     }
 }
 
@@ -175,12 +182,42 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Cronos -> "crypto-com-chain"
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
+        Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
     }
 }
 
 fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
+
+fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
+    return when (this) {
+        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
+        Blockchain.XRP -> BigDecimal.TEN
+        else -> null
+    }
+}
+
+fun Blockchain.minimalAmount(): BigDecimal {
+    return 1.toBigDecimal().movePointLeft(decimals())
+}
+
+fun Blockchain.getPrimaryCurve(): EllipticCurve? {
+    return when {
+        getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
+            EllipticCurve.Secp256k1
+        }
+        getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
+            EllipticCurve.Ed25519
+        }
+        else -> {
+            null
+        }
+    }
+}
+
+private const val NODL = "NODL"
+private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
