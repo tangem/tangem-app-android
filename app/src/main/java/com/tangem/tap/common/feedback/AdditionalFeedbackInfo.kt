@@ -1,17 +1,12 @@
 package com.tangem.tap.common.feedback
 
 import android.os.Build
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 
 class AdditionalFeedbackInfo {
     class EmailWalletInfo(
