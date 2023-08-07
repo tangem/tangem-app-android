@@ -7,9 +7,9 @@ import com.tangem.domain.core.raise.DelegatedRaise
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 internal class CurrenciesStatusesOperations<E>(
-    private val tokensRepository: TokensRepository,
+    private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
@@ -34,7 +34,7 @@ internal class CurrenciesStatusesOperations<E>(
         raise: Raise<E>,
         transformError: (Error) -> E,
     ) : this(
-        tokensRepository = useCase.tokensRepository,
+        currenciesRepository = useCase.currenciesRepository,
         quotesRepository = useCase.quotesRepository,
         networksRepository = useCase.networksRepository,
         userWalletId = userWalletId,
@@ -44,7 +44,7 @@ internal class CurrenciesStatusesOperations<E>(
         transformError = transformError,
     )
 
-    fun getMultiCurrencyWalletStatusesFlow(): Flow<Set<CryptoCurrencyStatus>> {
+    fun getCurrenciesStatusesFlow(): Flow<Set<CryptoCurrencyStatus>> {
         return getMultiCurrencyWalletCurrencies().flatMapConcat {
             val currencies = it.toNonEmptySetOrNull()
 
@@ -68,9 +68,19 @@ internal class CurrenciesStatusesOperations<E>(
         }
     }
 
+    suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<CryptoCurrencyStatus> {
+        val currency = getMultiCurrencyWalletCurrency(currencyId)
+
+        return getCurrencyStatusFlow(currency)
+    }
+
     suspend fun getPrimaryCurrencyStatusFlow(): Flow<CryptoCurrencyStatus> {
         val currency = getPrimaryCurrency()
 
+        return getCurrencyStatusFlow(currency)
+    }
+
+    private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<CryptoCurrencyStatus> {
         val quoteFlow = getQuotes(nonEmptySetOf(currency.id))
             .map { quotes ->
                 quotes.singleOrNull { it.currencyId == currency.id }
@@ -116,34 +126,36 @@ internal class CurrenciesStatusesOperations<E>(
         return currencyStatusOperations.createTokenStatus()
     }
 
+    private suspend fun getMultiCurrencyWalletCurrency(currencyId: CryptoCurrency.ID): CryptoCurrency {
+        return catch(
+            block = { currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, currencyId) },
+            catch = { raise(Error.DataError(it)) },
+        )
+    }
+
     private fun getMultiCurrencyWalletCurrencies(): Flow<Set<CryptoCurrency>> {
-        return tokensRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh)
+        return currenciesRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyCurrencies) }
-            .flowOn(dispatchers.io)
     }
 
     private suspend fun getPrimaryCurrency(): CryptoCurrency {
-        return withContext(dispatchers.io) {
-            catch(
-                block = { tokensRepository.getPrimaryCurrency(userWalletId) },
-                catch = { raise(Error.DataError(it)) },
-            )
-        }
+        return catch(
+            block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
+            catch = { raise(Error.DataError(it)) },
+        )
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Set<Quote>> {
         return quotesRepository.getQuotes(tokensIds, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyQuotes) }
-            .flowOn(dispatchers.io)
     }
 
     private fun getNetworksStatues(networks: NonEmptySet<Network.ID>): Flow<Set<NetworkStatus>> {
         return networksRepository.getNetworkStatuses(userWalletId, networks, refresh)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { raise(Error.EmptyNetworksStatuses) }
-            .flowOn(dispatchers.io)
     }
 
     sealed class Error {
