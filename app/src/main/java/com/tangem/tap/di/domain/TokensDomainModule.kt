@@ -28,6 +28,17 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetPrimaryCurrencyUseCase(
+        tokensRepository: TokensRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetPrimaryCurrencyUseCase {
+        return GetPrimaryCurrencyUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideToggleTokenListGroupingUseCase(
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,

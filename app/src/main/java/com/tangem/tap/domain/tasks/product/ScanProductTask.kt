@@ -20,6 +20,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.common.extensions.getPrimaryCurve
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
@@ -30,7 +31,6 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope

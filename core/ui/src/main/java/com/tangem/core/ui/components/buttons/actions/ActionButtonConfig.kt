@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.buttons.actions
 
 import androidx.annotation.DrawableRes
+import com.tangem.core.ui.extensions.TextReference
 
 /**
  * Action button config
@@ -13,7 +14,7 @@ import androidx.annotation.DrawableRes
  * @author Andrew Khokhlov on 23/06/2023
  */
 data class ActionButtonConfig(
-    val text: String,
+    val text: TextReference,
     @DrawableRes val iconResId: Int,
     val onClick: () -> Unit,
     val enabled: Boolean = true,

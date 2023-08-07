@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.extensions.removeBy
+import com.tangem.utils.extensions.removeByReplace
 import com.tangem.wallet.R
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -44,12 +44,12 @@ class WarningMessagesManager {
     }
 
     fun removeWarnings(origin: WarningMessage.Origin) {
-        warningsList.removeBy { it.origin == origin }
+        warningsList.removeByReplace { it.origin == origin }
         sortByPriority()
     }
 
     fun removeWarnings(messageRes: Int) {
-        warningsList.removeBy { it.messageResId == messageRes }
+        warningsList.removeByReplace { it.messageResId == messageRes }
     }
 
     fun containsWarning(warning: WarningMessage) = warning in warningsList

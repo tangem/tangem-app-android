@@ -31,6 +31,7 @@ import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggle
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -157,6 +158,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var scanCardProcessor: ScanCardProcessor
 
+    @Inject
+    lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
+
     override fun onCreate() {
         super.onCreate()
 
@@ -280,6 +284,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
         factory.build(Analytics, buildData)
+        // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
 
     private fun initFeedbackManager(

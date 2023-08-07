@@ -9,7 +9,10 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":common"))
     implementation(project(":libs:auth"))
-    implementation(project(":domain:models"))
+    implementation(projects.domain.demo)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
     /** Tangem libraries */

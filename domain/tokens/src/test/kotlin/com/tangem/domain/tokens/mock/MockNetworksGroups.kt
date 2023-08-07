@@ -9,22 +9,22 @@ internal object MockNetworksGroups {
 
     val networkGroup1 = NetworkGroup(
         network = MockNetworks.network1,
-        tokens = MockTokensStates.failedTokenStates
-            .filter { it.networkId == MockNetworks.network1.id }
+        currencies = MockTokensStates.failedTokenStates
+            .filter { it.currency.networkId == MockNetworks.network1.id }
             .toNonEmptySetOrNull()!!,
     )
 
     val networkGroup2 = NetworkGroup(
         network = MockNetworks.network2,
-        tokens = MockTokensStates.failedTokenStates
-            .filter { it.networkId == MockNetworks.network2.id }
+        currencies = MockTokensStates.failedTokenStates
+            .filter { it.currency.networkId == MockNetworks.network2.id }
             .toNonEmptySetOrNull()!!,
     )
 
     val networkGroup3 = NetworkGroup(
         network = MockNetworks.network3,
-        tokens = MockTokensStates.failedTokenStates
-            .filter { it.networkId == MockNetworks.network3.id }
+        currencies = MockTokensStates.failedTokenStates
+            .filter { it.currency.networkId == MockNetworks.network3.id }
             .toNonEmptySetOrNull()!!,
     )
 
@@ -32,21 +32,21 @@ internal object MockNetworksGroups {
 
     val loadedNetworksGroups = failedNetworksGroups.map { group ->
         group.copy(
-            tokens = MockTokensStates.loadedTokensStates
-                .filter { it.networkId == group.network.id }
+            currencies = MockTokensStates.loadedTokensStates
+                .filter { it.currency.networkId == group.network.id }
                 .toNonEmptySetOrNull()!!,
         )
     }.toNonEmptySet()
 
     val sortedNetworksGroups = loadedNetworksGroups.map { group ->
         group.copy(
-            tokens = group.tokens
+            currencies = group.currencies
                 .sortedByDescending { it.value.fiatAmount }
                 .toNonEmptySetOrNull()!!,
         )
     }
         .sortedByDescending { group ->
-            group.tokens.sumOf { it.value.fiatAmount!! }
+            group.currencies.sumOf { it.value.fiatAmount!! }
         }
         .toNonEmptySetOrNull()!!
 }

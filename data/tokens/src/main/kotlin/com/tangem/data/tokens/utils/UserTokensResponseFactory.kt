@@ -1,20 +1,18 @@
 package com.tangem.data.tokens.utils
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.model.Token
+import com.tangem.domain.tokens.model.CryptoCurrency
 
-@Suppress("unused") // TODO: Will be used in next MR
 internal class UserTokensResponseFactory {
 
     fun createUserTokensResponse(
-        tokens: Set<Token>,
+        currencies: Set<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): UserTokensResponse {
         return UserTokensResponse(
-            tokens = tokens.map(::createResponseToken),
+            tokens = currencies.map(::createResponseToken),
             group = if (isGroupedByNetwork) {
                 UserTokensResponse.GroupType.NETWORK
             } else {
@@ -28,17 +26,17 @@ internal class UserTokensResponseFactory {
         )
     }
 
-    private fun createResponseToken(domainToken: Token): UserTokensResponse.Token {
-        val blockchain = Blockchain.fromId(domainToken.networkId.value)
+    private fun createResponseToken(currency: CryptoCurrency): UserTokensResponse.Token {
+        val blockchain = getBlockchain(currency.networkId)
 
         return UserTokensResponse.Token(
-            id = domainToken.id.value.takeUnless { domainToken.isCustom },
+            id = getTokenIdString(currency),
             networkId = blockchain.toNetworkId(),
-            derivationPath = domainToken.derivationPath,
-            name = domainToken.name,
-            symbol = domainToken.symbol,
-            decimals = domainToken.decimals,
-            contractAddress = domainToken.contractAddress,
+            derivationPath = currency.derivationPath,
+            name = currency.name,
+            symbol = currency.symbol,
+            decimals = currency.decimals,
+            contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
         )
     }
 }

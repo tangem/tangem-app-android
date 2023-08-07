@@ -7,8 +7,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.operations.TokenListSortingOperations
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,7 +41,7 @@ class ToggleTokenListGroupingUseCase(
         val sortingOperations = getSortingOperations(tokenList)
         val tokens = sortingOperations.getTokens()
 
-        val networks = getNetworks(tokens.map { it.networkId }.toSet())
+        val networks = getNetworks(tokens.map { it.currency.networkId }.toSet())
         return TokenList.GroupedByNetwork(
             groups = sortingOperations.getGroupedTokens(networks),
             totalFiatBalance = tokenList.totalFiatBalance,
@@ -55,7 +55,7 @@ class ToggleTokenListGroupingUseCase(
         val sortingOperations = getSortingOperations(tokenList)
 
         return TokenList.Ungrouped(
-            tokens = sortingOperations.getTokens(),
+            currencies = sortingOperations.getTokens(),
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
         )
