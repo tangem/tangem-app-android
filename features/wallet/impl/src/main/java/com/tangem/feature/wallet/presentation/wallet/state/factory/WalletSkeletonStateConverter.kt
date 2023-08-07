@@ -49,7 +49,7 @@ internal class WalletSkeletonStateConverter(
                 onOrganizeTokensClick = clickIntents::onOrganizeTokensClick,
             ),
             notifications = persistentListOf(),
-            bottomSheet = null,
+            bottomSheetConfig = null,
         )
     }
 
@@ -63,7 +63,7 @@ internal class WalletSkeletonStateConverter(
             walletsListConfig = createWalletsListConfig(wallets),
             pullToRefreshConfig = createPullToRefreshConfig(),
             notifications = persistentListOf(),
-            bottomSheet = null,
+            bottomSheetConfig = null,
             buttons = WalletPreviewData.singleWalletScreenState.buttons, // TODO: create buttons
             marketPriceBlockState = MarketPriceBlockState.Loading(
                 currencyName = cardTypeResolver.getBlockchain().currency,
