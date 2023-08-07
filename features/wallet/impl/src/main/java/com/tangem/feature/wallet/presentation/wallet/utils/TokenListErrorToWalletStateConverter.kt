@@ -19,7 +19,7 @@ internal class TokenListErrorToWalletStateConverter(
             walletsListConfig = state.walletsListConfig,
             pullToRefreshConfig = state.pullToRefreshConfig,
             notifications = state.notifications,
-            bottomSheet = state.bottomSheet,
+            bottomSheetConfig = state.bottomSheetConfig,
             tokensListState = WalletTokensListState.Content(items = persistentListOf(), onOrganizeTokensClick = null),
         )
     }
