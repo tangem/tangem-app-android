@@ -8,6 +8,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.*
@@ -20,7 +21,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.WalletStoreModel
-import com.tangem.tap.domain.userWalletList.unlockIfLockable
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
