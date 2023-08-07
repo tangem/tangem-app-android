@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.wallets.legacy.UserWalletsListError
+import com.tangem.domain.wallets.legacy.isLocked
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.domain.userWalletList.UserWalletsListError
-import com.tangem.tap.domain.userWalletList.isLocked
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
