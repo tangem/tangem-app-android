@@ -50,7 +50,7 @@ internal class TokenListToWalletStateConverter(
             walletsListConfig = walletsListConfig,
             pullToRefreshConfig = pullToRefreshConfig,
             notifications = notifications,
-            bottomSheet = bottomSheet,
+            bottomSheetConfig = bottomSheetConfig,
             tokensListState = tokenListToContentConverter.convert(value = tokenList),
         )
     }
