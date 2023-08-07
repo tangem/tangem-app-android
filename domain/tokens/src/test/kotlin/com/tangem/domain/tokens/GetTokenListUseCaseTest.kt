@@ -13,9 +13,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
-import com.tangem.domain.tokens.repository.MockTokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
@@ -326,7 +326,7 @@ internal class GetTokenListUseCaseTest {
         isSortedByBalance: Flow<Either<DataError, Boolean>> = flowOf(MockTokenLists.isSortedByBalance.right()),
     ) = GetTokenListUseCase(
         dispatchers = dispatchers,
-        tokensRepository = MockTokensRepository(
+        currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
             token = MockTokens.token1.right(),
             tokens = tokens,
