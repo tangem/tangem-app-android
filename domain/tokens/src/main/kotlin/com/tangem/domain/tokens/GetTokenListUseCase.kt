@@ -11,9 +11,9 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListOperations
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapConcat
 
 class GetTokenListUseCase(
-    internal val tokensRepository: TokensRepository,
+    internal val currenciesRepository: CurrenciesRepository,
     internal val quotesRepository: QuotesRepository,
     internal val networksRepository: NetworksRepository,
     internal val dispatchers: CoroutineDispatcherProvider,
@@ -60,7 +60,7 @@ class GetTokenListUseCase(
             transformError = CurrenciesStatusesOperations.Error::mapToTokenListError,
         )
 
-        return operations.getMultiCurrencyWalletStatusesFlow()
+        return operations.getCurrenciesStatusesFlow()
     }
 
     private fun Raise<TokenListError>.createTokenList(

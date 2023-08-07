@@ -49,9 +49,14 @@ internal fun getTokenId(blockchain: Blockchain, token: SdkToken): CryptoCurrency
     return getTokenOrCoinId(blockchain, token)
 }
 
-internal fun getTokenIdString(currency: CryptoCurrency): String? {
-    return currency.id.value.substringAfter(TOKEN_ID_DELIMITER)
-        .takeUnless { currency is CryptoCurrency.Token && currency.isCustom }
+internal fun getTokenIdString(currencyId: CryptoCurrency.ID): String? {
+    val idValue = currencyId.value
+
+    return if (idValue.startsWith(CUSTOM_TOKEN_ID_PREFIX)) {
+        null
+    } else {
+        idValue.substringAfter(TOKEN_ID_DELIMITER)
+    }
 }
 
 internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {

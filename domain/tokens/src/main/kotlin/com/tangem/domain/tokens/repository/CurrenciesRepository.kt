@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Repository for everything related to the tokens of user wallet
  * */
-interface TokensRepository {
+interface CurrenciesRepository {
 
     /**
      * Saves the given set of cryptocurrencies, along with the preferences for grouping and sorting, for a specific
@@ -17,6 +17,8 @@ interface TokensRepository {
      * @param currencies The set of cryptocurrencies to be saved.
      * @param isGroupedByNetwork A boolean flag indicating whether the tokens should be grouped by network.
      * @param isSortedByBalance A boolean flag indicating whether the tokens should be sorted by balance.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
      */
     suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -30,8 +32,10 @@ interface TokensRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return The primary cryptocurrency associated with the user wallet.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * ID provided.
      */
-    suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
+    suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
      * Retrieves the set of cryptocurrencies within a multi-currency wallet.
@@ -39,14 +43,29 @@ interface TokensRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
      */
     fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<CryptoCurrency>>
+
+    /**
+     * Retrieves the cryptocurrency for a specific multi-currency user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @return The cryptocurrency associated with the user wallet and ID.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
 
     /**
      * Determines whether the tokens within a specific multi-currency user wallet are grouped.
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting a boolean value indicating whether the tokens are grouped.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
      */
     fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
 
@@ -55,6 +74,8 @@ interface TokensRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting a boolean value indicating whether the tokens are sorted by balance.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 }

@@ -9,14 +9,14 @@ import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.repository.TokensRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 class ApplyTokenListSortingUseCase(
-    private val tokensRepository: TokensRepository,
+    private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -67,7 +67,9 @@ class ApplyTokenListSortingUseCase(
 
     private suspend fun Raise<TokenListSortingError>.getCurrencies(userWalletId: UserWalletId): Set<CryptoCurrency> {
         val tokens = catch(
-            block = { tokensRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh = false).firstOrNull() },
+            block = {
+                currenciesRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh = false).firstOrNull()
+            },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
 
@@ -83,7 +85,7 @@ class ApplyTokenListSortingUseCase(
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
         catch(
-            block = { tokensRepository.saveTokens(userWalletId, tokens, isGrouped, isSortedByBalance) },
+            block = { currenciesRepository.saveTokens(userWalletId, tokens, isGrouped, isSortedByBalance) },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
     }
