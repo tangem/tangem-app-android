@@ -26,7 +26,7 @@ internal sealed class WalletStateHolder(
     open val walletsListConfig: WalletsListConfig,
     open val pullToRefreshConfig: WalletPullToRefreshConfig,
     open val notifications: ImmutableList<WalletNotification>,
-    open val bottomSheet: WalletBottomSheetConfig? = null,
+    open val bottomSheetConfig: WalletBottomSheetConfig? = null,
 ) {
 
     fun copySealed(
@@ -35,7 +35,7 @@ internal sealed class WalletStateHolder(
         walletsListConfig: WalletsListConfig = this.walletsListConfig,
         pullToRefreshConfig: WalletPullToRefreshConfig = this.pullToRefreshConfig,
         notifications: ImmutableList<WalletNotification> = this.notifications,
-        bottomSheet: WalletBottomSheetConfig? = this.bottomSheet,
+        bottomSheet: WalletBottomSheetConfig? = this.bottomSheetConfig,
     ): WalletStateHolder {
         return when (this) {
             is MultiCurrencyContent -> this.copy(
@@ -44,7 +44,7 @@ internal sealed class WalletStateHolder(
                 walletsListConfig = walletsListConfig,
                 pullToRefreshConfig = pullToRefreshConfig,
                 notifications = notifications,
-                bottomSheet = bottomSheet,
+                bottomSheetConfig = bottomSheet,
             )
             is SingleCurrencyContent -> this.copy(
                 onBackClick = onBackClick,
@@ -52,7 +52,7 @@ internal sealed class WalletStateHolder(
                 walletsListConfig = walletsListConfig,
                 pullToRefreshConfig = pullToRefreshConfig,
                 notifications = notifications,
-                bottomSheet = bottomSheet,
+                bottomSheetConfig = bottomSheet,
             )
             is UnlockWalletContent -> this.copy(
                 onBackClick = onBackClick,
@@ -80,7 +80,7 @@ internal sealed class WalletStateHolder(
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheet: WalletBottomSheetConfig? = null,
+        override val bottomSheetConfig: WalletBottomSheetConfig? = null,
         val tokensListState: WalletTokensListState,
     ) : WalletStateHolder(
         onBackClick = onBackClick,
@@ -88,7 +88,7 @@ internal sealed class WalletStateHolder(
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
         notifications = notifications,
-        bottomSheet = bottomSheet,
+        bottomSheetConfig = bottomSheetConfig,
     )
 
     /**
@@ -109,7 +109,7 @@ internal sealed class WalletStateHolder(
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheet: WalletBottomSheetConfig? = null,
+        override val bottomSheetConfig: WalletBottomSheetConfig? = null,
         val buttons: ImmutableList<ActionButtonConfig>,
         val marketPriceBlockState: MarketPriceBlockState,
         val txHistoryState: WalletTxHistoryState,
@@ -119,7 +119,7 @@ internal sealed class WalletStateHolder(
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
         notifications = notifications,
-        bottomSheet = bottomSheet,
+        bottomSheetConfig = bottomSheetConfig,
     )
 
     /**
@@ -151,7 +151,7 @@ internal sealed class WalletStateHolder(
         walletsListConfig = walletsListConfig,
         pullToRefreshConfig = pullToRefreshConfig,
         notifications = persistentListOf(WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick)),
-        bottomSheet = WalletBottomSheetConfig(
+        bottomSheetConfig = WalletBottomSheetConfig(
             isShow = false,
             onDismissRequest = onBottomSheetDismissRequest,
             content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
@@ -183,6 +183,6 @@ internal sealed class WalletStateHolder(
         ),
         pullToRefreshConfig = WalletPullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         notifications = persistentListOf(),
-        bottomSheet = null,
+        bottomSheetConfig = null,
     )
 }
