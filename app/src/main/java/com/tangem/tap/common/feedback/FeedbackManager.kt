@@ -63,8 +63,12 @@ class FeedbackManager(
             fileWriter.write(feedback)
             fileWriter.close()
 
-            sessionFeedbackFile = file
-            sessionFeedbackFile
+            if (file.exists()) {
+                sessionFeedbackFile = file
+                sessionFeedbackFile
+            } else {
+                null
+            }
         } catch (ex: Exception) {
             Timber.e(ex, "Can't create the logs file")
             null
@@ -86,8 +90,12 @@ class FeedbackManager(
             fileWriter.write(stringWriter.toString())
             fileWriter.close()
             logCollector.clearLogs()
-            sessionLogsFile = file
-            sessionLogsFile
+            if (file.exists()) {
+                sessionLogsFile = file
+                sessionLogsFile
+            } else {
+                null
+            }
         } catch (ex: Exception) {
             Timber.e(ex, "Can't create the logs file")
             null

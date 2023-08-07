@@ -22,6 +22,7 @@ internal class ZendeskChatOpener(
 ) : ChatOpener {
 
     private var isInitialized = false
+    private var isFilesSent = false
 
     override fun open(createFeedbackFile: (Context) -> File?, createLogsFile: (Context) -> File?) {
         foregroundActivityObserver.withForegroundActivity { activity ->
@@ -49,18 +50,20 @@ internal class ZendeskChatOpener(
     }
 
     private fun sendFeedbackFile(feedbackFile: File?) {
-        if (isInitialized && feedbackFile != null) {
+        if (isInitialized && feedbackFile != null && !isFilesSent) {
             Chat.INSTANCE.providers()?.chatProvider()?.sendFile(feedbackFile) { _, bytesUploaded, _ ->
                 Timber.d("Log file sent", "bytesUploaded: $bytesUploaded")
             }
+            isFilesSent = true
         }
     }
 
     private fun sendLogsFile(logsFile: File?) {
-        if (isInitialized && logsFile != null) {
+        if (isInitialized && logsFile != null && !isFilesSent) {
             Chat.INSTANCE.providers()?.chatProvider()?.sendFile(logsFile) { _, bytesUploaded, _ ->
                 Timber.d("Log file sent", "bytesUploaded: $bytesUploaded")
             }
+            isFilesSent = true
         }
     }
 
