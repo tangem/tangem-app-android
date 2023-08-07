@@ -6,4 +6,9 @@ sealed class DataError : Exception() {
 
         object NoInternetConnection : NetworkError()
     }
+
+    sealed class UserWalletError : DataError() {
+
+        data class WrongUserWallet(override val message: String) : UserWalletError()
+    }
 }
