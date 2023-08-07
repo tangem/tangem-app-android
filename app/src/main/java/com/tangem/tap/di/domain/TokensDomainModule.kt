@@ -1,9 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -18,23 +18,23 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideGetTokenListUseCase(
-        tokensRepository: TokensRepository,
+        currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetTokenListUseCase {
-        return GetTokenListUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+        return GetTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
     @ViewModelScoped
     fun provideGetPrimaryCurrencyUseCase(
-        tokensRepository: TokensRepository,
+        currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetPrimaryCurrencyUseCase {
-        return GetPrimaryCurrencyUseCase(tokensRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetCurrencyUseCase {
+        return GetCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
@@ -55,9 +55,9 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideApplyTokenListSortingUseCase(
-        tokensRepository: TokensRepository,
+        currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): ApplyTokenListSortingUseCase {
-        return ApplyTokenListSortingUseCase(tokensRepository, dispatchers)
+        return ApplyTokenListSortingUseCase(currenciesRepository, dispatchers)
     }
 }

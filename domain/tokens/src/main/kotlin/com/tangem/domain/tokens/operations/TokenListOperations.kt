@@ -10,8 +10,8 @@ import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 internal class TokenListOperations<E>(
-    private val tokensRepository: TokensRepository,
+    private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
     private val tokens: Set<CryptoCurrencyStatus>,
@@ -35,7 +35,7 @@ internal class TokenListOperations<E>(
         raise: Raise<E>,
         transform: (Error) -> E,
     ) : this(
-        tokensRepository = useCase.tokensRepository,
+        currenciesRepository = useCase.currenciesRepository,
         networksRepository = useCase.networksRepository,
         userWalletId = userWalletId,
         tokens = tokens,
@@ -149,14 +149,14 @@ internal class TokenListOperations<E>(
     }
 
     private fun getIsGrouped(): Flow<Boolean> {
-        return tokensRepository.isTokensGrouped(userWalletId)
+        return currenciesRepository.isTokensGrouped(userWalletId)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { emit(value = false) }
             .flowOn(dispatchers.io)
     }
 
     private fun getIsSortedByBalance(): Flow<Boolean> {
-        return tokensRepository.isTokensSortedByBalance(userWalletId)
+        return currenciesRepository.isTokensSortedByBalance(userWalletId)
             .catch { raise(Error.DataError(it)) }
             .onEmpty { emit(value = false) }
             .flowOn(dispatchers.io)

@@ -12,11 +12,23 @@ import com.tangem.blockchain.common.Token as SdkToken
 
 internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
 
-    fun createTokens(response: UserTokensResponse, card: CardDTO): Set<CryptoCurrency> {
-        return response.tokens.mapNotNull { createToken(it, card) }.toSet()
+    fun createCurrency(currencyId: CryptoCurrency.ID, response: UserTokensResponse, card: CardDTO): CryptoCurrency {
+        val responseTokenId = getTokenIdString(currencyId)
+
+        val token = requireNotNull(response.tokens.firstOrNull { it.id == responseTokenId }) {
+            "Unable find a token with provided ID: $responseTokenId"
+        }
+
+        return requireNotNull(createCurrency(token, card)) {
+            "Unable to create a currency with provided ID: $currencyId"
+        }
     }
 
-    private fun createToken(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
+    fun createCurrencies(response: UserTokensResponse, card: CardDTO): Set<CryptoCurrency> {
+        return response.tokens.mapNotNull { createCurrency(it, card) }.toSet()
+    }
+
+    private fun createCurrency(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
             Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
