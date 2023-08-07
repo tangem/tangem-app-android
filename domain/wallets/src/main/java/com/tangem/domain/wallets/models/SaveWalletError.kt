@@ -5,6 +5,5 @@ package com.tangem.domain.wallets.models
  */
 sealed interface SaveWalletError {
 
-    // TODO: Finalize in next PRs
     object CommonError : SaveWalletError
 }
