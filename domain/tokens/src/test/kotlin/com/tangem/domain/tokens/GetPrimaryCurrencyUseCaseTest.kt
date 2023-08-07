@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.error.TokenError
+import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokens
@@ -13,9 +13,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
-import com.tangem.domain.tokens.repository.MockTokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
@@ -47,7 +47,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
     @Test
     fun `when token getting failed then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
 
         val useCase = getUseCase(token = DataError.NetworkError.NoInternetConnection.left())
 
@@ -61,7 +61,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
     @Test
     fun `when quotes getting failed then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
 
         val useCase = getUseCase(quotes = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
@@ -75,7 +75,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
     @Test
     fun `when networks statuses getting failed then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
 
         val useCase = getUseCase(statuses = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
@@ -88,7 +88,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
 
     @Test
     fun `when networks statuses flow is empty then error should be received`() = runTest {
-        val expectedResult = TokenError.UnableToCreateToken.left()
+        val expectedResult = CurrencyError.UnableToCreateCurrency.left()
 
         val useCase = getUseCase(statuses = flowOf())
 
@@ -101,7 +101,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
 
     @Test
     fun `when quotes flow is empty then error should be received`() = runTest {
-        val expectedResult = TokenError.UnableToCreateToken.left()
+        val expectedResult = CurrencyError.UnableToCreateCurrency.left()
 
         val useCase = getUseCase(quotes = flowOf())
 
@@ -154,7 +154,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
     ) = GetPrimaryCurrencyUseCase(
         dispatchers = dispatchers,
-        tokensRepository = MockTokensRepository(
+        currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
             token = token,
             tokens = flowOf(),
