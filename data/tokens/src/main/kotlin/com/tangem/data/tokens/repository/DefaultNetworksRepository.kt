@@ -18,7 +18,10 @@ import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class DefaultNetworksRepository(
@@ -44,7 +47,9 @@ internal class DefaultNetworksRepository(
         networks: Set<Network.ID>,
         refresh: Boolean,
     ): Flow<Set<NetworkStatus>> = channelFlow {
-        networksStatuses.collectLatest(::send)
+        launch(dispatchers.io) {
+            networksStatuses.collect(::send)
+        }
 
         launch(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
@@ -99,7 +104,7 @@ internal class DefaultNetworksRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        return responseCurrenciesFactory.createTokens(response, userWallet.scanResponse.card)
+        return responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse.card)
     }
 
     private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId): String = "network_status_$userWalletId"
