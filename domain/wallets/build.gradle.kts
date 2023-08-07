@@ -10,6 +10,10 @@ android {
 
 dependencies {
 
+    // region Core modules
+    implementation(projects.core.res)
+    // endregion
+
     // region Domain modules
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
