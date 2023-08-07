@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components
+package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -31,6 +31,8 @@ private const val DOTS = "•••"
  *
  * @param state    state
  * @param modifier modifier
+ *
+[REDACTED_AUTHOR]
  */
 @Composable
 internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
