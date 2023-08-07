@@ -8,23 +8,27 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.repository.TokensRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
-internal class DefaultTokensRepository(
+internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
-) : TokensRepository {
+) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
     private val responseCurrenciesFactory = ResponseCurrenciesFactory(demoConfig)
@@ -37,6 +41,8 @@ internal class DefaultTokensRepository(
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
+        ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
+
         val response = userTokensResponseFactory.createUserTokensResponse(
             currencies = currencies,
             isGroupedByNetwork = isGroupedByNetwork,
@@ -46,58 +52,72 @@ internal class DefaultTokensRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
-    override suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
-        val userWallet = withContext(dispatchers.io) {
-            requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-                "Unable to find a user wallet with provided ID: $userWalletId"
-            }
-        }
-        require(!userWallet.isMultiCurrency) {
-            "Single currency wallet excepted, but multi currency wallet was found: $userWalletId"
-        }
+    override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
+        return withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-        return cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+        }
     }
 
     override fun getMultiCurrencyWalletCurrencies(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<Set<CryptoCurrency>> {
+    ): Flow<Set<CryptoCurrency>> = channelFlow {
+        val userWallet = getUserWallet(userWalletId)
+        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+        launch(dispatchers.io) {
+            getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
+        }
+
+        launch(dispatchers.io) {
+            fetchTokensIfCacheExpired(userWallet, refresh)
+        }
+    }
+
+    override suspend fun getMultiCurrencyWalletCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency = withContext(dispatchers.io) {
+        val userWallet = getUserWallet(userWalletId)
+        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+        val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
+            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+        }
+
+        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse.card)
+    }
+
+    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
         return channelFlow {
-            val userWallet = withContext(dispatchers.io) {
-                requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-                    "Unable to find a user wallet with provided ID: $userWalletId"
-                }
-            }
-            require(userWallet.isMultiCurrency) {
-                "Multi currency wallet excepted, but single currency wallet was found: $userWalletId"
-            }
+            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
 
             launch(dispatchers.io) {
-                getMultiCurrencyWalletCurrencies(userWallet).collectLatest(::send)
-            }
-
-            launch(dispatchers.io) {
-                fetchTokensIfCacheExpired(userWallet, refresh)
+                userTokensStore.get(userWalletId)
+                    .map { it.group == UserTokensResponse.GroupType.NETWORK }
+                    .collect(::send)
             }
         }
     }
 
-    override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
-        return userTokensStore.get(userWalletId)
-            .map { it.group == UserTokensResponse.GroupType.NETWORK }
-            .flowOn(dispatchers.io)
-    }
-
     override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
-        return userTokensStore.get(userWalletId)
-            .map { it.sort == UserTokensResponse.SortType.BALANCE }
-            .flowOn(dispatchers.io)
+        return channelFlow {
+            ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
+
+            launch(dispatchers.io) {
+                userTokensStore.get(userWalletId)
+                    .map { it.sort == UserTokensResponse.SortType.BALANCE }
+                    .collect(::send)
+            }
+        }
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<Set<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
-            responseCurrenciesFactory.createTokens(
+            responseCurrenciesFactory.createCurrencies(
                 response = storedTokens,
                 card = userWallet.scanResponse.card,
             )
@@ -142,6 +162,39 @@ internal class DefaultTokensRepository(
 
             tangemTechApi.saveUserTokens(userWallet.walletId.stringValue, response)
         } else {
+            throw error
+        }
+    }
+
+    private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
+        return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "Unable to find a user wallet with provided ID: $userWalletId"
+        }
+    }
+
+    private suspend fun ensureIsCorrectUserWallet(userWalletId: UserWalletId, isMultiCurrencyWalletExpected: Boolean) {
+        val userWallet = getUserWallet(userWalletId)
+
+        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected)
+    }
+
+    private fun ensureIsCorrectUserWallet(userWallet: UserWallet, isMultiCurrencyWalletExpected: Boolean) {
+        val userWalletId = userWallet.walletId
+
+        val message = when {
+            !userWallet.isMultiCurrency && isMultiCurrencyWalletExpected -> {
+                "Multi currency wallet expected, but single currency wallet was found: $userWalletId"
+            }
+            userWallet.isMultiCurrency && !isMultiCurrencyWalletExpected -> {
+                "Single currency wallet expected, but multi currency wallet was found: $userWalletId"
+            }
+            else -> null
+        }
+
+        if (message != null) {
+            val error = DataError.UserWalletError.WrongUserWallet(message)
+
+            Timber.e(error)
             throw error
         }
     }
