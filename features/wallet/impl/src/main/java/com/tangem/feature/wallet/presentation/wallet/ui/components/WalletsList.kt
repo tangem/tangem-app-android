@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
 
 /**

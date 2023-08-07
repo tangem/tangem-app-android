@@ -3,8 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState.TokensListItemState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter

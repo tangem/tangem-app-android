@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.snapshotFlow
-import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 
 /**

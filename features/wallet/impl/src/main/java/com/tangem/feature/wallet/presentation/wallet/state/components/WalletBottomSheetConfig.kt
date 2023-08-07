@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state
+package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color

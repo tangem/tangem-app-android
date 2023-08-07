@@ -9,7 +9,7 @@ import androidx.paging.compose.itemsIndexed
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 
 /**
