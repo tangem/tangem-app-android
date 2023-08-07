@@ -24,12 +24,14 @@ import com.tangem.utils.converter.Converter
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletStateHolder>,
     cardTypeResolverProvider: Provider<CardTypesResolver>,
+    isLockedWalletProvider: Provider<Boolean>,
     clickIntents: WalletClickIntents,
 ) : Converter<LoadedTokensListModel, WalletStateHolder> {
 
     private val tokenListStateConverter = TokenListToWalletStateConverter(
         currentStateProvider = currentStateProvider,
         cardTypeResolverProvider = cardTypeResolverProvider,
+        isLockedWalletProvider = isLockedWalletProvider,
         isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
         fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
         fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
