@@ -2,10 +2,10 @@ package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
