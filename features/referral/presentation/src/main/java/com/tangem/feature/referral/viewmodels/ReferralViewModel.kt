@@ -84,13 +84,13 @@ internal class ReferralViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.main) {
                 runCatching(dispatchers.io) { referralInteractor.startReferral() }
                     .onSuccess(::showContent)
-                    .onFailure {
-                        if (it is UserCancelledException) {
-                            lastReferralData?.let {
-                                showContent(it)
+                    .onFailure { throwable ->
+                        if (throwable is UserCancelledException) {
+                            lastReferralData?.let { referralData ->
+                                showContent(referralData)
                             }
                         } else {
-                            showErrorSnackbar(it)
+                            showErrorSnackbar(throwable)
                         }
                     }
             }
