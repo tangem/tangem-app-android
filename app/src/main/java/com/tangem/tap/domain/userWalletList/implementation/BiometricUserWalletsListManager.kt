@@ -2,10 +2,10 @@ package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
 import com.tangem.common.extensions.guard
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.SelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
