@@ -8,8 +8,8 @@ import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.biometric.BiometricStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
