@@ -3,9 +3,9 @@ package com.tangem.tap.features.welcome.ui
 import androidx.lifecycle.ViewModel
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.userWalletList.UserWalletsListError
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState

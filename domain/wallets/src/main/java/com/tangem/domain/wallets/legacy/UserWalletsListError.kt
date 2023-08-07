@@ -1,7 +1,7 @@
-package com.tangem.tap.domain.userWalletList
+package com.tangem.domain.wallets.legacy
 
 import com.tangem.common.core.TangemError
-import com.tangem.wallet.R
+import com.tangem.domain.wallets.R
 
 sealed class UserWalletsListError(code: Int) : TangemError(code) {
 
