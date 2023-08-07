@@ -7,7 +7,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.repository.MockTokensRepository
+import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
@@ -183,16 +183,16 @@ internal class ApplyTokenListSortingUseCaseTest {
         .sortedBy { Random.nextInt(0, MockTokens.tokens.size) }
         .toSet()
 
-    private fun getUseCase(tokensRepository: MockTokensRepository = getTokensRepository()) =
+    private fun getUseCase(tokensRepository: MockCurrenciesRepository = getTokensRepository()) =
         ApplyTokenListSortingUseCase(
-            tokensRepository = tokensRepository,
+            currenciesRepository = tokensRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
     private fun getTokensRepository(
         sortTokensResult: Either<DataError, Unit> = Unit.right(),
         tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
-    ): MockTokensRepository {
-        return MockTokensRepository(sortTokensResult, MockTokens.token1.right(), tokens, emptyFlow(), emptyFlow())
+    ): MockCurrenciesRepository {
+        return MockCurrenciesRepository(sortTokensResult, MockTokens.token1.right(), tokens, emptyFlow(), emptyFlow())
     }
 }
