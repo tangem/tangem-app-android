@@ -8,13 +8,13 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-internal class MockTokensRepository(
+internal class MockCurrenciesRepository(
     private val sortTokensResult: Either<DataError, Unit>,
     private val token: Either<DataError, CryptoCurrency>,
     private val tokens: Flow<Either<DataError, Set<CryptoCurrency>>>,
     private val isGrouped: Flow<Either<DataError, Boolean>>,
     private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
-) : TokensRepository {
+) : CurrenciesRepository {
 
     var tokensIdsAfterSortingApply: Set<CryptoCurrency>? = null
         private set
@@ -38,7 +38,7 @@ internal class MockTokensRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override suspend fun getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
+    override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return token.getOrElse { e -> throw e }
     }
 
@@ -47,6 +47,17 @@ internal class MockTokensRepository(
         refresh: Boolean,
     ): Flow<Set<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
+    }
+
+    override suspend fun getMultiCurrencyWalletCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency {
+        val token = token.getOrElse { e -> throw e }
+
+        require(token.id == id)
+
+        return token
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
