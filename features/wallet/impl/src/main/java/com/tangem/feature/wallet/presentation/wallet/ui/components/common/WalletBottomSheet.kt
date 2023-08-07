@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components
+package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
