@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components
+package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable

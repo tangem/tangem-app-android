@@ -76,7 +76,7 @@ internal class WalletLoadingTxHistoryConverter(
             walletsListConfig = walletsListConfig,
             pullToRefreshConfig = pullToRefreshConfig,
             notifications = notifications,
-            bottomSheet = bottomSheet,
+            bottomSheetConfig = bottomSheetConfig,
             buttons = getButtons(),
             marketPriceBlockState = getLoadingMarketPriceBlockState(),
             txHistoryState = txHistoryState,

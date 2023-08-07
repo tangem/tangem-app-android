@@ -93,7 +93,9 @@ internal class WalletStateFactory(
             state.copySealed(
                 bottomSheet = WalletBottomSheetConfig(
                     isShow = true,
-                    onDismissRequest = { state.copySealed(bottomSheet = state.bottomSheet?.copy(isShow = false)) },
+                    onDismissRequest = {
+                        state.copySealed(bottomSheet = state.bottomSheetConfig?.copy(isShow = false))
+                    },
                     content = content,
                 ),
             )
