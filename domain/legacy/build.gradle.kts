@@ -13,7 +13,9 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.libs.crypto)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {

@@ -4,7 +4,7 @@ import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.TransactionState
-import com.tangem.domain.txhistory.model.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState.TxHistoryItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -180,7 +180,7 @@ internal class WalletTxHistoryItemFlowConverter(
      *
      * @see [convert]
      */
-    private fun TxHistoryItem.getRawTimestamp() = this.timestamp.toString()
+    private fun TxHistoryItem.getRawTimestamp() = this.timestampInMillis.toString()
 
     private fun TxHistoryItemState?.getTimestamp(): Long? {
         return if (this is TxHistoryItemState.Transaction && this.state is TransactionState.Content) {
