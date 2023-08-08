@@ -374,6 +374,7 @@
     <string name="transaction_history_error_failed_to_load">無法加載交易</string>
     <string name="transaction_history_tx_in_progress">進行中…</string>
     <string name="twin_error_same_card">您掃描了同一張卡片。要創建雙錢包，您需要掃描編號為 %d 的卡</string>
+    <string name="twin_error_wrong_twin">你掃描錯了胞胎卡。請嘗試另一個</string>
     <string name="twins_onboarding_description_format">這一個是你手裡拿著的，另一個是編號為 %s 的，這兩張卡都可以用來從這個錢包中提取資金</string>
     <string name="twins_onboarding_subtitle">一個錢包，兩張卡片</string>
     <string name="twins_recreate_button_format">掃描卡片 #%s</string>
