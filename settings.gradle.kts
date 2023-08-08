@@ -107,6 +107,7 @@ include(":domain:tokens:models")
 include(":domain:wallets")
 include(":domain:wallets:models")
 include(":domain:txhistory")
+include(":domain:txhistory:models")
 // endregion Domain modules
 
 // region Data modules
