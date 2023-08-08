@@ -12,8 +12,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.*
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.flowOf
@@ -255,7 +254,7 @@ internal object WalletPreviewData {
     }
 
     val multicurrencyWalletScreenState by lazy {
-        WalletStateHolder.MultiCurrencyContent(
+        WalletMultiCurrencyState.Content(
             onBackClick = {},
             topBarConfig = walletTopBarConfig,
             walletsListConfig = walletListConfig,
@@ -326,7 +325,7 @@ internal object WalletPreviewData {
     }
 
     val singleWalletScreenState by lazy {
-        WalletStateHolder.SingleCurrencyContent(
+        WalletSingleCurrencyState.Content(
             onBackClick = {},
             topBarConfig = walletTopBarConfig,
             walletsListConfig = walletListConfig,
