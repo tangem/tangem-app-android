@@ -1,33 +1,32 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletLockedContentState
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Wallet screen state holder
  *
- * @property onBackClick            lambda be invoked when back button is clicked
- * @property topBarConfig           top bar config
- * @property walletsListConfig      wallets list config
- * @property pullToRefreshConfig    pull to refresh config
- * @property notifications          notifications
- *
 [REDACTED_AUTHOR]
  */
-internal sealed class WalletStateHolder(
-    open val onBackClick: () -> Unit,
-    open val topBarConfig: WalletTopBarConfig,
-    open val walletsListConfig: WalletsListConfig,
-    open val pullToRefreshConfig: WalletPullToRefreshConfig,
-    open val notifications: ImmutableList<WalletNotification>,
-    open val bottomSheetConfig: WalletBottomSheetConfig? = null,
-) {
+internal sealed class WalletStateHolder {
+
+    /** Lambda be invoked when back button is clicked */
+    abstract val onBackClick: () -> Unit
+
+    /** Top bar config */
+    abstract val topBarConfig: WalletTopBarConfig
+
+    /** Wallets list config */
+    abstract val walletsListConfig: WalletsListConfig
+
+    /** Pull to refresh config */
+    abstract val pullToRefreshConfig: WalletPullToRefreshConfig
+
+    /** Notifications */
+    abstract val notifications: ImmutableList<WalletNotification>
+
+    /** Bottom sheet config */
+    abstract val bottomSheetConfig: WalletBottomSheetConfig?
 
     fun copySealed(
         onBackClick: () -> Unit = this.onBackClick,
@@ -38,151 +37,67 @@ internal sealed class WalletStateHolder(
         bottomSheet: WalletBottomSheetConfig? = this.bottomSheetConfig,
     ): WalletStateHolder {
         return when (this) {
-            is MultiCurrencyContent -> this.copy(
-                onBackClick = onBackClick,
-                topBarConfig = topBarConfig,
-                walletsListConfig = walletsListConfig,
-                pullToRefreshConfig = pullToRefreshConfig,
-                notifications = notifications,
-                bottomSheetConfig = bottomSheet,
-            )
-            is SingleCurrencyContent -> this.copy(
-                onBackClick = onBackClick,
-                topBarConfig = topBarConfig,
-                walletsListConfig = walletsListConfig,
-                pullToRefreshConfig = pullToRefreshConfig,
-                notifications = notifications,
-                bottomSheetConfig = bottomSheet,
-            )
-            is UnlockWalletContent -> this.copy(
-                onBackClick = onBackClick,
-                topBarConfig = topBarConfig,
-                walletsListConfig = walletsListConfig,
-                pullToRefreshConfig = pullToRefreshConfig,
-            )
-            is Loading -> copy(onBackClick = onBackClick)
+            is WalletLoading -> {
+                copy(onBackClick = onBackClick)
+            }
+            is WalletMultiCurrencyState.Content -> {
+                copy(
+                    onBackClick = onBackClick,
+                    topBarConfig = topBarConfig,
+                    walletsListConfig = walletsListConfig,
+                    pullToRefreshConfig = pullToRefreshConfig,
+                    notifications = notifications,
+                    bottomSheetConfig = bottomSheet,
+                )
+            }
+            is WalletMultiCurrencyState.Locked -> {
+                if (bottomSheet != null) {
+                    copy(
+                        onBackClick = onBackClick,
+                        topBarConfig = topBarConfig,
+                        walletsListConfig = walletsListConfig,
+                        pullToRefreshConfig = pullToRefreshConfig,
+                        isBottomSheetShow = bottomSheet.isShow,
+                        onBottomSheetDismiss = bottomSheet.onDismissRequest,
+                    )
+                } else {
+                    copy(
+                        onBackClick = onBackClick,
+                        topBarConfig = topBarConfig,
+                        walletsListConfig = walletsListConfig,
+                        pullToRefreshConfig = pullToRefreshConfig,
+                    )
+                }
+            }
+            is WalletSingleCurrencyState.Content -> {
+                copy(
+                    onBackClick = onBackClick,
+                    topBarConfig = topBarConfig,
+                    walletsListConfig = walletsListConfig,
+                    pullToRefreshConfig = pullToRefreshConfig,
+                    notifications = notifications,
+                    bottomSheetConfig = bottomSheet,
+                )
+            }
+            is WalletSingleCurrencyState.Locked -> {
+                if (bottomSheet != null) {
+                    copy(
+                        onBackClick = onBackClick,
+                        topBarConfig = topBarConfig,
+                        walletsListConfig = walletsListConfig,
+                        pullToRefreshConfig = pullToRefreshConfig,
+                        isBottomSheetShow = bottomSheet.isShow,
+                        onBottomSheetDismiss = bottomSheet.onDismissRequest,
+                    )
+                } else {
+                    copy(
+                        onBackClick = onBackClick,
+                        topBarConfig = topBarConfig,
+                        walletsListConfig = walletsListConfig,
+                        pullToRefreshConfig = pullToRefreshConfig,
+                    )
+                }
+            }
         }
     }
-
-    /**
-     * Multi currency wallet content state
-     *
-     * @property onBackClick            lambda be invoked when back button is clicked
-     * @property topBarConfig           top bar config
-     * @property walletsListConfig      wallets list config
-     * @property pullToRefreshConfig    pull to refresh config
-     * @property tokensListState        token list state
-     * @property notifications          notifications
-     */
-    data class MultiCurrencyContent(
-        override val onBackClick: () -> Unit,
-        override val topBarConfig: WalletTopBarConfig,
-        override val walletsListConfig: WalletsListConfig,
-        override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig? = null,
-        val tokensListState: WalletTokensListState,
-    ) : WalletStateHolder(
-        onBackClick = onBackClick,
-        topBarConfig = topBarConfig,
-        walletsListConfig = walletsListConfig,
-        pullToRefreshConfig = pullToRefreshConfig,
-        notifications = notifications,
-        bottomSheetConfig = bottomSheetConfig,
-    )
-
-    /**
-     * Single currency wallet content state
-     *
-     * @property onBackClick            lambda be invoked when back button is clicked
-     * @property topBarConfig           top bar config
-     * @property walletsListConfig      wallets list config
-     * @property pullToRefreshConfig    pull to refresh config
-     * @property notifications          notifications
-     * @property buttons                manage buttons
-     * @property marketPriceBlockState  market price block state
-     * @property txHistoryState         transactions history state
-     */
-    data class SingleCurrencyContent(
-        override val onBackClick: () -> Unit,
-        override val topBarConfig: WalletTopBarConfig,
-        override val walletsListConfig: WalletsListConfig,
-        override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig? = null,
-        val buttons: ImmutableList<ActionButtonConfig>,
-        val marketPriceBlockState: MarketPriceBlockState,
-        val txHistoryState: WalletTxHistoryState,
-    ) : WalletStateHolder(
-        onBackClick = onBackClick,
-        topBarConfig = topBarConfig,
-        walletsListConfig = walletsListConfig,
-        pullToRefreshConfig = pullToRefreshConfig,
-        notifications = notifications,
-        bottomSheetConfig = bottomSheetConfig,
-    )
-
-    /**
-     * Unlock wallet content state
-     *
-     * @property onBackClick                      lambda be invoked when back button is clicked
-     * @property topBarConfig                     top bar config
-     * @property walletsListConfig                wallets list config
-     * @property pullToRefreshConfig              pull to refresh config
-     * @property lockedContentState               locked content state
-     * @property onUnlockWalletsNotificationClick lambda be invoked when unlock wallets notification is clicked
-     * @property onBottomSheetDismissRequest      lambda be invoked when bottom sheet is dismissed
-     * @property onUnlockClick                    lambda be invoked when unlock button is clicked
-     * @property onScanClick                      lambda be invoked when scan card button is clicked
-     */
-    data class UnlockWalletContent(
-        override val onBackClick: () -> Unit,
-        override val topBarConfig: WalletTopBarConfig,
-        override val walletsListConfig: WalletsListConfig,
-        override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        val lockedContentState: WalletLockedContentState,
-        val onUnlockWalletsNotificationClick: () -> Unit,
-        val onBottomSheetDismissRequest: () -> Unit,
-        val onUnlockClick: () -> Unit,
-        val onScanClick: () -> Unit,
-    ) : WalletStateHolder(
-        onBackClick = onBackClick,
-        topBarConfig = topBarConfig,
-        walletsListConfig = walletsListConfig,
-        pullToRefreshConfig = pullToRefreshConfig,
-        notifications = persistentListOf(WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick)),
-        bottomSheetConfig = WalletBottomSheetConfig(
-            isShow = false,
-            onDismissRequest = onBottomSheetDismissRequest,
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
-                onUnlockClick = onUnlockClick,
-                onScanClick = onScanClick,
-            ),
-        ),
-    )
-
-    /**
-     * Loading state
-     *
-     * @property onBackClick lambda be invoked when back button is clicked
-     */
-    data class Loading(override val onBackClick: () -> Unit) : WalletStateHolder(
-        onBackClick = onBackClick,
-        topBarConfig = WalletTopBarConfig(onScanCardClick = {}, onMoreClick = {}),
-        walletsListConfig = WalletsListConfig(
-            selectedWalletIndex = 0,
-            wallets = persistentListOf(
-                WalletCardState.Loading(
-                    id = UserWalletId(stringValue = ""),
-                    title = "",
-                    additionalInfo = "",
-                    imageResId = null,
-                ),
-            ),
-            onWalletChange = {},
-        ),
-        pullToRefreshConfig = WalletPullToRefreshConfig(isRefreshing = false, onRefresh = {}),
-        notifications = persistentListOf(),
-        bottomSheetConfig = null,
-    )
 }

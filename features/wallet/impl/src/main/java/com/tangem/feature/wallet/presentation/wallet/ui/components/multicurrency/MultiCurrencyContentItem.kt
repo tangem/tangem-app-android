@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 
 /**
  * Multi-currency content item
