@@ -43,7 +43,7 @@ class GetTokenListUseCase(
     private fun getTokensStatuses(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<Either<TokenListError, Set<CryptoCurrencyStatus>>> {
+    ): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             refresh = refresh,
@@ -58,7 +58,7 @@ class GetTokenListUseCase(
 
     private fun createTokenList(
         userWalletId: UserWalletId,
-        tokens: Set<CryptoCurrencyStatus>,
+        tokens: List<CryptoCurrencyStatus>,
     ): Flow<Either<TokenListError, TokenList>> {
         val operations = TokenListOperations(
             userWalletId = userWalletId,
