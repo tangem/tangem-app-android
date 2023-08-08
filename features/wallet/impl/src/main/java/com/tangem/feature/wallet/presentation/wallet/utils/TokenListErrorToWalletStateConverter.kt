@@ -2,8 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
@@ -14,7 +15,7 @@ internal class TokenListErrorToWalletStateConverter(
     // TODO: [REDACTED_JIRA]
     override fun convert(value: TokenListError): WalletStateHolder {
         val state = currentStateProvider()
-        return WalletStateHolder.MultiCurrencyContent(
+        return WalletMultiCurrencyState.Content(
             onBackClick = state.onBackClick,
             topBarConfig = state.topBarConfig,
             walletsListConfig = state.walletsListConfig,
