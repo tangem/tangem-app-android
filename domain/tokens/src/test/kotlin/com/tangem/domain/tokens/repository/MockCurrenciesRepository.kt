@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.map
 internal class MockCurrenciesRepository(
     private val sortTokensResult: Either<DataError, Unit>,
     private val token: Either<DataError, CryptoCurrency>,
-    private val tokens: Flow<Either<DataError, Set<CryptoCurrency>>>,
+    private val tokens: Flow<Either<DataError, List<CryptoCurrency>>>,
     private val isGrouped: Flow<Either<DataError, Boolean>>,
     private val isSortedByBalance: Flow<Either<DataError, Boolean>>,
 ) : CurrenciesRepository {
 
-    var tokensIdsAfterSortingApply: Set<CryptoCurrency>? = null
+    var tokensIdsAfterSortingApply: List<CryptoCurrency>? = null
         private set
 
     var isTokensGroupedAfterSortingApply: Boolean? = null
@@ -27,7 +27,7 @@ internal class MockCurrenciesRepository(
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) {
@@ -45,7 +45,7 @@ internal class MockCurrenciesRepository(
     override fun getMultiCurrencyWalletCurrencies(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<Set<CryptoCurrency>> {
+    ): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
 
