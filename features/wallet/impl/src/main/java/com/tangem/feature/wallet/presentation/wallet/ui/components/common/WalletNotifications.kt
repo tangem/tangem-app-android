@@ -4,7 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 
 /**

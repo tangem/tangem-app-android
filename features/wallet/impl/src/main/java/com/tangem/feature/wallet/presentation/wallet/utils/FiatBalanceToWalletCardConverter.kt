@@ -5,7 +5,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
-import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.utils.converter.Converter
 
 internal class FiatBalanceToWalletCardConverter(

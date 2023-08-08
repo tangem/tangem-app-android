@@ -6,9 +6,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -117,7 +118,7 @@ internal class WalletNotificationsListFactory(
         }
 
         return currentStateProvider().let { state ->
-            state is WalletStateHolder.MultiCurrencyContent && state.tokensListState.items.any(isUnreachableState)
+            state is WalletMultiCurrencyState.Content && state.tokensListState.items.any(isUnreachableState)
         }
     }
 

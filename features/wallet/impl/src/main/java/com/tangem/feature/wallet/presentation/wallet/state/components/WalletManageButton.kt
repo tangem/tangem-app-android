@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state
+package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference

@@ -18,7 +18,7 @@ import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 
 /**
  * Wallet bottom sheet with detail notification information

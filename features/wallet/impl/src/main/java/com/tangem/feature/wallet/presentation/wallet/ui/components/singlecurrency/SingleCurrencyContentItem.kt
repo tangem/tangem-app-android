@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurren
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.transactions.Transaction
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 
 /**
  * Single currency content item

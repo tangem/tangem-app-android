@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state.content
+package com.tangem.feature.wallet.presentation.wallet.state.components
 
 /**
  * Wallet locked content state.
