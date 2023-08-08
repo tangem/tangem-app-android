@@ -12,7 +12,7 @@ import com.tangem.blockchain.common.Token as SdkToken
 
 internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
 
-    fun createDefaultCoinsForMultiCurrencyCard(card: CardDTO): Set<CryptoCurrency.Coin> {
+    fun createDefaultCoinsForMultiCurrencyCard(card: CardDTO): List<CryptoCurrency.Coin> {
         var blockchains = if (demoConfig.isDemoCardId(card.cardId)) {
             demoConfig.demoBlockchains
         } else {
@@ -23,7 +23,7 @@ internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
             blockchains = blockchains.mapNotNull { it.getTestnetVersion() }
         }
 
-        return blockchains.mapNotNull { createCoin(it, card) }.toSet()
+        return blockchains.mapNotNull { createCoin(it, card) }
     }
 
     fun createPrimaryCurrencyForSingleCurrencyCard(scanResponse: ScanResponse): CryptoCurrency {
