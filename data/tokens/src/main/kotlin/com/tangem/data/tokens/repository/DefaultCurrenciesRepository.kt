@@ -37,7 +37,7 @@ internal class DefaultCurrenciesRepository(
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
@@ -64,7 +64,7 @@ internal class DefaultCurrenciesRepository(
     override fun getMultiCurrencyWalletCurrencies(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<Set<CryptoCurrency>> = channelFlow {
+    ): Flow<List<CryptoCurrency>> = channelFlow {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -115,7 +115,7 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<Set<CryptoCurrency>> {
+    private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
                 response = storedTokens,

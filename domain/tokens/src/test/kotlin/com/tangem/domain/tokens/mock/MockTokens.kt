@@ -119,5 +119,5 @@ internal object MockTokens {
             derivationPath = null,
         )
 
-    val tokens = setOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)
+    val tokens = listOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)
 }

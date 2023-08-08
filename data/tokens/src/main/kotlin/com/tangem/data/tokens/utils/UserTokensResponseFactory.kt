@@ -7,7 +7,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 internal class UserTokensResponseFactory {
 
     fun createUserTokensResponse(
-        currencies: Set<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): UserTokensResponse {

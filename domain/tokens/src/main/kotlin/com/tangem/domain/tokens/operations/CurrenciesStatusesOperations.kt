@@ -33,14 +33,14 @@ internal class CurrenciesStatusesOperations(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getCurrenciesStatusesFlow(): Flow<Either<Error, Set<CryptoCurrencyStatus>>> {
+    fun getCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
         return getMultiCurrencyWalletCurrencies().flatMapMerge flatMap@{ maybeCurrencies ->
             val nonEmptyCurrencies = maybeCurrencies.fold(
                 ifLeft = { error ->
                     return@flatMap flowOf(error.left())
                 },
-                ifRight = { it.toNonEmptySetOrNull() },
-            ) ?: return@flatMap flowOf(emptySet<CryptoCurrencyStatus>().right())
+                ifRight = { it.toNonEmptyListOrNull() },
+            ) ?: return@flatMap flowOf(emptyList<CryptoCurrencyStatus>().right())
 
             val (networksIds, currenciesIds) = getIds(nonEmptyCurrencies)
 
@@ -96,11 +96,11 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun createCurrenciesStatuses(
-        currencies: NonEmptySet<CryptoCurrency>,
+        currencies: NonEmptyList<CryptoCurrency>,
         quotes: Set<Quote>,
         networkStatuses: Set<NetworkStatus>,
-    ): Set<CryptoCurrencyStatus> {
-        return currencies.mapTo(hashSetOf()) { token ->
+    ): List<CryptoCurrencyStatus> {
+        return currencies.map { token ->
             val quote = quotes.firstOrNull { it.currencyId == token.id }
             val networkStatus = networkStatuses.firstOrNull { it.networkId == token.networkId }
 
@@ -122,9 +122,9 @@ internal class CurrenciesStatusesOperations(
         return currencyStatusOperations.createTokenStatus()
     }
 
-    private fun getMultiCurrencyWalletCurrencies(): Flow<Either<Error, Set<CryptoCurrency>>> {
+    private fun getMultiCurrencyWalletCurrencies(): Flow<Either<Error, List<CryptoCurrency>>> {
         return currenciesRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh)
-            .map<Set<CryptoCurrency>, Either<Error, Set<CryptoCurrency>>> { it.right() }
+            .map<List<CryptoCurrency>, Either<Error, List<CryptoCurrency>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyCurrencies.left()) }
     }
@@ -157,7 +157,7 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getIds(
-        currencies: NonEmptySet<CryptoCurrency>,
+        currencies: NonEmptyList<CryptoCurrency>,
     ): Pair<NonEmptySet<Network.ID>, NonEmptySet<CryptoCurrency.ID>> {
         val currencyIdToNetworkId = currencies.associate { currency ->
             currency.id to currency.networkId

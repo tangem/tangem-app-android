@@ -90,7 +90,7 @@ internal class DefaultNetworksRepository(
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             networkId = networkId,
-            extraTokens = currencies.filterIsInstanceTo(hashSetOf()),
+            extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
         val networkStatus = networkStatusFactory.createNetworkStatus(
             networkId = networkId,
@@ -103,7 +103,7 @@ internal class DefaultNetworksRepository(
         }
     }
 
-    private suspend fun getCurrencies(userWalletId: UserWalletId): Set<CryptoCurrency> {
+    private suspend fun getCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
