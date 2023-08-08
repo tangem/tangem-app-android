@@ -420,6 +420,7 @@
     <string name="transaction_history_transaction_to_address">to: %s</string>
     <string name="transaction_history_tx_in_progress">In progress…</string>
     <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
+    <string name="twin_error_wrong_twin">You\'ve scanned wrong twin card. Please try another one</string>
     <string name="twins_onboarding_description_format">This one that you are holding in your hands and the other one with number %s.\n\nBoth cards can be used to extract funds from this wallet.</string>
     <string name="twins_onboarding_subtitle">One wallet. Two cards.</string>
     <string name="twins_recreate_button_format">Scan the card #%s</string>
