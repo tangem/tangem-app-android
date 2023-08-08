@@ -225,7 +225,7 @@ internal class GetTokenListUseCaseTest {
     fun `when tokens is empty then not initialized token list should be received`() = runTest {
         val expectedResult = MockTokenLists.notInitializedTokenList.right()
 
-        val useCase = getUseCase(tokens = flowOf(emptySet<CryptoCurrency>().right()))
+        val useCase = getUseCase(tokens = flowOf(emptyList<CryptoCurrency>().right()))
 
         // When
         val result = useCase(userWalletId).first()
@@ -319,7 +319,7 @@ internal class GetTokenListUseCaseTest {
     }
 
     private fun getUseCase(
-        tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
+        tokens: Flow<Either<DataError, List<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         networks: Either<DataError, Set<Network>> = MockNetworks.networks.right(),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.errorNetworksStatuses.right()),
