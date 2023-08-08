@@ -8,9 +8,10 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.TransactionState
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.txhistory.error.TxHistoryStateError
-import com.tangem.feature.wallet.presentation.wallet.state.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
@@ -69,8 +70,8 @@ internal class WalletLoadingTxHistoryConverter(
 
     private fun WalletStateHolder.copySingleCurrencyContent(
         txHistoryState: WalletTxHistoryState,
-    ): WalletStateHolder.SingleCurrencyContent {
-        return WalletStateHolder.SingleCurrencyContent(
+    ): WalletSingleCurrencyState {
+        return WalletSingleCurrencyState.Content(
             onBackClick = onBackClick,
             topBarConfig = topBarConfig,
             walletsListConfig = walletsListConfig,
