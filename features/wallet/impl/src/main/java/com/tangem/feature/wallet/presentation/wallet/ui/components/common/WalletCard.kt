@@ -22,7 +22,7 @@ import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 
 private const val DOTS = "•••"
 
