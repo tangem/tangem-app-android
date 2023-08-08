@@ -24,8 +24,10 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.*
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -55,6 +57,7 @@ internal class WalletViewModel @Inject constructor(
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
+    private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -74,6 +77,7 @@ internal class WalletViewModel @Inject constructor(
         currentCardTypeResolverProvider = Provider {
             getCardTypeResolver(index = uiState.walletsListConfig.selectedWalletIndex)
         },
+        isLockedWalletProvider = Provider { wallets[uiState.walletsListConfig.selectedWalletIndex].isLocked },
         clickIntents = this,
     )
 
@@ -90,24 +94,31 @@ internal class WalletViewModel @Inject constructor(
         getWalletsUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .distinctUntilChanged()
-            .onEach { wallets ->
-                if (wallets.isEmpty()) return@onEach
-                this.wallets = wallets
-
-                uiState = stateFactory.getSkeletonState(wallets = wallets)
-
-                updateContentItems(index = 0)
-            }
+            .onEach(::updateWallets)
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
     }
 
+    private fun updateWallets(sourceList: List<UserWallet>) {
+        if (sourceList.isEmpty() || sourceList.all(UserWallet::isLocked)) return
+
+        wallets = sourceList
+
+        val unlockedWalletIndex = sourceList.indexOfFirst { !it.isLocked }
+        uiState = stateFactory.getSkeletonState(
+            wallets = wallets,
+            index = if (unlockedWalletIndex == -1) 0 else unlockedWalletIndex,
+        )
+
+        updateContentItems(index = unlockedWalletIndex)
+    }
+
     private fun updateContentItems(index: Int, isRefreshing: Boolean = false) {
         val cardTypeResolver = getCardTypeResolver(index)
-        if (cardTypeResolver.isMultiwalletAllowed()) {
-            updateByTokensList(index, isRefreshing)
-        } else {
-            updateByTxHistory(index)
+        when {
+            getWallet(index).isLocked -> uiState = stateFactory.getLockedState()
+            cardTypeResolver.isMultiwalletAllowed() -> updateByTokensList(index, isRefreshing)
+            !cardTypeResolver.isMultiwalletAllowed() -> updateByTxHistory(index)
         }
     }
 
@@ -120,7 +131,10 @@ internal class WalletViewModel @Inject constructor(
                     isRefreshing = isRefreshing,
                 )
 
-                tokenListEither.onRight { updateNotifications(index = index, tokenList = it) }
+                updateNotifications(
+                    index = index,
+                    tokenList = tokenListEither.fold(ifLeft = { null }, ifRight = { it }),
+                )
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
@@ -277,5 +291,17 @@ internal class WalletViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onUnlockWalletClick() {
+        viewModelScope.launch(dispatchers.io) {
+            unlockWalletsUseCase()
+        }
+    }
+
+    override fun onUnlockWalletNotificationClick() {
+        uiState = stateFactory.getStateWithOpenBottomSheet(
+            content = requireNotNull(uiState.bottomSheetConfig?.content),
+        )
     }
 }

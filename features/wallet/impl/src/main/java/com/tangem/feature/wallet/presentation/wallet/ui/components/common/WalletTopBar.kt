@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
 
 /**
  * Wallet screen top bar
