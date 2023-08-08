@@ -18,8 +18,10 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
@@ -57,7 +59,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                 .padding(paddingValues = scaffoldPaddings)
                 .pullRefresh(pullRefreshState),
         ) {
-            val txHistoryItems = if (state is WalletStateHolder.SingleCurrencyContent &&
+            val txHistoryItems = if (state is WalletSingleCurrencyState &&
                 state.txHistoryState is WalletTxHistoryState.ContentState
             ) {
                 (state.txHistoryState as? WalletTxHistoryState.ContentState)?.items?.collectAsLazyPagingItems()
@@ -80,7 +82,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
                     WalletsList(config = state.walletsListConfig, lazyListState = walletsListState)
                 }
 
-                if (state is WalletStateHolder.SingleCurrencyContent) {
+                if (state is WalletSingleCurrencyState) {
                     controlButtons(
                         configs = state.buttons,
                         modifier = movableItemModifier.padding(top = betweenItemsPadding),
@@ -89,13 +91,13 @@ internal fun WalletScreen(state: WalletStateHolder) {
 
                 notifications(configs = state.notifications, modifier = itemModifier)
 
-                if (state is WalletStateHolder.SingleCurrencyContent) {
+                if (state is WalletSingleCurrencyState.Content) {
                     marketPriceBlock(state = state.marketPriceBlockState, modifier = itemModifier)
                 }
 
                 contentItems(state = state, txHistoryItems = txHistoryItems, modifier = movableItemModifier)
 
-                if (state is WalletStateHolder.MultiCurrencyContent) {
+                if (state is WalletMultiCurrencyState) {
                     organizeButton(onClick = state.tokensListState.onOrganizeTokensClick, modifier = itemModifier)
                 }
             }
