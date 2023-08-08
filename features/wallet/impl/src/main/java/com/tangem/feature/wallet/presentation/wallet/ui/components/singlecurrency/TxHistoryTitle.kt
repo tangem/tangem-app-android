@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState.TxHistoryItemState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState.TxHistoryItemState
 
 /**
  * Transactions block title
