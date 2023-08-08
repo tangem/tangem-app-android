@@ -4,18 +4,20 @@ import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder.MultiCurrencyContent
-import com.tangem.feature.wallet.presentation.wallet.state.WalletsListConfig
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
+@Suppress("LongParameterList")
 internal class TokenListToWalletStateConverter(
     private val currentStateProvider: Provider<WalletStateHolder>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
+    private val isLockedWalletProvider: Provider<Boolean>,
     private val isWalletContentHidden: Boolean,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
@@ -43,8 +45,8 @@ internal class TokenListToWalletStateConverter(
             )
     }
 
-    private fun WalletStateHolder.updateWithTokenList(tokenList: TokenList): MultiCurrencyContent {
-        return MultiCurrencyContent(
+    private fun WalletStateHolder.updateWithTokenList(tokenList: TokenList): WalletMultiCurrencyState.Content {
+        return WalletMultiCurrencyState.Content(
             onBackClick = onBackClick,
             topBarConfig = topBarConfig,
             walletsListConfig = walletsListConfig,
@@ -60,7 +62,7 @@ internal class TokenListToWalletStateConverter(
         val selectedWalletCard = walletsListConfig.wallets[selectedWalletIndex]
         val converter = FiatBalanceToWalletCardConverter(
             currentState = selectedWalletCard,
-            isLockedState = this is WalletStateHolder.UnlockWalletContent,
+            isLockedState = isLockedWalletProvider(),
             cardTypeResolverProvider = cardTypeResolverProvider,
             isWalletContentHidden = isWalletContentHidden,
             fiatCurrencyCode = fiatCurrencyCode,
@@ -75,7 +77,7 @@ internal class TokenListToWalletStateConverter(
     }
 
     private fun WalletStateHolder.getRefreshingStatus(): Boolean {
-        return if (this is MultiCurrencyContent) {
+        return if (this is WalletMultiCurrencyState.Content) {
             tokensListState.items.any { tokensListItemState ->
                 tokensListItemState is WalletTokensListState.TokensListItemState.Token &&
                     tokensListItemState.state is TokenItemState.Loading
