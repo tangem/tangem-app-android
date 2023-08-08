@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState.TxHistoryItemState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState.TxHistoryItemState
 
 /**
  * Transactions block group title
