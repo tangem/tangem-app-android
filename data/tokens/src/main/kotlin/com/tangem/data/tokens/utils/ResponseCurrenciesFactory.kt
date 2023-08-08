@@ -24,8 +24,8 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
         }
     }
 
-    fun createCurrencies(response: UserTokensResponse, card: CardDTO): Set<CryptoCurrency> {
-        return response.tokens.mapNotNull { createCurrency(it, card) }.toSet()
+    fun createCurrencies(response: UserTokensResponse, card: CardDTO): List<CryptoCurrency> {
+        return response.tokens.mapNotNull { createCurrency(it, card) }
     }
 
     private fun createCurrency(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
