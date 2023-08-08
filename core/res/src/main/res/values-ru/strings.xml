@@ -428,6 +428,7 @@
     <string name="transaction_history_transaction_to_address">на: %s</string>
     <string name="transaction_history_tx_in_progress">В процессе…</string>
     <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
+    <string name="twin_error_wrong_twin">Вы отсканировали не ту twin-карту. Пожалуйста, попробуйте отсканировать другую</string>
     <string name="twins_onboarding_description_format">Это карта, которую вы держите в руках. У парной карты номер %s.\n\nОбе карты можно использовать для вывода средств из этого кошелька.</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
     <string name="twins_recreate_button_format">Сканировать карту #%s</string>
