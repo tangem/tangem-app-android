@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.mock
 
-import arrow.core.nonEmptySetOf
+import arrow.core.nonEmptyListOf
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 
@@ -57,7 +57,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount,
     )
 
-    val failedTokenStates = nonEmptySetOf(
+    val failedTokenStates = nonEmptyListOf(
         tokenState1,
         tokenState2,
         tokenState3,
@@ -86,5 +86,5 @@ internal object MockTokensStates {
                 hasTransactionsInProgress = false,
             ),
         )
-    }.toNonEmptySet()
+    }
 }

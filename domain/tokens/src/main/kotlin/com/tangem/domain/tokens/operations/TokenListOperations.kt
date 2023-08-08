@@ -16,12 +16,12 @@ internal class TokenListOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
-    private val tokens: Set<CryptoCurrencyStatus>,
+    private val tokens: List<CryptoCurrencyStatus>,
 ) {
 
     constructor(
         userWalletId: UserWalletId,
-        tokens: Set<CryptoCurrencyStatus>,
+        tokens: List<CryptoCurrencyStatus>,
         useCase: GetTokenListUseCase,
     ) : this(
         currenciesRepository = useCase.currenciesRepository,
@@ -42,14 +42,14 @@ internal class TokenListOperations(
     }
 
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
-        val tokensNes = tokens.toNonEmptySetOrNull()
+        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
             ?: return TokenList.NotInitialized
 
-        val isAnyTokenLoading = tokensNes.any { it.value is CryptoCurrencyStatus.Loading }
-        val fiatBalanceOperations = TokenListFiatBalanceOperations(tokensNes, isAnyTokenLoading)
+        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
+        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
 
         return createTokenList(
-            tokens = tokensNes,
+            currencies = nonEmptyCurrencies,
             fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
             isAnyTokenLoading = isAnyTokenLoading,
             isGrouped = isGrouped,
@@ -58,23 +58,23 @@ internal class TokenListOperations(
     }
 
     private fun Raise<Error>.createTokenList(
-        tokens: NonEmptySet<CryptoCurrencyStatus>,
+        currencies: NonEmptyList<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
         isAnyTokenLoading: Boolean,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ): TokenList {
         val sortingOperations = TokenListSortingOperations(
-            currencies = tokens,
+            currencies = currencies,
             isAnyTokenLoading = isAnyTokenLoading,
             sortByBalance = isSortedByBalance,
         )
 
-        return createTokenList(tokens, sortingOperations, fiatBalance, isGrouped)
+        return createTokenList(currencies, sortingOperations, fiatBalance, isGrouped)
     }
 
     private fun Raise<Error>.createTokenList(
-        tokens: NonEmptySet<CryptoCurrencyStatus>,
+        tokens: NonEmptyList<CryptoCurrencyStatus>,
         sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
         isGrouped: Boolean,
@@ -92,7 +92,7 @@ internal class TokenListOperations(
         }
     }
 
-    private fun Raise<Error>.getNetworks(tokensNes: NonEmptySet<CryptoCurrencyStatus>): Set<Network> {
+    private fun Raise<Error>.getNetworks(tokensNes: NonEmptyList<CryptoCurrencyStatus>): Set<Network> {
         val networksIds = tokensNes.map { it.currency.networkId }.toNonEmptySet()
 
         return catch(
@@ -131,7 +131,7 @@ internal class TokenListOperations(
     )
 
     private fun createUnsortedUngroupedTokenList(
-        tokens: Set<CryptoCurrencyStatus>,
+        tokens: List<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
     ): TokenList.Ungrouped {
         return TokenList.Ungrouped(

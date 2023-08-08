@@ -32,7 +32,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = emptySet(),
+            sortedTokensIds = emptyList(),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
@@ -54,7 +54,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = MockTokens.tokens.map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = MockTokens.tokens.map { it.networkId to it.id },
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
@@ -76,7 +76,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id },
             isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
@@ -100,7 +100,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id },
             isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
@@ -124,7 +124,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id },
             isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
@@ -148,7 +148,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = expectedTokens.map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = expectedTokens.map { it.networkId to it.id },
             isGroupedByNetwork = expectedIsGrouped,
             isSortedByBalance = expectedIsSorted,
         )
@@ -170,7 +170,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = getSortedTokens().drop(n = 3).map { it.networkId to it.id }.toSet(),
+            sortedTokensIds = getSortedTokens().drop(n = 3).map { it.networkId to it.id },
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )
@@ -181,7 +181,6 @@ internal class ApplyTokenListSortingUseCaseTest {
 
     private fun getSortedTokens() = MockTokens.tokens
         .sortedBy { Random.nextInt(0, MockTokens.tokens.size) }
-        .toSet()
 
     private fun getUseCase(tokensRepository: MockCurrenciesRepository = getTokensRepository()) =
         ApplyTokenListSortingUseCase(
@@ -191,7 +190,7 @@ internal class ApplyTokenListSortingUseCaseTest {
 
     private fun getTokensRepository(
         sortTokensResult: Either<DataError, Unit> = Unit.right(),
-        tokens: Flow<Either<DataError, Set<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
+        tokens: Flow<Either<DataError, List<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
     ): MockCurrenciesRepository {
         return MockCurrenciesRepository(sortTokensResult, MockTokens.token1.right(), tokens, emptyFlow(), emptyFlow())
     }

@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.Flow
 interface CurrenciesRepository {
 
     /**
-     * Saves the given set of cryptocurrencies, along with the preferences for grouping and sorting, for a specific
+     * Saves the given list of cryptocurrencies, along with the preferences for grouping and sorting, for a specific
      * multi-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The set of cryptocurrencies to be saved.
+     * @param currencies The list of cryptocurrencies to be saved.
      * @param isGroupedByNetwork A boolean flag indicating whether the tokens should be grouped by network.
      * @param isSortedByBalance A boolean flag indicating whether the tokens should be sorted by balance.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
@@ -22,7 +22,7 @@ interface CurrenciesRepository {
      */
     suspend fun saveTokens(
         userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     )
@@ -38,7 +38,7 @@ interface CurrenciesRepository {
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
-     * Retrieves the set of cryptocurrencies within a multi-currency wallet.
+     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param refresh A boolean flag indicating whether the data should be refreshed.
@@ -46,7 +46,7 @@ interface CurrenciesRepository {
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<Set<CryptoCurrency>>
+    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<List<CryptoCurrency>>
 
     /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
