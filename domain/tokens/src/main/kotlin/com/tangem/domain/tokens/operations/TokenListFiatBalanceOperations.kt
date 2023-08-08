@@ -1,12 +1,12 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.NonEmptySet
+import arrow.core.NonEmptyList
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
-    private val currencies: NonEmptySet<CryptoCurrencyStatus>,
+    private val currencies: NonEmptyList<CryptoCurrencyStatus>,
     private val isAnyTokenLoading: Boolean,
 ) {
 
