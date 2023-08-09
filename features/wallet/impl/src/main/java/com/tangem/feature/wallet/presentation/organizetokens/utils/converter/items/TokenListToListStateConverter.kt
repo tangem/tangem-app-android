@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items
 
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteItems
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
