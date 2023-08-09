@@ -6,8 +6,8 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.txhistory.error.TxHistoryListError
-import com.tangem.domain.txhistory.model.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryListError
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
