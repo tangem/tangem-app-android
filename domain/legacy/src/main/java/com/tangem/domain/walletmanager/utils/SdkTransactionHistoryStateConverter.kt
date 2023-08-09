@@ -8,9 +8,9 @@ import com.tangem.blockchain.common.txhistory.TransactionHistoryState as SdkTran
 internal class SdkTransactionHistoryStateConverter : Converter<SdkTransactionHistoryState, TxHistoryState> {
 
     override fun convert(value: TransactionHistoryState): TxHistoryState = when (value) {
-        TransactionHistoryState.Success.Empty -> TxHistoryState.Success.Empty
+        is TransactionHistoryState.Success.Empty -> TxHistoryState.Success.Empty
         is TransactionHistoryState.Success.HasTransactions -> TxHistoryState.Success.HasTransactions(value.txCount)
         is TransactionHistoryState.Failed.FetchError -> TxHistoryState.Failed.FetchError(value.exception)
-        TransactionHistoryState.NotImplemented -> TxHistoryState.NotImplemented
+        is TransactionHistoryState.NotImplemented -> TxHistoryState.NotImplemented
     }
 }

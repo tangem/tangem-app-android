@@ -2,13 +2,13 @@ package com.tangem.data.txhistory.repository.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.lib.crypto.models.ProxyPaginationWrapper
 
 private const val INITIAL_PAGE = 1
 
 internal class TxHistoryPagingSource(
-    private val loadPage: suspend (page: Int, pageSize: Int) -> ProxyPaginationWrapper<TxHistoryItem>,
+    private val loadPage: suspend (page: Int, pageSize: Int) -> PaginationWrapper<TxHistoryItem>,
 ) : PagingSource<Int, TxHistoryItem>() {
 
     override fun getRefreshKey(state: PagingState<Int, TxHistoryItem>): Int? {

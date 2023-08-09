@@ -1,6 +1,6 @@
-package com.tangem.lib.crypto.models
+package com.tangem.domain.txhistory.models
 
-data class ProxyPaginationWrapper<T>(
+data class PaginationWrapper<T>(
     val page: Int,
     val totalPages: Int,
     val itemsOnPage: Int,

@@ -24,6 +24,6 @@ internal class SdkTransactionHistoryItemConverter : Converter<SdkTransactionHist
         type = when (value.type) {
             TransactionHistoryItem.TransactionType.Transfer -> TxHistoryItem.TransactionType.Transfer
         },
-        amount = requireNotNull(value.amount.value) { "Amount value must not be null" },
+        amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
     )
 }

@@ -4,24 +4,23 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 class DefaultTxHistoryRepository(
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletsStateHolder: WalletsStateHolder,
+    private val userWalletsStore: UserWalletsStore,
 ) : TxHistoryRepository {
 
     override suspend fun getTxHistoryItemsCount(networkId: Network.ID, derivationPath: String?): Int {
-        val userWallet = requireNotNull(walletsStateHolder.userWalletsListManager?.selectedUserWalletSync) {
-            "Selected wallet must not be null"
-        }
+        val userWallet = getUserWallet()
         val state = walletManagersFacade.getTxHistoryState(
             userWalletId = userWallet.walletId,
             networkId = networkId,
@@ -40,9 +39,7 @@ class DefaultTxHistoryRepository(
         derivationPath: String?,
         pageSize: Int,
     ): Flow<PagingData<TxHistoryItem>> {
-        val userWallet = requireNotNull(walletsStateHolder.userWalletsListManager?.selectedUserWalletSync) {
-            "Selected wallet must not be null"
-        }
+        val userWallet = getUserWallet()
         return Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -61,5 +58,9 @@ class DefaultTxHistoryRepository(
                 )
             },
         ).flow
+    }
+
+    private fun getUserWallet(): UserWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull) {
+        "Selected wallet must not be null"
     }
 }

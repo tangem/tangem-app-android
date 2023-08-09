@@ -2,11 +2,11 @@ package com.tangem.domain.walletmanager
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.lib.crypto.models.ProxyPaginationWrapper
 
 // TODO: Move to its own module
 /**
@@ -59,5 +59,5 @@ interface WalletManagersFacade {
         rawDerivationPath: String?,
         page: Int,
         pageSize: Int,
-    ): ProxyPaginationWrapper<TxHistoryItem>
+    ): PaginationWrapper<TxHistoryItem>
 }

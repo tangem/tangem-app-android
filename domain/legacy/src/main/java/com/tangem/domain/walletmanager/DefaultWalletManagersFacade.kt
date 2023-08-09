@@ -13,13 +13,13 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.lib.crypto.models.ProxyPaginationWrapper
 import timber.log.Timber
 
 // FIXME: Move to its own module and make internal
@@ -42,18 +42,14 @@ class DefaultWalletManagersFacade(
         networkId: Network.ID,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(networkId.value)
 
         return getAndUpdateWalletManager(userWallet, blockchain, extraTokens)
     }
 
     override suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+        val userWallet = getUserWallet(userWalletId)
 
         val blockchain = Blockchain.fromId(networkId.value)
 
@@ -72,9 +68,7 @@ class DefaultWalletManagersFacade(
         networkId: Network.ID,
         rawDerivationPath: String?,
     ): TxHistoryState {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(networkId.value)
         val derivationPath = rawDerivationPath?.let(::DerivationPath)
         val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
@@ -91,10 +85,8 @@ class DefaultWalletManagersFacade(
         rawDerivationPath: String?,
         page: Int,
         pageSize: Int,
-    ): ProxyPaginationWrapper<TxHistoryItem> {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+    ): PaginationWrapper<TxHistoryItem> {
+        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(networkId.value)
         val derivationPath = rawDerivationPath?.let(::DerivationPath)
         val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
@@ -107,7 +99,7 @@ class DefaultWalletManagersFacade(
         )
 
         return when (itemsResult) {
-            is Result.Success -> ProxyPaginationWrapper(
+            is Result.Success -> PaginationWrapper(
                 page = itemsResult.data.page,
                 totalPages = itemsResult.data.totalPages,
                 itemsOnPage = itemsResult.data.itemsOnPage,
@@ -116,6 +108,11 @@ class DefaultWalletManagersFacade(
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
         }
     }
+
+    private suspend fun getUserWallet(userWalletId: UserWalletId) =
+        requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "Unable to find a user wallet with provided ID: $userWalletId"
+        }
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,

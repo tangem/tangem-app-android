@@ -1,9 +1,9 @@
 package com.tangem.data.txhistory.di
 
 import com.tangem.data.txhistory.repository.DefaultTxHistoryRepository
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,9 +18,9 @@ internal object TxHistoryDataModule {
     @Singleton
     fun provideTxHistoryRepository(
         walletManagersFacade: WalletManagersFacade,
-        walletsStateHolder: WalletsStateHolder,
+        userWalletsStore: UserWalletsStore,
     ): TxHistoryRepository = DefaultTxHistoryRepository(
         walletManagersFacade = walletManagersFacade,
-        walletsStateHolder = walletsStateHolder,
+        userWalletsStore = userWalletsStore,
     )
 }
