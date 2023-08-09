@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.er
 
 import com.tangem.common.Provider
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
 import com.tangem.utils.converter.Converter
 
