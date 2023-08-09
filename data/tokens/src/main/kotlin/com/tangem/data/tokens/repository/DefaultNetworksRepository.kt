@@ -36,7 +36,7 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory by lazy { ResponseCurrenciesFactory(DemoConfig()) }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
-    private val networksStatuses: MutableStateFlow<HashSet<NetworkStatus>> = MutableStateFlow(hashSetOf())
+    private val networksStatuses: MutableStateFlow<List<NetworkStatus>> = MutableStateFlow(emptyList())
 
     override fun getNetworks(networksIds: Set<Network.ID>): Set<Network> {
         return networkConverter.convertSet(networksIds)
@@ -48,7 +48,9 @@ internal class DefaultNetworksRepository(
         refresh: Boolean,
     ): Flow<Set<NetworkStatus>> = channelFlow {
         launch(dispatchers.io) {
-            networksStatuses.collect(::send)
+            networksStatuses.collect {
+                send(it.toSet())
+            }
         }
 
         launch(dispatchers.io) {
@@ -82,17 +84,22 @@ internal class DefaultNetworksRepository(
 
     private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, networkId: Network.ID) {
         val currencies = getCurrencies(userWalletId)
+            .asSequence()
+            .filter { it.networkId == networkId }
+
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             networkId = networkId,
             extraTokens = currencies.filterIsInstanceTo(hashSetOf()),
         )
-        val networkStatus = networkStatusFactory.createNetworkStatus(networkId, result, currencies)
+        val networkStatus = networkStatusFactory.createNetworkStatus(
+            networkId = networkId,
+            result = result,
+            currencies = currencies.toSet(),
+        )
 
         networksStatuses.update { statuses ->
-            statuses.apply {
-                addOrReplace(networkStatus) { it.networkId == networkStatus.networkId }
-            }
+            statuses.addOrReplace(networkStatus) { it.networkId == networkStatus.networkId }
         }
     }
 
