@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
+import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
