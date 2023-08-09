@@ -27,6 +27,7 @@ dependencies {
     implementation(deps.compose.coil)
 
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.arrow.core)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -36,6 +37,9 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
+
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)

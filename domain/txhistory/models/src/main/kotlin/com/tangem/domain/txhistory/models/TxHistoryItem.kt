@@ -1,10 +1,10 @@
-package com.tangem.domain.txhistory.model
+package com.tangem.domain.txhistory.models
 
 import java.math.BigDecimal
 
 data class TxHistoryItem(
     val txHash: String,
-    val timestamp: Long,
+    val timestampInMillis: Long,
     val direction: TransactionDirection,
     val status: TxStatus,
     val type: TransactionType,
