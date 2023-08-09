@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -19,7 +20,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
     abstract val marketPriceBlockState: MarketPriceBlockState?
 
     /** Transactions history state */
-    abstract val txHistoryState: WalletTxHistoryState
+    abstract val txHistoryState: TxHistoryState
 
     data class Content(
         override val onBackClick: () -> Unit,
@@ -30,7 +31,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val bottomSheetConfig: WalletBottomSheetConfig?,
         override val buttons: ImmutableList<WalletManageButton>,
         override val marketPriceBlockState: MarketPriceBlockState,
-        override val txHistoryState: WalletTxHistoryState,
+        override val txHistoryState: TxHistoryState,
     ) : WalletSingleCurrencyState()
 
     data class Locked(
@@ -62,6 +63,6 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
 
         override val marketPriceBlockState = null
 
-        override val txHistoryState: WalletTxHistoryState = WalletTxHistoryState.Locked(onExploreClick)
+        override val txHistoryState: TxHistoryState = TxHistoryState.Locked(onExploreClick)
     }
 }
