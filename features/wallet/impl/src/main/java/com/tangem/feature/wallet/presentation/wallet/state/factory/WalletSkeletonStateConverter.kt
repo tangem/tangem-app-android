@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -62,7 +64,7 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             buttons = getButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
-            txHistoryState = WalletTxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
+            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
         )
     }
 
