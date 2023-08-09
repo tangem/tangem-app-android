@@ -31,7 +31,7 @@ import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.plusOrReplace
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
@@ -429,7 +429,7 @@ internal class DefaultWalletAmountsRepository(
         withContext(Dispatchers.Default) {
             WalletManagerStorage.update { prevManagers ->
                 val newManagersForUserWallet = prevManagers[userWalletId].orEmpty()
-                    .plusOrReplace(walletManager) {
+                    .addOrReplace(walletManager) {
                         it.wallet.blockchain == walletManager.wallet.blockchain
                     }
 
