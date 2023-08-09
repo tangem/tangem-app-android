@@ -2,8 +2,8 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
 import com.tangem.common.Provider
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
 import com.tangem.utils.converter.Converter
 

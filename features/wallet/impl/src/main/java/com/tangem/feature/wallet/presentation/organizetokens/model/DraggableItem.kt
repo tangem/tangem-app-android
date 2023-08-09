@@ -1,60 +1,8 @@
-package com.tangem.feature.wallet.presentation.organizetokens
+package com.tangem.feature.wallet.presentation.organizetokens.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem.RoundingMode
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import org.burnoutcrew.reorderable.ItemPosition
-
-@Immutable
-internal data class OrganizeTokensState(
-    val onBackClick: () -> Unit,
-    val itemsState: OrganizeTokensListState,
-    val header: HeaderConfig,
-    val actions: ActionsConfig,
-    val dndConfig: DragAndDropConfig,
-) {
-
-    data class HeaderConfig(
-        val isEnabled: Boolean = false,
-        val isSortedByBalance: Boolean = false,
-        val isGrouped: Boolean = false,
-        val onSortClick: () -> Unit,
-        val onGroupClick: () -> Unit,
-    )
-
-    data class ActionsConfig(
-        val canApply: Boolean = false,
-        val showApplyProgress: Boolean = false,
-        val onApplyClick: () -> Unit,
-        val onCancelClick: () -> Unit,
-    )
-
-    data class DragAndDropConfig(
-        val onItemDragged: (ItemPosition, ItemPosition) -> Unit,
-        val canDragItemOver: (ItemPosition, ItemPosition) -> Boolean,
-        val onItemDragEnd: () -> Unit,
-        val onDragStart: (DraggableItem) -> Unit,
-    )
-}
-
-@Immutable
-internal sealed class OrganizeTokensListState {
-    abstract val items: PersistentList<DraggableItem>
-
-    data class GroupedByNetwork(
-        override val items: PersistentList<DraggableItem>,
-    ) : OrganizeTokensListState()
-
-    data class Ungrouped(
-        override val items: PersistentList<DraggableItem.Token>,
-    ) : OrganizeTokensListState()
-
-    object Empty : OrganizeTokensListState() {
-        override val items: PersistentList<DraggableItem> = persistentListOf()
-    }
-}
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem.RoundingMode
 
 /**
  * Helper class for the DND list items
@@ -151,5 +99,31 @@ internal sealed class DraggableItem {
          * @property showGap if true then item should have top and bottom padding
          * */
         data class All(override val showGap: Boolean = false) : RoundingMode()
+    }
+
+    /**
+     * Update item [RoundingMode]
+     *
+     * @param mode new [RoundingMode]
+     *
+     * @return updated [DraggableItem]
+     * */
+    fun updateRoundingMode(mode: RoundingMode): DraggableItem = when (this) {
+        is GroupPlaceholder -> this
+        is GroupHeader -> this.copy(roundingMode = mode)
+        is Token -> this.copy(roundingMode = mode)
+    }
+
+    /**
+     * Update item shadow visibility
+     *
+     * @param show if true then item should be elevated
+     *
+     * @return updated [DraggableItem]
+     * */
+    fun updateShadowVisibility(show: Boolean): DraggableItem = when (this) {
+        is GroupPlaceholder -> this
+        is GroupHeader -> this.copy(showShadow = show)
+        is Token -> this.copy(showShadow = show)
     }
 }

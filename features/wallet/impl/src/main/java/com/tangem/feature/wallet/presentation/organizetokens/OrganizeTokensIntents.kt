@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import org.burnoutcrew.reorderable.ItemPosition
 
 internal interface OrganizeTokensIntents {

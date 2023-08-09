@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items
 
 import com.tangem.domain.tokens.model.NetworkGroup
-import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupHeaderId
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupPlaceholder
 import com.tangem.utils.converter.Converter
