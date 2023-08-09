@@ -246,12 +246,13 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
     }
 
     companion object {
+        @Deprecated("Use [DefaultCardSdkProvider] instead")
         val config = Config(
             linkedTerminal = true,
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 21),
+                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
             ),
         )
     }
