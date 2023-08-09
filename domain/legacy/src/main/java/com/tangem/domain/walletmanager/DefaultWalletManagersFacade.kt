@@ -3,6 +3,7 @@ package com.tangem.domain.walletmanager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -12,10 +13,11 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.txhistory.models.PaginationWrapper
+import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
-import com.tangem.domain.walletmanager.utils.SdkTokenConverter
-import com.tangem.domain.walletmanager.utils.UpdateWalletManagerResultFactory
-import com.tangem.domain.walletmanager.utils.WalletManagerFactory
+import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
@@ -32,24 +34,22 @@ class DefaultWalletManagersFacade(
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
+    private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
+    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter() }
 
     override suspend fun update(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(networkId.value)
 
         return getAndUpdateWalletManager(userWallet, blockchain, extraTokens)
     }
 
     override suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+        val userWallet = getUserWallet(userWalletId)
 
         val blockchain = Blockchain.fromId(networkId.value)
 
@@ -62,6 +62,57 @@ class DefaultWalletManagersFacade(
             ?.getExploreUrl()
             .orEmpty()
     }
+
+    override suspend fun getTxHistoryState(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        rawDerivationPath: String?,
+    ): TxHistoryState {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(networkId.value)
+        val derivationPath = rawDerivationPath?.let(::DerivationPath)
+        val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
+            "Unable to get a wallet manager for blockchain: $blockchain"
+        }
+        return walletManager
+            .getTransactionHistoryState(walletManager.wallet.address)
+            .let(txHistoryStateConverter::convert)
+    }
+
+    override suspend fun getTxHistoryItems(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        rawDerivationPath: String?,
+        page: Int,
+        pageSize: Int,
+    ): PaginationWrapper<TxHistoryItem> {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(networkId.value)
+        val derivationPath = rawDerivationPath?.let(::DerivationPath)
+        val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
+            "Unable to get a wallet manager for blockchain: $blockchain"
+        }
+        val itemsResult = walletManager.getTransactionsHistory(
+            address = walletManager.wallet.address,
+            page = page,
+            pageSize = pageSize,
+        )
+
+        return when (itemsResult) {
+            is Result.Success -> PaginationWrapper(
+                page = itemsResult.data.page,
+                totalPages = itemsResult.data.totalPages,
+                itemsOnPage = itemsResult.data.itemsOnPage,
+                items = txHistoryItemConverter.convertList(itemsResult.data.items),
+            )
+            is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
+        }
+    }
+
+    private suspend fun getUserWallet(userWalletId: UserWalletId) =
+        requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "Unable to find a user wallet with provided ID: $userWalletId"
+        }
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,

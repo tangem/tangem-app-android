@@ -7,9 +7,9 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.txhistory.error.TxHistoryListError
-import com.tangem.domain.txhistory.error.TxHistoryStateError
-import com.tangem.domain.txhistory.model.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryListError
+import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLoading
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
