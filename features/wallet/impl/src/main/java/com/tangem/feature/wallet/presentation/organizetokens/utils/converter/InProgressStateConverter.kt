@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.utils.converter.TwoWayConverter
 
 internal class InProgressStateConverter : TwoWayConverter<OrganizeTokensState, OrganizeTokensState> {
