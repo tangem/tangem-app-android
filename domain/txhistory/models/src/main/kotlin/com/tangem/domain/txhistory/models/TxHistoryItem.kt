@@ -1,14 +1,14 @@
-package com.tangem.lib.crypto.models.txhistory
+package com.tangem.domain.txhistory.models
 
-import com.tangem.lib.crypto.models.ProxyAmount
+import java.math.BigDecimal
 
-data class ProxyTransactionHistoryItem(
+data class TxHistoryItem(
     val txHash: String,
-    val timestamp: Long,
+    val timestampInMillis: Long,
     val direction: TransactionDirection,
-    val status: ProxyTransactionStatus,
+    val status: TxStatus,
     val type: TransactionType,
-    val amount: ProxyAmount,
+    val amount: BigDecimal,
 ) {
     sealed interface TransactionDirection {
         data class Incoming(val from: String) : TransactionDirection
@@ -18,4 +18,6 @@ data class ProxyTransactionHistoryItem(
     sealed interface TransactionType {
         object Transfer : TransactionType
     }
+
+    enum class TxStatus { Confirmed, Unconfirmed }
 }
