@@ -20,7 +20,38 @@ internal sealed interface WalletTxHistoryState {
     sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : WalletTxHistoryState
 
     /**
-     * Content state
+     * Loading state
+     *
+     * @property onExploreClick lambda be invoke when explore button was clicked
+     */
+    data class Loading(val onExploreClick: () -> Unit) : ContentState(
+        items = flowOf(
+            PagingData.from(
+                listOf(
+                    TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                    TxHistoryItemState.Transaction(state = TransactionState.Loading),
+                ),
+            ),
+        ),
+    )
+
+    /**
+     * Wallet transaction history state with loading transactions
+     *
+     * @property itemsCount count of loading transactions
+     */
+    data class ContentWithLoadingItems(val itemsCount: Int) : ContentState(
+        items = flowOf(
+            value = PagingData.from(
+                data = buildList(capacity = itemsCount) {
+                    add(TxHistoryItemState.Transaction(state = TransactionState.Loading))
+                },
+            ),
+        ),
+    )
+
+    /**
+     * Wallet transaction history state with content
      *
      * @property items content items
      */

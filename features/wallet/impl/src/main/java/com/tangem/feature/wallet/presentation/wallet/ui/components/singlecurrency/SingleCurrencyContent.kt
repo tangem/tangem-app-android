@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -52,6 +53,7 @@ internal fun LazyListScope.txHistoryItems(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>,
     modifier: Modifier = Modifier,
@@ -64,20 +66,24 @@ private fun LazyListScope.contentItems(
 
             SingleCurrencyContentItem(
                 state = item,
-                modifier = modifier.walletContentItemDecoration(
-                    currentIndex = index,
-                    lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
-                ),
+                modifier = modifier
+                    .animateItemPlacement()
+                    .walletContentItemDecoration(
+                        currentIndex = index,
+                        lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
+                    ),
             )
         },
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
     item {
         EmptyTransactionBlock(
             state = state,
             modifier = modifier
+                .animateItemPlacement()
                 .padding(horizontal = TangemTheme.dimens.spacing16, vertical = TangemTheme.dimens.spacing12)
                 .fillMaxWidth(),
         )
