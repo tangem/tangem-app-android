@@ -3,12 +3,12 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import androidx.paging.compose.LazyPagingItems
+import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
-import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.txHistoryItems
 
 /**
  * Wallet content
@@ -21,7 +21,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrenc
  */
 internal fun LazyListScope.contentItems(
     state: WalletState.ContentState,
-    txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>?,
+    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
