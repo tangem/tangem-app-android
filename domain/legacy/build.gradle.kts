@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
 
     /** Tangem libraries */
