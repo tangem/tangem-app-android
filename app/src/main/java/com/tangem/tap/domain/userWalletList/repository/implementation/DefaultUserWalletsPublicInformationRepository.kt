@@ -12,7 +12,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.publicInformation
-import com.tangem.utils.extensions.plusOrReplace
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -29,7 +29,7 @@ internal class DefaultUserWalletsPublicInformationRepository(
             getAll()
                 .flatMap { savedInformation ->
                     val infoToSave = withContext(Dispatchers.Default) {
-                        savedInformation.plusOrReplace(userWallet.publicInformation) {
+                        savedInformation.addOrReplace(userWallet.publicInformation) {
                             userWallet.walletId == it.walletId
                         }
                     }
