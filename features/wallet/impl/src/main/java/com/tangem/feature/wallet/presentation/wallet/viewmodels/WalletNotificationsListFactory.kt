@@ -7,7 +7,7 @@ import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.flow
 * [REDACTED_AUTHOR]
  */
 internal class WalletNotificationsListFactory(
-    private val currentStateProvider: Provider<WalletStateHolder>,
+    private val currentStateProvider: Provider<WalletState>,
     private val wasCardScannedCallback: suspend (String) -> Boolean,
     private val isUserAlreadyRateAppCallback: suspend () -> Boolean,
     private val isDemoCardCallback: (String) -> Boolean,

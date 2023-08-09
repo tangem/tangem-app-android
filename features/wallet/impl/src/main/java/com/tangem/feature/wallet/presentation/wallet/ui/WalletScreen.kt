@@ -20,7 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
@@ -36,11 +36,19 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
  *
 * [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun WalletScreen(state: WalletStateHolder) {
+internal fun WalletScreen(state: WalletState) {
     BackHandler(onBack = state.onBackClick)
 
+    when (state) {
+        is WalletState.ContentState -> WalletContent(state = state)
+        is WalletState.Initial -> Unit
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun WalletContent(state: WalletState.ContentState) {
     val walletsListState = rememberLazyListState()
 
     Scaffold(
@@ -121,9 +129,7 @@ internal fun WalletScreen(state: WalletStateHolder) {
 // region Preview
 @Preview
 @Composable
-private fun WalletScreenPreview_Light(
-    @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
-) {
+private fun WalletScreenPreview_Light(@PreviewParameter(WalletScreenParameterProvider::class) state: WalletState) {
     TangemTheme {
         WalletScreen(state)
     }
@@ -131,15 +137,13 @@ private fun WalletScreenPreview_Light(
 
 @Preview
 @Composable
-private fun WalletScreenPreview_Dark(
-    @PreviewParameter(WalletScreenParameterProvider::class) state: WalletStateHolder,
-) {
+private fun WalletScreenPreview_Dark(@PreviewParameter(WalletScreenParameterProvider::class) state: WalletState) {
     TangemTheme(isDark = true) {
         WalletScreen(state)
     }
 }
 
-private class WalletScreenParameterProvider : CollectionPreviewParameterProvider<WalletStateHolder>(
+private class WalletScreenParameterProvider : CollectionPreviewParameterProvider<WalletState>(
     collection = listOf(
         WalletPreviewData.multicurrencyWalletScreenState,
         WalletPreviewData.singleWalletScreenState,

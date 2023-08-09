@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.persistentListOf
  *
 * [REDACTED_AUTHOR]
  */
-internal sealed class WalletMultiCurrencyState : WalletStateHolder() {
+internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
 
     /** Tokens list state */
     abstract val tokensListState: WalletTokensListState

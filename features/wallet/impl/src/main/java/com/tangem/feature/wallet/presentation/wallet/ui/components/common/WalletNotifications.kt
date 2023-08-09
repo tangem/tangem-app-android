@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
@@ -15,6 +16,11 @@ import kotlinx.collections.immutable.ImmutableList
  *
 * [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotification>, modifier: Modifier = Modifier) {
-    items(items = configs, itemContent = { Notification(state = it.state, modifier = modifier) })
+    items(
+        items = configs,
+        key = { it.state.title.hashCode() },
+        itemContent = { Notification(state = it.state, modifier = modifier.animateItemPlacement()) },
+    )
 }

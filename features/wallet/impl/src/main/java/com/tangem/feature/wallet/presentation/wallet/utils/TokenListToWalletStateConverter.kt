@@ -5,7 +5,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
@@ -15,14 +15,14 @@ import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("LongParameterList")
 internal class TokenListToWalletStateConverter(
-    private val currentStateProvider: Provider<WalletStateHolder>,
+    private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val isLockedWalletProvider: Provider<Boolean>,
     private val isWalletContentHidden: Boolean,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
     clickIntents: WalletClickIntents,
-) : Converter<TokensListModel, WalletStateHolder> {
+) : Converter<TokensListModel, WalletMultiCurrencyState.Content> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
@@ -31,33 +31,20 @@ internal class TokenListToWalletStateConverter(
         clickIntents = clickIntents,
     )
 
-    override fun convert(value: TokensListModel): WalletStateHolder {
-        val state = currentStateProvider()
-        return state
-            .updateWithTokenList(tokenList = value.tokenList)
-            .copySealed(
-                walletsListConfig = state.updateSelectedWallet(value.tokenList.totalFiatBalance),
-                pullToRefreshConfig = if (value.isRefreshing) {
-                    state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
-                } else {
-                    state.pullToRefreshConfig
-                },
-            )
-    }
-
-    private fun WalletStateHolder.updateWithTokenList(tokenList: TokenList): WalletMultiCurrencyState.Content {
-        return WalletMultiCurrencyState.Content(
-            onBackClick = onBackClick,
-            topBarConfig = topBarConfig,
-            walletsListConfig = walletsListConfig,
-            pullToRefreshConfig = pullToRefreshConfig,
-            notifications = notifications,
-            bottomSheetConfig = bottomSheetConfig,
-            tokensListState = tokenListToContentConverter.convert(value = tokenList),
+    override fun convert(value: TokensListModel): WalletMultiCurrencyState.Content {
+        val state = requireNotNull(currentStateProvider() as? WalletMultiCurrencyState.Content)
+        return state.copy(
+            walletsListConfig = state.updateSelectedWallet(fiatBalance = value.tokenList.totalFiatBalance),
+            pullToRefreshConfig = if (value.isRefreshing) {
+                state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
+            } else {
+                state.pullToRefreshConfig
+            },
+            tokensListState = tokenListToContentConverter.convert(value = value.tokenList),
         )
     }
 
-    private fun WalletStateHolder.updateSelectedWallet(fiatBalance: TokenList.FiatBalance): WalletsListConfig {
+    private fun WalletMultiCurrencyState.updateSelectedWallet(fiatBalance: TokenList.FiatBalance): WalletsListConfig {
         val selectedWalletIndex = walletsListConfig.selectedWalletIndex
         val selectedWalletCard = walletsListConfig.wallets[selectedWalletIndex]
         val converter = FiatBalanceToWalletCardConverter(
@@ -70,13 +57,12 @@ internal class TokenListToWalletStateConverter(
         )
 
         return walletsListConfig.copy(
-            wallets = walletsListConfig.wallets
-                .toPersistentList()
+            wallets = walletsListConfig.wallets.toPersistentList()
                 .set(index = selectedWalletIndex, element = converter.convert(fiatBalance)),
         )
     }
 
-    private fun WalletStateHolder.getRefreshingStatus(): Boolean {
+    private fun WalletState.getRefreshingStatus(): Boolean {
         return if (this is WalletMultiCurrencyState.Content) {
             tokensListState.items.any { tokensListItemState ->
                 tokensListItemState is WalletTokensListState.TokensListItemState.Token &&
