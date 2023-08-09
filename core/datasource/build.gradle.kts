@@ -12,8 +12,8 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
     implementation(projects.domain.core)
-    implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
