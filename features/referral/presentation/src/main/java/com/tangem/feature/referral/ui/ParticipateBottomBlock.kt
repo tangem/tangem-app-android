@@ -3,11 +3,7 @@ package com.tangem.feature.referral.ui
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +20,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat.startActivity
+import com.tangem.core.ui.components.CornersToRound
 import com.tangem.core.ui.components.PrimaryStartIconButton
 import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.referral.domain.models.ExpectedAward
+import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.presentation.R
 
 @Suppress("LongParameterList")
@@ -36,6 +35,7 @@ internal fun ParticipateBottomBlock(
     purchasedWalletCount: Int,
     code: String,
     shareLink: String,
+    expectedAwards: ExpectedAwards?,
     onAgreementClick: () -> Unit,
     onShowCopySnackbar: () -> Unit,
     onCopyClick: () -> Unit,
@@ -47,10 +47,10 @@ internal fun ParticipateBottomBlock(
                 top = TangemTheme.dimens.spacing24,
                 bottom = TangemTheme.dimens.spacing16,
             )
-            .padding(horizontal = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            .padding(horizontal = TangemTheme.dimens.spacing16)
     ) {
         PersonalCodeCard(code = code)
+        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
@@ -58,15 +58,49 @@ internal fun ParticipateBottomBlock(
             onCopyClick = onCopyClick,
             onShareClick = onShareClick,
         )
-        SmallInfoCard(
-            startText = stringResource(id = R.string.referral_friends_bought_title),
-            endText = pluralStringResource(
-                id = R.plurals.referral_wallets_purchased_count,
-                count = purchasedWalletCount,
-                purchasedWalletCount,
-            ),
-        )
+        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+        CountersAndAwards(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
+        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
+    }
+}
+
+@Composable
+private fun CountersAndAwards(
+    purchasedWalletCount: Int,
+    expectedAwards: ExpectedAwards?,
+) {
+    val isExpectedAwardsPresent = expectedAwards != null
+    SmallInfoCard(
+        startText = stringResource(id = R.string.referral_friends_bought_title),
+        endText = pluralStringResource(
+            id = R.plurals.referral_wallets_purchased_count,
+            count = purchasedWalletCount,
+            purchasedWalletCount,
+        ),
+        cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4
+    )
+    expectedAwards?.let { expectedAwards ->
+        SmallInfoCard(
+            startText = "Upcoming payments",
+            endText = "For 3 wallets",
+            cornersToRound = CornersToRound.ZERO
+        )
+
+        val expectedAwardsCount = expectedAwards.expectedAwards.count()
+        expectedAwards.expectedAwards.forEachIndexed { index, expectedAward ->
+            SmallInfoCard(
+                startText = expectedAward.paymentDate,
+                endText = expectedAward.amount,
+                cornersToRound = if (index == expectedAwardsCount - 1) {
+                    CornersToRound.BOTTOM_2
+                } else {
+                    CornersToRound.ZERO
+                }
+
+            )
+        }
+
     }
 }
 
@@ -162,6 +196,23 @@ private fun Preview_ParticipateBottomBlock_InLightTheme() {
                 purchasedWalletCount = 3,
                 code = "x4JdK",
                 shareLink = "",
+                expectedAwards = ExpectedAwards(
+                    numberOfWallets = 3,
+                    expectedAwards = listOf(
+                        ExpectedAward(
+                            amount = "10 USDT",
+                            paymentDate = "Today",
+                        ),
+                        ExpectedAward(
+                            amount = "20 USDT",
+                            paymentDate = "6 Aug 2023"
+                        ),
+                        ExpectedAward(
+                            amount = "30 USDT",
+                            paymentDate = "10 Aug 2023"
+                        ),
+                    )
+                ),
                 onAgreementClick = {},
                 onShowCopySnackbar = {},
                 onCopyClick = {},
@@ -180,6 +231,7 @@ private fun Preview_ParticipateBottomBlock_InDarkTheme() {
                 purchasedWalletCount = 3,
                 code = "x4JdK",
                 shareLink = "",
+                expectedAwards = null,
                 onAgreementClick = {},
                 onShowCopySnackbar = {},
                 onCopyClick = {},

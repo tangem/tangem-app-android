@@ -53,9 +53,8 @@ private class ExpectedAwardsConverter : Converter<ReferralResponse.ExpectedAward
             numberOfWallets = value.numberOfWallets,
             expectedAwards = value.list.map {
                 ExpectedAward(
-                    currency = it.currency,
-                    paymentDate = it.paymentDate,
-                    amount = it.amount
+                    paymentDate = it.paymentDate.toString(),
+                    amount = "${it.amount} ${it.currency}"
                 )
             }
         )

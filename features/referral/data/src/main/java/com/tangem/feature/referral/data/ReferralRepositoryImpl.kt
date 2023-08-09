@@ -28,7 +28,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
                 referralApi.getReferralStatus(
                     cardPublicKey = authProvider.getCardPublicKey(),
                     cardId = authProvider.getCardId(),
-                    walletId = walletId,
+                    walletId = "B39BDAED90CD8223119836C3CC592FCD50F7F0371EBC12C71B7D2CFB040671C4",
                 ),
             )
         }

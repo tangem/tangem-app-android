@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
@@ -160,6 +161,7 @@ private fun ReferralInfo(
                 purchasedWalletCount = state.purchasedWalletCount,
                 code = state.code,
                 shareLink = state.shareLink,
+                expectedAwards = state.expectedAwards,
                 onAgreementClick = onAgreementClick,
                 onShowCopySnackbar = onShowCopySnackbar,
                 onCopyClick = stateHolder.analytics.onCopyClicked,
@@ -449,6 +451,8 @@ private fun getMessageForErrorSnackbar(errorSnackbar: ErrorSnackbar): String {
     }
 }
 
+
+
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 private fun Preview_ReferralScreen_Participant_InLightTheme() {
@@ -495,6 +499,51 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     shareLink = "",
                     url = "",
                     expectedAwards = null
+                ),
+                errorSnackbar = null,
+                analytics = Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
+    TangemTheme(isDark = false) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.ParticipantContent(
+                    award = "10 USDT",
+                    networkName = "Tron",
+                    address = "ma80...zk8q2",
+                    discount = "10%",
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
+                    shareLink = "",
+                    url = "",
+                    expectedAwards = ExpectedAwards(
+                        numberOfWallets = 5,
+                        expectedAwards = listOf(
+                            ExpectedAward(
+                                amount = "10 USDT",
+                                paymentDate = "Today",
+                            ),
+                            ExpectedAward(
+                                amount = "20 USDT",
+                                paymentDate = "6 Aug 2023"
+                            ),
+                            ExpectedAward(
+                                amount = "30 USDT",
+                                paymentDate = "10 Aug 2023"
+                            ),
+                        )
+                    )
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(

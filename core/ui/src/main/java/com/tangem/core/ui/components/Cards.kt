@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
@@ -36,9 +37,29 @@ import kotlinx.collections.immutable.toImmutableList
  * >Figma component</a>
  */
 @Composable
-fun SmallInfoCard(startText: String, endText: String, isLoading: Boolean = false) {
+fun SmallInfoCard(
+    startText: String,
+    endText: String,
+    isLoading: Boolean = false,
+    cornersToRound: CornersToRound = CornersToRound.ALL_4
+) {
+    SmallInfoCardRoundable(
+        startText = startText,
+        endText = endText,
+        shape = cornersToRound.getShape(),
+        isLoading = isLoading
+    )
+}
+
+@Composable
+private fun SmallInfoCardRoundable(
+    startText: String,
+    endText: String,
+    isLoading: Boolean = false,
+    shape: RoundedCornerShape
+) {
     Surface(
-        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+        shape = shape,
         color = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
     ) {
@@ -569,6 +590,26 @@ private fun WarningItem(warningText: String) {
     }
 }
 
+
+enum class CornersToRound {
+    ALL_4,
+    TOP_2,
+    BOTTOM_2,
+    ZERO;
+
+    @Composable
+    fun getShape() : RoundedCornerShape {
+        val radius = TangemTheme.dimens.radius12
+        return when (this) {
+            ALL_4 -> RoundedCornerShape(radius)
+            TOP_2 -> RoundedCornerShape(topStart = radius, topEnd = radius)
+            BOTTOM_2 -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
+            ZERO -> RoundedCornerShape(0.dp)
+        }
+    }
+}
+
+
 // endregion elements
 
 // region Preview
@@ -580,6 +621,33 @@ private fun CardsPreview() {
         SmallInfoCard(
             startText = "Balance",
             endText = "0.4405434 BTC",
+        )
+
+        SpacerH32()
+
+        SmallInfoCard(
+            startText = "Balance",
+            endText = "0.4405434 BTC",
+            isLoading = false,
+            cornersToRound = CornersToRound.TOP_2
+        )
+
+        SpacerH32()
+
+        SmallInfoCard(
+            startText = "Balance",
+            endText = "0.4405434 BTC",
+            isLoading = false,
+            cornersToRound = CornersToRound.BOTTOM_2
+        )
+
+        SpacerH32()
+
+        SmallInfoCard(
+            startText = "Balance",
+            endText = "0.4405434 BTC",
+            isLoading = false,
+            cornersToRound = CornersToRound.ZERO
         )
 
         SpacerH32()
@@ -679,3 +747,5 @@ private fun Preview_SimpleInfoCard_InDarkTheme() {
     }
 }
 // endregion Preview
+
+
