@@ -31,6 +31,9 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.DraggableTokenItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import org.burnoutcrew.reorderable.*
 
 @Composable
