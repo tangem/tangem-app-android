@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
@@ -14,7 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal sealed class WalletSingleCurrencyState : WalletStateHolder() {
 
     /** Manage buttons */
-    abstract val buttons: ImmutableList<ActionButtonConfig>
+    abstract val buttons: ImmutableList<WalletManageButton>
 
     /** Market price block state */
     abstract val marketPriceBlockState: MarketPriceBlockState?
@@ -29,7 +28,7 @@ internal sealed class WalletSingleCurrencyState : WalletStateHolder() {
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
         override val bottomSheetConfig: WalletBottomSheetConfig?,
-        override val buttons: ImmutableList<ActionButtonConfig>,
+        override val buttons: ImmutableList<WalletManageButton>,
         override val marketPriceBlockState: MarketPriceBlockState,
         override val txHistoryState: WalletTxHistoryState,
     ) : WalletSingleCurrencyState()
@@ -39,7 +38,7 @@ internal sealed class WalletSingleCurrencyState : WalletStateHolder() {
         override val topBarConfig: WalletTopBarConfig,
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
-        override val buttons: ImmutableList<ActionButtonConfig>,
+        override val buttons: ImmutableList<WalletManageButton>,
         override val onUnlockWalletsNotificationClick: () -> Unit,
         override val onUnlockClick: () -> Unit,
         override val onScanClick: () -> Unit,
