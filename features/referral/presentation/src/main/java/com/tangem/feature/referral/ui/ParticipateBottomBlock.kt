@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.*
@@ -82,15 +83,19 @@ private fun CountersAndAwards(
     val isExpanded = remember { mutableStateOf(false) }
 
     val isExpectedAwardsPresent = expectedAwards != null
-    SmallInfoCard(
+
+    AwardText(
         startText = stringResource(id = R.string.referral_friends_bought_title),
+        startTextColor = TangemTheme.colors.text.tertiary,
+        startTextStyle = TangemTheme.typography.subtitle2,
         endText = pluralStringResource(
             id = R.plurals.referral_wallets_purchased_count,
             count = purchasedWalletCount,
             purchasedWalletCount,
         ),
+        endTextColor = TangemTheme.colors.text.primary1,
+        endTextStyle = TangemTheme.typography.body2,
         cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4,
-        noElevation = false
     )
 
     expectedAwards?.let { expectedAwards ->
@@ -98,30 +103,36 @@ private fun CountersAndAwards(
             color = TangemTheme.colors.stroke.primary,
             thickness = TangemTheme.dimens.size0_5,
         )
-        SmallInfoCard(
+        AwardText(
             startText = stringResource(id = R.string.referral_expected_awards),
+            startTextColor = TangemTheme.colors.text.tertiary,
+            startTextStyle = TangemTheme.typography.subtitle2,
             endText = pluralStringResource(
                 id = R.plurals.referral_number_of_wallets,
                 count = expectedAwards.numberOfWallets,
                 expectedAwards.numberOfWallets,
             ),
+            endTextColor = TangemTheme.colors.text.tertiary,
+            endTextStyle = TangemTheme.typography.body2,
             cornersToRound = CornersToRound.ZERO,
-            noElevation = false
         )
 
         val initialItems = expectedAwards.expectedAwards.take(elementsCountToShowInLessMode)
         val extraItems = expectedAwards.expectedAwards.drop(elementsCountToShowInLessMode)
 
         initialItems.forEachIndexed { index, expectedAward ->
-            SmallInfoCard(
+            AwardText(
                 startText = expectedAward.paymentDate,
+                startTextColor = TangemTheme.colors.text.primary1,
+                startTextStyle = TangemTheme.typography.subtitle2,
                 endText = expectedAward.amount,
+                endTextColor = TangemTheme.colors.text.primary1,
+                endTextStyle = TangemTheme.typography.subtitle2,
                 cornersToRound = if (index == initialItems.size - 1 && extraItems.isEmpty()) {
                     CornersToRound.BOTTOM_2
                 } else {
                     CornersToRound.ZERO
                 },
-                noElevation = false
             )
         }
 
@@ -194,11 +205,15 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
 private fun ExtraItems(extraItems: List<ExpectedAward>) {
     Column {
         extraItems.forEach { expectedAward ->
-            SmallInfoCard(
+            AwardText(
                 startText = expectedAward.paymentDate,
+                startTextColor = TangemTheme.colors.text.primary1,
+                startTextStyle = TangemTheme.typography.subtitle2,
                 endText = expectedAward.amount,
-                cornersToRound = CornersToRound.ZERO,
-                noElevation = false
+                endTextColor = TangemTheme.colors.text.primary1,
+                endTextStyle = TangemTheme.typography.subtitle2,
+                cornersToRound = CornersToRound.ZERO
+
             )
         }
     }
