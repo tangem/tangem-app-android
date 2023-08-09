@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.transactions.TxHistoryState
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
@@ -347,21 +348,21 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
-            txHistoryState = WalletTxHistoryState.Content(
+            txHistoryState = TxHistoryState.Content(
                 flowOf(
                     PagingData.from(
                         listOf(
-                            WalletTxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
-                            WalletTxHistoryState.TxHistoryItemState.GroupTitle("Today"),
-                            WalletTxHistoryState.TxHistoryItemState.Transaction(
+                            TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
+                            TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
+                            TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(
                                     address = "33BddS...ga2B",
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                 ),
                             ),
-                            WalletTxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
-                            WalletTxHistoryState.TxHistoryItemState.Transaction(
+                            TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
+                            TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(
                                     address = "33BddS...ga2B",
                                     amount = "-0.500913 BTC",
