@@ -2,6 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.txhistory.error.TxHistoryStateError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -30,13 +36,13 @@ internal class WalletLoadingTxHistoryConverter(
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
             txHistoryState = when (error) {
                 is TxHistoryStateError.EmptyTxHistories -> {
-                    WalletTxHistoryState.Empty(onBuyClick = clickIntents::onBuyClick)
+                    TxHistoryState.Empty(onBuyClick = clickIntents::onBuyClick)
                 }
                 is TxHistoryStateError.DataError -> {
-                    WalletTxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
                 }
                 is TxHistoryStateError.TxHistoryNotImplemented -> {
-                    WalletTxHistoryState.NotSupported(onExploreClick = clickIntents::onExploreClick)
+                    TxHistoryState.NotSupported(onExploreClick = clickIntents::onExploreClick)
                 }
             },
         )
