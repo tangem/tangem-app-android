@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
+package com.tangem.core.ui.components.transactions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,42 +9,34 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
+import com.tangem.core.ui.components.walletContentItemDecoration
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
-import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 
-/**
- * LazyList extension for transactions history [WalletTxHistoryState]
- *
- * @param state          state
- * @param txHistoryItems transactions
- * @param modifier       modifier
- */
-internal fun LazyListScope.txHistoryItems(
-    state: WalletTxHistoryState,
-    txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>?,
+fun LazyListScope.txHistoryItems(
+    state: TxHistoryState,
+    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is WalletTxHistoryState.ContentState -> {
+        is TxHistoryState.ContentState -> {
             contentItems(
                 txHistoryItems = requireNotNull(txHistoryItems),
                 modifier = modifier,
             )
         }
-        is WalletTxHistoryState.Empty -> {
+        is TxHistoryState.Empty -> {
             nonContentItem(
                 state = EmptyTransactionsBlockState.Empty(onClick = state.onBuyClick),
                 modifier = modifier,
             )
         }
-        is WalletTxHistoryState.Error -> {
+        is TxHistoryState.Error -> {
             nonContentItem(
                 state = EmptyTransactionsBlockState.FailedToLoad(onClick = state.onReloadClick),
                 modifier = modifier,
             )
         }
-        is WalletTxHistoryState.NotSupported -> {
+        is TxHistoryState.NotSupported -> {
             nonContentItem(
                 state = EmptyTransactionsBlockState.NotImplemented(onClick = state.onExploreClick),
                 modifier = modifier,
@@ -55,7 +47,7 @@ internal fun LazyListScope.txHistoryItems(
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
-    txHistoryItems: LazyPagingItems<WalletTxHistoryState.TxHistoryItemState>,
+    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>,
     modifier: Modifier = Modifier,
 ) {
     itemsIndexed(
@@ -64,7 +56,7 @@ private fun LazyListScope.contentItems(
         itemContent = { index, item ->
             if (item == null) return@itemsIndexed
 
-            SingleCurrencyContentItem(
+            TxHistoryContentItem(
                 state = item,
                 modifier = modifier
                     .animateItemPlacement()
