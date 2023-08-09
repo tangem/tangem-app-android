@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -78,13 +79,23 @@ private fun CountersAndAwards(
             count = purchasedWalletCount,
             purchasedWalletCount,
         ),
-        cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4
+        cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4,
+        noElevation = false
     )
     expectedAwards?.let { expectedAwards ->
+        Divider(
+            color = TangemTheme.colors.stroke.primary,
+            thickness = TangemTheme.dimens.size0_5,
+        )
         SmallInfoCard(
-            startText = "Upcoming payments",
-            endText = "For 3 wallets",
-            cornersToRound = CornersToRound.ZERO
+            startText = stringResource(id = R.string.referral_expected_awards),
+            endText = pluralStringResource(
+                id = R.plurals.referral_number_of_wallets,
+                count = expectedAwards.numberOfWallets,
+                expectedAwards.numberOfWallets,
+            ),
+            cornersToRound = CornersToRound.ZERO,
+            noElevation = false
         )
 
         val expectedAwardsCount = expectedAwards.expectedAwards.count()
@@ -96,7 +107,8 @@ private fun CountersAndAwards(
                     CornersToRound.BOTTOM_2
                 } else {
                     CornersToRound.ZERO
-                }
+                },
+                noElevation = false
 
             )
         }

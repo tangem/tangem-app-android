@@ -543,7 +543,7 @@ private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
                                 paymentDate = "10 Aug 2023"
                             ),
                         )
-                    )
+                    ),
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(

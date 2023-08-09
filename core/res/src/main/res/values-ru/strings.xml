@@ -274,7 +274,17 @@
     <string name="referral_button_participate">Участвовать</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
+    <string name="referral_expected_awards">Грядущие выплаты</string>
     <string name="referral_friends_bought_title">Ваши друзья купили</string>
+    <string name="referral_less">Меньше</string>
+    <string name="referral_more">Больше</string>
+    <string name="referral_no_expected_awards">Нет грядущих выплат</string>
+    <plurals name="referral_number_of_wallets">
+        <item quantity="one">за %d кошелек</item>
+        <item quantity="few">за %d кошелька</item>
+        <item quantity="many">за %d кошельков</item>
+        <item quantity="other">за %d кошельков</item>
+    </plurals>
     <string name="referral_point_currencies_description_prefix">Получите</string>
     <string name="referral_point_currencies_description_suffix">на ваш адрес в сети %1$s%2$s за каждый кошелек, который купит ваш друг</string>
     <string name="referral_point_currencies_title">Вы</string>

@@ -41,13 +41,15 @@ fun SmallInfoCard(
     startText: String,
     endText: String,
     isLoading: Boolean = false,
-    cornersToRound: CornersToRound = CornersToRound.ALL_4
+    cornersToRound: CornersToRound = CornersToRound.ALL_4,
+    noElevation: Boolean = false
 ) {
     SmallInfoCardRoundable(
         startText = startText,
         endText = endText,
         shape = cornersToRound.getShape(),
-        isLoading = isLoading
+        isLoading = isLoading,
+        noElevation = noElevation
     )
 }
 
@@ -56,12 +58,13 @@ private fun SmallInfoCardRoundable(
     startText: String,
     endText: String,
     isLoading: Boolean = false,
-    shape: RoundedCornerShape
+    shape: RoundedCornerShape,
+    noElevation: Boolean = false
 ) {
     Surface(
         shape = shape,
         color = TangemTheme.colors.background.primary,
-        elevation = TangemTheme.dimens.elevation2,
+        elevation = if (noElevation) TangemTheme.dimens.elevation2 else TangemTheme.dimens.elevation0,
     ) {
         CardInfoBox(
             startText = startText,
