@@ -5,12 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
@@ -143,23 +143,30 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateByTxHistory(index: Int) {
         viewModelScope.launch(dispatchers.io) {
-            val blockchain = getWallet(index).scanResponse.cardTypesResolver.getBlockchain()
+            val wallet = getWallet(index)
+            val blockchain = wallet.scanResponse.cardTypesResolver.getBlockchain()
+            val derivationPath = blockchain.derivationPath(style = wallet.scanResponse.card.derivationStyle)?.rawPath
 
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                networkId = blockchain.id,
-                derivationPath = requireNotNull(blockchain.derivationPath(style = DerivationStyle.LEGACY)).rawPath,
+                networkId = Network.ID(blockchain.id),
+                derivationPath = derivationPath,
             )
 
             uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
 
-            txHistoryItemsCountEither.onRight { updateTxHistory(networkId = blockchain.id) }
+            txHistoryItemsCountEither.onRight {
+                updateTxHistory(
+                    networkId = Network.ID(blockchain.id),
+                    derivationPath = derivationPath,
+                )
+            }
             updateNotifications(index)
         }
     }
 
-    private fun updateTxHistory(networkId: String) {
+    private fun updateTxHistory(networkId: Network.ID, derivationPath: String?) {
         uiState = stateFactory.getLoadedTxHistoryState(
-            txHistoryEither = txHistoryItemsUseCase(networkId = networkId).map { it.cachedIn(viewModelScope) },
+            txHistoryEither = txHistoryItemsUseCase(networkId, derivationPath).map { it.cachedIn(viewModelScope) },
         )
     }
 
