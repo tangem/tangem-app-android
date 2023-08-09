@@ -1,4 +1,4 @@
-package com.tangem.domain.txhistory.error
+package com.tangem.domain.txhistory.models
 
 sealed class TxHistoryStateError : Throwable() {
 
