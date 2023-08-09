@@ -2,12 +2,16 @@ package com.tangem.feature.referral.ui
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -60,7 +64,7 @@ internal fun ParticipateBottomBlock(
             onShareClick = onShareClick,
         )
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
-        CountersAndAwards(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
+        ReferralRewardsInfo(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
     }
@@ -113,6 +117,76 @@ private fun CountersAndAwards(
             )
         }
 
+    }
+}
+
+@Composable
+private fun ReferralRewardsInfo(
+    purchasedWalletCount: Int,
+    expectedAwards: ExpectedAwards?,
+) {
+    val isExpanded = remember { mutableStateOf(false) }
+
+    val isExpectedAwardsPresent = expectedAwards != null
+    SmallInfoCard(
+        startText = stringResource(id = R.string.referral_friends_bought_title),
+        endText = pluralStringResource(
+            id = R.plurals.referral_wallets_purchased_count,
+            count = purchasedWalletCount,
+            purchasedWalletCount,
+        ),
+        cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4,
+        noElevation = false
+    )
+
+    expectedAwards?.let { expectedAwards ->
+        Divider(
+            color = TangemTheme.colors.stroke.primary,
+            thickness = TangemTheme.dimens.size0_5,
+        )
+        SmallInfoCard(
+            startText = stringResource(id = R.string.referral_expected_awards),
+            endText = pluralStringResource(
+                id = R.plurals.referral_number_of_wallets,
+                count = expectedAwards.numberOfWallets,
+                expectedAwards.numberOfWallets,
+            ),
+            cornersToRound = CornersToRound.ZERO,
+            noElevation = false
+        )
+
+        val initialItems = expectedAwards.expectedAwards.take(3)
+        val extraItems = expectedAwards.expectedAwards.drop(3)
+
+        initialItems.forEach { expectedAward ->
+            SmallInfoCard(
+                startText = expectedAward.paymentDate,
+                endText = expectedAward.amount,
+                cornersToRound = CornersToRound.ZERO,
+                noElevation = false
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isExpanded.value,
+            enter = fadeIn() + expandVertically(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            extraItems.forEach { expectedAward ->
+                SmallInfoCard(
+                    startText = expectedAward.paymentDate,
+                    endText = expectedAward.amount,
+                    cornersToRound = CornersToRound.ZERO,
+                    noElevation = false
+                )
+            }
+        }
+
+        if (expectedAwards.expectedAwards.size > 3) {
+            Button(onClick = { isExpanded.value = !isExpanded.value }) {
+                Text(text = if (isExpanded.value) "Less" else "More")
+            }
+        }
     }
 }
 
