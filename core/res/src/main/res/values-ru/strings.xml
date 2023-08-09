@@ -177,6 +177,7 @@
     <string name="main_promotion_no_purchase">По вашему промокоду не было покупки кошелька, а значит вы не можете получить бонус. Купите кошелек Tangem, отсканируйте его в приложении и получите бонус.</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
+    <string name="main_tokens">Токены</string>
     <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
     <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
