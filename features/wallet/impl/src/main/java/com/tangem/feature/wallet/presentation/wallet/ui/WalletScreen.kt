@@ -16,12 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.tangem.core.ui.components.transactions.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
@@ -68,9 +68,9 @@ private fun WalletContent(state: WalletState.ContentState) {
                 .pullRefresh(pullRefreshState),
         ) {
             val txHistoryItems = if (state is WalletSingleCurrencyState &&
-                state.txHistoryState is WalletTxHistoryState.ContentState
+                state.txHistoryState is TxHistoryState.ContentState
             ) {
-                (state.txHistoryState as? WalletTxHistoryState.ContentState)?.items?.collectAsLazyPagingItems()
+                (state.txHistoryState as? TxHistoryState.ContentState)?.items?.collectAsLazyPagingItems()
             } else {
                 null
             }
