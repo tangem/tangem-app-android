@@ -46,7 +46,12 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
         flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
     ) {
         items(items = config.wallets, key = { it.id.stringValue }) { state ->
-            WalletCard(state = state, modifier = Modifier.width(itemWidth))
+            WalletCard(
+                state = state,
+                modifier = Modifier
+                    .animateItemPlacement()
+                    .width(itemWidth),
+            )
         }
     }
 }
