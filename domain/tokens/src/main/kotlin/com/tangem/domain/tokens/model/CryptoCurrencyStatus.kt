@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.tokens.models.CryptoCurrency
 import java.math.BigDecimal
 
 /**

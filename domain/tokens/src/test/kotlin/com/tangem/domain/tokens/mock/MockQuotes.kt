@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptySetOf
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.models.Quote
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
