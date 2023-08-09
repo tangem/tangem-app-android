@@ -19,6 +19,7 @@ import com.tangem.domain.tokens.repository.MockQuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -145,7 +146,7 @@ internal class GetTokenListUseCaseTest {
             tokens = flowOf(
                 MockTokens.tokens.right(),
                 error,
-            ),
+            ).map { delay(timeMillis = 1_000); it },
         )
 
         // When
