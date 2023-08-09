@@ -3,48 +3,44 @@ package com.tangem.domain.tokens.operations
 import arrow.core.NonEmptySet
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
     private val currencies: NonEmptySet<CryptoCurrencyStatus>,
     private val isAnyTokenLoading: Boolean,
-    private val dispatcher: CoroutineDispatcherProvider,
 ) {
 
-    suspend fun calculateFiatBalance(): TokenList.FiatBalance {
-        return withContext(dispatcher.single) {
-            var fiatBalance: TokenList.FiatBalance = TokenList.FiatBalance.Loading
-            if (isAnyTokenLoading) return@withContext fiatBalance
+    fun calculateFiatBalance(): TokenList.FiatBalance {
+        var fiatBalance: TokenList.FiatBalance = TokenList.FiatBalance.Loading
+        if (isAnyTokenLoading) return fiatBalance
 
-            for (token in currencies) {
-                when (val status = token.value) {
-                    is CryptoCurrencyStatus.Loading -> {
-                        fiatBalance = TokenList.FiatBalance.Loading
-                        break
-                    }
-                    is CryptoCurrencyStatus.MissedDerivation,
-                    is CryptoCurrencyStatus.Unreachable,
-                    -> {
-                        fiatBalance = TokenList.FiatBalance.Failed
-                        break
-                    }
-                    is CryptoCurrencyStatus.NoAccount -> {
-                        fiatBalance = recalculateBalanceForNoAccountStatus(fiatBalance)
-                    }
-                    is CryptoCurrencyStatus.Loaded -> {
-                        fiatBalance = recalculateBalance(status, fiatBalance)
-                    }
-                    is CryptoCurrencyStatus.Custom -> {
-                        fiatBalance = recalculateBalance(status, fiatBalance)
-                    }
+        for (token in currencies) {
+            when (val status = token.value) {
+                is CryptoCurrencyStatus.Loading -> {
+                    fiatBalance = TokenList.FiatBalance.Loading
+                    break
+                }
+                is CryptoCurrencyStatus.MissedDerivation,
+                is CryptoCurrencyStatus.Unreachable,
+                -> {
+                    fiatBalance = TokenList.FiatBalance.Failed
+                    break
+                }
+                is CryptoCurrencyStatus.NoAccount -> {
+                    fiatBalance = recalculateBalanceForNoAccountStatus(fiatBalance)
+                }
+                is CryptoCurrencyStatus.Loaded -> {
+                    fiatBalance = recalculateBalance(status, fiatBalance)
+                }
+                is CryptoCurrencyStatus.Custom -> {
+                    fiatBalance = recalculateBalance(status, fiatBalance)
                 }
             }
-
-            fiatBalance
         }
+
+        return fiatBalance
     }
+
     private fun recalculateBalanceForNoAccountStatus(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
         return with(currentBalance) {
             (this as? TokenList.FiatBalance.Loaded)?.copy(

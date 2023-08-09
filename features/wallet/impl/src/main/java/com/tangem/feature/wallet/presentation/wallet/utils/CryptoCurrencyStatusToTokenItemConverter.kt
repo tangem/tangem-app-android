@@ -19,7 +19,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private val CryptoCurrencyStatus.networkIconResId: Int?
         @DrawableRes get() {
 // [REDACTED_TODO_COMMENT]
-            return if (currency is CryptoCurrency.Token) null else R.drawable.img_eth_22
+            return if (currency is CryptoCurrency.Coin) null else R.drawable.img_eth_22
         }
 
     private val CryptoCurrencyStatus.tokenIconResId: Int
