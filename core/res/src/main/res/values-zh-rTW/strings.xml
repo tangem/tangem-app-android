@@ -150,6 +150,7 @@
     <string name="main_processing_full_amount">該金額不包括您的部分資金</string>
     <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
     <string name="main_scan_card_warning_view_title">掃描卡片</string>
+    <string name="main_tokens">代幣</string>
     <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包</string>
     <string name="onboarding_access_code_feature_1_title">保護</string>
     <string name="onboarding_access_code_feature_2_description">您可以稍後在每張卡上設置單獨的訪問密碼</string>
