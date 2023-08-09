@@ -4,6 +4,8 @@ import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.core.ui.components.transactions.TxHistoryState.TxHistoryItemState
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState.TxHistoryItemState
@@ -22,7 +24,7 @@ import java.math.BigDecimal
 import java.util.Locale
 
 /**
- * Convert from [Flow] of [TxHistoryItem] to [WalletTxHistoryState]
+ * Convert from [Flow] of [TxHistoryItem] to [TxHistoryState]
  *
  * @property blockchain   blockchain of transactions history
  * @property clickIntents screen click intents
@@ -32,7 +34,7 @@ import java.util.Locale
 internal class WalletTxHistoryItemFlowConverter(
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
-) : Converter<Flow<PagingData<TxHistoryItem>>, WalletTxHistoryState> {
+) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
 
     /** Example, 2 Aug, 2023 */
     private val dateFormatter by lazy {
@@ -56,8 +58,8 @@ internal class WalletTxHistoryItemFlowConverter(
             .withLocale(Locale.getDefault())
     }
 
-    override fun convert(value: Flow<PagingData<TxHistoryItem>>): WalletTxHistoryState {
-        return WalletTxHistoryState.Content(
+    override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
+        return TxHistoryState.Content(
             items = value
                 .map { pagingData ->
                     pagingData
@@ -163,9 +165,10 @@ internal class WalletTxHistoryItemFlowConverter(
             if (txHistoryItemState is TxHistoryItemState.Transaction &&
                 txHistoryItemState.state is TransactionState.Content
             ) {
+                val txContent = txHistoryItemState.state as TransactionState.Content
                 txHistoryItemState.copy(
-                    state = txHistoryItemState.state.copySealed(
-                        timestamp = txHistoryItemState.state.timestamp.toTimeFormat(),
+                    state = txContent.copySealed(
+                        timestamp = txContent.timestamp.toTimeFormat(),
                     ),
                 )
             } else {
@@ -184,7 +187,8 @@ internal class WalletTxHistoryItemFlowConverter(
 
     private fun TxHistoryItemState?.getTimestamp(): Long? {
         return if (this is TxHistoryItemState.Transaction && this.state is TransactionState.Content) {
-            requireNotNull(this.state.timestamp.toLongOrNull()) { "Timestamp must be Long type" }
+            val txContent = this.state as TransactionState.Content
+            requireNotNull(txContent.timestamp.toLongOrNull()) { "Timestamp must be Long type" }
         } else {
             null
         }

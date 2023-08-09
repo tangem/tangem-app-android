@@ -4,8 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.walletContentItemDecoration
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletContentItemDecoration
 
 /**
  * LazyList extension for [WalletTokensListState]
