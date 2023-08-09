@@ -59,9 +59,9 @@ internal class GetPrimaryCurrencyUseCaseTest {
     }
 
     @Test
-    fun `when quotes getting failed then error should be received`() = runTest {
+    fun `when quotes getting failed then currency with no quote status should be received`() = runTest {
         // Given
-        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = MockTokensStates.noQuotesTokensStatuses.first().right()
 
         val useCase = getUseCase(quotes = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
@@ -100,8 +100,8 @@ internal class GetPrimaryCurrencyUseCaseTest {
     }
 
     @Test
-    fun `when quotes flow is empty then error should be received`() = runTest {
-        val expectedResult = CurrencyError.UnableToCreateCurrency.left()
+    fun `when quotes flow is empty then no quote status should be received`() = runTest {
+        val expectedResult = MockTokensStates.noQuotesTokensStatuses.first().right()
 
         val useCase = getUseCase(quotes = flowOf())
 
