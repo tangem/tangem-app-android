@@ -9,9 +9,9 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
-import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensState
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
@@ -206,12 +206,13 @@ internal object WalletPreviewData {
 
     val groupedOrganizeTokensState by lazy {
         OrganizeTokensState(
+            onBackClick = {},
             itemsState = OrganizeTokensListState.GroupedByNetwork(
                 items = draggableItems,
             ),
             header = OrganizeTokensState.HeaderConfig(
-                onSortByBalanceClick = {},
-                onGroupByNetworkClick = {},
+                onSortClick = {},
+                onGroupClick = {},
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = { _, _ -> },
