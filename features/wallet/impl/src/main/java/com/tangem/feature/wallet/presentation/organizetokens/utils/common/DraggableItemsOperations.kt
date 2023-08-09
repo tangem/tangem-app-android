@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.common
 
-import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import kotlinx.collections.immutable.PersistentList
 import org.burnoutcrew.reorderable.ItemPosition
 
