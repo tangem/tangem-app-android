@@ -5,6 +5,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
@@ -13,6 +14,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListS
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.flowOf
@@ -260,8 +262,8 @@ internal object WalletPreviewData {
             walletsListConfig = walletListConfig,
             tokensListState = WalletTokensListState.Content(
                 persistentListOf(
-                    WalletTokensListState.TokensListItemState.NetworkGroupTitle("Bitcoin"),
-                    WalletTokensListState.TokensListItemState.Token(
+                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Bitcoin")),
+                    TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_1",
                             name = "Ethereum",
@@ -270,7 +272,7 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    WalletTokensListState.TokensListItemState.Token(
+                    TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_2",
                             name = "Ethereum",
@@ -279,7 +281,7 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    WalletTokensListState.TokensListItemState.Token(
+                    TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_3",
                             name = "Ethereum",
@@ -288,7 +290,7 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    WalletTokensListState.TokensListItemState.Token(
+                    TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_4",
                             name = "Ethereum",
@@ -297,8 +299,8 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    WalletTokensListState.TokensListItemState.NetworkGroupTitle("Ethereum"),
-                    WalletTokensListState.TokensListItemState.Token(
+                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Ethereum")),
+                    TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_5",
                             name = "Ethereum",
@@ -334,7 +336,7 @@ internal object WalletPreviewData {
                 onRefresh = {},
             ),
             notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
-            buttons = manageButtons.map(WalletManageButton::config).toPersistentList(),
+            buttons = manageButtons,
             bottomSheetConfig = bottomSheet,
             marketPriceBlockState = MarketPriceBlockState.Content(
                 currencyName = "BTC",

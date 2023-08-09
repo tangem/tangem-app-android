@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import androidx.paging.PagingData
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
@@ -121,7 +120,7 @@ internal class WalletSkeletonStateConverter(
         return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
 // [REDACTED_TODO_COMMENT]
-    private fun getButtons(): ImmutableList<ActionButtonConfig> {
+    private fun getButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Buy(onClick = {}),
             WalletManageButton.Send(onClick = {}),
@@ -129,8 +128,6 @@ internal class WalletSkeletonStateConverter(
             WalletManageButton.Exchange(onClick = {}),
             WalletManageButton.CopyAddress(onClick = {}),
         )
-            .map(WalletManageButton::config)
-            .toImmutableList()
     }
 
     data class SkeletonModel(

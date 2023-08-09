@@ -1,5 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -12,17 +14,26 @@ import kotlinx.collections.immutable.persistentListOf
  *
 * [REDACTED_AUTHOR]
  */
-// [REDACTED_TODO_COMMENT]
 internal sealed class WalletTokensListState(
     open val items: ImmutableList<TokensListItemState>,
     open val onOrganizeTokensClick: (() -> Unit)?,
 ) {
 
+    /** Loading content state */
+    object Loading : WalletTokensListState(
+        items = persistentListOf(
+            TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
+            TokensListItemState.Token(state = TokenItemState.Loading),
+            TokensListItemState.Token(state = TokenItemState.Loading),
+        ),
+        onOrganizeTokensClick = null,
+    )
+
     /**
      * Content state
      *
-     * @property items                  content items
-     * @property onOrganizeTokensClick  lambda be invoked when organize tokens button is clicked
+     * @property items                 content items
+     * @property onOrganizeTokensClick lambda be invoked when organize tokens button is clicked
      */
     data class Content(
         override val items: ImmutableList<TokensListItemState>,
@@ -33,7 +44,7 @@ internal sealed class WalletTokensListState(
     object Locked :
         WalletTokensListState(
             items = persistentListOf(
-                TokensListItemState.NetworkGroupTitle(networkName = "Tokens"),
+                TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
                 TokensListItemState.Token(state = TokenItemState.Loading),
             ),
             onOrganizeTokensClick = null,
@@ -46,9 +57,9 @@ internal sealed class WalletTokensListState(
         /**
          * Network group title item
          *
-         * @property networkName network name
+         * @property value network name
          */
-        data class NetworkGroupTitle(val networkName: String) : TokensListItemState
+        data class NetworkGroupTitle(val value: TextReference) : TokensListItemState
 
         /**
          * Token item

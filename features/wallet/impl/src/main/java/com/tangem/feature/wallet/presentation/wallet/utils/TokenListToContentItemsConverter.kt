@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -53,7 +54,7 @@ internal class TokenListToContentItemsConverter(
     }
 
     private fun MutableList<TokensListItemState>.addGroup(group: NetworkGroup): List<TokensListItemState> {
-        this.add(TokensListItemState.NetworkGroupTitle(group.network.name))
+        this.add(TokensListItemState.NetworkGroupTitle(TextReference.Str(group.network.name)))
 
         group.currencies.forEach { token ->
             this.addToken(token)

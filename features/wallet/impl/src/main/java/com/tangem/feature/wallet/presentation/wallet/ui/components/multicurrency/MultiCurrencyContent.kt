@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.decorations.walletConten
  *
 * [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifier: Modifier = Modifier) {
     itemsIndexed(
         items = state.items,
@@ -21,10 +23,12 @@ internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifie
         itemContent = { index, item ->
             MultiCurrencyContentItem(
                 state = item,
-                modifier = modifier.walletContentItemDecoration(
-                    currentIndex = index,
-                    lastIndex = state.items.lastIndex,
-                ),
+                modifier = modifier
+                    .animateItemPlacement()
+                    .walletContentItemDecoration(
+                        currentIndex = index,
+                        lastIndex = state.items.lastIndex,
+                    ),
             )
         },
     )

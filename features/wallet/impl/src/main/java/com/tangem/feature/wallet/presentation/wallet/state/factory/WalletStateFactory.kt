@@ -3,13 +3,12 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLoading
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
@@ -24,7 +23,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.Wal
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -154,7 +152,7 @@ internal class WalletStateFactory(
         }
     }
 // [REDACTED_TODO_COMMENT]
-    private fun getButtons(): ImmutableList<ActionButtonConfig> {
+    private fun getButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Buy(onClick = {}),
             WalletManageButton.Send(onClick = {}),
@@ -162,7 +160,5 @@ internal class WalletStateFactory(
             WalletManageButton.Exchange(onClick = {}),
             WalletManageButton.CopyAddress(onClick = {}),
         )
-            .map(WalletManageButton::config)
-            .toImmutableList()
     }
 }
