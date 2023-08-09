@@ -1,23 +1,18 @@
-package com.tangem.feature.wallet.presentation.wallet.state.components
+package com.tangem.core.ui.components.transactions
 
 import androidx.paging.PagingData
-import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
-/**
- * Wallet transaction history state
- *
-* [REDACTED_AUTHOR]
- */
-internal sealed interface WalletTxHistoryState {
+sealed interface TxHistoryState {
 
     /**
      * Wallet transaction history state with content
      *
      * @property items content items
      */
-    sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : WalletTxHistoryState
+    sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
     /**
      * Loading state
@@ -80,21 +75,21 @@ internal sealed interface WalletTxHistoryState {
      *
      * @property onBuyClick lambda be invoke when buy button was clicked
      */
-    data class Empty(val onBuyClick: () -> Unit) : WalletTxHistoryState
+    data class Empty(val onBuyClick: () -> Unit) : TxHistoryState
 
     /**
      * Not supported tx history state
      *
      * @property onExploreClick lambda be invoke when explore button was clicked
      */
-    data class NotSupported(val onExploreClick: () -> Unit) : WalletTxHistoryState
+    data class NotSupported(val onExploreClick: () -> Unit) : TxHistoryState
 
     /**
      * Error state
      *
      * @property onReloadClick lambda be invoke when reload button was clicked
      */
-    data class Error(val onReloadClick: () -> Unit) : WalletTxHistoryState
+    data class Error(val onReloadClick: () -> Unit) : TxHistoryState
 
     /** Transactions history item state */
     sealed interface TxHistoryItemState {
