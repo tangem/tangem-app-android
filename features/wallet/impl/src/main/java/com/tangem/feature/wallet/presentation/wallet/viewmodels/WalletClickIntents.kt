@@ -35,4 +35,6 @@ internal interface WalletClickIntents {
     fun onUnlockWalletClick()
 
     fun onUnlockWalletNotificationClick()
+
+    fun onBottomSheetDismiss()
 }
