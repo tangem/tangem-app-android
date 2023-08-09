@@ -3,11 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
@@ -16,7 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickInten
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -78,7 +76,7 @@ internal class WalletLoadedTxHistoryConverter(
     }
 
     // TODO: [REDACTED_JIRA]
-    private fun getButtons(): ImmutableList<ActionButtonConfig> {
+    private fun getButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Buy(onClick = {}),
             WalletManageButton.Send(onClick = {}),
@@ -86,8 +84,6 @@ internal class WalletLoadedTxHistoryConverter(
             WalletManageButton.Exchange(onClick = {}),
             WalletManageButton.CopyAddress(onClick = {}),
         )
-            .map(WalletManageButton::config)
-            .toImmutableList()
     }
 
     private fun getLoadingMarketPriceBlockState(): MarketPriceBlockState {
