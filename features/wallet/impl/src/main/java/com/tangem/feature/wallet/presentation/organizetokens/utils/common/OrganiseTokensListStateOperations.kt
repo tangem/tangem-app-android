@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.common
 
-import com.tangem.feature.wallet.presentation.organizetokens.DraggableItem
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 
