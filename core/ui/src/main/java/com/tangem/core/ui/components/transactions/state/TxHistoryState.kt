@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.transactions
+package com.tangem.core.ui.components.transactions.state
 
 import androidx.paging.PagingData
 import com.tangem.core.ui.components.wallet.WalletLockedContentState
