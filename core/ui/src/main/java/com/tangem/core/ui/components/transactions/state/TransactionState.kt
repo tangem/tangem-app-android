@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.transactions
+package com.tangem.core.ui.components.transactions.state
 
 /**
  * Transaction component state
