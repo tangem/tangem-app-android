@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -14,6 +16,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.Network
@@ -21,6 +24,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
@@ -55,6 +59,7 @@ internal class WalletViewModel @Inject constructor(
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
+    private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyUseCase,
     private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -97,6 +102,7 @@ internal class WalletViewModel @Inject constructor(
     private var wallets: List<UserWallet> by Delegates.notNull()
 
     private val tokensJobHolder = JobHolder()
+    private val marketPriceJobHolder = JobHolder()
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -115,10 +121,7 @@ internal class WalletViewModel @Inject constructor(
 
         val currentState = uiState
         val selectedWalletIndex = if (currentState is WalletLockedState) {
-            when (currentState) {
-                is WalletMultiCurrencyState.Locked -> currentState.walletsListConfig.selectedWalletIndex
-                is WalletSingleCurrencyState.Locked -> currentState.walletsListConfig.selectedWalletIndex
-            }
+            currentState.getSelectedWalletIndex()
         } else {
             val selectedWallet = getSelectedWalletUseCase().fold(
                 ifLeft = { error("Selected wallet is null") },
@@ -135,12 +138,12 @@ internal class WalletViewModel @Inject constructor(
         val cardTypeResolver = getCardTypeResolver(index)
         when {
             getWallet(index).isLocked -> uiState = stateFactory.getLockedState()
-            cardTypeResolver.isMultiwalletAllowed() -> updateByTokensList(index, isRefreshing)
-            !cardTypeResolver.isMultiwalletAllowed() -> updateByTxHistory(index)
+            cardTypeResolver.isMultiwalletAllowed() -> updateMultiCurrencyContent(index, isRefreshing)
+            !cardTypeResolver.isMultiwalletAllowed() -> updateSingleCurrencyContent(index)
         }
     }
 
-    private fun updateByTokensList(index: Int, isRefreshing: Boolean = false) {
+    private fun updateMultiCurrencyContent(index: Int, isRefreshing: Boolean = false) {
         val state = requireNotNull(uiState as? WalletMultiCurrencyState) {
             "Impossible to update tokens list if state isn't WalletMultiCurrencyState"
         }
@@ -163,11 +166,19 @@ internal class WalletViewModel @Inject constructor(
             .saveIn(tokensJobHolder)
     }
 
-    private fun updateByTxHistory(index: Int) {
+    private fun updateSingleCurrencyContent(index: Int) {
+        val wallet = getWallet(index)
+        updateTxHistory(
+            blockchain = getCardTypeResolver(index).getBlockchain(),
+            derivationStyle = wallet.scanResponse.card.derivationStyle,
+        )
+        updateMarketPrice(userWalletId = wallet.walletId)
+        updateNotifications(index)
+    }
+
+    private fun updateTxHistory(blockchain: Blockchain, derivationStyle: DerivationStyle?) {
         viewModelScope.launch(dispatchers.io) {
-            val wallet = getWallet(index)
-            val blockchain = getCardTypeResolver(index).getBlockchain()
-            val derivationPath = blockchain.derivationPath(style = wallet.scanResponse.card.derivationStyle)?.rawPath
+            val derivationPath = blockchain.derivationPath(style = derivationStyle)?.rawPath
 
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 networkId = Network.ID(blockchain.id),
@@ -177,20 +188,25 @@ internal class WalletViewModel @Inject constructor(
             uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
 
             txHistoryItemsCountEither.onRight {
-                updateTxHistory(
-                    networkId = Network.ID(blockchain.id),
-                    derivationPath = derivationPath,
+                uiState = stateFactory.getLoadedTxHistoryState(
+                    txHistoryEither = txHistoryItemsUseCase(
+                        networkId = Network.ID(blockchain.id),
+                        derivationPath = derivationPath,
+                    ).map {
+                        it.cachedIn(viewModelScope)
+                    },
                 )
             }
         }
-
-        updateNotifications(index)
     }
 
-    private fun updateTxHistory(networkId: Network.ID, derivationPath: String?) {
-        uiState = stateFactory.getLoadedTxHistoryState(
-            txHistoryEither = txHistoryItemsUseCase(networkId, derivationPath).map { it.cachedIn(viewModelScope) },
-        )
+    private fun updateMarketPrice(userWalletId: UserWalletId) {
+        getPrimaryCurrencyUseCase(userWalletId = userWalletId)
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getSingleCurrencyLoadedBalanceState(cryptoCurrencyEither = it) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(marketPriceJobHolder)
     }
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
@@ -300,6 +316,10 @@ internal class WalletViewModel @Inject constructor(
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
+        tokensJobHolder.update(job = null)
+        marketPriceJobHolder.update(job = null)
+        notificationsJobHolder.update(job = null)
+
         uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
 
         updateContentItems(index = index)
@@ -328,7 +348,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onReloadClick() {
         uiState = stateFactory.getStateAfterContentRefreshing()
-        updateByTxHistory(
+        updateSingleCurrencyContent(
             index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
         )
     }
