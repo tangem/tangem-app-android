@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.transactions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 
 @Composable
 internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, modifier: Modifier = Modifier) {
@@ -32,7 +34,7 @@ internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, mod
             modifier = Modifier.clickable(onClick = config.onExploreClick),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
         ) {
-            androidx.compose.material3.Icon(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_compass_24),
                 contentDescription = null,
                 modifier = Modifier.size(size = TangemTheme.dimens.size18),
