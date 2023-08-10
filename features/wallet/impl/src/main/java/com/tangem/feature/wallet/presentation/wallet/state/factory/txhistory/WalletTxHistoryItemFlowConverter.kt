@@ -3,12 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.ui.components.transactions.TransactionState
-import com.tangem.core.ui.components.transactions.TxHistoryState
-import com.tangem.core.ui.components.transactions.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.components.transactions.state.TransactionState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState.TxHistoryItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday

@@ -8,10 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun TxHistoryGroupTitle(config: TxHistoryState.TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
+internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
     Text(
         text = config.title,
         modifier = modifier
@@ -31,7 +32,7 @@ internal fun TxHistoryGroupTitle(config: TxHistoryState.TxHistoryItemState.Group
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Light() {
     TangemTheme(isDark = false) {
-        TxHistoryGroupTitle(config = TxHistoryState.TxHistoryItemState.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
     }
 }
 
@@ -39,7 +40,7 @@ private fun Preview_TransactionsBlockGroupTitle_Light() {
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Dark() {
     TangemTheme(isDark = true) {
-        TxHistoryGroupTitle(config = TxHistoryState.TxHistoryItemState.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
     }
 }
 

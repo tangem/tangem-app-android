@@ -4,9 +4,9 @@ import androidx.paging.PagingData
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
-import com.tangem.core.ui.components.transactions.TransactionState
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
