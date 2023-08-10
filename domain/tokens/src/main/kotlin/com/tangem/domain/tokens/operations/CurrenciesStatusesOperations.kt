@@ -4,7 +4,9 @@ import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.models.Quote
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
