@@ -11,6 +11,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.res.TangemTheme
 
+/**
+ * Transactions block group title
+ *
+ * @param config   config
+ * @param modifier modifier
+ */
 @Composable
 internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
     Text(
