@@ -6,6 +6,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
@@ -92,7 +93,7 @@ private fun handleOtherCardsAction(action: Action) {
                                 val blockchainNetwork =
                                     BlockchainNetwork(
                                         blockchain = primaryBlockchain,
-                                        card = updatedCard,
+                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
                                     )
                                         .updateTokens(
                                             listOfNotNull(primaryToken),
@@ -102,11 +103,11 @@ private fun handleOtherCardsAction(action: Action) {
                                 listOf(
                                     BlockchainNetwork(
                                         blockchain = Blockchain.Bitcoin,
-                                        card = updatedCard,
+                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
                                     ),
                                     BlockchainNetwork(
                                         blockchain = Blockchain.Ethereum,
-                                        card = updatedCard,
+                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
                                     ),
                                 )
                             }
