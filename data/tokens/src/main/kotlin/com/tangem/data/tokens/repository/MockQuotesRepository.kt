@@ -1,7 +1,7 @@
 package com.tangem.data.tokens.repository
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

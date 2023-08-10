@@ -1,6 +1,6 @@
 package com.tangem.domain.walletmanager
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
