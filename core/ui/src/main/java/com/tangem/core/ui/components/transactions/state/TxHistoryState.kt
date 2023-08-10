@@ -5,6 +5,9 @@ import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
+/**
+ * Wallet transaction history state
+ */
 sealed interface TxHistoryState {
 
     /**
