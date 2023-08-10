@@ -64,4 +64,3 @@ private fun Preview_TransactionsBlockTitle_Dark() {
         TxHistoryTitle(config = TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}))
     }
 }
-

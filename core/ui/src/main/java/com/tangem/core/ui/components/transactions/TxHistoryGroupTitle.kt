@@ -43,4 +43,3 @@ private fun Preview_TransactionsBlockGroupTitle_Dark() {
         TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
     }
 }
-
