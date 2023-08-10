@@ -3,8 +3,8 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
