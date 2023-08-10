@@ -21,6 +21,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.res.TangemTheme
 
 /**

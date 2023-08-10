@@ -4,7 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
-import com.tangem.core.ui.components.walletContentItemDecoration
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 
 /**
@@ -25,10 +25,10 @@ internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifie
                 state = item,
                 modifier = modifier
                     .animateItemPlacement()
-                    .walletContentItemDecoration(
-                        currentIndex = index,
-                        lastIndex = state.items.lastIndex,
-                    ),
+                    .roundedShapeItemDecoration(
+                    currentIndex = index,
+                    lastIndex = state.items.lastIndex,
+                ),
             )
         },
     )
