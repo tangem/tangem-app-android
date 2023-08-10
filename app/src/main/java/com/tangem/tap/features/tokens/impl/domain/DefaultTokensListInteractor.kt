@@ -2,18 +2,19 @@ package com.tangem.tap.features.tokens.impl.domain
 
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.derivationPath
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -24,10 +25,6 @@ import com.tangem.tap.features.tokens.legacy.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
@@ -51,11 +48,12 @@ internal class DefaultTokensListInteractor(
     override suspend fun saveChanges(tokens: List<TokenWithBlockchain>, blockchains: List<Blockchain>) {
         val scanResponse = requireNotNull(reduxStateHolder.scanResponse)
 
+        val derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle()
         val currentTokens = store.state.tokensState.addedWallets
-            .toNonCustomTokensWithBlockchains(style = scanResponse.card.derivationStyle)
+            .toNonCustomTokensWithBlockchains(derivationStyle = derivationStyle)
 
         val currentBlockchains = store.state.tokensState.addedWallets
-            .toNonCustomBlockchains(derivationStyle = scanResponse.card.derivationStyle)
+            .toNonCustomBlockchains(derivationStyle = derivationStyle)
 
         val blockchainsToAdd = blockchains.filterNot(currentBlockchains::contains)
         val blockchainsToRemove = currentBlockchains.filterNot(blockchains::contains)
@@ -73,18 +71,18 @@ internal class DefaultTokensListInteractor(
         remove(
             tokens = tokensToRemove,
             blockchains = blockchainsToRemove,
-            derivationStyle = scanResponse.card.derivationStyle,
+            derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
 
         add(tokens = tokensToAdd, blockchains = blockchainsToAdd, scanResponse = scanResponse)
     }
 
     private fun List<WalletDataModel>.toNonCustomTokensWithBlockchains(
-        style: DerivationStyle?,
+        derivationStyle: DerivationStyle?,
     ): List<TokenWithBlockchain> {
         return this.map(WalletDataModel::currency)
             .mapNotNull { currency ->
-                if (currency !is Currency.Token || currency.isCustomCurrency(style)) return@mapNotNull null
+                if (currency !is Currency.Token || currency.isCustomCurrency(derivationStyle)) return@mapNotNull null
                 TokenWithBlockchain(token = currency.token, blockchain = currency.blockchain)
             }
             .distinct()
@@ -123,7 +121,7 @@ internal class DefaultTokensListInteractor(
         val currenciesToAdd = convertToCurrencies(
             tokens = tokens,
             blockchains = blockchains,
-            derivationStyle = scanResponse.card.derivationStyle,
+            derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
 
         // TODO("[REDACTED_TASK_KEY] use DerivationManager")
@@ -184,7 +182,7 @@ internal class DefaultTokensListInteractor(
             .map(Currency::blockchain)
             .distinct()
             .filter { it.getSupportedCurves().contains(curve) }
-            .mapNotNull { it.derivationPath(scanResponse.card.derivationStyle) }
+            .mapNotNull { it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle()) }
 
         val customTokensCandidates = currencyList
             .filter { it.blockchain.getSupportedCurves().contains(curve) }
