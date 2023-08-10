@@ -1,6 +1,4 @@
-package com.tangem.domain.tokens.model
-
-import com.tangem.domain.tokens.models.Network
+package com.tangem.domain.tokens.models
 
 /**
  * Represents a generic cryptocurrency.

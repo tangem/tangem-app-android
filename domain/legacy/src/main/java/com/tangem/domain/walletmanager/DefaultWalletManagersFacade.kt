@@ -11,7 +11,7 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
