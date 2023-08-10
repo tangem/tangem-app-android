@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
