@@ -10,10 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.res.TangemTheme
 
+/**
+ * Transactions block title
+ *
+ * @param config   config
+ * @param modifier modifier
+ */
 @Composable
 internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, modifier: Modifier = Modifier) {
     Row(
