@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.legacy.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.tap.domain.model.WalletDataModel
 import org.rekotlin.Action
 
