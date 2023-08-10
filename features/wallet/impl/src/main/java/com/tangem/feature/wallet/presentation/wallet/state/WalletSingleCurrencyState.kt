@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.TxHistoryState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
