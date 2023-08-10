@@ -13,8 +13,9 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.map
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.operations.CommandResponse
@@ -56,6 +57,7 @@ private data class CreateWalletResponse(
 
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
+    private val derivationStyleProvider: DerivationStyleProvider,
     private val seed: ByteArray? = null,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
@@ -76,7 +78,7 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
-            else -> CreateWalletTangemWallet(seed)
+            else -> CreateWalletTangemWallet(seed, derivationStyleProvider)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -134,6 +136,7 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
 
 private class CreateWalletTangemWallet(
     private val seed: ByteArray?,
+    private val derivationStyleProvider: DerivationStyleProvider,
 ) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
     private var primaryCard: PrimaryCard? = null
@@ -243,9 +246,9 @@ private class CreateWalletTangemWallet(
             val blockchainsForCurve = getBlockchains(response.cardId, card).filter {
                 it.getSupportedCurves().contains(response.wallet.curve)
             }
-            val derivationPaths = blockchainsForCurve.mapNotNull {
+            val derivationPaths = blockchainsForCurve.mapNotNull { blockchain ->
                 isBlockchainsForCurvesExist = true
-                it.derivationPath(card.derivationStyle)
+                blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
             }
             if (derivationPaths.isNotEmpty()) {
                 map[response.wallet.publicKey.toMapKey()] = derivationPaths
