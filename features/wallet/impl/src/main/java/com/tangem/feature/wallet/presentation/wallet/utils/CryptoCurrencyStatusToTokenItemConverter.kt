@@ -3,8 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.utils.converter.Converter
