@@ -1,6 +1,6 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.Token as SdkToken
 
