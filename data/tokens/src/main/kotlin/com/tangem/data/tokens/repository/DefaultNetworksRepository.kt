@@ -120,11 +120,7 @@ internal class DefaultNetworksRepository(
         } else {
             val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
 
-            if (currency is CryptoCurrency.Token) {
-                listOf(currency)
-            } else {
-                emptyList()
-            }
+            listOf(currency)
         }
     }
 
