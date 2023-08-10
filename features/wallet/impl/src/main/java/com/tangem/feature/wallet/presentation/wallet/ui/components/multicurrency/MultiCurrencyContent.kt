@@ -26,9 +26,9 @@ internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifie
                 modifier = modifier
                     .animateItemPlacement()
                     .roundedShapeItemDecoration(
-                    currentIndex = index,
-                    lastIndex = state.items.lastIndex,
-                ),
+                        currentIndex = index,
+                        lastIndex = state.items.lastIndex,
+                    ),
             )
         },
     )
