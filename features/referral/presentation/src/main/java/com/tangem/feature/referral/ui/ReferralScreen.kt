@@ -268,6 +268,11 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
                         if (!address.isNullOrBlank()) " $address" else "",
                     ),
                 )
+                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                    // TODO move to strings
+                    append("30 days after")
+                }
+                append("that")
             },
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,

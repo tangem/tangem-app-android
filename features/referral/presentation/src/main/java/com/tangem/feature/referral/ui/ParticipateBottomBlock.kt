@@ -27,11 +27,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
@@ -95,10 +93,15 @@ private fun CountersAndAwards(
         ),
         endTextColor = TangemTheme.colors.text.primary1,
         endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = if (isExpectedAwardsPresent) CornersToRound.TOP_2 else CornersToRound.ALL_4,
+        cornersToRound = if (isExpectedAwardsPresent || purchasedWalletCount != 0) {
+            CornersToRound.TOP_2
+        } else {
+            CornersToRound.ALL_4
+        }
+
     )
 
-    expectedAwards?.let { expectedAwards ->
+    if (expectedAwards != null) {
         Divider(
             color = TangemTheme.colors.stroke.primary,
             thickness = TangemTheme.dimens.size0_5,
@@ -147,6 +150,20 @@ private fun CountersAndAwards(
         if (expectedAwards.expectedAwards.size > 3) {
             LessMoreButton(isExpanded = isExpanded)
         }
+    } else if (purchasedWalletCount != 0) {
+        Divider(
+            color = TangemTheme.colors.stroke.primary,
+            thickness = TangemTheme.dimens.size0_5,
+        )
+        AwardText(
+            startText = stringResource(id = R.string.referral_expected_awards),
+            startTextColor = TangemTheme.colors.text.tertiary,
+            startTextStyle = TangemTheme.typography.subtitle2,
+            endText = "",
+            endTextColor = TangemTheme.colors.text.tertiary,
+            endTextStyle = TangemTheme.typography.body2,
+            cornersToRound = CornersToRound.BOTTOM_2,
+        )
     }
 }
 
@@ -192,7 +209,7 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size20),
                     painter = chevronIcon,
-                    tint = TangemTheme.colors.icon.primary1,
+                    tint = TangemTheme.colors.text.tertiary,
                     contentDescription = null,
                 )
             }
@@ -306,7 +323,7 @@ private fun Context.shareText(text: String) {
 @Composable
 private fun Preview_ParticipateBottomBlock_InLightTheme() {
     TangemTheme(isDark = false) {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
@@ -339,6 +356,44 @@ private fun Preview_ParticipateBottomBlock_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
+private fun Preview_ParticipateBottomBlock_Without_Awards_InLightTheme() {
+    TangemTheme(isDark = false) {
+        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
+            ParticipateBottomBlock(
+                purchasedWalletCount = 3,
+                code = "x4JdK",
+                shareLink = "",
+                expectedAwards = null,
+                onAgreementClick = {},
+                onShowCopySnackbar = {},
+                onCopyClick = {},
+                onShareClick = {},
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+private fun Preview_ParticipateBottomBlock_Without_Awards_And_Purchased_Wallets_InLightTheme() {
+    TangemTheme(isDark = false) {
+        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
+            ParticipateBottomBlock(
+                purchasedWalletCount = 0,
+                code = "x4JdK",
+                shareLink = "",
+                expectedAwards = null,
+                onAgreementClick = {},
+                onShowCopySnackbar = {},
+                onCopyClick = {},
+                onShareClick = {},
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
 private fun LessMoreButton_White() {
     TangemTheme(isDark = false) {
         LessMoreButton(isExpanded = remember {
@@ -349,9 +404,9 @@ private fun LessMoreButton_White() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_ParticipateBottomBlock_InDarkTheme() {
+private fun Preview_ParticipateBottomBlock_Without_Awards_InDarkTheme() {
     TangemTheme(isDark = true) {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
