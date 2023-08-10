@@ -14,6 +14,7 @@ import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
@@ -21,6 +22,7 @@ import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.extensions.getPrimaryCurve
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
@@ -208,31 +210,22 @@ private class ScanWalletProcessor(
     ) {
         val productType = ProductType.Wallet
         scope.launch {
-            val derivations = collectDerivations(card)
+            val scanResponse = ScanResponse(
+                card = card,
+                productType = productType,
+                walletData = session.environment.walletData,
+                primaryCard = primaryCard,
+            )
+            val derivations = collectDerivations(card, scanResponse.derivationStyleProvider)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
-                callback(
-                    CompletionResult.Success(
-                        ScanResponse(
-                            card = card,
-                            productType = productType,
-                            walletData = session.environment.walletData,
-                            primaryCard = primaryCard,
-                        ),
-                    ),
-                )
+                callback(CompletionResult.Success(scanResponse))
                 return@launch
             }
 
             DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
-                        val response = ScanResponse(
-                            card = card,
-                            productType = productType,
-                            walletData = session.environment.walletData,
-                            derivedKeys = result.data.entries,
-                            primaryCard = primaryCard,
-                        )
+                        val response = scanResponse.copy(derivedKeys = result.data.entries)
                         callback(CompletionResult.Success(response))
                     }
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
@@ -241,7 +234,10 @@ private class ScanWalletProcessor(
         }
     }
 
-    private suspend fun getBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> {
+    private suspend fun getBlockchainsToDerive(
+        card: CardDTO,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): List<BlockchainNetwork> {
         val userTokensRepository = userTokensRepository ?: return emptyList()
         val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card)
             .toMutableList()
@@ -249,11 +245,11 @@ private class ScanWalletProcessor(
                 mutableListOf(
                     BlockchainNetwork(
                         blockchain = Blockchain.Bitcoin,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     ),
                     BlockchainNetwork(
                         blockchain = Blockchain.Ethereum,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     ),
                 )
             }
@@ -263,11 +259,11 @@ private class ScanWalletProcessor(
                 listOf(
                     BlockchainNetwork(
                         blockchain = Blockchain.Ethereum,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     ),
                     BlockchainNetwork(
                         blockchain = Blockchain.EthereumTestnet,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     ),
                 ),
             )
@@ -277,7 +273,7 @@ private class ScanWalletProcessor(
                 additionalBlockchainsToDerive.map {
                     BlockchainNetwork(
                         blockchain = it,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     )
                 },
             )
@@ -293,7 +289,7 @@ private class ScanWalletProcessor(
                 ).map {
                     BlockchainNetwork(
                         blockchain = it,
-                        card = card,
+                        derivationStyleProvider = derivationStyleProvider,
                     )
                 },
             )
@@ -301,8 +297,11 @@ private class ScanWalletProcessor(
         return blockchainsToDerive.distinct()
     }
 
-    private suspend fun collectDerivations(card: CardDTO): Map<ByteArrayKey, List<DerivationPath>> {
-        val blockchains = getBlockchainsToDerive(card)
+    private suspend fun collectDerivations(
+        card: CardDTO,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): Map<ByteArrayKey, List<DerivationPath>> {
+        val blockchains = getBlockchainsToDerive(card, derivationStyleProvider)
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
 
         blockchains.forEach { blockchain ->

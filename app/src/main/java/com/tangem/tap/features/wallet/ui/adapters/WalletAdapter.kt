@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
@@ -77,10 +77,8 @@ class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHold
 
             ivCurrency.load(
                 currency = wallet.currency,
-                derivationStyle = store.state.globalState
-                    .scanResponse
-                    ?.card
-                    ?.derivationStyle,
+                derivationStyle = store.state.globalState.scanResponse
+                    ?.derivationStyleProvider?.getDerivationStyle(),
             )
 
             lContent.tvCurrency.text = wallet.currency.currencyName
