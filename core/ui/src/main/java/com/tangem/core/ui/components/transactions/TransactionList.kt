@@ -9,7 +9,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
-import com.tangem.core.ui.components.walletContentItemDecoration
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 
 fun LazyListScope.txHistoryItems(
@@ -60,7 +61,7 @@ private fun LazyListScope.contentItems(
                 state = item,
                 modifier = modifier
                     .animateItemPlacement()
-                    .walletContentItemDecoration(
+                    .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
                     ),
