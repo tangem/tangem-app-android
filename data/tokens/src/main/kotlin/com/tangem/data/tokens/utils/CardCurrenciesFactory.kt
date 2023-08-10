@@ -6,7 +6,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
