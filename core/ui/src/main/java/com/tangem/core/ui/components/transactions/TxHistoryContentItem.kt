@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 
 @Composable
-internal fun TxHistoryContentItem(state: TxHistoryState.TxHistoryItemState, modifier: Modifier = Modifier) {
+internal fun TxHistoryListItem(state: TxHistoryState.TxHistoryItemState, modifier: Modifier = Modifier) {
     when (state) {
         is TxHistoryState.TxHistoryItemState.GroupTitle -> {
             TxHistoryGroupTitle(config = state, modifier = modifier)

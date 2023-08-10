@@ -13,6 +13,13 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 
+/**
+ * LazyList extension for transactions history [TxHistoryState]
+ *
+ * @param state          state
+ * @param txHistoryItems transactions
+ * @param modifier       modifier
+ */
 fun LazyListScope.txHistoryItems(
     state: TxHistoryState,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
@@ -57,7 +64,7 @@ private fun LazyListScope.contentItems(
         itemContent = { index, item ->
             if (item == null) return@itemsIndexed
 
-            TxHistoryContentItem(
+            TxHistoryListItem(
                 state = item,
                 modifier = modifier
                     .animateItemPlacement()
