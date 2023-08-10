@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.sdk.extensions.dpToPx
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.databinding.ViewCurrencyIconBinding
