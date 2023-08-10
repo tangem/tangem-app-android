@@ -11,14 +11,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.*
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
@@ -599,7 +599,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         if (blockchain == null) return null
 
         val derivationStyle = if (!isDerivationPathSelected()) {
-            reduxStateHolder.scanResponse?.card?.derivationStyle
+            reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
         } else {
             DerivationStyle.LEGACY
         }
