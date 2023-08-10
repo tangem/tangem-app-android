@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -11,8 +11,9 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
@@ -172,7 +173,7 @@ internal class WalletViewModel @Inject constructor(
         val wallet = getWallet(index)
         updateTxHistory(
             blockchain = getCardTypeResolver(index).getBlockchain(),
-            derivationStyle = wallet.scanResponse.card.derivationStyle,
+            derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
         updateMarketPrice(userWalletId = wallet.walletId)
         updateNotifications(index)
