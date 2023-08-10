@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.legacy.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
@@ -13,7 +13,8 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.derivationPath
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -21,7 +22,7 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -30,11 +31,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -72,7 +68,7 @@ object TokensMiddleware {
                 currencies = convertToCurrencies(
                     blockchains = blockchainsToRemove,
                     tokens = tokensToRemove,
-                    derivationStyle = scanResponse.card.derivationStyle,
+                    derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
                 ),
             )
 
@@ -87,7 +83,7 @@ object TokensMiddleware {
             val currencyList = convertToCurrencies(
                 blockchains = blockchainsToAdd,
                 tokens = tokensToAdd,
-                derivationStyle = scanResponse.card.derivationStyle,
+                derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
             )
 
             if (scanResponse.supportsHdWallet()) {
@@ -175,7 +171,7 @@ object TokensMiddleware {
         val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
             it.getSupportedCurves().contains(curve)
         }.mapNotNull {
-            it.derivationPath(scanResponse.card.derivationStyle)
+            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
         }
 
         val customTokensCandidates = currencyList.filter {
