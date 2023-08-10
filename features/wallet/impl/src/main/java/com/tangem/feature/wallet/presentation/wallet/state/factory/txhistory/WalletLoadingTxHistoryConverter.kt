@@ -2,16 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
 import arrow.core.Either
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.TransactionState
-import com.tangem.core.ui.components.transactions.TxHistoryState
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.txhistory.error.TxHistoryStateError
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 
@@ -50,7 +44,7 @@ internal class WalletLoadingTxHistoryConverter(
 
     private fun convert(value: Int): WalletSingleCurrencyState.Content {
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = WalletTxHistoryState.ContentWithLoadingItems(itemsCount = value),
+            txHistoryState = TxHistoryState.ContentWithLoadingItems(itemsCount = value),
         )
     }
 }

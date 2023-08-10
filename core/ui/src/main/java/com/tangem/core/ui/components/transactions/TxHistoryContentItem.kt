@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.transactions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 
 @Composable
 internal fun TxHistoryContentItem (state: TxHistoryState.TxHistoryItemState, modifier: Modifier = Modifier) {

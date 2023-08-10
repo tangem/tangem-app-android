@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components
+package com.tangem.core.ui.decorations
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,7 +7,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import com.tangem.core.ui.res.TangemTheme
 
-fun Modifier.walletContentItemDecoration(currentIndex: Int, lastIndex: Int): Modifier = composed {
+fun Modifier.roundedShapeItemDecoration(currentIndex: Int, lastIndex: Int): Modifier = composed {
     val modifierWithHorizontalPadding = this.padding(horizontal = TangemTheme.dimens.spacing16)
     val isSingleItem = currentIndex == 0 && lastIndex == 0
     when {
