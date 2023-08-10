@@ -2,10 +2,10 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.models.CryptoCurrency.ID
 import com.tangem.domain.tokens.models.Network
 import com.tangem.blockchain.common.Token as SdkToken
@@ -23,12 +23,8 @@ internal fun isCustomToken(tokenId: ID): Boolean {
     return tokenId.rawCurrencyId == null
 }
 
-internal fun getDerivationPath(blockchain: Blockchain, card: CardDTO): String? {
-    return if (card.settings.isHDWalletAllowed) {
-        blockchain.derivationPath(card.derivationStyle)?.rawPath
-    } else {
-        null
-    }
+internal fun getDerivationPath(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider): String? {
+    return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
 }
 
 internal fun getBlockchain(networkId: Network.ID): Blockchain {
