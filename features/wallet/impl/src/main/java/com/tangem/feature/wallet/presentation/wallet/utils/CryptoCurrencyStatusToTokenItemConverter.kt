@@ -33,6 +33,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             is CryptoCurrencyStatus.Loading -> TokenItemState.Loading
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
             -> value.mapToTokenItemState()
             // TODO: Add other token item states, currently not designed
             is CryptoCurrencyStatus.MissedDerivation,

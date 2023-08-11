@@ -3,7 +3,8 @@ package com.tangem.domain.tokens.operations
 import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.models.Quote
@@ -36,25 +37,41 @@ internal class CurrenciesStatusesOperations(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
-        return getMultiCurrencyWalletCurrencies().flatMapMerge flatMap@{ maybeCurrencies ->
+        return getMultiCurrencyWalletCurrencies().transformLatest { maybeCurrencies ->
             val nonEmptyCurrencies = maybeCurrencies.fold(
                 ifLeft = { error ->
-                    return@flatMap flowOf(error.left())
+                    emit(error.left())
+                    return@transformLatest
                 },
-                ifRight = { it.toNonEmptyListOrNull() },
-            ) ?: return@flatMap flowOf(emptyList<CryptoCurrencyStatus>().right())
+                ifRight = List<CryptoCurrency>::toNonEmptyListOrNull,
+            )
+
+            if (nonEmptyCurrencies == null) {
+                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
+
+                emit(emptyCurrenciesStatuses.right())
+                return@transformLatest
+            } else if (!refresh) {
+                val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
+                    currencies = nonEmptyCurrencies,
+                    maybeNetworkStatuses = null,
+                    maybeQuotes = null,
+                )
+
+                emit(maybeLoadingCurrenciesStatuses)
+            }
 
             val (networksIds, currenciesIds) = getIds(nonEmptyCurrencies)
 
-            combine(
+            val currenciesFlow = combine(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(networksIds),
             ) { maybeQuotes, maybeNetworksStatuses ->
-                either {
-                    createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes.bind(), maybeNetworksStatuses.bind())
-                }
+                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
             }
-        }
+
+            emitAll(currenciesFlow)
+        }.conflate()
     }
 
     suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
@@ -76,14 +93,16 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val quoteFlow = getQuotes(nonEmptySetOf(currency.id))
+        val (networksIds, currenciesIds) = getIds(nonEmptyListOf(currency))
+
+        val quoteFlow = getQuotes(currenciesIds)
             .map { maybeQuotes ->
                 maybeQuotes.map { quotes ->
                     quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
                 }
             }
 
-        val statusFlow = getNetworksStatuses(nonEmptySetOf(currency.networkId))
+        val statusFlow = getNetworksStatuses(networksIds)
             .map { maybeStatuses ->
                 maybeStatuses.map { statuses ->
                     statuses.singleOrNull { it.networkId == currency.networkId }
@@ -91,34 +110,58 @@ internal class CurrenciesStatusesOperations(
             }
 
         return combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
-            either {
-                createStatus(currency, maybeQuote.bind(), maybeNetworkStatus.bind())
-            }
+            createStatus(currency, maybeQuote, maybeNetworkStatus)
         }
     }
 
     private fun createCurrenciesStatuses(
         currencies: NonEmptyList<CryptoCurrency>,
-        quotes: Set<Quote>,
-        networkStatuses: Set<NetworkStatus>,
-    ): List<CryptoCurrencyStatus> {
-        return currencies.map { currency ->
-            val quote = quotes.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
-            val networkStatus = networkStatuses.firstOrNull { it.networkId == currency.networkId }
+        maybeQuotes: Either<Error, Set<Quote>>?,
+        maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>?,
+    ): Either<Error, List<CryptoCurrencyStatus>> = either {
+        var quotesRetrievingFailed = false
 
-            createStatus(currency, quote, networkStatus)
+        val networksStatuses = maybeNetworkStatuses?.bind()?.toNonEmptySetOrNull()
+        val quotes = recover({ maybeQuotes?.bind()?.toNonEmptySetOrNull() }) {
+            quotesRetrievingFailed = true
+            null
+        }
+
+        currencies.map { currency ->
+            val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+            val networkStatus = networksStatuses?.firstOrNull { it.networkId == currency.networkId }
+
+            createStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
         }
     }
 
     private fun createStatus(
-        token: CryptoCurrency,
+        currency: CryptoCurrency,
+        maybeQuote: Either<Error, Quote?>,
+        maybeNetworkStatus: Either<Error, NetworkStatus?>,
+    ): Either<Error, CryptoCurrencyStatus> = either {
+        var quoteRetrievingFailed = false
+
+        val networkStatus = maybeNetworkStatus.bind()
+        val quote = recover({ maybeQuote.bind() }) {
+            quoteRetrievingFailed = true
+            null
+        }
+
+        createStatus(currency, quote, networkStatus, ignoreQuote = quoteRetrievingFailed)
+    }
+
+    private fun createStatus(
+        currency: CryptoCurrency,
         quote: Quote?,
         networkStatus: NetworkStatus?,
+        ignoreQuote: Boolean,
     ): CryptoCurrencyStatus {
         val currencyStatusOperations = CurrencyStatusOperations(
-            currency = token,
+            currency = currency,
             quote = quote,
             networkStatus = networkStatus,
+            ignoreQuote = ignoreQuote,
         )
 
         return currencyStatusOperations.createTokenStatus()
