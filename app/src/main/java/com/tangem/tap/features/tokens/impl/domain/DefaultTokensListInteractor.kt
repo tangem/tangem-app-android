@@ -9,6 +9,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.supportsHdWallet
@@ -134,10 +135,11 @@ internal class DefaultTokensListInteractor(
     }
 
     private suspend fun deriveMissingBlockchains(scanResponse: ScanResponse, currencies: List<Currency>) {
-        val derivations = listOfNotNull(
-            getDerivations(EllipticCurve.Secp256k1, scanResponse, currencies),
-            getDerivations(EllipticCurve.Ed25519, scanResponse, currencies),
-        ).associate(transform = TokensMiddleware.DerivationData::derivations)
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivations = currencies.mapNotNull {
+            val curve = config.primaryCurve(it.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currencies) }
+        }.associate(transform = TokensMiddleware.DerivationData::derivations)
 
         if (derivations.isEmpty()) {
             submitAdd(scanResponse, currencies)
