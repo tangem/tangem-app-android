@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.tokens.utils.CardCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkConverter
 import com.tangem.data.tokens.utils.NetworkStatusFactory
 import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
@@ -32,8 +33,10 @@ internal class DefaultNetworksRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworksRepository {
 
+    private val demoConfig by lazy { DemoConfig() }
     private val networkConverter by lazy { NetworkConverter() }
-    private val responseCurrenciesFactory by lazy { ResponseCurrenciesFactory(DemoConfig()) }
+    private val cardCurrenciesFactory by lazy { CardCurrenciesFactory(demoConfig) }
+    private val responseCurrenciesFactory by lazy { ResponseCurrenciesFactory(demoConfig) }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
     private val networksStatuses: MutableStateFlow<List<NetworkStatus>> = MutableStateFlow(emptyList())
@@ -107,11 +110,18 @@ internal class DefaultNetworksRepository(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
-        val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
-            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-        }
 
-        return responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse.card)
+        return if (userWallet.isMultiCurrency) {
+            val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
+                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+            }
+
+            responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse.card)
+        } else {
+            val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+
+            listOf(currency)
+        }
     }
 
     private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId): String = "network_status_$userWalletId"
