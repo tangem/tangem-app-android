@@ -5,8 +5,10 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -17,6 +19,7 @@ import java.math.BigDecimal
 
 internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val fiatCurrencyCode: String,
     private val fiatCurrencySymbol: String,
 ) : Converter<Either<CurrencyError, CryptoCurrencyStatus>, WalletSingleCurrencyState.Content> {
@@ -33,7 +36,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         val state = requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
         val currencyName = state.marketPriceBlockState.currencyName
         return state.copy(
-            walletsListConfig = getUpdatedSelectedWallet(status.value, state),
+            walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
         )
     }
@@ -78,7 +81,11 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                 WalletCardState.Content(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
-                    additionalInfo = selectedWallet.additionalInfo,
+                    additionalInfo = WalletAdditionalInfoFactory.resolve(
+                        cardTypesResolver = cardTypeResolverProvider(),
+                        isLocked = false,
+                        currencyAmount = status.amount,
+                    ),
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
                     balance = BigDecimalFormatter.formatFiatAmount(
