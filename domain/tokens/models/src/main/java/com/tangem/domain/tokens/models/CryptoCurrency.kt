@@ -65,15 +65,68 @@ sealed class CryptoCurrency {
     }
 
     /**
-     * Value class for uniquely identifying a cryptocurrency.
+     * Represents a unique identifier for a cryptocurrency, constructed from various components.
      *
-     * @property value The unique identifier value.
+     * The ID is designed to ensure that different cryptocurrencies, whether they are standard tokens, custom tokens or
+     * standard coins, can be distinctly identified within a system.
+     *
+     * @property value Constructed unique identifier value, made up of prefix, network ID, and suffix.
+     * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
+     * its ID of the custom token.
      */
-    @JvmInline
-    value class ID(val value: String) {
+    data class ID(
+        private val prefix: Prefix,
+        private val networkId: Network.ID,
+        private val suffix: Suffix,
+    ) {
 
-        init {
-            require(value.isNotBlank()) { "Crypto currency ID must not be blank" }
+        val value: String = buildString {
+            append(prefix.value)
+            append(networkId.value)
+            append(DELIMITER)
+            append(suffix.value)
+        }
+
+        val rawCurrencyId: String? = (suffix as? Suffix.RawID)?.rawId
+
+        /**
+         * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
+         * These prefixes can help in quickly categorizing the type of cryptocurrency.
+         */
+        enum class Prefix(val value: String) {
+            /** Prefix for standard coins. */
+            COIN_PREFIX(value = "coin_"),
+
+            /** Prefix for standard tokens. */
+            TOKEN_PREFIX(value = "token_"),
+
+            /** Prefix for custom tokens. */
+            CUSTOM_TOKEN_PREFIX(value = "custom_"),
+        }
+
+        /**
+         * Represents the suffix part of the cryptocurrency ID.
+         *
+         * The suffix can either be a raw ID or a contract address.
+         */
+        sealed class Suffix {
+
+            /** The value of the suffix, which could be either a raw ID or a contract address. */
+            abstract val value: String
+
+            /** Represents a raw ID suffix. */
+            data class RawID(val rawId: String) : Suffix() {
+                override val value: String = rawId
+            }
+
+            /** Represents a contract address suffix. */
+            data class ContractAddress(val contractAddress: String) : Suffix() {
+                override val value: String = contractAddress
+            }
+        }
+
+        private companion object {
+            const val DELIMITER = '#'
         }
     }
 
