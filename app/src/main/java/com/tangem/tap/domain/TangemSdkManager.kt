@@ -94,18 +94,20 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         scanResponse: ScanResponse,
         mnemonic: String,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        return when (val seedResult = DefaultMnemonic(mnemonic, tangemSdk.wordlist).generateSeed()) {
-            is CompletionResult.Success -> runTaskAsync(
-                CreateProductWalletTask(
-                    cardTypesResolver = scanResponse.cardTypesResolver,
-                    derivationStyleProvider = scanResponse.derivationStyleProvider,
-                ),
-                scanResponse.card.cardId,
-                Message(resources.getString(R.string.initial_message_create_wallet_body)),
-            )
-
-            is CompletionResult.Failure -> CompletionResult.Failure(seedResult.error)
+        val mnemonic = try {
+            DefaultMnemonic(mnemonic, tangemSdk.wordlist)
+        } catch (e: TangemSdkError.MnemonicException) {
+            return CompletionResult.Failure(e)
         }
+        return runTaskAsync(
+            CreateProductWalletTask(
+                scanResponse.cardTypesResolver,
+                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                mnemonic,
+            ),
+            scanResponse.card.cardId,
+            Message(resources.getString(R.string.initial_message_create_wallet_body)),
+        )
     }
 
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
