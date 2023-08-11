@@ -1,8 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import com.tangem.blockchain.common.Blockchain
@@ -10,6 +7,8 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -26,12 +25,15 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +50,7 @@ import kotlin.properties.Delegates
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -96,8 +98,7 @@ internal class WalletViewModel @Inject constructor(
     )
 
     /** Screen state */
-    var uiState: WalletState by mutableStateOf(stateFactory.getInitialState())
-        private set
+    var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
     private var wallets: List<UserWallet> by Delegates.notNull()
 
@@ -131,6 +132,7 @@ internal class WalletViewModel @Inject constructor(
         }
 
         uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
+
         updateContentItems(index = selectedWalletIndex)
     }
 
@@ -316,13 +318,49 @@ internal class WalletViewModel @Inject constructor(
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
+        /*
+         * When wallet is changed it's necessary to stop the last jobs.
+         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
+         */
         tokensJobHolder.update(job = null)
         marketPriceJobHolder.update(job = null)
         notificationsJobHolder.update(job = null)
 
-        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
+        val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
+        if (cacheState != null) {
+            uiState = if (cacheState is WalletState.ContentState) {
+                cacheState.copySealed(walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index))
+            } else {
+                cacheState
+            }
 
-        updateContentItems(index = index)
+            if (cacheState.isLoadingState()) updateContentItems(index)
+        } else {
+            uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
+            updateContentItems(index = index)
+        }
+    }
+
+    private fun WalletState.isLoadingState(): Boolean {
+        // Check the base components
+        if (this is WalletState.ContentState) {
+            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading ||
+                notifications.isEmpty()
+        }
+
+        // Check the special components
+        return when (this) {
+            is WalletMultiCurrencyState -> {
+                tokensListState is WalletTokensListState.Loading ||
+                    tokensListState.items
+                        .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
+                        .any { it.state is TokenItemState.Loading }
+            }
+            is WalletSingleCurrencyState -> {
+                txHistoryState is TxHistoryState.Loading || marketPriceBlockState is MarketPriceBlockState.Loading
+            }
+            is WalletState.Initial -> false
+        }
     }
 
     override fun onRefreshSwipe() {
