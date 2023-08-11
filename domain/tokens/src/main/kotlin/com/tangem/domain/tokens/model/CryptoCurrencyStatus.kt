@@ -86,4 +86,15 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val hasTransactionsInProgress: Boolean,
     ) : Status()
+
+    /**
+     * Represents a state where the token is available, but there is no current quote available for it.
+     *
+     * @property amount The amount of the token.
+     * @property hasTransactionsInProgress Indicates if there are any transactions in progress related to the token.
+     */
+    data class NoQuote(
+        override val amount: BigDecimal,
+        override val hasTransactionsInProgress: Boolean,
+    ) : Status()
 }
