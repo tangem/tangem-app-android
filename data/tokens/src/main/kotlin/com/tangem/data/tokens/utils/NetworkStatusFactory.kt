@@ -39,7 +39,7 @@ internal class NetworkStatusFactory {
                     is CryptoCurrencyAmount.Coin -> currencies.singleOrNull { it is CryptoCurrency.Coin }
                     is CryptoCurrencyAmount.Token -> currencies.firstOrNull {
                         it is CryptoCurrency.Token &&
-                            getTokenIdString(it.id) == amount.id &&
+                            it.id.rawCurrencyId == amount.id &&
                             it.contractAddress == amount.tokenContractAddress
                     }
                 }
