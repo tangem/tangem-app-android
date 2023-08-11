@@ -87,4 +87,13 @@ internal object MockTokensStates {
             ),
         )
     }
+
+    val noQuotesTokensStatuses = loadedTokensStates.map { currency ->
+        currency.copy(
+            value = CryptoCurrencyStatus.NoQuote(
+                amount = currency.value.amount!!,
+                hasTransactionsInProgress = false,
+            ),
+        )
+    }
 }
