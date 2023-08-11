@@ -76,11 +76,8 @@ internal class WalletViewModel @Inject constructor(
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()
 
-    /** Screen state */
-    val uiState: WalletState get() = uiStateHolder.uiState
-
     private val notificationsListFactory = WalletNotificationsListFactory(
-        currentStateProvider = Provider { uiStateHolder.uiState },
+        currentStateProvider = Provider { uiState },
         wasCardScannedCallback = getCardWasScannedUseCase::invoke,
         isUserAlreadyRateAppCallback = isUserAlreadyRateAppUseCase::invoke,
         isDemoCardCallback = isDemoCardUseCase::invoke,
@@ -100,7 +97,8 @@ internal class WalletViewModel @Inject constructor(
         clickIntents = this,
     )
 
-    private val uiStateHolder = WalletStateHolder(initialState = stateFactory.getInitialState())
+    /** Screen state */
+    var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
     private var wallets: List<UserWallet> by Delegates.notNull()
 
@@ -133,16 +131,15 @@ internal class WalletViewModel @Inject constructor(
             sourceList.indexOfFirst { it.walletId == selectedWallet.walletId }
         }
 
-        uiStateHolder.setState(
-            state = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex),
-        )
+        uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
+
         updateContentItems(index = selectedWalletIndex)
     }
 
     private fun updateContentItems(index: Int, isRefreshing: Boolean = false) {
         val cardTypeResolver = getCardTypeResolver(index)
         when {
-            getWallet(index).isLocked -> uiStateHolder.setState(state = stateFactory.getLockedState())
+            getWallet(index).isLocked -> uiState = stateFactory.getLockedState()
             cardTypeResolver.isMultiwalletAllowed() -> updateMultiCurrencyContent(index, isRefreshing)
             !cardTypeResolver.isMultiwalletAllowed() -> updateSingleCurrencyContent(index)
         }
@@ -156,11 +153,9 @@ internal class WalletViewModel @Inject constructor(
         getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
-                uiStateHolder.setState(
-                    state = stateFactory.getStateByTokensList(
-                        tokenListEither = tokenListEither,
-                        isRefreshing = isRefreshing,
-                    ),
+                uiState = stateFactory.getStateByTokensList(
+                    tokenListEither = tokenListEither,
+                    isRefreshing = isRefreshing,
                 )
 
                 updateNotifications(
@@ -192,19 +187,17 @@ internal class WalletViewModel @Inject constructor(
                 derivationPath = derivationPath,
             )
 
-            uiStateHolder.setState(
-                state = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither),
-            )
+            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
 
             txHistoryItemsCountEither.onRight {
-                val newState = stateFactory.getLoadedTxHistoryState(
+                uiState = stateFactory.getLoadedTxHistoryState(
                     txHistoryEither = txHistoryItemsUseCase(
                         networkId = Network.ID(blockchain.id),
                         derivationPath = derivationPath,
-                    ).map { it.cachedIn(viewModelScope) },
+                    ).map {
+                        it.cachedIn(viewModelScope)
+                    },
                 )
-
-                uiStateHolder.setState(state = newState)
             }
         }
     }
@@ -212,11 +205,7 @@ internal class WalletViewModel @Inject constructor(
     private fun updateMarketPrice(userWalletId: UserWalletId) {
         getPrimaryCurrencyUseCase(userWalletId = userWalletId)
             .distinctUntilChanged()
-            .onEach {
-                uiStateHolder.setState(
-                    state = stateFactory.getSingleCurrencyLoadedBalanceState(cryptoCurrencyEither = it),
-                )
-            }
+            .onEach { uiState = stateFactory.getSingleCurrencyLoadedBalanceState(cryptoCurrencyEither = it) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
@@ -228,7 +217,7 @@ internal class WalletViewModel @Inject constructor(
             tokenList = tokenList,
         )
             .distinctUntilChanged()
-            .onEach { uiStateHolder.setState(state = stateFactory.getStateByNotifications(notifications = it)) }
+            .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(notificationsJobHolder)
@@ -293,12 +282,10 @@ internal class WalletViewModel @Inject constructor(
     override fun onBackupCardClick() = router.openOnboardingScreen()
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
-        uiStateHolder.setState(
-            state = stateFactory.getStateWithOpenBottomSheet(
-                content = WalletBottomSheetConfig.BottomSheetContentConfig.CriticalWarningAlreadySignedHashes(
-                    onOkClick = {},
-                    onCancelClick = {},
-                ),
+        uiState = stateFactory.getStateWithOpenBottomSheet(
+            content = WalletBottomSheetConfig.BottomSheetContentConfig.CriticalWarningAlreadySignedHashes(
+                onOkClick = {},
+                onCancelClick = {},
             ),
         )
     }
@@ -308,12 +295,10 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onLikeTangemAppClick() {
-        uiStateHolder.setState(
-            state = stateFactory.getStateWithOpenBottomSheet(
-                content = WalletBottomSheetConfig.BottomSheetContentConfig.LikeTangemApp(
-                    onRateTheAppClick = ::onRateTheAppClick,
-                    onShareClick = ::onShareClick,
-                ),
+        uiState = stateFactory.getStateWithOpenBottomSheet(
+            content = WalletBottomSheetConfig.BottomSheetContentConfig.LikeTangemApp(
+                onRateTheAppClick = ::onRateTheAppClick,
+                onShareClick = ::onShareClick,
             ),
         )
     }
@@ -343,19 +328,15 @@ internal class WalletViewModel @Inject constructor(
 
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
         if (cacheState != null) {
-            uiStateHolder.setState(
-                state = if (cacheState is WalletState.ContentState) {
-                    cacheState.copySealed(walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index))
-                } else {
-                    cacheState
-                },
-            )
+            uiState = if (cacheState is WalletState.ContentState) {
+                cacheState.copySealed(walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index))
+            } else {
+                cacheState
+            }
 
             if (cacheState.isLoadingState()) updateContentItems(index)
         } else {
-            uiStateHolder.setState(
-                state = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index),
-            )
+            uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
             updateContentItems(index = index)
         }
     }
@@ -383,7 +364,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe() {
-        uiStateHolder.setState(state = stateFactory.getStateAfterContentRefreshing())
+        uiState = stateFactory.getStateAfterContentRefreshing()
 
         updateContentItems(
             index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
@@ -404,7 +385,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onReloadClick() {
-        uiStateHolder.setState(state = stateFactory.getStateAfterContentRefreshing())
+        uiState = stateFactory.getStateAfterContentRefreshing()
         updateSingleCurrencyContent(
             index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
         )
@@ -437,17 +418,15 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
-        uiStateHolder.setState(
-            state = stateFactory.getStateWithOpenBottomSheet(
-                content = when (state) {
-                    is WalletMultiCurrencyState.Locked -> state.bottomSheetConfig.content
-                    is WalletSingleCurrencyState.Locked -> state.bottomSheetConfig.content
-                },
-            ),
+        uiState = stateFactory.getStateWithOpenBottomSheet(
+            content = when (state) {
+                is WalletMultiCurrencyState.Locked -> state.bottomSheetConfig.content
+                is WalletSingleCurrencyState.Locked -> state.bottomSheetConfig.content
+            },
         )
     }
 
     override fun onBottomSheetDismiss() {
-        uiStateHolder.setState(state = stateFactory.getStateWithClosedBottomSheet())
+        uiState = stateFactory.getStateWithClosedBottomSheet()
     }
 }
