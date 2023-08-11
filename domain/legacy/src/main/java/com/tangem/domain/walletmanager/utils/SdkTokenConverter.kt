@@ -8,7 +8,7 @@ internal class SdkTokenConverter : Converter<CryptoCurrency.Token, SdkToken> {
 
     override fun convert(value: CryptoCurrency.Token): SdkToken {
         return SdkToken(
-            id = value.id.value.takeUnless { value.isCustom },
+            id = value.id.rawCurrencyId,
             name = value.name,
             symbol = value.symbol,
             contractAddress = value.contractAddress,
