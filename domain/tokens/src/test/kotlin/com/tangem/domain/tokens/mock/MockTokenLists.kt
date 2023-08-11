@@ -41,9 +41,14 @@ internal object MockTokenLists {
         sortedBy = TokenList.SortType.NONE,
     )
 
+    val noQuotesUngroupedTokenList = failedUngroupedTokenList.copy(
+        totalFiatBalance = TokenList.FiatBalance.Loaded(amount = BigDecimal.ZERO, isAllAmountsSummarized = false),
+        currencies = MockTokensStates.noQuotesTokensStatuses,
+    )
+
     val loadingUngroupedTokenList = with(failedUngroupedTokenList) {
         copy(
-            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) }.toNonEmptyListOrNull()!!,
+            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) },
             totalFiatBalance = TokenList.FiatBalance.Loading,
         )
     }
@@ -54,8 +59,7 @@ internal object MockTokenLists {
             groups = groups.map { group ->
                 group.copy(
                     currencies = group.currencies
-                        .map { it.copy(value = CryptoCurrencyStatus.Loading) }
-                        .toNonEmptyListOrNull()!!,
+                        .map { it.copy(value = CryptoCurrencyStatus.Loading) },
                 )
             }.toNonEmptyListOrNull()!!,
         )
@@ -95,7 +99,6 @@ internal object MockTokenLists {
         get() {
             val tokens = MockTokensStates.loadedTokensStates
                 .sortedByDescending { it.value.fiatAmount }
-                .toNonEmptyListOrNull()!!
 
             return unsortedUngroupedTokenList.copy(
                 currencies = tokens,
