@@ -21,7 +21,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.domain.common.extensions.getPrimaryCurve
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -209,6 +209,7 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         val productType = ProductType.Wallet
+        val config = CardConfig.createConfig(card)
         scope.launch {
             val scanResponse = ScanResponse(
                 card = card,
@@ -216,7 +217,7 @@ private class ScanWalletProcessor(
                 walletData = session.environment.walletData,
                 primaryCard = primaryCard,
             )
-            val derivations = collectDerivations(card, scanResponse.derivationStyleProvider)
+            val derivations = collectDerivations(card, config, scanResponse.derivationStyleProvider)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
                 callback(CompletionResult.Success(scanResponse))
                 return@launch
@@ -299,13 +300,14 @@ private class ScanWalletProcessor(
 
     private suspend fun collectDerivations(
         card: CardDTO,
+        config: CardConfig,
         derivationStyleProvider: DerivationStyleProvider,
     ): Map<ByteArrayKey, List<DerivationPath>> {
         val blockchains = getBlockchainsToDerive(card, derivationStyleProvider)
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
 
         blockchains.forEach { blockchain ->
-            val curve = blockchain.blockchain.getPrimaryCurve()
+            val curve = config.primaryCurve(blockchain.blockchain)
             val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
             if (wallet.chainCode == null) return@forEach
 

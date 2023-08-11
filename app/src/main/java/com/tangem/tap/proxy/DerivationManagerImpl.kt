@@ -10,6 +10,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -94,10 +95,11 @@ class DerivationManagerImpl(
         onSuccess: (ScanResponse) -> Unit,
         onFailure: (Exception) -> Unit,
     ) {
-        val derivationDataList = listOfNotNull(
-            getDerivations(EllipticCurve.Secp256k1, scanResponse, currencyList),
-            getDerivations(EllipticCurve.Ed25519, scanResponse, currencyList),
-        )
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivationDataList = currencyList.mapNotNull {
+            val curve = config.primaryCurve(it.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        }
         val derivations = derivationDataList.associate { it.derivations }
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
