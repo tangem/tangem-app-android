@@ -13,6 +13,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
@@ -119,10 +120,11 @@ object TokensMiddleware {
         currencyList: List<Currency>,
         onSuccess: (ScanResponse) -> Unit,
     ) {
-        val derivationDataList = listOfNotNull(
-            getDerivations(EllipticCurve.Secp256k1, scanResponse, currencyList),
-            getDerivations(EllipticCurve.Ed25519, scanResponse, currencyList),
-        )
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivationDataList = currencyList.mapNotNull {
+            val curve = config.primaryCurve(it.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        }
         val derivations = derivationDataList.associate { it.derivations }
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
