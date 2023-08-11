@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokenLists
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.models.Quote
@@ -32,7 +33,10 @@ internal class GetTokenListUseCaseTest {
     @Test
     fun `when list ungrouped and unsorted then correct token list should be returned`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.failedUngroupedTokenList.right()
+        val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.right(),
+            MockTokenLists.failedUngroupedTokenList.right(),
+        )
 
         val useCase = getUseCase(
             isGrouped = flowOf(false.right()),
@@ -40,7 +44,30 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
+
+        // Then
+        assertEquals(expectedResult, result)
+    }
+
+    @Test
+    fun `when list refreshed then correct token list should be returned`() = runTest {
+        // Given
+        val expectedResult = listOf(
+            MockTokenLists.failedUngroupedTokenList.right(),
+        )
+
+        val useCase = getUseCase(
+            isGrouped = flowOf(false.right()),
+            isSortedByBalance = flowOf(false.right()),
+        )
+
+        // When
+        val result = useCase(userWalletId, refresh = true)
+            .take(count = 1)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -61,14 +88,22 @@ internal class GetTokenListUseCaseTest {
     }
 
     @Test
-    fun `when quotes getting failed then error should be received`() = runTest {
+    fun `when quotes getting failed then token list without quotes should be received`() = runTest {
         // Given
-        val expectedResult = TokenListError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.right(),
+            MockTokenLists.noQuotesUngroupedTokenList.right(),
+        )
 
-        val useCase = getUseCase(quotes = flowOf(DataError.NetworkError.NoInternetConnection.left()))
+        val useCase = getUseCase(
+            quotes = flowOf(DataError.NetworkError.NoInternetConnection.left()),
+            statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
+        )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -99,7 +134,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(statuses = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId, refresh = true).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -138,6 +173,7 @@ internal class GetTokenListUseCaseTest {
         // Given
         val error = DataError.NetworkError.NoInternetConnection.left()
         val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.right(),
             MockTokenLists.failedUngroupedTokenList.right(),
             TokenListError.DataError(DataError.NetworkError.NoInternetConnection).left(),
         )
@@ -151,7 +187,7 @@ internal class GetTokenListUseCaseTest {
 
         // When
         val result = useCase(userWalletId)
-            .take(count = 2)
+            .take(count = 3)
             .toList()
 
         // Then
@@ -160,12 +196,17 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when list grouped then correct token list should be received`() = runTest {
-        val expectedResult = MockTokenLists.failedGroupedTokenList.right()
+        val expectedResult = listOf(
+            MockTokenLists.loadingGroupedTokenList.right(),
+            MockTokenLists.failedGroupedTokenList.right(),
+        )
 
         val useCase = getUseCase(isGrouped = flowOf(true.right()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -189,7 +230,10 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when list is sorted and ungrouped then correct token list should be received`() = runTest {
-        val expectedResult = MockTokenLists.sortedUngroupedTokenList.right()
+        val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.copy(sortedBy = TokenList.SortType.BALANCE).right(),
+            MockTokenLists.sortedUngroupedTokenList.right(),
+        )
 
         val useCase = getUseCase(
             statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
@@ -198,7 +242,9 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -206,7 +252,10 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when list is sorted and grouped then correct token list should be received`() = runTest {
-        val expectedResult = MockTokenLists.sortedGroupedTokenList.right()
+        val expectedResult = listOf(
+            MockTokenLists.loadingGroupedTokenList.copy(sortedBy = TokenList.SortType.BALANCE).right(),
+            MockTokenLists.sortedGroupedTokenList.right(),
+        )
 
         val useCase = getUseCase(
             statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
@@ -215,7 +264,9 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -236,7 +287,10 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when networks is empty and list is grouped then ungrouped list should be received`() = runTest {
-        val expectedResult = TokenListError.UnableToSortTokenList(MockTokenLists.failedUngroupedTokenList).left()
+        val expectedResult = listOf(
+            TokenListError.UnableToSortTokenList(MockTokenLists.loadingUngroupedTokenList).left(),
+            TokenListError.UnableToSortTokenList(MockTokenLists.failedUngroupedTokenList).left(),
+        )
 
         val useCase = getUseCase(
             networks = emptySet<Network>().right(),
@@ -244,7 +298,9 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -265,12 +321,17 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when networks statuses flow is empty then error should be received`() = runTest {
-        val expectedResult = TokenListError.EmptyTokens.left()
+        val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.right(),
+            TokenListError.EmptyTokens.left(),
+        )
 
         val useCase = getUseCase(statuses = flowOf())
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
@@ -290,13 +351,21 @@ internal class GetTokenListUseCaseTest {
     }
 
     @Test
-    fun `when quotes flow is empty then error should be received`() = runTest {
-        val expectedResult = TokenListError.EmptyTokens.left()
+    fun `when quotes flow is empty then list without quotes should be received`() = runTest {
+        val expectedResult = listOf(
+            MockTokenLists.loadingUngroupedTokenList.right(),
+            MockTokenLists.noQuotesUngroupedTokenList.right(),
+        )
 
-        val useCase = getUseCase(quotes = flowOf())
+        val useCase = getUseCase(
+            statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
+            quotes = flowOf(),
+        )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase(userWalletId)
+            .take(count = 2)
+            .toList()
 
         // Then
         assertEquals(expectedResult, result)
