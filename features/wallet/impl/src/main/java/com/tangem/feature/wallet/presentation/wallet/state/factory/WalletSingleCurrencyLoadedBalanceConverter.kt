@@ -43,23 +43,14 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
 
     private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.Loaded -> MarketPriceBlockState.Content(
+            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.Loaded,
+            -> MarketPriceBlockState.Content(
                 currencyName = currencyName,
-                price = BigDecimalFormatter.formatFiatAmount(
-                    fiatAmount = status.fiatRate,
-                    fiatCurrencyCode = fiatCurrencyCode,
-                    fiatCurrencySymbol = fiatCurrencySymbol,
-                ),
+                price = formatPrice(status),
                 priceChangeConfig = PriceChangeConfig(
-                    valueInPercent = BigDecimalFormatter.formatPercent(
-                        percent = status.priceChange,
-                        useAbsoluteValue = true,
-                    ),
-                    type = if (status.priceChange > BigDecimal.ZERO) {
-                        PriceChangeConfig.Type.UP
-                    } else {
-                        PriceChangeConfig.Type.DOWN
-                    },
+                    valueInPercent = formatPriceChange(status),
+                    type = getPriceChangeType(status),
                 ),
             )
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
@@ -77,7 +68,9 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     ): WalletsListConfig {
         val selectedWallet = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex]
         val updatedWallet = when (status) {
-            is CryptoCurrencyStatus.Loaded -> {
+            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.Loaded,
+            -> {
                 WalletCardState.Content(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
@@ -88,11 +81,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     ),
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
-                    balance = BigDecimalFormatter.formatFiatAmount(
-                        fiatAmount = status.fiatAmount,
-                        fiatCurrencyCode = fiatCurrencyCode,
-                        fiatCurrencySymbol = fiatCurrencySymbol,
-                    ),
+                    balance = formatFiatAmount(status),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
@@ -122,6 +111,45 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         return state.walletsListConfig.copy(
             wallets = state.walletsListConfig.wallets.toPersistentList()
                 .set(index = state.walletsListConfig.selectedWalletIndex, element = updatedWallet),
+        )
+    }
+
+    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeConfig.Type {
+        val priceChange = status.priceChange ?: return PriceChangeConfig.Type.DOWN
+
+        return if (priceChange > BigDecimal.ZERO) {
+            PriceChangeConfig.Type.UP
+        } else {
+            PriceChangeConfig.Type.DOWN
+        }
+    }
+
+    private fun formatPriceChange(status: CryptoCurrencyStatus.Status): String {
+        val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+
+        return BigDecimalFormatter.formatPercent(
+            percent = priceChange,
+            useAbsoluteValue = true,
+        )
+    }
+
+    private fun formatPrice(status: CryptoCurrencyStatus.Status): String {
+        val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+
+        return BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = fiatRate,
+            fiatCurrencyCode = fiatCurrencyCode,
+            fiatCurrencySymbol = fiatCurrencySymbol,
+        )
+    }
+
+    private fun formatFiatAmount(status: CryptoCurrencyStatus.Status): String {
+        val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+
+        return BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = fiatAmount,
+            fiatCurrencyCode = fiatCurrencyCode,
+            fiatCurrencySymbol = fiatCurrencySymbol,
         )
     }
 }
