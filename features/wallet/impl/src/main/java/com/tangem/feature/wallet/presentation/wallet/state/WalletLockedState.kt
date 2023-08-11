@@ -21,4 +21,12 @@ internal sealed interface WalletLockedState {
 
     /** Lambda be invoked when bottom sheet is dismissed */
     val onBottomSheetDismiss: () -> Unit
+
+    /** Get selected wallet index */
+    fun getSelectedWalletIndex(): Int {
+        return when (this) {
+            is WalletMultiCurrencyState.Locked -> walletsListConfig.selectedWalletIndex
+            is WalletSingleCurrencyState.Locked -> walletsListConfig.selectedWalletIndex
+        }
+    }
 }
