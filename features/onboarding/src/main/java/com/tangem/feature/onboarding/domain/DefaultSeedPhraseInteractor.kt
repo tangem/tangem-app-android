@@ -112,4 +112,5 @@ private fun MnemonicErrorResult.mapToError(): SeedPhraseError = when (this) {
     MnemonicErrorResult.NormalizationFailed -> SeedPhraseError.NormalizationFailed
     MnemonicErrorResult.UnsupportedLanguage -> SeedPhraseError.UnsupportedLanguage
     is MnemonicErrorResult.InvalidWords -> SeedPhraseError.InvalidWords(this.words)
+    MnemonicErrorResult.InvalidMnemonic -> SeedPhraseError.InvalidMnemonic
 }
