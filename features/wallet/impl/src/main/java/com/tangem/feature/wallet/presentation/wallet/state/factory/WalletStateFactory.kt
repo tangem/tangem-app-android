@@ -69,6 +69,7 @@ internal class WalletStateFactory(
     private val singleCurrencyLoadedBalanceConverter by lazy {
         WalletSingleCurrencyLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
+            cardTypeResolverProvider = currentCardTypeResolverProvider,
             fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
             fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
         )
