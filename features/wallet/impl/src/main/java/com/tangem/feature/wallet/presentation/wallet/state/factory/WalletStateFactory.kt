@@ -4,7 +4,9 @@ import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
@@ -61,6 +63,14 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
             clickIntents = clickIntents,
+        )
+    }
+
+    private val singleCurrencyLoadedBalanceConverter by lazy {
+        WalletSingleCurrencyLoadedBalanceConverter(
+            currentStateProvider = currentStateProvider,
+            fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
+            fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
         )
     }
 
@@ -187,5 +197,11 @@ internal class WalletStateFactory(
             WalletManageButton.Sell(),
             WalletManageButton.CopyAddress(onClick = {}),
         )
+    }
+
+    fun getSingleCurrencyLoadedBalanceState(
+        cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
+    ): WalletState {
+        return singleCurrencyLoadedBalanceConverter.convert(cryptoCurrencyEither)
     }
 }
