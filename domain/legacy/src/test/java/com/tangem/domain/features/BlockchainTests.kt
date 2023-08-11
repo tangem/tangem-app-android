@@ -13,7 +13,6 @@ class BlockchainTests {
             .toMutableList()
             .apply {
                 remove(Blockchain.Unknown)
-                remove(Blockchain.Optimism)
             }
             .map { it to Blockchain.fromNetworkId(it.toNetworkId()) }
             .mapNotNull { if (it.second == null) it.first else null }
