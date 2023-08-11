@@ -13,13 +13,13 @@ internal class MockQuotesRepository : QuotesRepository {
 
     override fun getQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>> {
         return channelFlow {
-            val quotes = currenciesIds.map {
+            val quotes = currenciesIds.mapNotNullTo(hashSetOf()) { id ->
                 Quote(
-                    currencyId = it,
+                    rawCurrencyId = id.rawCurrencyId ?: return@mapNotNullTo null,
                     fiatRate = BigDecimal.ZERO,
                     priceChange = BigDecimal.ZERO,
                 )
-            }.toSet()
+            }
 
             delay(Random.nextLong(from = 200, until = 2_000))
 
