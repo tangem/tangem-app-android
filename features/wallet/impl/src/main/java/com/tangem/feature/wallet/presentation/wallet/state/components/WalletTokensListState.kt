@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
+import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
-import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -23,9 +23,8 @@ internal sealed class WalletTokensListState(
     /** Loading content state */
     object Loading : WalletTokensListState(
         items = persistentListOf(
-            TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
-            TokensListItemState.Token(state = TokenItemState.Loading),
-            TokensListItemState.Token(state = TokenItemState.Loading),
+            TokensListItemState.Token(state = TokenItemState.Loading(id = "Loading#1")),
+            TokensListItemState.Token(state = TokenItemState.Loading(id = "Loading#2")),
         ),
         onOrganizeTokensClick = null,
     )
@@ -46,7 +45,7 @@ internal sealed class WalletTokensListState(
         WalletTokensListState(
             items = persistentListOf(
                 TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
-                TokensListItemState.Token(state = TokenItemState.Loading),
+                TokensListItemState.Token(state = TokenItemState.Loading(id = "Locked#1")),
             ),
             onOrganizeTokensClick = null,
         ),

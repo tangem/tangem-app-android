@@ -19,7 +19,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletToke
 internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifier: Modifier = Modifier) {
     itemsIndexed(
         items = state.items,
-        key = { index, _ -> index },
+        key = { _, item ->
+            when (item) {
+                is WalletTokensListState.TokensListItemState.NetworkGroupTitle -> item.value.hashCode()
+                is WalletTokensListState.TokensListItemState.Token -> item.state.id
+            }
+        },
+        contentType = { _, item -> item::class.java },
         itemContent = { index, item ->
             MultiCurrencyContentItem(
                 state = item,
