@@ -10,6 +10,7 @@ internal class CurrencyStatusOperations(
     private val currency: CryptoCurrency,
     private val quote: Quote?,
     private val networkStatus: NetworkStatus?,
+    private val ignoreQuote: Boolean,
 ) {
 
     fun createTokenStatus(): CryptoCurrencyStatus = CryptoCurrencyStatus(currency, createStatus())
@@ -28,6 +29,10 @@ internal class CurrencyStatusOperations(
         val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
 
         return when {
+            ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+                amount = amount,
+                hasTransactionsInProgress = status.hasTransactionsInProgress,
+            )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
