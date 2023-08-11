@@ -6,6 +6,8 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -16,11 +18,16 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     derivationParams: DerivationParams?,
 ): WalletManager? {
     val card = scanResponse.card
+    val cardConfig = CardConfig.createConfig(card)
     if (card.isTestCard && blockchain.getTestnetVersion() == null) return null
     val supportedCurves = blockchain.getSupportedCurves()
 
     val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
-    val wallet = selectWallet(wallets) ?: return null
+    val wallet = selectWallet(
+        wallets = wallets,
+        cardConfig = cardConfig,
+        blockchain = blockchain,
+    ) ?: return null
 
     val environmentBlockchain =
         if (card.isTestCard) blockchain.getTestnetVersion()!! else blockchain
@@ -85,10 +92,19 @@ fun WalletManagerFactory.makePrimaryWalletManager(scanResponse: ScanResponse): W
     )
 }
 
-private fun selectWallet(wallets: List<CardDTO.Wallet>): CardDTO.Wallet? {
-    return when (wallets.size) {
-        0 -> null
-        1 -> wallets[0]
-        else -> wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: wallets[0]
+private fun selectWallet(
+    wallets: List<CardDTO.Wallet>,
+    cardConfig: CardConfig,
+    blockchain: Blockchain,
+): CardDTO.Wallet? {
+    return if (cardConfig is Wallet2CardConfig) {
+        val primaryCurve = cardConfig.primaryCurve(blockchain)
+        wallets.firstOrNull { it.curve == primaryCurve }
+    } else {
+        when (wallets.size) {
+            0 -> null
+            1 -> wallets[0]
+            else -> wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: wallets[0]
+        }
     }
 }
