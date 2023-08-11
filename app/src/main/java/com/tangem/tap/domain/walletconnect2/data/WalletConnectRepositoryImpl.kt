@@ -294,16 +294,19 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
     override fun sendRequest(requestData: RequestData, result: String) {
         val session = currentSessions.find { it.topic == requestData.topic }
-        analyticsHandler.send(
-            WalletConnect.RequestHandled(
-                WalletConnect.RequestHandledParams(
-                    dAppName = session?.name ?: "",
-                    dAppUrl = session?.url ?: "",
-                    methodName = requestData.method,
-                    blockchain = requestData.blockchain,
+        // Add Ethereum Chain method is processed without user input, skip logging it
+        if (requestData.method != WcJrpcMethods.WALLET_ADD_ETHEREUM_CHAIN.code) {
+            analyticsHandler.send(
+                WalletConnect.RequestHandled(
+                    WalletConnect.RequestHandledParams(
+                        dAppName = session?.name ?: "",
+                        dAppUrl = session?.url ?: "",
+                        methodName = requestData.method,
+                        blockchain = requestData.blockchain,
+                    ),
                 ),
-            ),
-        )
+            )
+        }
         Web3Wallet.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = requestData.topic,
