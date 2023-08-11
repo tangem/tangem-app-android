@@ -61,7 +61,7 @@ internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
     }
 
     private fun createCoin(blockchain: Blockchain, card: CardDTO): CryptoCurrency.Coin? {
-        if (blockchain != Blockchain.Unknown) {
+        if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
             return null
         }
