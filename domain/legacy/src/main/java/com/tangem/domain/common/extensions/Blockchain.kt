@@ -71,6 +71,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         "octaspace" -> Blockchain.OctaSpace
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
+        "chia" -> Blockchain.Chia
+        "chia/test" -> Blockchain.ChiaTestnet
         else -> null
     }
 }
@@ -141,6 +143,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
         Blockchain.OctaSpace -> "octaspace"
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -185,6 +189,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -202,20 +208,6 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
 
 fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
-}
-
-fun Blockchain.getPrimaryCurve(): EllipticCurve? {
-    return when {
-        getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
-            EllipticCurve.Secp256k1
-        }
-        getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
-            EllipticCurve.Ed25519
-        }
-        else -> {
-            null
-        }
-    }
 }
 
 fun Blockchain.derivationPath(style: DerivationStyle?): DerivationPath? {

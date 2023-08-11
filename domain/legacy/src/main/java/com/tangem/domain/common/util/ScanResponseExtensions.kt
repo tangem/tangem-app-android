@@ -10,6 +10,8 @@ import com.tangem.domain.common.TangemCardTypesResolver
 import com.tangem.domain.common.TangemDerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.models.scan.ScanResponse
 
 val ScanResponse.cardTypesResolver: CardTypesResolver
@@ -35,14 +37,22 @@ fun ScanResponse.hasDerivation(blockchain: Blockchain, rawDerivationPath: String
 
 private fun ScanResponse.hasDerivation(blockchain: Blockchain, derivationPath: DerivationPath): Boolean {
     val isTestnet = card.isTestCard || blockchain.isTestnet()
-    return when {
-        Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
-            hasDerivation(EllipticCurve.Secp256k1, derivationPath)
+    val config = CardConfig.createConfig(card)
+    return if (config is Wallet2CardConfig) {
+        // new logic for wallet2
+        val primaryCurve = config.primaryCurve(blockchain)
+        primaryCurve?.let { hasDerivation(it, derivationPath) } ?: false
+    } else {
+        // leave logic for legacy wallets
+        when {
+            Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
+                hasDerivation(EllipticCurve.Secp256k1, derivationPath)
+            }
+            Blockchain.ed25519OnlyBlockchains(isTestnet).contains(blockchain) -> {
+                hasDerivation(EllipticCurve.Ed25519, derivationPath)
+            }
+            else -> false
         }
-        Blockchain.ed25519OnlyBlockchains(isTestnet).contains(blockchain) -> {
-            hasDerivation(EllipticCurve.Ed25519, derivationPath)
-        }
-        else -> false
     }
 }
 

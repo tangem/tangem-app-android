@@ -11,11 +11,13 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.map
+import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.derivationPath
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.operations.CommandResponse
@@ -58,7 +60,7 @@ private data class CreateWalletResponse(
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
     private val derivationStyleProvider: DerivationStyleProvider,
-    private val seed: ByteArray? = null,
+    private val mnemonic: Mnemonic? = null,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -78,7 +80,7 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
-            else -> CreateWalletTangemWallet(seed, derivationStyleProvider)
+            else -> CreateWalletTangemWallet(mnemonic, derivationStyleProvider)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -134,8 +136,11 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
     }
 }
 
+/**
+ * Uses for multiWallet 1st and 2nd
+ */
 private class CreateWalletTangemWallet(
-    private val seed: ByteArray?,
+    private val mnemonic: Mnemonic?,
     private val derivationStyleProvider: DerivationStyleProvider,
 ) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
@@ -146,8 +151,9 @@ private class CreateWalletTangemWallet(
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
+        val config = CardConfig.createConfig(card)
         val walletsOnCard = card.wallets.map { it.curve }.toSet()
-        val curves = card.supportedCurves.intersect(CURVES_FOR_WALLETS).subtract(walletsOnCard).toList()
+        val curves = card.supportedCurves.intersect(config.mandatoryCurves.toSet()).subtract(walletsOnCard).toList()
 
         if (curves.isEmpty()) {
             val createWalletResponses = card.wallets.map { wallet ->
@@ -156,8 +162,7 @@ private class CreateWalletTangemWallet(
             proceedWithCreatedWallets(card, createWalletResponses, session, callback)
             return
         }
-
-        CreateWalletsTask(curves, seed).run(session) { result ->
+        CreateWalletsTask(curves, mnemonic).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     proceedWithCreatedWallets(
