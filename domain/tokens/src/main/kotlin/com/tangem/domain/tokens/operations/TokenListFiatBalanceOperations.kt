@@ -27,7 +27,7 @@ internal class TokenListFiatBalanceOperations(
                     break
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
-                    fiatBalance = recalculateBalanceForNoAccountStatus(fiatBalance)
+                    fiatBalance = recalculateBalanceWithoutQuote(fiatBalance)
                 }
                 is CryptoCurrencyStatus.Loaded -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
@@ -35,13 +35,16 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.Custom -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
                 }
+                is CryptoCurrencyStatus.NoQuote -> {
+                    fiatBalance = recalculateBalanceWithoutQuote(fiatBalance)
+                }
             }
         }
 
         return fiatBalance
     }
 
-    private fun recalculateBalanceForNoAccountStatus(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
+    private fun recalculateBalanceWithoutQuote(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
         return with(currentBalance) {
             (this as? TokenList.FiatBalance.Loaded)?.copy(
                 isAllAmountsSummarized = false,
