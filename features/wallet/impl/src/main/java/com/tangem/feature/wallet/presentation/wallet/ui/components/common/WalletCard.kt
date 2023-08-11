@@ -1,6 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -20,6 +23,7 @@ import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -64,85 +68,92 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
             }
 
             val imageWidth = TangemTheme.dimens.size120
-            state.imageResId?.let {
-                WalletImage(
-                    id = it,
-                    modifier = Modifier.constrainAs(imageItem) {
-                        centerVerticallyTo(parent)
-                        top.linkTo(parent.top)
-                        end.linkTo(parent.end)
-                        height = Dimension.fillToConstraints
-                        width = Dimension.value(imageWidth)
-                    },
-                )
-            }
+            WalletImage(
+                id = state.imageResId,
+                modifier = Modifier.constrainAs(imageItem) {
+                    centerVerticallyTo(parent)
+                    top.linkTo(parent.top)
+                    end.linkTo(parent.end)
+                    height = Dimension.fillToConstraints
+                    width = Dimension.value(imageWidth)
+                },
+            )
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun Title(state: WalletCardState) {
-    when (state) {
-        is WalletCardState.HiddenContent -> {
-            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
+    AnimatedContent(targetState = state, label = "Update the title") {
+        when (it) {
+            is WalletCardState.HiddenContent -> {
+                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
+                    Text(
+                        text = it.title,
+                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.body2,
+                        maxLines = 1,
+                    )
+                    Icon(
+                        modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                        painter = painterResource(id = R.drawable.ic_eye_off_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors.icon.informative,
+                    )
+                }
+            }
+            is WalletCardState.Content,
+            is WalletCardState.Error,
+            is WalletCardState.Loading,
+            -> {
                 Text(
-                    text = state.title,
+                    text = it.title,
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     maxLines = 1,
                 )
-                Icon(
-                    modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                    painter = painterResource(id = R.drawable.ic_eye_off_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
-                )
             }
-        }
-        else -> {
-            Text(
-                text = state.title,
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.body2,
-                maxLines = 1,
-            )
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun Balance(state: WalletCardState) {
-    when (state) {
-        is WalletCardState.Content -> {
-            ResizableText(
-                text = state.balance,
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.h2,
-                fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
-            )
-        }
-        is WalletCardState.Loading -> {
-            RectangleShimmer(
-                modifier = Modifier.size(
-                    width = TangemTheme.dimens.size102,
-                    height = TangemTheme.dimens.size24,
-                ),
-            )
-        }
-        is WalletCardState.HiddenContent -> {
-            Text(
-                text = DOTS,
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.h2,
-            )
-        }
-        is WalletCardState.Error -> {
-            Text(
-                text = "—",
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.h2,
-            )
+    AnimatedContent(targetState = state, label = "Update the balance") {
+        when (it) {
+            is WalletCardState.Content -> {
+                ResizableText(
+                    text = it.balance,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
+                    fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                )
+            }
+            is WalletCardState.Loading -> {
+                RectangleShimmer(
+                    modifier = Modifier.size(
+                        width = TangemTheme.dimens.size102,
+                        height = TangemTheme.dimens.size24,
+                    ),
+                )
+            }
+            is WalletCardState.HiddenContent -> {
+                Text(
+                    text = DOTS,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
+                )
+            }
+            is WalletCardState.Error -> {
+                Text(
+                    text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
+                )
+            }
         }
     }
 }
@@ -157,22 +168,23 @@ private fun AdditionalInfo(description: String) {
 }
 
 @Composable
-private fun WalletImage(@DrawableRes id: Int, modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(id),
-        contentDescription = null,
-        modifier = modifier,
-        contentScale = ContentScale.FillWidth,
-    )
+private fun WalletImage(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
+    AnimatedVisibility(visible = id != null, modifier = modifier) {
+        Image(
+            painter = painterResource(id = requireNotNull(id)),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+        )
+    }
 }
 
 // region Preview
 
-@Preview
+@Preview(widthDp = 360, heightDp = 360)
 @Composable
 private fun Preview_WalletCard_LightTheme(@PreviewParameter(WalletCardStateProvider::class) state: WalletCardState) {
     TangemTheme(isDark = false) {
-        WalletCard(state)
+        WalletCard(state = state, modifier = Modifier.fillMaxWidth())
     }
 }
 
