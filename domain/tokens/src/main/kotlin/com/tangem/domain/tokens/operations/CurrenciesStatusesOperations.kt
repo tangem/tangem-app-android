@@ -79,7 +79,7 @@ internal class CurrenciesStatusesOperations(
         val quoteFlow = getQuotes(nonEmptySetOf(currency.id))
             .map { maybeQuotes ->
                 maybeQuotes.map { quotes ->
-                    quotes.singleOrNull { it.currencyId == currency.id }
+                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
                 }
             }
 
@@ -102,11 +102,11 @@ internal class CurrenciesStatusesOperations(
         quotes: Set<Quote>,
         networkStatuses: Set<NetworkStatus>,
     ): List<CryptoCurrencyStatus> {
-        return currencies.map { token ->
-            val quote = quotes.firstOrNull { it.currencyId == token.id }
-            val networkStatus = networkStatuses.firstOrNull { it.networkId == token.networkId }
+        return currencies.map { currency ->
+            val quote = quotes.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+            val networkStatus = networkStatuses.firstOrNull { it.networkId == currency.networkId }
 
-            createStatus(token, quote, networkStatus)
+            createStatus(currency, quote, networkStatus)
         }
     }
 
