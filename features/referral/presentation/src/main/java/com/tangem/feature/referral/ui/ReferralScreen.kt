@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -256,28 +257,50 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
 private fun InfoForYou(award: String, networkName: String, address: String? = null) {
     ConditionInfo(title = stringResource(id = R.string.referral_point_currencies_title)) {
         Text(
-            text = buildAnnotatedString {
-                append(stringResource(id = R.string.referral_point_currencies_description_prefix))
-                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
-                    append(" $award ")
-                }
-                append(
-                    String.format(
-                        stringResource(id = R.string.referral_point_currencies_description_suffix),
-                        networkName,
-                        if (!address.isNullOrBlank()) " $address" else "",
-                    ),
-                )
-                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
-                    // TODO move to strings
-                    append("30 days after")
-                }
-                append("that")
-            },
+            formatString(
+                quantity = award,
+                network = networkName,
+                address = if (!address.isNullOrBlank()) " $address" else ""
+            ),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
         )
     }
+}
+
+
+@Composable
+fun formatString(
+    quantity: String,
+    network: String,
+    address: String
+): AnnotatedString {
+    val rawString = stringResource(R.string.referral_point_currencies_description, quantity, network, address)
+
+    val pattern = Regex("\\^\\^(.*?)\\^\\^")
+    var startIndex = 0
+    val annotatedString = buildAnnotatedString {
+        pattern.findAll(rawString).forEach { matchResult ->
+            val index = matchResult.range.first
+            val matchedValue = matchResult.groups[1]?.value ?: ""
+
+            // appends unformatted part
+            append(rawString.substring(startIndex, index))
+
+            // applies style on ^^-wrapped parts
+            withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                append(matchedValue)
+            }
+
+            // goes to next part
+            startIndex = matchResult.range.last + 1
+        }
+
+        // appends remaining ending if exists
+        append(rawString.substring(startIndex))
+    }
+
+    return annotatedString
 }
 
 @Composable
