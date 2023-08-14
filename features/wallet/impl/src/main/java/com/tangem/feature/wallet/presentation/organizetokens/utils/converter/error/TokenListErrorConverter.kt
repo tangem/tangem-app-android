@@ -11,7 +11,6 @@ internal class TokenListErrorConverter(
     private val inProgressStateConverter: InProgressStateConverter,
 ) : Converter<TokenListError, OrganizeTokensState> {
 
-    // TODO: [REDACTED_JIRA]
     override fun convert(value: TokenListError): OrganizeTokensState {
         return inProgressStateConverter.convertBack(currentState())
     }
