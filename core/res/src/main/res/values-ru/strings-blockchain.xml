@@ -6,7 +6,6 @@
   <string name="kaspa_withdrawal_message_warning">Из-за ограничений Kaspa в одну транзакцию может поместиться только %1$d UTXO. Это означает, что вы можете отправить только %2$s или меньше. Вам нужно уменьшить сумму.</string>
   <string name="no_account_generic">Пополните счет на %1$s+ %2$s, чтобы создать аккаунт</string>
   <string name="no_account_polkadot">Аккаунт получателя не активирован. Отправьте %s или более для активации аккаунта.</string>
-  <string name="send_error_blockchain_internal">Внутренняя ошибка блокчейна</string>
   <string name="send_error_dust_amount_format">Минимальная сумма: %s</string>
   <string name="send_error_dust_change">Сдача слишком мала</string>
   <string name="send_error_invalid_fee_value">Неверная комиссия</string>
