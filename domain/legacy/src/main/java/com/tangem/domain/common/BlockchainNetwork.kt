@@ -5,8 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.calculateHashCode
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.extensions.derivationPath
 
 @JsonClass(generateAdapter = true)
 data class BlockchainNetwork(
@@ -15,13 +14,9 @@ data class BlockchainNetwork(
     val tokens: List<Token>,
 ) {
 
-    constructor(blockchain: Blockchain, card: CardDTO) : this(
+    constructor(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider) : this(
         blockchain = blockchain,
-        derivationPath = if (card.settings.isHDWalletAllowed) {
-            blockchain.derivationPath(card.derivationStyle)?.rawPath
-        } else {
-            null
-        },
+        derivationPath = blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath,
         tokens = emptyList(),
     )
 
