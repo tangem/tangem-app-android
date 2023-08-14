@@ -5,6 +5,7 @@ import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultNetworksRepository
 import com.tangem.data.tokens.repository.DefaultQuotesRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -40,10 +41,17 @@ internal object TokensDataModule {
     fun provideQuotesRepository(
         tangemTechApi: TangemTechApi,
         quotesStore: QuotesStore,
+        selectedAppCurrencyStore: SelectedAppCurrencyStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
     ): QuotesRepository {
-        return DefaultQuotesRepository(tangemTechApi, quotesStore, cacheRegistry, dispatchers)
+        return DefaultQuotesRepository(
+            tangemTechApi,
+            quotesStore,
+            selectedAppCurrencyStore,
+            cacheRegistry,
+            dispatchers,
+        )
     }
 
     @Provides
