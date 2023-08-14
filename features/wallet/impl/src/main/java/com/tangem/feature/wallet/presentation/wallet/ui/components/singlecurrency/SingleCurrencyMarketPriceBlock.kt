@@ -16,5 +16,10 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.marketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
-    item { MarketPriceBlock(state = state, modifier = modifier.animateItemPlacement()) }
+    item(
+        key = MarketPriceBlockState::class.java,
+        contentType = MarketPriceBlockState::class.java,
+    ) {
+        MarketPriceBlock(state = state, modifier = modifier.animateItemPlacement())
+    }
 }

@@ -10,6 +10,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletMana
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
+private const val CONTROL_BUTTONS_CONTENT_TYPE = "ControlButtons"
+
 /**
  * Single currency control buttons. Like, "Buy", "Sell", etc
  *
@@ -20,7 +22,7 @@ import kotlinx.collections.immutable.toImmutableList
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.controlButtons(configs: ImmutableList<WalletManageButton>, modifier: Modifier = Modifier) {
-    item {
+    item(key = CONTROL_BUTTONS_CONTENT_TYPE, contentType = CONTROL_BUTTONS_CONTENT_TYPE) {
         HorizontalActionChips(
             buttons = configs.map(WalletManageButton::config).toImmutableList(),
             modifier = modifier.animateItemPlacement(),
