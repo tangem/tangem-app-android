@@ -12,7 +12,7 @@ import com.tangem.wallet.R
 object ClipboardOrScanQrDialog {
     fun create(wcUri: String, context: Context): AlertDialog {
         return AlertDialog.Builder(context).apply {
-            setTitle(context.getString(R.string.wallet_connect_title))
+            setTitle(context.getString(R.string.common_select_action))
             setMessage(context.getText(R.string.wallet_connect_clipboard_alert))
             setPositiveButton(context.getText(R.string.wallet_connect_paste_from_clipboard)) { _, _ ->
                 store.dispatch(WalletConnectAction.OpenSession(wcUri))

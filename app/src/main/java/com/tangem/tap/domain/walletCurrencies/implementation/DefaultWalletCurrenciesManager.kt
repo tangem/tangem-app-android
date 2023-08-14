@@ -1,9 +1,11 @@
 package com.tangem.tap.domain.walletCurrencies.implementation
 
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.*
 import com.tangem.domain.common.BlockchainNetwork
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.derivationPath
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -61,7 +63,9 @@ internal class DefaultWalletCurrenciesManager(
         }
 
         val card = userWallet.scanResponse.card
-        val currenciesToAddWithMissingBlockchains = currenciesToAdd.addMissingBlockchainsIfNeeded(card)
+        val currenciesToAddWithMissingBlockchains = currenciesToAdd.addMissingBlockchainsIfNeeded(
+            userWallet.scanResponse.derivationStyleProvider,
+        )
         listeners.forEach { it.willCurrenciesAdd(userWallet, currenciesToAddWithMissingBlockchains) }
 
         updateWalletStores(
@@ -166,13 +170,15 @@ internal class DefaultWalletCurrenciesManager(
         return networks
     }
 
-    private fun List<Currency>.addMissingBlockchainsIfNeeded(card: CardDTO): List<Currency> {
+    private fun List<Currency>.addMissingBlockchainsIfNeeded(
+        derivationStyleProvider: DerivationStyleProvider,
+    ): List<Currency> {
         if (this.isEmpty()) return this
         val currencies = this.asSequence()
 
         return currencies
             .groupBy { currency ->
-                findBlockchainCurrency(currency, currencies, card.derivationStyle)
+                findBlockchainCurrency(currency, currencies, derivationStyleProvider.getDerivationStyle())
             }
             .mapValues { (blockchainCurrency, blockchainCurrencies) ->
                 findBlockchainTokens(blockchainCurrency, blockchainCurrencies)

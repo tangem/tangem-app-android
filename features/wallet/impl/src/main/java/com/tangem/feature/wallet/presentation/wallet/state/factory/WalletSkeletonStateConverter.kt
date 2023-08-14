@@ -1,76 +1,69 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import androidx.paging.PagingData
+import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.domain.common.CardTypesResolver
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
-import com.tangem.feature.wallet.presentation.wallet.state.*
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTxHistoryState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.components.*
+import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletSkeletonStateConverter.SkeletonModel
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.flow
 
 /**
- * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletStateHolder]
+ * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletState.ContentState]
  *
- * @property clickIntents screen click intents
+ * @property currentStateProvider current ui state provider
+ * @property clickIntents         screen click intents
  *
 * [REDACTED_AUTHOR]
  */
 internal class WalletSkeletonStateConverter(
+    private val currentStateProvider: Provider<WalletState>,
     private val clickIntents: WalletClickIntents,
-) : Converter<List<UserWallet>, WalletStateHolder> {
+) : Converter<SkeletonModel, WalletState.ContentState> {
 
-    override fun convert(value: List<UserWallet>): WalletStateHolder {
-        val cardTypeResolver = requireNotNull(value.firstOrNull()).scanResponse.cardTypesResolver
+    override fun convert(value: SkeletonModel): WalletState.ContentState {
+        val cardTypeResolver = value.wallets[value.selectedWalletIndex].scanResponse.cardTypesResolver
 
         return if (cardTypeResolver.isMultiwalletAllowed()) {
-            createMultiCurrencyState(value)
+            createMultiCurrencyState(value = value)
         } else {
-            createSingleCurrencyState(value, cardTypeResolver)
+            createSingleCurrencyState(value = value, currencyName = cardTypeResolver.getBlockchain().currency)
         }
     }
 
-    private fun createMultiCurrencyState(wallets: List<UserWallet>): WalletStateHolder.MultiCurrencyContent {
-        return WalletStateHolder.MultiCurrencyContent(
+    private fun createMultiCurrencyState(value: SkeletonModel): WalletMultiCurrencyState {
+        return WalletMultiCurrencyState.Content(
             onBackClick = clickIntents::onBackClick,
             topBarConfig = createTopBarConfig(),
-            walletsListConfig = createWalletsListConfig(wallets),
+            walletsListConfig = createWalletsListConfig(value),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            tokensListState = WalletTokensListState.Content(
-                items = persistentListOf(),
-                onOrganizeTokensClick = clickIntents::onOrganizeTokensClick,
-            ),
+            tokensListState = WalletTokensListState.Loading,
             notifications = persistentListOf(),
-            bottomSheet = null,
+            bottomSheetConfig = null,
         )
     }
 
-    private fun createSingleCurrencyState(
-        wallets: List<UserWallet>,
-        cardTypeResolver: CardTypesResolver,
-    ): WalletStateHolder.SingleCurrencyContent {
-        return WalletStateHolder.SingleCurrencyContent(
+    private fun createSingleCurrencyState(value: SkeletonModel, currencyName: String): WalletSingleCurrencyState {
+        return WalletSingleCurrencyState.Content(
             onBackClick = clickIntents::onBackClick,
             topBarConfig = createTopBarConfig(),
-            walletsListConfig = createWalletsListConfig(wallets),
+            walletsListConfig = createWalletsListConfig(value),
             pullToRefreshConfig = createPullToRefreshConfig(),
             notifications = persistentListOf(),
-            bottomSheet = null,
-            buttons = WalletPreviewData.singleWalletScreenState.buttons, // TODO: create buttons
-            marketPriceBlockState = MarketPriceBlockState.Loading(
-                currencyName = cardTypeResolver.getBlockchain().currency,
-            ),
-            txHistoryState = WalletTxHistoryState.Content(
-                items = flow { PagingData.empty<WalletTxHistoryState.TxHistoryItemState>() },
-            ),
+            bottomSheetConfig = null,
+            buttons = getButtons(),
+            marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
+            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
         )
     }
 
@@ -81,26 +74,60 @@ internal class WalletSkeletonStateConverter(
         )
     }
 
-    private fun createWalletsListConfig(wallets: List<UserWallet>): WalletsListConfig {
+    private fun createWalletsListConfig(value: SkeletonModel): WalletsListConfig {
         return WalletsListConfig(
-            selectedWalletIndex = 0,
-            wallets = wallets.map { wallet ->
-                val cardTypeResolver = wallet.scanResponse.cardTypesResolver
-                WalletCardState.Loading(
-                    id = wallet.walletId,
-                    title = wallet.name,
-                    additionalInfo = WalletAdditionalInfoFactory.resolve(
-                        cardTypesResolver = cardTypeResolver,
-                        isLocked = wallet.isLocked,
-                    ),
-                    imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
-                )
-            }.toImmutableList(),
+            selectedWalletIndex = value.selectedWalletIndex,
+            wallets = value.wallets.map(::createWalletState).toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
+        )
+    }
+
+    private fun createWalletState(wallet: UserWallet): WalletCardState {
+        val state = currentStateProvider()
+
+        // If it isn't first initialization (example, when user unlocks wallet)
+        return if (state is WalletState.ContentState) {
+            val initializedWallet = state.walletsListConfig.wallets.first { it.id == wallet.walletId }
+
+            // If wallet is initialized, return it, otherwise return loading state
+            if (initializedWallet !is WalletCardState.Loading) {
+                initializedWallet
+            } else {
+                createWalletLoadingState(wallet)
+            }
+        } else {
+            createWalletLoadingState(wallet)
+        }
+    }
+
+    private fun createWalletLoadingState(wallet: UserWallet): WalletCardState {
+        val cardTypeResolver = wallet.scanResponse.cardTypesResolver
+
+        return WalletCardState.Loading(
+            id = wallet.walletId,
+            title = wallet.name,
+            additionalInfo = WalletAdditionalInfoFactory.resolve(
+                cardTypesResolver = cardTypeResolver,
+                isLocked = wallet.isLocked,
+            ),
+            imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
         )
     }
 
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
         return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
+// [REDACTED_TODO_COMMENT]
+    private fun getButtons(): ImmutableList<WalletManageButton> {
+        return persistentListOf(
+            WalletManageButton.Buy(),
+            WalletManageButton.Send(),
+            WalletManageButton.Receive(onClick = {}),
+            WalletManageButton.Exchange(),
+            WalletManageButton.Sell(),
+            WalletManageButton.CopyAddress(onClick = {}),
+        )
+    }
+
+    data class SkeletonModel(val wallets: List<UserWallet>, val selectedWalletIndex: Int)
 }

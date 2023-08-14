@@ -1,6 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.utils
 
+import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.lazy.LazyListItemInfo
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.State
 import kotlinx.coroutines.flow.FlowCollector
 import kotlin.math.abs
 
@@ -9,17 +12,22 @@ import kotlin.math.abs
  * If first visible item offset is greater than half item size, then [callback] be invoked.
  * If last visible item offset is greater than half item size, then [callback] be invoked.
  *
- * @property callback lambda be invoked when current scroll items is changed
+ * @property lazyListState   lazy list state
+ * @property dragInteraction current drag interaction
+ * @property callback        lambda be invoked when current scroll items is changed
  *
 * [REDACTED_AUTHOR]
  */
 internal class ScrollOffsetCollector(
+    private val lazyListState: LazyListState,
+    private val dragInteraction: State<Interaction?>,
     private val callback: (Int) -> Unit,
 ) : FlowCollector<List<LazyListItemInfo>> {
 
     private val LazyListItemInfo.halfItemSize get() = size.div(other = 2)
 
     override suspend fun emit(value: List<LazyListItemInfo>) {
+        if (!lazyListState.isScrollInProgress || dragInteraction.value == null || value.size <= 1) return
         val firstItem = value.firstOrNull() ?: return
         val lastItem = value.lastOrNull() ?: return
 

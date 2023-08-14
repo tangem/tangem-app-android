@@ -29,7 +29,7 @@ internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton, m
             .imePadding()
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
-        text = stringResource(id = R.string.common_add),
+        text = stringResource(id = R.string.custom_token_add_token),
         iconResId = R.drawable.ic_plus_24,
         enabled = model.isEnabled,
         onClick = model.onClick,

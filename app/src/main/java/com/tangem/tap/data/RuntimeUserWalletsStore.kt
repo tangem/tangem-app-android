@@ -11,6 +11,9 @@ internal class RuntimeUserWalletsStore(
     private val walletsStateHolder: WalletsStateHolder,
 ) : UserWalletsStore {
 
+    override val selectedUserWalletOrNull: UserWallet?
+        get() = walletsStateHolder.userWalletsListManager?.selectedUserWalletSync
+
     override suspend fun getSyncOrNull(key: UserWalletId): UserWallet? {
         return walletsStateHolder.userWalletsListManager
             ?.userWallets

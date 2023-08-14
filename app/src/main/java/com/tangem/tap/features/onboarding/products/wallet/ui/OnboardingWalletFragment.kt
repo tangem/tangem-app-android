@@ -257,7 +257,7 @@ class OnboardingWalletFragment :
         prepareBackupView()
         tvHeader.text = getText(R.string.onboarding_title_scan_origin_card)
         tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_origin_card,
+            R.string.onboarding_subtitle_scan_primary,
         )
 
         with(layoutButtonsCommon) {
