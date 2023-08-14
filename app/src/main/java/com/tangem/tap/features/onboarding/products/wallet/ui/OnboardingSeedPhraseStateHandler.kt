@@ -3,11 +3,13 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 import androidx.compose.runtime.collectAsState
 import com.tangem.feature.onboarding.api.OnboardingSeedPhrase
 import com.tangem.feature.onboarding.api.OnboardingSeedPhraseApi
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseScreen
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
+import com.tangem.wallet.R
 
 /**
 [REDACTED_AUTHOR]
@@ -44,11 +46,27 @@ internal class OnboardingSeedPhraseStateHandler(
         walletFragment.binding.onboardingWalletContainer.hide()
         walletFragment.bindingSeedPhrase.onboardingSeedPhraseContainer.show()
         walletFragment.bindingSeedPhrase.onboardingSeedPhraseContainer.setContent {
+            val subScreen = viewModel.currentScreen.collectAsState().value
+            setMainScreenToolbarTitle(walletFragment, subScreen)
+
             onboardingSeedPhraseApi.ScreenContent(
                 uiState = viewModel.uiState,
-                subScreen = viewModel.currentScreen.collectAsState().value,
+                subScreen = subScreen,
                 progress = viewModel.progress.collectAsState(0).value.toFloat() / onboardingWalletMaxProgress,
             )
         }
+    }
+
+    private fun setMainScreenToolbarTitle(walletFragment: OnboardingWalletFragment, subScreen: SeedPhraseScreen) {
+        val titleResId = when (subScreen) {
+            SeedPhraseScreen.Intro,
+            SeedPhraseScreen.AboutSeedPhrase,
+            SeedPhraseScreen.YourSeedPhrase,
+            SeedPhraseScreen.CheckSeedPhrase,
+            -> R.string.onboarding_create_wallet_header
+            SeedPhraseScreen.ImportSeedPhrase -> R.string.onboarding_seed_intro_button_import
+        }
+
+        walletFragment.binding.toolbar.title = walletFragment.getString(titleResId)
     }
 }
