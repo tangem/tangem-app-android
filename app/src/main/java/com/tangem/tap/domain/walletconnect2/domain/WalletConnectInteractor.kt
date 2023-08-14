@@ -1,7 +1,5 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
-import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -148,8 +146,8 @@ class WalletConnectInteractor(
         walletConnectRepository.disconnect(topic)
     }
 
-    fun rejectRequest(topic: String, id: Long) {
-        walletConnectRepository.rejectRequest(topic, id)
+    fun cancelRequest(topic: String, id: Long) {
+        walletConnectRepository.cancelRequest(topic, id)
     }
 
     private suspend fun handleRequest(sessionRequest: WalletConnectEvents.SessionRequest) {
@@ -164,16 +162,23 @@ class WalletConnectInteractor(
                 null
             }
         }
+        val networkId = sessionRequest.chainId?.let { blockchainHelper.chainIdToNetworkIdOrNull(it) } ?: ""
+        val requestData = RequestData(
+            topic = sessionRequest.topic,
+            requestId = sessionRequest.id,
+            blockchain = networkId,
+            method = sessionRequest.method,
+        )
+
         if (error != null) {
-            walletConnectRepository.rejectRequest(sessionRequest.topic, sessionRequest.id)
+            walletConnectRepository.rejectRequest(requestData, error)
             return
         }
 
         when (sessionRequest.request) {
             is WcRequest.BnbCancel -> Unit
             is WcRequest.BnbTxConfirm -> walletConnectRepository.sendRequest(
-                topic = sessionRequest.topic,
-                id = sessionRequest.id,
+                requestData = requestData,
                 result = "",
             )
             else -> {
@@ -212,16 +217,18 @@ class WalletConnectInteractor(
 
         Timber.d("Signed hash: $signedHash")
 
+        val requestData = RequestData(
+            topic = request.topic,
+            requestId = request.requestId,
+            blockchain = networkId,
+            method = currentRequest.method,
+        )
+
         if (signedHash == null) {
-            walletConnectRepository.rejectRequest(
-                topic = request.topic,
-                id = request.requestId,
-            )
+            walletConnectRepository.rejectRequest(requestData, WalletConnectError.SigningError)
         } else {
-            Analytics.send(WalletConnect.RequestSigned())
             walletConnectRepository.sendRequest(
-                topic = request.topic,
-                id = request.requestId,
+                requestData = requestData,
                 result = signedHash,
             )
         }

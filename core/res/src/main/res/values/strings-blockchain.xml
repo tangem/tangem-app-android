@@ -6,7 +6,6 @@
   <string name="kaspa_withdrawal_message_warning">Due to Kaspa limitations only %1$d UTXOs can fit in a single transaction. This means you can only send %2$s or less. You need to reduce the amount.</string>
   <string name="no_account_generic">Load %1$s+ %2$s to create account</string>
   <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
-  <string name="send_error_blockchain_internal">Blockchain internal error</string>
   <string name="send_error_dust_amount_format">Minimum amount is %s</string>
   <string name="send_error_dust_change">Change is too small</string>
   <string name="send_error_invalid_fee_value">Invalid Fee</string>

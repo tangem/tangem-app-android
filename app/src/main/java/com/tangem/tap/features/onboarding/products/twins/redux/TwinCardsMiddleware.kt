@@ -6,10 +6,12 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -19,9 +21,7 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.twins.TwinCardsManager
-import com.tangem.tap.domain.userWalletList.isLockedSync
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
@@ -50,7 +50,7 @@ private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, state ->
 
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handle(action: Action, dispatch: DispatchFunction) {
-    val action = action as? TwinCardsAction ?: return
+    if (action !is TwinCardsAction) return
 
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager

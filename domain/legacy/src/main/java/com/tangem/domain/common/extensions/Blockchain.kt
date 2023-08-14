@@ -1,6 +1,11 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.derivation.DerivationStyle
+import com.tangem.common.card.EllipticCurve
+import com.tangem.crypto.hdWallet.DerivationPath
+import java.math.BigDecimal
 
 @Suppress("ComplexMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
@@ -66,6 +71,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         "octaspace" -> Blockchain.OctaSpace
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
+        "chia" -> Blockchain.Chia
+        "chia/test" -> Blockchain.ChiaTestnet
         else -> null
     }
 }
@@ -135,6 +142,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
         Blockchain.OctaSpace -> "octaspace"
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -179,12 +188,39 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
 fun Blockchain.isSupportedInApp(): Boolean {
     return !excludedBlockchains.contains(this)
 }
+
+fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
+    return when (this) {
+        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
+        Blockchain.XRP -> BigDecimal.TEN
+        else -> null
+    }
+}
+
+fun Blockchain.minimalAmount(): BigDecimal {
+    return 1.toBigDecimal().movePointLeft(decimals())
+}
+
+fun Blockchain.derivationPath(style: DerivationStyle?): DerivationPath? {
+    if (style == null) return null
+    if (!getSupportedCurves().contains(EllipticCurve.Secp256k1) &&
+        !getSupportedCurves().contains(EllipticCurve.Ed25519)
+    ) {
+        return null
+    }
+    return style.provider().derivations(this).values.first()
+}
+
+private const val NODL = "NODL"
+private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,

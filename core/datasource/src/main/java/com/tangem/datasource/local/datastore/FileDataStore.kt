@@ -2,51 +2,66 @@ package com.tangem.datasource.local.datastore
 
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.files.FileReader
-import com.tangem.domain.core.error.DataError
+import com.tangem.datasource.local.datastore.core.StringKeyDataStore
+import com.tangem.datasource.local.datastore.model.WriteTrigger
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
+import timber.log.Timber
 
-internal class FileDataStore<Data>(
-    private val fileNameProvider: (key: String) -> String,
+internal class FileDataStore<Value : Any>(
     private val fileReader: FileReader,
-    private val adapter: JsonAdapter<Data>,
-) {
+    private val adapter: JsonAdapter<Value>,
+) : StringKeyDataStore<Value> {
 
-    private val writeTrigger = MutableSharedFlow<Unit>(
+    private val writeTrigger = MutableSharedFlow<WriteTrigger>(
+        replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    fun get(key: String): Flow<Data> {
+    override fun get(key: String): Flow<Value> {
         return writeTrigger
-            .map { getInternal(fileNameProvider(key)) }
+            .onEmpty { emit(WriteTrigger) }
+            .map { getInternal(key) }
             .filterNotNull()
     }
 
-    fun getSync(key: String): Data? {
-        return getInternal(fileNameProvider(key))
+    override suspend fun getSyncOrNull(key: String): Value? {
+        return getInternal(key)
     }
 
-    fun store(key: String, content: Data) {
+    override suspend fun store(key: String, item: Value) {
         try {
-            val json = adapter.toJson(content)
+            val json = adapter.toJson(item)
 
-            fileReader.rewriteFile(json, fileNameProvider(key))
-            writeTrigger.tryEmit(Unit)
+            fileReader.rewriteFile(json, key)
+            writeTrigger.tryEmit(WriteTrigger)
         } catch (e: Throwable) {
-            throw DataError.PersistenceError.UnableToWriteFile(e)
+            Timber.e(e, "Unable to write file: $key")
         }
     }
 
-    private fun getInternal(fileName: String): Data? {
+    override suspend fun store(items: Map<String, Value>) {
+        items.forEach { (key, item) ->
+            store(key, item)
+        }
+    }
+
+    override suspend fun remove(key: String) {
+        fileReader.removeFile(key)
+    }
+
+    override suspend fun clear() {
+        // TODO: Implement if needed
+    }
+
+    private fun getInternal(fileName: String): Value? {
         return try {
             val json = fileReader.readFile(fileName)
 
             adapter.fromJson(json)
         } catch (e: Throwable) {
-            throw DataError.PersistenceError.UnableToReadFile(e)
+            Timber.e(e, "Unable to read file: $fileName")
+            null
         }
     }
 }

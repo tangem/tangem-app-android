@@ -2,48 +2,27 @@ package com.tangem.domain.txhistory.usecase
 
 import androidx.paging.PagingData
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.raise.Raise
-import arrow.core.raise.recover
-import arrow.core.right
-import com.tangem.domain.txhistory.error.TxHistoryListError
-import com.tangem.domain.txhistory.model.TxHistoryItem
+import arrow.core.raise.either
+import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.txhistory.models.TxHistoryListError
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 
 private const val DEFAULT_PAGE_SIZE = 20
 
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
 
     operator fun invoke(
-        networkId: String,
+        networkId: Network.ID,
+        derivationPath: String?,
         pageSize: Int = DEFAULT_PAGE_SIZE,
-    ): Flow<Either<TxHistoryListError,
-            PagingData<TxHistoryItem>,>,> {
-        return channelFlow {
-            recover(
-                block = {
-                    getTxHistoryItems(
-                        networkId = networkId,
-                        pageSize = pageSize,
-                    ).collect { items ->
-                        send(items.right())
-                    }
-                },
-                recover = { error -> send(error.left()) },
-            )
+    ): Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>> {
+        return either {
+            repository
+                .getTxHistoryItems(networkId = networkId, derivationPath = derivationPath, pageSize = pageSize)
+                .catch { raise(TxHistoryListError.DataError(it)) }
         }
-    }
-
-    private fun Raise<TxHistoryListError>.getTxHistoryItems(
-        networkId: String,
-        pageSize: Int,
-    ): Flow<PagingData<TxHistoryItem>> {
-        return repository
-            .getTxHistoryItems(networkId = networkId, pageSize = pageSize)
-            .catch { raise(TxHistoryListError.DataError(it)) }
     }
 }

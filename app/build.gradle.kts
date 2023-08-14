@@ -26,10 +26,13 @@ dependencies {
     implementation(project(":domain:models"))
     implementation(project(":domain:core"))
     implementation(projects.domain.card)
+    implementation(projects.domain.demo)
     implementation(project(":domain:wallets"))
     implementation(project(":domain:wallets:models"))
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.appCurrency)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))
@@ -42,11 +45,14 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
+
     implementation(project(":data:source:preferences"))
     implementation(projects.data.card)
+    implementation(projects.data.common)
     implementation(projects.data.settings)
     implementation(projects.data.tokens)
-    implementation(projects.data.common)
+    implementation(projects.data.txhistory)
+    implementation(projects.data.appCurrency)
 
     /** Features */
     implementation(project(":features:onboarding"))

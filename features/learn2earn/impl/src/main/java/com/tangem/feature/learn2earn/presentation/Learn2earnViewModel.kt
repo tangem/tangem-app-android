@@ -55,12 +55,10 @@ class Learn2earnViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             interactor.getIsTangemWalletFlow()
                 .collect { isTangemWallet ->
-                    updateUi {
-                        uiState
-                            .updateGetBonusVisibility(
-                                isVisible = isTangemWallet && interactor.isPromotionActiveOnMain(),
-                            )
-                            .changeGetBonusDescription(getBonusDescription())
+                    if (isTangemWallet) {
+                        updateMainScreenViews()
+                    } else {
+                        updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
                     }
                 }
         }
@@ -103,7 +101,7 @@ class Learn2earnViewModel @Inject constructor(
                     )
                 }
                 .onFailure {
-                    Timber.e(it)
+                    Timber.w(it)
                     updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
                 }
         }
@@ -119,7 +117,9 @@ class Learn2earnViewModel @Inject constructor(
             -> {
                 updateUi { uiState.updateViewsVisibility(isVisible = false) }
             }
-            is PromotionError.CodeWasNotAppliedInShop -> {
+            is PromotionError.CodeWasNotAppliedInShop,
+            is PromotionError.EmptyUserWalletId,
+            -> {
                 updateUi { uiState.updateGetBonusVisibility(isVisible = false) }
             }
             is PromotionError.CodeNotFound,
@@ -141,11 +141,11 @@ class Learn2earnViewModel @Inject constructor(
     }
 
     private fun onButtonMainClick() {
-        if (interactor.isUserHadPromoCode() || interactor.isUserRegisteredInPromotion()) {
-            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.Old()))
+        val isUserHasPromo = interactor.isUserHadPromoCode()
+        analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(getAnalyticsClientType(isUserHasPromo)))
+        if (isUserHasPromo || interactor.isUserRegisteredInPromotion()) {
             requestAward()
         } else {
-            analytics.send(Learn2earnEvents.MainScreen.NoticeLear2earn(AnalyticsParam.ClientType.New()))
             subscribeToWebViewResultEvents()
             router.openWebView(interactor.buildUriForOldUser(), interactor.getBasicAuthHeaders())
         }
@@ -159,7 +159,13 @@ class Learn2earnViewModel @Inject constructor(
                 .onSuccess { requestAwardResult ->
                     requestAwardResult.fold(
                         onSuccess = {
-                            analytics.send(Learn2earnEvents.MainScreen.NoticeClaimSuccess())
+                            analytics.send(
+                                Learn2earnEvents.MainScreen.NoticeClaimSuccess(
+                                    clientType = getAnalyticsClientType(
+                                        isUserHasPromo = interactor.isUserHadPromoCode(),
+                                    ),
+                                ),
+                            )
                             val onHideDialog = {
                                 uiState = uiState.updateViewsVisibility(isVisible = false)
                                     .hideDialog()
@@ -173,9 +179,13 @@ class Learn2earnViewModel @Inject constructor(
                         },
                         onFailure = {
                             val errorDialog = createErrorDialog(it.toDomainError())
-                            updateUi {
-                                uiState.updateProgress(showProgress = false)
-                                    .showDialog(errorDialog)
+                            if (errorDialog == null) {
+                                updateUi { uiState.updateProgress(showProgress = false) }
+                            } else {
+                                updateUi {
+                                    uiState.updateProgress(showProgress = false)
+                                        .showDialog(errorDialog)
+                                }
                             }
                         },
                     )
@@ -184,8 +194,9 @@ class Learn2earnViewModel @Inject constructor(
                     updateUi { uiState.updateProgress(showProgress = false) }
                     if (exception is UserCancelledException) return@launch
 
-                    val errorDialog = createErrorDialog(exception.toDomainError())
-                    updateUi { uiState.showDialog(errorDialog) }
+                    createErrorDialog(exception.toDomainError())?.let {
+                        updateUi { uiState.showDialog(it) }
+                    }
                 }
         }
     }
@@ -198,7 +209,15 @@ class Learn2earnViewModel @Inject constructor(
         }
     }
 
-    private fun createErrorDialog(error: PromotionError): MainScreenState.Dialog {
+    private fun getAnalyticsClientType(isUserHasPromo: Boolean): AnalyticsParam.ClientType {
+        return if (isUserHasPromo) {
+            AnalyticsParam.ClientType.New()
+        } else {
+            AnalyticsParam.ClientType.Old()
+        }
+    }
+
+    private fun createErrorDialog(error: PromotionError): MainScreenState.Dialog? {
         return when (error) {
             is PromotionError.CodeWasNotAppliedInShop -> {
                 val onHideDialog = { uiState = uiState.hideDialog() }
@@ -237,6 +256,7 @@ class Learn2earnViewModel @Inject constructor(
                     onDismissRequest = onHideDialog,
                 )
             }
+            is PromotionError.EmptyUserWalletId -> null
         }
     }
 

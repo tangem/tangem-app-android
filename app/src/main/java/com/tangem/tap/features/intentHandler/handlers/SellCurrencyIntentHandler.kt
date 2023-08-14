@@ -1,6 +1,7 @@
 package com.tangem.tap.features.intentHandler.handlers
 
 import android.content.Intent
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -20,7 +21,7 @@ class SellCurrencyIntentHandler : IntentHandler {
             val destinationAddress = intentData.getQueryParameter(DEPOSIT_WALLET_ADDRESS_PARAM) ?: return false
 
             Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
-            store.dispatch(
+            store.dispatchWithMain(
                 WalletAction.TradeCryptoAction.SendCrypto(
                     currencyId = currency,
                     amount = amount,

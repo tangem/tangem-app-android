@@ -7,8 +7,10 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
@@ -68,10 +70,11 @@ class DefaultCustomTokenInteractor(
         currencyList: List<Currency>,
         onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        val derivationDataList = listOfNotNull(
-            getDerivations(EllipticCurve.Secp256k1, scanResponse, currencyList),
-            getDerivations(EllipticCurve.Ed25519, scanResponse, currencyList),
-        )
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivationDataList = currencyList.mapNotNull {
+            val curve = config.primaryCurve(it.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        }
 
         val derivations = derivationDataList.associate(TokensMiddleware.DerivationData::derivations)
         if (derivations.isEmpty()) {
@@ -114,7 +117,7 @@ class DefaultCustomTokenInteractor(
         val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
             it.getSupportedCurves().contains(curve)
         }.mapNotNull {
-            it.derivationPath(scanResponse.card.derivationStyle)
+            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
         }
 
         val customTokensCandidates = currencyList.filter {

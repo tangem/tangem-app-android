@@ -1,11 +1,7 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -23,8 +19,8 @@ import com.tangem.common.doOnResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.sdk.extensions.dpToPx
@@ -32,14 +28,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.appendIfNotNull
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.utils.SafeStoreSubscriber
@@ -57,15 +46,7 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
-import com.tangem.tap.features.wallet.ui.utils.assembleWarnings
-import com.tangem.tap.features.wallet.ui.utils.getAvailableActions
-import com.tangem.tap.features.wallet.ui.utils.getFormattedCryptoAmount
-import com.tangem.tap.features.wallet.ui.utils.getFormattedFiatAmount
-import com.tangem.tap.features.wallet.ui.utils.isAvailableToBuy
-import com.tangem.tap.features.wallet.ui.utils.isAvailableToSell
-import com.tangem.tap.features.wallet.ui.utils.isAvailableToSwap
-import com.tangem.tap.features.wallet.ui.utils.mainButton
-import com.tangem.tap.features.wallet.ui.utils.shouldShowMultipleAddress
+import com.tangem.tap.features.wallet.ui.utils.*
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.tap.walletCurrenciesManager
@@ -336,10 +317,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
     private fun handleCurrencyIcon(currency: Currency) = with(binding.lWalletDetails.lBalance) {
         ivCurrency.load(
             currency = currency,
-            derivationStyle = store.state.globalState
-                .scanResponse
-                ?.card
-                ?.derivationStyle,
+            derivationStyle = store.state.globalState.scanResponse
+                ?.derivationStyleProvider?.getDerivationStyle(),
         )
     }
 

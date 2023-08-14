@@ -2,9 +2,10 @@ package com.tangem.tap.domain.walletconnect2.data
 
 import android.app.Application
 import arrow.core.flatten
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
@@ -25,6 +26,7 @@ import javax.inject.Inject
 class WalletConnectRepositoryImpl @Inject constructor(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : WalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null
@@ -36,6 +38,8 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
     private val _activeSessions: MutableSharedFlow<List<WalletConnectSession>> = MutableSharedFlow()
     override val activeSessions: Flow<List<WalletConnectSession>> = _activeSessions
+
+    private var currentSessions: List<WalletConnectSession> = emptyList()
 
     /**
      * @param projectId Project ID at https://cloud.walletconnect.com/
@@ -127,8 +131,12 @@ class WalletConnectRepositoryImpl @Inject constructor(
                         // we can send approval automatically, because in WC 2.0 the list of chains is approved when
                         // initial connection is established
                         sendRequest(
-                            topic = sessionRequest.topic,
-                            id = sessionRequest.request.id,
+                            RequestData(
+                                topic = sessionRequest.topic,
+                                requestId = sessionRequest.request.id,
+                                blockchain = sessionRequest.chainId.toString(),
+                                method = WcJrpcMethods.WALLET_ADD_ETHEREUM_CHAIN.code,
+                            ),
                             result = "",
                         )
                     }
@@ -142,6 +150,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                                     id = sessionRequest.request.id,
                                     metaUrl = sessionRequest.peerMetaData?.url ?: "",
                                     metaName = sessionRequest.peerMetaData?.name ?: "",
+                                    method = sessionRequest.request.method,
                                 ),
                             )
                         }
@@ -263,7 +272,12 @@ class WalletConnectRepositoryImpl @Inject constructor(
             params = sessionApproval,
             onSuccess = {
                 Timber.d("Approved successfully: $it")
-                Analytics.send(WalletConnect.NewSessionEstablished(sessionProposal.name))
+                analyticsHandler.send(
+                    WalletConnect.NewSessionEstablished(
+                        dAppName = sessionProposal.name,
+                        dAppUrl = sessionProposal.url,
+                    ),
+                )
             },
             onError = {
                 Timber.d("Error while approving: $it")
@@ -278,23 +292,56 @@ class WalletConnectRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun sendRequest(topic: String, id: Long, result: String) {
+    override fun sendRequest(requestData: RequestData, result: String) {
+        val session = currentSessions.find { it.topic == requestData.topic }
+        analyticsHandler.send(
+            WalletConnect.RequestHandled(
+                WalletConnect.RequestHandledParams(
+                    dAppName = session?.name ?: "",
+                    dAppUrl = session?.url ?: "",
+                    methodName = requestData.method,
+                    blockchain = requestData.blockchain,
+                ),
+            ),
+        )
         Web3Wallet.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
-                sessionTopic = topic,
+                sessionTopic = requestData.topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
-                    id = id,
+                    id = requestData.requestId,
                     result = result,
                 ),
             ),
             onSuccess = {},
             onError = {
-                Analytics.send(WalletConnect.TransactionError(it.throwable))
+                WalletConnect.RequestHandledParams(
+                    dAppName = session?.name ?: "",
+                    dAppUrl = session?.url ?: "",
+                    methodName = requestData.method,
+                    blockchain = requestData.blockchain,
+                    errorCode = WalletConnectError.ValidationError.toString(),
+                )
             },
         )
     }
 
-    override fun rejectRequest(topic: String, id: Long) {
+    override fun rejectRequest(requestData: RequestData, error: WalletConnectError) {
+        val session = currentSessions.find { it.topic == requestData.topic }
+        analyticsHandler.send(
+            WalletConnect.RequestHandled(
+                WalletConnect.RequestHandledParams(
+                    dAppName = session?.name ?: "",
+                    dAppUrl = session?.url ?: "",
+                    methodName = requestData.method,
+                    blockchain = requestData.blockchain,
+                    errorCode = error.toString(),
+                ),
+            ),
+        )
+        cancelRequest(requestData.topic, requestData.requestId)
+    }
+
+    override fun cancelRequest(topic: String, id: Long) {
         Web3Wallet.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = topic,
@@ -325,10 +372,16 @@ class WalletConnectRepositoryImpl @Inject constructor(
     }
 
     override fun disconnect(topic: String) {
+        val session = currentSessions.find { it.topic == topic }
         Web3Wallet.disconnectSession(
             params = Wallet.Params.SessionDisconnect(topic),
             onSuccess = {
-                Analytics.send(WalletConnect.SessionDisconnected())
+                analyticsHandler.send(
+                    WalletConnect.SessionDisconnected(
+                        dAppName = session?.name ?: "",
+                        dAppUrl = session?.url ?: "",
+                    ),
+                )
                 updateSessions()
                 Timber.d("Disconnected successfully: $it")
             },
@@ -364,6 +417,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                     )
                 }
             Timber.d("Available sessions: $availableSessions")
+            currentSessions = availableSessions
             _activeSessions.emit(availableSessions)
         }
     }

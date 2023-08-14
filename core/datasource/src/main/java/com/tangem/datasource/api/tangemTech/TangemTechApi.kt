@@ -54,4 +54,17 @@ interface TangemTechApi {
 
     @GET("shops")
     suspend fun getShopInfo(@Query(value = "name") name: String): ShopResponse
+
+    @GET("sales")
+    suspend fun getSalesInfo(
+        @Query(value = "locale") locale: String,
+        @Query(value = "shops") shops: String,
+    ): SalesResponse
+
+    @GET("quotes")
+    suspend fun getQuotes(
+        @Query("currencyId") currencyId: String,
+        @Query("coinIds") coinIds: String,
+        @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt",
+    ): QuotesResponse
 }

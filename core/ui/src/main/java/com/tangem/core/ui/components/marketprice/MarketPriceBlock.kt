@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components.marketprice
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,15 +22,22 @@ import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 
 /**
- *  @see <a href =
- * "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1217-922&mode=design&t=t1PxyisyGJSwzQwg-4"
+ * Market price block
+ *
+ * @param state    component state
+ * @param modifier modifier
+ *
+ * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=1217-922&mode
+ * =design&t=t1PxyisyGJSwzQwg-4"
  * >Figma component</a>
  */
 @Composable
 fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
     var rootWidth by remember { mutableStateOf(value = 0) }
+
     Column(
         modifier = modifier
             .background(
@@ -42,79 +51,137 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
         horizontalAlignment = Alignment.Start,
     ) {
-        Text(
-            text = stringResource(id = R.string.wallet_marketplace_block_title, state.currencyName),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.subtitle2,
-        )
+        Title(currencyName = state.currencyName)
 
-        when (state) {
-            is MarketPriceBlockState.Loading -> {
-                RectangleShimmer(
-                    modifier = Modifier.size(width = TangemTheme.dimens.size158, height = TangemTheme.dimens.size20),
-                )
-            }
-            is MarketPriceBlockState.Content -> {
-                Price(
-                    config = state,
+        Content(state = state, rootWidth = rootWidth)
+    }
+}
+
+@Composable
+private fun Title(currencyName: String) {
+    Text(
+        text = stringResource(id = R.string.wallet_marketplace_block_title, currencyName),
+        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography.subtitle2,
+    )
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun Content(state: MarketPriceBlockState, rootWidth: Int) {
+    AnimatedContent(targetState = state, label = "Update the content") { marketPriceBlockState ->
+        when (marketPriceBlockState) {
+            is MarketPriceBlockState.Content,
+            is MarketPriceBlockState.Error,
+            -> {
+                PriceContent(
+                    state = marketPriceBlockState,
                     priceWidthDp = with(LocalDensity.current) { rootWidth.div(other = 2).toDp() },
                 )
             }
+            is MarketPriceBlockState.Loading -> LoadingContent()
         }
     }
 }
 
 @Composable
-private fun Price(config: MarketPriceBlockState.Content, priceWidthDp: Dp) {
+private fun PriceContent(state: MarketPriceBlockState, priceWidthDp: Dp) {
     Row(
-        modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
     ) {
-        Text(
-            text = config.price,
-            modifier = Modifier.widthIn(max = priceWidthDp),
-            color = TangemTheme.colors.text.primary1,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = TangemTheme.typography.body2,
-        )
+        PriceBlock(state = state, priceWidthDp = priceWidthDp)
 
-        PriceChangeInPercent(config.priceChangeConfig)
+        QuoteTimeStatus()
+    }
+}
 
-        Text(
-            text = stringResource(id = R.string.wallet_marketprice_block_update_time),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.body2,
-        )
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
+    val priceModifier = Modifier.widthIn(max = priceWidthDp)
+    AnimatedContent(targetState = state, label = "Update the price block") { marketPriceBlockState ->
+        if (marketPriceBlockState is MarketPriceBlockState.Content) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+            ) {
+                Price(price = marketPriceBlockState.price, modifier = priceModifier)
+
+                PriceChangeInPercent(marketPriceBlockState.priceChangeConfig)
+            }
+        } else {
+            Price(price = BigDecimalFormatter.EMPTY_BALANCE_SIGN, modifier = priceModifier)
+        }
     }
 }
 
 @Composable
+private fun Price(price: String, modifier: Modifier = Modifier) {
+    Text(
+        text = price,
+        modifier = modifier,
+        color = TangemTheme.colors.text.primary1,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+        style = TangemTheme.typography.body2,
+    )
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
 private fun PriceChangeInPercent(config: PriceChangeConfig) {
+    AnimatedContent(targetState = config.type, label = "Update price change") { type ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
+        ) {
+            Image(
+                painter = painterResource(
+                    id = when (type) {
+                        PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
+                        PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                    },
+                ),
+                contentDescription = null,
+            )
+
+            Text(
+                text = config.valueInPercent,
+                color = when (type) {
+                    PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
+                    PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
+                },
+                style = TangemTheme.typography.body2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
     ) {
-        Image(
-            painter = painterResource(
-                id = when (config.type) {
-                    PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                    PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
-                },
+        RectangleShimmer(
+            modifier = Modifier.size(
+                width = TangemTheme.dimens.size158,
+                height = TangemTheme.dimens.size20,
             ),
-            contentDescription = null,
         )
 
-        Text(
-            text = config.valueInPercent,
-            color = when (config.type) {
-                PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
-                PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
-            },
-            style = TangemTheme.typography.body2,
-        )
+        QuoteTimeStatus()
     }
+}
+
+@Composable
+private fun QuoteTimeStatus() {
+    Text(
+        text = stringResource(id = R.string.wallet_marketprice_block_update_time),
+        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography.body2,
+    )
 }
 
 @Preview
@@ -143,7 +210,7 @@ private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterPr
     collection = listOf(
         MarketPriceBlockState.Content(
             currencyName = "BTC",
-            price = "98900",
+            price = "98900 $",
             priceChangeConfig = PriceChangeConfig(
                 valueInPercent = "5.16%",
                 type = PriceChangeConfig.Type.DOWN,
@@ -151,12 +218,13 @@ private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterPr
         ),
         MarketPriceBlockState.Content(
             currencyName = "BTC",
-            price = "98900",
+            price = "98900 $",
             priceChangeConfig = PriceChangeConfig(
                 valueInPercent = "10.89%",
                 type = PriceChangeConfig.Type.UP,
             ),
         ),
         MarketPriceBlockState.Loading(currencyName = "BTC"),
+        MarketPriceBlockState.Error(currencyName = "BTC"),
     ),
 )

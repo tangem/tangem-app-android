@@ -14,4 +14,6 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
 
     implementation(projects.core.utils)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory.models)
 }
