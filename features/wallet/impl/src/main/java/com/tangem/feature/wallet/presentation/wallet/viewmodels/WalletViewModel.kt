@@ -352,10 +352,12 @@ internal class WalletViewModel @Inject constructor(
         // Check the special components
         return when (this) {
             is WalletMultiCurrencyState -> {
-                tokensListState is WalletTokensListState.Loading ||
-                    tokensListState.items
+                val hasLoadingTokens = tokensListState is WalletTokensListState.ContentState &&
+                    (tokensListState as WalletTokensListState.ContentState).items
                         .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
                         .any { it.state is TokenItemState.Loading }
+
+                tokensListState is WalletTokensListState.Loading || hasLoadingTokens
             }
             is WalletSingleCurrencyState -> {
                 txHistoryState is TxHistoryState.Loading || marketPriceBlockState is MarketPriceBlockState.Loading
