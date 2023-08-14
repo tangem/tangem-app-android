@@ -1,10 +1,7 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import arrow.core.raise.Raise
-import arrow.core.raise.catch
-import arrow.core.raise.either
-import arrow.core.raise.ensure
+import arrow.core.raise.*
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
@@ -35,47 +32,40 @@ class ToggleTokenListGroupingUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListSortingError>.groupTokens(
-        tokenList: TokenList.Ungrouped,
-    ): TokenList.GroupedByNetwork {
-        val sortingOperations = getSortingOperations(tokenList)
-        val tokens = sortingOperations.getTokens()
+    private fun Raise<TokenListSortingError>.groupTokens(tokenList: TokenList.Ungrouped): TokenList.GroupedByNetwork {
+        val sortingOperations = TokenListSortingOperations(tokenList)
+        val tokens = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
+            sortingOperations.getTokens().bind()
+        }
 
         val networks = getNetworks(tokens.map { it.currency.networkId }.toSet())
         return TokenList.GroupedByNetwork(
-            groups = sortingOperations.getGroupedTokens(networks),
+            groups = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
+                sortingOperations.getGroupedTokens(networks).bind()
+            },
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
         )
     }
 
-    private suspend fun Raise<TokenListSortingError>.ungroupTokens(
+    private fun Raise<TokenListSortingError>.ungroupTokens(
         tokenList: TokenList.GroupedByNetwork,
     ): TokenList.Ungrouped {
-        val sortingOperations = getSortingOperations(tokenList)
+        val sortingOperations = TokenListSortingOperations(tokenList)
 
         return TokenList.Ungrouped(
-            currencies = sortingOperations.getTokens(),
+            currencies = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
+                sortingOperations.getTokens().bind()
+            },
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
         )
     }
 
-    private fun Raise<TokenListSortingError>.getSortingOperations(tokenList: TokenList): TokenListSortingOperations<*> {
-        return TokenListSortingOperations(
-            tokenList = tokenList,
-            dispatchers = dispatchers,
-            raise = this,
-            transformError = TokenListSortingOperations.Error::mapToTokenListSortingError,
+    private fun Raise<TokenListSortingError>.getNetworks(networksIds: Set<Network.ID>): Set<Network> {
+        return catch(
+            block = { networksRepository.getNetworks(networksIds) },
+            catch = { raise(TokenListSortingError.DataError(it)) },
         )
-    }
-
-    private suspend fun Raise<TokenListSortingError>.getNetworks(networksIds: Set<Network.ID>): Set<Network> {
-        return withContext(dispatchers.io) {
-            catch(
-                block = { networksRepository.getNetworks(networksIds) },
-                catch = { raise(TokenListSortingError.DataError(it)) },
-            )
-        }
     }
 }
