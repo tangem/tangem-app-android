@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 
+private const val ORGANIZE_BUTTON_CONTENT_TYPE = "OrganizeTokensButton"
+
 /**
  * Organize tokens button
  *
@@ -14,5 +16,7 @@ import androidx.compose.ui.Modifier
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.organizeButton(onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    item { OrganizeTokensButton(onClick = onClick, modifier = modifier.animateItemPlacement()) }
+    item(key = ORGANIZE_BUTTON_CONTENT_TYPE, contentType = ORGANIZE_BUTTON_CONTENT_TYPE) {
+        OrganizeTokensButton(onClick = onClick, modifier = modifier.animateItemPlacement())
+    }
 }
