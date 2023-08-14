@@ -30,9 +30,10 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
-            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading
+            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading(id = value.currency.id.value)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
             -> value.mapToTokenItemState()
             // TODO: Add other token item states, currently not designed
             is CryptoCurrencyStatus.MissedDerivation,

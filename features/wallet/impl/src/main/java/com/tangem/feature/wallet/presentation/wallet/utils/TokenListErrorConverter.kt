@@ -12,7 +12,6 @@ internal class TokenListErrorConverter(
     private val currentStateProvider: Provider<WalletState>,
 ) : Converter<TokenListError, WalletMultiCurrencyState.Content> {
 
-    // TODO: https://tangem.atlassian.net/browse/AND-4021
     override fun convert(value: TokenListError): WalletMultiCurrencyState.Content {
         return requireNotNull(currentStateProvider() as? WalletMultiCurrencyState.Content).copy(
             tokensListState = WalletTokensListState.Content(items = persistentListOf(), onOrganizeTokensClick = null),

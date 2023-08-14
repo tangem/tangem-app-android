@@ -11,7 +11,6 @@ internal class TokenListSortingErrorConverter(
     private val inProgressStateConverter: InProgressStateConverter,
 ) : Converter<TokenListSortingError, OrganizeTokensState> {
 
-    // TODO: https://tangem.atlassian.net/browse/AND-4021
     override fun convert(value: TokenListSortingError): OrganizeTokensState {
         return inProgressStateConverter.convertBack(currentState())
     }

@@ -13,7 +13,7 @@ import com.tangem.blockchain.common.Token as SdkToken
 internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
 
     fun createCurrency(currencyId: CryptoCurrency.ID, response: UserTokensResponse, card: CardDTO): CryptoCurrency {
-        val responseTokenId = getTokenIdString(currencyId)
+        val responseTokenId = currencyId.rawCurrencyId
 
         val token = requireNotNull(response.tokens.firstOrNull { it.id == responseTokenId }) {
             "Unable find a token with provided ID: $responseTokenId"

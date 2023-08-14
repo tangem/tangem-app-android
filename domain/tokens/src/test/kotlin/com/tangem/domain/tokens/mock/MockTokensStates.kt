@@ -74,7 +74,7 @@ internal object MockTokensStates {
         val networkStatus = MockNetworks.verifiedNetworksStatuses
             .first { it.networkId == status.currency.networkId }
         val amount = (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
-        val quote = MockQuotes.quotes.first { it.currencyId == status.currency.id }
+        val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
         val fiatAmount = amount * quote.fiatRate
 
         status.copy(
@@ -83,6 +83,15 @@ internal object MockTokensStates {
                 fiatAmount = fiatAmount,
                 fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
+                hasTransactionsInProgress = false,
+            ),
+        )
+    }
+
+    val noQuotesTokensStatuses = loadedTokensStates.map { currency ->
+        currency.copy(
+            value = CryptoCurrencyStatus.NoQuote(
+                amount = currency.value.amount!!,
                 hasTransactionsInProgress = false,
             ),
         )

@@ -102,14 +102,14 @@ internal class TokensListViewModel @Inject constructor(
     private fun getInitialToolbarState(): TokensListToolbarState {
         return if (args.isManageAccess) {
             TokensListToolbarState.Title.Manage(
-                titleResId = R.string.main_manage_tokens,
+                titleResId = R.string.add_tokens_title,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
                 onAddCustomTokenClick = actionsHandler::onAddCustomTokenClick,
             )
         } else {
             TokensListToolbarState.Title.Read(
-                titleResId = R.string.search_tokens_title,
+                titleResId = R.string.common_search_tokens,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
             )

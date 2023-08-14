@@ -21,6 +21,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
     items(
         items = configs,
         key = { it.state.title.hashCode() },
+        contentType = { it.state::class.java },
         itemContent = { Notification(state = it.state, modifier = modifier.animateItemPlacement()) },
     )
 }

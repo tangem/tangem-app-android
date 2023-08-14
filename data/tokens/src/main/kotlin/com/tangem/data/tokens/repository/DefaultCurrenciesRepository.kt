@@ -9,6 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -154,7 +155,8 @@ internal class DefaultCurrenciesRepository(
             val response = userTokensStore.getSyncOrNull(userWallet.walletId)
                 ?: userTokensResponseFactory.createUserTokensResponse(
                     currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(
-                        userWallet.scanResponse.card,
+                        card = userWallet.scanResponse.card,
+                        derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                     ),
                     isGroupedByNetwork = false,
                     isSortedByBalance = false,
