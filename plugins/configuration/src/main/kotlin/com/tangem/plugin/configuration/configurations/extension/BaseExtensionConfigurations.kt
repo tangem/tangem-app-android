@@ -20,12 +20,14 @@ internal fun BaseExtension.configureCompilerOptions() {
 internal fun BaseExtension.configureCompose(project: Project) {
     val useCompose = with(project.path) {
         contains(":ui") ||
-            contains(":onboarding") || // TODO: divide on api/impl after migrating all onboarding to module
-            contains(":presentation") ||
-            contains(":app") || // TODO: [REDACTED_JIRA]
-            contains(":impl")
+            contains(Regex(pattern = ":onboarding\$")) || // TODO: divide on api/impl after migrating all onboarding to module
+            contains(Regex(pattern = ":presentation\$")) ||
+            contains(Regex(pattern = ":app\$")) || // TODO: [REDACTED_JIRA]
+            contains(Regex(pattern = ":impl\$"))
     }
+
     buildFeatures.compose = useCompose
+    
     if (useCompose) {
         composeOptions {
             kotlinCompilerExtensionVersion = project.findVersion(alias = "compose-compiler").requiredVersion
