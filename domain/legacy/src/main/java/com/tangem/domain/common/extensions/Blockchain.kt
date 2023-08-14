@@ -2,7 +2,9 @@ package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.card.EllipticCurve
+import com.tangem.crypto.hdWallet.DerivationPath
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod")
@@ -69,6 +71,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         "octaspace" -> Blockchain.OctaSpace
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
+        "chia" -> Blockchain.Chia
+        "chia/test" -> Blockchain.ChiaTestnet
         else -> null
     }
 }
@@ -139,6 +143,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
         Blockchain.OctaSpace -> "octaspace"
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -183,6 +189,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -202,18 +210,14 @@ fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
 }
 
-fun Blockchain.getPrimaryCurve(): EllipticCurve? {
-    return when {
-        getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
-            EllipticCurve.Secp256k1
-        }
-        getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
-            EllipticCurve.Ed25519
-        }
-        else -> {
-            null
-        }
+fun Blockchain.derivationPath(style: DerivationStyle?): DerivationPath? {
+    if (style == null) return null
+    if (!getSupportedCurves().contains(EllipticCurve.Secp256k1) &&
+        !getSupportedCurves().contains(EllipticCurve.Ed25519)
+    ) {
+        return null
     }
+    return style.getConfig().derivations(this).values.first()
 }
 
 private const val NODL = "NODL"
