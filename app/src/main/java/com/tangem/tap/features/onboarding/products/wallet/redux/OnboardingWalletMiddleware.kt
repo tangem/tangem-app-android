@@ -12,6 +12,7 @@ import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
@@ -125,7 +126,10 @@ private fun handleWalletAction(action: Action) {
                     } else {
                         listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
                     }.map { blockchain ->
-                        BlockchainNetwork(blockchain, result.data.card)
+                        BlockchainNetwork(
+                            blockchain = blockchain,
+                            derivationStyleProvider = updatedResponse.derivationStyleProvider,
+                        )
                     }
 
                     scope.launch {
