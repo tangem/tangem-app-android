@@ -27,7 +27,7 @@ sealed interface TxHistoryState {
             PagingData.from(
                 listOf(
                     TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                    TxHistoryItemState.Transaction(state = TransactionState.Loading),
+                    TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)),
                 ),
             ),
         ),
@@ -42,7 +42,7 @@ sealed interface TxHistoryState {
         items = flowOf(
             value = PagingData.from(
                 data = buildList(capacity = itemsCount) {
-                    add(TxHistoryItemState.Transaction(state = TransactionState.Loading))
+                    add(TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)))
                 },
             ),
         ),
@@ -66,7 +66,7 @@ sealed interface TxHistoryState {
                 PagingData.from(
                     listOf(
                         TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                        TxHistoryItemState.Transaction(state = TransactionState.Loading),
+                        TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)),
                     ),
                 ),
             ),
@@ -117,5 +117,9 @@ sealed interface TxHistoryState {
          * @property state transaction state
          */
         data class Transaction(val state: TransactionState) : TxHistoryItemState
+    }
+
+    private companion object {
+        const val LOADING_TX_HASH = "LOADING_TX_HASH"
     }
 }
