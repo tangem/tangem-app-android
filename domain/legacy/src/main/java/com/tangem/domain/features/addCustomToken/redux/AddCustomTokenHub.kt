@@ -5,49 +5,18 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
-import com.tangem.domain.AddCustomTokenError.Warning.PotentialScamToken
-import com.tangem.domain.AddCustomTokenError.Warning.TokenAlreadyAdded
-import com.tangem.domain.AddCustomTokenError.Warning.UnsupportedSolanaToken
+import com.tangem.domain.AddCustomTokenError.Warning.*
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.common.form.Field
-import com.tangem.domain.common.form.Form
-import com.tangem.domain.common.form.TokenContractAddressValidator
-import com.tangem.domain.common.form.TokenDecimalsValidator
-import com.tangem.domain.common.form.TokenNameValidator
-import com.tangem.domain.common.form.TokenNetworkValidator
-import com.tangem.domain.common.form.TokenSymbolValidator
-import com.tangem.domain.features.addCustomToken.AddCustomTokenService
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.ContractAddress
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Decimals
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.DerivationPath
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Name
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Network
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Symbol
-import com.tangem.domain.features.addCustomToken.TokenBlockchainField
-import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
-import com.tangem.domain.features.addCustomToken.TokenField
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.FieldError
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.Init
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnAddCustomTokenClicked
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnCreate
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnDestroy
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenContractAddressChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDecimalsChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDerivationPathChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNameChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNetworkChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenSymbolChanged
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.Screen
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.SetFoundTokenInfo
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.UpdateForm
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.Warning
+import com.tangem.domain.common.form.*
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.features.addCustomToken.*
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState.Companion.createInitialScreenState
 import com.tangem.domain.redux.BaseStoreHub
 import com.tangem.domain.redux.DomainState
@@ -590,7 +559,7 @@ private class AddCustomTokenReducer(
                 )
 
                 state.copy(
-                    cardDerivationStyle = card.derivationStyle,
+                    cardDerivationStyle = globalState.scanResponse?.derivationStyleProvider?.getDerivationStyle(),
                     form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain)),
                     tangemTechServiceManager = tangemTechServiceManager,
                     screenState = createInitialScreenState(card.settings.isHDWalletAllowed),
