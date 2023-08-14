@@ -45,7 +45,11 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
     ) {
-        items(items = config.wallets, key = { it.id.stringValue }) { state ->
+        items(
+            items = config.wallets,
+            key = { it.id.stringValue },
+            contentType = { it::class.java },
+        ) { state ->
             WalletCard(
                 state = state,
                 modifier = Modifier
