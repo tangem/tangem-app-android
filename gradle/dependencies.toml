@@ -40,7 +40,7 @@ appsflyer = "6.5.1"
 armadillo = "0.9.0"
 coil = "2.1.0"
 compose-shimmer = "1.0.3"
-coroutine = "1.5.2"
+coroutine = "1.7.2"
 desugarJdkLibs = "1.1.5"
 firebase = "26.0.0"
 googleMaterialComponent = "1.6.1"
@@ -80,9 +80,9 @@ okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_4.10-310"
+tangemBlockchainSdk = "develop-312"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_4.10-281"
+tangemCardSdk = "develop-288"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
