@@ -44,7 +44,7 @@ object TapWorkarounds {
     private val tangemNoteBatches = mapOf(
         "AB01" to Blockchain.Bitcoin,
         "AB02" to Blockchain.Ethereum,
-        "AB03" to Blockchain.CardanoShelley,
+        "AB03" to Blockchain.Cardano,
         "AB04" to Blockchain.Dogecoin,
         "AB05" to Blockchain.BSC,
         "AB06" to Blockchain.XRP,

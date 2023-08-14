@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.walletconnect
 
+import com.tangem.blockchain.common.AddressServiceFactory
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.makeAddressOldStyle
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -169,7 +171,11 @@ class WalletConnectManager {
 
         val key = activeData.wallet.derivedPublicKey ?: activeData.wallet.walletPublicKey ?: return
         val blockchain = activeData.wallet.getBlockchainForSession()
-        val accounts = listOf(blockchain.makeAddresses(key).first().value)
+
+        val factory = AddressServiceFactory(blockchain)
+        val service = factory.makeAddressService()
+
+        val accounts = listOf(service.makeAddressOldStyle(key).value)
         val approved = activeData.client.approveSession(
             accounts = accounts,
             chainId = blockchain.getChainId() ?: Blockchain.Ethereum.getChainId()!!,
@@ -268,7 +274,7 @@ class WalletConnectManager {
                             preparedRequestData = data,
                             topic = session.session.topic,
                             requestId = id,
-                            derivationPath = data.walletManager.wallet.publicKey.derivationPath?.rawPath,
+                            derivationPath = data.walletManager.wallet.publicKey.derivation?.derivationPath?.rawPath,
                         ),
                     ),
                 ),

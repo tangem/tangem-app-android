@@ -47,7 +47,7 @@ data class BlockchainNetwork(
         fun fromWalletManager(walletManager: WalletManager): BlockchainNetwork {
             return BlockchainNetwork(
                 walletManager.wallet.blockchain,
-                walletManager.wallet.publicKey.derivationPath?.rawPath,
+                walletManager.wallet.publicKey.derivation?.derivationPath?.rawPath,
                 walletManager.cardTokens.toList(),
             )
         }

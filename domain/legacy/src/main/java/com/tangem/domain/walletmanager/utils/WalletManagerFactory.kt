@@ -2,6 +2,7 @@ package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
