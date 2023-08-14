@@ -251,7 +251,7 @@ private fun LoadedTokensInfo(
             SpacerH2()
             Text(
                 text = pluralStringResource(
-                    id = R.plurals.tokens_count,
+                    id = R.plurals.token_count,
                     count = tokensCount,
                     tokensCount,
                 ),

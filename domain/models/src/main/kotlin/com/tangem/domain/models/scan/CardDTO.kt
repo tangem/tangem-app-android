@@ -11,6 +11,7 @@ import com.tangem.operations.attestation.Attestation
 import java.util.*
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
+// TODO: Move to :domain:card:models
 /**
  * [Card] copy
  * */

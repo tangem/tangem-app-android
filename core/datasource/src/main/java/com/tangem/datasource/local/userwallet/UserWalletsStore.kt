@@ -5,5 +5,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface UserWalletsStore {
 
-    suspend fun getSync(userWalletId: UserWalletId): UserWallet?
+    val selectedUserWalletOrNull: UserWallet?
+
+    suspend fun getSyncOrNull(key: UserWalletId): UserWallet?
 }

@@ -102,14 +102,14 @@ internal class TokensListViewModel @Inject constructor(
     private fun getInitialToolbarState(): TokensListToolbarState {
         return if (args.isManageAccess) {
             TokensListToolbarState.Title.Manage(
-                titleResId = R.string.main_manage_tokens,
+                titleResId = R.string.add_tokens_title,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
                 onAddCustomTokenClick = actionsHandler::onAddCustomTokenClick,
             )
         } else {
             TokensListToolbarState.Title.Read(
-                titleResId = R.string.search_tokens_title,
+                titleResId = R.string.common_search_tokens,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
             )
@@ -131,10 +131,12 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun createManageTokenContent(token: Token): TokenItemState.ManageContent {
+        val currentTime = System.nanoTime()
         return TokenItemState.ManageContent(
             fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createManageNetworkContent).toImmutableList(),
+            composedId = token.id + currentTime,
             id = token.id,
             name = token.name,
             symbol = token.symbol,
@@ -162,11 +164,13 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun createReadTokenContent(token: Token): TokenItemState.ReadContent {
+        val currentTime = System.nanoTime()
         return TokenItemState.ReadContent(
             id = token.id,
             fullName = getTokenFullName(token),
             iconUrl = token.iconUrl,
             networks = token.networks.map(::createReadNetworkContent).toImmutableList(),
+            composedId = token.id + currentTime,
         )
     }
 

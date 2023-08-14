@@ -1,9 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
-import com.tangem.tap.domain.walletconnect2.domain.models.Account
-import com.tangem.tap.domain.walletconnect2.domain.models.NetworkNamespace
-import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
-import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectSession
+import com.tangem.tap.domain.walletconnect2.domain.models.*
 import kotlinx.coroutines.flow.Flow
 
 interface WalletConnectRepository {
@@ -24,7 +21,9 @@ interface WalletConnectRepository {
 
     fun reject()
 
-    fun sendRequest(topic: String, id: Long, result: String)
+    fun sendRequest(requestData: RequestData, result: String)
 
-    fun rejectRequest(topic: String, id: Long)
+    fun rejectRequest(requestData: RequestData, error: WalletConnectError)
+
+    fun cancelRequest(topic: String, id: Long)
 }

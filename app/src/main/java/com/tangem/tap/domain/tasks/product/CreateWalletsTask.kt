@@ -5,6 +5,8 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
+import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
@@ -18,7 +20,7 @@ class CreateWalletsResponse(
 
 class CreateWalletsTask(
     private val curves: List<EllipticCurve>,
-    private val seed: ByteArray? = null,
+    private val mnemonic: Mnemonic? = null,
 ) : CardSessionRunnable<CreateWalletsResponse> {
 
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
@@ -38,7 +40,10 @@ class CreateWalletsTask(
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
-        CreateWalletTask(curve, seed).run(session) { result ->
+        val extendedPrivateKey = mnemonic?.let {
+            AnyMasterKeyFactory(mnemonic = it, passphrase = "").makeMasterKey(curve)
+        }
+        CreateWalletTask(curve, extendedPrivateKey).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     createdWalletsResponses.add(result.data)

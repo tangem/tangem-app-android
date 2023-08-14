@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.demo.isDemoCard

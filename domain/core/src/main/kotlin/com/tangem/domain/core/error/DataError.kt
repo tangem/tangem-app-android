@@ -7,10 +7,8 @@ sealed class DataError : Exception() {
         object NoInternetConnection : NetworkError()
     }
 
-    sealed class PersistenceError : DataError() {
+    sealed class UserWalletError : DataError() {
 
-        data class UnableToReadFile(override val cause: Throwable) : DataError()
-
-        data class UnableToWriteFile(override val cause: Throwable) : DataError()
+        data class WrongUserWallet(override val message: String) : UserWalletError()
     }
 }

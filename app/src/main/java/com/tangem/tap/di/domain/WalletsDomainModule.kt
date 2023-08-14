@@ -1,8 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +21,31 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletUseCase {
+        return GetSelectedWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun providesSaveWalletUseCase(walletsStateHolder: WalletsStateHolder): SaveWalletUseCase {
         return SaveWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetExploreUrlUseCase(walletsManagersFacade: WalletManagersFacade): GetExploreUrlUseCase {
+        return GetExploreUrlUseCase(walletsManagersFacade = walletsManagersFacade)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesUnlockWalletUseCase(walletsStateHolder: WalletsStateHolder): UnlockWalletsUseCase {
+        return UnlockWalletsUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesSelectWalletUseCase(walletsStateHolder: WalletsStateHolder): SelectWalletUseCase {
+        return SelectWalletUseCase(walletsStateHolder = walletsStateHolder)
     }
 }

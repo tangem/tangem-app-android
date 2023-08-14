@@ -1,97 +1,81 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.NonEmptySet
-import arrow.core.raise.Raise
-import arrow.core.raise.catch
-import arrow.core.raise.ensureNotNull
-import arrow.core.toNonEmptySetOrNull
-import com.tangem.domain.core.raise.DelegatedRaise
+import arrow.core.*
+import arrow.core.raise.*
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.model.TokenStatus
+import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.TokensRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
-internal class TokenListOperations<E>(
-    private val tokensRepository: TokensRepository,
+internal class TokenListOperations(
+    private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
-    private val tokens: Set<TokenStatus>,
-    private val dispatchers: CoroutineDispatcherProvider,
-    raise: Raise<E>,
-    transform: (Error) -> E,
-) : DelegatedRaise<TokenListOperations.Error, E>(raise, transform) {
+    private val tokens: List<CryptoCurrencyStatus>,
+) {
 
     constructor(
         userWalletId: UserWalletId,
-        tokens: Set<TokenStatus>,
+        tokens: List<CryptoCurrencyStatus>,
         useCase: GetTokenListUseCase,
-        raise: Raise<E>,
-        transform: (Error) -> E,
     ) : this(
-        tokensRepository = useCase.tokensRepository,
+        currenciesRepository = useCase.currenciesRepository,
         networksRepository = useCase.networksRepository,
         userWalletId = userWalletId,
         tokens = tokens,
-        dispatchers = useCase.dispatchers,
-        raise = raise,
-        transform = transform,
     )
 
-    fun getTokenListFlow(): Flow<TokenList> {
-        return combine(getIsGrouped(), getIsSortedByBalance()) { isGrouped, isSortedByBalance ->
-            createTokenList(isGrouped, isSortedByBalance)
+    fun getTokenListFlow(): Flow<Either<Error, TokenList>> {
+        return combine(
+            getIsGrouped(),
+            getIsSortedByBalance(),
+        ) { isGrouped, isSortedByBalance ->
+            either {
+                createTokenList(isGrouped.bind(), isSortedByBalance.bind())
+            }
         }
     }
 
-    private suspend fun createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
-        return withContext(dispatchers.default) {
-            val tokensNes = tokens.toNonEmptySetOrNull()
-                ?: return@withContext TokenList.NotInitialized
+    private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
+        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
+            ?: return TokenList.NotInitialized
 
-            val isAnyTokenLoading = tokensNes.any { it.value is TokenStatus.Loading }
-            val fiatBalanceOperations = TokenListFiatBalanceOperations(tokensNes, isAnyTokenLoading, dispatchers)
+        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
+        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
 
-            createTokenList(
-                tokens = tokensNes,
-                fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
-                isAnyTokenLoading = isAnyTokenLoading,
-                isGrouped = isGrouped,
-                isSortedByBalance = isSortedByBalance,
-            )
-        }
+        return createTokenList(
+            currencies = nonEmptyCurrencies,
+            fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
+            isAnyTokenLoading = isAnyTokenLoading,
+            isGrouped = isGrouped,
+            isSortedByBalance = isSortedByBalance,
+        )
     }
 
-    private suspend fun createTokenList(
-        tokens: NonEmptySet<TokenStatus>,
+    private fun Raise<Error>.createTokenList(
+        currencies: NonEmptyList<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
         isAnyTokenLoading: Boolean,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ): TokenList {
         val sortingOperations = TokenListSortingOperations(
-            tokens = tokens,
+            currencies = currencies,
             isAnyTokenLoading = isAnyTokenLoading,
             sortByBalance = isSortedByBalance,
-            dispatchers = dispatchers,
-            raise = this,
-            transformError = { e ->
-                Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
-            },
         )
 
-        return createTokenList(tokens, sortingOperations, fiatBalance, isGrouped)
+        return createTokenList(currencies, sortingOperations, fiatBalance, isGrouped)
     }
 
-    private suspend fun createTokenList(
-        tokens: NonEmptySet<TokenStatus>,
-        sortingOperations: TokenListSortingOperations<*>,
+    private fun Raise<Error>.createTokenList(
+        tokens: NonEmptyList<CryptoCurrencyStatus>,
+        sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
         isGrouped: Boolean,
     ): TokenList {
@@ -108,58 +92,67 @@ internal class TokenListOperations<E>(
         }
     }
 
-    private suspend fun getNetworks(tokensNes: NonEmptySet<TokenStatus>): Set<Network> {
-        return withContext(dispatchers.io) {
-            val networksIds = tokensNes.map { it.networkId }.toNonEmptySet()
-            catch(
-                block = { networksRepository.getNetworks(networksIds) },
-                catch = { raise(Error.DataError(it)) },
-            )
-        }
+    private fun Raise<Error>.getNetworks(tokensNes: NonEmptyList<CryptoCurrencyStatus>): Set<Network> {
+        val networksIds = tokensNes.map { it.currency.networkId }.toNonEmptySet()
+
+        return catch(
+            block = { networksRepository.getNetworks(networksIds) },
+            catch = { raise(Error.DataError(it)) },
+        )
     }
 
-    private suspend fun createUngroupedTokenList(
-        sortingOperations: TokenListSortingOperations<*>,
+    private fun Raise<Error>.createUngroupedTokenList(
+        sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
     ): TokenList.Ungrouped = TokenList.Ungrouped(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
-        tokens = sortingOperations.getTokens(),
+        currencies = withError(
+            transform = { e ->
+                Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
+            },
+            block = { sortingOperations.getTokens().bind() },
+        ),
     )
 
-    private suspend fun createGroupedTokenList(
-        sortingOperations: TokenListSortingOperations<*>,
+    private fun Raise<Error>.createGroupedTokenList(
+        sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
         networks: NonEmptySet<Network>,
     ): TokenList.GroupedByNetwork = TokenList.GroupedByNetwork(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
-        groups = sortingOperations.getGroupedTokens(networks),
+        groups = withError(
+            transform = { e ->
+                Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
+            },
+            block = { sortingOperations.getGroupedTokens(networks).bind() },
+        ),
     )
 
     private fun createUnsortedUngroupedTokenList(
-        tokens: NonEmptySet<TokenStatus>,
+        tokens: List<CryptoCurrencyStatus>,
         fiatBalance: TokenList.FiatBalance,
     ): TokenList.Ungrouped {
         return TokenList.Ungrouped(
             sortedBy = TokenList.SortType.NONE,
             totalFiatBalance = fiatBalance,
-            tokens = tokens,
+            currencies = tokens,
         )
     }
 
-    private fun getIsGrouped(): Flow<Boolean> {
-        return tokensRepository.isTokensGrouped(userWalletId)
-            .catch { raise(Error.DataError(it)) }
-            .onEmpty { emit(value = false) }
-            .flowOn(dispatchers.io)
+    private fun getIsGrouped(): Flow<Either<Error, Boolean>> {
+        return currenciesRepository.isTokensGrouped(userWalletId)
+            .map<Boolean, Either<Error, Boolean>> { it.right() }
+            .catch { emit(Error.DataError(it).left()) }
+            .onEmpty { emit(value = false.right()) }
     }
 
-    private fun getIsSortedByBalance(): Flow<Boolean> {
-        return tokensRepository.isTokensSortedByBalance(userWalletId)
-            .catch { raise(Error.DataError(it)) }
-            .onEmpty { emit(value = false) }
-            .flowOn(dispatchers.io)
+    private fun getIsSortedByBalance(): Flow<Either<Error, Boolean>> {
+        return currenciesRepository.isTokensSortedByBalance(userWalletId)
+            .map<Boolean, Either<Error, Boolean>> { it.right() }
+            .catch { emit(Error.DataError(it).left()) }
+            .onEmpty { emit(value = false.right()) }
     }
 
     sealed class Error {
