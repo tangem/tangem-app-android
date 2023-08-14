@@ -5,8 +5,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
@@ -142,7 +142,7 @@ internal object WalletPreviewData {
         )
     }
 
-    val loadingTokenItemState by lazy { TokenItemState.Loading }
+    val loadingTokenItemState by lazy { TokenItemState.Loading(id = "Loading#1") }
 
     private const val networksSize = 10
     private const val tokensSize = 3
