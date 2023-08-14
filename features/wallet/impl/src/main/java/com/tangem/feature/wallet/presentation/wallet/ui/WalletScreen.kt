@@ -22,6 +22,7 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
@@ -106,7 +107,10 @@ private fun WalletContent(state: WalletState.ContentState) {
                 contentItems(state = state, txHistoryItems = txHistoryItems, modifier = movableItemModifier)
 
                 if (state is WalletMultiCurrencyState) {
-                    organizeButton(onClick = state.tokensListState.onOrganizeTokensClick, modifier = itemModifier)
+                    val tokensListState = state.tokensListState
+                    if (tokensListState is WalletTokensListState.ContentState) {
+                        organizeButton(onClick = tokensListState.onOrganizeTokensClick, modifier = itemModifier)
+                    }
                 }
             }
 
