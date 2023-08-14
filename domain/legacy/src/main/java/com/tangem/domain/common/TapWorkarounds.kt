@@ -1,7 +1,6 @@
 package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.models.scan.CardDTO
@@ -14,6 +13,7 @@ object TapWorkarounds {
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
     private const val TEST_CARD_ID_STARTS_WITH = "FF99"
+    private val backupRequiredFirmwareVersion = FirmwareVersion(major = 6, minor = 21)
 
     val CardDTO.isTangemTwins: Boolean
         get() = TwinsHelper.getTwinCardNumber(cardId) != null
@@ -26,19 +26,11 @@ object TapWorkarounds {
 
     // for cards 6.21 and higher backup is not skippable
     val CardDTO.canSkipBackup: Boolean
-        get() = this.firmwareVersion < FirmwareVersion.KeysImportAvailable
+        get() = this.firmwareVersion < backupRequiredFirmwareVersion
 
     val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
-    val CardDTO.derivationStyle: DerivationStyle?
-        get() = if (!settings.isHDWalletAllowed) {
-            null
-        } else if (useOldStyleDerivation) {
-            DerivationStyle.LEGACY
-        } else {
-            DerivationStyle.NEW
-        }
     val CardDTO.isExcluded: Boolean
         get() {
             val excludedBatch = excludedBatches.contains(batchId)

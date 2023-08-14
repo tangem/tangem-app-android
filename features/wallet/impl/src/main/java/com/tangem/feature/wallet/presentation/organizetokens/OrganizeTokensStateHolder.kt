@@ -1,179 +1,122 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
-import androidx.compose.runtime.Immutable
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.toPersistentList
-import org.burnoutcrew.reorderable.ItemPosition
+import com.tangem.common.Provider
+import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.error.TokenListSortingError
+import com.tangem.domain.tokens.model.TokenList
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
+import com.tangem.feature.wallet.presentation.organizetokens.utils.common.updateSorting
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenListToStateConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListErrorConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListSortingErrorConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.*
 
-internal data class OrganizeTokensStateHolder(
-    val header: HeaderConfig,
-    val itemsState: OrganizeTokensListState,
-    val dragConfig: DragConfig,
-    val actions: ActionsConfig,
+@Suppress("unused", "MemberVisibilityCanBePrivate") // TODO: Will be used in next MR
+internal class OrganizeTokensStateHolder(
+    private val intents: OrganizeTokensIntents,
+    private val fiatCurrencyCode: String,
+    private val fiatCurrencySymbol: String,
+    private val onSubscription: () -> Unit,
+    scope: CoroutineScope,
 ) {
 
-    data class HeaderConfig(
-        val onSortByBalanceClick: () -> Unit,
-        val onGroupByNetworkClick: () -> Unit,
-    )
+    private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
 
-    data class ActionsConfig(
-        val onApplyClick: () -> Unit,
-        val onCancelClick: () -> Unit,
-    )
+    private val tokenListConverter by lazy {
+        val tokensConverter = CryptoCurrencyToDraggableItemConverter(
+            fiatCurrencyCode = fiatCurrencyCode,
+            fiatCurrencySymbol = fiatCurrencySymbol,
+        )
+        val itemsConverter = TokenListToListStateConverter(
+            tokensConverter = tokensConverter,
+            groupsConverter = NetworkGroupToDraggableItemsConverter(tokensConverter),
+        )
 
-    data class DragConfig(
-        val onItemDragged: (from: ItemPosition, to: ItemPosition) -> Unit,
-        val canDragItemOver: (dragOver: ItemPosition, dragging: ItemPosition) -> Boolean,
-        val onItemDragEnd: () -> Unit,
-        val onDragStart: (item: DraggableItem) -> Unit,
-    )
-}
+        TokenListToStateConverter(Provider(stateFlowInternal::value), itemsConverter)
+    }
 
-@Immutable
-internal sealed interface OrganizeTokensListState {
-    val items: PersistentList<DraggableItem>
+    private val inProgressStateConverter by lazy {
+        InProgressStateConverter()
+    }
 
-    data class GroupedByNetwork(
-        override val items: PersistentList<DraggableItem>,
-    ) : OrganizeTokensListState
+    private val tokenListErrorConverter by lazy {
+        TokenListErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
+    }
 
-    data class Ungrouped(
-        override val items: PersistentList<DraggableItem.Token>,
-    ) : OrganizeTokensListState
+    private val tokenListSortingErrorConverter by lazy {
+        TokenListSortingErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
+    }
 
-    @Suppress("UNCHECKED_CAST")
-    fun updateItems(update: (PersistentList<DraggableItem>) -> List<DraggableItem>): OrganizeTokensListState {
-        val updatedItems = update(this.items).toPersistentList()
+    val stateFlow: StateFlow<OrganizeTokensState> = stateFlowInternal
+        .onSubscription { onSubscription() }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = getInitialState(),
+        )
 
-        return when (this) {
-            is GroupedByNetwork -> this.copy(items = updatedItems)
-            is Ungrouped -> this.copy(items = updatedItems as PersistentList<DraggableItem.Token>)
+    var tokenList: TokenList? = null
+        private set
+
+    fun updateStateWithTokenList(tokenList: TokenList) {
+        updateState { tokenListConverter.convert(tokenList) }
+        this.tokenList = tokenList
+    }
+
+    fun updateStateToDisplayProgress() {
+        updateState { inProgressStateConverter.convert(value = this) }
+    }
+
+    fun updateStateToHideProgress() {
+        updateState { inProgressStateConverter.convertBack(value = this) }
+    }
+
+    fun updateStateWithManualSorting(itemsState: OrganizeTokensListState) {
+        updateState {
+            copy(
+                header = header.copy(isSortedByBalance = false),
+                itemsState = itemsState,
+            )
         }
-    }
-}
-
-/**
- * Helper class for the DND list items
- *
- * @property id ID of the item
- * @property roundingMode item [RoundingMode]
- * @property showShadow if true then item should be elevated
- * */
-@Immutable
-internal sealed interface DraggableItem {
-    val id: String
-    val roundingMode: RoundingMode
-    val showShadow: Boolean
-
-    /**
-     * Item for network group header.
-     *
-     * @property id ID of the network group
-     * @property networkName network group name
-     * @property roundingMode item [RoundingMode]
-     * @property showShadow if true then item should be elevated
-     * */
-    data class GroupHeader(
-        override val id: String,
-        val networkName: String,
-        override val roundingMode: RoundingMode = RoundingMode.None,
-        override val showShadow: Boolean = false,
-    ) : DraggableItem
-
-    /**
-     * Item for token.
-     *
-     * @property tokenItemState state of the token item
-     * @property groupId ID of the network group which contains this token
-     * @property id ID of the token
-     * @property roundingMode item [RoundingMode]
-     * @property showShadow if true then item should be elevated
-     * */
-    data class Token(
-        val tokenItemState: TokenItemState.Draggable,
-        val groupId: String,
-        override val showShadow: Boolean = false,
-        override val roundingMode: RoundingMode = RoundingMode.None,
-    ) : DraggableItem {
-        override val id: String = tokenItemState.id
+        tokenList = tokenList?.updateSorting(isSortedByBalance = false)
     }
 
-    /**
-     * Helper item used to detect possible positions where a network group can be placed.
-     * Used only on [OrganizeTokensListState.GroupedByNetwork] and placed between network groups.
-     *
-     * @property id ID of the placeholder
-     * */
-    data class GroupPlaceholder(
-        override val id: String,
-    ) : DraggableItem {
-        override val showShadow: Boolean = false
-        override val roundingMode: RoundingMode = RoundingMode.None
+    fun updateStateWithError(error: TokenListError) {
+        updateState { tokenListErrorConverter.convert(error) }
     }
 
-    /**
-     * Update item [RoundingMode]
-     *
-     * @param mode new [RoundingMode]
-     *
-     * @return updated [DraggableItem]
-     * */
-    fun roundingMode(mode: RoundingMode): DraggableItem = when (this) {
-        is GroupPlaceholder -> this
-        is GroupHeader -> this.copy(roundingMode = mode)
-        is Token -> this.copy(roundingMode = mode)
+    fun updateStateWithError(error: TokenListSortingError) {
+        updateState { tokenListSortingErrorConverter.convert(error) }
     }
 
-    /**
-     * Update item shadow visibility
-     *
-     * @param show if true then item should be elevated
-     *
-     * @return updated [DraggableItem]
-     * */
-    fun showShadow(show: Boolean): DraggableItem = when (this) {
-        is GroupPlaceholder -> this
-        is GroupHeader -> this.copy(showShadow = show)
-        is Token -> this.copy(showShadow = show)
+    private fun getInitialState(): OrganizeTokensState {
+        return OrganizeTokensState(
+            onBackClick = intents::onBackClick,
+            itemsState = OrganizeTokensListState.Empty,
+            header = OrganizeTokensState.HeaderConfig(
+                onSortClick = intents::onSortClick,
+                onGroupClick = intents::onGroupClick,
+            ),
+            actions = OrganizeTokensState.ActionsConfig(
+                onApplyClick = intents::onApplyClick,
+                onCancelClick = intents::onCancelClick,
+            ),
+            dndConfig = OrganizeTokensState.DragAndDropConfig(
+                onItemDragged = intents::onItemDragged,
+                onDragStart = intents::onItemDraggingStart,
+                onItemDragEnd = intents::onItemDraggingEnd,
+                canDragItemOver = intents::canDragItemOver,
+            ),
+        )
     }
 
-    /**
-     * Rounding mode of the [DraggableItem]
-     *
-     * @property showGap if true then item should have padding on rounded side
-     * */
-    @Immutable
-    sealed interface RoundingMode {
-        val showGap: Boolean
-
-        /**
-         * In this mode, item is not rounded
-         * */
-        object None : RoundingMode {
-            override val showGap: Boolean = false
-        }
-
-        /**
-         * In this mode, item should have a rounded top side
-         *
-         * @property showGap if true then item should have top padding
-         * */
-        data class Top(override val showGap: Boolean = false) : RoundingMode
-
-        /**
-         * In this mode, item should have a rounded bottom side
-         *
-         * @property showGap if true then item should have bottom padding
-         * */
-        data class Bottom(override val showGap: Boolean = false) : RoundingMode
-
-        /**
-         * In this mode, item should have a rounded all sides
-         *
-         * @property showGap if true then item should have top and bottom padding
-         * */
-        data class All(override val showGap: Boolean = false) : RoundingMode
+    private fun updateState(block: OrganizeTokensState.() -> OrganizeTokensState) {
+        stateFlowInternal.update(block)
     }
 }

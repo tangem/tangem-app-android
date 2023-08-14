@@ -1,11 +1,6 @@
 package com.tangem.tap.features.home.compose.views
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
@@ -51,7 +46,7 @@ fun HomeButtons(
             },
             content = {
                 Text(
-                    text = stringResource(id = R.string.welcome_unlock_card),
+                    text = stringResource(id = R.string.home_button_scan),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
