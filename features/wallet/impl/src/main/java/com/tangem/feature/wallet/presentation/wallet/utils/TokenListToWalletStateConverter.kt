@@ -63,7 +63,9 @@ internal class TokenListToWalletStateConverter(
     }
 
     private fun WalletState.getRefreshingStatus(): Boolean {
-        return if (this is WalletMultiCurrencyState.Content) {
+        return if (this is WalletMultiCurrencyState.Content &&
+            this.tokensListState is WalletTokensListState.ContentState
+        ) {
             tokensListState.items.any { tokensListItemState ->
                 tokensListItemState is WalletTokensListState.TokensListItemState.Token &&
                     tokensListItemState.state is TokenItemState.Loading
