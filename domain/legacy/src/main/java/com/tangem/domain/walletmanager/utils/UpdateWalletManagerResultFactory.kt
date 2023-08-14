@@ -1,11 +1,7 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.TransactionStatus
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.domain.common.extensions.amountToCreateAccount
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
@@ -26,9 +22,9 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getDemoResult(demoAmount: Amount, tokens: Set<CryptoCurrency.Token>): UpdateWalletManagerResult.Verified {
+    fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): UpdateWalletManagerResult.Verified {
         return UpdateWalletManagerResult.Verified(
-            tokensAmounts = getDemoTokensAmounts(demoAmount, tokens),
+            tokensAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
             hasTransactionsInProgress = false,
         )
     }
@@ -53,18 +49,19 @@ internal class UpdateWalletManagerResultFactory {
         return amounts.mapNotNullTo(mutableAmounts, ::getTokenAmount)
     }
 
-    private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<CryptoCurrency.Token>): Set<CryptoCurrencyAmount> {
+    private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<Token>): Set<CryptoCurrencyAmount> {
         val amountValue = demoAmount.value ?: BigDecimal.ZERO
         val demoAmounts = hashSetOf<CryptoCurrencyAmount>(CryptoCurrencyAmount.Coin(amountValue))
 
         return tokens.mapTo(demoAmounts) { token ->
-            CryptoCurrencyAmount.Token(token.contractAddress, amountValue)
+            CryptoCurrencyAmount.Token(token.id, token.contractAddress, amountValue)
         }
     }
 
     private fun getTokenAmount(amount: Amount): CryptoCurrencyAmount? {
         return when (val type = amount.type) {
             is AmountType.Token -> CryptoCurrencyAmount.Token(
+                id = type.token.id,
                 tokenContractAddress = type.token.contractAddress,
                 value = getAmountValue(amount) ?: return null,
             )

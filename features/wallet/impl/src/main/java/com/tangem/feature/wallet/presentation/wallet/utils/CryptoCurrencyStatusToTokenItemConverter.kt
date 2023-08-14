@@ -3,8 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.utils.converter.Converter
@@ -19,7 +19,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private val CryptoCurrencyStatus.networkIconResId: Int?
         @DrawableRes get() {
             // TODO: [REDACTED_JIRA]
-            return if (currency is CryptoCurrency.Token) null else R.drawable.img_eth_22
+            return if (currency is CryptoCurrency.Coin) null else R.drawable.img_eth_22
         }
 
     private val CryptoCurrencyStatus.tokenIconResId: Int
@@ -30,9 +30,10 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
-            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading
+            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading(id = value.currency.id.value)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
             -> value.mapToTokenItemState()
             // TODO: Add other token item states, currently not designed
             is CryptoCurrencyStatus.MissedDerivation,
