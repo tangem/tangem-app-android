@@ -161,12 +161,15 @@ class SeedPhraseViewModel @Inject constructor(
 
             val fieldState = field.getState(uiState)
             if (fieldState.textFieldValue.text.isEmpty()) {
-                updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError = false) }
+                updateUi {
+                    val mediate = uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError = false)
+                    uiBuilder.checkSeedPhrase.updateCreateWalletButton(mediate, enabled = false)
+                }
                 return@launchSingle
             }
 
             createOrGetDebouncer(field.name).debounce(viewModelScope, context = dispatchers.io) {
-                val hasError = !interactor.isWordMatch(textFieldValue.text)
+                val hasError = !interactor.isWordMatch(generatedMnemonicComponents, field, textFieldValue.text)
                 if (fieldState.isError != hasError) {
                     updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
@@ -278,7 +281,6 @@ class SeedPhraseViewModel @Inject constructor(
             is CompletionResult.Success -> {
                 isFinished = true
             }
-
             is CompletionResult.Failure -> {
                 // errors shows on the TangemSdk bottom sheet dialog
             }
