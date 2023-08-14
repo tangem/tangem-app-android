@@ -60,26 +60,31 @@ private fun LazyListScope.contentItems(
 ) {
     itemsIndexed(
         items = txHistoryItems,
-        key = { index, _ -> index },
-        itemContent = { index, item ->
-            if (item == null) return@itemsIndexed
-
-            TxHistoryListItem(
-                state = item,
-                modifier = modifier
-                    .animateItemPlacement()
-                    .roundedShapeItemDecoration(
-                        currentIndex = index,
-                        lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
-                    ),
-            )
+        key = { _, item ->
+            when (item) {
+                is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
+                is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
+                is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
+            }
         },
-    )
+    ) { index, item ->
+        if (item == null) return@itemsIndexed
+
+        TxHistoryListItem(
+            state = item,
+            modifier = modifier
+                .animateItemPlacement()
+                .roundedShapeItemDecoration(
+                    currentIndex = index,
+                    lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
+                ),
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
-    item {
+    item(key = state::class.java, contentType = state::class.java) {
         EmptyTransactionBlock(
             state = state,
             modifier = modifier
