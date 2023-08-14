@@ -100,6 +100,28 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 Timber.d("sessionProposal: $sessionProposal")
                 this@WalletConnectRepositoryImpl.sessionProposal = sessionProposal
 
+                val missingNetworks = findMissingNetworks(
+                    namespaces = sessionProposal.requiredNamespaces,
+                    userNamespaces = this@WalletConnectRepositoryImpl.userNamespaces ?: emptyMap(),
+                )
+
+                if (missingNetworks.isNotEmpty()) {
+                    Timber.w("Not added blockchains: $missingNetworks")
+                    scope.launch {
+                        _events.emit(
+                            WalletConnectEvents.SessionApprovalError(
+                                WalletConnectError.ApprovalErrorMissingNetworks(missingNetworks.toList()),
+                            ),
+                        )
+                    }
+                    return
+                }
+
+                val optionalWithoutMissingNetworks = removeMissingNetworks(
+                    namespaces = sessionProposal.optionalNamespaces,
+                    userNamespaces = this@WalletConnectRepositoryImpl.userNamespaces ?: emptyMap(),
+                )
+
                 scope.launch {
                     _events.emit(
                         WalletConnectEvents.SessionProposal(
@@ -108,7 +130,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                             sessionProposal.url,
                             sessionProposal.icons,
                             sessionProposal.requiredNamespaces.values.flatMap { it.chains ?: emptyList() },
-                            sessionProposal.optionalNamespaces.values.flatMap { it.chains ?: emptyList() },
+                            optionalWithoutMissingNetworks.toList(),
                         ),
                     )
                 }
@@ -211,6 +233,10 @@ class WalletConnectRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>) {
+        this.userNamespaces = userNamespaces
+    }
+
     override fun pair(uri: String) {
         Web3Wallet.pair(Wallet.Params.Pair(uri))
     }
@@ -219,23 +245,6 @@ class WalletConnectRepositoryImpl @Inject constructor(
         this.userNamespaces = userNamespaces
 
         val sessionProposal: Wallet.Model.SessionProposal = requireNotNull(this.sessionProposal)
-
-        val missingNetworks = findMissingNetworks(
-            namespaces = sessionProposal.requiredNamespaces,
-            userNamespaces = userNamespaces,
-        )
-
-        if (missingNetworks.isNotEmpty()) {
-            Timber.e("Not added blockchains: $missingNetworks")
-            scope.launch {
-                _events.emit(
-                    WalletConnectEvents.SessionApprovalError(
-                        WalletConnectError.ApprovalErrorMissingNetworks(missingNetworks.toList()),
-                    ),
-                )
-            }
-            return
-        }
 
         val userChains = userNamespaces.flatMap { namespace ->
             namespace.value.map { it.chainId to "${it.chainId}:${it.walletAddress}" }
@@ -429,5 +438,14 @@ class WalletConnectRepositoryImpl @Inject constructor(
         val requiredChains = namespaces.values.flatMap { it.chains ?: emptyList() }
         val userChains = userNamespaces.flatMap { it.value.map { account -> account.chainId } }
         return requiredChains.subtract(userChains.toSet())
+    }
+
+    private fun removeMissingNetworks(
+        namespaces: Map<String, Wallet.Model.Namespace.Proposal>,
+        userNamespaces: Map<NetworkNamespace, List<Account>>,
+    ): Collection<String> {
+        val wcProvidedChains = namespaces.values.flatMap { it.chains ?: emptyList() }
+        val userChains = userNamespaces.flatMap { it.value.map { account -> account.chainId } }
+        return wcProvidedChains.intersect(userChains.toSet())
     }
 }
