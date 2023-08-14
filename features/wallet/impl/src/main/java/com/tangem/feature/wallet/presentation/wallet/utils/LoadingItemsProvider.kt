@@ -8,8 +8,14 @@ import kotlinx.collections.immutable.toImmutableList
 internal object LoadingItemsProvider {
 
     fun getLoadingMultiCurrencyTokens(): ImmutableList<WalletTokensListState.TokensListItemState.Token> {
-        return buildList(capacity = 5) {
-            add(WalletTokensListState.TokensListItemState.Token(state = TokenItemState.Loading))
-        }.toImmutableList()
+        val items = mutableListOf<WalletTokensListState.TokensListItemState.Token>()
+        repeat(times = 5) {
+            items.add(
+                WalletTokensListState.TokensListItemState.Token(
+                    state = TokenItemState.Loading(id = "Loading#$it"),
+                ),
+            )
+        }
+        return items.toImmutableList()
     }
 }
