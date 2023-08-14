@@ -5,6 +5,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -20,8 +21,7 @@ import java.math.BigDecimal
 internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
+    private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<Either<CurrencyError, CryptoCurrencyStatus>, WalletSingleCurrencyState.Content> {
 
     override fun convert(value: Either<CurrencyError, CryptoCurrencyStatus>): WalletSingleCurrencyState.Content {
@@ -47,7 +47,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.Loaded,
             -> MarketPriceBlockState.Content(
                 currencyName = currencyName,
-                price = formatPrice(status),
+                price = formatPrice(status, appCurrencyProvider()),
                 priceChangeConfig = PriceChangeConfig(
                     valueInPercent = formatPriceChange(status),
                     type = getPriceChangeType(status),
@@ -67,6 +67,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         state: WalletSingleCurrencyState,
     ): WalletsListConfig {
         val selectedWallet = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex]
+
         val updatedWallet = when (status) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
@@ -81,7 +82,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     ),
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
-                    balance = formatFiatAmount(status),
+                    balance = formatFiatAmount(status, appCurrencyProvider()),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
@@ -133,23 +134,23 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         )
     }
 
-    private fun formatPrice(status: CryptoCurrencyStatus.Status): String {
+    private fun formatPrice(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
         val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatFiatAmount(
             fiatAmount = fiatRate,
-            fiatCurrencyCode = fiatCurrencyCode,
-            fiatCurrencySymbol = fiatCurrencySymbol,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
         )
     }
 
-    private fun formatFiatAmount(status: CryptoCurrencyStatus.Status): String {
+    private fun formatFiatAmount(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
         val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatFiatAmount(
             fiatAmount = fiatAmount,
-            fiatCurrencyCode = fiatCurrencyCode,
-            fiatCurrencySymbol = fiatCurrencySymbol,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
         )
     }
 }

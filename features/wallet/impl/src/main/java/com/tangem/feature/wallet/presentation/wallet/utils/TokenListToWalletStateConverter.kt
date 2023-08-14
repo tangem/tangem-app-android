@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -18,16 +19,14 @@ internal class TokenListToWalletStateConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val isLockedWalletProvider: Provider<Boolean>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
     clickIntents: WalletClickIntents,
 ) : Converter<TokensListModel, WalletMultiCurrencyState.Content> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
-        fiatCurrencyCode = fiatCurrencyCode,
-        fiatCurrencySymbol = fiatCurrencySymbol,
+        appCurrencyProvider = appCurrencyProvider,
         clickIntents = clickIntents,
     )
 
@@ -51,9 +50,8 @@ internal class TokenListToWalletStateConverter(
             currentState = selectedWalletCard,
             isLockedState = isLockedWalletProvider(),
             cardTypeResolverProvider = cardTypeResolverProvider,
+            appCurrencyProvider = appCurrencyProvider,
             isWalletContentHidden = isWalletContentHidden,
-            fiatCurrencyCode = fiatCurrencyCode,
-            fiatCurrencySymbol = fiatCurrencySymbol,
         )
 
         return walletsListConfig.copy(

@@ -56,6 +56,8 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
