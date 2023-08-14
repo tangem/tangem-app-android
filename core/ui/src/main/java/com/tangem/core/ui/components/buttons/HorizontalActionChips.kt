@@ -31,7 +31,11 @@ fun HorizontalActionChips(
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
     ) {
-        items(items = buttons, itemContent = { ActionButton(config = it) })
+        items(
+            items = buttons,
+            key = { config -> "${config.text.hashCode()} ${config.iconResId}" },
+            itemContent = { ActionButton(config = it) },
+        )
     }
 }
 
