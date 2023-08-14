@@ -1,15 +1,17 @@
 package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
+import com.tangem.common.Provider
+import com.tangem.data.common.locale.LocaleProvider
 import com.tangem.feature.learn2earn.impl.BuildConfig
 
 /**
 [REDACTED_AUTHOR]
  */
 internal class WebViewUriBuilder(
-    private val authCredentialsProvider: () -> String?,
-    private val localeLanguageProvider: () -> String,
-    private val promoCodeProvider: () -> String?,
+    private val authCredentialsProvider: Provider<String?>,
+    private val localeProvider: LocaleProvider,
+    private val promoCodeProvider: Provider<String?>,
 ) {
 
     fun buildUriForNewUser(learningIsFinished: Boolean): Uri {
@@ -46,18 +48,9 @@ internal class WebViewUriBuilder(
         } else {
             authority(BASE_URL)
         }
-        appendPath(getLocaleLanguage(localeLanguageProvider.invoke()))
+        appendPath(localeProvider.getWebUriLocaleLanguage())
         appendPath(PATH_PROMOTION)
         appendQueryParameter(QUERY_FINISHED, learningIsFinished.toString())
-    }
-
-    // TODO: locale: This can be used by another feature. Move it to the appropriate location
-    private fun getLocaleLanguage(language: String): String {
-        return if (LOCALE_LANG_RU.equals(language, true) || LOCALE_LANG_BY.equals(language, true)) {
-            LOCALE_LANG_RU
-        } else {
-            LOCALE_LANG_EN
-        }
     }
 
     private companion object {
@@ -71,9 +64,5 @@ internal class WebViewUriBuilder(
         const val QUERY_FINISHED = "finished"
 
         const val DEV_BASE_URL = "devweb.tangem.com"
-
-        const val LOCALE_LANG_RU = "ru"
-        const val LOCALE_LANG_BY = "by"
-        const val LOCALE_LANG_EN = "en"
     }
 }
