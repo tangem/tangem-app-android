@@ -6,7 +6,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.entities.FiatCurrency
@@ -104,13 +104,13 @@ class MultiWalletView : WalletView() {
         watcher.invoke(state)
 
         binding.btnAddToken.setOnClickListener {
-            val card = store.state.globalState.scanResponse!!.card
             Analytics.send(Portfolio.ButtonManageTokens())
 
             store.dispatch(
                 TokensAction.SetArgs.ManageAccess(
                     wallets = state.walletsDataFromStores,
-                    derivationStyle = card.derivationStyle,
+                    derivationStyle = store.state.globalState.scanResponse
+                        ?.derivationStyleProvider?.getDerivationStyle(),
                 ),
             )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))

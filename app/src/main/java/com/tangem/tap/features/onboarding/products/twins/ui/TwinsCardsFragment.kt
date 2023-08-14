@@ -350,7 +350,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             btnAlternativeAction.isVisible = false
         }
 
-        tvHeader.setText(R.string.onboarding_top_up_header)
+        tvHeader.setText(R.string.onboarding_topup_title)
         tvBody.setText(R.string.onboarding_top_up_body)
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
