@@ -118,7 +118,9 @@ internal class WalletNotificationsListFactory(
         }
 
         return currentStateProvider().let { state ->
-            state is WalletMultiCurrencyState.Content && state.tokensListState.items.any(isUnreachableState)
+            state is WalletMultiCurrencyState.Content &&
+                state.tokensListState is WalletTokensListState.ContentState &&
+                state.tokensListState.items.any(isUnreachableState)
         }
     }
 

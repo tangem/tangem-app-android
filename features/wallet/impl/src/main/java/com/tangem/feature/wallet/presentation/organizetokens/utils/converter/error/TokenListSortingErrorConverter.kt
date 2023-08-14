@@ -10,7 +10,7 @@ internal class TokenListSortingErrorConverter(
     private val currentState: Provider<OrganizeTokensState>,
     private val inProgressStateConverter: InProgressStateConverter,
 ) : Converter<TokenListSortingError, OrganizeTokensState> {
-// [REDACTED_TODO_COMMENT]
+
     override fun convert(value: TokenListSortingError): OrganizeTokensState {
         return inProgressStateConverter.convertBack(currentState())
     }

@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class TokenListErrorConverter(
     private val currentStateProvider: Provider<WalletState>,
 ) : Converter<TokenListError, WalletMultiCurrencyState.Content> {
-// [REDACTED_TODO_COMMENT]
+
     override fun convert(value: TokenListError): WalletMultiCurrencyState.Content {
         return requireNotNull(currentStateProvider() as? WalletMultiCurrencyState.Content).copy(
             tokensListState = WalletTokensListState.Content(items = persistentListOf(), onOrganizeTokensClick = null),

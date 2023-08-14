@@ -27,18 +27,28 @@ internal class TokenListToContentItemsConverter(
     )
 
     override fun convert(value: TokenList): WalletTokensListState {
-        return WalletTokensListState.Content(
-            items = when (value) {
-                is TokenList.GroupedByNetwork -> value.mapToMultiCurrencyItems()
-                is TokenList.Ungrouped -> value.mapToMultiCurrencyItems()
-                is TokenList.NotInitialized -> getLoadingMultiCurrencyTokens()
-            },
-            onOrganizeTokensClick = if (value.totalFiatBalance is TokenList.FiatBalance.Loaded) {
-                clickIntents::onOrganizeTokensClick
-            } else {
-                null
-            },
-        )
+        val isEmptyList = when (value) {
+            is TokenList.GroupedByNetwork -> value.groups.isEmpty()
+            is TokenList.NotInitialized -> true
+            is TokenList.Ungrouped -> value.currencies.isEmpty()
+        }
+
+        return if (isEmptyList) {
+            WalletTokensListState.Empty
+        } else {
+            WalletTokensListState.Content(
+                items = when (value) {
+                    is TokenList.GroupedByNetwork -> value.mapToMultiCurrencyItems()
+                    is TokenList.Ungrouped -> value.mapToMultiCurrencyItems()
+                    is TokenList.NotInitialized -> getLoadingMultiCurrencyTokens()
+                },
+                onOrganizeTokensClick = if (value.totalFiatBalance is TokenList.FiatBalance.Loaded) {
+                    clickIntents::onOrganizeTokensClick
+                } else {
+                    null
+                },
+            )
+        }
     }
 
     private fun TokenList.GroupedByNetwork.mapToMultiCurrencyItems(): PersistentList<TokensListItemState> {
