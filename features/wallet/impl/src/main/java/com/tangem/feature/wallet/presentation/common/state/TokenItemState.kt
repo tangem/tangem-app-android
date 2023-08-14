@@ -8,12 +8,16 @@ import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 @Immutable
 internal sealed interface TokenItemState {
 
+    /** Unique id */
+    val id: String
+
     /** Loading token state */
-    object Loading : TokenItemState
+    data class Loading(override val id: String) : TokenItemState
 
     /**
      * Content token state
      *
+     * @property id                  unique id
      * @property tokenIconUrl        token icon url
      * @property tokenIconResId      token icon resource id
      * @property networkIconResId    network icon resource id, may be null if it is a coin
@@ -23,7 +27,7 @@ internal sealed interface TokenItemState {
      * @property tokenOptions        state for token options
      */
     data class Content(
-        val id: String,
+        override val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
@@ -36,13 +40,15 @@ internal sealed interface TokenItemState {
     /**
      * Draggable token state
      *
+     * @property id                  unique id
      * @property tokenIconUrl        token icon url
      * @property tokenIconResId      token icon resource id
      * @property networkIconResId    network icon resource id, may be null if it is a coin
      * @property name                token name
+     * @property fiatAmount          fiat amount of token
      */
     data class Draggable(
-        val id: String,
+        override val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
@@ -60,7 +66,7 @@ internal sealed interface TokenItemState {
      * @property name                token name
      */
     data class Unreachable(
-        val id: String,
+        override val id: String,
         val tokenIconUrl: String?,
         @DrawableRes val tokenIconResId: Int,
         @DrawableRes val networkIconResId: Int?,
