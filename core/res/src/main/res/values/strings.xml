@@ -160,6 +160,7 @@
     <string name="initial_message_tap_header">Tap the card</string>
     <string name="internal_error_wallet_manager_not_found">Internal error: wallet manager not found</string>
     <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
+    <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens.</string>
     <string name="main_get_bonus_subtitle">You have completed all of the lessons, and are now eligible to receive your 1INCH tokens</string>
     <plurals name="main_learn_subtitle">
         <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
