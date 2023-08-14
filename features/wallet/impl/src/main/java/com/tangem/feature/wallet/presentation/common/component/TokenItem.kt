@@ -1,6 +1,9 @@
 package com.tangem.feature.wallet.presentation.common.component
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
@@ -124,7 +127,7 @@ internal fun UnreachableTokenItem(state: TokenItemState.Unreachable, modifier: M
         options = { ref ->
             Text(
                 modifier = Modifier.constrainAsOptionsItem(scope = this, ref),
-                text = "Unreachable", // TODO (conform this text)
+                text = stringResource(id = R.string.common_unreachable),
                 style = TangemTypography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -143,7 +146,7 @@ private fun LoadingTokenItem(modifier: Modifier = Modifier) {
                     vertical = TangemTheme.dimens.spacing4,
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         ) {
             CircleShimmer(modifier = Modifier.size(size = TangemTheme.dimens.size42))
             Row(
@@ -188,22 +191,17 @@ private fun LoadingTokenItem(modifier: Modifier = Modifier) {
  * Block for end part of token item
  * shows status is reachable, is drag, hidden or show balance
  */
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun TokenOptionsBlock(state: TokenOptionsState, modifier: Modifier = Modifier) {
-    when (state) {
-        is TokenOptionsState.Visible -> {
-            TokenFiatPercentageBlock(
-                modifier = modifier,
-                fiatAmount = state.fiatAmount,
-                priceChange = state.priceChange,
-            )
-        }
-        is TokenOptionsState.Hidden -> {
-            TokenFiatPercentageBlock(
-                modifier = modifier,
-                fiatAmount = DOTS,
-                priceChange = state.priceChange,
-            )
+    AnimatedContent(targetState = state, label = "Update the options", modifier = modifier) { options ->
+        when (options) {
+            is TokenOptionsState.Visible -> {
+                TokenFiatPercentageBlock(fiatAmount = options.fiatAmount, priceChange = options.priceChange)
+            }
+            is TokenOptionsState.Hidden -> {
+                TokenFiatPercentageBlock(fiatAmount = DOTS, priceChange = options.priceChange)
+            }
         }
     }
 }
@@ -243,7 +241,7 @@ private fun InternalTokenItem(
 
             TokenTitleAmountBlock(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .padding(horizontal = TangemTheme.dimens.spacing8)
                     .constrainAs(tokenNameItem) {
                         centerVerticallyTo(parent)
                         start.linkTo(iconItem.end)
@@ -298,17 +296,18 @@ private fun TokenTitleAmountBlock(title: String, amount: String?, hasPending: Bo
                 style = TangemTypography.subtitle2,
                 color = TangemTheme.colors.text.primary1,
             )
-            if (hasPending) {
+
+            AnimatedVisibility(visible = hasPending, modifier = Modifier.align(Alignment.CenterVertically)) {
                 Image(
-                    modifier = Modifier.align(Alignment.CenterVertically),
                     painter = painterResource(id = R.drawable.img_loader_15),
                     contentDescription = null,
                 )
             }
         }
-        if (!amount.isNullOrBlank()) {
+
+        AnimatedVisibility(visible = !amount.isNullOrBlank()) {
             Text(
-                text = amount,
+                text = requireNotNull(amount),
                 style = TangemTypography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -316,6 +315,7 @@ private fun TokenTitleAmountBlock(title: String, amount: String?, hasPending: Bo
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun TokenFiatPercentageBlock(
     fiatAmount: String,
@@ -334,30 +334,39 @@ private fun TokenFiatPercentageBlock(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
-            val iconChangeArrow: Int
-            val changeTextColor: Color
-            when (priceChange.type) {
-                PriceChangeConfig.Type.UP -> {
-                    iconChangeArrow = R.drawable.img_arrow_up_8
-                    changeTextColor = TangemTheme.colors.text.accent
-                }
-                PriceChangeConfig.Type.DOWN -> {
-                    iconChangeArrow = R.drawable.img_arrow_down_8
-                    changeTextColor = TangemTheme.colors.text.warning
-                }
+            AnimatedContent(
+                targetState = priceChange.type,
+                label = "Update the price change's arrow",
+                modifier = Modifier.align(Alignment.CenterVertically),
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = when (priceChange.type) {
+                            PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
+                            PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                        },
+                    ),
+                    contentDescription = null,
+                )
             }
-            Image(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                painter = painterResource(id = iconChangeArrow),
-                contentDescription = null,
-            )
+
             SpacerW4()
-            Text(
+
+            AnimatedContent(
+                targetState = priceChange.type,
+                label = "Update the price change's arrow",
                 modifier = Modifier.align(Alignment.CenterVertically),
-                text = priceChange.valueInPercent,
-                style = TangemTypography.body2,
-                color = changeTextColor,
-            )
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                    text = priceChange.valueInPercent,
+                    style = TangemTypography.body2,
+                    color = when (priceChange.type) {
+                        PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
+                        PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
+                    },
+                )
+            }
         }
     }
 }
@@ -389,20 +398,20 @@ private fun TokenIcon(
             contentDescription = null,
         )
 
-        if (networkIconRes != null) {
-            Box(
+        AnimatedVisibility(
+            visible = networkIconRes != null,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(TangemTheme.dimens.size18)
+                .background(color = Color.White, shape = CircleShape),
+        ) {
+            Image(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(TangemTheme.dimens.size18)
-                    .background(color = Color.White, shape = CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    modifier = Modifier.padding(all = 0.5.dp),
-                    painter = painterResource(id = networkIconRes),
-                    contentDescription = null,
-                )
-            }
+                    .padding(all = TangemTheme.dimens.spacing0_5)
+                    .align(Alignment.Center),
+                painter = painterResource(id = requireNotNull(networkIconRes)),
+                contentDescription = null,
+            )
         }
     }
 }
