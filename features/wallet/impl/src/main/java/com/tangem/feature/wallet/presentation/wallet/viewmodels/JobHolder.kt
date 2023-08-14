@@ -11,8 +11,8 @@ internal class JobHolder {
 
     private var job: Job? = null
 
-    /** Update current job */
-    fun update(job: Job) {
+    /** Update current [job] */
+    fun update(job: Job?) {
         this.job?.cancel()
         this.job = job
     }
