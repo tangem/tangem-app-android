@@ -29,7 +29,7 @@ internal class TokenListToContentItemsConverter(
     override fun convert(value: TokenList): WalletTokensListState {
         val isEmptyList = when (value) {
             is TokenList.GroupedByNetwork -> value.groups.isEmpty()
-            is TokenList.NotInitialized -> true
+            is TokenList.NotInitialized -> false
             is TokenList.Ungrouped -> value.currencies.isEmpty()
         }
 
