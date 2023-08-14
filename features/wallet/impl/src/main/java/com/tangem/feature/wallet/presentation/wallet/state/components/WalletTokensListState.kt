@@ -10,18 +10,26 @@ import kotlinx.collections.immutable.persistentListOf
 /**
  * Wallet tokens list state
  *
- * @property items                  content items
- * @property onOrganizeTokensClick  lambda be invoked when organize tokens button is clicked
- *
 [REDACTED_AUTHOR]
  */
-internal sealed class WalletTokensListState(
-    open val items: ImmutableList<TokensListItemState>,
-    open val onOrganizeTokensClick: (() -> Unit)?,
-) {
+internal sealed class WalletTokensListState {
+
+    /** Empty token list state */
+    object Empty : WalletTokensListState()
+
+    /**
+     * Wallet content token list state
+     *
+     * @property items                  content items
+     * @property onOrganizeTokensClick  lambda be invoked when organize tokens button is clicked
+     */
+    sealed class ContentState(
+        open val items: ImmutableList<TokensListItemState>,
+        open val onOrganizeTokensClick: (() -> Unit)?,
+    ) : WalletTokensListState()
 
     /** Loading content state */
-    object Loading : WalletTokensListState(
+    object Loading : ContentState(
         items = persistentListOf(
             TokensListItemState.Token(state = TokenItemState.Loading(id = FIRST_LOADING_TOKEN_ID)),
             TokensListItemState.Token(state = TokenItemState.Loading(id = SECOND_LOADING_TOKEN_ID)),
@@ -38,11 +46,11 @@ internal sealed class WalletTokensListState(
     data class Content(
         override val items: ImmutableList<TokensListItemState>,
         override val onOrganizeTokensClick: (() -> Unit)?,
-    ) : WalletTokensListState(items, onOrganizeTokensClick)
+    ) : ContentState(items, onOrganizeTokensClick)
 
     /** Locked content state */
     object Locked :
-        WalletTokensListState(
+        ContentState(
             items = persistentListOf(
                 TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
                 TokensListItemState.Token(state = TokenItemState.Loading(id = LOCKED_TOKEN_ID)),
