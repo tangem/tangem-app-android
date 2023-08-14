@@ -1,18 +1,19 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.extensions.guard
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.BlockchainNetwork
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -357,9 +358,13 @@ class WalletConnectMiddleware {
         handleScanResponse(scanResponse = scanResponse, session = session, blockchain = blockchain)
     }
 
-    private fun getAvailableBlockchains(card: CardDTO, walletState: WalletState): List<Blockchain> {
+    private fun getAvailableBlockchains(
+        derivationStyleProvider: DerivationStyleProvider,
+        walletState: WalletState,
+    ): List<Blockchain> {
         return walletState.currencies.filter {
-            it.isBlockchain() && !it.isCustomCurrency(card.derivationStyle) && it.blockchain.isEvm()
+            it.isBlockchain() &&
+                !it.isCustomCurrency(derivationStyleProvider.getDerivationStyle()) && it.blockchain.isEvm()
         }.map { it.blockchain }
     }
 
@@ -390,7 +395,7 @@ class WalletConnectMiddleware {
             walletPublicKey = wallet.publicKey.seedKey,
             derivedPublicKey = derivedKey,
             derivationPath = wallet.publicKey.derivationPath,
-            derivationStyle = scanResponse.card.derivationStyle,
+            derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
             blockchain = wallet.blockchain,
         )
 
@@ -403,7 +408,6 @@ class WalletConnectMiddleware {
     }
 
     private fun handleScanResponse(scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain) {
-        val card = scanResponse.card
         if (!scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
             return
@@ -415,7 +419,11 @@ class WalletConnectMiddleware {
                 NewWcSessionData(session = updatedSession, scanResponse = scanResponse, blockchain = blockchain),
             ),
         )
-        val blockchains = if (blockchain.isEvm()) getAvailableBlockchains(card, walletState) else emptyList()
+        val blockchains = if (blockchain.isEvm()) {
+            getAvailableBlockchains(scanResponse.derivationStyleProvider, walletState)
+        } else {
+            emptyList()
+        }
         store.dispatch(
             GlobalAction.ShowDialog(
                 WalletConnectDialog.ApproveWcSession(session = updatedSession, networks = blockchains),
@@ -433,8 +441,9 @@ class WalletConnectMiddleware {
         } else {
             blockchain
         }
-        val derivation = blockchainToMake.derivationPath(store.state.globalState.scanResponse?.card?.derivationStyle)
-            ?.rawPath
+        val derivation = blockchainToMake.derivationPath(
+            style = store.state.globalState.scanResponse?.derivationStyleProvider?.getDerivationStyle(),
+        )?.rawPath
         val blockchainNetwork = BlockchainNetwork(
             blockchain = blockchainToMake,
             derivationPath = derivation,
