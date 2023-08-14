@@ -18,12 +18,12 @@ sealed class TokenList {
     /**
      * Represents tokens that are grouped by their network.
      *
-     * @property groups A set of network groups containing tokens.
+     * @property groups A list of network groups containing tokens.
      * @property totalFiatBalance The total fiat balance across all groups.
      * @property sortedBy The criteria used for sorting the tokens within the groups.
      */
     data class GroupedByNetwork(
-        val groups: Set<NetworkGroup>,
+        val groups: List<NetworkGroup>,
         override val totalFiatBalance: FiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()
@@ -31,12 +31,12 @@ sealed class TokenList {
     /**
      * Represents tokens that are not grouped by any specific criteria.
      *
-     * @property currencies A set of cryptocurrency statuses.
+     * @property currencies A list of cryptocurrency statuses.
      * @property totalFiatBalance The total fiat balance across all currencies.
      * @property sortedBy The criteria used for sorting the currencies.
      */
     data class Ungrouped(
-        val currencies: Set<CryptoCurrencyStatus>,
+        val currencies: List<CryptoCurrencyStatus>,
         override val totalFiatBalance: FiatBalance,
         override val sortedBy: SortType,
     ) : TokenList()

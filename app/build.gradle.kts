@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.appCurrency)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))
@@ -51,6 +52,7 @@ dependencies {
     implementation(projects.data.settings)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
+    implementation(projects.data.appCurrency)
 
     /** Features */
     implementation(project(":features:onboarding"))
