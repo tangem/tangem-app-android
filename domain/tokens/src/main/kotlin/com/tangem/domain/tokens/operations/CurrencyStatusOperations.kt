@@ -1,28 +1,19 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.raise.Raise
-import arrow.core.raise.ensureNotNull
-import com.tangem.domain.core.raise.DelegatedRaise
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.Quote
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.withContext
+import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Quote
 import java.math.BigDecimal
 
-internal class CurrencyStatusOperations<OtherError>(
+internal class CurrencyStatusOperations(
     private val currency: CryptoCurrency,
     private val quote: Quote?,
     private val networkStatus: NetworkStatus?,
-    private val dispatchers: CoroutineDispatcherProvider,
-    raise: Raise<OtherError>,
-    transformError: (Error) -> OtherError,
-) : DelegatedRaise<CurrencyStatusOperations.Error, OtherError>(raise, transformError) {
+    private val ignoreQuote: Boolean,
+) {
 
-    suspend fun createTokenStatus(): CryptoCurrencyStatus = withContext(dispatchers.default) {
-        CryptoCurrencyStatus(currency, createStatus())
-    }
+    fun createTokenStatus(): CryptoCurrencyStatus = CryptoCurrencyStatus(currency, createStatus())
 
     private fun createStatus(): CryptoCurrencyStatus.Status {
         return when (val status = networkStatus?.value) {
@@ -35,11 +26,13 @@ internal class CurrencyStatusOperations<OtherError>(
     }
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
-        val amount = ensureNotNull(status.amounts[currency.id]) {
-            Error.UnableToFindAmount(currency.id)
-        }
+        val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
 
         return when {
+            ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+                amount = amount,
+                hasTransactionsInProgress = status.hasTransactionsInProgress,
+            )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
@@ -66,10 +59,5 @@ internal class CurrencyStatusOperations<OtherError>(
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
-    }
-
-    sealed class Error {
-
-        data class UnableToFindAmount(val currencyId: CryptoCurrency.ID) : Error()
     }
 }
