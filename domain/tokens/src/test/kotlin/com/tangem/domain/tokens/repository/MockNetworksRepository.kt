@@ -3,7 +3,6 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -21,7 +20,7 @@ internal class MockNetworksRepository(
 
     override fun getNetworkStatuses(
         userWalletId: UserWalletId,
-        networks: Map<Network.ID, Set<CryptoCurrency.ID>>,
+        networks: Set<Network.ID>,
         refresh: Boolean,
     ): Flow<Set<NetworkStatus>> {
         return statuses.map { it.getOrElse { e -> throw e } }
