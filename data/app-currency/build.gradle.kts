@@ -6,18 +6,15 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.data.tokens"
+    namespace = "com.tangem.data.appcurrency"
 }
 
 dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.core)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     /** Project - Data */
     implementation(projects.core.datasource)
@@ -25,11 +22,6 @@ dependencies {
 
     /** Project - Utils */
     implementation(projects.core.utils)
-    implementation(projects.domain.legacy)
-
-    /** Tangem SDKs */
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
 
     /** DI */
     implementation(deps.hilt.core)
@@ -37,7 +29,5 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.moshi.kotlin)
-    implementation(deps.jodatime)
     implementation(deps.timber)
 }
