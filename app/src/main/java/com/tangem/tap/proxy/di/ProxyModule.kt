@@ -1,6 +1,6 @@
 package com.tangem.tap.proxy.di
 
-import androidx.compose.ui.text.intl.Locale
+import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
@@ -74,9 +74,7 @@ class ProxyModule {
                     }
             }
 
-            override fun getLocaleProvider(): () -> String = { Locale.current.language }
-
-            override fun getWebViewAuthCredentialsProvider(): () -> String? = {
+            override fun getWebViewAuthCredentialsProvider(): Provider<String?> = Provider {
                 appStateHolder.mainStore?.state?.globalState?.configManager?.config?.tangemComAuthorization
             }
         }
