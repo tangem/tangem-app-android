@@ -208,8 +208,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
-                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true &&
-                        blockchain != Blockchain.Cardano
+                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -273,7 +272,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 ),
             ) + Blockchain.values()
                 .filter { blockchain ->
-                    blockchain.isSupportedInApp() && !blockchain.isTestnet() && blockchain != Blockchain.Cardano
+                    blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createDerivationPathSelectorAdditionalItem)
