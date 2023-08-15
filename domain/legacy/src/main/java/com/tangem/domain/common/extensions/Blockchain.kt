@@ -227,4 +227,6 @@ private val excludedBlockchains = listOf(
     Blockchain.Ducatus,
     Blockchain.Telos, // disable in 4.9
     Blockchain.TelosTestnet, // disable in 4.9
+    Blockchain.OctaSpace,
+    Blockchain.OctaSpaceTestnet,
 )
