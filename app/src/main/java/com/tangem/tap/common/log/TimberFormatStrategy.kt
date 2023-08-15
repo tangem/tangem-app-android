@@ -36,7 +36,7 @@ class TimberFormatStrategy : FormatStrategy {
     }
 
     private fun logContent(logType: Int, tag: String?, chunk: String) {
-        chunk.split(System.getProperty("line.separator").orEmpty()).forEach { line ->
+        chunk.split(System.lineSeparator()).forEach { line ->
             logChunk(logType, tag, "$HORIZONTAL_LINE $line")
         }
     }
