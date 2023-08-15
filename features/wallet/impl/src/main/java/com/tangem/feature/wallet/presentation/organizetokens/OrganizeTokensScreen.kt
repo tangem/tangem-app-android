@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,8 @@ import org.burnoutcrew.reorderable.*
 
 @Composable
 internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
+    BackHandler(onBack = state.onBackClick)
+
     val tokensListState = rememberLazyListState()
 
     Scaffold(
