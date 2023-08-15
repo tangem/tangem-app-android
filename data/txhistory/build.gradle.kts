@@ -10,7 +10,13 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.utils)
+    implementation(projects.core.datasource)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.wallets.models)
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.androidx.paging.runtime)
