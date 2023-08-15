@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items
 
 import androidx.annotation.DrawableRes
+import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
@@ -12,8 +14,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getTok
 import com.tangem.utils.converter.Converter
 
 internal class CryptoCurrencyToDraggableItemConverter(
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
+    private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<CryptoCurrencyStatus, DraggableItem.Token> {
 
     private val CryptoCurrency.networkIconResId: Int?
@@ -29,13 +30,29 @@ internal class CryptoCurrencyToDraggableItemConverter(
         }
 
     override fun convert(value: CryptoCurrencyStatus): DraggableItem.Token {
+        return createDraggableToken(value, appCurrencyProvider())
+    }
+
+    override fun convertList(input: Collection<CryptoCurrencyStatus>): List<DraggableItem.Token> {
+        val appCurrency = appCurrencyProvider()
+
+        return input.map { createDraggableToken(it, appCurrency) }
+    }
+
+    private fun createDraggableToken(
+        currencyStatus: CryptoCurrencyStatus,
+        appCurrency: AppCurrency,
+    ): DraggableItem.Token {
         return DraggableItem.Token(
-            tokenItemState = createToTokenItemState(value),
-            groupId = getGroupHeaderId(value.currency.networkId),
+            tokenItemState = createTokenItemState(currencyStatus, appCurrency),
+            groupId = getGroupHeaderId(currencyStatus.currency.networkId),
         )
     }
 
-    private fun createToTokenItemState(currencyStatus: CryptoCurrencyStatus): TokenItemState.Draggable {
+    private fun createTokenItemState(
+        currencyStatus: CryptoCurrencyStatus,
+        appCurrency: AppCurrency,
+    ): TokenItemState.Draggable {
         val currency = currencyStatus.currency
 
         return TokenItemState.Draggable(
@@ -44,13 +61,13 @@ internal class CryptoCurrencyToDraggableItemConverter(
             tokenIconResId = currency.tokenIconResId,
             networkIconResId = currency.networkIconResId,
             name = currency.name,
-            fiatAmount = getFormattedFiatAmount(currencyStatus),
+            fiatAmount = getFormattedFiatAmount(currencyStatus, appCurrency),
         )
     }
 
-    private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus): String {
+    private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
         val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatFiatAmount(fiatAmount, fiatCurrencyCode, fiatCurrencySymbol)
+        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
     }
 }
