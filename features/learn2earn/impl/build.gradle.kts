@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:res"))
     implementation(project(":data:source:preferences"))
+    implementation(project(":data:common"))
     implementation(project(":libs:auth"))
     implementation(project(":libs:crypto"))
 
