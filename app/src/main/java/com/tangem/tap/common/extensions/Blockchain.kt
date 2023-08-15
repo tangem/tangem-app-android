@@ -16,7 +16,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> R.drawable.ic_eth_no_color
         Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> R.drawable.ic_eth_no_color
         Blockchain.RSK -> R.drawable.ic_rsk_no_color
-        Blockchain.Cardano, Blockchain.CardanoShelley -> R.drawable.ic_cardano_no_color
+        Blockchain.Cardano -> R.drawable.ic_cardano_no_color
         Blockchain.Tezos -> R.drawable.ic_tezos_no_color
         Blockchain.XRP -> R.drawable.ic_xrp_no_color
         Blockchain.Stellar -> R.drawable.ic_stellar_no_color
