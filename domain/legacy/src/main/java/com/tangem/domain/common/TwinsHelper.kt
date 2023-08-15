@@ -4,8 +4,17 @@ import com.tangem.crypto.CryptoUtils
 import com.tangem.domain.models.scan.CardDTO
 
 object TwinsHelper {
-    private val firstCardSeries = listOf("CB61", "CB64")
-    private val secondCardSeries = listOf("CB62", "CB65")
+
+    /**
+     * Card compatibility
+     * cb61 <-> cb62
+     * cb64 <-> cb65
+     *
+     */
+    private const val FIRST_CARD_FIRST_SERIES = "CB61"
+    private const val SECOND_CARD_FIRST_SERIES = "CB62"
+    private const val FIRST_CARD_SECOND_SERIES = "CB64"
+    private const val SECOND_CARD_SECOND_SERIES = "CB65"
 
     @Suppress("MagicNumber")
     fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
@@ -16,10 +25,15 @@ object TwinsHelper {
         return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
     }
 
-    fun getTwinCardNumber(cardId: String): TwinCardNumber? = when {
-        firstCardSeries.any(cardId::startsWith) -> TwinCardNumber.First
-        secondCardSeries.any(cardId::startsWith) -> TwinCardNumber.Second
-        else -> null
+    fun getTwinCardNumber(cardId: String): TwinCardNumber? {
+        val isFirstCard = cardId.startsWith(FIRST_CARD_FIRST_SERIES) ||
+            cardId.startsWith(FIRST_CARD_SECOND_SERIES)
+        if (isFirstCard) return TwinCardNumber.First
+
+        val isSecondCard = cardId.startsWith(SECOND_CARD_FIRST_SERIES) ||
+            cardId.startsWith(SECOND_CARD_SECOND_SERIES)
+        if (isSecondCard) return TwinCardNumber.Second
+        return null
     }
 
     @Suppress("MagicNumber")
@@ -29,6 +43,25 @@ object TwinsHelper {
         val twinCardId = cardId.substring(11..14)
         val twinCardNumber = getTwinCardNumber(cardId)?.number ?: 1
         return "$twinCardId #$twinCardNumber"
+    }
+
+    /**
+     * Twins compatibility
+     * cb61 <-> cb62
+     * cb64 <-> cb65
+     */
+    fun isTwinsCompatible(firstCardId: String, secondCardId: String): Boolean {
+        if (firstCardId.startsWith(FIRST_CARD_FIRST_SERIES) &&
+            secondCardId.startsWith(SECOND_CARD_FIRST_SERIES)
+        ) {
+            return true
+        }
+        if (firstCardId.startsWith(FIRST_CARD_SECOND_SERIES) &&
+            secondCardId.startsWith(SECOND_CARD_SECOND_SERIES)
+        ) {
+            return true
+        }
+        return false
     }
 }
 

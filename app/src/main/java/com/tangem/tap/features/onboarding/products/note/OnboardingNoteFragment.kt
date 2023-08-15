@@ -151,7 +151,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             btnAlternativeAction.isVisible = false
         }
 
-        tvHeader.setText(R.string.onboarding_top_up_header)
+        tvHeader.setText(R.string.onboarding_topup_title)
         if (state.balanceNonCriticalError == null) {
             tvBody.setText(R.string.onboarding_top_up_body)
         } else {
