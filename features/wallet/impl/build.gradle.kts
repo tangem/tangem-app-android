@@ -9,6 +9,7 @@ plugins {
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.lifecycle.compose)
     implementation(deps.material)
 
     /** Compose */
@@ -53,9 +54,13 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
+    implementation(projects.features.tokendetails.api)
 }
