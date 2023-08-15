@@ -99,14 +99,22 @@ private fun Button(
             painter = painterResource(id = config.iconResId),
             contentDescription = null,
             modifier = Modifier.size(size = TangemTheme.dimens.size20),
-            tint = if (config.enabled) TangemTheme.colors.icon.primary1 else TangemTheme.colors.icon.informative,
+            tint = when {
+                !config.enabled -> TangemTheme.colors.icon.informative
+                config.dimContent -> TangemTheme.colors.icon.secondary
+                else -> TangemTheme.colors.icon.primary1
+            },
         )
 
         SpacerW8()
 
         Text(
             text = config.text.resolveReference(),
-            color = if (config.enabled) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.disabled,
+            color = when {
+                !config.enabled -> TangemTheme.colors.text.disabled
+                config.dimContent -> TangemTheme.colors.text.secondary
+                else -> TangemTheme.colors.text.primary1
+            },
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             style = TangemTheme.typography.button,
@@ -152,6 +160,13 @@ private class ActionStateProvider : CollectionPreviewParameterProvider<ActionBut
             text = TextReference.Str(value = "Enabled"),
             iconResId = R.drawable.ic_arrow_up_24,
             enabled = true,
+            onClick = {},
+        ),
+        ActionButtonConfig(
+            text = TextReference.Str(value = "Dimmed"),
+            iconResId = R.drawable.ic_arrow_up_24,
+            enabled = true,
+            dimContent = true,
             onClick = {},
         ),
         ActionButtonConfig(
