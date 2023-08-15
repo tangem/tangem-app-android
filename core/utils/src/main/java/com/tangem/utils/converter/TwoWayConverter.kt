@@ -1,8 +1,10 @@
 package com.tangem.utils.converter
 
-interface TwoWayConverter<I, O> : Converter<I, O> {
+interface TwoWayConverter<I : Any, O> : Converter<I, O> {
+
     fun convertBack(value: O): I
-    fun convertListBack(input: List<O>): List<I> {
+
+    fun convertListBack(input: Collection<O>): List<I> {
         return input.map { convertBack(it) }
     }
 }

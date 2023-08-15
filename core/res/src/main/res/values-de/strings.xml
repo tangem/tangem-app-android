@@ -10,6 +10,7 @@
     <string name="common_cancel">Abbrechen</string>
     <string name="common_delete">Entfernen</string>
     <string name="common_done">Erledigt</string>
+    <string name="common_error">Fehler</string>
     <string name="common_ok">OK</string>
     <string name="common_save_changes">Änderungen speichern</string>
     <string name="common_send">Absenden</string>
@@ -27,12 +28,14 @@
     <string name="details_row_title_signed_hashes">Signiert</string>
     <string name="details_title">Details</string>
     <string name="disclaimer_title">Nutzungsbedingungen</string>
+    <string name="home_button_scan">Karte scannen</string>
     <string name="initial_message_change_access_code_body">Tippen Sie um den Zugangscode zu ändern</string>
     <string name="initial_message_change_passcode_body">Tippen Sie um den Passcode zu ändern</string>
     <string name="initial_message_scan_header">Legen Sie die Karte zum Scannen an</string>
     <string name="initial_message_sign_header">Tippen um zu signieren</string>
     <string name="initial_message_tap_header">Legen Sie die Karte an</string>
     <string name="main_processing_full_amount">Der Betrag enthält nicht einige Ihrer Mittel</string>
+    <string name="onboarding_create_wallet_button_create_wallet">Ein wallet erstellen</string>
     <string name="send_amount_label">Betrag</string>
     <string name="send_destination_hint_address">Adresse</string>
     <string name="send_error_address_same_as_wallet">Die Adresse stimmt mit der Adresse Ihrer Brieftasche überein</string>
