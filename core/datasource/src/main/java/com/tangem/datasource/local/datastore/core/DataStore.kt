@@ -6,7 +6,11 @@ internal interface DataStore<Key : Any, Value : Any> {
 
     fun get(key: Key): Flow<Value>
 
+    fun getAll(): Flow<List<Value>>
+
     suspend fun getSyncOrNull(key: Key): Value?
+
+    suspend fun getAllSyncOrNull(): List<Value>
 
     suspend fun store(key: Key, item: Value)
 
