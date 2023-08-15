@@ -12,7 +12,7 @@ object MultipleAddressUiHelper {
         Blockchain.BitcoinTestnet,
         Blockchain.Litecoin,
         Blockchain.BitcoinCash,
-        Blockchain.CardanoShelley,
+        Blockchain.Cardano,
     )
 
     fun typeToId(type: AddressType, blockchain: Blockchain): Int {
