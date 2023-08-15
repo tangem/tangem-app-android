@@ -16,6 +16,7 @@ import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
@@ -80,7 +81,10 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(scanResponse.cardTypesResolver),
+            CreateProductWalletTask(
+                cardTypesResolver = scanResponse.cardTypesResolver,
+                derivationStyleProvider = scanResponse.derivationStyleProvider,
+            ),
             scanResponse.card.cardId,
             Message(resources.getString(R.string.initial_message_create_wallet_body)),
         )
@@ -90,15 +94,20 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         scanResponse: ScanResponse,
         mnemonic: String,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        return when (val seedResult = DefaultMnemonic(mnemonic, tangemSdk.wordlist).generateSeed()) {
-            is CompletionResult.Success -> runTaskAsync(
-                CreateProductWalletTask(scanResponse.cardTypesResolver, seedResult.data),
-                scanResponse.card.cardId,
-                Message(resources.getString(R.string.initial_message_create_wallet_body)),
-            )
-
-            is CompletionResult.Failure -> CompletionResult.Failure(seedResult.error)
+        val mnemonic = try {
+            DefaultMnemonic(mnemonic, tangemSdk.wordlist)
+        } catch (e: TangemSdkError.MnemonicException) {
+            return CompletionResult.Failure(e)
         }
+        return runTaskAsync(
+            CreateProductWalletTask(
+                scanResponse.cardTypesResolver,
+                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                mnemonic,
+            ),
+            scanResponse.card.cardId,
+            Message(resources.getString(R.string.initial_message_create_wallet_body)),
+        )
     }
 
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
@@ -246,12 +255,13 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
     }
 
     companion object {
+        @Deprecated("Use [DefaultCardSdkProvider] instead")
         val config = Config(
             linkedTerminal = true,
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 21),
+                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
             ),
         )
     }
