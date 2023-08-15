@@ -176,6 +176,7 @@ private fun StoriesTitleText(text: String, isDarkBackground: Boolean) {
                 .padding(start = 40.dp, end = 40.dp),
             text = text,
             fontSize = 32.sp,
+            lineHeight = 38.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (isDarkBackground) Color.White else Color(0xFF090E13),
             textAlign = TextAlign.Center,
@@ -198,6 +199,7 @@ private fun StoriesSubtitleText(subtitleText: AnnotatedString) {
             fontWeight = FontWeight.Normal,
             text = subtitleText,
             fontSize = 20.sp,
+            lineHeight = 26.sp,
             color = color,
             textAlign = TextAlign.Center,
         )
