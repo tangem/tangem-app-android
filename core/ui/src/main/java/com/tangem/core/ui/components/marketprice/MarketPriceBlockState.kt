@@ -7,6 +7,8 @@ sealed interface MarketPriceBlockState {
 
     val currencyName: String
 
+    data class Error(override val currencyName: String) : MarketPriceBlockState
+
     data class Loading(override val currencyName: String) : MarketPriceBlockState
 
     data class Content(

@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,10 +32,15 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.DraggableTokenItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import org.burnoutcrew.reorderable.*
 
 @Composable
-internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Modifier = Modifier) {
+internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
+    BackHandler(onBack = state.onBackClick)
+
     val tokensListState = rememberLazyListState()
 
     Scaffold(
@@ -44,10 +50,12 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Mo
         },
         content = { paddingValues ->
             TokenList(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
                 listState = tokensListState,
                 state = state.itemsState,
-                dragConfig = state.dragConfig,
+                dndConfig = state.dndConfig,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -62,15 +70,15 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensStateHolder, modifier: Mo
 private fun TokenList(
     listState: LazyListState,
     state: OrganizeTokensListState,
-    dragConfig: OrganizeTokensStateHolder.DragConfig,
+    dndConfig: OrganizeTokensState.DragAndDropConfig,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         val reorderableListState = rememberReorderableLazyListState(
-            onMove = dragConfig.onItemDragged,
+            onMove = dndConfig.onItemDragged,
             listState = listState,
-            canDragOver = dragConfig.canDragItemOver,
-            onDragEnd = { _, _ -> dragConfig.onItemDragEnd() },
+            canDragOver = dndConfig.canDragItemOver,
+            onDragEnd = { _, _ -> dndConfig.onItemDragEnd() },
         )
         val items = state.items
 
@@ -78,7 +86,8 @@ private fun TokenList(
             modifier = Modifier
                 .reorderable(reorderableListState)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .fillMaxSize(),
             state = reorderableListState.listState,
             contentPadding = PaddingValues(
                 top = TangemTheme.dimens.spacing12,
@@ -91,7 +100,7 @@ private fun TokenList(
             ) { index, item ->
 
                 val onDragStart = remember(item) {
-                    { dragConfig.onDragStart(item) }
+                    { dndConfig.onDragStart(item) }
                 }
 
                 DraggableItem(
@@ -166,7 +175,7 @@ private fun BottomGradient(modifier: Modifier = Modifier) {
 
 @Composable
 private fun TopBar(
-    config: OrganizeTokensStateHolder.HeaderConfig,
+    config: OrganizeTokensState.HeaderConfig,
     tokensListState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
@@ -211,16 +220,25 @@ private fun TopBar(
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
-                    onClick = config.onSortByBalanceClick,
+                    enabled = config.isEnabled,
+                    onClick = config.onSortClick,
+                    dimContent = !config.isSortedByBalance,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
             )
             RoundedActionButton(
                 config = ActionButtonConfig(
-                    text = TextReference.Res(id = R.string.organize_tokens_group),
+                    text = TextReference.Res(
+                        id = if (config.isGrouped) {
+                            R.string.organize_tokens_ungroup
+                        } else {
+                            R.string.organize_tokens_group
+                        },
+                    ),
+                    enabled = config.isEnabled,
                     iconResId = R.drawable.ic_group_24,
-                    onClick = config.onGroupByNetworkClick,
+                    onClick = config.onGroupClick,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
@@ -230,7 +248,7 @@ private fun TopBar(
 }
 
 @Composable
-private fun Actions(config: OrganizeTokensStateHolder.ActionsConfig, modifier: Modifier = Modifier) {
+private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -247,6 +265,8 @@ private fun Actions(config: OrganizeTokensStateHolder.ActionsConfig, modifier: M
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_apply),
             onClick = config.onApplyClick,
+            showProgress = config.showApplyProgress,
+            enabled = config.canApply,
         )
     }
 }
@@ -308,7 +328,7 @@ private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMod
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun OrganizeTokensScreenPreview_Light(
-    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensStateHolder,
+    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
 ) {
     TangemTheme {
         OrganizeTokensScreen(state)
@@ -318,14 +338,14 @@ private fun OrganizeTokensScreenPreview_Light(
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun OrganizeTokensScreenPreview_Dark(
-    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensStateHolder,
+    @PreviewParameter(OrganizeTokensStateProvider::class) state: OrganizeTokensState,
 ) {
     TangemTheme(isDark = true) {
         OrganizeTokensScreen(state)
     }
 }
 
-private class OrganizeTokensStateProvider : CollectionPreviewParameterProvider<OrganizeTokensStateHolder>(
+private class OrganizeTokensStateProvider : CollectionPreviewParameterProvider<OrganizeTokensState>(
     collection = listOf(
         WalletPreviewData.organizeTokensState,
         WalletPreviewData.groupedOrganizeTokensState,
