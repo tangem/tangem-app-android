@@ -83,6 +83,8 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     }
 
     override fun openDetailsScreen() {
+        // FIXME: Prepare details screen (e.g. dispatch action: `DetailsAction.PrepareScreen`)
+        // [REDACTED_JIRA]
         navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
     }
 

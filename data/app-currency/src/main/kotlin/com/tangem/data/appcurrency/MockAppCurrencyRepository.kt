@@ -17,7 +17,7 @@ internal class MockAppCurrencyRepository : AppCurrencyRepository {
         return mockAppCurrencies
     }
 
-    override suspend fun changeAppCurrency(appCurrency: AppCurrency) {
+    override suspend fun changeAppCurrency(currencyCode: String) {
         /* no-op */
     }
 }
