@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.features.tokens.impl.data.converters.CoinsResponseConverter
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.tap.proxy.AppStateHolder
@@ -38,7 +39,8 @@ internal class TangemApiTokensPagingSource(
         val page = params.key ?: 0
 
         return runCatching(dispatchers.io) {
-            val supportedBlockchains = reduxStateHolder.scanResponse?.card?.supportedBlockchains()
+            val scanResponse = reduxStateHolder.scanResponse
+            val supportedBlockchains = scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
                 ?: Blockchain.values().toList()
 
             api.getCoins(
