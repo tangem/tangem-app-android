@@ -97,6 +97,7 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
         amountToSend,
         destinationAddress,
     ) as? Result.Success ?: return
+
     val fee = when (val feeForTx = feeResult.data) {
         is TransactionFee.Choosable -> feeForTx.minimum
         is TransactionFee.Single -> feeForTx.normal
