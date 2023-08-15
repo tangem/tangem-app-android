@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.models.CryptoCurrency
 
 internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
 
-    private val cryptoCurrencyConverter by lazy { CryptoCurrencyConverter() }
+    private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory() }
 
     fun createDefaultCoinsForMultiCurrencyCard(
         card: CardDTO,
@@ -28,7 +28,7 @@ internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
             blockchains = blockchains.mapNotNull { it.getTestnetVersion() }
         }
 
-        return blockchains.mapNotNull { cryptoCurrencyConverter.createCoin(it, derivationStyleProvider) }
+        return blockchains.mapNotNull { cryptoCurrencyFactory.createCoin(it, derivationStyleProvider) }
     }
 
     fun createPrimaryCurrencyForSingleCurrencyCard(scanResponse: ScanResponse): CryptoCurrency {
@@ -36,11 +36,11 @@ internal class CardCurrenciesFactory(private val demoConfig: DemoConfig) {
         val resolver = scanResponse.cardTypesResolver
         val blockchain = resolver.getBlockchain()
 
-        val coin = requireNotNull(cryptoCurrencyConverter.createCoin(blockchain, derivationStyleProvider)) {
+        val coin = requireNotNull(cryptoCurrencyFactory.createCoin(blockchain, derivationStyleProvider)) {
             "Coin for the single currency card cannot be null"
         }
         val primaryToken = resolver.getPrimaryToken()?.let { token ->
-            cryptoCurrencyConverter.createToken(token, blockchain, derivationStyleProvider)
+            cryptoCurrencyFactory.createToken(token, blockchain, derivationStyleProvider)
         }
 
         return primaryToken ?: coin

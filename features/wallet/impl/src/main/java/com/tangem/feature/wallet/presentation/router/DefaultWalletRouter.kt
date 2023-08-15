@@ -103,6 +103,7 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
         navigationStateHolder.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,
+                // TODO: https://tangem.atlassian.net/browse/AND-4264
                 bundle = bundleOf(TokenDetailsRouter.SELECTED_CURRENCY_KEY to currency),
             ),
         )

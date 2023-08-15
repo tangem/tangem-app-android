@@ -6,7 +6,7 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.models.CryptoCurrency
 import timber.log.Timber
 
-class CryptoCurrencyConverter {
+class CryptoCurrencyFactory {
 
     fun createToken(
         sdkToken: SdkToken,
@@ -18,14 +18,15 @@ class CryptoCurrencyConverter {
             return null
         }
 
+        val id = getTokenId(blockchain, sdkToken)
         return CryptoCurrency.Token(
-            id = getTokenId(blockchain, sdkToken),
+            id = id,
             networkId = getNetworkId(blockchain),
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
             decimals = sdkToken.decimals,
-            isCustom = false,
+            isCustom = isCustomToken(id),
             contractAddress = sdkToken.contractAddress,
             derivationPath = getDerivationPath(blockchain, derivationStyleProvider),
             blockchainName = blockchain.fullName,

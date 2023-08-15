@@ -7,9 +7,6 @@ import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.data.tokens.utils.CryptoCurrencyConverter
-import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -20,7 +17,7 @@ import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.converters.CryptoCurrencyConverter
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
@@ -43,7 +40,8 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.currency != null) {
                     val bundle = bundleOf(
-                        TokenDetailsRouter.SELECTED_CURRENCY_KEY to action.currency.toCryptoCurrency(),
+                        // TODO: https://tangem.atlassian.net/browse/AND-4264
+                        TokenDetailsRouter.SELECTED_CURRENCY_KEY to cryptoCurrencyConverter.convert(action.currency),
                     )
                     store.dispatch(NavigationAction.NavigateTo(screen = AppScreen.WalletDetails, bundle = bundle))
                 }
@@ -111,34 +109,6 @@ class MultiWalletMiddleware {
             }
             else -> {}
         }
-    }
-
-    private fun Currency.toCryptoCurrency(): CryptoCurrency = when (this) {
-        is Currency.Blockchain -> requireNotNull(
-            cryptoCurrencyConverter.createCoin(
-                blockchain = blockchain,
-                derivationStyleProvider = requireNotNull(
-                    store.state.globalState
-                        .userWalletsListManager
-                        ?.selectedUserWalletSync
-                        ?.scanResponse
-                        ?.derivationStyleProvider,
-                ),
-            ),
-        )
-        is Currency.Token -> requireNotNull(
-            cryptoCurrencyConverter.createToken(
-                sdkToken = token,
-                blockchain = blockchain,
-                derivationStyleProvider = requireNotNull(
-                    store.state.globalState
-                        .userWalletsListManager
-                        ?.selectedUserWalletSync
-                        ?.scanResponse
-                        ?.derivationStyleProvider,
-                ),
-            ),
-        )
     }
 
     private fun scanAndUpdateCard(selectedUserWallet: UserWallet) = scope.launch(Dispatchers.Default) {
