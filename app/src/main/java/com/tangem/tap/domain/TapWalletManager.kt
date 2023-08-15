@@ -153,7 +153,7 @@ class TapWalletManager(
                     Account(
                         chainId,
                         wallet.address,
-                        wallet.publicKey.derivationPath?.rawPath,
+                        wallet.publicKey.derivationKey?.path?.rawPath,
                     )
                 }
             }

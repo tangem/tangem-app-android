@@ -203,7 +203,7 @@ internal class DefaultWalletManagersRepository(
                 } else {
                     userWalletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain &&
-                            it.wallet.publicKey.derivationPath?.rawPath == derivationPath
+                            it.wallet.publicKey.derivationKey?.path?.rawPath == derivationPath
                     }
                 }
             }
