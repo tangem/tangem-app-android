@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.scan.CardDTO
 
 /**
@@ -17,8 +18,14 @@ fun CardDTO.supportedBlockchains(): List<Blockchain> {
         Blockchain.fromCurve(EllipticCurve.Secp256k1)
     } else {
         wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct()
+    }.toMutableList()
+    // disabled Cardano for wallet 2 for now, should be enabled after key processed
+    // ([REDACTED_JIRA])
+    if (this.isWallet2) {
+        supportedBlockchains.apply {
+            remove(Blockchain.Cardano)
+        }
     }
-
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }
         .filter { it.isSupportedInApp() }
