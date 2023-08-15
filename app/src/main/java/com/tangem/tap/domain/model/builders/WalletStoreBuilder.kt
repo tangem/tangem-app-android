@@ -1,11 +1,15 @@
 package com.tangem.tap.domain.model.builders
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -47,7 +51,7 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
     }
 
     override fun build(): WalletStoreModel {
-        val cardDerivationStyle = userWallet.scanResponse.card.derivationStyle
+        val cardDerivationStyle = userWallet.scanResponse.derivationStyleProvider.getDerivationStyle()
         val blockchainWalletData = blockchainNetwork.getBlockchainWalletData(walletManager, cardDerivationStyle)
         val tokensWalletsData = blockchainNetwork.getTokensWalletsData(
             walletManager = walletManager,

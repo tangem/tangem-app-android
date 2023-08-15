@@ -188,7 +188,7 @@ fun StoriesScreen(
                         contentDescription = null,
                     )
                     Text(
-                        text = stringResource(id = R.string.search_tokens_title),
+                        text = stringResource(id = R.string.common_search_tokens),
                         fontWeight = FontWeight.Medium,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center,

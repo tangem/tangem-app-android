@@ -12,20 +12,22 @@ internal fun BaseExtension.configureCompileSdk() {
 
 internal fun BaseExtension.configureCompilerOptions() {
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
 internal fun BaseExtension.configureCompose(project: Project) {
     val useCompose = with(project.path) {
         contains(":ui") ||
-            contains(":onboarding") || // TODO: divide on api/impl after migrating all onboarding to module
-            contains(":presentation") ||
-            contains(":app") || // TODO: https://tangem.atlassian.net/browse/AND-3190
-            contains(":impl")
+            contains(Regex(pattern = ":onboarding\$")) || // TODO: divide on api/impl after migrating all onboarding to module
+            contains(Regex(pattern = ":presentation\$")) ||
+            contains(Regex(pattern = ":app\$")) || // TODO: https://tangem.atlassian.net/browse/AND-3190
+            contains(Regex(pattern = ":impl\$"))
     }
+
     buildFeatures.compose = useCompose
+    
     if (useCompose) {
         composeOptions {
             kotlinCompilerExtensionVersion = project.findVersion(alias = "compose-compiler").requiredVersion

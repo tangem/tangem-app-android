@@ -34,6 +34,11 @@ class CreateSecondTwinWalletTask(
                 return
             }
 
+            if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
+                callback(CompletionResult.Failure(IncompatibleTwinCard))
+                return
+            }
+
             session.setMessage(preparingMessage)
             PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {

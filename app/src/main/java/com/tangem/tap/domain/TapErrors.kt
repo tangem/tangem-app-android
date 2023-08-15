@@ -26,10 +26,8 @@ sealed class TapError(
         val stateError: String,
     ) : TapError(R.string.common_custom_string, listOf("Unsupported state: $stateError"))
 
-    object ScanCardError : TapError(R.string.scan_card_error)
     object UnknownBlockchain : TapError(R.string.wallet_error_unsupported_blockchain_subtitle)
     object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
-    object BlockchainInternalError : TapError(R.string.send_error_blockchain_internal)
     object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
     data class AmountLowerExistentialDeposit(
         override val args: List<Any>,
@@ -43,7 +41,7 @@ sealed class TapError(
     object DustChange : TapError(R.string.send_error_dust_change)
 
     sealed class WalletManager {
-        object CreationError : CustomError("Can't create wallet manager")
+        object CreationError : CustomError(customMessage = "Can't create wallet manager")
         class NoAccountError(amountToCreateAccount: String) : CustomError(amountToCreateAccount)
         class InternalError(message: String) : CustomError(message)
         object BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)

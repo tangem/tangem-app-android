@@ -84,8 +84,8 @@ Author
 ты будешь для этого создавать 4 модели?
  */
 
-enum class SeedPhraseField {
-    Second,
-    Seventh,
-    Eleventh,
+enum class SeedPhraseField(val index: Int) {
+    Second(index = 1),
+    Seventh(index = 6),
+    Eleventh(index = 10),
 }

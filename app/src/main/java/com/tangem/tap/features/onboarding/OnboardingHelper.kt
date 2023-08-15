@@ -6,7 +6,6 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ProductType
@@ -37,10 +36,8 @@ object OnboardingHelper {
                     cardInfoStorage.isActivationInProgress(cardId)
                 }
             }
-// [REDACTED_TODO_COMMENT]
-            //  (AND-4057)
-            // response.cardTypesResolver.isWallet2() -> {
-            !response.card.canSkipBackup -> {
+
+            response.cardTypesResolver.isWallet2() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true

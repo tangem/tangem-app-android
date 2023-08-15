@@ -13,10 +13,10 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.core)
+    implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
-    implementation(projects.domain.demo)
     implementation(projects.domain.wallets.models)
 
     /** Project - Data */
@@ -25,7 +25,6 @@ dependencies {
 
     /** Project - Utils */
     implementation(projects.core.utils)
-// [REDACTED_TODO_COMMENT]
     implementation(projects.domain.legacy)
 
     /** Tangem SDKs */
@@ -38,7 +37,6 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
     implementation(deps.moshi.kotlin)
     implementation(deps.jodatime)
     implementation(deps.timber)

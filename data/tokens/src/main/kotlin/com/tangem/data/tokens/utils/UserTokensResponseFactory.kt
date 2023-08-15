@@ -2,12 +2,12 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
 
 internal class UserTokensResponseFactory {
 
     fun createUserTokensResponse(
-        currencies: Set<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): UserTokensResponse {
@@ -30,7 +30,7 @@ internal class UserTokensResponseFactory {
         val blockchain = getBlockchain(currency.networkId)
 
         return UserTokensResponse.Token(
-            id = getResponseTokenId(currency),
+            id = currency.id.rawCurrencyId,
             networkId = blockchain.toNetworkId(),
             derivationPath = currency.derivationPath,
             name = currency.name,
