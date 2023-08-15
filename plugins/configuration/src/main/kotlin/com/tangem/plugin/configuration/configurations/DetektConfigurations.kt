@@ -47,6 +47,6 @@ private fun Project.configureDetektTask() {
             }
         }
 
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
