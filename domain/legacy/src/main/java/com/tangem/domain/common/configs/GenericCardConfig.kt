@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import timber.log.Timber
 
-object TangemWalletCardConfig : CardConfig {
+object GenericCardConfig : CardConfig {
     override val mandatoryCurves: List<EllipticCurve>
         get() = listOf(
             EllipticCurve.Secp256k1,
