@@ -2,7 +2,6 @@ package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.common.card.EllipticCurve
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod")
@@ -30,7 +29,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "bitcoin/test" -> Blockchain.BitcoinTestnet
         "bitcoin-cash" -> Blockchain.BitcoinCash
         "bitcoin-cash/test" -> Blockchain.BitcoinCashTestnet
-        "cardano" -> Blockchain.CardanoShelley
+        "cardano" -> Blockchain.Cardano
         "dogecoin" -> Blockchain.Dogecoin
         "ducatus" -> Blockchain.Ducatus
         "litecoin" -> Blockchain.Litecoin
@@ -69,6 +68,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "aleph-zero/test" -> Blockchain.AlephZeroTestnet
         "octaspace" -> Blockchain.OctaSpace
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
+        "chia" -> Blockchain.Chia
+        "chia/test" -> Blockchain.ChiaTestnet
         else -> null
     }
 }
@@ -90,7 +91,6 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.BitcoinCash -> "bitcoin-cash"
         Blockchain.BitcoinCashTestnet -> "bitcoin-cash/test"
         Blockchain.Cardano -> "cardano"
-        Blockchain.CardanoShelley -> "cardano"
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Ethereum -> "ethereum"
@@ -139,6 +139,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AlephZeroTestnet -> "aleph-zero/test"
         Blockchain.OctaSpace -> "octaspace"
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -151,7 +153,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ethereum"
         Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
-        Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
+        Blockchain.Cardano -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "ethereum"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
@@ -183,6 +185,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
     }
 }
 
@@ -200,20 +204,6 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
 
 fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
-}
-
-fun Blockchain.getPrimaryCurve(): EllipticCurve? {
-    return when {
-        getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
-            EllipticCurve.Secp256k1
-        }
-        getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
-            EllipticCurve.Ed25519
-        }
-        else -> {
-            null
-        }
-    }
 }
 
 private const val NODL = "NODL"
