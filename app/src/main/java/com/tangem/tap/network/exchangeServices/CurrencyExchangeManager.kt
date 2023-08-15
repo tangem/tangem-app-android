@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.extensions.safeUpdate
@@ -96,7 +97,10 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
         amountToSend,
         destinationAddress,
     ) as? Result.Success ?: return
-    val fee = feeResult.data.minimum
+    val fee = when (val feeForTx = feeResult.data) {
+        is TransactionFee.Choosable -> feeForTx.minimum
+        is TransactionFee.Single -> feeForTx.normal
+    }
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
     if (coinValue < fee.amount.value) return
