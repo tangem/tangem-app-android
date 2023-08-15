@@ -1,7 +1,9 @@
 package com.tangem.feature.learn2earn.domain
 
 import android.net.Uri
+import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.locale.LocaleProvider
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.feature.learn2earn.analytics.AnalyticsParam
@@ -35,6 +37,7 @@ internal class DefaultLearn2earnInteractor(
     private val repository: Learn2earnRepository,
     private val userWalletManager: UserWalletManager,
     private val derivationManager: DerivationManager,
+    private val localeProvider: LocaleProvider,
     private val analytics: AnalyticsEventHandler,
     private val demoModeDatasource: DemoModeDatasource,
     private val dependencyProvider: Learn2earnDependencyProvider,
@@ -57,8 +60,8 @@ internal class DefaultLearn2earnInteractor(
     private val webViewUriBuilder: WebViewUriBuilder by lazy {
         WebViewUriBuilder(
             authCredentialsProvider = dependencyProvider.getWebViewAuthCredentialsProvider(),
-            localeLanguageProvider = dependencyProvider.getLocaleProvider(),
-            promoCodeProvider = { promoUserData.promoCode },
+            localeProvider = localeProvider,
+            promoCodeProvider = Provider { promoUserData.promoCode },
         )
     }
 
