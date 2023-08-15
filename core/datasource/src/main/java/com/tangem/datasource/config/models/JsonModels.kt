@@ -38,6 +38,7 @@ class ConfigValueModel(
     val kaspaSecondaryApiUrl: String,
     val walletConnectProjectId: String,
     val tangemComAuthorization: String?,
+    val chiaFireAcademyApiKey: String?,
 )
 
 data class AppsFlyer(
