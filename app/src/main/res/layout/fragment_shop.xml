@@ -264,16 +264,17 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <TextView
-                    android:id="@+id/tv_sold_out_desc"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:background="@drawable/shape_rectangle_rounded_4"
-                    android:padding="16dp"
-                    android:text="@string/shop_sold_out_description"
-                    android:textColor="@color/text_tertiary"
-                    android:textSize="16sp" />
+                <!--TODO: https://tangem.slack.com/archives/C01HARKDLQ0/p1691421861756069-->
+                <!--<TextView-->
+                <!--    android:id="@+id/tv_sold_out_desc"-->
+                <!--    android:layout_width="match_parent"-->
+                <!--    android:layout_height="wrap_content"-->
+                <!--    android:layout_marginTop="14dp"-->
+                <!--    android:background="@drawable/shape_rectangle_rounded_4"-->
+                <!--    android:padding="16dp"-->
+                <!--    android:text="@string/shop_sold_out_description"-->
+                <!--    android:textColor="@color/text_tertiary"-->
+                <!--    android:textSize="16sp" />-->
             </LinearLayout>
 
             <LinearLayout
