@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
@@ -102,14 +103,14 @@ internal class TokensListViewModel @Inject constructor(
     private fun getInitialToolbarState(): TokensListToolbarState {
         return if (args.isManageAccess) {
             TokensListToolbarState.Title.Manage(
-                titleResId = R.string.main_manage_tokens,
+                titleResId = R.string.add_tokens_title,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
                 onAddCustomTokenClick = actionsHandler::onAddCustomTokenClick,
             )
         } else {
             TokensListToolbarState.Title.Read(
-                titleResId = R.string.search_tokens_title,
+                titleResId = R.string.common_search_tokens,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
                 onSearchButtonClick = actionsHandler::onSearchButtonClick,
             )
@@ -349,8 +350,14 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
+                val scanResponse = reduxStateHolder.scanResponse
                 val isUnsupportedToken =
-                    !(reduxStateHolder.scanResponse?.card?.canHandleToken(token.blockchain) ?: false)
+                    !(
+                        scanResponse?.card?.canHandleToken(
+                            blockchain = token.blockchain,
+                            cardTypesResolver = scanResponse.cardTypesResolver,
+                        ) ?: false
+                        )
 
                 if (isUnsupportedToken) {
                     router.openUnsupportedSoltanaNetworkAlert()
