@@ -61,6 +61,7 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
 private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier = Modifier) {
     InternalTokenItem(
         modifier = modifier,
+        onClick = content.onClick,
         name = content.name,
         tokenIconUrl = content.tokenIconUrl,
         tokenIconResId = content.tokenIconResId,
@@ -217,8 +218,12 @@ private fun InternalTokenItem(
     hasPending: Boolean,
     options: @Composable ConstraintLayoutScope.(ref: ConstrainedLayoutReference) -> Unit,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
-    BaseSurface(modifier) {
+    BaseSurface(
+        modifier = modifier,
+        onClick = onClick,
+    ) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
