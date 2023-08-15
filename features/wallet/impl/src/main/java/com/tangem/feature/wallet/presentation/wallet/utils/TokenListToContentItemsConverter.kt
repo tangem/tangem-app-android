@@ -24,6 +24,7 @@ internal class TokenListToContentItemsConverter(
     private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
         isWalletContentHidden = isWalletContentHidden,
         appCurrencyProvider = appCurrencyProvider,
+        clickIntents = clickIntents,
     )
 
     override fun convert(value: TokenList): WalletTokensListState {
