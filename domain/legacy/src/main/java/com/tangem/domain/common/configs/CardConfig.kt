@@ -20,9 +20,9 @@ sealed interface CardConfig {
             if (cardDTO.settings.isBackupAllowed && cardDTO.settings.isHDWalletAllowed &&
                 cardDTO.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
             ) {
-                return TangemWalletCardConfig
+                return GenericCardConfig
             }
-            error("This card is not supported by this configs")
+            return GenericCardConfig
         }
     }
 }
