@@ -28,9 +28,6 @@ object TapWorkarounds {
     val CardDTO.canSkipBackup: Boolean
         get() = this.firmwareVersion < backupRequiredFirmwareVersion
 
-    val CardDTO.isWallet2: Boolean
-        get() = this.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && this.settings.isKeysImportAllowed
-
     val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
