@@ -8,7 +8,6 @@ import com.tangem.common.card.WalletData
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
@@ -31,7 +30,7 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWallet2(): Boolean {
-        return card.isWallet2
+        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && card.settings.isKeysImportAllowed
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
