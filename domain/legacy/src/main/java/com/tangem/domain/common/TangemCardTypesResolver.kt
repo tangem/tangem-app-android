@@ -103,6 +103,9 @@ internal class TangemCardTypesResolver(
             "BINANCE/test" -> {
                 Blockchain.BSCTestnet
             }
+            "CARDANO" -> {
+                Blockchain.Cardano
+            }
             else -> {
                 Blockchain.fromId(blockchainName)
             }
