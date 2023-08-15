@@ -119,7 +119,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
         return when (currencyName) {
             "BNB" -> Blockchain.BSC
             "ETH" -> Blockchain.Ethereum
-            "ADA" -> Blockchain.CardanoShelley
+            "ADA" -> Blockchain.Cardano
             else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
         }
     }
