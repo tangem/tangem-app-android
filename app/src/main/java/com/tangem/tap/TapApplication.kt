@@ -23,6 +23,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
@@ -161,6 +162,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
 
+    @Inject
+    lateinit var appCurrencyRepository: AppCurrencyRepository
+
     override fun onCreate() {
         super.onCreate()
 
@@ -179,6 +183,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
+                    appCurrencyRepository = appCurrencyRepository,
                 ),
             ),
         )
