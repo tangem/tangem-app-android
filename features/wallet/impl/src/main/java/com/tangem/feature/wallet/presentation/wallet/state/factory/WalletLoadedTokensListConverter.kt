@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
@@ -25,6 +26,7 @@ import com.tangem.utils.converter.Converter
  */
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletState>,
+    appCurrencyProvider: Provider<AppCurrency>,
     cardTypeResolverProvider: Provider<CardTypesResolver>,
     isLockedWalletProvider: Provider<Boolean>,
     clickIntents: WalletClickIntents,
@@ -34,9 +36,8 @@ internal class WalletLoadedTokensListConverter(
         currentStateProvider = currentStateProvider,
         cardTypeResolverProvider = cardTypeResolverProvider,
         isLockedWalletProvider = isLockedWalletProvider,
+        appCurrencyProvider = appCurrencyProvider,
         isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
-        fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
-        fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
         clickIntents = clickIntents,
     )
 

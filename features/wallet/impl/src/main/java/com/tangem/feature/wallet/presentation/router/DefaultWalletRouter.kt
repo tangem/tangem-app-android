@@ -83,6 +83,8 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     }
 
     override fun openDetailsScreen() {
+// [REDACTED_TODO_COMMENT]
+// [REDACTED_JIRA]
         navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
     }
 

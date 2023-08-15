@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.error.TokenListError
@@ -37,6 +38,7 @@ internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val isLockedWalletProvider: Provider<Boolean>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: WalletClickIntents,
 ) {
 
@@ -47,6 +49,7 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
             isLockedWalletProvider = isLockedWalletProvider,
+            appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
         )
     }
@@ -70,8 +73,7 @@ internal class WalletStateFactory(
         WalletSingleCurrencyLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
-            fiatCurrencyCode = "USD", // TODO: https://tangem.atlassian.net/browse/AND-4006
-            fiatCurrencySymbol = "$", // TODO: https://tangem.atlassian.net/browse/AND-4006
+            appCurrencyProvider = appCurrencyProvider,
         )
     }
 

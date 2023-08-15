@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels
+package com.tangem.utils.coroutines
 
 import kotlinx.coroutines.Job
 
@@ -7,7 +7,7 @@ import kotlinx.coroutines.Job
  *
 * [REDACTED_AUTHOR]
  */
-internal class JobHolder {
+class JobHolder {
 
     private var job: Job? = null
 
@@ -18,4 +18,4 @@ internal class JobHolder {
     }
 }
 
-internal fun Job.saveIn(jobHolder: JobHolder) = jobHolder.update(job = this)
+fun Job.saveIn(jobHolder: JobHolder) = jobHolder.update(job = this)

@@ -55,6 +55,8 @@ class WalletMiddleware {
             walletRepository = store.state.featureRepositoryProvider.walletRepository,
             tapWalletManager = store.state.globalState.tapWalletManager,
             fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage,
+            appCurrencyRepository = store.state.daggerGraphState.get(DaggerGraphState::appCurrencyRepository),
+            featureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles),
             appCurrencyProvider = { store.state.globalState.appCurrency },
         )
     }
