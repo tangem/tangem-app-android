@@ -9,12 +9,14 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class CryptoCurrencyStatusToTokenItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     private val CryptoCurrencyStatus.networkIconResId: Int?
@@ -61,6 +63,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                     priceChange = getPriceChangeConfig(),
                 )
             },
+            onClick = { clickIntents.onTokenClick(currency) },
         )
     }
 
