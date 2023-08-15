@@ -64,13 +64,13 @@ internal class SharedPreferencesDataStore<Value : Any>(
     }
 
     override suspend fun remove(key: String) {
-        sharedPreferences.edit {
-            remove(key)
-        }
+        sharedPreferences.edit { remove(key) }
+        writeTrigger.trigger()
     }
 
     override suspend fun clear() {
         sharedPreferences.edit { clear() }
+        writeTrigger.trigger()
     }
 
     private fun getInternal(key: String): Value? {

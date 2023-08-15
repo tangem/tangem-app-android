@@ -7,6 +7,7 @@ import com.tangem.datasource.local.datastore.utils.Trigger
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
+@Deprecated("Use shared preferences data store instead")
 internal class FileDataStore<Value : Any>(
     private val fileReader: FileReader,
     private val adapter: JsonAdapter<Value>,
@@ -22,9 +23,10 @@ internal class FileDataStore<Value : Any>(
     }
 
     override fun getAll(): Flow<List<Value>> {
-        Timber.e("`getAll()` function not implemented for `FileDataStore`")
+        val e = NotImplementedError("`getAll()` function not implemented for `FileDataStore`")
+        Timber.e(e)
 
-        return emptyFlow()
+        throw e
     }
 
     override suspend fun getSyncOrNull(key: String): Value? {
@@ -32,9 +34,10 @@ internal class FileDataStore<Value : Any>(
     }
 
     override suspend fun getAllSyncOrNull(): List<Value> {
-        Timber.e("`getAllSyncOrNull()` function not implemented for `FileDataStore`")
+        val e = NotImplementedError("`getAllSyncOrNull()` function not implemented for `FileDataStore`")
+        Timber.e(e)
 
-        return emptyList()
+        throw e
     }
 
     override suspend fun store(key: String, item: Value) {
@@ -56,10 +59,14 @@ internal class FileDataStore<Value : Any>(
 
     override suspend fun remove(key: String) {
         fileReader.removeFile(key)
+        writeTrigger.trigger()
     }
 
     override suspend fun clear() {
-        Timber.e("`clear()` function not implemented for `FileDataStore`")
+        val e = NotImplementedError("`clear()` function not implemented for `FileDataStore`")
+        Timber.e(e)
+
+        throw e
     }
 
     private fun getInternal(fileName: String): Value? {
