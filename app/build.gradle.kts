@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))
