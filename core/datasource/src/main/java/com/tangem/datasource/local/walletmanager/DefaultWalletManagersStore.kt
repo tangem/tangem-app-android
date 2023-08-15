@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.extensions.plusOrReplace
+import com.tangem.utils.extensions.addOrReplace
 
 internal class DefaultWalletManagersStore(
     dataStore: StringKeyDataStore<List<WalletManager>>,
@@ -32,7 +32,7 @@ internal class DefaultWalletManagersStore(
         val walletManagers = getSyncOrNull(userWalletId)
 
         val updatedWalletManagers = walletManagers
-            ?.plusOrReplace(walletManager) {
+            ?.addOrReplace(walletManager) {
                 it.wallet.blockchain == walletManager.wallet.blockchain &&
                     it.wallet.publicKey == walletManager.wallet.publicKey
             }
