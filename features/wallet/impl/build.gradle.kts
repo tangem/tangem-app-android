@@ -9,6 +9,7 @@ plugins {
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.lifecycle.compose)
     implementation(deps.material)
 
     /** Compose */
