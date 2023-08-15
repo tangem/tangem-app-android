@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.*
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
