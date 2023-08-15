@@ -58,8 +58,8 @@ sealed class CryptoCurrency : Serializable {
         override val derivationPath: String?,
         val contractAddress: String,
         val isCustom: Boolean,
-        val blockchainName: String,
-        val standardType: StandardType,
+        val blockchainName: String, // TODO: Move this field to proper entity
+        val standardType: StandardType, // TODO: Move this field to proper entity
     ) : CryptoCurrency() {
 
         init {
