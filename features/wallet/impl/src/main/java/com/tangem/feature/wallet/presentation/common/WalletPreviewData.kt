@@ -100,6 +100,7 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
+            onClick = {},
         )
     }
 
@@ -118,6 +119,7 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
+            onClick = {},
         )
     }
 
