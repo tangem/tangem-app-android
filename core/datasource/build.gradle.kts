@@ -11,7 +11,7 @@ dependencies {
     /** Project */
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
-    implementation(projects.domain.core)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
     /** Tangem libraries */
