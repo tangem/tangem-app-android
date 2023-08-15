@@ -1,25 +1,28 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import androidx.annotation.DrawableRes
+import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class CryptoCurrencyStatusToTokenItemConverter(
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     private val CryptoCurrencyStatus.networkIconResId: Int?
         @DrawableRes get() {
             // TODO: [REDACTED_JIRA]
-            return if (currency is CryptoCurrency.Token) null else R.drawable.img_eth_22
+            return if (currency is CryptoCurrency.Coin) null else R.drawable.img_eth_22
         }
 
     private val CryptoCurrencyStatus.tokenIconResId: Int
@@ -30,9 +33,10 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
-            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading
+            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading(id = value.currency.id.value)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
             -> value.mapToTokenItemState()
             // TODO: Add other token item states, currently not designed
             is CryptoCurrencyStatus.MissedDerivation,
@@ -59,6 +63,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                     priceChange = getPriceChangeConfig(),
                 )
             },
+            onClick = { clickIntents.onTokenClick(currency) },
         )
     }
 
@@ -70,8 +75,9 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
         val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val appCurrency = appCurrencyProvider()
 
-        return BigDecimalFormatter.formatFiatAmount(fiatAmount, fiatCurrencyCode, fiatCurrencySymbol)
+        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
     }
 
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(
