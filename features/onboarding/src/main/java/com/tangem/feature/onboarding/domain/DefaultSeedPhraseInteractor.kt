@@ -4,6 +4,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
 import com.tangem.feature.onboarding.data.MnemonicRepository
+import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
 import com.tangem.utils.extensions.isNotWhitespace
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -36,8 +37,8 @@ internal class DefaultSeedPhraseInteractor constructor(
         }
     }
 
-    override suspend fun isWordMatch(word: String): Boolean {
-        return repository.getWordsDictionary().contains(word)
+    override suspend fun isWordMatch(mnemonicComponents: List<String>?, field: SeedPhraseField, word: String): Boolean {
+        return mnemonicComponents?.get(field.index) == word
     }
 
     override suspend fun validateMnemonicString(text: String): Result<List<String>> {
@@ -111,4 +112,5 @@ private fun MnemonicErrorResult.mapToError(): SeedPhraseError = when (this) {
     MnemonicErrorResult.NormalizationFailed -> SeedPhraseError.NormalizationFailed
     MnemonicErrorResult.UnsupportedLanguage -> SeedPhraseError.UnsupportedLanguage
     is MnemonicErrorResult.InvalidWords -> SeedPhraseError.InvalidWords(this.words)
+    MnemonicErrorResult.InvalidMnemonic -> SeedPhraseError.InvalidMnemonic
 }
