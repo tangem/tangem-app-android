@@ -8,7 +8,6 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.configs.CardConfig
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
