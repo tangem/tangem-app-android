@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
