@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.tokens
 
 import android.content.Context
-import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.core.TangemSdkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
