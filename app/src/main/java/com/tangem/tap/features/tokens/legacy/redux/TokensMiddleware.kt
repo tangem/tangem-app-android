@@ -14,7 +14,6 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.configs.CardConfig
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.supportsHdWallet
