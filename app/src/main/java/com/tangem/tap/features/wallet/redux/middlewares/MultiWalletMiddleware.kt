@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import androidx.core.os.bundleOf
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.common.flatMap
@@ -7,6 +8,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.addContext
@@ -15,6 +17,7 @@ import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.wallet.converters.CryptoCurrencyConverter
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
@@ -28,12 +31,19 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class MultiWalletMiddleware {
+
+    private val cryptoCurrencyConverter by lazy { CryptoCurrencyConverter() }
+
     @Suppress("LongMethod", "ComplexMethod")
     fun handle(action: WalletAction.MultiWallet, walletState: WalletState?) {
         when (action) {
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.currency != null) {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletDetails))
+                    val bundle = bundleOf(
+                        // TODO: [REDACTED_JIRA]
+                        TokenDetailsRouter.SELECTED_CURRENCY_KEY to cryptoCurrencyConverter.convert(action.currency),
+                    )
+                    store.dispatch(NavigationAction.NavigateTo(screen = AppScreen.WalletDetails, bundle = bundle))
                 }
             }
             is WalletAction.MultiWallet.TryToRemoveWallet -> {
