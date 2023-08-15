@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
@@ -349,8 +350,14 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
+                val scanResponse = reduxStateHolder.scanResponse
                 val isUnsupportedToken =
-                    !(reduxStateHolder.scanResponse?.card?.canHandleToken(token.blockchain) ?: false)
+                    !(
+                        scanResponse?.card?.canHandleToken(
+                            blockchain = token.blockchain,
+                            cardTypesResolver = scanResponse.cardTypesResolver,
+                        ) ?: false
+                        )
 
                 if (isUnsupportedToken) {
                     router.openUnsupportedSoltanaNetworkAlert()
