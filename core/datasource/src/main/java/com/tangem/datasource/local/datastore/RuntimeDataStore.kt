@@ -13,8 +13,16 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
             .filterNotNull()
     }
 
+    override fun getAll(): Flow<List<Data>> {
+        return store.map { value -> value.values.toList() }
+    }
+
     override suspend fun getSyncOrNull(key: String): Data? {
         return store.value[key]
+    }
+
+    override suspend fun getAllSyncOrNull(): List<Data> {
+        return store.value.values.toList()
     }
 
     override suspend fun store(key: String, item: Data) {
