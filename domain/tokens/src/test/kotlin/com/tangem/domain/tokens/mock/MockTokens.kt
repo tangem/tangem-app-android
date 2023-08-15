@@ -26,6 +26,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token3
         get() = CryptoCurrency.Token(
@@ -38,6 +40,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token4
         get() = CryptoCurrency.Coin(
@@ -60,6 +64,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token6
         get() = CryptoCurrency.Token(
@@ -72,6 +78,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token7
         get() = CryptoCurrency.Coin(
@@ -94,6 +102,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token9
         get() = CryptoCurrency.Token(
@@ -106,6 +116,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token10
         get() = CryptoCurrency.Token(
@@ -118,6 +130,8 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
 
     val tokens = listOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)

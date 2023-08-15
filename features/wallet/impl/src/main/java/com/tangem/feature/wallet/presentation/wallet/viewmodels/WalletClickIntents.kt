@@ -1,5 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.domain.tokens.models.CryptoCurrency
+
 internal interface WalletClickIntents {
 
     fun onBackClick()
@@ -37,4 +39,6 @@ internal interface WalletClickIntents {
     fun onUnlockWalletNotificationClick()
 
     fun onBottomSheetDismiss()
+
+    fun onTokenClick(currency: CryptoCurrency)
 }
