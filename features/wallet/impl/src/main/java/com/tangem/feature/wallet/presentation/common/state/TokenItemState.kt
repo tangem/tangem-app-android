@@ -35,6 +35,7 @@ internal sealed interface TokenItemState {
         val amount: String,
         val hasPending: Boolean,
         val tokenOptions: TokenOptionsState,
+        val onClick: () -> Unit,
     ) : TokenItemState
 
     /**
