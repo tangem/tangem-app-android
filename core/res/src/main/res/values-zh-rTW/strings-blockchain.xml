@@ -6,7 +6,6 @@
   <string name="kaspa_withdrawal_message_warning">由於 Kaspa 的限制，只有%1$d UTXO 可以放入單次交易中。這意味著您只能發送%2$s或更少數量。您需要減少數量。</string>
   <string name="no_account_generic">加載 %1$s+ %2$s 以創建帳戶</string>
   <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
-  <string name="send_error_blockchain_internal">區塊鏈內部錯誤</string>
   <string name="send_error_dust_amount_format">最小數量是 %s</string>
   <string name="send_error_dust_change">更動太小</string>
   <string name="send_error_invalid_fee_value">無效費用</string>

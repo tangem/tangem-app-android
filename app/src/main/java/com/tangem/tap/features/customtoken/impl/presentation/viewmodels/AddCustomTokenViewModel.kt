@@ -11,14 +11,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.*
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
@@ -206,10 +207,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
+            val scanResponse = reduxStateHolder.scanResponse
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
-                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true &&
-                        blockchain != Blockchain.Cardano
+                    scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
+                        ?.contains(blockchain) == true
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -273,7 +275,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 ),
             ) + Blockchain.values()
                 .filter { blockchain ->
-                    blockchain.isSupportedInApp() && !blockchain.isTestnet() && blockchain != Blockchain.Cardano
+                    blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createDerivationPathSelectorAdditionalItem)
@@ -405,7 +407,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val isSupportedToken = if (!isNetworkSelected()) {
             true
         } else {
-            reduxStateHolder.scanResponse?.card?.canHandleToken(networkSelectorValue) ?: false
+            val scanResponse = reduxStateHolder.scanResponse
+            scanResponse?.card?.canHandleToken(
+                blockchain = networkSelectorValue,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            ) ?: false
         }
 
         return buildSet {
@@ -439,8 +445,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
-                val isSupportedToken = reduxStateHolder.scanResponse?.card
-                    ?.canHandleToken(networkSelectorValue)
+                val scanResponse = reduxStateHolder.scanResponse
+                val isSupportedToken = scanResponse?.card
+                    ?.canHandleToken(
+                        blockchain = networkSelectorValue,
+                        cardTypesResolver = scanResponse.cardTypesResolver,
+                    )
                     ?: false
 
                 uiState.copySealed(
@@ -599,7 +609,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         if (blockchain == null) return null
 
         val derivationStyle = if (!isDerivationPathSelected()) {
-            reduxStateHolder.scanResponse?.card?.derivationStyle
+            reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
         } else {
             DerivationStyle.LEGACY
         }
