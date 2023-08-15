@@ -2,9 +2,6 @@ package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.derivation.DerivationStyle
-import com.tangem.common.card.EllipticCurve
-import com.tangem.crypto.hdWallet.DerivationPath
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod")
@@ -207,16 +204,6 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
 
 fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
-}
-
-fun Blockchain.derivationPath(style: DerivationStyle?): DerivationPath? {
-    if (style == null) return null
-    if (!getSupportedCurves().contains(EllipticCurve.Secp256k1) &&
-        !getSupportedCurves().contains(EllipticCurve.Ed25519)
-    ) {
-        return null
-    }
-    return style.getConfig().derivations(this).values.first()
 }
 
 private const val NODL = "NODL"

@@ -3,7 +3,6 @@ package com.tangem.data.tokens.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.models.CryptoCurrency
