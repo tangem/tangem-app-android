@@ -8,7 +8,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
