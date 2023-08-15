@@ -61,7 +61,7 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
 private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier = Modifier) {
     InternalTokenItem(
         modifier = modifier,
-        onClick = { content.onClick() },
+        onClick = content.onClick,
         name = content.name,
         tokenIconUrl = content.tokenIconUrl,
         tokenIconResId = content.tokenIconResId,
