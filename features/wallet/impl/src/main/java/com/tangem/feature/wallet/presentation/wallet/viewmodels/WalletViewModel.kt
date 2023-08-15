@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.Provider
@@ -9,6 +10,8 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.extensions.derivationPath
@@ -37,11 +40,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -71,11 +73,14 @@ internal class WalletViewModel @Inject constructor(
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()
+
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private val notificationsListFactory = WalletNotificationsListFactory(
         currentStateProvider = Provider { uiState },
@@ -95,6 +100,7 @@ internal class WalletViewModel @Inject constructor(
         isLockedWalletProvider = Provider {
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex].isLocked
         },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
     )
 
@@ -431,5 +437,17 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBottomSheetDismiss() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
     }
 }
