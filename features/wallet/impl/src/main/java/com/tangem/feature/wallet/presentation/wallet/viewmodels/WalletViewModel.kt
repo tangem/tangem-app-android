@@ -22,6 +22,7 @@ import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -437,6 +438,10 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBottomSheetDismiss() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onTokenClick(currency: CryptoCurrency) {
+        router.openTokenDetails(currency = currency)
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
