@@ -2,9 +2,6 @@ package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.derivation.DerivationStyle
-import com.tangem.common.card.EllipticCurve
-import com.tangem.crypto.hdWallet.DerivationPath
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod")

@@ -102,7 +102,7 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
         is TransactionFee.Choosable -> feeForTx.minimum
         is TransactionFee.Single -> feeForTx.normal
     }
-    
+
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
     if (coinValue < fee.amount.value) return
 
