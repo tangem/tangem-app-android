@@ -18,6 +18,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.extensions.*
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.domain.model.WalletDataModel
@@ -206,9 +207,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
+            val scanResponse = reduxStateHolder.scanResponse
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
-                    reduxStateHolder.scanResponse?.card?.supportedBlockchains()?.contains(blockchain) == true
+                    scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
+                        ?.contains(blockchain) == true
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -404,7 +407,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val isSupportedToken = if (!isNetworkSelected()) {
             true
         } else {
-            reduxStateHolder.scanResponse?.card?.canHandleToken(networkSelectorValue) ?: false
+            val scanResponse = reduxStateHolder.scanResponse
+            scanResponse?.card?.canHandleToken(
+                blockchain = networkSelectorValue,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            ) ?: false
         }
 
         return buildSet {
@@ -438,8 +445,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
-                val isSupportedToken = reduxStateHolder.scanResponse?.card
-                    ?.canHandleToken(networkSelectorValue)
+                val scanResponse = reduxStateHolder.scanResponse
+                val isSupportedToken = scanResponse?.card
+                    ?.canHandleToken(
+                        blockchain = networkSelectorValue,
+                        cardTypesResolver = scanResponse.cardTypesResolver,
+                    )
                     ?: false
 
                 uiState.copySealed(
