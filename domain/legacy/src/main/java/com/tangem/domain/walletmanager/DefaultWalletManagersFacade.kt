@@ -8,7 +8,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
