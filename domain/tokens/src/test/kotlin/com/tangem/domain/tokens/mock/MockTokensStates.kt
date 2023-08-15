@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.mock
 
-import arrow.core.nonEmptySetOf
+import arrow.core.nonEmptyListOf
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 
@@ -57,7 +57,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount,
     )
 
-    val failedTokenStates = nonEmptySetOf(
+    val failedTokenStates = nonEmptyListOf(
         tokenState1,
         tokenState2,
         tokenState3,
@@ -74,7 +74,7 @@ internal object MockTokensStates {
         val networkStatus = MockNetworks.verifiedNetworksStatuses
             .first { it.networkId == status.currency.networkId }
         val amount = (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
-        val quote = MockQuotes.quotes.first { it.currencyId == status.currency.id }
+        val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
         val fiatAmount = amount * quote.fiatRate
 
         status.copy(
@@ -86,5 +86,14 @@ internal object MockTokensStates {
                 hasTransactionsInProgress = false,
             ),
         )
-    }.toNonEmptySet()
+    }
+
+    val noQuotesTokensStatuses = loadedTokensStates.map { currency ->
+        currency.copy(
+            value = CryptoCurrencyStatus.NoQuote(
+                amount = currency.value.amount!!,
+                hasTransactionsInProgress = false,
+            ),
+        )
+    }
 }
