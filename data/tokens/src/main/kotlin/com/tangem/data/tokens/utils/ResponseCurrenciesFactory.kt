@@ -84,6 +84,8 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
             contractAddress = sdkToken.contractAddress,
             isCustom = isCustomToken(id),
+            blockchainName = blockchain.fullName,
+            standardType = getTokenStandardType(blockchain, sdkToken),
         )
     }
 }
