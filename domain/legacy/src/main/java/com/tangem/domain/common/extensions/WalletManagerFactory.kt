@@ -1,6 +1,7 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
