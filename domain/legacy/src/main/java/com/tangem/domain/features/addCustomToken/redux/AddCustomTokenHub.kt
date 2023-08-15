@@ -13,6 +13,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.form.*
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
@@ -435,7 +436,13 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private fun tokenIsSupported(blockchain: Blockchain): Boolean = when (blockchain) {
         Blockchain.Unknown -> true
-        else -> globalState.scanResponse?.card?.canHandleToken(blockchain) ?: false
+        else -> {
+            val scanResponse = globalState.scanResponse
+            scanResponse?.card?.canHandleToken(
+                blockchain = blockchain,
+                cardTypesResolver = scanResponse.cardTypesResolver,
+            ) ?: false
+        }
     }
 
     @Throws
@@ -547,8 +554,9 @@ private class AddCustomTokenReducer(
                 state.copy(onTokenAddCallback = action.callback)
             }
             is OnCreate -> {
-                val card = requireNotNull(globalState.scanResponse?.card)
-                val supportedTokenNetworkIds = card.supportedBlockchains()
+                val scanResponse = requireNotNull(globalState.scanResponse)
+                val card = globalState.scanResponse.card
+                val supportedTokenNetworkIds = card.supportedBlockchains(scanResponse.cardTypesResolver)
                     .filter(Blockchain::canHandleTokens)
                     .map(Blockchain::toNetworkId)
 
@@ -559,15 +567,22 @@ private class AddCustomTokenReducer(
                 )
 
                 state.copy(
-                    cardDerivationStyle = globalState.scanResponse?.derivationStyleProvider?.getDerivationStyle(),
-                    form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain)),
+                    cardDerivationStyle = globalState.scanResponse.derivationStyleProvider.getDerivationStyle(),
+                    form = Form(
+                        AddCustomTokenState.createFormFields(
+                            cardTypesResolver = globalState.scanResponse.cardTypesResolver,
+                            card = card,
+                            type = CustomTokenType.Blockchain,
+                        ),
+                    ),
                     tangemTechServiceManager = tangemTechServiceManager,
                     screenState = createInitialScreenState(card.settings.isHDWalletAllowed),
                 )
             }
             is OnDestroy -> {
-                val card = requireNotNull(globalState.scanResponse?.card)
-                state.reset(card)
+                val scanResponse = requireNotNull(globalState.scanResponse)
+                val card = scanResponse.card
+                state.reset(scanResponse.cardTypesResolver, card)
             }
             is UpdateForm -> {
                 updateFormState(action.state)
