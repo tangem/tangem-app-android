@@ -7,7 +7,6 @@ import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens

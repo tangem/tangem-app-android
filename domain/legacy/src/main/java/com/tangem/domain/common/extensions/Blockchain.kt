@@ -209,16 +209,6 @@ fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
 }
 
-fun Blockchain.derivationPath(style: DerivationStyle?): DerivationPath? {
-    if (style == null) return null
-    if (!getSupportedCurves().contains(EllipticCurve.Secp256k1) &&
-        !getSupportedCurves().contains(EllipticCurve.Ed25519)
-    ) {
-        return null
-    }
-    return style.getConfig().derivations(this).values.first()
-}
-
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
