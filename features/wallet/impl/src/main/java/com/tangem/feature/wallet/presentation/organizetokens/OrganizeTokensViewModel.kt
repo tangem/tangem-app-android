@@ -1,133 +1,147 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import com.tangem.common.Provider
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
+import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
+import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
+import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import com.tangem.feature.wallet.presentation.organizetokens.utils.common.*
+import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.burnoutcrew.reorderable.ItemPosition
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
-// FIXME: Implemented with preview data
 @HiltViewModel
-internal class OrganizeTokensViewModel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
+internal class OrganizeTokensViewModel @Inject constructor(
+    private val getTokenListUseCase: GetTokenListUseCase,
+    private val toggleTokenListGroupingUseCase: ToggleTokenListGroupingUseCase,
+    private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
+    private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel(), OrganizeTokensIntents {
 
-    @Volatile
-    private var movingItem: DraggableItem? = null
+    lateinit var router: InnerWalletRouter
 
-    var router: InnerWalletRouter by Delegates.notNull()
-    val userWalletId: UserWalletId by lazy {
+    private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
+
+    private val stateHolder = OrganizeTokensStateHolder(
+        stateFlowScope = viewModelScope,
+        intents = this,
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        onSubscription = {
+            bootstrapTokenList()
+        },
+    )
+
+    private val userWalletId: UserWalletId by lazy {
         val userWalletIdValue: String = checkNotNull(savedStateHandle[WalletRoute.userWalletIdKey])
 
         UserWalletId(userWalletIdValue)
     }
 
-    var uiState: OrganizeTokensState by mutableStateOf(getInitialState())
-        private set
+    private var tokenList: TokenList? = null
 
-    private fun getInitialState(): OrganizeTokensState = WalletPreviewData.organizeTokensState.copy(
-        itemsState = OrganizeTokensListState.Ungrouped(
-            items = WalletPreviewData.draggableTokens,
-        ),
-        dndConfig = OrganizeTokensState.DragAndDropConfig(
-            onItemDragged = this::moveItem,
-            canDragItemOver = this::checkCanMoveItemOver,
-            onItemDragEnd = this::endMoving,
-            onDragStart = this::startMoving,
-        ),
-        header = OrganizeTokensState.HeaderConfig(
-            onSortClick = { /* no-op */ },
-            onGroupClick = this::toggleTokensByNetworkGrouping,
-        ),
-    )
+    val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
-    private fun toggleTokensByNetworkGrouping() {
-        val newListState = when (val itemsState = uiState.itemsState) {
-            is OrganizeTokensListState.GroupedByNetwork -> OrganizeTokensListState.Ungrouped(
-                items = itemsState.items.filterIsInstance<DraggableItem.Token>().toPersistentList(),
+    override fun onBackClick() {
+        router.popBackStack()
+    }
+
+    override fun onSortClick() {
+        viewModelScope.launch(Dispatchers.Default) {
+            val list = tokenList ?: return@launch
+
+            toggleTokenListSortingUseCase(list).fold(
+                ifLeft = stateHolder::updateStateWithError,
+                ifRight = {
+                    stateHolder.updateStateWithTokenList(it)
+                    tokenList = it
+                },
             )
-            is OrganizeTokensListState.Ungrouped -> OrganizeTokensListState.GroupedByNetwork(
-                items = WalletPreviewData.draggableItems,
+        }
+    }
+
+    override fun onGroupClick() {
+        viewModelScope.launch(Dispatchers.Default) {
+            val list = tokenList ?: return@launch
+
+            toggleTokenListGroupingUseCase(list).fold(
+                ifLeft = stateHolder::updateStateWithError,
+                ifRight = {
+                    stateHolder.updateStateWithTokenList(it)
+                    tokenList = it
+                },
             )
-            is OrganizeTokensListState.Empty -> itemsState
-        }
-
-        uiState = uiState.copy(itemsState = newListState)
-    }
-
-    private fun checkCanMoveItemOver(moveOverItemPosition: ItemPosition, movedItemPosition: ItemPosition): Boolean {
-        val items = (uiState.itemsState as? OrganizeTokensListState.GroupedByNetwork)
-            ?.items
-            ?: return true // If ungrouped then item can be moved anywhere
-
-        val (moveOverItem, movedItem) = items.findItemsToMove(moveOverItemPosition.key, movedItemPosition.key)
-
-        if (moveOverItem == null || movedItem == null) {
-            return false
-        }
-
-        return when (movedItem) {
-            is DraggableItem.GroupHeader -> checkCanMoveHeaderOver(moveOverItemPosition, moveOverItem, items.lastIndex)
-            is DraggableItem.Token -> checkCanMoveTokenOver(movedItem, moveOverItem)
-            is DraggableItem.GroupPlaceholder -> false
         }
     }
 
-    private fun startMoving(movingItem: DraggableItem) = viewModelScope.launch(Dispatchers.Default) {
-        if (this@OrganizeTokensViewModel.movingItem != null) return@launch
-        this@OrganizeTokensViewModel.movingItem = movingItem
+    override fun onApplyClick() {
+        viewModelScope.launch(Dispatchers.Default) {
+            stateHolder.updateStateToDisplayProgress()
 
-        val updatedItemsState = uiState.itemsState.updateItems { items ->
-            when (movingItem) {
-                is DraggableItem.GroupHeader -> items.collapseGroup(movingItem)
-                is DraggableItem.Token -> when (uiState.itemsState) {
-                    is OrganizeTokensListState.GroupedByNetwork -> items.divideGroups(movingItem)
-                    is OrganizeTokensListState.Ungrouped -> items.divideItems(movingItem)
-                    is OrganizeTokensListState.Empty -> uiState.itemsState.items
-                }
-                is DraggableItem.GroupPlaceholder -> items
+            val listState = uiState.value.itemsState
+            val resolver = CryptoCurrenciesIdsResolver()
+
+            val result = applyTokenListSortingUseCase(
+                userWalletId = userWalletId,
+                sortedTokensIds = resolver.resolve(listState, tokenList),
+                isGroupedByNetwork = listState is OrganizeTokensListState.GroupedByNetwork,
+                isSortedByBalance = uiState.value.header.isSortedByBalance,
+            )
+
+            result.fold(
+                ifLeft = stateHolder::updateStateWithError,
+                ifRight = {
+                    stateHolder.updateStateToHideProgress()
+                    withContext(Dispatchers.Main) { router.popBackStack() }
+                },
+            )
+        }
+    }
+
+    override fun onCancelClick() {
+        router.popBackStack()
+    }
+
+    private fun bootstrapTokenList() {
+        viewModelScope.launch(Dispatchers.Default) {
+            val maybeTokenList = getTokenListUseCase(userWalletId)
+                .first { it.getOrNull()?.totalFiatBalance is TokenList.FiatBalance.Loaded }
+
+            maybeTokenList.fold(
+                ifLeft = stateHolder::updateStateWithError,
+                ifRight = {
+                    stateHolder.updateStateWithTokenList(it)
+                    tokenList = it
+                },
+            )
+        }
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
-        }
-
-        uiState = uiState.copy(itemsState = updatedItemsState)
-    }
-
-    private fun endMoving() = viewModelScope.launch(Dispatchers.Default) {
-        if (movingItem == null) return@launch
-
-        val updatedItemsState = uiState.itemsState.updateItems { items ->
-            when (movingItem) {
-                is DraggableItem.GroupHeader -> items.expandGroups()
-                is DraggableItem.Token -> items.uniteItems()
-                is DraggableItem.GroupPlaceholder,
-                null,
-                -> items
-            }
-        }
-
-        uiState = uiState.copy(itemsState = updatedItemsState)
-        movingItem = null
-    }
-
-    private fun moveItem(from: ItemPosition, to: ItemPosition) = viewModelScope.launch(Dispatchers.Default) {
-        uiState = uiState.copy(
-            itemsState = uiState.itemsState.updateItems {
-                it.moveItem(from.index, to.index)
-            },
-        )
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
     }
 }
