@@ -41,6 +41,7 @@ import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
@@ -189,7 +190,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
 
         if (BuildConfig.DEBUG) {
-            Logger.addLogAdapter(AndroidLogAdapter())
+            Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
             Timber.plant(
                 object : Timber.DebugTree() {
                     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
