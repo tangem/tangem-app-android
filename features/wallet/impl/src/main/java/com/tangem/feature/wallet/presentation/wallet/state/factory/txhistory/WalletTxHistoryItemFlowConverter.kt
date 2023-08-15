@@ -97,11 +97,13 @@ internal class WalletTxHistoryItemFlowConverter(
     ): TransactionState {
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
+                txHash = item.txHash,
                 address = direction.from.toBriefAddressFormat(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
+                txHash = item.txHash,
                 address = direction.from.toBriefAddressFormat(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
@@ -116,11 +118,13 @@ internal class WalletTxHistoryItemFlowConverter(
     ): TransactionState {
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
+                txHash = item.txHash,
                 address = direction.to.toBriefAddressFormat(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
+                txHash = item.txHash,
                 address = direction.to.toBriefAddressFormat(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
