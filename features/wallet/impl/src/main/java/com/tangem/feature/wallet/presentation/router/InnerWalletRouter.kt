@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.router
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.fragment.app.FragmentManager
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.wallet.navigation.WalletRouter
 
@@ -40,4 +41,7 @@ internal interface InnerWalletRouter : WalletRouter {
 
     /** Open transaction history website by [url] */
     fun openTxHistoryWebsite(url: String)
+
+    /** Open token details screen */
+    fun openTokenDetails(currency: CryptoCurrency)
 }
