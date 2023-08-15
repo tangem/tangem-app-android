@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
 
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
 
