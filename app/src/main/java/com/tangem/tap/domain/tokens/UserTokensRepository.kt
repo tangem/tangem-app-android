@@ -9,7 +9,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.files.AndroidFileReader
 import com.tangem.domain.common.BlockchainNetwork
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.converters.CurrencyConverter
