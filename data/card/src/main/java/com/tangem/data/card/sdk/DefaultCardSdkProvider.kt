@@ -38,7 +38,7 @@ internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, C
             allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 21),
+                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
             ),
         )
     }

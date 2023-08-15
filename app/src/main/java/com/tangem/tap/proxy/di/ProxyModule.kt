@@ -1,6 +1,6 @@
 package com.tangem.tap.proxy.di
 
-import androidx.compose.ui.text.intl.Locale
+import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
@@ -8,7 +8,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
-import com.tangem.lib.crypto.TxHistoryManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.*
 import dagger.Module
@@ -59,12 +58,6 @@ class ProxyModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideTxHistoryManager(appStateHolder: AppStateHolder): TxHistoryManager {
-        return TxHistoryManagerImpl(appStateHolder = appStateHolder)
-    }
-
     // regions FeatureConsumers
     @Provides
     @Singleton
@@ -81,9 +74,7 @@ class ProxyModule {
                     }
             }
 
-            override fun getLocaleProvider(): () -> String = { Locale.current.language }
-
-            override fun getWebViewAuthCredentialsProvider(): () -> String? = {
+            override fun getWebViewAuthCredentialsProvider(): Provider<String?> = Provider {
                 appStateHolder.mainStore?.state?.globalState?.configManager?.config?.tangemComAuthorization
             }
         }
