@@ -9,7 +9,6 @@ import arrow.core.toNonEmptyListOrNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -23,7 +22,7 @@ class ApplyTokenListSortingUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        sortedTokensIds: List<Pair<Network.ID, CryptoCurrency.ID>>,
+        sortedTokensIds: List<CryptoCurrency.ID>,
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): Either<TokenListSortingError, Unit> {
@@ -40,7 +39,7 @@ class ApplyTokenListSortingUseCase(
     }
 
     private suspend fun Raise<TokenListSortingError>.sortTokens(
-        sortedTokensIds: List<Pair<Network.ID, CryptoCurrency.ID>>,
+        sortedTokensIds: List<CryptoCurrency.ID>,
         unsortedTokens: List<CryptoCurrency>,
     ): List<CryptoCurrency> = withContext(dispatchers.default) {
         val nonEmptySortedTokensIds = ensureNotNull(sortedTokensIds.toNonEmptySetOrNull()) {
@@ -49,13 +48,13 @@ class ApplyTokenListSortingUseCase(
 
         val sortedTokens = sortedMapOf<Int, CryptoCurrency>()
 
-        unsortedTokens.distinct().forEach { token ->
-            val index = nonEmptySortedTokensIds.indexOfFirst { (networkId, tokenId) ->
-                networkId == token.networkId && tokenId == token.id
+        unsortedTokens.distinct().forEach { currency ->
+            val index = nonEmptySortedTokensIds.indexOfFirst { currencyId ->
+                currencyId == currency.id
             }
 
             if (index >= 0) {
-                sortedTokens[index] = token
+                sortedTokens[index] = currency
             } else {
                 raise(TokenListSortingError.UnableToSortTokenList)
             }
