@@ -1,12 +1,13 @@
 package com.tangem.domain.tokens.mock
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.CryptoCurrency.ID
 
 internal object MockTokens {
 
     val token1
         get() = CryptoCurrency.Coin(
-            id = CryptoCurrency.ID("token1"),
+            id = ID(ID.Prefix.COIN_PREFIX, MockNetworks.network1.id, ID.Suffix.RawID("token1")),
             networkId = MockNetworks.network1.id,
             name = "Token 1",
             symbol = "T1",
@@ -16,7 +17,7 @@ internal object MockTokens {
         )
     val token2
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token2"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network1.id, ID.Suffix.RawID("token2")),
             networkId = MockNetworks.network1.id,
             name = "Token 2",
             symbol = "T2",
@@ -25,10 +26,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token3
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token3"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network1.id, ID.Suffix.RawID("token3")),
             networkId = MockNetworks.network1.id,
             name = "Token 3",
             symbol = "T3",
@@ -37,10 +40,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token4
         get() = CryptoCurrency.Coin(
-            id = CryptoCurrency.ID("token4"),
+            id = ID(ID.Prefix.COIN_PREFIX, MockNetworks.network2.id, ID.Suffix.RawID("token4")),
             networkId = MockNetworks.network2.id,
             name = "Token 4",
             symbol = "T4",
@@ -50,7 +55,7 @@ internal object MockTokens {
         )
     val token5
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token5"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network2.id, ID.Suffix.RawID("token5")),
             networkId = MockNetworks.network2.id,
             name = "Token 5",
             symbol = "T5",
@@ -59,10 +64,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token6
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token6"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network2.id, ID.Suffix.RawID("token6")),
             networkId = MockNetworks.network2.id,
             name = "Token 6",
             symbol = "T6",
@@ -71,10 +78,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token7
         get() = CryptoCurrency.Coin(
-            id = CryptoCurrency.ID("token7"),
+            id = ID(ID.Prefix.COIN_PREFIX, MockNetworks.network3.id, ID.Suffix.RawID("token7")),
             networkId = MockNetworks.network3.id,
             name = "Token 7",
             symbol = "T7",
@@ -84,7 +93,7 @@ internal object MockTokens {
         )
     val token8
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token8"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network3.id, ID.Suffix.RawID("token8")),
             networkId = MockNetworks.network3.id,
             name = "Token 8",
             symbol = "T8",
@@ -93,10 +102,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token9
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token9"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network3.id, ID.Suffix.RawID("token9")),
             networkId = MockNetworks.network3.id,
             name = "Token 9",
             symbol = "T9",
@@ -105,10 +116,12 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
     val token10
         get() = CryptoCurrency.Token(
-            id = CryptoCurrency.ID("token10"),
+            id = ID(ID.Prefix.TOKEN_PREFIX, MockNetworks.network3.id, ID.Suffix.RawID("token10")),
             networkId = MockNetworks.network3.id,
             name = "Token 10",
             symbol = "T10",
@@ -117,7 +130,9 @@ internal object MockTokens {
             iconUrl = null,
             contractAddress = "address",
             derivationPath = null,
+            blockchainName = "Ethereum",
+            standardType = CryptoCurrency.StandardType.ERC20,
         )
 
-    val tokens = setOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)
+    val tokens = listOf(token1, token2, token3, token4, token5, token6, token7, token8, token9, token10)
 }
