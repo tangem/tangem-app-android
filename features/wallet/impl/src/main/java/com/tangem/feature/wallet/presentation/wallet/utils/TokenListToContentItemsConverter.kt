@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
+import com.tangem.common.Provider
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -14,16 +16,14 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 
 internal class TokenListToContentItemsConverter(
+    appCurrencyProvider: Provider<AppCurrency>,
     isWalletContentHidden: Boolean,
-    fiatCurrencyCode: String,
-    fiatCurrencySymbol: String,
     private val clickIntents: WalletClickIntents,
 ) : Converter<TokenList, WalletTokensListState> {
 
     private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
         isWalletContentHidden = isWalletContentHidden,
-        fiatCurrencyCode = fiatCurrencyCode,
-        fiatCurrencySymbol = fiatCurrencySymbol,
+        appCurrencyProvider = appCurrencyProvider,
     )
 
     override fun convert(value: TokenList): WalletTokensListState {
