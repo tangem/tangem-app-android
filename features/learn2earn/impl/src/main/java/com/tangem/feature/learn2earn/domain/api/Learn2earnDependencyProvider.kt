@@ -1,5 +1,6 @@
 package com.tangem.feature.learn2earn.domain.api
 
+import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
 import kotlinx.coroutines.flow.Flow
 
@@ -12,7 +13,5 @@ interface Learn2earnDependencyProvider {
 
     fun getCardTypeResolverFlow(): Flow<CardTypesResolver?>
 
-    fun getLocaleProvider(): () -> String
-
-    fun getWebViewAuthCredentialsProvider(): () -> String?
+    fun getWebViewAuthCredentialsProvider(): Provider<String?>
 }
