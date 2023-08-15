@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.models
 
+import java.io.Serializable
+
 /**
  * Represents a generic cryptocurrency.
  *
@@ -12,7 +14,7 @@ package com.tangem.domain.tokens.models
  * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
  * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
  */
-sealed class CryptoCurrency {
+sealed class CryptoCurrency : Serializable {
 
     abstract val id: ID
     abstract val networkId: Network.ID
@@ -56,6 +58,8 @@ sealed class CryptoCurrency {
         override val derivationPath: String?,
         val contractAddress: String,
         val isCustom: Boolean,
+        val blockchainName: String, // TODO: Move this field to proper entity
+        val standardType: StandardType, // TODO: Move this field to proper entity
     ) : CryptoCurrency() {
 
         init {
@@ -127,6 +131,26 @@ sealed class CryptoCurrency {
 
         private companion object {
             const val DELIMITER = '#'
+        }
+    }
+
+    sealed class StandardType {
+        abstract val name: String
+
+        object ERC20 : StandardType() {
+            override val name: String = "ERC20"
+        }
+        object TRC20 : StandardType() {
+            override val name: String = "TRC20"
+        }
+        object BEP20 : StandardType() {
+            override val name: String = "BEP20"
+        }
+        object BEP2 : StandardType() {
+            override val name: String = "BEP2"
+        }
+        class Unspecified(val tokenName: String) : StandardType() {
+            override val name: String = tokenName
         }
     }
 
