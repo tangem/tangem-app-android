@@ -16,7 +16,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
