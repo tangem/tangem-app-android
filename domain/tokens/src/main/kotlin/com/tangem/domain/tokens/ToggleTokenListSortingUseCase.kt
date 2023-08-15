@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.withError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
@@ -31,36 +32,37 @@ class ToggleTokenListSortingUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListSortingError>.sortGroupedTokenList(
+    private fun Raise<TokenListSortingError>.sortGroupedTokenList(
         tokenList: TokenList.GroupedByNetwork,
     ): TokenList.GroupedByNetwork {
         val operations = getSortingOperations(tokenList)
         val networks = tokenList.groups.map { it.network }.toSet()
 
         return tokenList.copy(
-            groups = operations.getGroupedTokens(networks),
+            groups = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
+                operations.getGroupedTokens(networks).bind()
+            },
             sortedBy = operations.getSortType(),
         )
     }
 
-    private suspend fun Raise<TokenListSortingError>.sortUngroupedTokenList(
+    private fun Raise<TokenListSortingError>.sortUngroupedTokenList(
         tokenList: TokenList.Ungrouped,
     ): TokenList.Ungrouped {
         val operations = getSortingOperations(tokenList)
 
         return tokenList.copy(
-            currencies = operations.getTokens(),
+            currencies = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
+                operations.getTokens().bind()
+            },
             sortedBy = operations.getSortType(),
         )
     }
 
-    private fun Raise<TokenListSortingError>.getSortingOperations(tokenList: TokenList): TokenListSortingOperations<*> {
+    private fun getSortingOperations(tokenList: TokenList): TokenListSortingOperations {
         return TokenListSortingOperations(
             tokenList = tokenList,
             sortByBalance = tokenList.sortedBy != TokenList.SortType.BALANCE,
-            dispatchers = dispatchers,
-            raise = this,
-            transformError = TokenListSortingOperations.Error::mapToTokenListSortingError,
         )
     }
 }
