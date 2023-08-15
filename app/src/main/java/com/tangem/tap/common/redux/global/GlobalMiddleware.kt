@@ -8,10 +8,12 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -24,17 +26,13 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userTokensRepository
-import com.tangem.tap.walletCurrenciesManager
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
-import java.util.*
+import java.util.Locale
 
 object GlobalMiddleware {
     val handler = globalMiddlewareHandler
@@ -68,13 +66,11 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            store.dispatch(
-                GlobalAction.RestoreAppCurrency.Success(
-                    preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
-                        ?.run { FiatCurrency(code, name, symbol) }
-                        ?: FiatCurrency.Default,
-                ),
-            )
+            if (store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles).isRedesignedScreenEnabled) {
+                restoreAppCurrencyNew()
+            } else {
+                restoreAppCurrencyLegacy()
+            }
         }
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
@@ -190,6 +186,28 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.SetTopUpController -> {
             walletCurrenciesManager.addListener(action.topUpController)
         }
+    }
+}
+
+private fun restoreAppCurrencyLegacy() {
+    store.dispatch(
+        GlobalAction.RestoreAppCurrency.Success(
+            preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
+                ?.run { FiatCurrency(code, name, symbol) }
+                ?: FiatCurrency.Default,
+        ),
+    )
+}
+
+private fun restoreAppCurrencyNew() {
+    scope.launch {
+        val currency = store.state.daggerGraphState.get(DaggerGraphState::appCurrencyRepository)
+            .getSelectedAppCurrency()
+            .firstOrNull()
+            ?.run { FiatCurrency(code, name, symbol) }
+            ?: FiatCurrency.Default
+
+        store.dispatchWithMain(GlobalAction.RestoreAppCurrency.Success(currency))
     }
 }
 
