@@ -37,4 +37,5 @@ sealed class SeedPhraseError(
     object NormalizationFailed : SeedPhraseError(subCode = 5)
     object UnsupportedLanguage : SeedPhraseError(subCode = 6)
     data class InvalidWords(val words: Set<String>) : SeedPhraseError(subCode = 7)
+    object InvalidMnemonic : SeedPhraseError(subCode = 8)
 }
