@@ -47,7 +47,7 @@ internal class WalletSkeletonStateConverter(
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(value),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            tokensListState = WalletTokensListState.Loading,
+            tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
         )
