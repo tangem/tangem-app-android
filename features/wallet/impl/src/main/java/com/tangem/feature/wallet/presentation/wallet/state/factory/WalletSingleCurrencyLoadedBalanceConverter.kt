@@ -94,14 +94,13 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     ),
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
-                    balance = formatFiatAmount(status, appCurrencyProvider()),
+                    balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
                 WalletCardState.Loading(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
-                    additionalInfo = selectedWallet.additionalInfo,
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
                 )
@@ -114,7 +113,6 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                 WalletCardState.Error(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
-                    additionalInfo = selectedWallet.additionalInfo,
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
                 )
