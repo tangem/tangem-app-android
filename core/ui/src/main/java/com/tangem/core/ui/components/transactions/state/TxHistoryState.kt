@@ -1,13 +1,13 @@
 package com.tangem.core.ui.components.transactions.state
 
 import androidx.paging.PagingData
+import androidx.paging.insertHeaderItem
 import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
-/**
- * Wallet transaction history state
- */
+/** Wallet transaction history state */
 sealed interface TxHistoryState {
 
     /**
@@ -18,34 +18,26 @@ sealed interface TxHistoryState {
     sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
     /**
-     * Loading state
+     * Loading state. Items contains a required [TxHistoryItemState.Title].
      *
      * @property onExploreClick lambda be invoke when explore button was clicked
+     * @property items          loading transactions
      */
-    data class Loading(val onExploreClick: () -> Unit) : ContentState(
-        items = flowOf(
+    data class Loading(
+        val onExploreClick: () -> Unit,
+        override val items: Flow<PagingData<TxHistoryItemState>> = flowOf(
             PagingData.from(
                 listOf(
-                    TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                    TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)),
+                    element = TxHistoryItemState.Transaction(
+                        state = TransactionState.Loading(txHash = LOADING_TX_HASH),
+                    ),
                 ),
             ),
         ),
-    )
-
-    /**
-     * Wallet transaction history state with loading transactions
-     *
-     * @property itemsCount count of loading transactions
-     */
-    data class ContentWithLoadingItems(val itemsCount: Int) : ContentState(
-        items = flowOf(
-            value = PagingData.from(
-                data = buildList(capacity = itemsCount) {
-                    add(TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)))
-                },
-            ),
-        ),
+    ) : ContentState(
+        items = items.map {
+            it.insertHeaderItem(item = TxHistoryItemState.Title(onExploreClick = onExploreClick))
+        },
     )
 
     /**
