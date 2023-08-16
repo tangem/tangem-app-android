@@ -8,8 +8,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -164,7 +164,7 @@ internal class DefaultCurrenciesRepository(
 
             tangemTechApi.saveUserTokens(userWallet.walletId.stringValue, response)
         } else {
-            throw error
+            Timber.e(error, "Unable to fetch currencies for: ${userWallet.walletId}")
         }
     }
 
