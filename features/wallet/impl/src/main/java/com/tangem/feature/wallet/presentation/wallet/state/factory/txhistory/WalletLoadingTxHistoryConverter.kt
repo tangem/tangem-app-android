@@ -1,13 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
+import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.coroutines.flow.flow
 
 /**
  * Converter from loading tx history state to [WalletSingleCurrencyState.Content]
@@ -44,7 +47,17 @@ internal class WalletLoadingTxHistoryConverter(
 
     private fun convert(value: Int): WalletSingleCurrencyState.Content {
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = TxHistoryState.ContentWithLoadingItems(itemsCount = value),
+            txHistoryState = TxHistoryState.Loading(
+                onExploreClick = clickIntents::onExploreClick,
+                transactions = flow {
+                    PagingData.from(
+                        data = MutableList(
+                            size = value,
+                            init = { TransactionState.Loading(it.toString()) },
+                        ),
+                    )
+                },
+            ),
         )
     }
 }
