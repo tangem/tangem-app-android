@@ -351,10 +351,10 @@ internal object WalletPreviewData {
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
-                flowOf(
+                onExploreClick = {},
+                contentItems = flowOf(
                     PagingData.from(
                         listOf(
-                            TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(
