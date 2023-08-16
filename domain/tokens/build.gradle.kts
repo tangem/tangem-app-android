@@ -14,6 +14,9 @@ dependencies {
     /** Project - Other */
     implementation(projects.core.utils)
 
+    /** Utils */
+    implementation(deps.jodatime)
+
     /** Tests */
     testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
