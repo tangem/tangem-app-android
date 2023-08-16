@@ -48,14 +48,14 @@ internal class WalletRefreshStateConverter(
     private fun WalletSingleCurrencyState.Content.getRefreshState(): WalletSingleCurrencyState.Content {
         return copy(
             // TODO: [REDACTED_JIRA]
-            walletsListConfig = getWalletsListConfig(additionalInfo = ""),
+            walletsListConfig = getWalletsListConfig(),
             pullToRefreshConfig = getPullToRefreshConfig(),
             txHistoryState = getTxHistoryState(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = marketPriceBlockState.currencyName),
         )
     }
 
-    private fun WalletState.ContentState.getWalletsListConfig(additionalInfo: String? = null): WalletsListConfig {
+    private fun WalletState.ContentState.getWalletsListConfig(): WalletsListConfig {
         val selectedWallet = walletsListConfig.wallets[walletsListConfig.selectedWalletIndex]
 
         return walletsListConfig.copy(
@@ -66,7 +66,6 @@ internal class WalletRefreshStateConverter(
                     element = WalletCardState.Loading(
                         id = selectedWallet.id,
                         title = selectedWallet.title,
-                        additionalInfo = additionalInfo ?: selectedWallet.additionalInfo,
                         imageResId = selectedWallet.imageResId,
                     ),
                 ),
