@@ -49,7 +49,7 @@ internal class WalletLoadingTxHistoryConverter(
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
             txHistoryState = TxHistoryState.Loading(
                 onExploreClick = clickIntents::onExploreClick,
-                items = flow {
+                transactions = flow {
                     PagingData.from(
                         data = MutableList(
                             size = value,

@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
@@ -12,7 +12,7 @@ import com.tangem.feature.wallet.impl.R
  *
  * @author Andrew Khokhlov on 24/06/2023
  */
-@Stable
+@Immutable
 sealed class WalletManageButton(val config: ActionButtonConfig) {
 
     /** Lambda be invoked when manage button is clicked */

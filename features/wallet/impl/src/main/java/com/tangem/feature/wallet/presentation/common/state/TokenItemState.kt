@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 
 /** Token item state */
@@ -76,7 +75,7 @@ internal sealed interface TokenItemState {
     ) : TokenItemState
 
     /** Token options state */
-    @Stable
+    @Immutable
     sealed interface TokenOptionsState {
 
         /**

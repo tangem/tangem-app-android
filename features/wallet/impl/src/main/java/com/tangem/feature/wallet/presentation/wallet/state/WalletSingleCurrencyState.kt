@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
@@ -12,7 +12,7 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * @author Andrew Khokhlov on 07/08/2023
  */
-@Stable
+@Immutable
 internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
 
     /** Manage buttons */

@@ -101,7 +101,7 @@ internal class WalletRefreshStateConverter(
             is TxHistoryState.Content -> {
                 TxHistoryState.Loading(
                     onExploreClick = clickIntents::onExploreClick,
-                    items = txHistoryState.items
+                    transactions = txHistoryState.contentItems
                         .filterIsInstance<PagingData<TxHistoryItemState.Transaction>>()
                         .mapPagingData { transaction ->
                             transaction.copy(
