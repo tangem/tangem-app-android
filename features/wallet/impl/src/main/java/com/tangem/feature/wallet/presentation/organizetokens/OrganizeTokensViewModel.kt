@@ -16,6 +16,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
+import com.tangem.feature.wallet.presentation.organizetokens.utils.common.disableSortingByBalance
+import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapter
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,12 +41,19 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
 
+    private val dragAndDropAdapter = DragAndDropAdapter(
+        listStateProvider = Provider { uiState.value.itemsState },
+        scope = viewModelScope,
+    )
+
     private val stateHolder = OrganizeTokensStateHolder(
         stateFlowScope = viewModelScope,
         intents = this,
+        dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         onSubscription = {
             bootstrapTokenList()
+            bootstrapDragAndDropUpdates()
         },
     )
 
@@ -69,7 +78,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
             toggleTokenListSortingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
-                    stateHolder.updateStateWithTokenList(it)
+                    stateHolder.updateStateAfterTokenListSorting(it)
                     tokenList = it
                 },
             )
@@ -83,7 +92,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
             toggleTokenListGroupingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
-                    stateHolder.updateStateWithTokenList(it)
+                    stateHolder.updateStateAfterTokenListSorting(it)
                     tokenList = it
                 },
             )
@@ -131,6 +140,16 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun bootstrapDragAndDropUpdates() {
+        dragAndDropAdapter.stateFlow
+            .distinctUntilChanged()
+            .onEach {
+                stateHolder.updateStateWithManualSorting(it)
+                tokenList = tokenList?.disableSortingByBalance()
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
