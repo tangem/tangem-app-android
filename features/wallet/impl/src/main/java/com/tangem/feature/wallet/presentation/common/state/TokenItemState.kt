@@ -75,12 +75,13 @@ internal sealed interface TokenItemState {
     ) : TokenItemState
 
     /** Token options state */
+    @Immutable
     sealed interface TokenOptionsState {
 
         /**
          * Visible token options state
          *
-         * @property fiatAmount fiat amount of token
+         * @property fiatAmount  fiat amount of token
          * @property priceChange value of price changing
          */
         data class Visible(val fiatAmount: String, val priceChange: PriceChangeConfig) : TokenOptionsState
