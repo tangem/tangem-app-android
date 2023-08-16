@@ -10,15 +10,15 @@ internal abstract class KeylessDataStoreDecorator<Value : Any>(
         return STRING_KEY
     }
 
-    fun get(): Flow<Value> {
+    open fun get(): Flow<Value> {
         return get(Unit)
     }
 
-    suspend fun getSyncOrNull(): Value? {
+    open suspend fun getSyncOrNull(): Value? {
         return getSyncOrNull(Unit)
     }
 
-    suspend fun store(item: Value) {
+    open suspend fun store(item: Value) {
         store(Unit, item)
     }
 
