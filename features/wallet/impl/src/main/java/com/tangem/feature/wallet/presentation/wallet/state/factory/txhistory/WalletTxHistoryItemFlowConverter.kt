@@ -1,7 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
 import android.text.format.DateUtils
-import androidx.paging.*
+import androidx.paging.PagingData
+import androidx.paging.TerminalSeparatorType
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -58,17 +61,14 @@ internal class WalletTxHistoryItemFlowConverter(
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
         return TxHistoryState.Content(
-            items = value
+            onExploreClick = clickIntents::onExploreClick,
+            contentItems = value
                 .map { pagingData ->
                     pagingData
                         .map<TxHistoryItem, TxHistoryItemState> { item ->
                             // [createTransactionState] returns timestamp without formatting
                             TxHistoryItemState.Transaction(state = createTransactionState(item))
                         }
-                        .insertHeaderItem(
-                            terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                            item = TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick),
-                        )
                         .insertGroupTitle() // method uses the raw timestamp
                         .formatTransactionsTimestamp() // method formats the timestamp
                 },
