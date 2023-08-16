@@ -77,6 +77,10 @@ internal class WalletStateFactory(
         )
     }
 
+    private val refreshStateConverter by lazy {
+        WalletRefreshStateConverter(currentStateProvider = currentStateProvider, clickIntents = clickIntents)
+    }
+
     fun getInitialState(): WalletState = WalletState.Initial(onBackClick = clickIntents::onBackClick)
 
     fun getSkeletonState(wallets: List<UserWallet>, selectedWalletIndex: Int): WalletState {
@@ -105,9 +109,7 @@ internal class WalletStateFactory(
         }
     }
 
-    fun getStateAfterContentRefreshing(): WalletState {
-        return currentStateProvider()
-    }
+    fun getStateAfterContentRefreshing(): WalletState = refreshStateConverter.convert(Unit)
 
     fun getStateWithOpenBottomSheet(content: WalletBottomSheetConfig.BottomSheetContentConfig): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
@@ -205,7 +207,13 @@ internal class WalletStateFactory(
 
     fun getSingleCurrencyLoadedBalanceState(
         cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
+        isRefreshing: Boolean,
     ): WalletState {
-        return singleCurrencyLoadedBalanceConverter.convert(cryptoCurrencyEither)
+        return singleCurrencyLoadedBalanceConverter.convert(
+            value = WalletSingleCurrencyLoadedBalanceConverter.SingleCurrencyLoadedBalanceModel(
+                cryptoCurrencyEither = cryptoCurrencyEither,
+                isRefreshing = isRefreshing,
+            ),
+        )
     }
 }
