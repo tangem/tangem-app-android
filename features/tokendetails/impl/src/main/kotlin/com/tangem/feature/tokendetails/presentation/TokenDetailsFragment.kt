@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.components.SystemBarsEffect
@@ -38,6 +39,7 @@ internal class TokenDetailsFragment : Fragment() {
 
                     val viewModel = hiltViewModel<TokenDetailsViewModel>()
                     viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
+                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
                     TokenDetailsScreen(state = viewModel.uiState)
                 }
             }
