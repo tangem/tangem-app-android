@@ -27,14 +27,14 @@ internal class CurrencyStatusOperations(
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
         val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
-        val hasCurrentNetworkTransactions = status.currentTransactions.isNotEmpty()
-        val currentTransactions = status.currentTransactions.getOrElse(currency.id, ::emptySet)
+        val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
+        val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
         return when {
             ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
-                currentTransactions = currentTransactions,
+                pendingTransactions = currentTransactions,
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
@@ -42,7 +42,7 @@ internal class CurrencyStatusOperations(
                 fiatRate = quote?.fiatRate,
                 priceChange = quote?.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
-                currentTransactions = currentTransactions,
+                pendingTransactions = currentTransactions,
             )
             quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
@@ -51,7 +51,7 @@ internal class CurrencyStatusOperations(
                 fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
-                currentTransactions = currentTransactions,
+                pendingTransactions = currentTransactions,
             )
         }
     }

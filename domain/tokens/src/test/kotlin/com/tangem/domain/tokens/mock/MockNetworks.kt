@@ -63,7 +63,7 @@ internal object MockNetworks {
                     MockTokens.token2.id to BigDecimal.TEN,
                     MockTokens.token3.id to BigDecimal.TEN,
                 ),
-                currentTransactions = emptyMap(),
+                pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )
@@ -76,7 +76,7 @@ internal object MockNetworks {
                     MockTokens.token5.id to BigDecimal.TEN,
                     MockTokens.token6.id to BigDecimal.TEN,
                 ),
-                currentTransactions = emptyMap(),
+                pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )
@@ -90,7 +90,7 @@ internal object MockNetworks {
                     MockTokens.token9.id to BigDecimal.TEN,
                     MockTokens.token10.id to BigDecimal.TEN,
                 ),
-                currentTransactions = emptyMap(),
+                pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )

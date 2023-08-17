@@ -4,13 +4,13 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 /**
- * Represents a current cryptocurrency transaction.
+ * Represents a cryptocurrency transaction that is currently in progress.
  *
  * @property amount The monetary amount involved in the transaction.
  * @property direction The direction of the transaction, indicating if it's an incoming or outgoing transaction.
  * @property sentAt The timestamp when the transaction was executed.
  */
-data class CurrentTransaction(
+data class PendingTransaction(
     val amount: BigDecimal,
     val direction: Direction,
     val sentAt: DateTime,

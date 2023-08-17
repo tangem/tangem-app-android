@@ -38,8 +38,8 @@ data class CryptoCurrencyStatus(
         /** Indicates if there are any transactions in progress related to the cryptocurrency network. */
         open val hasCurrentNetworkTransactions: Boolean = false
 
-        /** The current cryptocurrency transactions. */
-        open val currentTransactions: Set<CurrentTransaction> = emptySet()
+        /** The pending cryptocurrency transactions. */
+        open val pendingTransactions: Set<PendingTransaction> = emptySet()
     }
 
     /** Represents the Loading state of a token, typically while fetching its details. */
@@ -63,7 +63,7 @@ data class CryptoCurrencyStatus(
      * @property priceChange The change in price of the token.
      * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
      * cryptocurrency network.
-     * @property currentTransactions The current cryptocurrency transactions.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class Loaded(
         override val amount: BigDecimal,
@@ -71,7 +71,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal,
         override val priceChange: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val currentTransactions: Set<CurrentTransaction>,
+        override val pendingTransactions: Set<PendingTransaction>,
     ) : Status()
 
     /**
@@ -83,7 +83,7 @@ data class CryptoCurrencyStatus(
      * @property priceChange The change in price of the token (optional).
      * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
      * cryptocurrency network.
-     * @property currentTransactions The current cryptocurrency transactions.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class Custom(
         override val amount: BigDecimal,
@@ -91,7 +91,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal?,
         override val priceChange: BigDecimal?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val currentTransactions: Set<CurrentTransaction>,
+        override val pendingTransactions: Set<PendingTransaction>,
     ) : Status()
 
     /**
@@ -100,11 +100,11 @@ data class CryptoCurrencyStatus(
      * @property amount The amount of the token.
      * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
      * cryptocurrency network.
-     * @property currentTransactions The current cryptocurrency transactions.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class NoQuote(
         override val amount: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val currentTransactions: Set<CurrentTransaction>,
+        override val pendingTransactions: Set<PendingTransaction>,
     ) : Status()
 }

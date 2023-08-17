@@ -2,7 +2,6 @@ package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
-import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -36,14 +35,6 @@ internal class UpdateWalletManagerResultFactory {
             currenciesAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
             currentTransactions = getCurrentTransactions(wallet.recentTransactions.toSet()),
         )
-    }
-
-    private fun getAvailableAddresses(addresses: Set<Address>): Set<String>? {
-        return if (addresses.all { it.type == AddressType.Default }) {
-            null
-        } else {
-            addresses.mapTo(hashSetOf()) { it.value }
-        }
     }
 
     fun getNoAccountResult(walletManager: WalletManager): UpdateWalletManagerResult.NoAccount {
@@ -124,6 +115,10 @@ internal class UpdateWalletManagerResultFactory {
             )
             is AmountType.Reserve -> null
         }
+    }
+
+    private fun getAvailableAddresses(addresses: Set<Address>): Set<String> {
+        return addresses.mapTo(hashSetOf()) { it.value }
     }
 
     private fun getCurrencyAmountValue(amount: Amount): BigDecimal? {

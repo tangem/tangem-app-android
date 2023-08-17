@@ -38,13 +38,13 @@ data class NetworkStatus(
      *
      * @property address Network addresses.
      * @property amounts A map containing the amounts associated with different cryptocurrencies within the network.
-     * @property currentTransactions A map containing current transactions associated with different cryptocurrencies
+     * @property pendingTransactions A map containing pending transactions associated with different cryptocurrencies
      * within the network.
      */
     data class Verified(
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, BigDecimal>,
-        val currentTransactions: Map<CryptoCurrency.ID, Set<CurrentTransaction>>,
+        val pendingTransactions: Map<CryptoCurrency.ID, Set<PendingTransaction>>,
     ) : Status()
 
     /**

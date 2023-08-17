@@ -1,8 +1,8 @@
 package com.tangem.data.tokens.utils
 
-import com.tangem.domain.tokens.model.CurrentTransaction
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.PendingTransaction
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
@@ -30,8 +30,8 @@ internal class NetworkStatusFactory {
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
                     address = getNetworkAddress(result.defaultAddress, result.addresses),
                     amounts = formatAmounts(result.currenciesAmounts, currencies),
-                    currentTransactions = formatTransactions(
-                        networksAddresses = result.addresses ?: setOf(result.defaultAddress),
+                    pendingTransactions = formatTransactions(
+                        networksAddresses = result.addresses,
                         transactions = result.currentTransactions,
                         currencies = currencies,
                     ),
@@ -70,20 +70,20 @@ internal class NetworkStatusFactory {
         networksAddresses: Set<String>,
         transactions: Set<CryptoCurrencyTransaction>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, Set<CurrentTransaction>> {
+    ): Map<CryptoCurrency.ID, Set<PendingTransaction>> {
         if (transactions.isEmpty()) return emptyMap()
 
         return currencies
             .asSequence()
             .map { currency ->
                 val currencyTransactions = when (currency) {
-                    is CryptoCurrency.Coin -> transactions.filterTo(hashSetOf()) {
-                        it is CryptoCurrencyTransaction.Coin
+                    is CryptoCurrency.Coin -> transactions.filterTo(hashSetOf()) { transaction ->
+                        transaction is CryptoCurrencyTransaction.Coin
                     }
-                    is CryptoCurrency.Token -> transactions.filterTo(hashSetOf()) {
-                        it is CryptoCurrencyTransaction.Token &&
-                            it.tokenId == currency.id.rawCurrencyId &&
-                            it.tokenContractAddress == currency.contractAddress
+                    is CryptoCurrency.Token -> transactions.filterTo(hashSetOf()) { transaction ->
+                        transaction is CryptoCurrencyTransaction.Token &&
+                            transaction.tokenId == currency.id.rawCurrencyId &&
+                            transaction.tokenContractAddress == currency.contractAddress
                     }
                 }
 
@@ -95,19 +95,19 @@ internal class NetworkStatusFactory {
     private fun createCurrentTransactions(
         networksAddresses: Set<String>,
         transactions: Set<CryptoCurrencyTransaction>,
-    ): Set<CurrentTransaction> {
+    ): Set<PendingTransaction> {
         return transactions.mapNotNullTo(hashSetOf()) { createCurrentTransaction(networksAddresses, it) }
     }
 
     private fun createCurrentTransaction(
         networksAddresses: Set<String>,
         transaction: CryptoCurrencyTransaction,
-    ): CurrentTransaction? {
+    ): PendingTransaction? {
         val direction = when {
-            transaction.toAddress in networksAddresses -> CurrentTransaction.Direction.Incoming(
+            transaction.toAddress in networksAddresses -> PendingTransaction.Direction.Incoming(
                 fromAddress = transaction.fromAddress,
             )
-            transaction.fromAddress in networksAddresses -> CurrentTransaction.Direction.Outgoing(
+            transaction.fromAddress in networksAddresses -> PendingTransaction.Direction.Outgoing(
                 toAddress = transaction.toAddress,
             )
             else -> {
@@ -124,15 +124,15 @@ internal class NetworkStatusFactory {
             }
         }
 
-        return CurrentTransaction(
+        return PendingTransaction(
             amount = transaction.amount,
             direction = direction,
             sentAt = transaction.sentAt,
         )
     }
 
-    private fun getNetworkAddress(defaultAddress: String, availableAddresses: Set<String>?): NetworkAddress {
-        return if (availableAddresses != null) {
+    private fun getNetworkAddress(defaultAddress: String, availableAddresses: Set<String>): NetworkAddress {
+        return if (availableAddresses.size != 1) {
             NetworkAddress.Selectable(defaultAddress, availableAddresses)
         } else {
             NetworkAddress.Single(defaultAddress)

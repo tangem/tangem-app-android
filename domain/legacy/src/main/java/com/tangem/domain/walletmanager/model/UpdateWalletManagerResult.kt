@@ -10,14 +10,14 @@ sealed class UpdateWalletManagerResult {
 
     data class Verified(
         val defaultAddress: String,
-        val addresses: Set<String>?,
+        val addresses: Set<String>,
         val currenciesAmounts: Set<CryptoCurrencyAmount>,
         val currentTransactions: Set<CryptoCurrencyTransaction>,
     ) : UpdateWalletManagerResult()
 
     data class NoAccount(
         val defaultAddress: String,
-        val addresses: Set<String>?,
+        val addresses: Set<String>,
         val amountToCreateAccount: BigDecimal,
     ) : UpdateWalletManagerResult()
 }
