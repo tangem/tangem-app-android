@@ -24,6 +24,7 @@ class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun convertError(): TokenDetailsState {
+        // TODO:  https://tangem.atlassian.net/browse/AND-4292
         return currentStateProvider()
     }
 
@@ -53,6 +54,7 @@ class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
+            // TODO:  https://tangem.atlassian.net/browse/AND-4292
             is CryptoCurrencyStatus.Unreachable,
             -> {
                 TokenDetailsBalanceBlockState.Error(TokenDetailsPreviewData.actionButtons)
