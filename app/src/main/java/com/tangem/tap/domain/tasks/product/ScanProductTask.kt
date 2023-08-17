@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.tasks.product
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
@@ -14,6 +15,7 @@ import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
@@ -22,6 +24,7 @@ import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -217,7 +220,8 @@ private class ScanWalletProcessor(
                 walletData = session.environment.walletData,
                 primaryCard = primaryCard,
             )
-            val derivations = collectDerivations(card, config, scanResponse.derivationStyleProvider)
+            val derivations =
+                collectDerivations(card, config, scanResponse.derivationStyleProvider)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
                 callback(CompletionResult.Success(scanResponse))
                 return@launch
@@ -279,6 +283,20 @@ private class ScanWalletProcessor(
                 },
             )
         }
+
+        blockchainsToDerive.find { it.blockchain == Blockchain.Cardano }?.let { blockchainNetwork ->
+            val cardanoStandardDerivation = blockchainNetwork.derivationPath?.let { DerivationPath(it) }
+                ?: return@let
+            val cardanoPatchedDerivation = CardanoUtils.extendedDerivationPath(cardanoStandardDerivation)
+            blockchainsToDerive.add(
+                BlockchainNetwork(
+                    blockchain = Blockchain.Cardano,
+                    derivationPath = cardanoPatchedDerivation.rawPath,
+                    tokens = emptyList()
+                )
+            )
+        }
+
         if (!card.useOldStyleDerivation) {
             blockchainsToDerive.removeAll(
                 listOf(
