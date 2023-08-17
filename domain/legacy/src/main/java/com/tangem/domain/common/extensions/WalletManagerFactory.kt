@@ -84,7 +84,7 @@ private fun makePublicKey(
 ): Wallet.PublicKey {
     val derivedKey = derivedWalletKeys[derivationPath] ?: error("No derivation found")
 
-    val derivationKey = Wallet.DerivationKey(
+    val derivationKey = Wallet.HDKey(
         path = derivationPath,
         extendedPublicKey = derivedKey
     )
@@ -96,7 +96,7 @@ private fun makePublicKey(
             val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
             val secondDerivedKey = derivedWalletKeys[extendedDerivationPath] ?: error("No derivation found")
 
-            val secondDerivationKey = Wallet.DerivationKey(secondDerivedKey, extendedDerivationPath)
+            val secondDerivationKey = Wallet.HDKey(secondDerivedKey, extendedDerivationPath)
 
             return Wallet.PublicKey(
                 seedKey = seedKey,
