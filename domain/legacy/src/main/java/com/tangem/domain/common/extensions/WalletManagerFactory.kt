@@ -51,7 +51,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
             val derivationPath = derivationParams.getPath(blockchain)
 
-            val walletPk = makePublicKey(
+            val publicKey = makePublicKey(
                 seedKey = wallet.publicKey,
                 blockchain = blockchain,
                 derivationPath = derivationPath ?: return null,
@@ -61,8 +61,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 
             createWalletManager(
                 blockchain = environmentBlockchain,
-                seedKey = wallet.publicKey,
-                derivationType = walletPk.derivationType
+                publicKey = publicKey
             )
         }
         else -> {
