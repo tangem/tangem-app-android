@@ -1,14 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-import com.tangem.common.Provider
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateHolder
-import com.tangem.feature.wallet.presentation.wallet.state.content.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +21,6 @@ import kotlinx.coroutines.flow.flow
  * @author Andrew Khokhlov on 16/07/2023
  */
 internal class WalletNotificationsListFactory(
-    private val currentStateProvider: Provider<WalletStateHolder>,
     private val wasCardScannedCallback: suspend (String) -> Boolean,
     private val isUserAlreadyRateAppCallback: suspend () -> Boolean,
     private val isDemoCardCallback: (String) -> Boolean,
@@ -55,7 +50,7 @@ internal class WalletNotificationsListFactory(
                         add(element = WalletNotification.DemoCard)
                     }
 
-                    if (hasUnreachableNetworks()) {
+                    if (hasUnreachableNetworks(tokenList)) {
                         add(element = WalletNotification.UnreachableNetworks)
                     }
 
@@ -111,13 +106,22 @@ internal class WalletNotificationsListFactory(
         }
     }
 
-    private fun hasUnreachableNetworks(): Boolean {
-        val isUnreachableState = { item: WalletTokensListState.TokensListItemState ->
-            (item as? WalletTokensListState.TokensListItemState.Token)?.state is TokenItemState.Unreachable
-        }
-
-        return currentStateProvider().let { state ->
-            state is WalletStateHolder.MultiCurrencyContent && state.tokensListState.items.any(isUnreachableState)
+    private fun hasUnreachableNetworks(tokenList: TokenList?): Boolean {
+        return when (tokenList) {
+            is TokenList.GroupedByNetwork -> {
+                tokenList.groups
+                    .flatMap(NetworkGroup::currencies)
+                    .map(CryptoCurrencyStatus::value)
+                    .any { it is CryptoCurrencyStatus.Unreachable }
+            }
+            is TokenList.Ungrouped -> {
+                tokenList.currencies
+                    .map(CryptoCurrencyStatus::value)
+                    .any { it is CryptoCurrencyStatus.Unreachable }
+            }
+            is TokenList.NotInitialized,
+            null,
+            -> false
         }
     }
 

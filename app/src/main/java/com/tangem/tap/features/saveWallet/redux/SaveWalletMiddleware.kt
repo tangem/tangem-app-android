@@ -11,6 +11,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.isLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -20,7 +21,6 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.domain.userWalletList.isLockable
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
