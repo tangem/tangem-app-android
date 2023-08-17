@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.data.source.preferences.model.DataSourceCurrency
+import com.tangem.data.source.preferences.model.DataSourceFiatCurrency
 import com.tangem.data.source.preferences.storage.FiatCurrenciesPrefStorage
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -52,21 +53,10 @@ class AppCurrencyMiddleware(
     }
 
     private fun selectCurrency(action: WalletAction.AppCurrencyAction.SelectAppCurrency) {
-        Analytics.send(MainScreen.MainCurrencyChanged(AnalyticsParam.CurrencyType.FiatCurrency(action.fiatCurrency)))
-
-        scope.launch {
-            appCurrencyRepository.changeAppCurrency(action.fiatCurrency.code)
-
-            store.dispatchWithMain(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
-            store.dispatchWithMain(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
-            store.dispatchWithMain(WalletSelectorAction.ChangeAppCurrency(action.fiatCurrency))
-
-            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-                Timber.e("Unable to select currency, no user wallet selected")
-                return@launch
-            }
-
-            tapWalletManager.loadData(selectedUserWallet, refresh = true)
+        if (featureToggles.isRedesignedScreenEnabled) {
+            selectCurrencyNew(action.fiatCurrency)
+        } else {
+            selectCurrencyLegacy(action.fiatCurrency)
         }
     }
 
@@ -116,6 +106,42 @@ class AppCurrencyMiddleware(
                         )
                     }
                 }
+        }
+    }
+
+    private fun selectCurrencyNew(fiatCurrency: FiatCurrency) {
+        Analytics.send(MainScreen.MainCurrencyChanged(AnalyticsParam.CurrencyType.FiatCurrency(fiatCurrency)))
+
+        scope.launch {
+            appCurrencyRepository.changeAppCurrency(fiatCurrency.code)
+
+            store.dispatchWithMain(GlobalAction.ChangeAppCurrency(fiatCurrency))
+            store.dispatchWithMain(DetailsAction.ChangeAppCurrency(fiatCurrency))
+            store.dispatchWithMain(WalletSelectorAction.ChangeAppCurrency(fiatCurrency))
+
+            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                Timber.e("Unable to select currency, no user wallet selected")
+                return@launch
+            }
+
+            tapWalletManager.loadData(selectedUserWallet, refresh = true)
+        }
+    }
+
+    private fun selectCurrencyLegacy(fiatCurrency: FiatCurrency) {
+        Analytics.send(MainScreen.MainCurrencyChanged(AnalyticsParam.CurrencyType.FiatCurrency(fiatCurrency)))
+        fiatCurrenciesPrefStorage.saveAppCurrency(
+            with(fiatCurrency) { DataSourceFiatCurrency(code, name, symbol) },
+        )
+        store.dispatch(GlobalAction.ChangeAppCurrency(fiatCurrency))
+        store.dispatch(DetailsAction.ChangeAppCurrency(fiatCurrency))
+        store.dispatch(WalletSelectorAction.ChangeAppCurrency(fiatCurrency))
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to select currency, no user wallet selected")
+            return
+        }
+        scope.launch {
+            tapWalletManager.loadData(selectedUserWallet, refresh = true)
         }
     }
 
