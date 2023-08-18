@@ -92,7 +92,7 @@ private fun makePublicKey(
     // because cardano address generation for wallet2 requires keys from 2 derivations
     // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
     if (blockchain == Blockchain.Cardano) {
-        CardanoAddressConfig.useExtendedAddressation = isWallet2
+        CardanoAddressConfig.useExtendedAddressing = isWallet2
 
         if (isWallet2) {
             val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
