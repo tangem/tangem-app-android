@@ -38,7 +38,6 @@
     <string name="card_settings_access_code_recovery_enabled_description">允許您使用此卡重置此錢包中其他卡上的訪問密碼</string>
     <string name="card_settings_access_code_recovery_footer">禁用重置此卡或此錢包中其他卡上的訪問密碼的功能</string>
     <string name="card_settings_access_code_recovery_title">恢復訪問密碼</string>
-    <string name="card_settings_action_sheet_reset">重置</string>
     <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
@@ -80,6 +79,7 @@
     <string name="common_ok">OK</string>
     <string name="common_origin_card">主卡片</string>
     <string name="common_reject">拒絕</string>
+    <string name="common_reset">重置</string>
     <string name="common_save_changes">保存設置</string>
     <string name="common_search">搜索</string>
     <string name="common_search_tokens">搜尋代幣</string>

@@ -41,7 +41,6 @@
     <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_title">Access code recovery</string>
-    <string name="card_settings_action_sheet_reset">Reset</string>
     <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
@@ -95,6 +94,7 @@
     <string name="common_receive">Receive</string>
     <string name="common_reject">Reject</string>
     <string name="common_reload">Reload</string>
+    <string name="common_reset">Reset</string>
     <string name="common_save_changes">Save changes</string>
     <string name="common_search">Search</string>
     <string name="common_search_tokens">Search tokens</string>
