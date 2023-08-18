@@ -1,5 +1,7 @@
 package com.tangem.tap.features.tokens.impl.presentation.router
 
+import com.tangem.blockchain.common.Blockchain
+
 /** Tokens list feature router */
 internal interface TokensListRouter {
 
@@ -28,6 +30,9 @@ internal interface TokensListRouter {
      */
     fun openRemoveWalletAlert(tokenName: String, onOkClick: () -> Unit)
 
-    /** Open alert if solana network is unsupported */
-    fun openUnsupportedSoltanaNetworkAlert()
+    /** Open alert if solana network is unsupported
+     *
+     * @param blockchain blockchain to show alert
+     */
+    fun openUnsupportedNetworkAlert(blockchain: Blockchain)
 }
