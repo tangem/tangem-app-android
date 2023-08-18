@@ -18,12 +18,13 @@ object Wallet2CardConfig : CardConfig {
      * Logic to determine primary curve for blockchain in TangemWallet 2.0
      */
     override fun primaryCurve(blockchain: Blockchain): EllipticCurve? {
+        // order is important, new curve is preferred for wallet 2
         return when {
-            blockchain.getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
-                EllipticCurve.Secp256k1
-            }
             blockchain.getSupportedCurves().contains(EllipticCurve.Ed25519Slip0010) -> {
                 EllipticCurve.Ed25519Slip0010
+            }
+            blockchain.getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
+                EllipticCurve.Secp256k1
             }
             blockchain.getSupportedCurves().contains(EllipticCurve.Bls12381G2Aug) -> {
                 EllipticCurve.Bls12381G2Aug
