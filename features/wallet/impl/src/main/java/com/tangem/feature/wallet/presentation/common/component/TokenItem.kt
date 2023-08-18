@@ -14,9 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -42,6 +45,8 @@ import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
 private const val DOTS = "•••"
+private const val GRAY_SCALE_SATURATION = 0f
+
 val TOKEN_ITEM_HEIGHT: Dp
     @Composable
     @ReadOnlyComposable
@@ -49,6 +54,7 @@ val TOKEN_ITEM_HEIGHT: Dp
 
 @Composable
 internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
+    // TODO: Add custom token state: [REDACTED_JIRA]
     when (state) {
         is TokenItemState.Content -> ContentTokenItem(state, modifier)
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
@@ -65,7 +71,7 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
         name = content.name,
         tokenIconUrl = content.tokenIconUrl,
         tokenIconResId = content.tokenIconResId,
-        networkIconResId = content.networkIconResId,
+        networkBadgeIconResId = content.networkBadgeIconResId,
         amount = if (content.tokenOptions is TokenOptionsState.Hidden) DOTS else content.amount,
         hasPending = content.hasPending,
         options = { ref ->
@@ -74,6 +80,7 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
                 state = content.tokenOptions,
             )
         },
+        isTestnet = content.isTestnet,
     )
 }
 
@@ -88,9 +95,10 @@ internal fun DraggableTokenItem(
         name = state.name,
         tokenIconUrl = state.tokenIconUrl,
         tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
+        networkBadgeIconResId = state.networkBadgeIconResId,
         amount = state.fiatAmount,
         hasPending = false,
+        isTestnet = state.isTestnet,
         options = { ref ->
             Box(
                 modifier = Modifier
@@ -122,7 +130,7 @@ internal fun UnreachableTokenItem(state: TokenItemState.Unreachable, modifier: M
         name = state.name,
         tokenIconUrl = state.tokenIconUrl,
         tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
+        networkBadgeIconResId = state.networkBadgeIconResId,
         amount = null,
         hasPending = false,
         options = { ref ->
@@ -213,11 +221,12 @@ private fun InternalTokenItem(
     name: String,
     tokenIconUrl: String?,
     @DrawableRes tokenIconResId: Int,
-    @DrawableRes networkIconResId: Int?,
+    @DrawableRes networkBadgeIconResId: Int?,
     amount: String?,
     hasPending: Boolean,
     options: @Composable ConstraintLayoutScope.(ref: ConstrainedLayoutReference) -> Unit,
     modifier: Modifier = Modifier,
+    isTestnet: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     BaseSurface(
@@ -241,7 +250,8 @@ private fun InternalTokenItem(
                 },
                 tokenIconUrl = tokenIconUrl,
                 tokenIconResId = tokenIconResId,
-                networkIconRes = networkIconResId,
+                networkBadgeIconRes = networkBadgeIconResId,
+                isTestnet = isTestnet,
             )
 
             TokenTitleAmountBlock(
@@ -379,9 +389,10 @@ private fun TokenFiatPercentageBlock(
 @Composable
 private fun TokenIcon(
     tokenIconUrl: String?,
+    @DrawableRes tokenIconResId: Int,
+    isTestnet: Boolean,
     modifier: Modifier = Modifier,
-    @DrawableRes tokenIconResId: Int? = null,
-    @DrawableRes networkIconRes: Int? = null,
+    @DrawableRes networkBadgeIconRes: Int? = null,
 ) {
     Box(
         modifier = modifier
@@ -392,19 +403,36 @@ private fun TokenIcon(
             .align(Alignment.BottomStart)
             .size(TangemTheme.dimens.size36)
 
-        val data = if (tokenIconUrl.isNullOrEmpty()) tokenIconResId else tokenIconUrl
+        val iconData: Any = remember(tokenIconUrl) {
+            if (tokenIconUrl.isNullOrEmpty()) tokenIconResId else tokenIconUrl
+        }
+        val colorFilter = remember(isTestnet) {
+            if (isTestnet) {
+                val colorMatrix = ColorMatrix().also {
+                    it.setToSaturation(GRAY_SCALE_SATURATION)
+                }
+
+                ColorFilter.colorMatrix(colorMatrix)
+            } else {
+                null
+            }
+        }
+
         SubcomposeAsyncImage(
             modifier = tokenImageModifier,
             model = ImageRequest.Builder(LocalContext.current)
-                .data(data)
-                .crossfade(true)
+                .data(iconData)
+                .placeholder(tokenIconResId)
+                .error(tokenIconResId)
+                .fallback(tokenIconResId)
+                .crossfade(enable = true)
                 .build(),
-            loading = { CircleShimmer(modifier = tokenImageModifier) },
+            colorFilter = colorFilter,
             contentDescription = null,
         )
 
         AnimatedVisibility(
-            visible = networkIconRes != null,
+            visible = networkBadgeIconRes != null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .size(TangemTheme.dimens.size18)
@@ -414,7 +442,8 @@ private fun TokenIcon(
                 modifier = Modifier
                     .padding(all = TangemTheme.dimens.spacing0_5)
                     .align(Alignment.Center),
-                painter = painterResource(id = requireNotNull(networkIconRes)),
+                painter = painterResource(id = requireNotNull(networkBadgeIconRes)),
+                colorFilter = colorFilter,
                 contentDescription = null,
             )
         }
@@ -446,6 +475,7 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
         WalletPreviewData.tokenItemDragState,
         WalletPreviewData.tokenItemHiddenState,
         WalletPreviewData.loadingTokenItemState,
+        WalletPreviewData.testnetTokenItemVisibleState,
     ),
 )
 
