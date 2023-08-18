@@ -14,6 +14,7 @@ import java.io.Serializable
  * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
  * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
  */
+// TODO: [REDACTED_JIRA] delete serializable
 sealed class CryptoCurrency : Serializable {
 
     abstract val id: ID
@@ -82,7 +83,7 @@ sealed class CryptoCurrency : Serializable {
         private val prefix: Prefix,
         private val networkId: Network.ID,
         private val suffix: Suffix,
-    ) {
+    ) : Serializable {
 
         val value: String = buildString {
             append(prefix.value)
@@ -113,7 +114,7 @@ sealed class CryptoCurrency : Serializable {
          *
          * The suffix can either be a raw ID or a contract address.
          */
-        sealed class Suffix {
+        sealed class Suffix : Serializable {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
             abstract val value: String
