@@ -14,6 +14,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyS
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletSingleCurrencyLoadedBalanceConverter.SingleCurrencyLoadedBalanceModel
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -22,21 +23,32 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<Either<CurrencyError, CryptoCurrencyStatus>, WalletSingleCurrencyState.Content> {
+) : Converter<SingleCurrencyLoadedBalanceModel, WalletSingleCurrencyState.Content> {
 
-    override fun convert(value: Either<CurrencyError, CryptoCurrencyStatus>): WalletSingleCurrencyState.Content {
-        return value.fold(ifLeft = { convertError() }, ifRight = ::convert)
+    override fun convert(value: SingleCurrencyLoadedBalanceModel): WalletSingleCurrencyState.Content {
+        return value.cryptoCurrencyEither.fold(
+            ifLeft = { convertError() },
+            ifRight = { convertContent(it, value.isRefreshing) },
+        )
     }
 
     private fun convertError(): WalletSingleCurrencyState.Content {
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
     }
 
-    private fun convert(status: CryptoCurrencyStatus): WalletSingleCurrencyState.Content {
+    private fun convertContent(
+        status: CryptoCurrencyStatus,
+        isRefreshing: Boolean,
+    ): WalletSingleCurrencyState.Content {
         val state = requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
         val currencyName = state.marketPriceBlockState.currencyName
         return state.copy(
             walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
+            pullToRefreshConfig = if (isRefreshing) {
+                state.pullToRefreshConfig.copy(isRefreshing = status.value is CryptoCurrencyStatus.Loading)
+            } else {
+                state.pullToRefreshConfig
+            },
             marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
         )
     }
@@ -82,14 +94,13 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     ),
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
-                    balance = formatFiatAmount(status, appCurrencyProvider()),
+                    balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
                 WalletCardState.Loading(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
-                    additionalInfo = selectedWallet.additionalInfo,
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
                 )
@@ -102,7 +113,6 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                 WalletCardState.Error(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
-                    additionalInfo = selectedWallet.additionalInfo,
                     imageResId = selectedWallet.imageResId,
                     onClick = selectedWallet.onClick,
                 )
@@ -153,4 +163,9 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             fiatCurrencySymbol = appCurrency.symbol,
         )
     }
+
+    data class SingleCurrencyLoadedBalanceModel(
+        val cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
+        val isRefreshing: Boolean,
+    )
 }
