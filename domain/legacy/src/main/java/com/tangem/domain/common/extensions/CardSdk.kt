@@ -15,10 +15,13 @@ val FirmwareVersion.Companion.SolanaTokensAvailable
 
 fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blockchain> {
     val supportedBlockchains = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
-        Blockchain.fromCurve(EllipticCurve.Secp256k1)
+        Blockchain.fromCurve(EllipticCurve.Secp256k1).toMutableList()
+    } else if (!cardTypesResolver.isWallet2() && !cardTypesResolver.isTangemWallet()) {
+        // need for old multiwallet that supports only secp256k1
+        wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct().toMutableList()
     } else {
-        wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct()
-    }.toMutableList()
+        Blockchain.values().toMutableList()
+    }
     // disabled Cardano for wallet 2 for now, should be enabled after key processed
     // ([REDACTED_JIRA])
     if (cardTypesResolver.isWallet2()) {
