@@ -72,7 +72,7 @@ internal object MockTokensStates {
 
     val loadedTokensStates = failedTokenStates.map { status ->
         val networkStatus = MockNetworks.verifiedNetworksStatuses
-            .first { it.networkId == status.currency.networkId }
+            .first { it.networkId == status.currency.network.id }
         val amount = (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
         val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
         val fiatAmount = amount * quote.fiatRate
