@@ -28,10 +28,10 @@ internal object WalletPreviewData {
 
     val walletCardContentState by lazy {
         WalletCardState.Content(
-            id = UserWalletId("123"),
+            id = UserWalletId(stringValue = "123"),
             title = "Wallet 1",
             balance = "8923,05 $",
-            additionalInfo = "3 cards • Seed enabled",
+            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -41,7 +41,6 @@ internal object WalletPreviewData {
         WalletCardState.Loading(
             id = UserWalletId("321"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -51,7 +50,6 @@ internal object WalletPreviewData {
         WalletCardState.HiddenContent(
             id = UserWalletId("42"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -61,7 +59,6 @@ internal object WalletPreviewData {
         WalletCardState.Error(
             id = UserWalletId("24"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -351,10 +348,10 @@ internal object WalletPreviewData {
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
-                flowOf(
+                onExploreClick = {},
+                contentItems = flowOf(
                     PagingData.from(
                         listOf(
-                            TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(

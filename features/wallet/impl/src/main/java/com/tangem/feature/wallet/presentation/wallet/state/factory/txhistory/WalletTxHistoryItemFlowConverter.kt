@@ -1,18 +1,21 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
 import android.text.format.DateUtils
-import androidx.paging.*
+import androidx.paging.PagingData
+import androidx.paging.TerminalSeparatorType
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
 import com.tangem.utils.toBriefAddressFormat
-import com.tangem.utils.toFormattedCurrencyString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.joda.time.DateTime
@@ -58,17 +61,14 @@ internal class WalletTxHistoryItemFlowConverter(
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
         return TxHistoryState.Content(
-            items = value
+            onExploreClick = clickIntents::onExploreClick,
+            contentItems = value
                 .map { pagingData ->
                     pagingData
                         .map<TxHistoryItem, TxHistoryItemState> { item ->
                             // [createTransactionState] returns timestamp without formatting
                             TxHistoryItemState.Transaction(state = createTransactionState(item))
                         }
-                        .insertHeaderItem(
-                            terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                            item = TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick),
-                        )
                         .insertGroupTitle() // method uses the raw timestamp
                         .formatTransactionsTimestamp() // method formats the timestamp
                 },
@@ -133,7 +133,11 @@ internal class WalletTxHistoryItemFlowConverter(
     }
 
     private fun BigDecimal.toCryptoCurrencyFormat(blockchain: Blockchain): String {
-        return toFormattedCurrencyString(currency = blockchain.currency, decimals = blockchain.decimals())
+        return BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = this,
+            cryptoCurrency = blockchain.currency,
+            decimals = blockchain.decimals(),
+        )
     }
 
     private fun PagingData<TxHistoryItemState>.insertGroupTitle(): PagingData<TxHistoryItemState> {
