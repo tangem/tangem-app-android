@@ -43,7 +43,6 @@
     <string name="card_settings_access_code_recovery_enabled_description">Использовать эту карту для сброса кода доступа на других картах в этом кошельке</string>
     <string name="card_settings_access_code_recovery_footer">Отключить возможность сброса кода доступа на этой карте или других картах этого кошелька</string>
     <string name="card_settings_access_code_recovery_title">Восстановление кода доступа</string>
-    <string name="card_settings_action_sheet_reset">Сбросить</string>
     <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
     <string name="card_settings_change_access_code">Смена кода доступа</string>
     <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
@@ -96,6 +95,7 @@
     <string name="common_receive">Получить</string>
     <string name="common_reject">Отклонить</string>
     <string name="common_reload">Перезагрузить</string>
+    <string name="common_reset">Сбросить</string>
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_search">Искать</string>
     <string name="common_search_tokens">Поиск токенов</string>
