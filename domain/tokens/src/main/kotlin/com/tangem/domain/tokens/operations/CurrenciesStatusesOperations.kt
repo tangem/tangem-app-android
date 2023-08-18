@@ -105,7 +105,7 @@ internal class CurrenciesStatusesOperations(
         val statusFlow = getNetworksStatuses(networksIds)
             .map { maybeStatuses ->
                 maybeStatuses.map { statuses ->
-                    statuses.singleOrNull { it.networkId == currency.networkId }
+                    statuses.singleOrNull { it.networkId == currency.network.id }
                 }
             }
 
@@ -129,7 +129,7 @@ internal class CurrenciesStatusesOperations(
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
-            val networkStatus = networksStatuses?.firstOrNull { it.networkId == currency.networkId }
+            val networkStatus = networksStatuses?.firstOrNull { it.networkId == currency.network.id }
 
             createStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
         }
@@ -205,7 +205,7 @@ internal class CurrenciesStatusesOperations(
         currencies: NonEmptyList<CryptoCurrency>,
     ): Pair<NonEmptySet<Network.ID>, NonEmptySet<CryptoCurrency.ID>> {
         val currencyIdToNetworkId = currencies.associate { currency ->
-            currency.id to currency.networkId
+            currency.id to currency.network.id
         }
         val currenciesIds = currencyIdToNetworkId.keys.toNonEmptySetOrNull()
         val networksIds = currencyIdToNetworkId.values.toNonEmptySetOrNull()
