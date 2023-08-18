@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
@@ -309,7 +310,7 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                if (isUnsupportedToken(blockchain)) {
+                if (isUnsupportedBlockchain(blockchain)) {
                     router.openUnsupportedNetworkAlert(blockchain)
                 } else {
                     analyticsSender.sendWhenBlockchainAdded(blockchain)
@@ -368,6 +369,15 @@ internal class TokensListViewModel @Inject constructor(
     private fun isUnsupportedToken(blockchain: Blockchain): Boolean {
         val scanResponse = reduxStateHolder.scanResponse
         val canHandleToken = scanResponse?.card?.canHandleToken(
+            blockchain = blockchain,
+            cardTypesResolver = scanResponse.cardTypesResolver,
+        ) ?: false
+        return !canHandleToken
+    }
+
+    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+        val scanResponse = reduxStateHolder.scanResponse
+        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
             blockchain = blockchain,
             cardTypesResolver = scanResponse.cardTypesResolver,
         ) ?: false
