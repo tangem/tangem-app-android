@@ -15,6 +15,7 @@
     <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
     <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
     <string name="alert_manage_tokens_addresses_message">Note that tokens on different networks have different addresses. Double check that your address matches the network when you transfer funds.</string>
+    <string name="alert_manage_tokens_unsupported_curve_message">To activate the %1$s blockchain\'s cryptographic encryption, you\'ll need to reset the wallet to factory settings. Please withdraw your funds before doing so to ensure that you don\'t lose them, and then complete the reset process. Access to the current wallet will not be possible after the reset.</string>
     <string name="alert_manage_tokens_unsupported_message">Tokens in Solana network are not supported by this card due to firmware limitation.</string>
     <string name="alert_signed_hashes_message">This card is not a bearer note. We can\'t currently match the signature count on the card with the information on the blockchain. This is normal but in rare cases can mean a previous holder is holding back an offline signature, which is a security concern.\nDo not accept this card as physical payment from someone you don\'t trust.\nIt\'s perfectly safe in all other respects.\nTangem is the only hardware wallet to offer signature count protection.</string>
     <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card?</string>
