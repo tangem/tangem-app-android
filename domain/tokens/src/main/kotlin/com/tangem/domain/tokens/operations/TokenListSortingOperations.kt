@@ -1,10 +1,12 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.NonEmptyList
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -31,16 +33,13 @@ internal class TokenListSortingOperations(
         sortByBalance = sortByBalance,
     )
 
-    fun getGroupedTokens(networks: Set<Network>): Either<Error, NonEmptyList<NetworkGroup>> = either {
+    fun getGroupedTokens(): Either<Error, NonEmptyList<NetworkGroup>> = either {
         ensure(currencies.isNotEmpty()) { Error.EmptyTokens }
-        val networksNes = ensureNotNull(networks.toNonEmptySetOrNull()) {
-            Error.EmptyNetworks
-        }
 
         if (sortByBalance) {
-            groupAndSortTokensByBalance(networksNes)
+            groupAndSortTokensByBalance()
         } else {
-            groupTokens(networksNes)
+            groupTokens()
         }
     }
 
@@ -54,14 +53,10 @@ internal class TokenListSortingOperations(
 
     fun getSortType(): TokenList.SortType = if (sortByBalance) TokenList.SortType.BALANCE else TokenList.SortType.NONE
 
-    private fun Raise<Error>.groupTokens(networks: NonEmptySet<Network>): NonEmptyList<NetworkGroup> {
+    private fun Raise<Error>.groupTokens(): NonEmptyList<NetworkGroup> {
         val groupedTokens = currencies
-            .groupBy { it.currency.networkId }
-            .map { (networkId, tokens) ->
-                val network = ensureNotNull(networks.firstOrNull { it.id == networkId }) {
-                    Error.NetworkNotFound(networkId)
-                }
-
+            .groupBy { it.currency.network }
+            .map { (network, tokens) ->
                 NetworkGroup(
                     network = network,
                     currencies = ensureNotNull(tokens.toNonEmptyListOrNull()) { Error.EmptyTokens },
@@ -72,8 +67,8 @@ internal class TokenListSortingOperations(
         return ensureNotNull(groupedTokens) { Error.EmptyTokens }
     }
 
-    private fun Raise<Error>.groupAndSortTokensByBalance(networks: NonEmptySet<Network>): NonEmptyList<NetworkGroup> {
-        val groupsWithSortedTokens = groupTokens(networks)
+    private fun Raise<Error>.groupAndSortTokensByBalance(): NonEmptyList<NetworkGroup> {
+        val groupsWithSortedTokens = groupTokens()
             .map { group ->
                 val tokens = group.currencies as? NonEmptyList<CryptoCurrencyStatus>
                     ?: error("Tokens can not be empty here")
@@ -109,8 +104,6 @@ internal class TokenListSortingOperations(
     sealed class Error {
 
         object EmptyTokens : Error()
-
-        object EmptyNetworks : Error()
 
         data class NetworkNotFound(val networkId: Network.ID) : Error()
     }
