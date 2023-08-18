@@ -5,7 +5,6 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -47,7 +46,7 @@ internal class WalletSkeletonStateConverter(
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(value),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            tokensListState = WalletTokensListState.Loading,
+            tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
         )
@@ -106,10 +105,6 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = wallet.walletId,
             title = wallet.name,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(
-                cardTypesResolver = cardTypeResolver,
-                isLocked = wallet.isLocked,
-            ),
             imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
         )
     }
