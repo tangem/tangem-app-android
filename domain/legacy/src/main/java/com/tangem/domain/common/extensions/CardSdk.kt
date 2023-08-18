@@ -54,3 +54,7 @@ fun CardDTO.supportedTokens(cardTypesResolver: CardTypesResolver): List<Blockcha
 fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
     return this.supportedTokens(cardTypesResolver).contains(blockchain)
 }
+
+fun CardDTO.canHandleBlockchain(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
+    return this.supportedBlockchains(cardTypesResolver).contains(blockchain)
+}
