@@ -54,7 +54,7 @@ internal object WalletAdditionalInfoFactory {
             isLocked -> {
                 backupInfoRes + TextReference.Res(R.string.common_locked)
             }
-            else -> error("It isn't exist additional info for this case")
+            else -> error("It isn't exist additional info for this case") // FIXME: Crashes on dev cards
         }
     }
 
