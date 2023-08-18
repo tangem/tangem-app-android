@@ -17,6 +17,7 @@ sealed class AppDialog : StateDialog {
     data class SimpleOkDialogRes(
         val headerId: Int,
         val messageId: Int,
+        val args: List<String> = emptyList(),
         val onOk: VoidCallback? = null,
     ) : AppDialog()
 
