@@ -70,7 +70,7 @@ class OnboardingManager(
         return balance.copy(
             currency = Currency.Blockchain(
                 blockchain = walletManager.wallet.blockchain,
-                derivationPath = walletManager.wallet.publicKey.derivationKey?.path?.rawPath,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath,
             ),
         )
     }
