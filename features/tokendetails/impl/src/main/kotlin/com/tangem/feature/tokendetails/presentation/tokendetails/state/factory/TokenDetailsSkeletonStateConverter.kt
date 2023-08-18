@@ -28,8 +28,8 @@ internal class TokenDetailsSkeletonStateConverter(
                 currency = when (value.cryptoCurrency) {
                     is CryptoCurrency.Coin -> TokenInfoBlockState.Currency.Native
                     is CryptoCurrency.Token -> TokenInfoBlockState.Currency.Token(
-                        networkName = value.cryptoCurrency.standardType.name,
-                        blockchainName = value.cryptoCurrency.blockchainName,
+                        networkName = value.cryptoCurrency.network.standardType.name,
+                        blockchainName = value.cryptoCurrency.network.name,
                         // TODO: https://tangem.atlassian.net/browse/AND-4009
                         networkIcon = R.drawable.img_eth_22,
                     )
