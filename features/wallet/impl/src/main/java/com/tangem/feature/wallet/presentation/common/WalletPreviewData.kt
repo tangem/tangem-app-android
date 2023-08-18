@@ -87,7 +87,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -98,7 +98,15 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
+            isTestnet = false,
             onClick = {},
+        )
+    }
+
+    val testnetTokenItemVisibleState by lazy {
+        tokenItemVisibleState.copy(
+            name = "Polygon testnet",
+            isTestnet = true,
         )
     }
 
@@ -107,7 +115,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -117,6 +125,7 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
+            isTestnet = false,
             onClick = {},
         )
     }
@@ -126,8 +135,9 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
+            isTestnet = false,
             fiatAmount = "3 172,14 $",
         )
     }
@@ -137,7 +147,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
         )
     }
@@ -171,7 +181,7 @@ internal object WalletPreviewData {
                             tokenItemState = tokenItemDragState.copy(
                                 id = "${group.id}_token_$tokenNumber",
                                 name = "Token $tokenNumber from $networkNumber network",
-                                networkIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
+                                networkBadgeIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                             ),
                             groupId = group.id,
                             roundingMode = when {
@@ -271,7 +281,7 @@ internal object WalletPreviewData {
                             id = "token_1",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -280,7 +290,7 @@ internal object WalletPreviewData {
                             id = "token_2",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -289,7 +299,7 @@ internal object WalletPreviewData {
                             id = "token_3",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -298,7 +308,7 @@ internal object WalletPreviewData {
                             id = "token_4",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -308,7 +318,7 @@ internal object WalletPreviewData {
                             id = "token_5",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
