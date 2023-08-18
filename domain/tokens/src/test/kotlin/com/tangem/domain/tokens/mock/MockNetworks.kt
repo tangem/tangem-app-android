@@ -14,16 +14,22 @@ internal object MockNetworks {
     val network1 = Network(
         id = Network.ID("network1"),
         name = "Network One",
+        isTestnet = false,
+        standardType = Network.StandardType.ERC20,
     )
 
     val network2 = Network(
         id = Network.ID("network2"),
         name = "Network Two",
+        isTestnet = false,
+        standardType = Network.StandardType.ERC20,
     )
 
     val network3 = Network(
         id = Network.ID("network3"),
         name = "Network Three",
+        isTestnet = false,
+        standardType = Network.StandardType.ERC20,
     )
 
     val networks = nonEmptySetOf(network1, network2, network3)
