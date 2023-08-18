@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.router
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -49,12 +50,21 @@ internal class DefaultTokensListRouter(
         )
     }
 
-    override fun openUnsupportedSoltanaNetworkAlert() {
-        store.dispatchDialogShow(
-            AppDialog.SimpleOkDialogRes(
+    override fun openUnsupportedNetworkAlert(blockchain: Blockchain) {
+        val alert = when (blockchain) {
+            Blockchain.Solana -> AppDialog.SimpleOkDialogRes(
                 headerId = R.string.common_warning,
                 messageId = R.string.alert_manage_tokens_unsupported_message,
-            ),
-        )
+            )
+            Blockchain.Chia, Blockchain.ChiaTestnet -> AppDialog.SimpleOkDialogRes(
+                headerId = R.string.common_warning,
+                messageId = R.string.alert_manage_tokens_unsupported_curve_message,
+                args = listOf(blockchain.fullName),
+            )
+            else -> null // there's no alerts for other blockchains yer
+        }
+        if (alert != null) {
+            store.dispatchDialogShow(alert)
+        }
     }
 }
