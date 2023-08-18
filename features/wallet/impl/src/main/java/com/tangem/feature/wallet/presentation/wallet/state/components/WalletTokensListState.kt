@@ -28,14 +28,17 @@ internal sealed class WalletTokensListState {
         open val onOrganizeTokensClick: (() -> Unit)?,
     ) : WalletTokensListState()
 
-    /** Loading content state */
-    object Loading : ContentState(
-        items = persistentListOf(
+    /**
+     * Loading content state
+     *
+     * @property items content items
+     */
+    data class Loading(
+        override val items: ImmutableList<TokensListItemState.Token> = persistentListOf(
             TokensListItemState.Token(state = TokenItemState.Loading(id = FIRST_LOADING_TOKEN_ID)),
             TokensListItemState.Token(state = TokenItemState.Loading(id = SECOND_LOADING_TOKEN_ID)),
         ),
-        onOrganizeTokensClick = null,
-    )
+    ) : ContentState(items = items, onOrganizeTokensClick = null)
 
     /**
      * Content state
