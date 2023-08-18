@@ -7,4 +7,9 @@ import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 
 internal class DefaultSelectedAppCurrencyStore(
     dataStore: StringKeyDataStore<CurrenciesResponse.Currency>,
-) : SelectedAppCurrencyStore, KeylessDataStoreDecorator<CurrenciesResponse.Currency>(dataStore)
+) : SelectedAppCurrencyStore, KeylessDataStoreDecorator<CurrenciesResponse.Currency>(dataStore) {
+
+    override suspend fun isEmpty(): Boolean {
+        return getSyncOrNull() == null
+    }
+}
