@@ -25,7 +25,7 @@ class WalletConnectSessionsRepositoryImpl @Inject constructor(
             val fileContent = fileReader.readFile(getFileNameForUserWallet(userWallet))
             sessionsAdapter.fromJson(fileContent) ?: emptyList()
         } catch (exception: Exception) {
-            Timber.e(exception)
+            Timber.d(exception)
             emptyList()
         }
     }
