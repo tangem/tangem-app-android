@@ -284,6 +284,9 @@ private class ScanWalletProcessor(
             )
         }
 
+        // we should generate second key for cardano
+        // because cardano address generation for wallet2 requires keys from 2 derivations
+        // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
         blockchainsToDerive.find { it.blockchain == Blockchain.Cardano }?.let { blockchainNetwork ->
             val cardanoStandardDerivation = blockchainNetwork.derivationPath?.let { DerivationPath(it) }
                 ?: return@let

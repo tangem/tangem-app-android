@@ -88,6 +88,9 @@ private fun makePublicKey(
         extendedPublicKey = derivedKey
     )
 
+    // we should generate second key for cardano
+    // because cardano address generation for wallet2 requires keys from 2 derivations
+    // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
     if (blockchain == Blockchain.Cardano) {
         CardanoAddressConfig.useExtendedAddressation = isWallet2
 
