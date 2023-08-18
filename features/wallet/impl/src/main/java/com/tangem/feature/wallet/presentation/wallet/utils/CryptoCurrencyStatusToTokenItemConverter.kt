@@ -1,13 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import androidx.annotation.DrawableRes
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.extensions.iconResId
+import com.tangem.core.ui.extensions.networkBadgeIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
@@ -18,18 +17,6 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private val isWalletContentHidden: Boolean,
     private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
-
-    private val CryptoCurrencyStatus.networkIconResId: Int?
-        @DrawableRes get() {
-            // TODO: [REDACTED_JIRA]
-            return if (currency is CryptoCurrency.Coin) null else R.drawable.img_eth_22
-        }
-
-    private val CryptoCurrencyStatus.tokenIconResId: Int
-        @DrawableRes get() {
-            // TODO: [REDACTED_JIRA]
-            return R.drawable.img_eth_22
-        }
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
@@ -51,8 +38,8 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             id = currency.id.value,
             name = currency.name,
             tokenIconUrl = currency.iconUrl,
-            tokenIconResId = this.tokenIconResId,
-            networkIconResId = this.networkIconResId,
+            tokenIconResId = currency.iconResId,
+            networkBadgeIconResId = currency.networkBadgeIconResId,
             amount = getFormattedAmount(),
             hasPending = value.hasTransactionsInProgress,
             tokenOptions = if (isWalletContentHidden) {
@@ -63,6 +50,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                     priceChange = getPriceChangeConfig(),
                 )
             },
+            isTestnet = currency.network.isTestnet,
             onClick = { clickIntents.onTokenClick(currency) },
         )
     }
@@ -84,8 +72,8 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         id = currency.id.value,
         name = currency.name,
         tokenIconUrl = currency.iconUrl,
-        tokenIconResId = this.tokenIconResId,
-        networkIconResId = this.networkIconResId,
+        tokenIconResId = currency.iconResId,
+        networkBadgeIconResId = currency.networkBadgeIconResId,
     )
 
     private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeConfig {
