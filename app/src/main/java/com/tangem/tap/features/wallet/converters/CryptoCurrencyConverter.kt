@@ -7,7 +7,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import com.tangem.utils.converter.Converter
 
-class CryptoCurrencyConverter : Converter<Currency, CryptoCurrency> {
+internal class CryptoCurrencyConverter : Converter<Currency, CryptoCurrency> {
 
     private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory() }
 
