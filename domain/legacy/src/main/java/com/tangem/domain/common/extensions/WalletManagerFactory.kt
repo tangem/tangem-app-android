@@ -56,12 +56,12 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 blockchain = blockchain,
                 derivationPath = derivationPath ?: return null,
                 derivedWalletKeys = derivedKeys ?: return null,
-                isWallet2 = scanResponse.cardTypesResolver.isWallet2()
+                isWallet2 = scanResponse.cardTypesResolver.isWallet2(),
             )
 
             createWalletManager(
                 blockchain = environmentBlockchain,
-                publicKey = publicKey
+                publicKey = publicKey,
             )
         }
         else -> {
@@ -85,7 +85,7 @@ private fun makePublicKey(
 
     val derivationKey = Wallet.HDKey(
         path = derivationPath,
-        extendedPublicKey = derivedKey
+        extendedPublicKey = derivedKey,
     )
 
     // we should generate second key for cardano
@@ -102,14 +102,14 @@ private fun makePublicKey(
 
             return Wallet.PublicKey(
                 seedKey = seedKey,
-                derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey)
+                derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey),
             )
         }
     }
 
     return Wallet.PublicKey(
         seedKey = seedKey,
-        derivationType = Wallet.PublicKey.DerivationType.Plain(derivationKey)
+        derivationType = Wallet.PublicKey.DerivationType.Plain(derivationKey),
     )
 }
 
