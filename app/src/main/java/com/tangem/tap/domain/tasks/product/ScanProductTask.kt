@@ -244,77 +244,101 @@ private class ScanWalletProcessor(
         val userTokensRepository = userTokensRepository ?: return emptyList()
         val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card)
             .toMutableList()
-            .ifEmpty {
-                mutableListOf(
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Bitcoin,
-                        derivationStyleProvider = derivationStyleProvider,
-                    ),
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Ethereum,
-                        derivationStyleProvider = derivationStyleProvider,
-                    ),
-                )
-            }
+            .ifEmpty { getDefaultBlockchains(derivationStyleProvider) }
 
         if (card.settings.isHDWalletAllowed) {
-            blockchainsToDerive.addAll(
-                listOf(
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Ethereum,
-                        derivationStyleProvider = derivationStyleProvider,
-                    ),
-                    BlockchainNetwork(
-                        blockchain = Blockchain.EthereumTestnet,
-                        derivationStyleProvider = derivationStyleProvider,
-                    ),
-                ),
-            )
+            blockchainsToDerive += getEthereumBlockchains(derivationStyleProvider)
         }
-        if (additionalBlockchainsToDerive != null) {
-            blockchainsToDerive.addAll(
-                additionalBlockchainsToDerive.map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        derivationStyleProvider = derivationStyleProvider,
-                    )
-                },
-            )
+
+        additionalBlockchainsToDerive?.let {
+            blockchainsToDerive += getAdditionalBlockchainToDerive(derivationStyleProvider, it)
         }
 
         // we should generate second key for cardano
         // because cardano address generation for wallet2 requires keys from 2 derivations
         // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
-        blockchainsToDerive.find { it.blockchain == Blockchain.Cardano }?.let { blockchainNetwork ->
-            val cardanoStandardDerivation = blockchainNetwork.derivationPath?.let { DerivationPath(it) }
-                ?: return@let
-            val cardanoPatchedDerivation = CardanoUtils.extendedDerivationPath(cardanoStandardDerivation)
-            blockchainsToDerive.add(
-                BlockchainNetwork(
-                    blockchain = Blockchain.Cardano,
-                    derivationPath = cardanoPatchedDerivation.rawPath,
-                    tokens = emptyList(),
-                ),
-            )
+        val secondCardanoNetwork = blockchainsToDerive
+            .find { it.blockchain == Blockchain.Cardano }
+            ?.let { getCardanoSecondNetwork(it) }
+        secondCardanoNetwork?.let { blockchainsToDerive.add(it) }
+
+        // pay attention to this
+        if (!card.useOldStyleDerivation) {
+            removeUnnecessaryBlockchains(blockchainsToDerive, derivationStyleProvider)
         }
 
-        if (!card.useOldStyleDerivation) {
-            blockchainsToDerive.removeAll(
-                listOf(
-                    Blockchain.BSC, Blockchain.BSCTestnet,
-                    Blockchain.Polygon, Blockchain.PolygonTestnet,
-                    Blockchain.RSK,
-                    Blockchain.Fantom, Blockchain.FantomTestnet,
-                    Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        derivationStyleProvider = derivationStyleProvider,
-                    )
-                },
+        return blockchainsToDerive.distinct()
+    }
+
+    private fun getDefaultBlockchains(
+        derivationStyleProvider: DerivationStyleProvider,
+    ): MutableList<BlockchainNetwork> {
+        return mutableListOf(
+            BlockchainNetwork(
+                blockchain = Blockchain.Bitcoin,
+                derivationStyleProvider = derivationStyleProvider,
+            ),
+            BlockchainNetwork(
+                blockchain = Blockchain.Ethereum,
+                derivationStyleProvider = derivationStyleProvider,
+            ),
+        )
+    }
+
+    private fun getEthereumBlockchains(derivationStyleProvider: DerivationStyleProvider): List<BlockchainNetwork> {
+        return listOf(
+            BlockchainNetwork(
+                blockchain = Blockchain.Ethereum,
+                derivationStyleProvider = derivationStyleProvider,
+            ),
+            BlockchainNetwork(
+                blockchain = Blockchain.EthereumTestnet,
+                derivationStyleProvider = derivationStyleProvider,
+            ),
+        )
+    }
+
+    private fun getAdditionalBlockchainToDerive(
+        derivationStyleProvider: DerivationStyleProvider,
+        collection: Collection<Blockchain>,
+    ): List<BlockchainNetwork> {
+        return collection.map {
+            BlockchainNetwork(
+                blockchain = it,
+                derivationStyleProvider = derivationStyleProvider,
             )
         }
-        return blockchainsToDerive.distinct()
+    }
+
+    private fun getCardanoSecondNetwork(cardanoBlockchainNetwork: BlockchainNetwork): BlockchainNetwork? {
+        val cardanoStandardDerivation = cardanoBlockchainNetwork.derivationPath?.let { DerivationPath(it) }
+            ?: return null
+        val cardanoPatchedDerivation = CardanoUtils.extendedDerivationPath(cardanoStandardDerivation)
+        return BlockchainNetwork(
+            blockchain = Blockchain.Cardano,
+            derivationPath = cardanoPatchedDerivation.rawPath,
+            tokens = emptyList(),
+        )
+    }
+
+    private fun removeUnnecessaryBlockchains(
+        blockchainsToDerive: MutableList<BlockchainNetwork>,
+        derivationStyleProvider: DerivationStyleProvider,
+    ) {
+        blockchainsToDerive.removeAll(
+            listOf(
+                Blockchain.BSC, Blockchain.BSCTestnet,
+                Blockchain.Polygon, Blockchain.PolygonTestnet,
+                Blockchain.RSK,
+                Blockchain.Fantom, Blockchain.FantomTestnet,
+                Blockchain.Avalanche, Blockchain.AvalancheTestnet,
+            ).map {
+                BlockchainNetwork(
+                    blockchain = it,
+                    derivationStyleProvider = derivationStyleProvider,
+                )
+            },
+        )
     }
 
     private suspend fun collectDerivations(
