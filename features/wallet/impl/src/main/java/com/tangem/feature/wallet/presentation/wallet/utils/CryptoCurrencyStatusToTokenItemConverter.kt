@@ -51,7 +51,8 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                 )
             },
             isTestnet = currency.network.isTestnet,
-            onClick = { clickIntents.onTokenClick(currency) },
+            onItemClick = { clickIntents.onTokenItemClick(currency) },
+            onItemLongClick = { clickIntents.onTokenItemLongClick(currency) },
         )
     }
 

@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
@@ -99,7 +100,8 @@ internal object WalletPreviewData {
                 ),
             ),
             isTestnet = false,
-            onClick = {},
+            onItemClick = {},
+            onItemLongClick = {},
         )
     }
 
@@ -126,7 +128,8 @@ internal object WalletPreviewData {
                 ),
             ),
             isTestnet = false,
-            onClick = {},
+            onItemClick = {},
+            onItemLongClick = {},
         )
     }
 
@@ -258,15 +261,25 @@ internal object WalletPreviewData {
         )
     }
 
-    private val manageButtons by lazy {
-        persistentListOf(
-            WalletManageButton.Buy(onClick = {}),
-            WalletManageButton.Send(onClick = {}),
-            WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(onClick = {}),
-            WalletManageButton.CopyAddress(onClick = {}),
-        )
-    }
+    val actionsBottomSheet = ActionsBottomSheetConfig(
+        isShow = true,
+        onDismissRequest = {},
+        actions = listOf(
+            TokenActionButtonConfig(
+                text = "Send",
+                iconResId = R.drawable.ic_share_24,
+                onClick = {},
+            ),
+        ).toImmutableList(),
+    )
+
+    private val manageButtons = persistentListOf(
+        WalletManageButton.Buy(onClick = {}),
+        WalletManageButton.Send(onClick = {}),
+        WalletManageButton.Receive(onClick = {}),
+        WalletManageButton.Exchange(onClick = {}),
+        WalletManageButton.CopyAddress(onClick = {}),
+    )
 
     val multicurrencyWalletScreenState by lazy {
         WalletMultiCurrencyState.Content(
@@ -336,6 +349,7 @@ internal object WalletPreviewData {
                 WalletNotification.ScanCard(onClick = {}),
             ),
             bottomSheetConfig = bottomSheet,
+            tokenActionsBottomSheet = actionsBottomSheet,
         )
     }
 
