@@ -28,7 +28,8 @@ internal sealed interface TokenItemState {
      * @property hasPending               pending tx in blockchain
      * @property tokenOptions             state for token options
      * @property isTestnet                indicates whether the token is from test network or not
-     * @property onClick                  callback which will be called when an item is clicked
+     * @property onItemClick              callback which will be called when an item is clicked
+     * @property onItemLongClick          callback which will be called when an item is long clicked
      */
     data class Content(
         override val id: String,
@@ -40,7 +41,8 @@ internal sealed interface TokenItemState {
         val hasPending: Boolean,
         val tokenOptions: TokenOptionsState,
         val isTestnet: Boolean,
-        val onClick: () -> Unit,
+        val onItemClick: () -> Unit,
+        val onItemLongClick: () -> Unit,
     ) : TokenItemState
 
     /**
