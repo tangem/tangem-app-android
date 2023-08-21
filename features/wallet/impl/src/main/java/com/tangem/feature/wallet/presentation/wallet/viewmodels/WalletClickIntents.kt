@@ -35,9 +35,13 @@ internal interface WalletClickIntents : TxHistoryClickIntents {
 
     fun onUnlockWalletNotificationClick()
 
-    fun onBottomSheetDismiss()
+    fun onDismissBottomSheet()
 
-    fun onTokenClick(currency: CryptoCurrency)
+    fun onTokenItemClick(currency: CryptoCurrency)
+
+    fun onTokenItemLongClick(currency: CryptoCurrency)
+
+    fun onDismissActionsBottomSheet()
 
     fun onRenameClick(userWalletId: UserWalletId, name: String)
 
