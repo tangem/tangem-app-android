@@ -296,7 +296,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onBackupCardClick() = router.openOnboardingScreen()
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = WalletBottomSheetConfig.BottomSheetContentConfig.CriticalWarningAlreadySignedHashes(
                 onOkClick = {},
                 onCancelClick = {},
@@ -309,7 +309,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onLikeTangemAppClick() {
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = WalletBottomSheetConfig.BottomSheetContentConfig.LikeTangemApp(
                 onRateTheAppClick = ::onRateTheAppClick,
                 onShareClick = ::onShareClick,
@@ -445,7 +445,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = when (state) {
                 is WalletMultiCurrencyState.Locked -> state.bottomSheetConfig.content
                 is WalletSingleCurrencyState.Locked -> state.bottomSheetConfig.content
@@ -453,12 +453,14 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    override fun onBottomSheetDismiss() {
-        uiState = stateFactory.getStateWithClosedBottomSheet()
+    override fun onTokenItemClick(currency: CryptoCurrency) {
+        router.openTokenDetails(currency = currency)
     }
 
-    override fun onTokenClick(currency: CryptoCurrency) {
-        router.openTokenDetails(currency = currency)
+    override fun onTokenItemLongClick(currency: CryptoCurrency) {
+        uiState = stateFactory.getStateWithTokenActionBottomSheet(
+            tokenId = currency.id.value,
+        )
     }
 
     override fun onRenameClick(userWalletId: UserWalletId, name: String) {
@@ -483,5 +485,19 @@ internal class WalletViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
+    }
+
+    override fun onDismissBottomSheet() {
+        uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onDismissActionsBottomSheet() {
+        (uiState as? WalletMultiCurrencyState.Content)?.let { state ->
+            uiState = state.copy(
+                tokenActionsBottomSheet = state.tokenActionsBottomSheet?.copy(
+                    isShow = false,
+                ),
+            )
+        }
     }
 }
