@@ -23,6 +23,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencySt
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
@@ -122,12 +123,23 @@ private fun WalletContent(state: WalletState.ContentState) {
         }
     }
 
-    val bottomSheetConfig = state.bottomSheetConfig
+    WalletBottomSheets(state = state)
+
+    WalletSideEffects(lazyListState = walletsListState, walletsListConfig = state.walletsListConfig)
+}
+
+@Composable
+private fun WalletBottomSheets(state: WalletState) {
+    val bottomSheetConfig = (state as? WalletState.ContentState)?.bottomSheetConfig
     if (bottomSheetConfig != null && bottomSheetConfig.isShow) {
         WalletBottomSheet(config = bottomSheetConfig)
     }
 
-    WalletSideEffects(lazyListState = walletsListState, walletsListConfig = state.walletsListConfig)
+    (state as? WalletMultiCurrencyState.Content)?.let { multiCurrencyState ->
+        if (multiCurrencyState.tokenActionsBottomSheet != null && multiCurrencyState.tokenActionsBottomSheet.isShow) {
+            TokenActionsBottomSheet(config = multiCurrencyState.tokenActionsBottomSheet)
+        }
+    }
 }
 
 // region Preview
