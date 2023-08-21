@@ -2,21 +2,24 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.wallets.models.UserWalletId
 
-data class WalletButtonsState(
+data class WalletActionsState(
     val walletId: UserWalletId,
-    val states: List<ButtonState>,
-)
+    val states: List<ActionState>,
+) {
 
-sealed class ButtonState {
+    sealed class ActionState {
 
-    abstract val enabled: Boolean
+        abstract val enabled: Boolean
 
-    class Buy(override val enabled: Boolean) : ButtonState()
+        data class Buy(override val enabled: Boolean) : ActionState()
 
-    class Sell(override val enabled: Boolean) : ButtonState()
+        data class Sell(override val enabled: Boolean) : ActionState()
 
-    class Receive(override val enabled: Boolean) : ButtonState()
+        data class Receive(override val enabled: Boolean) : ActionState()
 
-    class Exchange(override val enabled: Boolean) : ButtonState()
+        data class Exchange(override val enabled: Boolean) : ActionState()
+
+    }
 
 }
+
