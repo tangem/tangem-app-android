@@ -4,8 +4,10 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,11 +69,18 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier = Modifier) {
+    val hapticFeedback = LocalHapticFeedback.current
     InternalTokenItem(
-        modifier = modifier,
-        onClick = content.onClick,
+        modifier = modifier.combinedClickable(
+            onClick = content.onItemClick,
+            onLongClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                content.onItemLongClick()
+            },
+        ),
         name = content.name,
         tokenIconUrl = content.tokenIconUrl,
         tokenIconResId = content.tokenIconResId,
@@ -300,15 +311,15 @@ private fun InternalTokenItem(
     options: @Composable ConstraintLayoutScope.(ref: ConstrainedLayoutReference) -> Unit,
     modifier: Modifier = Modifier,
     isTestnet: Boolean = false,
-    onClick: (() -> Unit)? = null,
 ) {
-    BaseSurface(
-        modifier = modifier,
-        onClick = onClick,
+    Box(
+        modifier = modifier
+            .defaultMinSize(minHeight = TOKEN_ITEM_HEIGHT)
+            .background(color = TangemTheme.colors.background.primary),
     ) {
         ConstraintLayout(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(
                     horizontal = TangemTheme.dimens.spacing14,
                     vertical = TangemTheme.dimens.spacing4,
