@@ -51,6 +51,7 @@ internal class WalletSkeletonStateConverter(
             tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
+            tokenActionsBottomSheet = null,
         )
     }
 
