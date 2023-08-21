@@ -99,7 +99,7 @@
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_search">Искать</string>
     <string name="common_search_tokens">Поиск токенов</string>
-    <string name="common_seed_phrase">Секретная фраза</string>
+    <string name="common_seed_phrase">Seed-фраза</string>
     <string name="common_select_action">Выберите действие</string>
     <string name="common_sell">Продать</string>
     <string name="common_send">Отправить</string>
@@ -249,18 +249,18 @@
     <string name="onboarding_navbar_pin">Код доступа</string>
     <string name="onboarding_navbar_register_wallet">Подключиться</string>
     <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
-    <string name="onboarding_seed_button_read_more">Прочитать о секретной фразе</string>
+    <string name="onboarding_seed_button_read_more">Прочитать о seed-фразе</string>
     <string name="onboarding_seed_generate_message">Запишите эти 12 слов в порядке, указанном ниже, и сохраните их в надежном месте.</string>
-    <string name="onboarding_seed_generate_title">Ваша секретная фраза</string>
-    <string name="onboarding_seed_import_message">Чтобы импортировать кошелек, введите секретную фразу в поле ниже</string>
-    <string name="onboarding_seed_intro_button_generate">Cоздать секретную фразу</string>
+    <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
+    <string name="onboarding_seed_import_message">Чтобы импортировать кошелек, введите seed-фразу в поле ниже</string>
+    <string name="onboarding_seed_intro_button_generate">Создать seed-фразу</string>
     <string name="onboarding_seed_intro_button_import">Импорт кошелька</string>
-    <string name="onboarding_seed_intro_message">Секретная фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
-    <string name="onboarding_seed_intro_title">Использовать секретную фразу</string>
-    <string name="onboarding_seed_mnemonic_invalid_checksum">Неверная секретная фраза. Пожалуйста, проверьте порядок слов.</string>
-    <string name="onboarding_seed_mnemonic_wrong_words">Неверная секретная фраза. Пожалуйста, проверьте орфографию.</string>
+    <string name="onboarding_seed_intro_message">Seed-фраза — это набор слов, который дает возможность восстановить кошелек. В отличие от ключей, сгенерированных картой, seed-фраза не защищена и может быть скопирована и украдена. Используйте этот вариант на свой страх и риск.</string>
+    <string name="onboarding_seed_intro_title">Использовать seed-фразу</string>
+    <string name="onboarding_seed_mnemonic_invalid_checksum">Неверная seed-фраза. Пожалуйста, проверьте порядок слов.</string>
+    <string name="onboarding_seed_mnemonic_wrong_words">Неверная seed-фраза. Пожалуйста, проверьте орфографию.</string>
     <string name="onboarding_seed_phrase_intro_legacy">Устаревший</string>
-    <string name="onboarding_seed_user_validation_message">Чтобы проверить, правильно ли вы записали секретную фразу, введите 2-е, 7-е и 11-е слова</string>
+    <string name="onboarding_seed_user_validation_message">Чтобы проверить, правильно ли вы записали seed-фразу, введите 2-е, 7-е и 11-е слова</string>
     <string name="onboarding_seed_user_validation_title">Итак, проверим</string>
     <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDAI на свой кошелек</string>
     <string name="onboarding_subtitle_claim_progress">Это займет несколько секунд</string>
@@ -567,6 +567,6 @@
     <string name="welcome_interrupted_backup_discard_title">Это необратимое действие</string>
     <string name="welcome_unlock">Войти с %s</string>
     <string name="welcome_unlock_card">Сканировать карту</string>
-    <string name="welcome_unlock_description">Используйте %s или код доступа для входа в приложение</string>
+    <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
 </resources>
