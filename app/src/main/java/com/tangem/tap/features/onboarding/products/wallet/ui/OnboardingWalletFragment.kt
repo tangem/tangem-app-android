@@ -97,8 +97,7 @@ class OnboardingWalletFragment :
 
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        binding.toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
-        addBackPressHandler(this)
+        addBackPressHandler(handler = this)
 
         store.dispatch(OnboardingWallet2Action.Init(seedPhraseViewModel.maxProgress))
         store.dispatch(OnboardingWalletAction.Init)
