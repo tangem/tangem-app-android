@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.consumed
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -145,7 +146,7 @@ internal object WalletPreviewData {
 
     private const val networksSize = 10
     private const val tokensSize = 3
-    val draggableItems by lazy {
+    private val draggableItems by lazy {
         List(networksSize) { it }
             .flatMap { index ->
                 val lastNetworkIndex = networksSize - 1
@@ -194,7 +195,7 @@ internal object WalletPreviewData {
             .toPersistentList()
     }
 
-    val draggableTokens by lazy {
+    private val draggableTokens by lazy {
         draggableItems
             .filterIsInstance<DraggableItem.Token>()
             .toMutableList()
@@ -224,6 +225,7 @@ internal object WalletPreviewData {
                 onApplyClick = {},
                 onCancelClick = {},
             ),
+            scrollListToTop = consumed,
         )
     }
 
