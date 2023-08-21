@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.IconsUtil
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.CryptoCurrency.ID
 import com.tangem.domain.tokens.models.Network
 import com.tangem.blockchain.common.Token as SdkToken
@@ -31,28 +30,12 @@ internal fun getBlockchain(networkId: Network.ID): Blockchain {
     return Blockchain.fromId(networkId.value)
 }
 
-internal fun getNetworkId(blockchain: Blockchain): Network.ID {
-    val value = blockchain.id
-
-    return Network.ID(value)
-}
-
 internal fun getCoinId(blockchain: Blockchain): ID {
     return getTokenOrCoinId(blockchain, token = null)
 }
 
 internal fun getTokenId(blockchain: Blockchain, token: SdkToken): ID {
     return getTokenOrCoinId(blockchain, token)
-}
-
-internal fun getTokenStandardType(blockchain: Blockchain, token: SdkToken): CryptoCurrency.StandardType {
-    return when (blockchain) {
-        Blockchain.Ethereum, Blockchain.EthereumTestnet -> CryptoCurrency.StandardType.ERC20
-        Blockchain.BSC, Blockchain.BSCTestnet -> CryptoCurrency.StandardType.BEP20
-        Blockchain.Binance, Blockchain.BinanceTestnet -> CryptoCurrency.StandardType.BEP2
-        Blockchain.Tron, Blockchain.TronTestnet -> CryptoCurrency.StandardType.TRC20
-        else -> CryptoCurrency.StandardType.Unspecified(token.name)
-    }
 }
 
 internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {
@@ -83,7 +66,7 @@ private fun getTokenOrCoinId(blockchain: Blockchain, token: SdkToken?): ID {
         else -> TOKEN_ID_PREFIX to CurrencyIdSuffix(rawId = sdkTokenId)
     }
 
-    return ID(prefix, getNetworkId(blockchain), suffix)
+    return ID(prefix, Network.ID(blockchain.id), suffix)
 }
 
 private fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
