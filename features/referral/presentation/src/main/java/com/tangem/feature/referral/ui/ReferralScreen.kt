@@ -257,7 +257,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
 private fun InfoForYou(award: String, networkName: String, address: String? = null) {
     ConditionInfo(title = stringResource(id = R.string.referral_point_currencies_title)) {
         Text(
-            formatString(
+            formatAwardConditionsString(
                 quantity = award,
                 network = networkName,
                 address = if (!address.isNullOrBlank()) " $address" else ""
@@ -270,7 +270,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
 
 
 @Composable
-fun formatString(
+private fun formatAwardConditionsString(
     quantity: String,
     network: String,
     address: String
