@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.event.StateEvent
 import org.burnoutcrew.reorderable.ItemPosition
 
 @Immutable
@@ -10,6 +11,7 @@ internal data class OrganizeTokensState(
     val header: HeaderConfig,
     val actions: ActionsConfig,
     val dndConfig: DragAndDropConfig,
+    val scrollListToTop: StateEvent,
 ) {
 
     data class HeaderConfig(
