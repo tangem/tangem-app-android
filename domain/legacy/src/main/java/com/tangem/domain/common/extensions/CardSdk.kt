@@ -20,6 +20,7 @@ fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blo
         // need for old multiwallet that supports only secp256k1
         wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct().toMutableList()
     } else {
+        // multiwallet supports all blockchains, move this logic to config
         Blockchain.values().toMutableList()
     }
     // disabled Cardano for wallet 2 for now, should be enabled after key processed
@@ -56,5 +57,15 @@ fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesR
 }
 
 fun CardDTO.canHandleBlockchain(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
-    return this.supportedBlockchains(cardTypesResolver).contains(blockchain)
+    val supportedBlockchains = this.supportedBlockchains(cardTypesResolver)
+    val isContainsBlockchain = supportedBlockchains.contains(blockchain)
+    return if (cardTypesResolver.isTangemWallet()) {
+        // specific workaround for multiwallet v1 with different curves
+        // cause on early created wallets there's no created bls curve wallet
+        // but user can recreate wallet with curve in current app version
+        isContainsBlockchain &&
+            wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    } else {
+        isContainsBlockchain
+    }
 }
