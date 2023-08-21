@@ -14,6 +14,7 @@ import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -45,6 +46,7 @@ internal class WalletStateFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
+    private val tokenActionsProvider by lazy { TokenActionsProvider(currentStateProvider = currentStateProvider) }
     private val skeletonConverter by lazy { WalletSkeletonStateConverter(currentStateProvider, clickIntents) }
 
     private val loadedTokensListConverter by lazy {
@@ -119,29 +121,29 @@ internal class WalletStateFactory(
 
     fun getStateAfterContentRefreshing(): WalletState = refreshStateConverter.convert(Unit)
 
-    fun getStateWithOpenBottomSheet(content: WalletBottomSheetConfig.BottomSheetContentConfig): WalletState {
+    fun getStateWithOpenWalletBottomSheet(content: WalletBottomSheetConfig.BottomSheetContentConfig): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> state.copy(
                 bottomSheetConfig = WalletBottomSheetConfig(
                     isShow = true,
-                    onDismissRequest = clickIntents::onBottomSheetDismiss,
+                    onDismissRequest = clickIntents::onDismissBottomSheet,
                     content = content,
                 ),
             )
             is WalletMultiCurrencyState.Locked -> state.copy(
                 isBottomSheetShow = true,
-                onBottomSheetDismiss = clickIntents::onBottomSheetDismiss,
+                onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
             is WalletSingleCurrencyState.Content -> state.copy(
                 bottomSheetConfig = WalletBottomSheetConfig(
                     isShow = true,
-                    onDismissRequest = clickIntents::onBottomSheetDismiss,
+                    onDismissRequest = clickIntents::onDismissBottomSheet,
                     content = content,
                 ),
             )
             is WalletSingleCurrencyState.Locked -> state.copy(
                 isBottomSheetShow = true,
-                onBottomSheetDismiss = clickIntents::onBottomSheetDismiss,
+                onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
         }
     }
@@ -156,6 +158,19 @@ internal class WalletStateFactory(
                 bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
             )
             is WalletSingleCurrencyState.Locked -> state.copy(isBottomSheetShow = false)
+        }
+    }
+
+    fun getStateWithTokenActionBottomSheet(tokenId: String): WalletState {
+        return when (val state = currentStateProvider() as WalletState.ContentState) {
+            is WalletMultiCurrencyState.Content -> state.copy(
+                tokenActionsBottomSheet = ActionsBottomSheetConfig(
+                    isShow = true,
+                    actions = tokenActionsProvider.provideActions(tokenId = tokenId),
+                    onDismissRequest = clickIntents::onDismissActionsBottomSheet,
+                ),
+            )
+            else -> state
         }
     }
 
