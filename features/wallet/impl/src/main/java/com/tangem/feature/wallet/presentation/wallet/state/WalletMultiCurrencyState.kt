@@ -22,6 +22,7 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val notifications: ImmutableList<WalletNotification>,
         override val bottomSheetConfig: WalletBottomSheetConfig?,
         override val tokensListState: WalletTokensListState,
+        val tokenActionsBottomSheet: ActionsBottomSheetConfig?,
     ) : WalletMultiCurrencyState()
 
     data class Locked(
