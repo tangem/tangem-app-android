@@ -4,13 +4,13 @@ import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState.*
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 
 /**
  * Converter from loading tx history state to [WalletSingleCurrencyState.Content]
@@ -33,31 +33,36 @@ internal class WalletLoadingTxHistoryConverter(
         return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
             txHistoryState = when (error) {
                 is TxHistoryStateError.EmptyTxHistories -> {
-                    TxHistoryState.Empty(onBuyClick = clickIntents::onBuyClick)
+                    Empty(onBuyClick = clickIntents::onBuyClick)
                 }
                 is TxHistoryStateError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                    Error(onReloadClick = clickIntents::onReloadClick)
                 }
                 is TxHistoryStateError.TxHistoryNotImplemented -> {
-                    TxHistoryState.NotSupported(onExploreClick = clickIntents::onExploreClick)
+                    NotSupported(onExploreClick = clickIntents::onExploreClick)
                 }
             },
         )
     }
 
     private fun convert(value: Int): WalletSingleCurrencyState.Content {
-        return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = TxHistoryState.Loading(
-                onExploreClick = clickIntents::onExploreClick,
-                transactions = flow {
-                    PagingData.from(
-                        data = MutableList(
-                            size = value,
-                            init = { TransactionState.Loading(it.toString()) },
-                        ),
-                    )
-                },
-            ),
-        )
+        val state = requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
+        val txHistoryContent = requireNotNull(state.txHistoryState as? Content)
+
+        txHistoryContent.contentItems.update {
+            PagingData.from(
+                data = listOf(TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick)) +
+                    MutableList(
+                        size = value,
+                        init = {
+                            TxHistoryItemState.Transaction(
+                                state = TransactionState.Loading(it.toString()),
+                            )
+                        },
+                    ),
+            )
+        }
+
+        return state
     }
 }
