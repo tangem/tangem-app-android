@@ -200,4 +200,11 @@ sealed interface TransactionState {
      * @property txHash transaction hash
      */
     data class Loading(override val txHash: String) : TransactionState
+
+    /**
+     * Locked state
+     *
+     * @property txHash transaction hash
+     */
+    data class Locked(override val txHash: String) : TransactionState
 }

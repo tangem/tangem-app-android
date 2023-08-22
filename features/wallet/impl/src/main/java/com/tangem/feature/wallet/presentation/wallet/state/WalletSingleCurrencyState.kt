@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.compose.runtime.Immutable
+import androidx.paging.PagingData
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
@@ -63,8 +65,19 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
 
         override val txHistoryState: TxHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
-                value = TxHistoryState.getDefaultLoadingTransactions(onExploreClick),
+                value = PagingData.from(
+                    data = listOf(
+                        TxHistoryState.TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                        TxHistoryState.TxHistoryItemState.Transaction(
+                            state = TransactionState.Locked(txHash = LOCKED_TX_HASH),
+                        ),
+                    ),
+                ),
             ),
         )
+
+        private companion object {
+            const val LOCKED_TX_HASH = "LOCKED_TX_HASH"
+        }
     }
 }
