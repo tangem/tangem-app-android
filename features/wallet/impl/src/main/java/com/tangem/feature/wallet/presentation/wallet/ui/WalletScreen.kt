@@ -69,9 +69,9 @@ private fun WalletContent(state: WalletState.ContentState) {
                 .pullRefresh(pullRefreshState),
         ) {
             val txHistoryItems = if (state is WalletSingleCurrencyState &&
-                state.txHistoryState is TxHistoryState.ContentState
+                state.txHistoryState is TxHistoryState.Content
             ) {
-                (state.txHistoryState as? TxHistoryState.ContentState)?.items?.collectAsLazyPagingItems()
+                (state.txHistoryState as? TxHistoryState.Content)?.contentItems?.collectAsLazyPagingItems()
             } else {
                 null
             }
