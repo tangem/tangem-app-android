@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletState.ContentState]
@@ -62,7 +63,11 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             buttons = getButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
-            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
         )
     }
 
