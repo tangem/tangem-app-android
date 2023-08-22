@@ -25,6 +25,7 @@ class GetCryptoCurrencyActionsUseCase(
                 TokenActionsState.ActionState.Sell(true),
                 TokenActionsState.ActionState.Receive(true),
                 TokenActionsState.ActionState.Swap(true),
+                TokenActionsState.ActionState.Sell(true),
             ),
         )
     }
