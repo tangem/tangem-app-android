@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
@@ -11,6 +12,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
@@ -39,6 +41,11 @@ internal class TokenDetailsSkeletonStateConverter(
                 TokenDetailsPreviewData.disabledActionButtons,
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.cryptoCurrency.name),
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
         )
     }
 
