@@ -83,7 +83,8 @@ internal object MockTokensStates {
                 fiatAmount = fiatAmount,
                 fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
-                hasTransactionsInProgress = false,
+                pendingTransactions = emptySet(),
+                hasCurrentNetworkTransactions = false,
             ),
         )
     }
@@ -92,7 +93,8 @@ internal object MockTokensStates {
         currency.copy(
             value = CryptoCurrencyStatus.NoQuote(
                 amount = currency.value.amount!!,
-                hasTransactionsInProgress = false,
+                pendingTransactions = emptySet(),
+                hasCurrentNetworkTransactions = false,
             ),
         )
     }
