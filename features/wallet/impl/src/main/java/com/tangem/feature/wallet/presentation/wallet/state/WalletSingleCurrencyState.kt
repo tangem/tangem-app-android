@@ -1,11 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.compose.runtime.Immutable
+import androidx.paging.PagingData
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Single currency wallet content state
@@ -60,6 +62,8 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
             ),
         )
 
-        override val txHistoryState: TxHistoryState = TxHistoryState.Locked(onExploreClick)
+        override val txHistoryState: TxHistoryState = TxHistoryState.Content(
+            contentItems = MutableStateFlow(PagingData.empty()),
+        )
     }
 }

@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.consumed
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -18,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
 @Suppress("LargeClass")
@@ -28,10 +29,10 @@ internal object WalletPreviewData {
 
     val walletCardContentState by lazy {
         WalletCardState.Content(
-            id = UserWalletId("123"),
+            id = UserWalletId(stringValue = "123"),
             title = "Wallet 1",
             balance = "8923,05 $",
-            additionalInfo = "3 cards • Seed enabled",
+            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -41,7 +42,6 @@ internal object WalletPreviewData {
         WalletCardState.Loading(
             id = UserWalletId("321"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -51,7 +51,6 @@ internal object WalletPreviewData {
         WalletCardState.HiddenContent(
             id = UserWalletId("42"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -61,7 +60,6 @@ internal object WalletPreviewData {
         WalletCardState.Error(
             id = UserWalletId("24"),
             title = "Wallet 1",
-            additionalInfo = "3 cards • Seed enabled",
             imageResId = R.drawable.ill_businessman_3d,
             onClick = null,
         )
@@ -148,7 +146,7 @@ internal object WalletPreviewData {
 
     private const val networksSize = 10
     private const val tokensSize = 3
-    val draggableItems by lazy {
+    private val draggableItems by lazy {
         List(networksSize) { it }
             .flatMap { index ->
                 val lastNetworkIndex = networksSize - 1
@@ -197,7 +195,7 @@ internal object WalletPreviewData {
             .toPersistentList()
     }
 
-    val draggableTokens by lazy {
+    private val draggableTokens by lazy {
         draggableItems
             .filterIsInstance<DraggableItem.Token>()
             .toMutableList()
@@ -227,6 +225,7 @@ internal object WalletPreviewData {
                 onApplyClick = {},
                 onCancelClick = {},
             ),
+            scrollListToTop = consumed,
         )
     }
 
@@ -351,8 +350,7 @@ internal object WalletPreviewData {
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
-                onExploreClick = {},
-                contentItems = flowOf(
+                contentItems = MutableStateFlow(
                     PagingData.from(
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),

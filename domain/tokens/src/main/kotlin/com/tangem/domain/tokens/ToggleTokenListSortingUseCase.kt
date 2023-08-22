@@ -36,11 +36,10 @@ class ToggleTokenListSortingUseCase(
         tokenList: TokenList.GroupedByNetwork,
     ): TokenList.GroupedByNetwork {
         val operations = getSortingOperations(tokenList)
-        val networks = tokenList.groups.map { it.network }.toSet()
 
         return tokenList.copy(
             groups = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
-                operations.getGroupedTokens(networks).bind()
+                operations.getGroupedTokens().bind()
             },
             sortedBy = operations.getSortType(),
         )

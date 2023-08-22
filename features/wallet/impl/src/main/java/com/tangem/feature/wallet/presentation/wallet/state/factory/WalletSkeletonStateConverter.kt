@@ -5,7 +5,6 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -17,6 +16,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletState.ContentState]
@@ -63,7 +63,11 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             buttons = getButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
-            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
         )
     }
 
@@ -106,10 +110,6 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = wallet.walletId,
             title = wallet.name,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(
-                cardTypesResolver = cardTypeResolver,
-                isLocked = wallet.isLocked,
-            ),
             imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
         )
     }
