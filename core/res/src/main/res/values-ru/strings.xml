@@ -96,6 +96,8 @@
     <string name="common_receive">Получить</string>
     <string name="common_reject">Отклонить</string>
     <string name="common_reload">Перезагрузить</string>
+    <string name="common_rename">Переименовать</string>
+    <string name="common_reset">Сбросить</string>
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_search">Искать</string>
     <string name="common_search_tokens">Поиск токенов</string>
@@ -116,6 +118,7 @@
     <string name="common_transactions">Транзакции</string>
     <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
+    <string name="common_unlock_needed">Необходима разблокировка</string>
     <string name="common_unreachable">Недоступно</string>
     <string name="common_yes">Да</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
@@ -472,6 +475,8 @@
     <string name="twins_recreate_toolbar">Tangem Twin</string>
     <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
     <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
+    <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту, чтобы получить доступ к своему кошельку</string>
+    <string name="unlock_wallet_description_short">Используйте %s или отсканируйте карту</string>
     <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
     <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
     <string name="user_wallet_list_editing_count">%d выбрано</string>
