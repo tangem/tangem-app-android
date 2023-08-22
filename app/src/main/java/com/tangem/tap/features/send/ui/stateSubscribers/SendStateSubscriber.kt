@@ -261,19 +261,34 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     }
 
     @Suppress("MagicNumber")
-    private fun handleFeeState(fg: SendFragment, state: FeeState) = with(fg.binding.clNetworkFee) {
-        fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
-        flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
-        llFeeControlsContainer.show(state.controlsLayoutIsVisible)
-        chipGroup.show(state.feeChipGroupIsVisible)
+    private fun handleFeeState(fg: SendFragment, state: FeeState) {
+        with(fg.binding.clNetworkFee) {
+            fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
+            flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
+            llFeeControlsContainer.show(state.controlsLayoutIsVisible)
+            chipGroup.show(state.feeChipGroupIsVisible)
 
-        swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
-        if (swIncludeFee.isChecked != state.feeIsIncluded) {
-            swIncludeFee.isChecked = state.feeIsIncluded
+            swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
+            if (swIncludeFee.isChecked != state.feeIsIncluded) {
+                swIncludeFee.isChecked = state.feeIsIncluded
+            }
+
+            val chipId = FeeUiHelper.toId(state.selectedFeeType)
+            if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
         }
-
-        val chipId = FeeUiHelper.toId(state.selectedFeeType)
-        if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
+        with(fg.binding.clReceiptContainer) {
+            when (state.progressState) {
+                ProgressState.Loading -> {
+                    tvReceiptFeeValue.hide()
+                    pbReceiptFee.show()
+                }
+                ProgressState.Done -> {
+                    pbReceiptFee.hide()
+                    tvReceiptFeeValue.show()
+                }
+                else -> {}
+            }
+        }
     }
 
     @Suppress("LongMethod", "ComplexMethod")
