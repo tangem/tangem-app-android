@@ -9,9 +9,15 @@ sealed class UpdateWalletManagerResult {
     object Unreachable : UpdateWalletManagerResult()
 
     data class Verified(
-        val tokensAmounts: Set<CryptoCurrencyAmount>,
-        val hasTransactionsInProgress: Boolean, // TODO: May be add recent transactions
+        val defaultAddress: String,
+        val addresses: Set<String>,
+        val currenciesAmounts: Set<CryptoCurrencyAmount>,
+        val currentTransactions: Set<CryptoCurrencyTransaction>,
     ) : UpdateWalletManagerResult()
 
-    data class NoAccount(val amountToCreateAccount: BigDecimal) : UpdateWalletManagerResult()
+    data class NoAccount(
+        val defaultAddress: String,
+        val addresses: Set<String>,
+        val amountToCreateAccount: BigDecimal,
+    ) : UpdateWalletManagerResult()
 }
