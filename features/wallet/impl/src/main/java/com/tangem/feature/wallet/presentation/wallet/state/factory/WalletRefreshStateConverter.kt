@@ -1,12 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import androidx.paging.PagingData
-import androidx.paging.map
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -20,9 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickInten
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
 internal class WalletRefreshStateConverter(
     private val currentStateProvider: Provider<WalletState>,
@@ -98,30 +92,15 @@ internal class WalletRefreshStateConverter(
     private fun WalletSingleCurrencyState.Content.getTxHistoryState(): TxHistoryState {
         return when (txHistoryState) {
             is TxHistoryState.Content -> {
-                TxHistoryState.Loading(
-                    onExploreClick = clickIntents::onExploreClick,
-                    transactions = txHistoryState.contentItems
-                        .filterIsInstance<PagingData<TxHistoryItemState.Transaction>>()
-                        .mapPagingData { transaction ->
-                            transaction.copy(
-                                state = TransactionState.Loading(txHash = transaction.state.txHash),
-                            )
-                        },
-                )
+                txHistoryState.contentItems.update {
+                    TxHistoryState.getDefaultLoadingTransactions(onExploreClick = clickIntents::onExploreClick)
+                }
+                txHistoryState
             }
             is TxHistoryState.Empty,
             is TxHistoryState.Error,
             is TxHistoryState.NotSupported,
-            -> TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick)
-            is TxHistoryState.Locked,
-            is TxHistoryState.Loading,
             -> txHistoryState
         }
-    }
-
-    private fun Flow<PagingData<TxHistoryItemState.Transaction>>.mapPagingData(
-        transform: (TxHistoryItemState.Transaction) -> TxHistoryItemState,
-    ): Flow<PagingData<TxHistoryItemState>> {
-        return map { it.map(transform) }
     }
 }
