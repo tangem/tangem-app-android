@@ -260,8 +260,8 @@ class WalletConnectMiddleware {
                 }
                 val updatedWallet = action.session.wallet.copy(
                     walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                    derivedPublicKey = walletManager.wallet.publicKey.derivation?.derivedKey,
-                    derivationPath = walletManager.wallet.publicKey.derivation?.derivationPath,
+                    derivedPublicKey = walletManager.wallet.publicKey.derivedKey,
+                    derivationPath = walletManager.wallet.publicKey.derivationPath,
                     blockchain = action.blockchain,
                 )
                 val updatedSession = action.session.copy(wallet = updatedWallet)
@@ -281,7 +281,7 @@ class WalletConnectMiddleware {
                             Account(
                                 chainId,
                                 wallet.address,
-                                wallet.publicKey.derivation?.derivationPath?.rawPath,
+                                wallet.publicKey.derivationPath?.rawPath,
                             )
                         }
                     }
@@ -393,7 +393,7 @@ class WalletConnectMiddleware {
         val walletForSession = WalletForSession(
             walletPublicKey = wallet.publicKey.seedKey,
             derivedPublicKey = derivedKey,
-            derivationPath = wallet.publicKey.derivation?.derivationPath,
+            derivationPath = wallet.publicKey.derivationPath,
             derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle(),
             blockchain = wallet.blockchain,
         )
