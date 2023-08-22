@@ -112,10 +112,7 @@ internal class WalletSkeletonStateConverter(
             id = wallet.walletId,
             title = wallet.name,
             additionalInfo = if (cardTypeResolver.isMultiwalletAllowed()) {
-                WalletAdditionalInfoFactory.resolve(
-                    cardTypesResolver = cardTypeResolver,
-                    isLocked = wallet.isLocked,
-                )
+                WalletAdditionalInfoFactory.resolve(cardTypesResolver = cardTypeResolver, wallet = wallet)
             } else {
                 null
             },

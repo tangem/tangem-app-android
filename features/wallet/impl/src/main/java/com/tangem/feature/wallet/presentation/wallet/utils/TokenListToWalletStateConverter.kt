@@ -4,6 +4,7 @@ import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
@@ -16,7 +17,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal class TokenListToWalletStateConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val isLockedWalletProvider: Provider<Boolean>,
+    private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
     clickIntents: WalletClickIntents,
@@ -46,7 +47,7 @@ internal class TokenListToWalletStateConverter(
         val selectedWalletCard = walletsListConfig.wallets[selectedWalletIndex]
         val converter = FiatBalanceToWalletCardConverter(
             currentState = selectedWalletCard,
-            isLockedState = isLockedWalletProvider(),
+            currentWalletProvider = currentWalletProvider,
             cardTypeResolverProvider = cardTypeResolverProvider,
             appCurrencyProvider = appCurrencyProvider,
             isWalletContentHidden = isWalletContentHidden,

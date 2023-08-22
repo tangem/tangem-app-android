@@ -34,13 +34,13 @@ import kotlinx.coroutines.flow.Flow
  *
  * @property currentStateProvider            current ui state provider
  * @property currentCardTypeResolverProvider current card type resolver
- * @property isLockedWalletProvider          current wallet is locked or not
+ * @property currentWalletProvider           current wallet
  * @property clickIntents                    screen click intents
  */
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val isLockedWalletProvider: Provider<Boolean>,
+    private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: WalletClickIntents,
 ) {
@@ -51,7 +51,7 @@ internal class WalletStateFactory(
         WalletLoadedTokensListConverter(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
-            isLockedWalletProvider = isLockedWalletProvider,
+            currentWalletProvider = currentWalletProvider,
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
         )
@@ -77,6 +77,7 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
             appCurrencyProvider = appCurrencyProvider,
+            currentWalletProvider = currentWalletProvider,
         )
     }
 
@@ -187,7 +188,7 @@ internal class WalletStateFactory(
                                 onClick = walletCardState.onClick,
                                 additionalInfo = WalletAdditionalInfoFactory.resolve(
                                     cardTypesResolver = cardTypeResolver,
-                                    isLocked = isLockedWalletProvider.invoke(),
+                                    wallet = currentWalletProvider(),
                                 ),
                             )
                         }
