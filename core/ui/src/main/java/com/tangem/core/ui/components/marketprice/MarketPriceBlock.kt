@@ -167,7 +167,7 @@ private fun LoadingContent() {
         RectangleShimmer(
             modifier = Modifier.size(
                 width = TangemTheme.dimens.size158,
-                height = TangemTheme.dimens.size20,
+                height = TangemTheme.dimens.size18,
             ),
         )
 
