@@ -60,6 +60,8 @@ internal class WalletViewModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
+    private val updateWalletUseCase: UpdateWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val getBiometricsStatusUseCase: GetBiometricsStatusUseCase,
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
@@ -457,6 +459,18 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onTokenClick(currency: CryptoCurrency) {
         router.openTokenDetails(currency = currency)
+    }
+
+    override fun onRenameClick(userWalletId: UserWalletId, name: String) {
+        viewModelScope.launch(dispatchers.io) {
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+        }
+    }
+
+    override fun onDeleteClick(userWalletId: UserWalletId) {
+        viewModelScope.launch(dispatchers.io) {
+            deleteWalletUseCase(userWalletId)
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
