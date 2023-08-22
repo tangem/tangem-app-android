@@ -14,6 +14,8 @@ internal sealed interface TokenItemState {
     /** Loading token state */
     data class Loading(override val id: String) : TokenItemState
 
+    data class Locked(override val id: String) : TokenItemState
+
     /**
      * Content token state
      *
