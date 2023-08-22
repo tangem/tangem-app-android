@@ -14,19 +14,22 @@ android {
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.paging.runtime)
 
     /** Compose */
-    implementation(deps.compose.material)
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.paging)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.coil)
 
     implementation(deps.arrow.core)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.tangem.blockchain)
     implementation(deps.tangem.card.core)
