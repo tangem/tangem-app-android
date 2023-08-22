@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
-interface TokenDetailsClickIntents {
+import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
+
+interface TokenDetailsClickIntents : TxHistoryClickIntents {
 
     fun onBackClick()
 
