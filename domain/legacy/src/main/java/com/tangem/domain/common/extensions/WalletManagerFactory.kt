@@ -62,6 +62,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
             createWalletManager(
                 blockchain = environmentBlockchain,
                 publicKey = publicKey,
+                curve = wallet.curve
             )
         }
         else -> {
