@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.models.Network
 import java.math.BigDecimal
@@ -48,6 +49,7 @@ internal object MockNetworks {
         networkId = network3.id,
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
+            address = NetworkAddress.Single(defaultAddress = "mock"),
         ),
     )
 
@@ -61,7 +63,8 @@ internal object MockNetworks {
                     MockTokens.token2.id to BigDecimal.TEN,
                     MockTokens.token3.id to BigDecimal.TEN,
                 ),
-                hasTransactionsInProgress = false,
+                pendingTransactions = emptyMap(),
+                address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )
 
@@ -73,7 +76,8 @@ internal object MockNetworks {
                     MockTokens.token5.id to BigDecimal.TEN,
                     MockTokens.token6.id to BigDecimal.TEN,
                 ),
-                hasTransactionsInProgress = false,
+                pendingTransactions = emptyMap(),
+                address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )
 
@@ -86,7 +90,8 @@ internal object MockNetworks {
                     MockTokens.token9.id to BigDecimal.TEN,
                     MockTokens.token10.id to BigDecimal.TEN,
                 ),
-                hasTransactionsInProgress = false,
+                pendingTransactions = emptyMap(),
+                address = NetworkAddress.Single(defaultAddress = "mock"),
             ),
         )
 
