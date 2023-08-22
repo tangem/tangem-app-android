@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -10,6 +11,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfo
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal object TokenDetailsPreviewData {
 
@@ -82,5 +84,10 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
+        txHistoryState = TxHistoryState.Content(
+            contentItems = MutableStateFlow(
+                value = TxHistoryState.getDefaultLoadingTransactions {},
+            ),
+        ),
     )
 }
