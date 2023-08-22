@@ -41,7 +41,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             tokenIconResId = currency.iconResId,
             networkBadgeIconResId = currency.networkBadgeIconResId,
             amount = getFormattedAmount(),
-            hasPending = value.hasTransactionsInProgress,
+            hasPending = value.hasCurrentNetworkTransactions,
             tokenOptions = if (isWalletContentHidden) {
                 TokenItemState.TokenOptionsState.Hidden(getPriceChangeConfig())
             } else {
