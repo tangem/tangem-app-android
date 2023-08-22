@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
 @Suppress("LargeClass")
@@ -350,8 +350,7 @@ internal object WalletPreviewData {
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
-                onExploreClick = {},
-                contentItems = flowOf(
+                contentItems = MutableStateFlow(
                     PagingData.from(
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),

@@ -9,7 +9,6 @@ import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.*
@@ -375,8 +374,7 @@ internal class WalletViewModel @Inject constructor(
                 tokensListState is WalletTokensListState.Loading || hasLoadingTokens
             }
             is WalletSingleCurrencyState -> {
-                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading ||
-                    txHistoryState is TxHistoryState.Loading
+                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading
             }
             is WalletState.Initial -> false
         }
