@@ -1,8 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
 import com.tangem.domain.tokens.models.CryptoCurrency
 
-internal interface WalletClickIntents {
+internal interface WalletClickIntents : TxHistoryClickIntents {
 
     fun onBackClick()
 
@@ -27,12 +28,6 @@ internal interface WalletClickIntents {
     fun onRefreshSwipe()
 
     fun onOrganizeTokensClick()
-
-    fun onBuyClick()
-
-    fun onReloadClick()
-
-    fun onExploreClick()
 
     fun onUnlockWalletClick()
 
