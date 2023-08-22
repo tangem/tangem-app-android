@@ -4,13 +4,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
+import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetCurrencyUseCase
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -21,15 +25,20 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val getCurrencyUseCase: GetCurrencyUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val getExploreUrlUseCase: GetExploreUrlUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
@@ -45,6 +54,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
+        symbol = cryptoCurrency.symbol,
+        decimals = cryptoCurrency.decimals,
     )
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
         private set
@@ -63,6 +74,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateContent(selectedWallet: UserWallet, refresh: Boolean) {
         updateMarketPrice(selectedWallet = selectedWallet, refresh = refresh)
+        updateTxHistory()
     }
 
     private fun updateMarketPrice(selectedWallet: UserWallet, refresh: Boolean) {
@@ -72,6 +84,28 @@ internal class TokenDetailsViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
+    }
+
+    private fun updateTxHistory() {
+        viewModelScope.launch(dispatchers.io) {
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
+                networkId = cryptoCurrency.network.id,
+                derivationPath = cryptoCurrency.derivationPath,
+            )
+
+            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+
+            txHistoryItemsCountEither.onRight {
+                uiState = stateFactory.getLoadedTxHistoryState(
+                    txHistoryEither = txHistoryItemsUseCase(
+                        networkId = cryptoCurrency.network.id,
+                        derivationPath = cryptoCurrency.derivationPath,
+                    ).map {
+                        it.cachedIn(viewModelScope)
+                    },
+                )
+            }
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
@@ -92,5 +126,25 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onMoreClick() {
         TODO("Not yet implemented")
+    }
+
+    override fun onBuyClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onReloadClick() {
+        updateTxHistory()
+    }
+
+    override fun onExploreClick() {
+        viewModelScope.launch {
+            val wallet = getWallet()
+            router.openUrl(
+                url = getExploreUrlUseCase(
+                    userWalletId = wallet.walletId,
+                    networkId = cryptoCurrency.network.id,
+                ),
+            )
+        }
     }
 }
