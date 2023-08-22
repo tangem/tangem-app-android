@@ -5,7 +5,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 
-class GetTokenActionsUseCase(
+class GetCryptoCurrencyActionsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -24,7 +24,7 @@ class GetTokenActionsUseCase(
                 TokenActionsState.ActionState.Buy(true),
                 TokenActionsState.ActionState.Sell(true),
                 TokenActionsState.ActionState.Receive(true),
-                TokenActionsState.ActionState.Exchange(true),
+                TokenActionsState.ActionState.Swap(true),
             ),
         )
     }

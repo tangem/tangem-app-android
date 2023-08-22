@@ -18,6 +18,8 @@ data class TokenActionsState(
 
         data class Receive(override val enabled: Boolean) : ActionState()
 
-        data class Exchange(override val enabled: Boolean) : ActionState()
+        data class Swap(override val enabled: Boolean) : ActionState()
+
+        data class Send(override val enabled: Boolean) : ActionState()
     }
 }
