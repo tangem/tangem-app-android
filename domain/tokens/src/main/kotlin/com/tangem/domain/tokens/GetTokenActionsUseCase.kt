@@ -9,20 +9,14 @@ class GetTokenActionsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(
-        userWalletId: UserWalletId,
-        tokenId: String,
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWalletId: UserWalletId, tokenId: String): Flow<TokenActionsState> {
         return flow {
             emit(getMockState(userWalletId, tokenId))
         }.flowOn(dispatchers.io)
     }
 
     // TODO replace by real data
-    private fun getMockState(
-        userWalletId: UserWalletId,
-        tokenId: String,
-    ): TokenActionsState {
+    private fun getMockState(userWalletId: UserWalletId, tokenId: String): TokenActionsState {
         return TokenActionsState(
             walletId = userWalletId,
             tokenId = tokenId,
@@ -30,8 +24,8 @@ class GetTokenActionsUseCase(
                 TokenActionsState.ActionState.Buy(true),
                 TokenActionsState.ActionState.Sell(true),
                 TokenActionsState.ActionState.Receive(true),
-                TokenActionsState.ActionState.Exchange(true)
-            )
+                TokenActionsState.ActionState.Exchange(true),
+            ),
         )
     }
 }
