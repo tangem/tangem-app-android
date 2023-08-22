@@ -9,7 +9,7 @@
     },
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
-        "version": "4.10.0"
+        "version": "4.11.0"
     },
     {
         "name": "REDESIGNED_WALLET_SCREEN_ENABLED",
@@ -17,7 +17,7 @@
     },
     {
         "name": "1INCH_LEARN_2_EARN_ENABLED",
-        "version": "4.9.0"
+        "version": "undefined"
     },
     {
         "name": "REDESIGNED_TOKEN_DETAIL_SCREEN_ENABLED",

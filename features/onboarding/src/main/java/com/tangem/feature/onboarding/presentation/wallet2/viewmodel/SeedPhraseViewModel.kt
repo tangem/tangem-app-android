@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.locale.LocaleProvider
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
@@ -35,6 +36,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SeedPhraseViewModel @Inject constructor(
     private val interactor: SeedPhraseInteractor,
+    private val localeProvider: LocaleProvider,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
@@ -303,7 +305,14 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonReadMoreAboutSeedPhraseClick() {
         analyticsEventHandler.send(SeedPhraseEvents.ButtonReadMore)
-        router.openUri(URI_ABOUT_SEED_PHRASE)
+        val webUri = Uri.Builder()
+            .scheme("https")
+            .authority("tangem.com")
+            .appendPath(localeProvider.getWebUriLocaleLanguage())
+            .appendPath("blog/post/seed-phrase-a-risky-solution")
+            .build()
+
+        router.openUri(webUri)
     }
 
     private fun buttonGenerateSeedPhraseClick() {
@@ -327,7 +336,7 @@ class SeedPhraseViewModel @Inject constructor(
         }
     }
 
-    private suspend fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
+    private fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
         val size = mnemonicComponents.size
         val splitIndex = if (size.isEven()) size / 2 else size / 2 + 1
         val leftColumn = mnemonicComponents.subList(0, splitIndex)
@@ -418,8 +427,6 @@ class SeedPhraseViewModel @Inject constructor(
     // endregion Utils
 
     companion object {
-        private val URI_ABOUT_SEED_PHRASE =
-            Uri.parse("https://tangem.com/ru/blog/post/seed-phrase-a-risky-solution/")
         private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
         private const val MNEMONIC_DEBOUNCE_DELAY = 700L
         private const val DELAY_GENERATE_SEED_PHRASE = 300L

@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.Provider
@@ -9,9 +10,10 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -19,6 +21,7 @@ import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -37,11 +40,11 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -71,14 +74,16 @@ internal class WalletViewModel @Inject constructor(
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
     var router: InnerWalletRouter by Delegates.notNull()
 
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+
     private val notificationsListFactory = WalletNotificationsListFactory(
-        currentStateProvider = Provider { uiState },
         wasCardScannedCallback = getCardWasScannedUseCase::invoke,
         isUserAlreadyRateAppCallback = isUserAlreadyRateAppUseCase::invoke,
         isDemoCardCallback = isDemoCardUseCase::invoke,
@@ -95,6 +100,7 @@ internal class WalletViewModel @Inject constructor(
         isLockedWalletProvider = Provider {
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex].isLocked
         },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
     )
 
@@ -142,7 +148,7 @@ internal class WalletViewModel @Inject constructor(
         when {
             getWallet(index).isLocked -> uiState = stateFactory.getLockedState()
             cardTypeResolver.isMultiwalletAllowed() -> updateMultiCurrencyContent(index, isRefreshing)
-            !cardTypeResolver.isMultiwalletAllowed() -> updateSingleCurrencyContent(index)
+            !cardTypeResolver.isMultiwalletAllowed() -> updateSingleCurrencyContent(index, isRefreshing)
         }
     }
 
@@ -151,7 +157,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to update tokens list if state isn't WalletMultiCurrencyState"
         }
 
-        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
+        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id, refresh = isRefreshing)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
                 uiState = stateFactory.getStateByTokensList(
@@ -169,13 +175,13 @@ internal class WalletViewModel @Inject constructor(
             .saveIn(tokensJobHolder)
     }
 
-    private fun updateSingleCurrencyContent(index: Int) {
+    private fun updateSingleCurrencyContent(index: Int, isRefreshing: Boolean) {
         val wallet = getWallet(index)
         updateTxHistory(
             blockchain = getCardTypeResolver(index).getBlockchain(),
             derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
-        updateMarketPrice(userWalletId = wallet.walletId)
+        updateMarketPrice(userWalletId = wallet.walletId, isRefreshing = isRefreshing)
         updateNotifications(index)
     }
 
@@ -203,10 +209,16 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun updateMarketPrice(userWalletId: UserWalletId) {
+    // It also update wallet balance
+    private fun updateMarketPrice(userWalletId: UserWalletId, isRefreshing: Boolean) {
         getPrimaryCurrencyUseCase(userWalletId = userWalletId)
             .distinctUntilChanged()
-            .onEach { uiState = stateFactory.getSingleCurrencyLoadedBalanceState(cryptoCurrencyEither = it) }
+            .onEach {
+                uiState = stateFactory.getSingleCurrencyLoadedBalanceState(
+                    cryptoCurrencyEither = it,
+                    isRefreshing = isRefreshing,
+                )
+            }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
@@ -330,7 +342,10 @@ internal class WalletViewModel @Inject constructor(
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
         if (cacheState != null) {
             uiState = if (cacheState is WalletState.ContentState) {
-                cacheState.copySealed(walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index))
+                cacheState.copySealed(
+                    walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index),
+                    pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false),
+                )
             } else {
                 cacheState
             }
@@ -360,19 +375,27 @@ internal class WalletViewModel @Inject constructor(
                 tokensListState is WalletTokensListState.Loading || hasLoadingTokens
             }
             is WalletSingleCurrencyState -> {
-                txHistoryState is TxHistoryState.Loading || marketPriceBlockState is MarketPriceBlockState.Loading
+                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading ||
+                    txHistoryState is TxHistoryState.Loading
             }
             is WalletState.Initial -> false
         }
     }
 
     override fun onRefreshSwipe() {
-        uiState = stateFactory.getStateAfterContentRefreshing()
+        if (uiState is WalletState.Initial || uiState is WalletLockedState) return
 
-        updateContentItems(
-            index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
-            isRefreshing = true,
-        )
+        viewModelScope.launch(dispatchers.io) {
+            uiState = stateFactory.getStateAfterContentRefreshing()
+
+            // TODO: [REDACTED_JIRA]
+            delay(timeMillis = 500)
+
+            updateContentItems(
+                index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
+                isRefreshing = true,
+            )
+        }
     }
 
     override fun onOrganizeTokensClick() {
@@ -391,6 +414,7 @@ internal class WalletViewModel @Inject constructor(
         uiState = stateFactory.getStateAfterContentRefreshing()
         updateSingleCurrencyContent(
             index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
+            isRefreshing = true,
         )
     }
 
@@ -431,5 +455,21 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBottomSheetDismiss() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onTokenClick(currency: CryptoCurrency) {
+        router.openTokenDetails(currency = currency)
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
     }
 }

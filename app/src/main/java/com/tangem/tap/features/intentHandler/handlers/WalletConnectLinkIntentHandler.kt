@@ -7,6 +7,8 @@ import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.store
+import timber.log.Timber
+import java.net.URLDecoder
 
 /**
 [REDACTED_AUTHOR]
@@ -23,10 +25,16 @@ class WalletConnectLinkIntentHandler : IntentHandler {
             else -> null
         }
 
-        return if (wcUri == null) {
+        return if (wcUri.isNullOrBlank()) {
             false
         } else {
-            store.dispatchWithMain(WalletConnectAction.HandleDeepLink(wcUri))
+            val decodedWcUri = try {
+                URLDecoder.decode(wcUri, DEFAULT_CHARSET_NAME)
+            } catch (e: Exception) {
+                Timber.e(e)
+                return false
+            }
+            store.dispatchWithMain(WalletConnectAction.HandleDeepLink(decodedWcUri))
             true
         }
     }
@@ -34,5 +42,6 @@ class WalletConnectLinkIntentHandler : IntentHandler {
     private companion object {
         private const val TANGEM_SCHEME = "tangem"
         private const val TANGEM_WC_PREFIX = "tangem://wc?uri="
+        private const val DEFAULT_CHARSET_NAME = "UTF-8"
     }
 }

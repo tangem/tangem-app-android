@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -25,6 +27,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
+import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -38,6 +41,8 @@ import org.burnoutcrew.reorderable.*
 
 @Composable
 internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
+    BackHandler(onBack = state.onBackClick)
+
     val tokensListState = rememberLazyListState()
 
     Scaffold(
@@ -47,10 +52,12 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
         },
         content = { paddingValues ->
             TokenList(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
                 listState = tokensListState,
                 state = state.itemsState,
-                dragConfig = state.dndConfig,
+                dndConfig = state.dndConfig,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -59,21 +66,30 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
         },
         containerColor = TangemTheme.colors.background.secondary,
     )
+
+    EventEffect(state.scrollListToTop) {
+        tokensListState.animateScrollToItem(index = 0)
+    }
 }
 
 @Composable
 private fun TokenList(
     listState: LazyListState,
     state: OrganizeTokensListState,
-    dragConfig: OrganizeTokensState.DragAndDropConfig,
+    dndConfig: OrganizeTokensState.DragAndDropConfig,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
+        val onDragEnd: (Int, Int) -> Unit = remember {
+            { _, _ ->
+                dndConfig.onItemDragEnd()
+            }
+        }
         val reorderableListState = rememberReorderableLazyListState(
-            onMove = dragConfig.onItemDragged,
+            onMove = dndConfig.onItemDragged,
             listState = listState,
-            canDragOver = dragConfig.canDragItemOver,
-            onDragEnd = { _, _ -> dragConfig.onItemDragEnd() },
+            canDragOver = dndConfig.canDragItemOver,
+            onDragEnd = onDragEnd,
         )
         val items = state.items
 
@@ -81,7 +97,8 @@ private fun TokenList(
             modifier = Modifier
                 .reorderable(reorderableListState)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .fillMaxSize(),
             state = reorderableListState.listState,
             contentPadding = PaddingValues(
                 top = TangemTheme.dimens.spacing12,
@@ -94,7 +111,7 @@ private fun TokenList(
             ) { index, item ->
 
                 val onDragStart = remember(item) {
-                    { dragConfig.onDragStart(item) }
+                    { dndConfig.onDragStart(item) }
                 }
 
                 DraggableItem(
@@ -103,11 +120,6 @@ private fun TokenList(
                     reorderableState = reorderableListState,
                     onDragStart = onDragStart,
                 )
-
-                if (item is DraggableItem.GroupPlaceholder) {
-                    // This item should be displayed in the list but remain invisible
-                    Box(modifier = Modifier.fillMaxWidth())
-                }
             }
         }
 
@@ -115,6 +127,7 @@ private fun TokenList(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LazyItemScope.DraggableItem(
     index: Int,
@@ -123,15 +136,13 @@ private fun LazyItemScope.DraggableItem(
     onDragStart: () -> Unit,
 ) {
     ReorderableItem(
-        reorderableState = reorderableState,
+        defaultDraggingModifier = Modifier.animateItemPlacement(
+            animationSpec = tween(easing = LinearOutSlowInEasing),
+        ),
+        state = reorderableState,
         index = index,
         key = item.id,
     ) { isDragging ->
-
-        if (isDragging) {
-            onDragStart()
-        }
-
         val itemModifier = Modifier.applyShapeAndShadow(item.roundingMode, item.showShadow)
 
         when (item) {
@@ -145,7 +156,14 @@ private fun LazyItemScope.DraggableItem(
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
             )
-            is DraggableItem.GroupPlaceholder -> Unit
+            // Should be presented in the list but remain invisible
+            is DraggableItem.GroupPlaceholder -> Box(modifier = Modifier.fillMaxWidth())
+        }
+
+        LaunchedEffect(isDragging) {
+            if (isDragging) {
+                onDragStart()
+            }
         }
     }
 }
@@ -214,14 +232,23 @@ private fun TopBar(
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
+                    enabled = config.isEnabled,
                     onClick = config.onSortClick,
+                    dimContent = !config.isSortedByBalance,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
             )
             RoundedActionButton(
                 config = ActionButtonConfig(
-                    text = TextReference.Res(id = R.string.organize_tokens_group),
+                    text = TextReference.Res(
+                        id = if (config.isGrouped) {
+                            R.string.organize_tokens_ungroup
+                        } else {
+                            R.string.organize_tokens_group
+                        },
+                    ),
+                    enabled = config.isEnabled,
                     iconResId = R.drawable.ic_group_24,
                     onClick = config.onGroupClick,
                 ),
@@ -250,6 +277,8 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_apply),
             onClick = config.onApplyClick,
+            showProgress = config.showApplyProgress,
+            enabled = config.canApply,
         )
     }
 }

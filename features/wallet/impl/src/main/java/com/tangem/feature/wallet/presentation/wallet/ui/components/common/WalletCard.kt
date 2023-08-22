@@ -18,17 +18,16 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-
-private const val DOTS = "•••"
 
 /**
  * Wallet card
@@ -40,61 +39,87 @@ private const val DOTS = "•••"
  */
 @Composable
 internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
+    @Suppress("DestructuringDeclarationWithTooManyEntries")
+    CardContainer(onClick = state.onClick, modifier = modifier) {
+        val (title, balance, additionalText, image) = createRefs()
+
+        val contentVerticalMargin = TangemTheme.dimens.spacing12
+        Title(
+            state = state,
+            modifier = Modifier.constrainAs(title) {
+                start.linkTo(parent.start)
+                top.linkTo(anchor = parent.top, margin = contentVerticalMargin)
+                end.linkTo(image.start)
+                width = Dimension.fillToConstraints
+            },
+        )
+
+        val betweenContentMargin = TangemTheme.dimens.spacing8
+        Balance(
+            state = state,
+            modifier = Modifier.constrainAs(balance) {
+                start.linkTo(parent.start)
+                top.linkTo(anchor = title.bottom, margin = betweenContentMargin)
+                bottom.linkTo(anchor = additionalText.top, margin = betweenContentMargin)
+            },
+        )
+
+        AdditionalInfo(
+            state = state,
+            modifier = Modifier.constrainAs(additionalText) {
+                start.linkTo(parent.start)
+                bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
+            },
+        )
+
+        val imageWidth = TangemTheme.dimens.size120
+        Image(
+            id = state.imageResId,
+            modifier = Modifier.constrainAs(image) {
+                centerVerticallyTo(parent)
+                top.linkTo(parent.top)
+                end.linkTo(parent.end)
+                height = Dimension.fillToConstraints
+                width = Dimension.value(imageWidth)
+            },
+        )
+    }
+}
+
+@Composable
+private fun CardContainer(
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    content: @Composable ConstraintLayoutScope.() -> Unit,
+) {
     Surface(
         modifier = modifier.defaultMinSize(minHeight = TangemTheme.dimens.size108),
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = TangemTheme.colors.background.primary,
-        onClick = state.onClick ?: {},
-        enabled = state.onClick != null,
+        onClick = onClick ?: {},
+        enabled = onClick != null,
     ) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing14),
         ) {
-            val (balanceBlock, imageItem) = createRefs()
-            Column(
-                modifier = Modifier.constrainAs(balanceBlock) {
-                    centerVerticallyTo(parent)
-                    start.linkTo(parent.start)
-                    end.linkTo(imageItem.start)
-                    width = Dimension.fillToConstraints
-                },
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-            ) {
-                Title(state)
-                Balance(state)
-                AdditionalInfo(description = state.additionalInfo)
-            }
-
-            val imageWidth = TangemTheme.dimens.size120
-            WalletImage(
-                id = state.imageResId,
-                modifier = Modifier.constrainAs(imageItem) {
-                    centerVerticallyTo(parent)
-                    top.linkTo(parent.top)
-                    end.linkTo(parent.end)
-                    height = Dimension.fillToConstraints
-                    width = Dimension.value(imageWidth)
-                },
-            )
+            content()
         }
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Title(state: WalletCardState) {
-    AnimatedContent(targetState = state, label = "Update the title") {
-        when (it) {
-            is WalletCardState.HiddenContent -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
-                    Text(
-                        text = it.title,
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.body2,
-                        maxLines = 1,
-                    )
+private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+    ) {
+        TitleText(title = state.title)
+
+        AnimatedVisibility(visible = state is WalletCardState.HiddenContent, label = "Update the hidden icon") {
+            when (state) {
+                is WalletCardState.HiddenContent -> {
                     Icon(
                         modifier = Modifier.size(size = TangemTheme.dimens.size20),
                         painter = painterResource(id = R.drawable.ic_eye_off_24),
@@ -102,16 +127,63 @@ private fun Title(state: WalletCardState) {
                         tint = TangemTheme.colors.icon.informative,
                     )
                 }
+                is WalletCardState.Content,
+                is WalletCardState.Error,
+                is WalletCardState.Loading,
+                -> Unit
             }
-            is WalletCardState.Content,
-            is WalletCardState.Error,
-            is WalletCardState.Loading,
-            -> {
+        }
+    }
+}
+
+@Composable
+private fun TitleText(title: String) {
+    Text(
+        text = title,
+        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography.body2,
+        maxLines = 1,
+    )
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = state,
+        label = "Update the balance",
+        modifier = modifier,
+    ) { walletCardState ->
+        when (walletCardState) {
+            is WalletCardState.Content -> {
+                ResizableText(
+                    text = walletCardState.balance,
+                    fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
+                )
+            }
+            is WalletCardState.Loading -> {
+                RectangleShimmer(
+                    modifier = Modifier.size(
+                        width = TangemTheme.dimens.size102,
+                        height = TangemTheme.dimens.size32,
+                    ),
+                )
+            }
+            is WalletCardState.HiddenContent -> {
                 Text(
-                    text = it.title,
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.body2,
-                    maxLines = 1,
+                    text = WalletCardState.HIDDEN_BALANCE_TEXT.resolveReference(),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
+                )
+            }
+            is WalletCardState.Error -> {
+                Text(
+                    text = WalletCardState.EMPTY_BALANCE_TEXT.resolveReference(),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.h2,
                 )
             }
         }
@@ -120,38 +192,26 @@ private fun Title(state: WalletCardState) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Balance(state: WalletCardState) {
-    AnimatedContent(targetState = state, label = "Update the balance") {
-        when (it) {
-            is WalletCardState.Content -> {
-                ResizableText(
-                    text = it.balance,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                    fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = state,
+        label = "Update the additional text",
+        modifier = modifier,
+    ) { walletCardState ->
+        when (walletCardState) {
+            is WalletCardState.AdditionalTextAvailability -> {
+                Text(
+                    text = walletCardState.additionalInfo.resolveReference(),
+                    color = TangemTheme.colors.text.disabled,
+                    style = TangemTheme.typography.caption,
                 )
             }
             is WalletCardState.Loading -> {
                 RectangleShimmer(
                     modifier = Modifier.size(
-                        width = TangemTheme.dimens.size102,
-                        height = TangemTheme.dimens.size24,
+                        width = TangemTheme.dimens.size84,
+                        height = TangemTheme.dimens.size16,
                     ),
-                )
-            }
-            is WalletCardState.HiddenContent -> {
-                Text(
-                    text = DOTS,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                )
-            }
-            is WalletCardState.Error -> {
-                Text(
-                    text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
                 )
             }
         }
@@ -159,16 +219,7 @@ private fun Balance(state: WalletCardState) {
 }
 
 @Composable
-private fun AdditionalInfo(description: String) {
-    Text(
-        text = description,
-        color = TangemTheme.colors.text.disabled,
-        style = TangemTheme.typography.caption,
-    )
-}
-
-@Composable
-private fun WalletImage(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
+private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
     AnimatedVisibility(visible = id != null, modifier = modifier) {
         Image(
             painter = painterResource(id = requireNotNull(id)),
@@ -180,11 +231,14 @@ private fun WalletImage(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
 
 // region Preview
 
-@Preview(widthDp = 360, heightDp = 360)
+@Preview
 @Composable
-private fun Preview_WalletCard_LightTheme(@PreviewParameter(WalletCardStateProvider::class) state: WalletCardState) {
+private fun Preview_WalletCard_LightTheme(
+    @PreviewParameter(WalletCardStateProvider::class)
+    state: WalletCardState,
+) {
     TangemTheme(isDark = false) {
-        WalletCard(state = state, modifier = Modifier.fillMaxWidth())
+        WalletCard(state = state)
     }
 }
 

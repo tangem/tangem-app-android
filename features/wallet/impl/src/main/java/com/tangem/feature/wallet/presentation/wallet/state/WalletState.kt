@@ -34,14 +34,26 @@ internal sealed class WalletState {
         /**
          * Util function that allow to make a copy
          *
-         * @param walletsListConfig wallets list config
+         * @param walletsListConfig   wallets list config
+         * @param pullToRefreshConfig pull to refresh config
          */
-        fun copySealed(walletsListConfig: WalletsListConfig = this.walletsListConfig): ContentState {
+        fun copySealed(
+            walletsListConfig: WalletsListConfig = this.walletsListConfig,
+            pullToRefreshConfig: WalletPullToRefreshConfig = this.pullToRefreshConfig,
+        ): ContentState {
             return when (this) {
-                is WalletMultiCurrencyState.Content -> copy(walletsListConfig = walletsListConfig)
-                is WalletMultiCurrencyState.Locked -> copy(walletsListConfig = walletsListConfig)
-                is WalletSingleCurrencyState.Content -> copy(walletsListConfig = walletsListConfig)
-                is WalletSingleCurrencyState.Locked -> copy(walletsListConfig = walletsListConfig)
+                is WalletMultiCurrencyState.Content -> {
+                    copy(walletsListConfig = walletsListConfig, pullToRefreshConfig = pullToRefreshConfig)
+                }
+                is WalletMultiCurrencyState.Locked -> {
+                    copy(walletsListConfig = walletsListConfig, pullToRefreshConfig = pullToRefreshConfig)
+                }
+                is WalletSingleCurrencyState.Content -> {
+                    copy(walletsListConfig = walletsListConfig, pullToRefreshConfig = pullToRefreshConfig)
+                }
+                is WalletSingleCurrencyState.Locked -> {
+                    copy(walletsListConfig = walletsListConfig, pullToRefreshConfig = pullToRefreshConfig)
+                }
             }
         }
     }

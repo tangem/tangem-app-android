@@ -88,7 +88,7 @@ internal class DefaultNetworksRepository(
     private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, networkId: Network.ID) {
         val currencies = getCurrencies(userWalletId)
             .asSequence()
-            .filter { it.networkId == networkId }
+            .filter { it.network.id == networkId }
 
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,

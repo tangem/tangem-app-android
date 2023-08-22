@@ -1,19 +1,22 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import androidx.annotation.DrawableRes
+import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class CryptoCurrencyStatusToTokenItemConverter(
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     private val CryptoCurrencyStatus.networkIconResId: Int?
@@ -60,6 +63,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                     priceChange = getPriceChangeConfig(),
                 )
             },
+            onClick = { clickIntents.onTokenClick(currency) },
         )
     }
 
@@ -71,8 +75,9 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
         val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val appCurrency = appCurrencyProvider()
 
-        return BigDecimalFormatter.formatFiatAmount(fiatAmount, fiatCurrencyCode, fiatCurrencySymbol)
+        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
     }
 
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(

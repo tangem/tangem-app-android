@@ -48,7 +48,7 @@ private fun ScanResponse.hasDerivation(blockchain: Blockchain, derivationPath: D
             Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
                 hasDerivation(EllipticCurve.Secp256k1, derivationPath)
             }
-            Blockchain.ed25519OnlyBlockchains(isTestnet).contains(blockchain) -> {
+            Blockchain.ed25519Blockchains(isTestnet).contains(blockchain) -> {
                 hasDerivation(EllipticCurve.Ed25519, derivationPath)
             }
             else -> false

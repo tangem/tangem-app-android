@@ -96,6 +96,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     mainnetApiKey = configValues.tonCenterKeys.mainnet,
                     testnetApiKey = configValues.tonCenterKeys.testnet,
                 ),
+                chiaFireAcademyApiKey = configValues.chiaFireAcademyApiKey,
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,

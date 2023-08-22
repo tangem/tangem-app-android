@@ -31,8 +31,10 @@ dependencies {
     implementation(project(":domain:wallets:models"))
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))

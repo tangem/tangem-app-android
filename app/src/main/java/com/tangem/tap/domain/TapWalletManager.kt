@@ -8,6 +8,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.ConfigManager
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
@@ -20,6 +21,8 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletStores.WalletStoresError
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
+import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -92,7 +95,8 @@ class TapWalletManager(
             null
         }
         scope.launch {
-            store.state.daggerGraphState.walletConnectInteractor?.startListening(
+            val wcInteractor = store.state.daggerGraphState.walletConnectInteractor ?: return@launch
+            wcInteractor.startListening(
                 userWalletId = userWallet.walletId.stringValue,
                 cardId = cardId,
             )
@@ -106,6 +110,9 @@ class TapWalletManager(
                 store.dispatchOnMain(WalletAction.LoadData.Success)
                 store.state.globalState.topUpController?.loadDataSuccess()
                 store.dispatchWithMain(WalletAction.Warnings.CheckHashesCount.VerifyOnlineIfNeeded)
+
+                val wcInteractor = store.state.daggerGraphState.walletConnectInteractor
+                wcInteractor?.setUserChains(getAccountsForWc(wcInteractor))
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {
@@ -132,6 +139,23 @@ class TapWalletManager(
                 Timber.e(error, "Wallet stores fetching failed for ${userWallet.walletId}")
 
                 store.dispatchOnMain(errorAction)
+            }
+    }
+
+    private fun getAccountsForWc(wcInteractor: WalletConnectInteractor): List<Account> {
+        return store.state.walletState.walletManagers
+            .mapNotNull {
+                val wallet = it.wallet
+                val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                    wallet.blockchain.toNetworkId(),
+                )
+                chainId?.let {
+                    Account(
+                        chainId,
+                        wallet.address,
+                        wallet.publicKey.derivationPath?.rawPath,
+                    )
+                }
             }
     }
 

@@ -234,7 +234,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val balanceIsLoading = twinCardsState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivation?.derivationPath?.rawPath,
+                    walletManager.wallet.publicKey.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
