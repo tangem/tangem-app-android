@@ -137,7 +137,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch {
             val wallet = getWallet()
             router.openUrl(
                 url = getExploreUrlUseCase(
