@@ -135,7 +135,7 @@ sealed class CryptoCurrency : Serializable {
         }
     }
 
-    sealed class StandardType {
+    sealed class StandardType : Serializable {
         abstract val name: String
 
         object ERC20 : StandardType() {
