@@ -1,12 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter.TokensListModel
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -18,16 +17,14 @@ internal class TokenListToWalletStateConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val isLockedWalletProvider: Provider<Boolean>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
-    private val fiatCurrencyCode: String,
-    private val fiatCurrencySymbol: String,
     clickIntents: WalletClickIntents,
 ) : Converter<TokensListModel, WalletMultiCurrencyState.Content> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
-        fiatCurrencyCode = fiatCurrencyCode,
-        fiatCurrencySymbol = fiatCurrencySymbol,
+        appCurrencyProvider = appCurrencyProvider,
         clickIntents = clickIntents,
     )
 
@@ -36,7 +33,7 @@ internal class TokenListToWalletStateConverter(
         return state.copy(
             walletsListConfig = state.updateSelectedWallet(fiatBalance = value.tokenList.totalFiatBalance),
             pullToRefreshConfig = if (value.isRefreshing) {
-                state.pullToRefreshConfig.copy(isRefreshing = state.getRefreshingStatus())
+                state.pullToRefreshConfig.copy(isRefreshing = getRefreshingStatus(tokenList = value.tokenList))
             } else {
                 state.pullToRefreshConfig
             },
@@ -51,9 +48,8 @@ internal class TokenListToWalletStateConverter(
             currentState = selectedWalletCard,
             isLockedState = isLockedWalletProvider(),
             cardTypeResolverProvider = cardTypeResolverProvider,
+            appCurrencyProvider = appCurrencyProvider,
             isWalletContentHidden = isWalletContentHidden,
-            fiatCurrencyCode = fiatCurrencyCode,
-            fiatCurrencySymbol = fiatCurrencySymbol,
         )
 
         return walletsListConfig.copy(
@@ -62,17 +58,8 @@ internal class TokenListToWalletStateConverter(
         )
     }
 
-    private fun WalletState.getRefreshingStatus(): Boolean {
-        return if (this is WalletMultiCurrencyState.Content &&
-            this.tokensListState is WalletTokensListState.ContentState
-        ) {
-            tokensListState.items.any { tokensListItemState ->
-                tokensListItemState is WalletTokensListState.TokensListItemState.Token &&
-                    tokensListItemState.state is TokenItemState.Loading
-            }
-        } else {
-            false
-        }
+    private fun getRefreshingStatus(tokenList: TokenList): Boolean {
+        return tokenList.totalFiatBalance is TokenList.FiatBalance.Loading
     }
 
     data class TokensListModel(val tokenList: TokenList, val isRefreshing: Boolean)

@@ -23,6 +23,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
@@ -40,6 +41,7 @@ import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
@@ -161,6 +163,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
 
+    @Inject
+    lateinit var appCurrencyRepository: AppCurrencyRepository
+
     override fun onCreate() {
         super.onCreate()
 
@@ -179,12 +184,13 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
+                    appCurrencyRepository = appCurrencyRepository,
                 ),
             ),
         )
 
         if (BuildConfig.DEBUG) {
-            Logger.addLogAdapter(AndroidLogAdapter())
+            Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
             Timber.plant(
                 object : Timber.DebugTree() {
                     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {

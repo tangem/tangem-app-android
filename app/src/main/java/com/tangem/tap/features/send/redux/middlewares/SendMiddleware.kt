@@ -411,7 +411,7 @@ private suspend fun updateWallet(walletManager: WalletManager) {
         userWallet = selectedUserWallet,
         currency = Currency.Blockchain(
             blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivation?.derivationPath?.rawPath,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath,
         ),
     )
 }

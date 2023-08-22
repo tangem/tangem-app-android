@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":core:res"))
+    implementation(project(":data:common"))
 
     /** Tangem libraries */
     implementation(deps.tangem.card.core)

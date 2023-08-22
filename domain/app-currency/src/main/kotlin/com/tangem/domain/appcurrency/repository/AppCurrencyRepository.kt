@@ -9,5 +9,5 @@ interface AppCurrencyRepository {
 
     suspend fun getAvailableAppCurrencies(): List<AppCurrency>
 
-    suspend fun changeAppCurrency(appCurrency: AppCurrency)
+    suspend fun changeAppCurrency(currencyCode: String)
 }

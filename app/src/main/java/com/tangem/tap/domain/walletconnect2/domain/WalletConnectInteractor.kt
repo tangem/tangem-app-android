@@ -44,6 +44,15 @@ class WalletConnectInteractor(
         }
     }
 
+    fun setUserChains(accounts: List<Account>) {
+        val userNamespaces: Map<NetworkNamespace, List<Account>> = accounts
+            .groupBy { account ->
+                blockchainHelper.getNamespaceFromFullChainIdOrNull(account.chainId)
+                    ?.let { NetworkNamespace(it) }
+            }.filterNotNull()
+        walletConnectRepository.setUserNamespaces(userNamespaces)
+    }
+
     private suspend fun subscribeToEvents() {
         events
             .onEach { wcEvent ->

@@ -82,10 +82,7 @@ fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
 }
 
 fun <T> WalletManager.Companion.stub(): T {
-    val wallet = Wallet(
-        blockchain = Blockchain.Unknown,
-        walletAddresses = emptyMap()
-    )
+    val wallet = Wallet(Blockchain.Unknown, setOf(), Wallet.PublicKey(byteArrayOf(), null), setOf())
     return object : WalletManager(wallet) {
         override val currentHost: String = ""
         override suspend fun update() {}

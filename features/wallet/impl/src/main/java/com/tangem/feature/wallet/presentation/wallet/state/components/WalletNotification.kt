@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
@@ -14,6 +15,7 @@ import com.tangem.feature.wallet.impl.R
 [REDACTED_AUTHOR]
  */
 // TODO: Finalize notification strings [REDACTED_JIRA]
+@Immutable
 sealed class WalletNotification(open val state: NotificationState) {
 
     /** Clickable notification */

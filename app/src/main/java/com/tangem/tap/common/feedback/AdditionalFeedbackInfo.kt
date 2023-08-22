@@ -82,7 +82,7 @@ class AdditionalFeedbackInfo {
     private fun createEmailWalletInfo(walletManager: WalletManager): EmailWalletInfo {
         return EmailWalletInfo(
             blockchain = walletManager.wallet.blockchain,
-            derivationPath = walletManager.wallet.publicKey.derivation?.derivationPath?.rawPath ?: "",
+            derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath ?: "",
             outputsCount = walletManager.outputsCount?.toString(),
             host = walletManager.currentHost,
             addresses = formatAddresses(walletManager.wallet),

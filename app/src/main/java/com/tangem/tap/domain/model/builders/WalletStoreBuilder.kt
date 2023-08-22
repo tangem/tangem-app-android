@@ -87,7 +87,7 @@ private class WalletMangerWalletStoreBuilderImpl(
         return WalletStoreModel(
             userWalletId = userWallet.walletId,
             blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivation?.derivationPath,
+            derivationPath = wallet.publicKey.derivationPath,
             walletsData = listOf(blockchainWalletData) + listOfNotNull(tokenWalletsData),
             walletRent = null,
             walletManager = walletManager,
@@ -144,7 +144,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
     return WalletDataModel(
         currency = Currency.Blockchain(
             blockchain = this,
-            derivationPath = wallet.publicKey.derivation?.derivationPath?.rawPath,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
         walletAddresses = wallet.getWalletAddresses(),
@@ -161,7 +161,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager, primaryToken: 
         currency = Currency.Token(
             token = this,
             blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivation?.derivationPath?.rawPath,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath,
         ),
         status = WalletDataModel.Loading,
         walletAddresses = wallet.getWalletAddresses(),

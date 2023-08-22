@@ -14,6 +14,9 @@ internal interface OrganizeTokensIntents {
     fun onApplyClick()
 
     fun onCancelClick()
+}
+
+internal interface DragAndDropIntents {
 
     fun onItemDragged(from: ItemPosition, to: ItemPosition)
 

@@ -24,7 +24,7 @@ internal class DefaultWalletManagersStore(
 
         return walletManagers?.singleOrNull {
             it.wallet.blockchain == blockchain &&
-                it.wallet.publicKey.derivation?.derivationPath?.rawPath == derivationPath
+                it.wallet.publicKey.derivationPath?.rawPath == derivationPath
         }
     }
 

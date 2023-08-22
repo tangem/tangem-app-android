@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.calculateHashCode
-import com.tangem.domain.common.extensions.derivationPath
 
 @JsonClass(generateAdapter = true)
 data class BlockchainNetwork(

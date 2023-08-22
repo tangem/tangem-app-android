@@ -11,6 +11,8 @@ interface WalletConnectRepository {
 
     fun init(projectId: String)
 
+    fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>)
+
     fun updateSessions()
 
     fun pair(uri: String)

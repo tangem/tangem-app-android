@@ -22,7 +22,7 @@ class SignHashesTask(
         SignHashesCommand(
             hashes = hashes.toTypedArray(),
             walletPublicKey = publicKey.seedKey,
-            derivationPath = publicKey.derivation?.derivationPath,
+            derivationPath = publicKey.derivationPath,
         ).run(session) { response ->
             when (response) {
                 is CompletionResult.Success -> {

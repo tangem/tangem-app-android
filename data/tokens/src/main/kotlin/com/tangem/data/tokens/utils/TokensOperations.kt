@@ -3,7 +3,6 @@ package com.tangem.data.tokens.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.derivationPath
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.models.CryptoCurrency.ID
@@ -29,12 +28,6 @@ internal fun getDerivationPath(blockchain: Blockchain, derivationStyleProvider: 
 
 internal fun getBlockchain(networkId: Network.ID): Blockchain {
     return Blockchain.fromId(networkId.value)
-}
-
-internal fun getNetworkId(blockchain: Blockchain): Network.ID {
-    val value = blockchain.id
-
-    return Network.ID(value)
 }
 
 internal fun getCoinId(blockchain: Blockchain): ID {
@@ -73,7 +66,7 @@ private fun getTokenOrCoinId(blockchain: Blockchain, token: SdkToken?): ID {
         else -> TOKEN_ID_PREFIX to CurrencyIdSuffix(rawId = sdkTokenId)
     }
 
-    return ID(prefix, getNetworkId(blockchain), suffix)
+    return ID(prefix, Network.ID(blockchain.id), suffix)
 }
 
 private fun getTokenIconUrlFromDefaultHost(tokenId: String): String {

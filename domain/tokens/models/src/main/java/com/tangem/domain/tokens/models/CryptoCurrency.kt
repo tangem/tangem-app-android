@@ -1,10 +1,12 @@
 package com.tangem.domain.tokens.models
 
+import java.io.Serializable
+
 /**
  * Represents a generic cryptocurrency.
  *
  * @property id Unique identifier for the cryptocurrency.
- * @property networkId Identifier for the network to which the cryptocurrency belongs.
+ * @property network The network to which the cryptocurrency belongs.
  * @property name Human-readable name of the cryptocurrency.
  * @property symbol Symbol of the cryptocurrency.
  * @property decimals Number of decimal places used by the cryptocurrency.
@@ -12,10 +14,11 @@ package com.tangem.domain.tokens.models
  * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
  * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
  */
-sealed class CryptoCurrency {
+// FIXME: Remove serialization [REDACTED_JIRA]
+sealed class CryptoCurrency : Serializable {
 
     abstract val id: ID
-    abstract val networkId: Network.ID
+    abstract val network: Network
     abstract val name: String
     abstract val symbol: String
     abstract val decimals: Int
@@ -27,7 +30,7 @@ sealed class CryptoCurrency {
      */
     data class Coin(
         override val id: ID,
-        override val networkId: Network.ID,
+        override val network: Network,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,
@@ -48,7 +51,7 @@ sealed class CryptoCurrency {
      */
     data class Token(
         override val id: ID,
-        override val networkId: Network.ID,
+        override val network: Network,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,
@@ -74,11 +77,12 @@ sealed class CryptoCurrency {
      * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
      * its ID of the custom token.
      */
+    // FIXME: Remove serialization [REDACTED_JIRA]
     data class ID(
         private val prefix: Prefix,
         private val networkId: Network.ID,
         private val suffix: Suffix,
-    ) {
+    ) : Serializable {
 
         val value: String = buildString {
             append(prefix.value)
@@ -109,7 +113,8 @@ sealed class CryptoCurrency {
          *
          * The suffix can either be a raw ID or a contract address.
          */
-        sealed class Suffix {
+        // FIXME: Remove serialization [REDACTED_JIRA]
+        sealed class Suffix : Serializable {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
             abstract val value: String

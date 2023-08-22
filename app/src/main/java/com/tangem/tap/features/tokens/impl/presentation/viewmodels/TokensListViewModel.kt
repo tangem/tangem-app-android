@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
@@ -308,9 +309,13 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                analyticsSender.sendWhenBlockchainAdded(blockchain)
-                changedBlockchainList.add(blockchain)
-                toggledNetwork.changeToggleState()
+                if (isUnsupportedToken(blockchain)) {
+                    router.openUnsupportedNetworkAlert(blockchain)
+                } else {
+                    analyticsSender.sendWhenBlockchainAdded(blockchain)
+                    changedBlockchainList.add(blockchain)
+                    toggledNetwork.changeToggleState()
+                }
             }
         }
 
@@ -349,11 +354,8 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                val isUnsupportedToken =
-                    !(reduxStateHolder.scanResponse?.card?.canHandleToken(token.blockchain) ?: false)
-
-                if (isUnsupportedToken) {
-                    router.openUnsupportedSoltanaNetworkAlert()
+                if (isUnsupportedToken(token.blockchain)) {
+                    router.openUnsupportedNetworkAlert(token.blockchain)
                 } else {
                     analyticsSender.sendWhenTokenAdded(token.token)
                     changedTokensList.add(token)
@@ -361,6 +363,15 @@ internal class TokensListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun isUnsupportedToken(blockchain: Blockchain): Boolean {
+        val scanResponse = reduxStateHolder.scanResponse
+        val canHandleToken = scanResponse?.card?.canHandleToken(
+            blockchain = blockchain,
+            cardTypesResolver = scanResponse.cardTypesResolver,
+        ) ?: false
+        return !canHandleToken
     }
 
     private companion object {
