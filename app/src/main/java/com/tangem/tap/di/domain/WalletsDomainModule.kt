@@ -48,4 +48,16 @@ internal object WalletsDomainModule {
     fun providesSelectWalletUseCase(walletsStateHolder: WalletsStateHolder): SelectWalletUseCase {
         return SelectWalletUseCase(walletsStateHolder = walletsStateHolder)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun providesUpdateWalletUseCase(walletsStateHolder: WalletsStateHolder): UpdateWalletUseCase {
+        return UpdateWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesDeleteWalletUseCase(walletsStateHolder: WalletsStateHolder): DeleteWalletUseCase {
+        return DeleteWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
 }
