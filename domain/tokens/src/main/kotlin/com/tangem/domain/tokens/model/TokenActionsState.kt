@@ -2,8 +2,9 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.wallets.models.UserWalletId
 
-data class WalletActionsState(
+data class TokenActionsState(
     val walletId: UserWalletId,
+    val tokenId: String,
     val states: List<ActionState>,
 ) {
 
