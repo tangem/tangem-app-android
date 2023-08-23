@@ -23,26 +23,32 @@ import kotlinx.coroutines.flow.update
 internal class WalletLoadingTxHistoryConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val clickIntents: WalletClickIntents,
-) : Converter<Either<TxHistoryStateError, Int>, WalletSingleCurrencyState.Content> {
+) : Converter<Either<TxHistoryStateError, Int>, WalletState> {
 
-    override fun convert(value: Either<TxHistoryStateError, Int>): WalletSingleCurrencyState.Content {
+    override fun convert(value: Either<TxHistoryStateError, Int>): WalletState {
         return value.fold(ifLeft = ::convertError, ifRight = ::convert)
     }
 
-    private fun convertError(error: TxHistoryStateError): WalletSingleCurrencyState.Content {
-        return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = when (error) {
-                is TxHistoryStateError.EmptyTxHistories -> {
-                    Empty(onBuyClick = clickIntents::onBuyClick)
-                }
-                is TxHistoryStateError.DataError -> {
-                    Error(onReloadClick = clickIntents::onReloadClick)
-                }
-                is TxHistoryStateError.TxHistoryNotImplemented -> {
-                    NotSupported(onExploreClick = clickIntents::onExploreClick)
-                }
-            },
-        )
+    private fun convertError(error: TxHistoryStateError): WalletState {
+        val state = currentStateProvider()
+
+        return if (state is WalletSingleCurrencyState.Content) {
+            state.copy(
+                txHistoryState = when (error) {
+                    is TxHistoryStateError.EmptyTxHistories -> {
+                        Empty(onBuyClick = clickIntents::onBuyClick)
+                    }
+                    is TxHistoryStateError.DataError -> {
+                        Error(onReloadClick = clickIntents::onReloadClick)
+                    }
+                    is TxHistoryStateError.TxHistoryNotImplemented -> {
+                        NotSupported(onExploreClick = clickIntents::onExploreClick)
+                    }
+                },
+            )
+        } else {
+            state
+        }
     }
 
     private fun convert(value: Int): WalletSingleCurrencyState.Content {
