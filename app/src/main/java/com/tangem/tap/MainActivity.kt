@@ -215,6 +215,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+
+        /*
+         * FIXME: Test functionality. TangemSdk is null on some devices when HomeAction.Read is called
+         *  inside IntentHandler.
+         */
+        cardSdkLifecycleObserver.onCreate(context = this)
+
         scope.launch {
             intentProcessor.handleIntent(intent)
         }
