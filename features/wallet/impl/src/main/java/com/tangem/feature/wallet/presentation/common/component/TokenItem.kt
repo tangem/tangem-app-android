@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +61,7 @@ internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
         is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
         is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
+        is TokenItemState.Locked -> LockedTokenItem(modifier)
     }
 }
 
@@ -194,6 +196,77 @@ private fun LoadingTokenItem(modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+@Composable
+private fun LockedTokenItem(modifier: Modifier = Modifier) {
+    BaseSurface(modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = TangemTheme.dimens.spacing12,
+                    vertical = TangemTheme.dimens.spacing4,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        ) {
+            Box(modifier = Modifier.size(size = TangemTheme.dimens.size42)) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            color = TangemTheme.colors.button.secondary,
+                            shape = CircleShape,
+                        ),
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size72,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size50,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size40,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size40,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
 }
 
 /**
