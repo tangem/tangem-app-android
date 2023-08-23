@@ -97,7 +97,7 @@ internal class WalletSkeletonStateConverter(
 
             // If wallet is initialized, return it, otherwise return loading state
             if (initializedWallet !is WalletCardState.Loading) {
-                initializedWallet
+                initializedWallet.copySealed(title = wallet.name)
             } else {
                 createWalletLoadingState(wallet)
             }
@@ -118,6 +118,8 @@ internal class WalletSkeletonStateConverter(
                 null
             },
             imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
+            onRenameClick = clickIntents::onRenameClick,
+            onDeleteClick = clickIntents::onDeleteClick,
         )
     }
 

@@ -35,7 +35,8 @@ internal object WalletPreviewData {
             balance = "8923,05 $",
             additionalInfo = TextReference.Str("3 cards • Seed phrase"),
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -44,7 +45,8 @@ internal object WalletPreviewData {
             id = UserWalletId("321"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -53,7 +55,8 @@ internal object WalletPreviewData {
             id = UserWalletId("42"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -62,7 +65,8 @@ internal object WalletPreviewData {
             id = UserWalletId("24"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 

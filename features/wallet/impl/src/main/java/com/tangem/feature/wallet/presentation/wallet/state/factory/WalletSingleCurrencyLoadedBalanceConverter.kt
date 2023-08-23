@@ -95,7 +95,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                         currencyAmount = status.amount,
                     ),
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                     balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
                 )
             }
@@ -104,7 +105,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                 )
             }
             is CryptoCurrencyStatus.MissedDerivation,
@@ -116,7 +118,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                 )
             }
         }
