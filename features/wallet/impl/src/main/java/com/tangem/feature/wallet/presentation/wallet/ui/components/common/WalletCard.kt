@@ -5,7 +5,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,7 +25,9 @@ import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -118,20 +122,12 @@ private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
         TitleText(title = state.title)
 
         AnimatedVisibility(visible = state is WalletCardState.HiddenContent, label = "Update the hidden icon") {
-            when (state) {
-                is WalletCardState.HiddenContent -> {
-                    Icon(
-                        modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                        painter = painterResource(id = R.drawable.ic_eye_off_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
-                    )
-                }
-                is WalletCardState.Content,
-                is WalletCardState.Error,
-                is WalletCardState.Loading,
-                -> Unit
-            }
+            Icon(
+                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                painter = painterResource(id = R.drawable.ic_eye_off_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
         }
     }
 }
@@ -164,58 +160,76 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.h2,
                 )
             }
+            is WalletCardState.HiddenContent -> NonContentBalanceText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.Error -> NonContentBalanceText(text = WalletCardState.EMPTY_BALANCE_TEXT)
             is WalletCardState.Loading -> {
-                RectangleShimmer(
-                    modifier = Modifier.size(
-                        width = TangemTheme.dimens.size102,
-                        height = TangemTheme.dimens.size32,
-                    ),
-                )
+                RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
             }
-            is WalletCardState.HiddenContent -> {
-                Text(
-                    text = WalletCardState.HIDDEN_BALANCE_TEXT.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                )
-            }
-            is WalletCardState.Error -> {
-                Text(
-                    text = WalletCardState.EMPTY_BALANCE_TEXT.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                )
+            is WalletCardState.LockedContent -> {
+                LockedContent(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
             }
         }
     }
+}
+
+@Composable
+private fun NonContentBalanceText(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        color = TangemTheme.colors.text.primary1,
+        style = TangemTheme.typography.h2,
+    )
+}
+
+private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
+    return size(width = dimens.size102, height = dimens.size32)
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state,
+        targetState = state.additionalInfo,
         label = "Update the additional text",
         modifier = modifier,
-    ) { walletCardState ->
-        when (walletCardState) {
-            is WalletCardState.AdditionalTextAvailability -> {
-                Text(
-                    text = walletCardState.additionalInfo.resolveReference(),
-                    color = TangemTheme.colors.text.disabled,
-                    style = TangemTheme.typography.caption,
-                )
-            }
-            is WalletCardState.Loading -> {
-                RectangleShimmer(
-                    modifier = Modifier.size(
-                        width = TangemTheme.dimens.size84,
-                        height = TangemTheme.dimens.size16,
-                    ),
-                )
+    ) { additionalInfo ->
+        if (additionalInfo != null) {
+            AdditionalInfoText(text = additionalInfo)
+        } else {
+            when (state) {
+                is WalletCardState.Loading -> {
+                    RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
+                }
+                is WalletCardState.LockedContent -> {
+                    LockedContent(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
+                }
+                else -> Unit
             }
         }
     }
+}
+
+@Composable
+private fun AdditionalInfoText(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        color = TangemTheme.colors.text.disabled,
+        style = TangemTheme.typography.caption,
+    )
+}
+
+private fun Modifier.nonContentAdditionalInfoSize(dimens: TangemDimens): Modifier {
+    return size(width = dimens.size84, height = dimens.size16)
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
 }
 
 @Composable
