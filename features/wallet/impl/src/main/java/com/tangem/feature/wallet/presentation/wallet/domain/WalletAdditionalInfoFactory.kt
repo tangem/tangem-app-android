@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 import java.math.BigDecimal
 
@@ -20,50 +21,47 @@ internal object WalletAdditionalInfoFactory {
     /**
      * Get additional info
      *
-     * @param cardTypesResolver  card type resolver
-     * @param isLocked          check if wallet is locked
+     * @param cardTypesResolver card type resolver
+     * @param wallet            current wallet
      * @param currencyAmount    amount of currency
      */
     fun resolve(
         cardTypesResolver: CardTypesResolver,
-        isLocked: Boolean,
+        wallet: UserWallet,
         currencyAmount: BigDecimal? = null,
     ): TextReference {
         return if (cardTypesResolver.isMultiwalletAllowed()) {
-            resolveMultiCurrencyInfo(cardTypesResolver, isLocked)
+            resolveMultiCurrencyInfo(cardTypesResolver, wallet)
         } else {
-            resolveSingleCurrencyInfo(cardTypesResolver, isLocked, currencyAmount)
+            resolveSingleCurrencyInfo(cardTypesResolver, wallet, currencyAmount)
         }
     }
 
-    private fun resolveMultiCurrencyInfo(cardTypeResolver: CardTypesResolver, isLocked: Boolean): TextReference {
-        val backupCardsCount = cardTypeResolver.getBackupCardsCount()
+    private fun resolveMultiCurrencyInfo(cardTypeResolver: CardTypesResolver, wallet: UserWallet): TextReference {
+        val backupCardsCount = wallet.cardsInWallet.size + 1
         val backupInfoRes = TextReference.PluralRes(
             id = R.plurals.card_label_card_count,
             count = backupCardsCount,
             formatArgs = wrappedList(backupCardsCount),
         )
 
-        return when {
-            cardTypeResolver.isWallet2() && !isLocked -> {
+        return if (wallet.isLocked) {
+            backupInfoRes + DIVIDER_RES + TextReference.Res(R.string.common_locked)
+        } else {
+            if (cardTypeResolver.isWallet2()) {
                 backupInfoRes + DIVIDER_RES + TextReference.Res(id = R.string.common_seed_phrase)
-            }
-            cardTypeResolver.isTangemWallet() && !isLocked -> {
+            } else {
                 backupInfoRes
             }
-            isLocked -> {
-                backupInfoRes + TextReference.Res(R.string.common_locked)
-            }
-            else -> error("It isn't exist additional info for this case") // FIXME: Crashes on dev cards
         }
     }
 
     private fun resolveSingleCurrencyInfo(
         cardTypeResolver: CardTypesResolver,
-        isLocked: Boolean,
+        wallet: UserWallet,
         currencyAmount: BigDecimal?,
     ): TextReference {
-        return if (isLocked) {
+        return if (wallet.isLocked) {
             TextReference.Res(R.string.common_locked)
         } else {
             val blockchain = cardTypeResolver.getBlockchain()
