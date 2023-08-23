@@ -215,16 +215,10 @@
     <string name="onboarding_navbar_title_creating_backup">創建備份</string>
     <string name="onboarding_seed_button_read_more">閱讀更多關於助記詞的訊息</string>
     <string name="onboarding_seed_generate_message">按照下面給出的順序寫下這 12 個單詞，並將它們存放在安全秘密的地方。</string>
-    <string name="onboarding_seed_generate_title">您的助記詞</string>
-    <string name="onboarding_seed_import_message">要導入您的錢包，請在下面的字段中輸入您的助記詞</string>
     <string name="onboarding_seed_intro_button_generate">生成助記詞</string>
     <string name="onboarding_seed_intro_button_import">導入錢包</string>
-    <string name="onboarding_seed_intro_message">註記詞是一系列能夠恢復錢包的單詞。與卡片生成的密鑰不同，助記詞不受保護，可以被複製和竊取。使用此選項需要您自擔風險。</string>
     <string name="onboarding_seed_intro_title">使用助記詞</string>
-    <string name="onboarding_seed_mnemonic_invalid_checksum">無效的助記詞。請檢查單詞順序。</string>
-    <string name="onboarding_seed_mnemonic_wrong_words">助記詞無效。請檢查您的拼寫。</string>
     <string name="onboarding_seed_phrase_intro_legacy">Legacy</string>
-    <string name="onboarding_seed_user_validation_message">為了檢查您是否正確輸入了助記詞，請輸入第 2、7 和 11 個單詞</string>
     <string name="onboarding_seed_user_validation_title">那麼，讓我們檢查一下</string>
     <string name="onboarding_subtitle_claim">要開始，只需將 wxDAI 獲取到您的錢包</string>
     <string name="onboarding_subtitle_claim_progress">這會花上幾秒</string>
