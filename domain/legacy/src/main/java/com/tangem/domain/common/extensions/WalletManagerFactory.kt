@@ -15,7 +15,6 @@ import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.blockchain.common.CardanoAddressConfig
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
@@ -57,7 +56,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 derivationPath = derivationPath ?: return null,
                 derivedWalletKeys = derivedKeys ?: return null,
                 isWallet2 = scanResponse.cardTypesResolver.isWallet2(),
-            )
+            ) ?: return null
 
             createWalletManager(
                 blockchain = environmentBlockchain,
@@ -80,8 +79,8 @@ private fun makePublicKey(
     derivationPath: DerivationPath,
     derivedWalletKeys: Map<DerivationPath, ExtendedPublicKey>,
     isWallet2: Boolean,
-): Wallet.PublicKey {
-    val derivedKey = derivedWalletKeys[derivationPath] ?: error("No derivation found")
+): Wallet.PublicKey? {
+    val derivedKey = derivedWalletKeys[derivationPath] ?: return null
 
     val derivationKey = Wallet.HDKey(
         path = derivationPath,
