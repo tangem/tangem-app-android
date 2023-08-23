@@ -213,6 +213,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+
+        /*
+* [REDACTED_TODO_COMMENT]
+         *  inside IntentHandler.
+         */
+        cardSdkLifecycleObserver.onCreate(context = this)
+
         scope.launch {
             intentProcessor.handleIntent(intent)
         }
