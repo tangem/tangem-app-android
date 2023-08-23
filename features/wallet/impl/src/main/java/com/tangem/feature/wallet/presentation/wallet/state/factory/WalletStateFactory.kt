@@ -13,10 +13,12 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
@@ -24,6 +26,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.Wal
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -31,13 +34,13 @@ import kotlinx.coroutines.flow.Flow
  *
  * @property currentStateProvider            current ui state provider
  * @property currentCardTypeResolverProvider current card type resolver
- * @property isLockedWalletProvider          current wallet is locked or not
+ * @property currentWalletProvider           current wallet
  * @property clickIntents                    screen click intents
  */
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val isLockedWalletProvider: Provider<Boolean>,
+    private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: WalletClickIntents,
 ) {
@@ -48,7 +51,7 @@ internal class WalletStateFactory(
         WalletLoadedTokensListConverter(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
-            isLockedWalletProvider = isLockedWalletProvider,
+            currentWalletProvider = currentWalletProvider,
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
         )
@@ -74,11 +77,16 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
             appCurrencyProvider = appCurrencyProvider,
+            currentWalletProvider = currentWalletProvider,
         )
     }
 
     private val refreshStateConverter by lazy {
-        WalletRefreshStateConverter(currentStateProvider = currentStateProvider, clickIntents = clickIntents)
+        WalletRefreshStateConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+            clickIntents = clickIntents,
+        )
     }
 
     fun getInitialState(): WalletState = WalletState.Initial(onBackClick = clickIntents::onBackClick)
@@ -170,7 +178,22 @@ internal class WalletStateFactory(
                 topBarConfig = state.topBarConfig.copy(
                     onMoreClick = clickIntents::onUnlockWalletNotificationClick,
                 ),
-                walletsListConfig = state.walletsListConfig,
+                walletsListConfig = state.walletsListConfig.copy(
+                    wallets = state.walletsListConfig.wallets
+                        .map { walletCardState ->
+                            WalletCardState.LockedContent(
+                                id = walletCardState.id,
+                                title = walletCardState.title,
+                                imageResId = walletCardState.imageResId,
+                                onClick = walletCardState.onClick,
+                                additionalInfo = WalletAdditionalInfoFactory.resolve(
+                                    cardTypesResolver = cardTypeResolver,
+                                    wallet = currentWalletProvider(),
+                                ),
+                            )
+                        }
+                        .toImmutableList(),
+                ),
                 pullToRefreshConfig = state.pullToRefreshConfig,
                 onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
                 onUnlockClick = clickIntents::onUnlockWalletClick,
@@ -182,7 +205,18 @@ internal class WalletStateFactory(
                 topBarConfig = state.topBarConfig.copy(
                     onMoreClick = clickIntents::onUnlockWalletNotificationClick,
                 ),
-                walletsListConfig = state.walletsListConfig,
+                walletsListConfig = state.walletsListConfig.copy(
+                    wallets = state.walletsListConfig.wallets
+                        .map { walletCardState ->
+                            WalletCardState.LockedContent(
+                                id = walletCardState.id,
+                                title = walletCardState.title,
+                                imageResId = walletCardState.imageResId,
+                                onClick = walletCardState.onClick,
+                            )
+                        }
+                        .toImmutableList(),
+                ),
                 pullToRefreshConfig = state.pullToRefreshConfig,
                 buttons = getButtons(),
                 onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
