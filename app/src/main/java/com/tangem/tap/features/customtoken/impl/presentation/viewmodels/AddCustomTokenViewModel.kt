@@ -145,6 +145,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         fun createDerivationPathSelectorAdditionalItem(
             blockchain: Blockchain,
             type: DerivationPathSelectorType = DerivationPathSelectorType.BLOCKCHAIN,
+            derivationStyle: DerivationStyle?,
         ): SelectorItem.TitleWithSubtitle {
             return when (type) {
                 DerivationPathSelectorType.DEFAULT -> SelectorItem.TitleWithSubtitle(
@@ -160,7 +161,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                 )
                 DerivationPathSelectorType.BLOCKCHAIN -> SelectorItem.TitleWithSubtitle(
-                    title = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath?.let(TextReference::Str)
+                    title = blockchain.derivationPath(
+                        style = derivationStyle,
+                    )?.rawPath?.let(TextReference::Str)
                         ?: TextReference.Res(R.string.custom_token_derivation_path_default),
                     subtitle = TextReference.Str(blockchain.fullName),
                     blockchain = blockchain,
@@ -251,9 +254,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathsSelectorField(): AddCustomTokenSelectorField.DerivationPath? {
-            if (reduxStateHolder.scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
+            val scanResponse = reduxStateHolder.scanResponse
+            if (scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
 
-            val selectorItems = getDerivationPathsSelectorItems()
+            val selectorItems =
+                getDerivationPathsSelectorItems(scanResponse?.derivationStyleProvider?.getDerivationStyle())
             return AddCustomTokenSelectorField.DerivationPath(
                 label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
                 selectedItem = requireNotNull(selectorItems.firstOrNull()),
@@ -263,22 +268,31 @@ internal class AddCustomTokenViewModel @Inject constructor(
             )
         }
 
-        private fun getDerivationPathsSelectorItems(): List<SelectorItem.TitleWithSubtitle> {
+        private fun getDerivationPathsSelectorItems(
+            derivationStyle: DerivationStyle?,
+        ): List<SelectorItem.TitleWithSubtitle> {
             return listOf(
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.DEFAULT,
+                    derivationStyle = derivationStyle,
                 ),
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.CUSTOM,
+                    derivationStyle = derivationStyle,
                 ),
             ) + Blockchain.values()
                 .filter { blockchain ->
                     blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
                 .sortedBy(Blockchain::fullName)
-                .map(::createDerivationPathSelectorAdditionalItem)
+                .map {
+                    createDerivationPathSelectorAdditionalItem(
+                        blockchain = it,
+                        derivationStyle = derivationStyle,
+                    )
+                }
         }
 
         private fun createDerivationPathInputField(): AddCustomTokenInputField.DerivationPath? {
@@ -782,6 +796,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         fun onResetButtonClick() {
+            val scanResponse = reduxStateHolder.scanResponse
             with(uiState.form) {
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(
@@ -799,11 +814,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         decimalsInputField = decimalsInputField.copy(value = "", isEnabled = false),
                         derivationPathSelectorField = derivationPathSelectorField?.copy(
                             isEnabled = true,
-                            selectedItem = formStateBuilder
-                                .createDerivationPathSelectorAdditionalItem(
-                                    blockchain = Blockchain.Unknown,
-                                    type = DerivationPathSelectorType.DEFAULT,
-                                ),
+                            selectedItem = formStateBuilder.createDerivationPathSelectorAdditionalItem(
+                                blockchain = Blockchain.Unknown,
+                                type = DerivationPathSelectorType.DEFAULT,
+                                derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle(),
+                            ),
                         ),
                     ),
                 )
