@@ -5,6 +5,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList.FiatBalance
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.utils.converter.Converter
@@ -13,7 +14,7 @@ internal class FiatBalanceToWalletCardConverter(
     private val currentState: WalletCardState,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isLockedState: Boolean,
+    private val currentWalletProvider: Provider<UserWallet>,
     private val isWalletContentHidden: Boolean,
 ) : Converter<FiatBalance, WalletCardState> {
 
@@ -26,7 +27,7 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun WalletCardState.toLoadingWalletCardState(): WalletCardState {
-        return WalletCardState.Loading(id, title, imageResId, onClick)
+        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onClick)
     }
 
     private fun WalletCardState.toErrorWalletCardState(): WalletCardState {
@@ -37,7 +38,7 @@ internal class FiatBalanceToWalletCardConverter(
             onClick = onClick,
             additionalInfo = WalletAdditionalInfoFactory.resolve(
                 cardTypesResolver = cardTypeResolverProvider(),
-                isLocked = isLockedState,
+                wallet = currentWalletProvider(),
             ),
         )
     }
@@ -47,6 +48,7 @@ internal class FiatBalanceToWalletCardConverter(
             WalletCardState.HiddenContent(
                 id = currentState.id,
                 title = currentState.title,
+                additionalInfo = currentState.additionalInfo ?: WalletCardState.HIDDEN_BALANCE_TEXT,
                 imageResId = currentState.imageResId,
                 onClick = currentState.onClick,
             )
@@ -58,7 +60,7 @@ internal class FiatBalanceToWalletCardConverter(
                 title = currentState.title,
                 additionalInfo = WalletAdditionalInfoFactory.resolve(
                     cardTypesResolver = cardTypeResolverProvider(),
-                    isLocked = isLockedState,
+                    wallet = currentWalletProvider(),
                 ),
                 imageResId = currentState.imageResId,
                 onClick = currentState.onClick,
