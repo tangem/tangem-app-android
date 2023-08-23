@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -158,6 +159,18 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Loading -> {
             CircleShimmer(modifier = modifier.size(TangemTheme.dimens.size40))
         }
+        is TransactionState.Locked -> {
+            Box(modifier = modifier.size(TangemTheme.dimens.size40)) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            color = TangemTheme.colors.button.secondary,
+                            shape = CircleShape,
+                        ),
+                )
+            }
+        }
     }
 }
 
@@ -206,6 +219,11 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
+            )
+        }
     }
 }
 
@@ -247,6 +265,11 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
+            )
+        }
     }
 }
 
@@ -264,6 +287,11 @@ private fun Amount(state: TransactionState, modifier: Modifier = Modifier) {
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
+                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+            )
+        }
+        is TransactionState.Locked -> {
+            LockedContent(
                 modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
             )
         }
@@ -287,7 +315,22 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+            )
+        }
     }
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
 }
 
 @Preview
