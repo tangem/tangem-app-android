@@ -15,6 +15,9 @@ internal sealed interface WalletCardState {
     /** Title */
     val title: String
 
+    /** Additional text */
+    val additionalInfo: TextReference?
+
     /** Wallet image resource id */
     @get:DrawableRes
     val imageResId: Int?
@@ -22,81 +25,92 @@ internal sealed interface WalletCardState {
     /** Lambda be invoked when card is clicked */
     val onClick: (() -> Unit)?
 
-    /** Additional text availability */
-    sealed interface AdditionalTextAvailability {
-
-        /** Additional wallet information */
-        val additionalInfo: TextReference
-    }
-
     /**
      * Wallet card content state
      *
      * @property id             wallet id
      * @property title          wallet name
+     * @property additionalInfo wallet additional info
      * @property imageResId     wallet image resource id
      * @property onClick        lambda be invoked when wallet card is clicked
-     * @property additionalInfo wallet additional info
      * @property balance        wallet balance
      */
     data class Content(
         override val id: UserWalletId,
         override val title: String,
-        override val imageResId: Int?,
-        override val onClick: (() -> Unit)? = null,
         override val additionalInfo: TextReference,
-        val balance: String,
-    ) : WalletCardState, AdditionalTextAvailability
-
-    /**
-     * Wallet card loading state
-     *
-     * @property id         wallet id
-     * @property title      wallet name
-     * @property imageResId wallet image resource id
-     * @property onClick    lambda be invoked when wallet card is clicked
-     */
-    data class Loading(
-        override val id: UserWalletId,
-        override val title: String,
         override val imageResId: Int?,
         override val onClick: (() -> Unit)? = null,
+        val balance: String,
     ) : WalletCardState
 
     /**
      * Wallet card hidden content state
      *
-     * @property id         wallet id
-     * @property title      wallet name
-     * @property imageResId wallet image resource id
-     * @property onClick    lambda be invoked when wallet card is clicked
+     * @property id             wallet id
+     * @property title          wallet name
+     * @property additionalInfo wallet additional info
+     * @property imageResId     wallet image resource id
+     * @property onClick        lambda be invoked when wallet card is clicked
      */
     data class HiddenContent(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference = HIDDEN_BALANCE_TEXT,
         override val imageResId: Int?,
         override val onClick: (() -> Unit)?,
-    ) : WalletCardState, AdditionalTextAvailability {
+    ) : WalletCardState
 
-        override val additionalInfo: TextReference = HIDDEN_BALANCE_TEXT
-    }
+    /**
+     * Wallet card locked state
+     *
+     * @property id             wallet id
+     * @property title          wallet name
+     * @property additionalInfo wallet additional info
+     * @property imageResId     wallet image resource id
+     * @property onClick        lambda be invoked when wallet card is clicked
+     */
+    data class LockedContent(
+        override val id: UserWalletId,
+        override val title: String,
+        override val additionalInfo: TextReference? = null,
+        override val imageResId: Int?,
+        override val onClick: (() -> Unit)?,
+    ) : WalletCardState
 
     /**
      * Wallet card error state
      *
      * @property id             wallet id
      * @property title          wallet name
+     * @property additionalInfo wallet additional info
      * @property imageResId     wallet image resource id
      * @property onClick        lambda be invoked when wallet card is clicked
-     * @property additionalInfo wallet additional info
      */
     data class Error(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT,
         override val imageResId: Int?,
         override val onClick: (() -> Unit)?,
-        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT,
-    ) : WalletCardState, AdditionalTextAvailability
+    ) : WalletCardState
+
+    /**
+     * Wallet card loading state
+     *
+     * @property id             wallet id
+     * @property title          wallet name
+     * @property additionalInfo wallet additional info
+     * @property imageResId     wallet image resource id
+     * @property onClick        lambda be invoked when wallet card is clicked
+     */
+    data class Loading(
+        override val id: UserWalletId,
+        override val title: String,
+        override val additionalInfo: TextReference? = null,
+        override val imageResId: Int?,
+        override val onClick: (() -> Unit)? = null,
+    ) : WalletCardState
 
     companion object {
         val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = "•••") }
