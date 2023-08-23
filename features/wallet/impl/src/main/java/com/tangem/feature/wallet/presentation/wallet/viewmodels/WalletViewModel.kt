@@ -96,8 +96,8 @@ internal class WalletViewModel @Inject constructor(
                 index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
             )
         },
-        isLockedWalletProvider = Provider {
-            wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex].isLocked
+        currentWalletProvider = Provider {
+            wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
