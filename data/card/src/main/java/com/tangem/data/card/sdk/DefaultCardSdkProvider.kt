@@ -24,7 +24,9 @@ internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, C
     private var _sdk: TangemSdk? = null
 
     override fun onCreate(context: Context) {
-        _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
+        if (_sdk == null) {
+            _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
+        }
     }
 
     override fun onDestroy() {
