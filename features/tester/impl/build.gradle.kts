@@ -23,6 +23,10 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
+    /** Domain modules */
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
+
     /** Core modules */
     implementation(project(":core:featuretoggles"))
     implementation(project(":core:ui"))
@@ -32,4 +36,8 @@ dependencies {
 
     /** Other modules */
     implementation(project(":libs:crypto"))
+
+    /** Other libraries */
+    implementation(deps.arrow.core)
+    implementation(deps.timber)
 }
