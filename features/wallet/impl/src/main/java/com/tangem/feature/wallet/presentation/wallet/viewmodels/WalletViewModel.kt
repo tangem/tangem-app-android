@@ -17,6 +17,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.TokenList
@@ -76,6 +77,7 @@ internal class WalletViewModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -112,6 +114,7 @@ internal class WalletViewModel @Inject constructor(
 
     private val tokensJobHolder = JobHolder()
     private val marketPriceJobHolder = JobHolder()
+    private val buttonsJobHolder = JobHolder()
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -178,8 +181,10 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateSingleCurrencyContent(index: Int, isRefreshing: Boolean) {
         val wallet = getWallet(index)
+        val blockchain = getCardTypeResolver(index).getBlockchain()
+        updateButtons(userWalletId = wallet.walletId, currencyId = blockchain.id)
         updateTxHistory(
-            blockchain = getCardTypeResolver(index).getBlockchain(),
+            blockchain = blockchain,
             derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
         updateMarketPrice(userWalletId = wallet.walletId, isRefreshing = isRefreshing)
@@ -223,6 +228,15 @@ internal class WalletViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
+    }
+
+    private fun updateButtons(userWalletId: UserWalletId, currencyId: String) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, tokenId = currencyId)
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(buttonsJobHolder)
     }
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
@@ -338,6 +352,7 @@ internal class WalletViewModel @Inject constructor(
          */
         tokensJobHolder.update(job = null)
         marketPriceJobHolder.update(job = null)
+        buttonsJobHolder.update(job = null)
         notificationsJobHolder.update(job = null)
 
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
@@ -407,6 +422,18 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onBuyClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onSendClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onReceiveClick() {
+        // TODO: [REDACTED_JIRA]
+    }
+
+    override fun onSellClick() {
         // TODO: [REDACTED_JIRA]
     }
 
