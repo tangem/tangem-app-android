@@ -67,6 +67,8 @@ internal class WalletRefreshStateConverter(
                     title = selectedWallet.title,
                     additionalInfo = additionalInfo,
                     imageResId = selectedWallet.imageResId,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                 ),
             ),
         )
