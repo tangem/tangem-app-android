@@ -35,6 +35,8 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))
@@ -55,6 +57,7 @@ dependencies {
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.appCurrency)
+    implementation(projects.data.appTheme)
 
     /** Features */
     implementation(project(":features:onboarding"))
@@ -86,6 +89,7 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.lifecycle.compose)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
