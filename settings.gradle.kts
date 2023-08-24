@@ -110,6 +110,8 @@ include(":domain:txhistory")
 include(":domain:txhistory:models")
 include(":domain:app-currency")
 include(":domain:app-currency:models")
+include(":domain:app-theme")
+include(":domain:app-theme:models")
 // endregion Domain modules
 
 // region Data modules
@@ -120,4 +122,5 @@ include(":data:source:preferences")
 include(":data:settings")
 include(":data:txhistory")
 include(":data:app-currency")
+include(":data:app-theme")
 // endregion Data modules
