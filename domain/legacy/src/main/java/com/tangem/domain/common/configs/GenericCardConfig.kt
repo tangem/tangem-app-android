@@ -9,7 +9,6 @@ object GenericCardConfig : CardConfig {
         get() = listOf(
             EllipticCurve.Secp256k1,
             EllipticCurve.Ed25519,
-            EllipticCurve.Bip0340,
             EllipticCurve.Bls12381G2Aug,
         )
 
