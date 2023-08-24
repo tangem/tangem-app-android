@@ -200,11 +200,12 @@ internal class WalletStateFactory(
                                 id = walletCardState.id,
                                 title = walletCardState.title,
                                 imageResId = walletCardState.imageResId,
-                                onClick = walletCardState.onClick,
                                 additionalInfo = WalletAdditionalInfoFactory.resolve(
                                     cardTypesResolver = cardTypeResolver,
                                     wallet = currentWalletProvider(),
                                 ),
+                                onRenameClick = walletCardState.onRenameClick,
+                                onDeleteClick = walletCardState.onDeleteClick,
                             )
                         }
                         .toImmutableList(),
@@ -227,7 +228,8 @@ internal class WalletStateFactory(
                                 id = walletCardState.id,
                                 title = walletCardState.title,
                                 imageResId = walletCardState.imageResId,
-                                onClick = walletCardState.onClick,
+                                onRenameClick = walletCardState.onRenameClick,
+                                onDeleteClick = walletCardState.onDeleteClick,
                             )
                         }
                         .toImmutableList(),
