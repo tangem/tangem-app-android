@@ -5,7 +5,6 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
@@ -87,17 +86,12 @@ class CurrencyExchangeManager(
     }
 }
 
-suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, token: Token) {
+suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
-    val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(
-        amountToSend,
-        destinationAddress,
-    ) as? Result.Success ?: return
-
+    val feeResult = walletManager.getFee(amountToSend, destinationAddress) as? Result.Success ?: return
     val fee = when (val feeForTx = feeResult.data) {
         is TransactionFee.Choosable -> feeForTx.minimum
         is TransactionFee.Single -> feeForTx.normal
@@ -105,8 +99,6 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
     if (coinValue < fee.amount.value) return
-
-    val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
         card = card,
@@ -121,5 +113,13 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
             ),
         )
     }
-    walletManager.send(transaction, signer)
+
+    walletManager.send(
+        transactionData = walletManager.createTransaction(
+            amount = amountToSend,
+            fee = fee,
+            destination = destinationAddress,
+        ),
+        signer = signer,
+    )
 }
