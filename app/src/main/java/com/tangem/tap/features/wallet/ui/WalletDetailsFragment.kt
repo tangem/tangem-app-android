@@ -423,6 +423,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                     is WalletDataModel.SameCurrencyTransactionInProgress,
                     -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
+                        showPendingTransactionsIfPresent(status.pendingTransactions)
                     }
 
                     is WalletDataModel.TransactionInProgress -> {
