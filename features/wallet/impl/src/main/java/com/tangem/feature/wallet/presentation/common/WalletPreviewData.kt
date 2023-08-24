@@ -277,13 +277,15 @@ internal object WalletPreviewData {
         ).toImmutableList(),
     )
 
-    private val manageButtons = persistentListOf(
-        WalletManageButton.Buy(onClick = {}),
-        WalletManageButton.Send(onClick = {}),
-        WalletManageButton.Receive(onClick = {}),
-        WalletManageButton.Exchange(onClick = {}),
-        WalletManageButton.CopyAddress(onClick = {}),
-    )
+    private val manageButtons by lazy {
+        persistentListOf(
+            WalletManageButton.Buy(enabled = true, onClick = {}),
+            WalletManageButton.Send(enabled = true, onClick = {}),
+            WalletManageButton.Receive(onClick = {}),
+            WalletManageButton.Sell(enabled = true, onClick = {}),
+            WalletManageButton.Swap(enabled = true, onClick = {}),
+        )
+    }
 
     val multicurrencyWalletScreenState by lazy {
         WalletMultiCurrencyState.Content(
