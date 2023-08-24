@@ -70,4 +70,12 @@ internal object TokensDomainModule {
     ): ApplyTokenListSortingUseCase {
         return ApplyTokenListSortingUseCase(currenciesRepository, dispatchers)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCryptoCurrencyActionsUseCase(
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCryptoCurrencyActionsUseCase {
+        return GetCryptoCurrencyActionsUseCase(dispatchers)
+    }
 }
