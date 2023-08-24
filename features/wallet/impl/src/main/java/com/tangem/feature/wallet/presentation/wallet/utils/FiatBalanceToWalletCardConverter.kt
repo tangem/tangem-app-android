@@ -27,7 +27,7 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun WalletCardState.toLoadingWalletCardState(): WalletCardState {
-        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onClick)
+        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onRenameClick, onDeleteClick)
     }
 
     private fun WalletCardState.toErrorWalletCardState(): WalletCardState {
@@ -35,7 +35,8 @@ internal class FiatBalanceToWalletCardConverter(
             id = id,
             title = title,
             imageResId = imageResId,
-            onClick = onClick,
+            onDeleteClick = onDeleteClick,
+            onRenameClick = onRenameClick,
             additionalInfo = WalletAdditionalInfoFactory.resolve(
                 cardTypesResolver = cardTypeResolverProvider(),
                 wallet = currentWalletProvider(),
@@ -50,7 +51,8 @@ internal class FiatBalanceToWalletCardConverter(
                 title = currentState.title,
                 additionalInfo = currentState.additionalInfo ?: WalletCardState.HIDDEN_BALANCE_TEXT,
                 imageResId = currentState.imageResId,
-                onClick = currentState.onClick,
+                onRenameClick = currentState.onRenameClick,
+                onDeleteClick = currentState.onDeleteClick,
             )
         } else {
             val appCurrency = appCurrencyProvider()
@@ -63,7 +65,8 @@ internal class FiatBalanceToWalletCardConverter(
                     wallet = currentWalletProvider(),
                 ),
                 imageResId = currentState.imageResId,
-                onClick = currentState.onClick,
+                onRenameClick = currentState.onRenameClick,
+                onDeleteClick = currentState.onDeleteClick,
                 balance = formatFiatAmount(
                     fiatAmount = this.amount,
                     fiatCurrencyCode = appCurrency.code,

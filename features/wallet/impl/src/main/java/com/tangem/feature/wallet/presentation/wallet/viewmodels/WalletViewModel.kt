@@ -471,7 +471,10 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onDeleteClick(userWalletId: UserWalletId) {
         viewModelScope.launch(dispatchers.io) {
-            deleteWalletUseCase(userWalletId)
+            val either = deleteWalletUseCase(userWalletId)
+
+            val state = requireNotNull(uiState as? WalletState.ContentState)
+            if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) router.openStoriesScreen()
         }
     }
 
