@@ -63,7 +63,7 @@ internal class WalletSkeletonStateConverter(
             pullToRefreshConfig = createPullToRefreshConfig(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
-            buttons = getButtons(),
+            buttons = createButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
@@ -126,15 +126,13 @@ internal class WalletSkeletonStateConverter(
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
         return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
-// [REDACTED_TODO_COMMENT]
-    private fun getButtons(): ImmutableList<WalletManageButton> {
+
+    private fun createButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Buy(),
-            WalletManageButton.Send(),
+            WalletManageButton.Buy(enabled = false, onClick = {}),
+            WalletManageButton.Send(enabled = false, onClick = {}),
             WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(),
-            WalletManageButton.Sell(),
-            WalletManageButton.CopyAddress(onClick = {}),
+            WalletManageButton.Sell(enabled = false, onClick = {}),
         )
     }
 
