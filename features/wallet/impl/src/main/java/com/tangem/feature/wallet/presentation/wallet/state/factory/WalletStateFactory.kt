@@ -8,26 +8,22 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -83,10 +79,26 @@ internal class WalletStateFactory(
         )
     }
 
+    private val lockedConverter by lazy {
+        WalletLockedConverter(
+            currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+            currentWalletProvider = currentWalletProvider,
+            clickIntents = clickIntents,
+        )
+    }
+
     private val refreshStateConverter by lazy {
         WalletRefreshStateConverter(
             currentStateProvider = currentStateProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
+            clickIntents = clickIntents,
+        )
+    }
+
+    private val cryptoCurrencyActionsConverter by lazy {
+        WalletCryptoCurrencyActionsConverter(
+            currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
         )
     }
@@ -184,77 +196,7 @@ internal class WalletStateFactory(
         return loadedTxHistoryConverter.convert(txHistoryEither)
     }
 
-    fun getLockedState(): WalletState {
-        val cardTypeResolver = currentCardTypeResolverProvider()
-        val state = requireNotNull(currentStateProvider() as? WalletState.ContentState)
-        return if (cardTypeResolver.isMultiwalletAllowed()) {
-            WalletMultiCurrencyState.Locked(
-                onBackClick = state.onBackClick,
-                topBarConfig = state.topBarConfig.copy(
-                    onMoreClick = clickIntents::onUnlockWalletNotificationClick,
-                ),
-                walletsListConfig = state.walletsListConfig.copy(
-                    wallets = state.walletsListConfig.wallets
-                        .map { walletCardState ->
-                            WalletCardState.LockedContent(
-                                id = walletCardState.id,
-                                title = walletCardState.title,
-                                imageResId = walletCardState.imageResId,
-                                additionalInfo = WalletAdditionalInfoFactory.resolve(
-                                    cardTypesResolver = cardTypeResolver,
-                                    wallet = currentWalletProvider(),
-                                ),
-                                onRenameClick = walletCardState.onRenameClick,
-                                onDeleteClick = walletCardState.onDeleteClick,
-                            )
-                        }
-                        .toImmutableList(),
-                ),
-                pullToRefreshConfig = state.pullToRefreshConfig,
-                onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
-                onUnlockClick = clickIntents::onUnlockWalletClick,
-                onScanClick = clickIntents::onScanCardClick,
-            )
-        } else {
-            WalletSingleCurrencyState.Locked(
-                onBackClick = state.onBackClick,
-                topBarConfig = state.topBarConfig.copy(
-                    onMoreClick = clickIntents::onUnlockWalletNotificationClick,
-                ),
-                walletsListConfig = state.walletsListConfig.copy(
-                    wallets = state.walletsListConfig.wallets
-                        .map { walletCardState ->
-                            WalletCardState.LockedContent(
-                                id = walletCardState.id,
-                                title = walletCardState.title,
-                                imageResId = walletCardState.imageResId,
-                                onRenameClick = walletCardState.onRenameClick,
-                                onDeleteClick = walletCardState.onDeleteClick,
-                            )
-                        }
-                        .toImmutableList(),
-                ),
-                pullToRefreshConfig = state.pullToRefreshConfig,
-                buttons = getButtons(),
-                onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
-                onUnlockClick = clickIntents::onUnlockWalletClick,
-                onScanClick = clickIntents::onScanCardClick,
-                onExploreClick = clickIntents::onExploreClick,
-            )
-        }
-    }
-
-    // TODO: [REDACTED_JIRA]
-    private fun getButtons(): ImmutableList<WalletManageButton> {
-        return persistentListOf(
-            WalletManageButton.Buy(),
-            WalletManageButton.Send(),
-            WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(),
-            WalletManageButton.Sell(),
-            WalletManageButton.CopyAddress(onClick = {}),
-        )
-    }
+    fun getLockedState(): WalletState = lockedConverter.convert(Unit)
 
     fun getSingleCurrencyLoadedBalanceState(
         cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
@@ -266,5 +208,9 @@ internal class WalletStateFactory(
                 isRefreshing = isRefreshing,
             ),
         )
+    }
+
+    fun getSingleCurrencyManageButtonsState(actions: List<TokenActionsState.ActionState>): WalletState {
+        return cryptoCurrencyActionsConverter.convert(value = actions)
     }
 }
