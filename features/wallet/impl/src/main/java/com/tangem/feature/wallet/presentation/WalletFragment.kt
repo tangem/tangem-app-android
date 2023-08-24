@@ -1,15 +1,12 @@
 package com.tangem.feature.wallet.presentation
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
-import androidx.transition.TransitionInflater
-import com.tangem.core.ui.components.SystemBarsEffect
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.impl.R
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,36 +18,28 @@ import javax.inject.Inject
  * @author Andrew Khokhlov on 29/05/2023
  */
 @AndroidEntryPoint
-internal class WalletFragment : Fragment() {
+internal class WalletFragment : ComposeFragment() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     /** Feature router */
     @Inject
     internal lateinit var walletRouter: WalletRouter
+
+    override val backgroundColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = TangemTheme.colors.background.secondary
 
     private val _walletRouter: InnerWalletRouter
         get() = requireNotNull(walletRouter as? InnerWalletRouter) {
             "_walletRouter should be instance of InnerWalletRouter"
         }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        with(TransitionInflater.from(requireContext())) {
-            enterTransition = inflateTransition(R.transition.slide_right)
-            exitTransition = inflateTransition(R.transition.fade)
-        }
-
-        return ComposeView(inflater.context).apply {
-            setContent {
-                TangemTheme {
-                    val systemBarsColor = TangemTheme.colors.background.secondary
-                    SystemBarsEffect {
-                        setSystemBarsColor(systemBarsColor)
-                    }
-
-                    isTransitionGroup = true
-                    _walletRouter.Initialize(fragmentManager = requireActivity().supportFragmentManager)
-                }
-            }
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        _walletRouter.Initialize(fragmentManager = requireActivity().supportFragmentManager)
     }
 
     companion object {
