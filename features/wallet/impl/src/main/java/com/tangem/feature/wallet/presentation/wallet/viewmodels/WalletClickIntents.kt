@@ -46,4 +46,10 @@ internal interface WalletClickIntents : TxHistoryClickIntents {
     fun onRenameClick(userWalletId: UserWalletId, name: String)
 
     fun onDeleteClick(userWalletId: UserWalletId)
+
+    fun onSendClick()
+
+    fun onReceiveClick()
+
+    fun onSellClick()
 }
