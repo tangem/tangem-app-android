@@ -35,6 +35,7 @@ internal class CurrencyStatusOperations(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
@@ -43,6 +44,7 @@ internal class CurrencyStatusOperations(
                 priceChange = quote?.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
             quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
@@ -52,6 +54,7 @@ internal class CurrencyStatusOperations(
                 priceChange = quote.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
         }
     }
