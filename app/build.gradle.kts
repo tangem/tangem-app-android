@@ -50,14 +50,15 @@ dependencies {
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
 
-    implementation(project(":data:source:preferences"))
+    implementation(projects.data.appCurrency)
+    implementation(projects.data.appTheme)
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
+    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
-    implementation(projects.data.appCurrency)
-    implementation(projects.data.appTheme)
+    implementation(projects.data.wallets)
 
     /** Features */
     implementation(project(":features:onboarding"))
