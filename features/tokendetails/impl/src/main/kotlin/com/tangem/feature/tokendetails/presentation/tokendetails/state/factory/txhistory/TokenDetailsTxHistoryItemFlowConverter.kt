@@ -7,8 +7,10 @@ import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
@@ -100,13 +102,13 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
             )
@@ -120,13 +122,13 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
             )
@@ -219,5 +221,10 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         return timeFormatter.print(
             DateTime(this.toLong(), DateTimeZone.getDefault()),
         )
+    }
+
+    private fun TxHistoryItem.TransactionDirection.extractAddress(): TextReference = when (val addr = address) {
+        TxHistoryItem.Address.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
+        is TxHistoryItem.Address.Single -> TextReference.Str(addr.rawAddress.toBriefAddressFormat())
     }
 }
