@@ -23,6 +23,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.transactions.state.TransactionState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import java.util.UUID
 
@@ -237,7 +239,7 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                     is TransactionState.Send,
                     -> stringResource(
                         id = R.string.transaction_history_transaction_to_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                     is TransactionState.Receiving,
                     is TransactionState.Receive,
@@ -245,13 +247,13 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                     is TransactionState.Approved,
                     -> stringResource(
                         id = R.string.transaction_history_transaction_from_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                     is TransactionState.Swapping,
                     is TransactionState.Swapped,
                     -> stringResource(
                         id = R.string.transaction_history_contract_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                 },
                 modifier = modifier,
@@ -357,49 +359,49 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
     collection = listOf(
         TransactionState.Sending(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Receiving(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Approving(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Swapping(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Send(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Receive(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Approved(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Swapped(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
