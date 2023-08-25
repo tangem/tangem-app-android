@@ -18,6 +18,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -39,7 +40,6 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
@@ -337,9 +337,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         if (externalTransactionData == null) {
             store.dispatch(NavigationAction.PopBackTo())
         } else {
-            store.dispatch(
-                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId),
-            )
+            store.dispatch(TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
         }
     }
 
