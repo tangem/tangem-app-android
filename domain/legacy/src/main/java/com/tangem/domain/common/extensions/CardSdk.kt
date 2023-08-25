@@ -53,18 +53,26 @@ fun CardDTO.supportedTokens(cardTypesResolver: CardTypesResolver): List<Blockcha
 }
 
 fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
-    return this.supportedTokens(cardTypesResolver).contains(blockchain)
+    val isContainsBlockchain = this.supportedTokens(cardTypesResolver).contains(blockchain)
+    val isWalletForCurveExists =
+        wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    // fixme: check for first wallets with 1 curve and remove condition
+    return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
+        // if there's no wallet on card for blockchain with given curve
+        isContainsBlockchain && isWalletForCurveExists
+    } else {
+        isContainsBlockchain
+    }
 }
 
 fun CardDTO.canHandleBlockchain(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
-    val supportedBlockchains = this.supportedBlockchains(cardTypesResolver)
-    val isContainsBlockchain = supportedBlockchains.contains(blockchain)
-    return if (cardTypesResolver.isTangemWallet()) {
-        // specific workaround for multiwallet v1 with different curves
-        // cause on early created wallets there's no created bls curve wallet
-        // but user can recreate wallet with curve in current app version
-        isContainsBlockchain &&
-            wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    val isContainsBlockchain = this.supportedBlockchains(cardTypesResolver).contains(blockchain)
+    val isWalletForCurveExists =
+        wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    // fixme: check for first wallets with 1 curve and remove condition
+    return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
+        // if there's no wallet on card for blockchain with given curve
+        isContainsBlockchain && isWalletForCurveExists
     } else {
         isContainsBlockchain
     }
