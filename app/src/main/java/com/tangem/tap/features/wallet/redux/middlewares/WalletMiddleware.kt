@@ -12,6 +12,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.userwallets.GetCardImageUseCase
 import com.tangem.domain.wallets.legacy.lockIfLockable
 import com.tangem.tap.*
@@ -87,7 +88,7 @@ class WalletMiddleware {
         val walletState = store.state.walletState
 
         when (action) {
-            is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
+            is TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
             is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState)
             is WalletAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
