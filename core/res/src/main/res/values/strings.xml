@@ -335,8 +335,8 @@
     <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
     <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
-    <string name="russian_bank_card_warning_subtitle">Do you have a bank card of another country or a UnionPay card?</string>
-    <string name="russian_bank_card_warning_title">Russian bank cards are not accepted at the moment</string>
+    <string name="russian_bank_card_warning_subtitle">Do you have a bank card from another country and a residence permit or registration outside the Russian Federation?</string>
+    <string name="russian_bank_card_warning_title">Russian bank cards are not currently accepted</string>
     <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card</string>
     <string name="save_user_wallet_agreement_access_title">Access the app</string>
     <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
