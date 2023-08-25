@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components.transactions.state
 
+import com.tangem.core.ui.extensions.TextReference
+
 /**
  * Transaction component state
  *
@@ -20,14 +22,14 @@ sealed interface TransactionState {
      */
     sealed class Content(
         override val txHash: String,
-        open val address: String,
+        open val address: TextReference,
         open val amount: String,
         open val timestamp: String,
     ) : TransactionState {
 
         fun copySealed(
             txHash: String = this.txHash,
-            address: String = this.address,
+            address: TextReference = this.address,
             amount: String = this.amount,
             timestamp: String = this.timestamp,
         ): Content {
@@ -54,7 +56,7 @@ sealed interface TransactionState {
      */
     sealed class ProcessedTransactionContent(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : Content(txHash, address, amount, timestamp)
@@ -69,7 +71,7 @@ sealed interface TransactionState {
      */
     sealed class CompletedTransactionContent(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : Content(txHash, address, amount, timestamp)
@@ -84,7 +86,7 @@ sealed interface TransactionState {
      */
     data class Sending(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
@@ -99,7 +101,7 @@ sealed interface TransactionState {
      */
     data class Receiving(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
@@ -114,7 +116,7 @@ sealed interface TransactionState {
      */
     data class Approving(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
@@ -129,7 +131,7 @@ sealed interface TransactionState {
      */
     data class Swapping(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
@@ -144,7 +146,7 @@ sealed interface TransactionState {
      */
     data class Send(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : CompletedTransactionContent(txHash, address, amount, timestamp)
@@ -159,7 +161,7 @@ sealed interface TransactionState {
      */
     data class Receive(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : CompletedTransactionContent(txHash, address, amount, timestamp)
@@ -174,7 +176,7 @@ sealed interface TransactionState {
      */
     data class Approved(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : CompletedTransactionContent(txHash, address, amount, timestamp)
@@ -189,7 +191,7 @@ sealed interface TransactionState {
      */
     data class Swapped(
         override val txHash: String,
-        override val address: String,
+        override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
     ) : CompletedTransactionContent(txHash, address, amount, timestamp)
