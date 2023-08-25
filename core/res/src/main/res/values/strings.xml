@@ -451,6 +451,7 @@
     <string name="transaction_history_contract_address">contract: %s</string>
     <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
     <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+    <string name="transaction_history_multiple_addresses">Multiple addresses</string>
     <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
     <string name="transaction_history_transaction_from_address">from: %s</string>
     <string name="transaction_history_transaction_to_address">to: %s</string>
