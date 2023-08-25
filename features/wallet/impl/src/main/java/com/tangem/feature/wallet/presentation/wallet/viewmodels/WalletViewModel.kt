@@ -16,10 +16,13 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
@@ -78,6 +81,7 @@ internal class WalletViewModel @Inject constructor(
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -111,6 +115,7 @@ internal class WalletViewModel @Inject constructor(
     var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
     private var wallets: List<UserWallet> by Delegates.notNull()
+    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private val tokensJobHolder = JobHolder()
     private val marketPriceJobHolder = JobHolder()
@@ -219,11 +224,13 @@ internal class WalletViewModel @Inject constructor(
     private fun updateMarketPrice(userWalletId: UserWalletId, isRefreshing: Boolean) {
         getPrimaryCurrencyUseCase(userWalletId = userWalletId)
             .distinctUntilChanged()
-            .onEach {
+            .onEach { either ->
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(
-                    cryptoCurrencyEither = it,
+                    cryptoCurrencyEither = either,
                     isRefreshing = isRefreshing,
                 )
+
+                either.onRight { status -> cryptoCurrencyStatus = status }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
@@ -421,11 +428,21 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onBuyClick() {
-// [REDACTED_TODO_COMMENT]
+        val state = uiState as? WalletState.ContentState ?: return
+        val status = cryptoCurrencyStatus ?: return
+        val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+        reduxStateHolder.dispatch(
+            TradeCryptoAction.New.Buy(
+                userWallet = wallet,
+                cryptoCurrencyStatus = status,
+                appCurrencyCode = selectedAppCurrencyFlow.value.code,
+            ),
+        )
     }
 
     override fun onSendClick() {
-// [REDACTED_TODO_COMMENT]
+        reduxStateHolder.dispatch(TradeCryptoAction.New.Send)
     }
 
     override fun onReceiveClick() {
@@ -433,7 +450,14 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onSellClick() {
-// [REDACTED_TODO_COMMENT]
+        val status = cryptoCurrencyStatus ?: return
+
+        reduxStateHolder.dispatch(
+            TradeCryptoAction.New.Sell(
+                cryptoCurrencyStatus = status,
+                appCurrencyCode = selectedAppCurrencyFlow.value.code,
+            ),
+        )
     }
 
     override fun onReloadClick() {
