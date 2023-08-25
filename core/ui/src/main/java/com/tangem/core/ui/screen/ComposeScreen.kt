@@ -1,16 +1,13 @@
 package com.tangem.core.ui.screen
 
 import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -30,22 +27,12 @@ internal interface ComposeScreen {
     val appThemeModeHolder: AppThemeModeHolder
 
     /**
-     * The background color of the screen.
-     */
-    val backgroundColor: Color
-        @Composable
-        @ReadOnlyComposable
-        get() = TangemTheme.colors.background.primary
-
-    /**
      * The screen modifier.
      */
     val screenModifier: Modifier
         @Composable
         @ReadOnlyComposable
-        get() = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
+        get() = Modifier.fillMaxSize()
 
     /**
      * Composable function to define the content of the screen.
@@ -69,11 +56,6 @@ internal fun ComposeScreen.createComposeView(context: Context): ComposeView {
             val appThemeMode by appThemeModeHolder.appThemeMode
 
             TangemTheme(isDark = shouldUseDarkTheme(appThemeMode)) {
-                val systemBarsColor = backgroundColor
-                SystemBarsEffect {
-                    setSystemBarsColor(systemBarsColor)
-                }
-
                 ScreenContent(modifier = screenModifier)
             }
         }

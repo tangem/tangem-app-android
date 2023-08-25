@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -37,11 +36,6 @@ abstract class ComposeBottomSheetFragment : BottomSheetDialogFragment(), Compose
     @FloatRange(from = 0.0, to = 1.0)
     open val expandedHeightFraction: Float? = null
 
-    override val backgroundColor: Color
-        @Composable
-        @ReadOnlyComposable
-        get() = TangemTheme.colors.background.plain
-
     override val screenModifier: Modifier
         @Composable
         @ReadOnlyComposable
@@ -51,7 +45,7 @@ abstract class ComposeBottomSheetFragment : BottomSheetDialogFragment(), Compose
                 if (expandedHeightFraction != null) it.fillMaxHeight(expandedHeightFraction!!) else it
             }
             .background(
-                color = backgroundColor,
+                color = TangemTheme.colors.background.plain,
                 shape = TangemTheme.shapes.bottomSheet,
             )
 

@@ -10,6 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.Chat
@@ -35,6 +37,11 @@ internal class SprinklrActivity : ComposeActivity() {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         val state by viewModel.state.collectAsStateWithLifecycle()
+
+        val systemBarsColor = TangemTheme.colors.background.primary
+        SystemBarsEffect {
+            setSystemBarsColor(systemBarsColor)
+        }
 
         BackHandler(onBack = state.onNavigateBack)
         SprinklrScreenContent(

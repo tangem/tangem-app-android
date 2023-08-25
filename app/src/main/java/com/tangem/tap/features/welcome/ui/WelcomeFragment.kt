@@ -1,6 +1,7 @@
 package com.tangem.tap.features.welcome.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -45,13 +47,19 @@ internal class WelcomeFragment : ComposeFragment() {
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val warning by rememberUpdatedState(newValue = state.warning)
 
+        val backgroundColor = TangemTheme.colors.background.primary
+        SystemBarsEffect {
+            setSystemBarsColor(backgroundColor)
+        }
+
         BackHandler {
             requireActivity().finish()
         }
 
         Box(
             modifier = modifier
-                .systemBarsPadding(),
+                .systemBarsPadding()
+                .background(backgroundColor),
         ) {
             WelcomeScreenContent(
                 showUnlockProgress = state.showUnlockWithBiometricsProgress,

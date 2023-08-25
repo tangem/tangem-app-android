@@ -12,12 +12,7 @@ import dagger.hilt.android.components.ActivityComponent
 internal object ThemeModule {
 
     @Provides
-    fun provideMutableAppThemeModeHolder(): MutableAppThemeModeHolder {
+    fun provideAppThemeModeHolder(): AppThemeModeHolder {
         return MutableAppThemeModeHolder
-    }
-
-    @Provides
-    fun provideAppThemeModeHolder(mutableAppThemeHolder: MutableAppThemeModeHolder): AppThemeModeHolder {
-        return mutableAppThemeHolder
     }
 }

@@ -1,11 +1,10 @@
 package com.tangem.feature.tokendetails.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -30,17 +29,17 @@ internal class TokenDetailsFragment : ComposeFragment() {
             "internalTokenDetailsRouter should be instance of InnerTokenDetailsRouter"
         }
 
-    override val backgroundColor: Color
-        @Composable
-        @ReadOnlyComposable
-        get() = TangemTheme.colors.background.secondary
-
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         val viewModel = hiltViewModel<TokenDetailsViewModel>()
         viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
 
         LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+
+        val systemBarsColor = TangemTheme.colors.background.secondary
+        SystemBarsEffect {
+            setSystemBarsColor(systemBarsColor)
+        }
 
         TokenDetailsScreen(state = viewModel.uiState)
     }
