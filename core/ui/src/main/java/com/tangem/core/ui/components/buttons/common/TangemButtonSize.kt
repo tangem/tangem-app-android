@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
-internal enum class TangemButtonSize {
+enum class TangemButtonSize {
     Default,
     Text,
     Selector,
