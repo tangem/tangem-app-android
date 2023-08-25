@@ -85,16 +85,22 @@ internal object MockTokensStates {
                 priceChange = quote.priceChange,
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
+                networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
             ),
         )
     }
 
-    val noQuotesTokensStatuses = loadedTokensStates.map { currency ->
-        currency.copy(
+    val noQuotesTokensStatuses = loadedTokensStates.map { status ->
+        status.copy(
             value = CryptoCurrencyStatus.NoQuote(
-                amount = currency.value.amount!!,
+                amount = status.value.amount!!,
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
+                networkAddress = requireNotNull(
+                    value = MockNetworks.verifiedNetworksStatuses
+                        .first { it.networkId == status.currency.network.id }
+                        .value as? NetworkStatus.Verified,
+                ).address,
             ),
         )
     }
