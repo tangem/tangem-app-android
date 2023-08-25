@@ -1,22 +1,22 @@
 package com.tangem.tap.features.home.compose.content
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.extensions.dpSize
 import com.tangem.tap.common.compose.extensions.halfHeight
 import com.tangem.tap.common.compose.extensions.toPx
@@ -112,23 +112,17 @@ fun StoriesWeb3Content(paused: Boolean, duration: Int) {
 
 @Composable
 private fun LightenBox(content: @Composable () -> Unit) {
-    Box {
+    val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+
+    Box(modifier = Modifier.fillMaxSize()) {
         content()
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 250.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0f),
-                            Color.White.copy(alpha = 0.75f),
-                            Color.White.copy(alpha = 0.95f),
-                            Color.White,
-                        ),
-                    ),
-                ),
-        ) {}
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(TangemTheme.dimens.size164 + bottomInsetsPx.dp)
+                .background(BottomGradient),
+        )
     }
 }
 
@@ -136,3 +130,12 @@ private fun scaleToDesignSize(itemSize: DpSize, designItemHeight: Dp): DpSize {
     val scaleRate = itemSize.height / designItemHeight
     return itemSize / scaleRate
 }
+
+private val BottomGradient: Brush = Brush.verticalGradient(
+    colors = listOf(
+        TangemColorPalette.White.copy(alpha = 0f),
+        TangemColorPalette.White.copy(alpha = 0.75f),
+        TangemColorPalette.White.copy(alpha = 0.95f),
+        TangemColorPalette.White,
+    ),
+)
