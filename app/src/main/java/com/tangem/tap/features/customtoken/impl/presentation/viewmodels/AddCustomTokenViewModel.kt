@@ -635,6 +635,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
         return derivationNetwork.derivationPath(derivationStyle)
     }
 
+    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+        val scanResponse = reduxStateHolder.scanResponse
+        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
+            blockchain = blockchain,
+            cardTypesResolver = scanResponse.cardTypesResolver,
+        ) ?: false
+        return !canHandleToken
+    }
+
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
 
         fun onBackButtonClick() {
@@ -747,6 +756,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         fun onAddCustomTokenClick() {
             if (!isNetworkSelected()) return
+            val blockchain = uiState.form.networkSelectorField.selectedItem.blockchain
+            if (isUnsupportedBlockchain(blockchain)) {
+                featureRouter.openUnsupportedNetworkAlert(blockchain)
+                return
+            }
 
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
@@ -758,13 +772,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
                             decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
                             id = foundToken?.id,
                         ),
-                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        network = blockchain,
                         derivationPath = getDerivationPath(),
                     )
                 }
                 CustomTokenType.BLOCKCHAIN -> {
                     CustomCurrency.CustomBlockchain(
-                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        network = blockchain,
                         derivationPath = getDerivationPath(),
                     )
                 }
