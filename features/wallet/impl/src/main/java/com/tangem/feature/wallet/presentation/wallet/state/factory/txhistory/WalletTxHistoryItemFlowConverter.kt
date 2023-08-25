@@ -7,8 +7,10 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -115,13 +117,13 @@ internal class WalletTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
@@ -136,13 +138,13 @@ internal class WalletTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
@@ -239,5 +241,10 @@ internal class WalletTxHistoryItemFlowConverter(
         return timeFormatter.print(
             DateTime(this.toLong(), DateTimeZone.getDefault()),
         )
+    }
+
+    private fun TxHistoryItem.TransactionDirection.extractAddress(): TextReference = when (val addr = address) {
+        TxHistoryItem.Address.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
+        is TxHistoryItem.Address.Single -> TextReference.Str(addr.rawAddress.toBriefAddressFormat())
     }
 }
