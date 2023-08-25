@@ -15,4 +15,8 @@ internal class DefaultSettingsRepository(
             preferencesDataSource.appRatingLaunchObserver.isReadyToShow()
         }
     }
+
+    override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
+        return withContext(dispatchers.io) { preferencesDataSource.shouldShowSaveUserWalletScreen }
+    }
 }
