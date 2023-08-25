@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import dagger.Module
 import dagger.Provides
@@ -59,5 +60,11 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesDeleteWalletUseCase(walletsStateHolder: WalletsStateHolder): DeleteWalletUseCase {
         return DeleteWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesShouldSaveUserWalletsUseCase(walletsRepository: WalletsRepository): ShouldSaveUserWalletsUseCase {
+        return ShouldSaveUserWalletsUseCase(walletsRepository = walletsRepository)
     }
 }
