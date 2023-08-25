@@ -56,15 +56,12 @@ internal class DefaultTokensListRouter(
                 headerId = R.string.common_warning,
                 messageId = R.string.alert_manage_tokens_unsupported_message,
             )
-            Blockchain.Chia, Blockchain.ChiaTestnet -> AppDialog.SimpleOkDialogRes(
+            else -> AppDialog.SimpleOkDialogRes(
                 headerId = R.string.common_warning,
                 messageId = R.string.alert_manage_tokens_unsupported_curve_message,
                 args = listOf(blockchain.fullName),
             )
-            else -> null // there's no alerts for other blockchains yer
         }
-        if (alert != null) {
-            store.dispatchDialogShow(alert)
-        }
+        store.dispatchDialogShow(alert)
     }
 }
