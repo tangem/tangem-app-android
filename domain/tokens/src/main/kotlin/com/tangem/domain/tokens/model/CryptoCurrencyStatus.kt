@@ -40,6 +40,9 @@ data class CryptoCurrencyStatus(
 
         /** The pending cryptocurrency transactions. */
         open val pendingTransactions: Set<PendingTransaction> = emptySet()
+
+        /** The network address */
+        open val networkAddress: NetworkAddress? = null
     }
 
     /** Represents the Loading state of a token, typically while fetching its details. */
@@ -72,6 +75,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 
     /**
@@ -92,6 +96,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 
     /**
@@ -106,5 +111,6 @@ data class CryptoCurrencyStatus(
         override val amount: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 }
