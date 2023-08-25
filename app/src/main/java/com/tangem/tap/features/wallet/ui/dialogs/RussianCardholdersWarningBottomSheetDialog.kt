@@ -6,10 +6,10 @@ import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogRussiansCardholdersWarningBinding
@@ -40,7 +40,7 @@ class RussianCardholdersWarningBottomSheetDialog(
             if (dialogData != null) {
                 store.dispatchOpenUrl(dialogData.topUpUrl)
             } else {
-                store.dispatch(WalletAction.TradeCryptoAction.Buy(checkUserLocation = false))
+                store.dispatch(TradeCryptoAction.Buy(checkUserLocation = false))
             }
             dismiss()
         }

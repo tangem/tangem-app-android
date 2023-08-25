@@ -68,7 +68,6 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 error = null,
             )
         }
-        is WalletAction.TradeCryptoAction -> return newState
         is WalletAction.AppCurrencyAction -> {
             newState = appCurrencyReducer.reduce(action, newState)
         }
