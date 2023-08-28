@@ -7,14 +7,15 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_add_card"
-        style="@style/TapSecondaryButton"
+        style="@style/TapSecondaryIconButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/btn_continue"
         app:layout_constraintStart_toStartOf="@id/btn_continue"
-        tools:text="+ Add backup card" />
+        tools:icon="@drawable/ic_tangem_24"
+        tools:text="Add backup card" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_continue"
