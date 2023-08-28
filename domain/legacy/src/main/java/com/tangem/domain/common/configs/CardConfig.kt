@@ -20,7 +20,7 @@ sealed interface CardConfig {
             if (cardDTO.settings.isBackupAllowed && cardDTO.settings.isHDWalletAllowed &&
                 cardDTO.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
             ) {
-                return GenericCardConfig
+                return MultiWalletCardConfig
             }
             return GenericCardConfig
         }
