@@ -31,9 +31,17 @@ internal object TokensDataModule {
         userTokensStore: UserTokensStore,
         userWalletsStore: UserWalletsStore,
         cacheRegistry: CacheRegistry,
+        walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
     ): CurrenciesRepository {
-        return DefaultCurrenciesRepository(tangemTechApi, userTokensStore, userWalletsStore, cacheRegistry, dispatchers)
+        return DefaultCurrenciesRepository(
+            tangemTechApi,
+            userTokensStore,
+            userWalletsStore,
+            cacheRegistry,
+            walletManagersFacade,
+            dispatchers,
+        )
     }
 
     @Provides

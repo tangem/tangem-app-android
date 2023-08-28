@@ -1,5 +1,7 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCurrenciesFactory
 import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
@@ -12,7 +14,9 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -28,6 +32,7 @@ internal class DefaultCurrenciesRepository(
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
     private val cacheRegistry: CacheRegistry,
+    private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CurrenciesRepository {
 
@@ -52,6 +57,34 @@ internal class DefaultCurrenciesRepository(
 
         storeAndPushTokens(userWalletId, response)
     }
+
+    override suspend fun removeCurrency(userWallet: UserWallet, currency: CryptoCurrency) =
+        withContext(dispatchers.io) {
+            val savedCurrencies = requireNotNull(
+                value = userTokensStore.getSyncOrNull(userWallet.walletId),
+                lazyMessage = { "Saved tokens empty. Can not perform remove currency action" },
+            )
+            val walletManager = requireNotNull(
+                value = walletManagersFacade.getOrCreateWalletManager(
+                    userWallet = userWallet,
+                    blockchain = Blockchain.fromId(currency.network.id.value),
+                    derivationPath = currency.derivationPath?.let(::DerivationPath),
+                ),
+                lazyMessage = { "Could not find nor create wallet manager for $currency" },
+            )
+
+            if (currency is CryptoCurrency.Coin && walletManager.cardTokens.isNotEmpty()) {
+                throw RemoveCurrencyError.HasLinkedTokens(currency)
+            }
+
+            val token = userTokensResponseFactory.createResponseToken(currency)
+            storeAndPushTokens(
+                userWalletId = userWallet.walletId,
+                response = savedCurrencies.copy(
+                    tokens = savedCurrencies.tokens.filter { it != token },
+                ),
+            )
+        }
 
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {

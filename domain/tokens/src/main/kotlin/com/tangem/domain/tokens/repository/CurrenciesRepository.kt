@@ -1,6 +1,8 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.remove.RemoveCurrencyError
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -26,6 +28,9 @@ interface CurrenciesRepository {
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     )
+
+    @Throws(RemoveCurrencyError::class)
+    suspend fun removeCurrency(userWallet: UserWallet, currency: CryptoCurrency)
 
     /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
