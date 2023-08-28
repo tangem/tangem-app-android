@@ -5,6 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 
 /**
@@ -52,10 +53,32 @@ fun CardDTO.supportedTokens(cardTypesResolver: CardTypesResolver): List<Blockcha
     return tokensSupportedByCard.filter { isTestCard == it.isTestnet() }
 }
 
+/**
+ * The same as [CardDTO.supportedTokens] but with supportedTokens input, if previously calculated
+ */
+fun CardDTO.canHandleToken(
+    supportedTokens: List<Blockchain>,
+    blockchain: Blockchain,
+    cardTypesResolver: CardTypesResolver,
+): Boolean {
+    val cardConfig = CardConfig.createConfig(this)
+    val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
+    val isContainsBlockchain = supportedTokens.contains(blockchain)
+    val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
+    // fixme: check for first wallets with 1 curve and remove condition
+    return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
+        // if there's no wallet on card for blockchain with given curve
+        isContainsBlockchain && isWalletForCurveExists
+    } else {
+        isContainsBlockchain
+    }
+}
+
 fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
+    val cardConfig = CardConfig.createConfig(this)
+    val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
     val isContainsBlockchain = this.supportedTokens(cardTypesResolver).contains(blockchain)
-    val isWalletForCurveExists =
-        wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
     // fixme: check for first wallets with 1 curve and remove condition
     return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
         // if there's no wallet on card for blockchain with given curve
@@ -66,9 +89,10 @@ fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesR
 }
 
 fun CardDTO.canHandleBlockchain(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
+    val cardConfig = CardConfig.createConfig(this)
+    val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
     val isContainsBlockchain = this.supportedBlockchains(cardTypesResolver).contains(blockchain)
-    val isWalletForCurveExists =
-        wallets.map { it.curve }.intersect(blockchain.getSupportedCurves().toSet()).isNotEmpty()
+    val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
     // fixme: check for first wallets with 1 curve and remove condition
     return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
         // if there's no wallet on card for blockchain with given curve
