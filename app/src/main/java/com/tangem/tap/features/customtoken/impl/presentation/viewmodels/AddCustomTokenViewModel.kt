@@ -622,11 +622,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getDerivationPathForBlockchain(blockchain: Blockchain?): DerivationPath? {
         if (blockchain == null) return null
 
-        val derivationStyle = if (!isDerivationPathSelected()) {
-            reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
-        } else {
-            DerivationStyle.LEGACY
-        }
+        val derivationStyle = reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
+
         val derivationNetwork = if (blockchain == Blockchain.Unknown) {
             uiState.form.networkSelectorField.selectedItem.blockchain
         } else {
