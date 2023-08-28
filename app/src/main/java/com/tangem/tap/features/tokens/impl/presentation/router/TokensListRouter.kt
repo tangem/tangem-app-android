@@ -35,4 +35,9 @@ internal interface TokensListRouter {
      * @param blockchain blockchain to show alert
      */
     fun openUnsupportedNetworkAlert(blockchain: Blockchain)
+
+    /**
+     * Open alert with Solana tokens error
+     */
+    fun openSolanaTokensNotSupportAlert()
 }
