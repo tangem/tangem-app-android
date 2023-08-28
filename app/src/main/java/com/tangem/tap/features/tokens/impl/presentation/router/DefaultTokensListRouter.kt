@@ -51,17 +51,20 @@ internal class DefaultTokensListRouter(
     }
 
     override fun openUnsupportedNetworkAlert(blockchain: Blockchain) {
-        val alert = when (blockchain) {
-            Blockchain.Solana -> AppDialog.SimpleOkDialogRes(
+        val alert = AppDialog.SimpleOkDialogRes(
+            headerId = R.string.common_warning,
+            messageId = R.string.alert_manage_tokens_unsupported_curve_message,
+            args = listOf(blockchain.fullName),
+        )
+        store.dispatchDialogShow(alert)
+    }
+
+    override fun openSolanaTokensNotSupportAlert() {
+        store.dispatchDialogShow(
+            AppDialog.SimpleOkDialogRes(
                 headerId = R.string.common_warning,
                 messageId = R.string.alert_manage_tokens_unsupported_message,
-            )
-            else -> AppDialog.SimpleOkDialogRes(
-                headerId = R.string.common_warning,
-                messageId = R.string.alert_manage_tokens_unsupported_curve_message,
-                args = listOf(blockchain.fullName),
-            )
-        }
-        store.dispatchDialogShow(alert)
+            ),
+        )
     }
 }
