@@ -1,7 +1,6 @@
 package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.models.scan.CardDTO
 import java.util.*
@@ -69,6 +68,4 @@ object TapWorkarounds {
     fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
         return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
     }
-
-    fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId] ?: null
 }
