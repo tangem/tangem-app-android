@@ -39,6 +39,7 @@ class ConfigValueModel(
     val walletConnectProjectId: String,
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
+    val chiaTangemApiKey: String?,
 )
 
 data class AppsFlyer(
