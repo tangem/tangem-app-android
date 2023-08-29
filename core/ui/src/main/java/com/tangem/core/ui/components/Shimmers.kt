@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.res.TangemTheme
 import com.valentinilk.shimmer.shimmer
 
@@ -14,13 +15,13 @@ import com.valentinilk.shimmer.shimmer
  * Rectangle shimmer item with rounded shape from DS
  */
 @Composable
-fun RectangleShimmer(modifier: Modifier = Modifier) {
+fun RectangleShimmer(modifier: Modifier = Modifier, radius: Dp = TangemTheme.dimens.radius6) {
     Box(
         modifier = modifier
             .shimmer()
             .background(
                 color = TangemTheme.colors.button.secondary,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+                shape = RoundedCornerShape(size = radius),
             ),
     )
 }
@@ -31,16 +32,14 @@ fun RectangleShimmer(modifier: Modifier = Modifier) {
  */
 @Composable
 fun CircleShimmer(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.shimmer()) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.button.secondary,
-                    shape = CircleShape,
-                ),
-        )
-    }
+    Box(
+        modifier = modifier
+            .shimmer()
+            .background(
+                color = TangemTheme.colors.button.secondary,
+                shape = CircleShape,
+            ),
+    )
 }
 
 // region preview
