@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -71,13 +71,11 @@ interface FragmentOnBackPressedHandler {
 
 @SuppressLint("FragmentBackPressedCallback")
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
-    activity?.onBackPressedDispatcher?.addCallback(
-        this,
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                handler.handleOnBackPressed()
-            }
-        },
-    )
-    view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener { activity?.onBackPressed() }
+    requireActivity().onBackPressedDispatcher.addCallback {
+        handler.handleOnBackPressed()
+    }
+
+    view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+        handler.handleOnBackPressed()
+    }
 }
