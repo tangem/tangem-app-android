@@ -150,12 +150,14 @@ internal class GetPrimaryCurrencyUseCaseTest {
 
     private fun getUseCase(
         token: Either<DataError, CryptoCurrency> = MockTokens.token1.right(),
+        removeCurrencyResult: Either<DataError, Unit> = Unit.right(),
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
     ) = GetPrimaryCurrencyUseCase(
         dispatchers = dispatchers,
         currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
+            removeCurrencyResult = removeCurrencyResult,
             token = token,
             tokens = flowOf(),
             isGrouped = flowOf(),
