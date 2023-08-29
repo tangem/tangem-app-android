@@ -16,6 +16,4 @@ sealed interface TokensAction : Action {
     }
 // [REDACTED_TODO_COMMENT]
     data class SaveChanges(val tokens: List<TokenWithBlockchain>, val blockchains: List<Blockchain>) : TokensAction
-// [REDACTED_TODO_COMMENT]
-    object PrepareAndNavigateToAddCustomToken : TokensAction
 }
