@@ -52,8 +52,8 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetCurrencyUseCase {
-        return GetCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetCurrencyStatusUpdatesUseCase {
+        return GetCurrencyStatusUpdatesUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
@@ -63,8 +63,23 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetPrimaryCurrencyUseCase {
-        return GetPrimaryCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetPrimaryCurrencyStatusUpdatesUseCase {
+        return GetPrimaryCurrencyStatusUpdatesUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideFetchCurrencyStatusUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchCurrencyStatusUseCase {
+        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository)
     }
 
     @Provides
