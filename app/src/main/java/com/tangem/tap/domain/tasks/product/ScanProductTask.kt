@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
@@ -54,7 +55,7 @@ class ScanProductTask(
         }
         val cardDto = CardDTO(card)
 
-        val error = getErrorIfExcludedCard(cardDto)
+        val error = getErrorIfExcludedCard(cardDto, card)
         if (error != null) {
             callback(CompletionResult.Failure(error))
             return
@@ -84,9 +85,15 @@ class ScanProductTask(
         }
     }
 
-    private fun getErrorIfExcludedCard(cardDto: CardDTO): TangemError? {
+    private fun getErrorIfExcludedCard(cardDto: CardDTO, card: Card): TangemError? {
         if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp
         if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+        // according ios decline card lower Ed25519Slip0010Available version and contains imported wallets
+        if (card.firmwareVersion < FirmwareVersion.Ed25519Slip0010Available &&
+            card.wallets.any { it.isImported }
+        ) {
+            return TapSdkError.CardNotSupportedByRelease
+        }
         return null
     }
 }
