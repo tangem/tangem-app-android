@@ -4,20 +4,28 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +50,8 @@ import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
 private const val DOTS = "•••"
+private const val GRAY_SCALE_SATURATION = 0f
+
 val TOKEN_ITEM_HEIGHT: Dp
     @Composable
     @ReadOnlyComposable
@@ -49,23 +59,32 @@ val TOKEN_ITEM_HEIGHT: Dp
 
 @Composable
 internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
+    // TODO: Add custom token state: [REDACTED_JIRA]
     when (state) {
         is TokenItemState.Content -> ContentTokenItem(state, modifier)
         is TokenItemState.Loading -> LoadingTokenItem(modifier)
         is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
         is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
+        is TokenItemState.Locked -> LockedTokenItem(modifier)
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier = Modifier) {
+    val hapticFeedback = LocalHapticFeedback.current
     InternalTokenItem(
-        modifier = modifier,
-        onClick = content.onClick,
+        modifier = modifier.combinedClickable(
+            onClick = content.onItemClick,
+            onLongClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                content.onItemLongClick()
+            },
+        ),
         name = content.name,
         tokenIconUrl = content.tokenIconUrl,
         tokenIconResId = content.tokenIconResId,
-        networkIconResId = content.networkIconResId,
+        networkBadgeIconResId = content.networkBadgeIconResId,
         amount = if (content.tokenOptions is TokenOptionsState.Hidden) DOTS else content.amount,
         hasPending = content.hasPending,
         options = { ref ->
@@ -74,6 +93,7 @@ private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier
                 state = content.tokenOptions,
             )
         },
+        isTestnet = content.isTestnet,
     )
 }
 
@@ -88,9 +108,10 @@ internal fun DraggableTokenItem(
         name = state.name,
         tokenIconUrl = state.tokenIconUrl,
         tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
+        networkBadgeIconResId = state.networkBadgeIconResId,
         amount = state.fiatAmount,
         hasPending = false,
+        isTestnet = state.isTestnet,
         options = { ref ->
             Box(
                 modifier = Modifier
@@ -122,7 +143,7 @@ internal fun UnreachableTokenItem(state: TokenItemState.Unreachable, modifier: M
         name = state.name,
         tokenIconUrl = state.tokenIconUrl,
         tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
+        networkBadgeIconResId = state.networkBadgeIconResId,
         amount = null,
         hasPending = false,
         options = { ref ->
@@ -188,6 +209,77 @@ private fun LoadingTokenItem(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+private fun LockedTokenItem(modifier: Modifier = Modifier) {
+    BaseSurface(modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = TangemTheme.dimens.spacing12,
+                    vertical = TangemTheme.dimens.spacing4,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        ) {
+            Box(modifier = Modifier.size(size = TangemTheme.dimens.size42)) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            color = TangemTheme.colors.button.secondary,
+                            shape = CircleShape,
+                        ),
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size72,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size50,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size40,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                    LockedContent(
+                        modifier = Modifier.size(
+                            width = TangemTheme.dimens.size40,
+                            height = TangemTheme.dimens.size12,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
+}
+
 /**
  * Block for end part of token item
  * shows status is reachable, is drag, hidden or show balance
@@ -213,20 +305,21 @@ private fun InternalTokenItem(
     name: String,
     tokenIconUrl: String?,
     @DrawableRes tokenIconResId: Int,
-    @DrawableRes networkIconResId: Int?,
+    @DrawableRes networkBadgeIconResId: Int?,
     amount: String?,
     hasPending: Boolean,
     options: @Composable ConstraintLayoutScope.(ref: ConstrainedLayoutReference) -> Unit,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
+    isTestnet: Boolean = false,
 ) {
-    BaseSurface(
-        modifier = modifier,
-        onClick = onClick,
+    Box(
+        modifier = modifier
+            .defaultMinSize(minHeight = TOKEN_ITEM_HEIGHT)
+            .background(color = TangemTheme.colors.background.primary),
     ) {
         ConstraintLayout(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(
                     horizontal = TangemTheme.dimens.spacing14,
                     vertical = TangemTheme.dimens.spacing4,
@@ -241,7 +334,8 @@ private fun InternalTokenItem(
                 },
                 tokenIconUrl = tokenIconUrl,
                 tokenIconResId = tokenIconResId,
-                networkIconRes = networkIconResId,
+                networkBadgeIconRes = networkBadgeIconResId,
+                isTestnet = isTestnet,
             )
 
             TokenTitleAmountBlock(
@@ -379,9 +473,10 @@ private fun TokenFiatPercentageBlock(
 @Composable
 private fun TokenIcon(
     tokenIconUrl: String?,
+    @DrawableRes tokenIconResId: Int,
+    isTestnet: Boolean,
     modifier: Modifier = Modifier,
-    @DrawableRes tokenIconResId: Int? = null,
-    @DrawableRes networkIconRes: Int? = null,
+    @DrawableRes networkBadgeIconRes: Int? = null,
 ) {
     Box(
         modifier = modifier
@@ -392,19 +487,36 @@ private fun TokenIcon(
             .align(Alignment.BottomStart)
             .size(TangemTheme.dimens.size36)
 
-        val data = if (tokenIconUrl.isNullOrEmpty()) tokenIconResId else tokenIconUrl
+        val iconData: Any = remember(tokenIconUrl) {
+            if (tokenIconUrl.isNullOrEmpty()) tokenIconResId else tokenIconUrl
+        }
+        val colorFilter = remember(isTestnet) {
+            if (isTestnet) {
+                val colorMatrix = ColorMatrix().also {
+                    it.setToSaturation(GRAY_SCALE_SATURATION)
+                }
+
+                ColorFilter.colorMatrix(colorMatrix)
+            } else {
+                null
+            }
+        }
+
         SubcomposeAsyncImage(
             modifier = tokenImageModifier,
             model = ImageRequest.Builder(LocalContext.current)
-                .data(data)
-                .crossfade(true)
+                .data(iconData)
+                .placeholder(tokenIconResId)
+                .error(tokenIconResId)
+                .fallback(tokenIconResId)
+                .crossfade(enable = true)
                 .build(),
-            loading = { CircleShimmer(modifier = tokenImageModifier) },
+            colorFilter = colorFilter,
             contentDescription = null,
         )
 
         AnimatedVisibility(
-            visible = networkIconRes != null,
+            visible = networkBadgeIconRes != null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .size(TangemTheme.dimens.size18)
@@ -414,7 +526,8 @@ private fun TokenIcon(
                 modifier = Modifier
                     .padding(all = TangemTheme.dimens.spacing0_5)
                     .align(Alignment.Center),
-                painter = painterResource(id = requireNotNull(networkIconRes)),
+                painter = painterResource(id = requireNotNull(networkBadgeIconRes)),
+                colorFilter = colorFilter,
                 contentDescription = null,
             )
         }
@@ -446,6 +559,7 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
         WalletPreviewData.tokenItemDragState,
         WalletPreviewData.tokenItemHiddenState,
         WalletPreviewData.loadingTokenItemState,
+        WalletPreviewData.testnetTokenItemVisibleState,
     ),
 )
 
