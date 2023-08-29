@@ -26,6 +26,7 @@ import com.tangem.domain.DomainLayer
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
@@ -42,6 +43,7 @@ import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
+import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -165,6 +167,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var appCurrencyRepository: AppCurrencyRepository
 
+    @Inject
+    lateinit var walletManagersFacade: WalletManagersFacade
+
     override fun onCreate() {
         super.onCreate()
 
@@ -184,12 +189,13 @@ class TapApplication : Application(), ImageLoaderFactory {
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
+                    walletManagersFacade = walletManagersFacade,
                 ),
             ),
         )
 
         if (BuildConfig.DEBUG) {
-            Logger.addLogAdapter(AndroidLogAdapter())
+            Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
             Timber.plant(
                 object : Timber.DebugTree() {
                     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
