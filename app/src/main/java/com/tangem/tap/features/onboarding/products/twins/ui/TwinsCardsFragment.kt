@@ -5,6 +5,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionInflater
@@ -175,10 +176,12 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupWelcomeState(state: TwinCardsState) {
-        setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
+        setupWelcomeState(state) {
+            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
+        }
     }
 
-    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) =
+    private fun setupWelcomeState(state: TwinCardsState, onMainButtonClick: VoidCallback) =
         with(mainBinding.onboardingActionContainer) {
             twinsWidget.toWelcome(false)
 
@@ -192,7 +195,12 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             )
 
             btnMainAction.setText(R.string.common_continue)
-            btnMainAction.setOnClickListener { mainAction() }
+            btnMainAction.icon = when (state.currentStep) {
+                is TwinCardsStep.WelcomeOnly -> null
+                is TwinCardsStep.Welcome -> AppCompatResources.getDrawable(requireContext(), R.drawable.ic_tangem_24)
+                else -> null
+            }
+            btnMainAction.setOnClickListener { onMainButtonClick() }
         }
 
     private fun setupWarningState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
@@ -210,6 +218,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         }
         btnMainAction.isEnabled = state.userWasUnderstandIfWalletRecreate
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
         }
@@ -251,6 +260,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tvBody.setText(R.string.onboarding_twins_interrupt_warning)
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(
@@ -274,6 +284,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnMainAction.text =
             getString(R.string.twins_recreate_button_format, twinPairIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchSecondStep(
@@ -298,6 +309,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tvBody.setText(R.string.onboarding_twins_interrupt_warning)
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchThirdStep(
@@ -343,6 +355,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             }
         } else {
             btnMainAction.setText(R.string.onboarding_button_receive_crypto)
+            btnMainAction.icon = null
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
             }
@@ -367,6 +380,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private fun setupDoneState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.Confetti.Hide)
             store.dispatch(TwinCardsAction.Done)
