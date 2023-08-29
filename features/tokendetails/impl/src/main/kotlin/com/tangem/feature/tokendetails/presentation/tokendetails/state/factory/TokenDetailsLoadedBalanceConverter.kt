@@ -8,13 +8,12 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-class TokenDetailsLoadedBalanceConverter(
+internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<Either<CurrencyError, CryptoCurrencyStatus>, TokenDetailsState> {
@@ -32,24 +31,27 @@ class TokenDetailsLoadedBalanceConverter(
         val state = currentStateProvider()
         val currencyName = state.marketPriceBlockState.currencyName
         return state.copy(
-            tokenBalanceBlockState = getBalanceState(status),
+            tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
         )
     }
 
-    private fun getBalanceState(status: CryptoCurrencyStatus): TokenDetailsBalanceBlockState {
+    private fun getBalanceState(
+        currentState: TokenDetailsBalanceBlockState,
+        status: CryptoCurrencyStatus,
+    ): TokenDetailsBalanceBlockState {
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
             -> {
                 TokenDetailsBalanceBlockState.Content(
-                    actionButtons = TokenDetailsPreviewData.actionButtons,
+                    actionButtons = currentState.actionButtons,
                     fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                     cryptoBalance = formatCryptoAmount(status),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
-                TokenDetailsBalanceBlockState.Loading(TokenDetailsPreviewData.disabledActionButtons)
+                TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
             }
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
@@ -57,7 +59,7 @@ class TokenDetailsLoadedBalanceConverter(
             // TODO:  [REDACTED_JIRA]
             is CryptoCurrencyStatus.Unreachable,
             -> {
-                TokenDetailsBalanceBlockState.Error(TokenDetailsPreviewData.actionButtons)
+                TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
             }
         }
     }
