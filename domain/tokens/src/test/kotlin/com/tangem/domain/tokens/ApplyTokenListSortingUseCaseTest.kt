@@ -190,8 +190,16 @@ internal class ApplyTokenListSortingUseCaseTest {
 
     private fun getTokensRepository(
         sortTokensResult: Either<DataError, Unit> = Unit.right(),
+        removeCurrencyResult: Either<DataError, Unit> = Unit.right(),
         tokens: Flow<Either<DataError, List<CryptoCurrency>>> = flowOf(MockTokens.tokens.right()),
     ): MockCurrenciesRepository {
-        return MockCurrenciesRepository(sortTokensResult, MockTokens.token1.right(), tokens, emptyFlow(), emptyFlow())
+        return MockCurrenciesRepository(
+            sortTokensResult = sortTokensResult,
+            removeCurrencyResult = removeCurrencyResult,
+            token = MockTokens.token1.right(),
+            tokens = tokens,
+            isGrouped = emptyFlow(),
+            isSortedByBalance = emptyFlow(),
+        )
     }
 }
