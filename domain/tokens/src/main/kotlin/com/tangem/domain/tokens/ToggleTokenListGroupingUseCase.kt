@@ -1,18 +1,18 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import arrow.core.raise.*
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.raise.withError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.operations.TokenListSortingOperations
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
 class ToggleTokenListGroupingUseCase(
-    private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -34,14 +34,10 @@ class ToggleTokenListGroupingUseCase(
 
     private fun Raise<TokenListSortingError>.groupTokens(tokenList: TokenList.Ungrouped): TokenList.GroupedByNetwork {
         val sortingOperations = TokenListSortingOperations(tokenList)
-        val tokens = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
-            sortingOperations.getTokens().bind()
-        }
 
-        val networks = getNetworks(tokens.map { it.currency.networkId }.toSet())
         return TokenList.GroupedByNetwork(
             groups = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
-                sortingOperations.getGroupedTokens(networks).bind()
+                sortingOperations.getGroupedTokens().bind()
             },
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
@@ -59,13 +55,6 @@ class ToggleTokenListGroupingUseCase(
             },
             totalFiatBalance = tokenList.totalFiatBalance,
             sortedBy = sortingOperations.getSortType(),
-        )
-    }
-
-    private fun Raise<TokenListSortingError>.getNetworks(networksIds: Set<Network.ID>): Set<Network> {
-        return catch(
-            block = { networksRepository.getNetworks(networksIds) },
-            catch = { raise(TokenListSortingError.DataError(it)) },
         )
     }
 }
