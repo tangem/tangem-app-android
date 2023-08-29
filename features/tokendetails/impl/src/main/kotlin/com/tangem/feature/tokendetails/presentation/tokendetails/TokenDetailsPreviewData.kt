@@ -1,16 +1,14 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails
 
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal object TokenDetailsPreviewData {
@@ -42,40 +40,20 @@ internal object TokenDetailsPreviewData {
         ),
     )
 
-    // TODO: [REDACTED_JIRA]
-    val actionButtons = persistentListOf(
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Buy"),
-            iconResId = R.drawable.ic_plus_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Send"),
-            iconResId = R.drawable.ic_arrow_up_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Receive"),
-            iconResId = R.drawable.ic_arrow_down_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Exchange"),
-            iconResId = R.drawable.ic_exchange_vertical_24,
-            onClick = {},
-        ),
+    private val actionButtons = persistentListOf(
+        TokenDetailsActionButton.Buy(enabled = true, onClick = {}),
+        TokenDetailsActionButton.Send(enabled = true, onClick = {}),
+        TokenDetailsActionButton.Receive(onClick = {}),
+        TokenDetailsActionButton.Swap(enabled = true, onClick = {}),
     )
 
-    // TODO: [REDACTED_JIRA]
-    val disabledActionButtons = actionButtons.map { it.copy(enabled = false) }.toPersistentList()
-
-    val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = disabledActionButtons)
+    val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = actionButtons)
     val balanceContent = TokenDetailsBalanceBlockState.Content(
         actionButtons = actionButtons,
         fiatBalance = "123,00$",
         cryptoBalance = "866,96 USDT",
     )
-    val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = disabledActionButtons)
+    val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = actionButtons)
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencyName = "USDT")
 
