@@ -46,9 +46,15 @@ internal interface InnerWalletRouter : WalletRouter {
     /** Open token details screen */
     fun openTokenDetails(currency: CryptoCurrency)
 
+    /** Open stories screen */
+    fun openStoriesScreen()
+
     /** Open save user wallet screen */
     fun openSaveUserWalletScreen()
 
     /** Is wallet last screen */
     fun isWalletLastScreen(): Boolean
+
+    /** Open manage tokens screen */
+    fun openManageTokensScreen()
 }

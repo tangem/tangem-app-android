@@ -478,6 +478,10 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
+    override fun onManageTokensClick() {
+        router.openManageTokensScreen()
+    }
+
     override fun onReloadClick() {
         uiState = stateFactory.getStateAfterContentRefreshing()
         updateSingleCurrencyContent(
