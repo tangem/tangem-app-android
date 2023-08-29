@@ -3,18 +3,27 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
 import com.tangem.utils.toBriefAddressFormat
-import com.tangem.utils.toFormattedCurrencyString
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormatterBuilder
@@ -24,12 +33,14 @@ import java.util.Locale
 /**
  * Convert from [Flow] of [TxHistoryItem] to [TxHistoryState]
  *
- * @property blockchain   blockchain of transactions history
- * @property clickIntents screen click intents
+ * @property currentStateProvider current state provider
+ * @property blockchain           blockchain of transactions history
+ * @property clickIntents         screen click intents
  *
 [REDACTED_AUTHOR]
  */
 internal class WalletTxHistoryItemFlowConverter(
+    private val currentStateProvider: Provider<WalletState>,
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
@@ -57,22 +68,30 @@ internal class WalletTxHistoryItemFlowConverter(
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        return TxHistoryState.Content(
-            items = value
-                .map { pagingData ->
-                    pagingData
+        val state = currentStateProvider() as WalletSingleCurrencyState
+        val txHistoryContent = state.txHistoryState as TxHistoryState.Content
+
+        // FIXME: TxHistoryRepository should send loading transactions
+        // [REDACTED_JIRA]
+        value
+            .onEach { txHistoryStatePagingData ->
+                txHistoryContent.contentItems.update {
+                    txHistoryStatePagingData
                         .map<TxHistoryItem, TxHistoryItemState> { item ->
                             // [createTransactionState] returns timestamp without formatting
                             TxHistoryItemState.Transaction(state = createTransactionState(item))
                         }
                         .insertHeaderItem(
                             terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                            item = TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick),
+                            item = TxHistoryItemState.Title(clickIntents::onExploreClick),
                         )
                         .insertGroupTitle() // method uses the raw timestamp
                         .formatTransactionsTimestamp() // method formats the timestamp
-                },
-        )
+                }
+            }
+            .launchIn(CoroutineScope(Dispatchers.IO))
+
+        return txHistoryContent
     }
 
     private fun createTransactionState(item: TxHistoryItem): TransactionState {
@@ -98,13 +117,13 @@ internal class WalletTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
                 txHash = item.txHash,
-                address = direction.from.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
@@ -119,13 +138,13 @@ internal class WalletTxHistoryItemFlowConverter(
         return when (item.status) {
             TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
             TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
                 txHash = item.txHash,
-                address = direction.to.toBriefAddressFormat(),
+                address = direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
                 timestamp = item.getRawTimestamp(),
             )
@@ -133,7 +152,11 @@ internal class WalletTxHistoryItemFlowConverter(
     }
 
     private fun BigDecimal.toCryptoCurrencyFormat(blockchain: Blockchain): String {
-        return toFormattedCurrencyString(currency = blockchain.currency, decimals = blockchain.decimals())
+        return BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = this,
+            cryptoCurrency = blockchain.currency,
+            decimals = blockchain.decimals(),
+        )
     }
 
     private fun PagingData<TxHistoryItemState>.insertGroupTitle(): PagingData<TxHistoryItemState> {
@@ -218,5 +241,10 @@ internal class WalletTxHistoryItemFlowConverter(
         return timeFormatter.print(
             DateTime(this.toLong(), DateTimeZone.getDefault()),
         )
+    }
+
+    private fun TxHistoryItem.TransactionDirection.extractAddress(): TextReference = when (val addr = address) {
+        TxHistoryItem.Address.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
+        is TxHistoryItem.Address.Single -> TextReference.Str(addr.rawAddress.toBriefAddressFormat())
     }
 }
