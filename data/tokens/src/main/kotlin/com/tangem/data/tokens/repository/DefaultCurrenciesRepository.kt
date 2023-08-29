@@ -53,6 +53,22 @@ internal class DefaultCurrenciesRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
+    override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
+        withContext(dispatchers.io) {
+            val savedCurrencies = requireNotNull(
+                value = userTokensStore.getSyncOrNull(userWalletId),
+                lazyMessage = { "Saved tokens empty. Can not perform remove currency action" },
+            )
+
+            val token = userTokensResponseFactory.createResponseToken(currency)
+            storeAndPushTokens(
+                userWalletId = userWalletId,
+                response = savedCurrencies.copy(
+                    tokens = savedCurrencies.tokens.filter { it != token },
+                ),
+            )
+        }
+
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
@@ -76,6 +92,21 @@ internal class DefaultCurrenciesRepository(
         launch(dispatchers.io) {
             fetchTokensIfCacheExpired(userWallet, refresh)
         }
+    }
+
+    override suspend fun getMultiCurrencyWalletCurrenciesSync(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): List<CryptoCurrency> {
+        val userWallet = getUserWallet(userWalletId)
+        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+        fetchTokensIfCacheExpired(userWallet, refresh)
+        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId))
+        return responseCurrenciesFactory.createCurrencies(
+            response = storedTokens,
+            card = userWallet.scanResponse.card,
+        )
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
