@@ -1,15 +1,15 @@
 package com.tangem.feature.tester.presentation
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeActivity
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
@@ -24,7 +24,10 @@ import javax.inject.Inject
 
 /** Activity for testers */
 @AndroidEntryPoint
-internal class TesterActivity : ComponentActivity() {
+internal class TesterActivity : ComposeActivity() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     /** Router for inner feature navigation */
     @Inject
@@ -35,19 +38,14 @@ internal class TesterActivity : ComponentActivity() {
             "TesterRouter must be InnerTesterRouter for tester feature"
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        setContent {
-            TangemTheme {
-                val statusBarColor = TangemTheme.colors.background.secondary
-                SystemBarsEffect {
-                    setStatusBarColor(color = statusBarColor)
-                }
-
-                TesterNavHost()
-            }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        val systemBarsColor = TangemTheme.colors.background.secondary
+        SystemBarsEffect {
+            setSystemBarsColor(systemBarsColor)
         }
+
+        TesterNavHost()
     }
 
     @Suppress("TopLevelComposableFunctions")
