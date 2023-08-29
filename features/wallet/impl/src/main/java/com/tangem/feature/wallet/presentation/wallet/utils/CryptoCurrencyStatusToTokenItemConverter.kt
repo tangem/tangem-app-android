@@ -47,7 +47,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             } else {
                 TokenItemState.TokenOptionsState.Visible(
                     fiatAmount = getFormattedFiatAmount(),
-                    priceChange = getPriceChangeConfig(),
+                    config = getPriceChangeConfig(),
                 )
             },
             isTestnet = currency.network.isTestnet,
