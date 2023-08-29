@@ -98,7 +98,7 @@ internal object WalletPreviewData {
             hasPending = true,
             tokenOptions = TokenOptionsState.Visible(
                 fiatAmount = "321 $",
-                priceChange = PriceChangeConfig(
+                config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
@@ -126,7 +126,7 @@ internal object WalletPreviewData {
             amount = "5,412 MATIC",
             hasPending = true,
             tokenOptions = TokenOptionsState.Hidden(
-                priceChange = PriceChangeConfig(
+                config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
