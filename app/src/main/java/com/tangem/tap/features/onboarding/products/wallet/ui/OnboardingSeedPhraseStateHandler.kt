@@ -59,7 +59,7 @@ internal class OnboardingSeedPhraseStateHandler(
 
     private fun setMainScreenToolbarTitle(walletFragment: OnboardingWalletFragment, subScreen: SeedPhraseScreen) {
         val titleResId = when (subScreen) {
-            SeedPhraseScreen.Intro,
+            SeedPhraseScreen.Intro -> R.string.wallet_title
             SeedPhraseScreen.AboutSeedPhrase,
             SeedPhraseScreen.YourSeedPhrase,
             SeedPhraseScreen.CheckSeedPhrase,
