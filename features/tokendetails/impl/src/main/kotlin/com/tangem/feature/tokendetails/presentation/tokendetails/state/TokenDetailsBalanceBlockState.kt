@@ -3,7 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import kotlinx.collections.immutable.ImmutableList
 
-sealed class TokenDetailsBalanceBlockState {
+internal sealed class TokenDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<TokenDetailsActionButton>
 

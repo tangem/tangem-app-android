@@ -9,7 +9,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-class TokenDetailsActionButtonsConverter(
+internal class TokenDetailsActionButtonsConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<List<TokenActionsState.ActionState>, TokenDetailsState> {

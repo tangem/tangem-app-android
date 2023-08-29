@@ -1,10 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.tokendetails.impl.R
 
-sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
+@Immutable
+internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
 
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit

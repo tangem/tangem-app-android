@@ -13,7 +13,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-class TokenDetailsLoadedBalanceConverter(
+internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<Either<CurrencyError, CryptoCurrencyStatus>, TokenDetailsState> {

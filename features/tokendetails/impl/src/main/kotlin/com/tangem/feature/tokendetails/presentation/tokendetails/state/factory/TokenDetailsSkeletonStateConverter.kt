@@ -56,6 +56,7 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Send(enabled = false, onClick = {}),
             TokenDetailsActionButton.Receive(onClick = {}),
             TokenDetailsActionButton.Sell(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Swap(enabled = false, onClick = {}),
         )
     }
 

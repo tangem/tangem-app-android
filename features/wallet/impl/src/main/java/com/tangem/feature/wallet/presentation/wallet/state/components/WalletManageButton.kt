@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.impl.R
  * @author Andrew Khokhlov on 24/06/2023
  */
 @Immutable
-sealed class WalletManageButton(val config: ActionButtonConfig) {
+internal sealed class WalletManageButton(val config: ActionButtonConfig) {
 
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit
