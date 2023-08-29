@@ -5,16 +5,13 @@ import arrow.core.raise.*
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.*
 
 @Suppress("LongParameterList")
 internal class TokenListOperations(
     private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
     private val tokens: List<CryptoCurrencyStatus>,
 ) {
@@ -25,7 +22,6 @@ internal class TokenListOperations(
         useCase: GetTokenListUseCase,
     ) : this(
         currenciesRepository = useCase.currenciesRepository,
-        networksRepository = useCase.networksRepository,
         userWalletId = userWalletId,
         tokens = tokens,
     )
@@ -70,35 +66,19 @@ internal class TokenListOperations(
             sortByBalance = isSortedByBalance,
         )
 
-        return createTokenList(currencies, sortingOperations, fiatBalance, isGrouped)
+        return createTokenList(sortingOperations, fiatBalance, isGrouped)
     }
 
     private fun Raise<Error>.createTokenList(
-        tokens: NonEmptyList<CryptoCurrencyStatus>,
         sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
         isGrouped: Boolean,
     ): TokenList {
         return if (isGrouped) {
-            val networks = ensureNotNull(getNetworks(tokens).toNonEmptySetOrNull()) {
-                Error.UnableToGroupTokenList(
-                    ungroupedTokenList = createUngroupedTokenList(sortingOperations, fiatBalance),
-                )
-            }
-
-            createGroupedTokenList(sortingOperations, fiatBalance, networks)
+            createGroupedTokenList(sortingOperations, fiatBalance)
         } else {
             createUngroupedTokenList(sortingOperations, fiatBalance)
         }
-    }
-
-    private fun Raise<Error>.getNetworks(tokensNes: NonEmptyList<CryptoCurrencyStatus>): Set<Network> {
-        val networksIds = tokensNes.map { it.currency.networkId }.toNonEmptySet()
-
-        return catch(
-            block = { networksRepository.getNetworks(networksIds) },
-            catch = { raise(Error.DataError(it)) },
-        )
     }
 
     private fun Raise<Error>.createUngroupedTokenList(
@@ -118,7 +98,6 @@ internal class TokenListOperations(
     private fun Raise<Error>.createGroupedTokenList(
         sortingOperations: TokenListSortingOperations,
         fiatBalance: TokenList.FiatBalance,
-        networks: NonEmptySet<Network>,
     ): TokenList.GroupedByNetwork = TokenList.GroupedByNetwork(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
@@ -126,7 +105,7 @@ internal class TokenListOperations(
             transform = { e ->
                 Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
             },
-            block = { sortingOperations.getGroupedTokens(networks).bind() },
+            block = { sortingOperations.getGroupedTokens().bind() },
         ),
     )
 
@@ -159,8 +138,6 @@ internal class TokenListOperations(
 
         data class UnableToSortTokenList(val unsortedTokenList: TokenList.Ungrouped) : Error()
 
-        data class UnableToGroupTokenList(val ungroupedTokenList: TokenList.Ungrouped) : Error()
-
         data class DataError(val cause: Throwable) : Error()
 
         internal companion object {
@@ -169,7 +146,6 @@ internal class TokenListOperations(
                 e: TokenListSortingOperations.Error,
                 createUnsortedUngroupedTokenList: () -> TokenList.Ungrouped,
             ): Error = when (e) {
-                is TokenListSortingOperations.Error.EmptyNetworks,
                 is TokenListSortingOperations.Error.EmptyTokens,
                 is TokenListSortingOperations.Error.NetworkNotFound,
                 -> UnableToSortTokenList(
