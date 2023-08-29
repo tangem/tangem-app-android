@@ -17,6 +17,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletState.ContentState]
@@ -47,9 +48,10 @@ internal class WalletSkeletonStateConverter(
             topBarConfig = createTopBarConfig(),
             walletsListConfig = createWalletsListConfig(value),
             pullToRefreshConfig = createPullToRefreshConfig(),
-            tokensListState = WalletTokensListState.Loading,
+            tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
+            tokenActionsBottomSheet = null,
         )
     }
 
@@ -61,9 +63,13 @@ internal class WalletSkeletonStateConverter(
             pullToRefreshConfig = createPullToRefreshConfig(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
-            buttons = getButtons(),
+            buttons = createButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
-            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
         )
     }
 
@@ -91,7 +97,7 @@ internal class WalletSkeletonStateConverter(
 
             // If wallet is initialized, return it, otherwise return loading state
             if (initializedWallet !is WalletCardState.Loading) {
-                initializedWallet
+                initializedWallet.copySealed(title = wallet.name)
             } else {
                 createWalletLoadingState(wallet)
             }
@@ -106,11 +112,14 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = wallet.walletId,
             title = wallet.name,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(
-                cardTypesResolver = cardTypeResolver,
-                isLocked = wallet.isLocked,
-            ),
+            additionalInfo = if (cardTypeResolver.isMultiwalletAllowed()) {
+                WalletAdditionalInfoFactory.resolve(cardTypesResolver = cardTypeResolver, wallet = wallet)
+            } else {
+                null
+            },
             imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
+            onRenameClick = clickIntents::onRenameClick,
+            onDeleteClick = clickIntents::onDeleteClick,
         )
     }
 
@@ -118,15 +127,12 @@ internal class WalletSkeletonStateConverter(
         return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
 
-    // TODO: [REDACTED_JIRA]
-    private fun getButtons(): ImmutableList<WalletManageButton> {
+    private fun createButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Buy(),
-            WalletManageButton.Send(),
+            WalletManageButton.Buy(enabled = false, onClick = {}),
+            WalletManageButton.Send(enabled = false, onClick = {}),
             WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(),
-            WalletManageButton.Sell(),
-            WalletManageButton.CopyAddress(onClick = {}),
+            WalletManageButton.Sell(enabled = false, onClick = {}),
         )
     }
 
