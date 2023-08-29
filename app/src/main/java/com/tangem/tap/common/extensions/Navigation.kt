@@ -6,7 +6,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.FragmentShareTransition
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
-import com.tangem.tap.features.customtoken.legacy.AddCustomTokenFragment
+import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
@@ -33,7 +33,6 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import timber.log.Timber
-import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment as RedesignedAddCustomTokenFragment
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
@@ -155,18 +154,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> TokensListFragment()
-
-        AppScreen.AddCustomToken -> {
-            val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::customTokenFeatureToggles,
-            )
-            if (featureToggles.isRedesignedScreenEnabled) {
-                RedesignedAddCustomTokenFragment()
-            } else {
-                AddCustomTokenFragment()
-            }
-        }
-
+        AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
             val featureToggles = store.state.daggerGraphState.get(
                 getDependency = DaggerGraphState::tokenDetailsFeatureToggles,
