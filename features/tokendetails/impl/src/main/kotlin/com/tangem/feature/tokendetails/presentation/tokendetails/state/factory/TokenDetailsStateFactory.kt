@@ -6,6 +6,7 @@ import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
@@ -35,6 +36,13 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    private val tokenDetailsButtonsConverter by lazy {
+        TokenDetailsActionButtonsConverter(
+            currentStateProvider = currentStateProvider,
+            clickIntents = clickIntents,
+        )
+    }
+
     private val loadingTransactionsStateConverter by lazy {
         TokenDetailsLoadingTxHistoryConverter(currentStateProvider = currentStateProvider, clickIntents = clickIntents)
     }
@@ -58,6 +66,10 @@ internal class TokenDetailsStateFactory(
         cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
     ): TokenDetailsState {
         return tokenDetailsLoadedBalanceConverter.convert(cryptoCurrencyEither)
+    }
+
+    fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
+        return tokenDetailsButtonsConverter.convert(actions)
     }
 
     fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): TokenDetailsState {
