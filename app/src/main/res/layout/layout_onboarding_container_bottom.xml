@@ -74,7 +74,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
-            style="@style/TapPrimaryButton"
+            style="@style/TapPrimaryIconButton"
+            tools:icon="@drawable/ic_tangem_24"
             tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
