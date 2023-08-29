@@ -33,7 +33,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.DraggableNetworkGroupItem
-import com.tangem.feature.wallet.presentation.common.component.DraggableTokenItem
+import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
@@ -151,7 +151,7 @@ private fun LazyItemScope.DraggableItem(
                 networkName = item.networkName,
                 reorderableTokenListState = reorderableState,
             )
-            is DraggableItem.Token -> DraggableTokenItem(
+            is DraggableItem.Token -> TokenItem(
                 modifier = itemModifier,
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
