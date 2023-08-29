@@ -72,6 +72,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
     private fun setupCreateWalletState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingOtherCardsAction.CreateWallet)
@@ -92,6 +93,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
