@@ -27,18 +27,24 @@ internal class CurrencyStatusOperations(
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
         val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
+        val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
+        val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
         return when {
             ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
-                hasTransactionsInProgress = status.hasTransactionsInProgress,
+                hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
+                pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
                 fiatRate = quote?.fiatRate,
                 priceChange = quote?.priceChange,
-                hasTransactionsInProgress = status.hasTransactionsInProgress,
+                hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
+                pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
             quote == null -> CryptoCurrencyStatus.Loading
             else -> CryptoCurrencyStatus.Loaded(
@@ -46,7 +52,9 @@ internal class CurrencyStatusOperations(
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
                 fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
-                hasTransactionsInProgress = status.hasTransactionsInProgress,
+                hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
+                pendingTransactions = currentTransactions,
+                networkAddress = status.address,
             )
         }
     }
