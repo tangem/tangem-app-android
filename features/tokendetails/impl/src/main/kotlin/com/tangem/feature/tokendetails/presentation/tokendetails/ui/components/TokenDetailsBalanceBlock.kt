@@ -15,7 +15,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modifier: Modifier = Modifier) {
@@ -51,7 +53,7 @@ internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modi
             )
 
             HorizontalActionChips(
-                buttons = state.actionButtons,
+                buttons = state.actionButtons.map(TokenDetailsActionButton::config).toImmutableList(),
                 modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
                 contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
             )
