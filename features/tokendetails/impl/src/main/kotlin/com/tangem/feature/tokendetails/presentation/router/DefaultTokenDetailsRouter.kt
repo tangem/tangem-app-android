@@ -14,4 +14,8 @@ internal class DefaultTokenDetailsRouter(
     override fun popBackStack() {
         navigationStateHolder.navigate(NavigationAction.PopBackTo())
     }
+
+    override fun openUrl(url: String) {
+        navigationStateHolder.navigate(NavigationAction.OpenUrl(url = url))
+    }
 }
