@@ -34,25 +34,20 @@ class GetPrimaryCurrencyUseCase(
      * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A [Flow] emitting either a [CurrencyError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
-    operator fun invoke(
-        userWalletId: UserWalletId,
-        refresh: Boolean = false,
-    ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
+    operator fun invoke(userWalletId: UserWalletId): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
         return flow {
-            emitAll(getPrimaryCurrency(userWalletId, refresh))
+            emitAll(getPrimaryCurrency(userWalletId))
         }.flowOn(dispatchers.io)
     }
 
     private suspend fun getPrimaryCurrency(
         userWalletId: UserWalletId,
-        refresh: Boolean,
     ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             userWalletId = userWalletId,
-            refresh = refresh,
         )
 
         return operations.getPrimaryCurrencyStatusFlow().map { maybeCurrency ->

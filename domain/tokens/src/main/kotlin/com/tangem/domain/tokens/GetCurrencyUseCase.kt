@@ -39,24 +39,21 @@ class GetCurrencyUseCase(
     operator fun invoke(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
-        refresh: Boolean = false,
     ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
         return flow {
-            emitAll(getCurrency(userWalletId, currencyId, refresh))
+            emitAll(getCurrency(userWalletId, currencyId))
         }.flowOn(dispatchers.io)
     }
 
     private suspend fun getCurrency(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
-        refresh: Boolean,
     ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             userWalletId = userWalletId,
-            refresh = refresh,
         )
 
         return operations.getCurrencyStatusFlow(currencyId).map { maybeCurrency ->

@@ -17,6 +17,16 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideFetchTokenListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchTokenListUseCase {
+        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
