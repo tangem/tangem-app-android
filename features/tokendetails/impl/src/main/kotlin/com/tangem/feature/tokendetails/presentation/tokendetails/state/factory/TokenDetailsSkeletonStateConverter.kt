@@ -4,14 +4,16 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.iconResId
 import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSkeletonStateConverter.SkeletonModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
@@ -37,7 +39,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 },
             ),
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(
-                TokenDetailsPreviewData.disabledActionButtons,
+                actionButtons = createButtons(),
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.cryptoCurrency.name),
             txHistoryState = TxHistoryState.Content(
@@ -45,6 +47,16 @@ internal class TokenDetailsSkeletonStateConverter(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+        )
+    }
+
+    private fun createButtons(): ImmutableList<TokenDetailsActionButton> {
+        return persistentListOf(
+            TokenDetailsActionButton.Buy(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Send(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Receive(onClick = {}),
+            TokenDetailsActionButton.Sell(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Swap(enabled = false, onClick = {}),
         )
     }
 
