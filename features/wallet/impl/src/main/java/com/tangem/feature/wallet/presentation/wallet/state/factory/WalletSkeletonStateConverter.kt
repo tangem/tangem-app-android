@@ -52,6 +52,7 @@ internal class WalletSkeletonStateConverter(
             notifications = persistentListOf(),
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
+            onManageTokensClick = clickIntents::onManageTokensClick,
         )
     }
 
