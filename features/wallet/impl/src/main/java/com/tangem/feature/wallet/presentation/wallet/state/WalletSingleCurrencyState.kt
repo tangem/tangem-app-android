@@ -1,23 +1,25 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import androidx.compose.runtime.Immutable
+import androidx.paging.PagingData
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Single currency wallet content state
  *
 [REDACTED_AUTHOR]
  */
+@Immutable
 internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
 
     /** Manage buttons */
     abstract val buttons: ImmutableList<WalletManageButton>
-
-    /** Market price block state */
-    abstract val marketPriceBlockState: MarketPriceBlockState?
 
     /** Transactions history state */
     abstract val txHistoryState: TxHistoryState
@@ -30,8 +32,8 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val notifications: ImmutableList<WalletNotification>,
         override val bottomSheetConfig: WalletBottomSheetConfig?,
         override val buttons: ImmutableList<WalletManageButton>,
-        override val marketPriceBlockState: MarketPriceBlockState,
         override val txHistoryState: TxHistoryState,
+        val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletSingleCurrencyState()
 
     data class Locked(
@@ -61,8 +63,21 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
             ),
         )
 
-        override val marketPriceBlockState = null
+        override val txHistoryState: TxHistoryState = TxHistoryState.Content(
+            contentItems = MutableStateFlow(
+                value = PagingData.from(
+                    data = listOf(
+                        TxHistoryState.TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                        TxHistoryState.TxHistoryItemState.Transaction(
+                            state = TransactionState.Locked(txHash = LOCKED_TX_HASH),
+                        ),
+                    ),
+                ),
+            ),
+        )
 
-        override val txHistoryState: TxHistoryState = TxHistoryState.Locked(onExploreClick)
+        private companion object {
+            const val LOCKED_TX_HASH = "LOCKED_TX_HASH"
+        }
     }
 }
