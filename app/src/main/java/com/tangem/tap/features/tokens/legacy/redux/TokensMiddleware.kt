@@ -9,28 +9,19 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
-import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.supportsHdWallet
-import com.tangem.domain.features.addCustomToken.CustomCurrency
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,7 +35,6 @@ object TokensMiddleware {
             { action ->
                 when (action) {
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
-                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken()
                 }
                 next(action)
             }
@@ -230,57 +220,5 @@ object TokensMiddleware {
             return
         }
         walletCurrenciesManager.removeCurrencies(selectedUserWallet, currencies)
-    }
-
-    private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
-        return currency.derivationPath?.let {
-            !scanResponse.hasDerivation(currency.blockchain, it)
-        } ?: false
-    }
-
-    private fun handleAddingCustomToken() = scope.launch {
-        val onAddCustomToken = fun(customCurrency: CustomCurrency) {
-            val scanResponse = store.state.globalState.scanResponse ?: return
-
-            fun submitAndPopBack(scanResponse: ScanResponse, currencyList: List<Currency>) {
-                submitAdd(scanResponse, currencyList)
-                // pop from the AddCustomTokenScreen
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-            }
-
-            Analytics.send(ManageTokens.CustomToken.TokenWasAdded(customCurrency))
-            val currency = Currency.fromCustomCurrency(customCurrency)
-            val isNeedToDerive = isNeedToDerive(scanResponse, currency)
-            val currencyList = listOf(currency)
-            if (isNeedToDerive) {
-                deriveMissingBlockchains(scanResponse, currencyList) {
-                    submitAndPopBack(it, currencyList)
-                }
-            } else {
-                submitAndPopBack(scanResponse, currencyList)
-            }
-        }
-
-        val addedCurrencies = store.state.walletState.walletsStores
-            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-            .flatten()
-            .map { currency ->
-                when (currency) {
-                    is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
-                        currency.blockchain,
-                        currency.derivationPath,
-                    )
-
-                    is Currency.Token -> DomainWrapped.Currency.Token(
-                        currency.token,
-                        currency.blockchain,
-                        currency.derivationPath,
-                    )
-                }
-            }
-        domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
-        domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(onAddCustomToken))
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
     }
 }

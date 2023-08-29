@@ -17,7 +17,4 @@ sealed interface TokensAction : Action {
 
     // TODO: AND-3391 Remove this action
     data class SaveChanges(val tokens: List<TokenWithBlockchain>, val blockchains: List<Blockchain>) : TokensAction
-
-    // TODO: Remove this action in 4.7 release
-    object PrepareAndNavigateToAddCustomToken : TokensAction
 }
