@@ -6,14 +6,24 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.ui.fragments.ComposeActivity
+import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeActivity
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.Chat
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-internal class SprinklrActivity : ComposeActivity<SprinklrScreenState>() {
+@AndroidEntryPoint
+internal class SprinklrActivity : ComposeActivity() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
+
     private val viewModel by viewModels<SprinklrViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,12 +35,14 @@ internal class SprinklrActivity : ComposeActivity<SprinklrScreenState>() {
     }
 
     @Composable
-    override fun provideState(): State<SprinklrScreenState> {
-        return viewModel.state.collectAsState()
-    }
+    override fun ScreenContent(modifier: Modifier) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
-    @Composable
-    override fun ScreenContent(state: SprinklrScreenState, modifier: Modifier) {
+        val systemBarsColor = TangemTheme.colors.background.primary
+        SystemBarsEffect {
+            setSystemBarsColor(systemBarsColor)
+        }
+
         BackHandler(onBack = state.onNavigateBack)
         SprinklrScreenContent(
             modifier = modifier
