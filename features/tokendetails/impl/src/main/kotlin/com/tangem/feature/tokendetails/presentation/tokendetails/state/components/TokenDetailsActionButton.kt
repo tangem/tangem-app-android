@@ -4,7 +4,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.tokendetails.impl.R
 
-internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
+sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
 
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit
