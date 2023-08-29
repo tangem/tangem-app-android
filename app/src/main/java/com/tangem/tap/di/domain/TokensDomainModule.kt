@@ -51,10 +51,9 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideToggleTokenListGroupingUseCase(
-        networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCase {
-        return ToggleTokenListGroupingUseCase(networksRepository, dispatchers)
+        return ToggleTokenListGroupingUseCase(dispatchers)
     }
 
     @Provides
@@ -70,5 +69,13 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ApplyTokenListSortingUseCase {
         return ApplyTokenListSortingUseCase(currenciesRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCryptoCurrencyActionsUseCase(
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCryptoCurrencyActionsUseCase {
+        return GetCryptoCurrencyActionsUseCase(dispatchers)
     }
 }

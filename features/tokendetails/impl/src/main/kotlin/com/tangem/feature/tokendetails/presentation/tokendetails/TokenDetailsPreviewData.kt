@@ -2,7 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -11,6 +11,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfo
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal object TokenDetailsPreviewData {
 
@@ -40,8 +41,8 @@ internal object TokenDetailsPreviewData {
             blockchainName = "Ethereum",
         ),
     )
-
-    private val actionButtons = persistentListOf(
+// [REDACTED_TODO_COMMENT]
+    val actionButtons = persistentListOf(
         ActionButtonConfig(
             text = TextReference.Str(value = "Buy"),
             iconResId = R.drawable.ic_plus_24,
@@ -63,8 +64,8 @@ internal object TokenDetailsPreviewData {
             onClick = {},
         ),
     )
-
-    private val disabledActionButtons = actionButtons.map { it.copy(enabled = false) }.toPersistentList()
+// [REDACTED_TODO_COMMENT]
+    val disabledActionButtons = actionButtons.map { it.copy(enabled = false) }.toPersistentList()
 
     val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = disabledActionButtons)
     val balanceContent = TokenDetailsBalanceBlockState.Content(
@@ -74,15 +75,6 @@ internal object TokenDetailsPreviewData {
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = disabledActionButtons)
 
-    val marketPriceContent = MarketPriceBlockState.Content(
-        currencyName = "USDT",
-        price = "98900 $",
-        priceChangeConfig = PriceChangeConfig(
-            valueInPercent = "10.89%",
-            type = PriceChangeConfig.Type.UP,
-        ),
-    )
-
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencyName = "USDT")
 
     val tokenDetailsState = TokenDetailsState(
@@ -90,5 +82,10 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
+        txHistoryState = TxHistoryState.Content(
+            contentItems = MutableStateFlow(
+                value = TxHistoryState.getDefaultLoadingTransactions {},
+            ),
+        ),
     )
 }

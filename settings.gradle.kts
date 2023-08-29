@@ -110,14 +110,18 @@ include(":domain:txhistory")
 include(":domain:txhistory:models")
 include(":domain:app-currency")
 include(":domain:app-currency:models")
+include(":domain:app-theme")
+include(":domain:app-theme:models")
 // endregion Domain modules
 
 // region Data modules
+include(":data:app-currency")
+include(":data:app-theme")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
 include(":data:source:preferences")
 include(":data:settings")
 include(":data:txhistory")
-include(":data:app-currency")
+include(":data:wallets")
 // endregion Data modules
