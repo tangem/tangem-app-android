@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -17,7 +18,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
@@ -81,6 +84,9 @@ internal class WalletViewModel @Inject constructor(
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
@@ -123,6 +129,14 @@ internal class WalletViewModel @Inject constructor(
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
+        viewModelScope.launch(dispatchers.main) {
+            delay(timeMillis = 1_800)
+
+            if (router.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()) {
+                router.openSaveUserWalletScreen()
+            }
+        }
+
         getWalletsUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .distinctUntilChanged()
@@ -280,7 +294,11 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
 
-    override fun onBackClick() = router.popBackStack()
+    override fun onBackClick() {
+        viewModelScope.launch(dispatchers.main) {
+            router.popBackStack(screen = if (shouldSaveUserWalletsUseCase()) AppScreen.Welcome else AppScreen.Home)
+        }
+    }
 
     override fun onScanCardClick() {
         val prevRequestPolicyStatus = getBiometricsStatusUseCase()
@@ -525,7 +543,7 @@ internal class WalletViewModel @Inject constructor(
             val either = deleteWalletUseCase(userWalletId)
 
             val state = requireNotNull(uiState as? WalletState.ContentState)
-            if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) router.openStoriesScreen()
+            if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) onBackClick()
         }
     }
 
