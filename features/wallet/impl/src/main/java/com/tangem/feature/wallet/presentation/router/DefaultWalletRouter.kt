@@ -113,6 +113,10 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
         )
     }
 
+    override fun openStoriesScreen() {
+        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(screen = AppScreen.Home))
+    }
+
     private companion object {
         const val BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN = 2
     }
