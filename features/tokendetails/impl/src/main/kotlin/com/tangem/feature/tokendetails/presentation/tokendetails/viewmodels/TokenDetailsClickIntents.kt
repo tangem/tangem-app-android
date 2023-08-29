@@ -7,4 +7,12 @@ interface TokenDetailsClickIntents : TxHistoryClickIntents {
     fun onBackClick()
 
     fun onMoreClick()
+
+    fun onSendClick()
+
+    fun onReceiveClick()
+
+    fun onSellClick()
+
+    fun onSwapClick()
 }
