@@ -342,6 +342,7 @@ internal class GetTokenListUseCaseTest {
         dispatchers = dispatchers,
         currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
+            removeCurrencyResult = Unit.right(),
             token = MockTokens.token1.right(),
             tokens = tokens,
             isGrouped = isGrouped,
