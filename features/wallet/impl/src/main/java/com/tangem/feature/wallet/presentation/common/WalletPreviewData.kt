@@ -356,6 +356,7 @@ internal object WalletPreviewData {
             ),
             bottomSheetConfig = bottomSheet,
             tokenActionsBottomSheet = actionsBottomSheet,
+            onManageTokensClick = {},
         )
     }
 
