@@ -1,4 +1,4 @@
-package com.tangem.core.ui.fragments
+package com.tangem.core.ui.extensions
 
 import android.view.WindowManager
 import androidx.annotation.ColorRes

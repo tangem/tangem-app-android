@@ -7,6 +7,7 @@ plugins {
 dependencies {
     /** Project - Domain */
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.appTheme.models)
 
     /** Project - Core */
     implementation(projects.core.res)
