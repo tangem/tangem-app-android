@@ -13,19 +13,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.wallets.RenameWalletDialogContent
-import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeBottomSheetFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.*
 import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
-internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<WalletSelectorScreenState>() {
+internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
+
     private val viewModel by viewModels<WalletSelectorViewModel>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -35,10 +42,8 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     }
 
     @Composable
-    override fun provideState(): State<WalletSelectorScreenState> = viewModel.state.collectAsState()
-
-    @Composable
-    override fun ScreenContent(state: WalletSelectorScreenState, modifier: Modifier) {
+    override fun ScreenContent(modifier: Modifier) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val dialog by rememberUpdatedState(newValue = state.dialog)
