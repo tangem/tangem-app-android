@@ -4,12 +4,16 @@ import androidx.core.os.bundleOf
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
@@ -27,6 +31,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
@@ -35,19 +40,27 @@ import kotlinx.serialization.json.Json
 import com.tangem.feature.swap.domain.models.domain.Currency as SwapCurrency
 
 class TradeCryptoMiddleware {
-    fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
+    fun handle(state: () -> AppState?, action: TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
 
         when (action) {
-            is WalletAction.TradeCryptoAction.Buy -> proceedBuyAction(state, action)
-            is WalletAction.TradeCryptoAction.Sell -> proceedSellAction()
-            is WalletAction.TradeCryptoAction.SendCrypto -> preconfigureAndOpenSendScreen(action)
-            is WalletAction.TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
-            is WalletAction.TradeCryptoAction.Swap -> openSwap()
+            is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
+            is TradeCryptoAction.Sell -> proceedSellAction()
+            is TradeCryptoAction.SendCrypto -> preconfigureAndOpenSendScreen(action)
+            is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
+            is TradeCryptoAction.Swap -> {
+                openSwap(currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency())
+            }
+            is TradeCryptoAction.New.Buy -> proceedNewBuyAction(state, action)
+            TradeCryptoAction.New.Send -> store.dispatch(WalletAction.Send())
+            is TradeCryptoAction.New.Sell -> proceedNewSellAction(action)
+            is TradeCryptoAction.New.Swap -> {
+                openSwap(currency = action.cryptoCurrency.toSwapCurrency())
+            }
         }
     }
 
-    private fun proceedBuyAction(state: () -> AppState?, action: WalletAction.TradeCryptoAction.Buy) {
+    private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
 
@@ -75,7 +88,7 @@ class TradeCryptoMiddleware {
                 buyErc20TestnetTokens(
                     card = card,
                     walletManager = walletManager,
-                    token = currency.token,
+                    destinationAddress = currency.token.contractAddress,
                 )
             }
             return
@@ -87,6 +100,56 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
+        )?.let {
+            store.dispatchOpenUrl(it)
+            Analytics.send(Token.Topup.ScreenOpened())
+        }
+    }
+
+    private fun proceedNewBuyAction(state: () -> AppState?, action: TradeCryptoAction.New.Buy) {
+        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress?.defaultAddress ?: return
+
+        if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
+            store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog())
+            return
+        }
+
+        val status = action.cryptoCurrencyStatus
+        val currency = status.currency
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
+            scope.launch {
+                val walletManager = store.state.daggerGraphState
+                    .get(DaggerGraphState::walletManagersFacade)
+                    .getOrCreateWalletManager(
+                        userWallet = action.userWallet,
+                        blockchain = blockchain,
+                        derivationPath = blockchain.derivationPath(
+                            style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
+                        ),
+                    )
+
+                if (walletManager !is EthereumWalletManager) {
+                    store.dispatchDebugErrorNotification("Testnet tokens available only for the Ethereum")
+                    return@launch
+                }
+
+                buyErc20TestnetTokens(
+                    card = action.userWallet.scanResponse.card,
+                    walletManager = walletManager,
+                    destinationAddress = currency.contractAddress,
+                )
+            }
+            return
+        }
+
+        val exchangeManager = store.state.globalState.exchangeManager
+        exchangeManager.getUrl(
+            action = CurrencyExchangeManager.Action.Buy,
+            blockchain = blockchain,
+            cryptoCurrencyName = currency.symbol,
+            fiatCurrencyName = action.appCurrencyCode,
+            walletAddress = networkAddress,
         )?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Topup.ScreenOpened())
@@ -115,6 +178,22 @@ class TradeCryptoMiddleware {
         }
     }
 
+    private fun proceedNewSellAction(action: TradeCryptoAction.New.Sell) {
+        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress?.defaultAddress ?: return
+        val currency = action.cryptoCurrencyStatus.currency
+
+        store.state.globalState.exchangeManager.getUrl(
+            action = CurrencyExchangeManager.Action.Sell,
+            blockchain = Blockchain.fromId(currency.network.id.value),
+            cryptoCurrencyName = currency.symbol,
+            fiatCurrencyName = action.appCurrencyCode,
+            walletAddress = networkAddress,
+        )?.let {
+            store.dispatchOpenUrl(it)
+            Analytics.send(Token.Withdraw.ScreenOpened())
+        }
+    }
+
     private fun chooseAppropriateCurrency(walletState: WalletState): Currency? {
         return if (walletState.primaryTokenData == null) {
             walletState.selectedWalletData?.currency
@@ -126,7 +205,7 @@ class TradeCryptoMiddleware {
         }
     }
 
-    private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
+    private fun preconfigureAndOpenSendScreen(action: TradeCryptoAction.SendCrypto) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
 
         Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(selectedWalletData.currency)))
@@ -160,14 +239,42 @@ class TradeCryptoMiddleware {
         )?.let { store.dispatchOpenUrl(it) }
     }
 
-    private fun openSwap() {
-        val currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency()
-        val bundle =
-            bundleOf(
-                SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
-                SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath,
-            )
+    private fun openSwap(currency: SwapCurrency?) {
+        val bundle = bundleOf(
+            SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
+            SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath,
+        )
+
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
+    }
+
+    private fun CryptoCurrency.toSwapCurrency(): SwapCurrency {
+        val blockchain = Blockchain.fromId(network.id.value)
+
+        return when (this) {
+            is CryptoCurrency.Coin -> {
+                SwapCurrency.NativeToken(
+                    id = blockchain.toCoinId(),
+                    name = name,
+                    symbol = symbol,
+                    networkId = blockchain.toNetworkId(),
+                    // no need to set logoUrl for blockchain cause
+                    // error when form url with coinId, coinId of eth and arbitrum the same
+                    logoUrl = "",
+                )
+            }
+            is CryptoCurrency.Token -> {
+                SwapCurrency.NonNativeToken(
+                    id = id.value,
+                    name = name,
+                    symbol = symbol,
+                    networkId = blockchain.toNetworkId(),
+                    logoUrl = getIconUrl(id.value),
+                    contractAddress = contractAddress,
+                    decimalCount = decimals,
+                )
+            }
+        }
     }
 
     private fun Currency.toSwapCurrency(): SwapCurrency {
