@@ -21,6 +21,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.sdk.extensions.dpToPx
@@ -276,9 +277,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
     ) {
         val exchangeManager = store.state.globalState.exchangeManager
         binding.rowButtons.apply {
-            onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
-            onSellClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
-            onSwapClick = { store.dispatch(WalletAction.TradeCryptoAction.Swap) }
+            onBuyClick = { store.dispatch(TradeCryptoAction.Buy()) }
+            onSellClick = { store.dispatch(TradeCryptoAction.Sell) }
+            onSwapClick = { store.dispatch(TradeCryptoAction.Swap) }
             onTradeClick = {
                 store.dispatch(
                     WalletAction.DialogAction.ChooseTradeActionDialog(
