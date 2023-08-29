@@ -117,11 +117,19 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
         )
     }
 
+    override fun openStoriesScreen() {
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(screen = AppScreen.Home))
+    }
+
     override fun openSaveUserWalletScreen() {
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.SaveWallet))
     }
 
     override fun isWalletLastScreen(): Boolean = reduxNavController.getBackStack().lastOrNull() == AppScreen.Wallet
+
+    override fun openManageTokensScreen() {
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.AddTokens))
+    }
 
     private companion object {
         const val BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN = 2
