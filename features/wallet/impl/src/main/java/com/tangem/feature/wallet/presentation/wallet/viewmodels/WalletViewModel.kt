@@ -9,7 +9,6 @@ import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.*
@@ -17,9 +16,13 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
@@ -61,6 +64,8 @@ internal class WalletViewModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
+    private val updateWalletUseCase: UpdateWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val getBiometricsStatusUseCase: GetBiometricsStatusUseCase,
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
@@ -75,6 +80,8 @@ internal class WalletViewModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -97,8 +104,8 @@ internal class WalletViewModel @Inject constructor(
                 index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
             )
         },
-        isLockedWalletProvider = Provider {
-            wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex].isLocked
+        currentWalletProvider = Provider {
+            wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         clickIntents = this,
@@ -108,9 +115,11 @@ internal class WalletViewModel @Inject constructor(
     var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
     private var wallets: List<UserWallet> by Delegates.notNull()
+    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private val tokensJobHolder = JobHolder()
     private val marketPriceJobHolder = JobHolder()
+    private val buttonsJobHolder = JobHolder()
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -177,8 +186,10 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateSingleCurrencyContent(index: Int, isRefreshing: Boolean) {
         val wallet = getWallet(index)
+        val blockchain = getCardTypeResolver(index).getBlockchain()
+        updateButtons(userWalletId = wallet.walletId, currencyId = blockchain.id)
         updateTxHistory(
-            blockchain = getCardTypeResolver(index).getBlockchain(),
+            blockchain = blockchain,
             derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )
         updateMarketPrice(userWalletId = wallet.walletId, isRefreshing = isRefreshing)
@@ -213,15 +224,26 @@ internal class WalletViewModel @Inject constructor(
     private fun updateMarketPrice(userWalletId: UserWalletId, isRefreshing: Boolean) {
         getPrimaryCurrencyUseCase(userWalletId = userWalletId)
             .distinctUntilChanged()
-            .onEach {
+            .onEach { either ->
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(
-                    cryptoCurrencyEither = it,
+                    cryptoCurrencyEither = either,
                     isRefreshing = isRefreshing,
                 )
+
+                either.onRight { status -> cryptoCurrencyStatus = status }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
+    }
+
+    private fun updateButtons(userWalletId: UserWalletId, currencyId: String) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, tokenId = currencyId)
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(buttonsJobHolder)
     }
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
@@ -295,7 +317,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onBackupCardClick() = router.openOnboardingScreen()
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = WalletBottomSheetConfig.BottomSheetContentConfig.CriticalWarningAlreadySignedHashes(
                 onOkClick = {},
                 onCancelClick = {},
@@ -308,7 +330,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onLikeTangemAppClick() {
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = WalletBottomSheetConfig.BottomSheetContentConfig.LikeTangemApp(
                 onRateTheAppClick = ::onRateTheAppClick,
                 onShareClick = ::onShareClick,
@@ -337,6 +359,7 @@ internal class WalletViewModel @Inject constructor(
          */
         tokensJobHolder.update(job = null)
         marketPriceJobHolder.update(job = null)
+        buttonsJobHolder.update(job = null)
         notificationsJobHolder.update(job = null)
 
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
@@ -375,8 +398,7 @@ internal class WalletViewModel @Inject constructor(
                 tokensListState is WalletTokensListState.Loading || hasLoadingTokens
             }
             is WalletSingleCurrencyState -> {
-                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading ||
-                    txHistoryState is TxHistoryState.Loading
+                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading
             }
             is WalletState.Initial -> false
         }
@@ -407,7 +429,36 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onBuyClick() {
-        // TODO: https://tangem.atlassian.net/browse/AND-3962
+        val state = uiState as? WalletState.ContentState ?: return
+        val status = cryptoCurrencyStatus ?: return
+        val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+        reduxStateHolder.dispatch(
+            TradeCryptoAction.New.Buy(
+                userWallet = wallet,
+                cryptoCurrencyStatus = status,
+                appCurrencyCode = selectedAppCurrencyFlow.value.code,
+            ),
+        )
+    }
+
+    override fun onSendClick() {
+        reduxStateHolder.dispatch(TradeCryptoAction.New.Send)
+    }
+
+    override fun onReceiveClick() {
+        // TODO: https://tangem.atlassian.net/browse/AND-4356
+    }
+
+    override fun onSellClick() {
+        val status = cryptoCurrencyStatus ?: return
+
+        reduxStateHolder.dispatch(
+            TradeCryptoAction.New.Sell(
+                cryptoCurrencyStatus = status,
+                appCurrencyCode = selectedAppCurrencyFlow.value.code,
+            ),
+        )
     }
 
     override fun onReloadClick() {
@@ -445,7 +496,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
-        uiState = stateFactory.getStateWithOpenBottomSheet(
+        uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = when (state) {
                 is WalletMultiCurrencyState.Locked -> state.bottomSheetConfig.content
                 is WalletSingleCurrencyState.Locked -> state.bottomSheetConfig.content
@@ -453,12 +504,29 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    override fun onBottomSheetDismiss() {
-        uiState = stateFactory.getStateWithClosedBottomSheet()
+    override fun onTokenItemClick(currency: CryptoCurrency) {
+        router.openTokenDetails(currency = currency)
     }
 
-    override fun onTokenClick(currency: CryptoCurrency) {
-        router.openTokenDetails(currency = currency)
+    override fun onTokenItemLongClick(currency: CryptoCurrency) {
+        uiState = stateFactory.getStateWithTokenActionBottomSheet(
+            tokenId = currency.id.value,
+        )
+    }
+
+    override fun onRenameClick(userWalletId: UserWalletId, name: String) {
+        viewModelScope.launch(dispatchers.io) {
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+        }
+    }
+
+    override fun onDeleteClick(userWalletId: UserWalletId) {
+        viewModelScope.launch(dispatchers.io) {
+            val either = deleteWalletUseCase(userWalletId)
+
+            val state = requireNotNull(uiState as? WalletState.ContentState)
+            if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) router.openStoriesScreen()
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
@@ -471,5 +539,19 @@ internal class WalletViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
+    }
+
+    override fun onDismissBottomSheet() {
+        uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onDismissActionsBottomSheet() {
+        (uiState as? WalletMultiCurrencyState.Content)?.let { state ->
+            uiState = state.copy(
+                tokenActionsBottomSheet = state.tokenActionsBottomSheet?.copy(
+                    isShow = false,
+                ),
+            )
+        }
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,6 +23,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.transactions.state.TransactionState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import java.util.UUID
 
@@ -158,6 +161,18 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Loading -> {
             CircleShimmer(modifier = modifier.size(TangemTheme.dimens.size40))
         }
+        is TransactionState.Locked -> {
+            Box(modifier = modifier.size(TangemTheme.dimens.size40)) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            color = TangemTheme.colors.button.secondary,
+                            shape = CircleShape,
+                        ),
+                )
+            }
+        }
     }
 }
 
@@ -206,6 +221,11 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
+            )
+        }
     }
 }
 
@@ -219,7 +239,7 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                     is TransactionState.Send,
                     -> stringResource(
                         id = R.string.transaction_history_transaction_to_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                     is TransactionState.Receiving,
                     is TransactionState.Receive,
@@ -227,13 +247,13 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                     is TransactionState.Approved,
                     -> stringResource(
                         id = R.string.transaction_history_transaction_from_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                     is TransactionState.Swapping,
                     is TransactionState.Swapped,
                     -> stringResource(
                         id = R.string.transaction_history_contract_address,
-                        state.address,
+                        state.address.resolveReference(),
                     )
                 },
                 modifier = modifier,
@@ -244,6 +264,11 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
+                modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
+            )
+        }
+        is TransactionState.Locked -> {
+            LockedContent(
                 modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
             )
         }
@@ -267,6 +292,11 @@ private fun Amount(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+            )
+        }
     }
 }
 
@@ -287,7 +317,22 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
             )
         }
+        is TransactionState.Locked -> {
+            LockedContent(
+                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+            )
+        }
     }
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
 }
 
 @Preview
@@ -314,49 +359,49 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
     collection = listOf(
         TransactionState.Sending(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Receiving(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Approving(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Swapping(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Send(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Receive(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Approved(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),
         TransactionState.Swapped(
             txHash = UUID.randomUUID().toString(),
-            address = "33BddS...ga2B",
+            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
         ),

@@ -5,6 +5,13 @@ plugins {
 }
 
 dependencies {
+    /** Project - Domain */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.appTheme.models)
+
+    /** Project - Core */
+    implementation(projects.core.res)
+
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
@@ -22,6 +29,4 @@ dependencies {
     implementation(deps.material)
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
-
-    implementation(project(":core:res"))
 }

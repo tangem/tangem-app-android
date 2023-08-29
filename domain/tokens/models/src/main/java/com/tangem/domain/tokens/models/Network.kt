@@ -31,9 +31,8 @@ data class Network(
      *
      * @property value The string representation of the network ID.
      */
-    // FIXME: Remove serialization https://tangem.atlassian.net/browse/AND-4264
     @JvmInline
-    value class ID(val value: String) : Serializable {
+    value class ID(val value: String) {
 
         init {
             require(value.isNotBlank()) { "Network ID must not be blank" }
@@ -49,7 +48,8 @@ data class Network(
      *
      * @property name The human-readable name of the standard type.
      */
-    sealed class StandardType {
+    // FIXME: Remove serialization https://tangem.atlassian.net/browse/AND-4264
+    sealed class StandardType : Serializable {
         abstract val name: String
 
         /** Represents the ERC20 token standard, common on the Ethereum network. */

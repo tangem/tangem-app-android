@@ -9,6 +9,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -23,6 +24,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val currentWalletProvider: Provider<UserWallet>,
 ) : Converter<SingleCurrencyLoadedBalanceModel, WalletSingleCurrencyState.Content> {
 
     override fun convert(value: SingleCurrencyLoadedBalanceModel): WalletSingleCurrencyState.Content {
@@ -89,11 +91,12 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     title = selectedWallet.title,
                     additionalInfo = WalletAdditionalInfoFactory.resolve(
                         cardTypesResolver = cardTypeResolverProvider(),
-                        isLocked = false,
+                        wallet = currentWalletProvider(),
                         currencyAmount = status.amount,
                     ),
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                     balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
                 )
             }
@@ -102,7 +105,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                 )
             }
             is CryptoCurrencyStatus.MissedDerivation,
@@ -114,7 +118,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
                     imageResId = selectedWallet.imageResId,
-                    onClick = selectedWallet.onClick,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
                 )
             }
         }

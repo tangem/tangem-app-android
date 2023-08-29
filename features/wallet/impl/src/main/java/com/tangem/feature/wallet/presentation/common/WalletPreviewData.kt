@@ -18,8 +18,9 @@ import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
 @Suppress("LargeClass")
@@ -34,7 +35,8 @@ internal object WalletPreviewData {
             balance = "8923,05 $",
             additionalInfo = TextReference.Str("3 cards • Seed phrase"),
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -43,7 +45,8 @@ internal object WalletPreviewData {
             id = UserWalletId("321"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -52,7 +55,8 @@ internal object WalletPreviewData {
             id = UserWalletId("42"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -61,7 +65,8 @@ internal object WalletPreviewData {
             id = UserWalletId("24"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_businessman_3d,
-            onClick = null,
+            onRenameClick = { _, _ -> },
+            onDeleteClick = {},
         )
     }
 
@@ -87,7 +92,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -98,7 +103,16 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
-            onClick = {},
+            isTestnet = false,
+            onItemClick = {},
+            onItemLongClick = {},
+        )
+    }
+
+    val testnetTokenItemVisibleState by lazy {
+        tokenItemVisibleState.copy(
+            name = "Polygon testnet",
+            isTestnet = true,
         )
     }
 
@@ -107,7 +121,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -117,7 +131,9 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
-            onClick = {},
+            isTestnet = false,
+            onItemClick = {},
+            onItemLongClick = {},
         )
     }
 
@@ -126,8 +142,9 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
+            isTestnet = false,
             fiatAmount = "3 172,14 $",
         )
     }
@@ -137,7 +154,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             tokenIconUrl = null,
             tokenIconResId = R.drawable.img_polygon_22,
-            networkIconResId = R.drawable.img_polygon_22,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
             name = "Polygon",
         )
     }
@@ -171,7 +188,7 @@ internal object WalletPreviewData {
                             tokenItemState = tokenItemDragState.copy(
                                 id = "${group.id}_token_$tokenNumber",
                                 name = "Token $tokenNumber from $networkNumber network",
-                                networkIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
+                                networkBadgeIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                             ),
                             groupId = group.id,
                             roundingMode = when {
@@ -248,13 +265,25 @@ internal object WalletPreviewData {
         )
     }
 
+    val actionsBottomSheet = ActionsBottomSheetConfig(
+        isShow = true,
+        onDismissRequest = {},
+        actions = listOf(
+            TokenActionButtonConfig(
+                text = "Send",
+                iconResId = R.drawable.ic_share_24,
+                onClick = {},
+            ),
+        ).toImmutableList(),
+    )
+
     private val manageButtons by lazy {
         persistentListOf(
-            WalletManageButton.Buy(onClick = {}),
-            WalletManageButton.Send(onClick = {}),
+            WalletManageButton.Buy(enabled = true, onClick = {}),
+            WalletManageButton.Send(enabled = true, onClick = {}),
             WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(onClick = {}),
-            WalletManageButton.CopyAddress(onClick = {}),
+            WalletManageButton.Sell(enabled = true, onClick = {}),
+            WalletManageButton.Swap(enabled = true, onClick = {}),
         )
     }
 
@@ -271,7 +300,7 @@ internal object WalletPreviewData {
                             id = "token_1",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -280,7 +309,7 @@ internal object WalletPreviewData {
                             id = "token_2",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -289,7 +318,7 @@ internal object WalletPreviewData {
                             id = "token_3",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -298,7 +327,7 @@ internal object WalletPreviewData {
                             id = "token_4",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -308,7 +337,7 @@ internal object WalletPreviewData {
                             id = "token_5",
                             name = "Ethereum",
                             tokenIconResId = R.drawable.img_eth_22,
-                            networkIconResId = null,
+                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -326,6 +355,7 @@ internal object WalletPreviewData {
                 WalletNotification.ScanCard(onClick = {}),
             ),
             bottomSheetConfig = bottomSheet,
+            tokenActionsBottomSheet = actionsBottomSheet,
         )
     }
 
@@ -350,15 +380,14 @@ internal object WalletPreviewData {
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
-                onExploreClick = {},
-                contentItems = flowOf(
+                contentItems = MutableStateFlow(
                     PagingData.from(
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = "33BddS...ga2B",
+                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                 ),
@@ -367,7 +396,7 @@ internal object WalletPreviewData {
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Sending(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = "33BddS...ga2B",
+                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                 ),

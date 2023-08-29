@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -16,6 +17,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Converter from loaded list of [UserWallet] to skeleton state of screen [WalletState.ContentState]
@@ -49,6 +51,7 @@ internal class WalletSkeletonStateConverter(
             tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
+            tokenActionsBottomSheet = null,
         )
     }
 
@@ -60,9 +63,13 @@ internal class WalletSkeletonStateConverter(
             pullToRefreshConfig = createPullToRefreshConfig(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
-            buttons = getButtons(),
+            buttons = createButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
-            txHistoryState = TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick),
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
         )
     }
 
@@ -90,7 +97,7 @@ internal class WalletSkeletonStateConverter(
 
             // If wallet is initialized, return it, otherwise return loading state
             if (initializedWallet !is WalletCardState.Loading) {
-                initializedWallet
+                initializedWallet.copySealed(title = wallet.name)
             } else {
                 createWalletLoadingState(wallet)
             }
@@ -105,7 +112,14 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = wallet.walletId,
             title = wallet.name,
+            additionalInfo = if (cardTypeResolver.isMultiwalletAllowed()) {
+                WalletAdditionalInfoFactory.resolve(cardTypesResolver = cardTypeResolver, wallet = wallet)
+            } else {
+                null
+            },
             imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
+            onRenameClick = clickIntents::onRenameClick,
+            onDeleteClick = clickIntents::onDeleteClick,
         )
     }
 
@@ -113,15 +127,12 @@ internal class WalletSkeletonStateConverter(
         return WalletPullToRefreshConfig(isRefreshing = false, onRefresh = clickIntents::onRefreshSwipe)
     }
 
-    // TODO: https://tangem.atlassian.net/browse/AND-3962
-    private fun getButtons(): ImmutableList<WalletManageButton> {
+    private fun createButtons(): ImmutableList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Buy(),
-            WalletManageButton.Send(),
+            WalletManageButton.Buy(enabled = false, onClick = {}),
+            WalletManageButton.Send(enabled = false, onClick = {}),
             WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Exchange(),
-            WalletManageButton.Sell(),
-            WalletManageButton.CopyAddress(onClick = {}),
+            WalletManageButton.Sell(enabled = false, onClick = {}),
         )
     }
 

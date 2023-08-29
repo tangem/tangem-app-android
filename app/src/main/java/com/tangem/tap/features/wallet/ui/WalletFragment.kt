@@ -25,7 +25,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.datasource.connection.NetworkConnectionManager
