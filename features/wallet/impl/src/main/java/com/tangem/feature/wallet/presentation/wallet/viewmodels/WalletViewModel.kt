@@ -9,6 +9,7 @@ import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.navigation.AppScreen
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -37,6 +38,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.analytics.Portfolio
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -89,6 +92,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventsHandler: AnalyticsEventHandler
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
@@ -129,6 +133,9 @@ internal class WalletViewModel @Inject constructor(
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
+        analyticsEventsHandler.send(MainScreen.ScreenOpened)
+
+    
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
 
@@ -136,6 +143,7 @@ internal class WalletViewModel @Inject constructor(
                 router.openSaveUserWalletScreen()
             }
         }
+
 
         getWalletsUseCase()
             .flowWithLifecycle(owner.lifecycle)
@@ -301,6 +309,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onScanCardClick() {
+        analyticsEventsHandler.send(MainScreen.NoticeScanYourCardTapped)
+
         val prevRequestPolicyStatus = getBiometricsStatusUseCase()
 
         // Update access the code policy according access code saving status
@@ -332,7 +342,11 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onDetailsClick() = router.openDetailsScreen()
 
-    override fun onBackupCardClick() = router.openOnboardingScreen()
+    override fun onBackupCardClick() {
+        analyticsEventsHandler.send(MainScreen.NoticeBackupYourWalletTapped)
+
+        router.openOnboardingScreen()
+    }
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
@@ -358,6 +372,8 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onRateTheAppClick() {
         // TODO: https://tangem.atlassian.net/browse/AND-4103
+        // analyticsEventsHandler.send(MainScreen.NoticeRateAppButton())
+        // TODO implement this when know rating
     }
 
     override fun onShareClick() {
@@ -370,6 +386,8 @@ internal class WalletViewModel @Inject constructor(
         }
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
+
+        analyticsEventsHandler.send(MainScreen.WalletSwipe)
 
         /*
          * When wallet is changed it's necessary to stop the last jobs.
@@ -423,6 +441,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe() {
+        analyticsEventsHandler.send(Portfolio.Refreshed)
+
         if (uiState is WalletState.Initial || uiState is WalletLockedState) return
 
         viewModelScope.launch(dispatchers.io) {
@@ -439,6 +459,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onOrganizeTokensClick() {
+        analyticsEventsHandler.send(Portfolio.OrganizeTokens)
+
         val state = requireNotNull(uiState as? WalletState.ContentState)
         val index = state.walletsListConfig.selectedWalletIndex
         val walletId = state.walletsListConfig.wallets[index].id
@@ -480,6 +502,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onManageTokensClick() {
+        analyticsEventsHandler.send(Portfolio.ButtonManageTokens)
+
         router.openManageTokensScreen()
     }
 
@@ -518,6 +542,8 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
+        analyticsEventsHandler.send(MainScreen.NoticeWalletLocked)
+
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = when (state) {
                 is WalletMultiCurrencyState.Locked -> state.bottomSheetConfig.content
@@ -527,6 +553,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTokenItemClick(currency: CryptoCurrency) {
+        analyticsEventsHandler.send(Portfolio.TokenTapped)
         router.openTokenDetails(currency = currency)
     }
 

@@ -12,6 +12,11 @@ sealed class Portfolio(
 ) : AnalyticsEvent("Portfolio", event, params) {
 
     class Refreshed : Portfolio("Refreshed")
+
     class ButtonManageTokens : Portfolio("Button - Manage Tokens")
+
     class TokenTapped : Portfolio("Token is Tapped")
+
+    class OrganizeTokens : Portfolio("Button - Organize Tokens")
+
 }

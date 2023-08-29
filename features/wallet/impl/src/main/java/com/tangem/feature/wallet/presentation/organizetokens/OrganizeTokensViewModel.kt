@@ -1,10 +1,10 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import arrow.core.getOrElse
 import com.tangem.common.Provider
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.organizetokens.analytics.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
@@ -34,8 +35,9 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     savedStateHandle: SavedStateHandle,
-) : ViewModel(), OrganizeTokensIntents {
+) : ViewModel(), DefaultLifecycleObserver, OrganizeTokensIntents {
 
     lateinit var router: InnerWalletRouter
 
@@ -67,11 +69,17 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
+    override fun onCreate(owner: LifecycleOwner) {
+        analyticsEventsHandler.send(OrganizeTokensScreen.ScreenOpened)
+    }
+
     override fun onBackClick() {
         router.popBackStack()
     }
 
     override fun onSortClick() {
+        analyticsEventsHandler.send(OrganizeTokensScreen.ByBalance)
+
         viewModelScope.launch(Dispatchers.Default) {
             val list = tokenList ?: return@launch
 
@@ -86,6 +94,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onGroupClick() {
+        analyticsEventsHandler.send(OrganizeTokensScreen.Group)
+
         viewModelScope.launch(Dispatchers.Default) {
             val list = tokenList ?: return@launch
 
@@ -99,6 +109,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
         }
     }
 
+
     override fun onApplyClick() {
         viewModelScope.launch(Dispatchers.Default) {
             stateHolder.updateStateToDisplayProgress()
@@ -106,11 +117,19 @@ internal class OrganizeTokensViewModel @Inject constructor(
             val listState = uiState.value.itemsState
             val resolver = CryptoCurrenciesIdsResolver()
 
+            val isGroupedByNetwork = listState is OrganizeTokensListState.GroupedByNetwork
+            val isSortedByBalance = uiState.value.header.isSortedByBalance
+
+            sendAnalyticsEvent(
+                isGroupedByNetwork = isGroupedByNetwork,
+                isSortedByBalance = isSortedByBalance
+            )
+
             val result = applyTokenListSortingUseCase(
                 userWalletId = userWalletId,
                 sortedTokensIds = resolver.resolve(listState, tokenList),
-                isGroupedByNetwork = listState is OrganizeTokensListState.GroupedByNetwork,
-                isSortedByBalance = uiState.value.header.isSortedByBalance,
+                isGroupedByNetwork = isGroupedByNetwork,
+                isSortedByBalance = isSortedByBalance
             )
 
             result.fold(
@@ -124,6 +143,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onCancelClick() {
+        analyticsEventsHandler.send(OrganizeTokensScreen.Cancel)
+
         router.popBackStack()
     }
 
@@ -163,4 +184,20 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 initialValue = AppCurrency.Default,
             )
     }
+
+    private fun sendAnalyticsEvent(isGroupedByNetwork: Boolean, isSortedByBalance: Boolean) {
+        analyticsEventsHandler.send(OrganizeTokensScreen.Apply(
+            grouping = if (isGroupedByNetwork) {
+                AnalyticsParam.OnOffState.On
+            } else {
+                AnalyticsParam.OnOffState.Off
+            },
+            organizeSortType = if (isSortedByBalance) {
+                AnalyticsParam.OrganizeSortType.ByBalance
+            } else {
+                AnalyticsParam.OrganizeSortType.Manually
+            }
+        ))
+    }
+
 }
