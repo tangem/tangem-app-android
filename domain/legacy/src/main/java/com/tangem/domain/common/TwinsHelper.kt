@@ -51,17 +51,19 @@ object TwinsHelper {
      * cb64 <-> cb65
      */
     fun isTwinsCompatible(firstCardId: String, secondCardId: String): Boolean {
-        if (firstCardId.startsWith(FIRST_CARD_FIRST_SERIES) &&
-            secondCardId.startsWith(SECOND_CARD_FIRST_SERIES)
-        ) {
-            return true
+        return secondCardId.startsWith(getCompatibleTwinCardId(firstCardId))
+    }
+
+    private fun getCompatibleTwinCardId(cardId: String): String {
+        return when {
+            cardId.startsWith(FIRST_CARD_FIRST_SERIES) -> SECOND_CARD_FIRST_SERIES
+            cardId.startsWith(FIRST_CARD_SECOND_SERIES) -> SECOND_CARD_SECOND_SERIES
+            cardId.startsWith(SECOND_CARD_FIRST_SERIES) -> FIRST_CARD_FIRST_SERIES
+            cardId.startsWith(SECOND_CARD_SECOND_SERIES) -> FIRST_CARD_SECOND_SERIES
+            else -> {
+                "unknown"
+            }
         }
-        if (firstCardId.startsWith(FIRST_CARD_SECOND_SERIES) &&
-            secondCardId.startsWith(SECOND_CARD_SECOND_SERIES)
-        ) {
-            return true
-        }
-        return false
     }
 }
 
