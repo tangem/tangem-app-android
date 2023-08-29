@@ -4,9 +4,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.itemsIndexed
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -26,7 +28,7 @@ fun LazyListScope.txHistoryItems(
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is TxHistoryState.ContentState -> {
+        is TxHistoryState.Content -> {
             contentItems(
                 txHistoryItems = requireNotNull(txHistoryItems),
                 modifier = modifier,
@@ -58,8 +60,18 @@ private fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>,
     modifier: Modifier = Modifier,
 ) {
+    txHistoryItems.itemKey { item ->
+        when (item) {
+            is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
+            is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
+            is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
+        }
+    }
+
+    txHistoryItems.itemContentType { it::class.java }
+
     itemsIndexed(
-        items = txHistoryItems,
+        items = txHistoryItems.itemSnapshotList.items,
         key = { _, item ->
             when (item) {
                 is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
@@ -68,8 +80,6 @@ private fun LazyListScope.contentItems(
             }
         },
     ) { index, item ->
-        if (item == null) return@itemsIndexed
-
         TxHistoryListItem(
             state = item,
             modifier = modifier
