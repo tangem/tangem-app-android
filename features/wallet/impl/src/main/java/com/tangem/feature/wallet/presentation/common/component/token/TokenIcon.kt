@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
@@ -42,11 +41,11 @@ private fun ContentIcon(content: TokenItemState.ContentState, modifier: Modifier
         val isTestnet = when (content) {
             is TokenItemState.Content -> content.isTestnet
             is TokenItemState.Draggable -> content.isTestnet
-            is TokenItemState.Unreachable -> null
+            is TokenItemState.Unreachable -> false
         }
 
         val colorFilter = remember(isTestnet) {
-            if (isTestnet == true) {
+            if (isTestnet) {
                 ColorFilter.colorMatrix(
                     colorMatrix = ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) },
                 )
@@ -62,11 +61,7 @@ private fun ContentIcon(content: TokenItemState.ContentState, modifier: Modifier
         )
 
         NetworkBadge(
-            iconResId = when (content) {
-                is TokenItemState.Content -> content.networkBadgeIconResId
-                is TokenItemState.Draggable -> content.networkBadgeIconResId
-                is TokenItemState.Unreachable -> null
-            },
+            iconResId = content.networkBadgeIconResId,
             colorFilter = colorFilter,
             modifier = Modifier.align(Alignment.TopEnd),
         )
@@ -103,14 +98,14 @@ private fun BoxScope.NetworkBadge(
     AnimatedVisibility(
         visible = iconResId != null,
         modifier = modifier
-            .size(TangemTheme.dimens.size14)
-            .background(color = Color.White, shape = CircleShape),
+            .size(TangemTheme.dimens.size18)
+            .background(color = TangemTheme.colors.background.primary, shape = CircleShape),
     ) {
         if (iconResId == null) return@AnimatedVisibility
 
         Image(
             modifier = Modifier
-                .padding(all = TangemTheme.dimens.spacing0_5)
+                .padding(all = TangemTheme.dimens.spacing2)
                 .align(Alignment.Center),
             painter = painterResource(id = iconResId),
             colorFilter = colorFilter,
