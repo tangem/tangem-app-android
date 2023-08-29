@@ -18,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.navigation.NavigationStateHolder
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.WalletFragment
@@ -30,7 +30,7 @@ import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
-internal class DefaultWalletRouter(private val navigationStateHolder: NavigationStateHolder) : InnerWalletRouter {
+internal class DefaultWalletRouter(private val reduxNavController: ReduxNavController) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
     private var fragmentManager: FragmentManager by Delegates.notNull()
@@ -71,7 +71,7 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
         }
     }
 
-    override fun popBackStack() {
+    override fun popBackStack(screen: AppScreen?) {
         /*
          * It's hack that avoid issue with closing the wallet screen.
          * We are using NavGraph only inside feature so first backstack's element is entry of NavGraph and
@@ -79,7 +79,11 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
          * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
          */
         if (navController.backQueue.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
-            fragmentManager.popBackStack()
+            if (screen != null) {
+                reduxNavController.navigate(action = NavigationAction.PopBackTo(screen))
+            } else {
+                fragmentManager.popBackStack()
+            }
         } else {
             navController.popBackStack()
         }
@@ -92,19 +96,19 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
     override fun openDetailsScreen() {
         // FIXME: Prepare details screen (e.g. dispatch action: `DetailsAction.PrepareScreen`)
         // [REDACTED_JIRA]
-        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
     }
 
     override fun openOnboardingScreen() {
-        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
     }
 
     override fun openTxHistoryWebsite(url: String) {
-        navigationStateHolder.navigate(action = NavigationAction.OpenUrl(url))
+        reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
     override fun openTokenDetails(currency: CryptoCurrency) {
-        navigationStateHolder.navigate(
+        reduxNavController.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,
                 // TODO: [REDACTED_JIRA]
@@ -113,9 +117,11 @@ internal class DefaultWalletRouter(private val navigationStateHolder: Navigation
         )
     }
 
-    override fun openStoriesScreen() {
-        navigationStateHolder.navigate(action = NavigationAction.NavigateTo(screen = AppScreen.Home))
+    override fun openSaveUserWalletScreen() {
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.SaveWallet))
     }
+
+    override fun isWalletLastScreen(): Boolean = reduxNavController.getBackStack().lastOrNull() == AppScreen.Wallet
 
     private companion object {
         const val BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN = 2
