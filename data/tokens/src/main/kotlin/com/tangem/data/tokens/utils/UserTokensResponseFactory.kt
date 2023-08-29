@@ -26,7 +26,7 @@ internal class UserTokensResponseFactory {
         )
     }
 
-    private fun createResponseToken(currency: CryptoCurrency): UserTokensResponse.Token {
+    fun createResponseToken(currency: CryptoCurrency): UserTokensResponse.Token {
         val blockchain = getBlockchain(currency.network.id)
 
         return UserTokensResponse.Token(
