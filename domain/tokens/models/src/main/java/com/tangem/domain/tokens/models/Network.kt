@@ -73,8 +73,6 @@ data class Network(
         }
 
         /** Represents a network that does not adhere to a predefined standard type. */
-        class Unspecified(val networkName: String) : StandardType() {
-            override val name: String = networkName
-        }
+        data class Unspecified(override val name: String) : StandardType()
     }
 }
