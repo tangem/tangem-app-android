@@ -22,7 +22,6 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.DomainLayer
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
@@ -210,7 +209,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        DomainLayer.init()
         preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
