@@ -12,11 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -145,7 +145,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         fun createDerivationPathSelectorAdditionalItem(
             blockchain: Blockchain,
             type: DerivationPathSelectorType = DerivationPathSelectorType.BLOCKCHAIN,
-            derivationStyle: DerivationStyle?,
+            derivationPath: String,
         ): SelectorItem.TitleWithSubtitle {
             return when (type) {
                 DerivationPathSelectorType.DEFAULT -> SelectorItem.TitleWithSubtitle(
@@ -161,10 +161,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                 )
                 DerivationPathSelectorType.BLOCKCHAIN -> SelectorItem.TitleWithSubtitle(
-                    title = blockchain.derivationPath(
-                        style = derivationStyle,
-                    )?.rawPath?.let(TextReference::Str)
-                        ?: TextReference.Res(R.string.custom_token_derivation_path_default),
+                    title = TextReference.Str(derivationPath),
                     subtitle = TextReference.Str(blockchain.fullName),
                     blockchain = blockchain,
                 )
@@ -211,10 +208,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
             val scanResponse = reduxStateHolder.scanResponse
+            val derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle()
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
                     scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
-                        ?.contains(blockchain) == true
+                        ?.contains(blockchain) == true &&
+                        blockchain.derivationPath(derivationStyle)?.rawPath?.isNotEmpty() == true
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
@@ -258,7 +257,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             if (scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
 
             val selectorItems =
-                getDerivationPathsSelectorItems(scanResponse?.derivationStyleProvider?.getDerivationStyle())
+                getDerivationPathsSelectorItems(scanResponse?.derivationStyleProvider)
             return AddCustomTokenSelectorField.DerivationPath(
                 label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
                 selectedItem = requireNotNull(selectorItems.firstOrNull()),
@@ -269,29 +268,35 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun getDerivationPathsSelectorItems(
-            derivationStyle: DerivationStyle?,
+            derivationStyleProvider: DerivationStyleProvider?,
         ): List<SelectorItem.TitleWithSubtitle> {
+            val derivationStyle = derivationStyleProvider?.getDerivationStyle()
             return listOf(
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.DEFAULT,
-                    derivationStyle = derivationStyle,
+                    derivationPath = "",
                 ),
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.CUSTOM,
-                    derivationStyle = derivationStyle,
+                    derivationPath = "",
                 ),
             ) + Blockchain.values()
                 .filter { blockchain ->
                     blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
                 .sortedBy(Blockchain::fullName)
-                .map {
-                    createDerivationPathSelectorAdditionalItem(
-                        blockchain = it,
-                        derivationStyle = derivationStyle,
-                    )
+                .mapNotNull {
+                    val derivationPath = it.derivationPath(derivationStyle)?.rawPath
+                    if (derivationPath?.isNotEmpty() == true) {
+                        createDerivationPathSelectorAdditionalItem(
+                            blockchain = it,
+                            derivationPath = derivationPath,
+                        )
+                    } else {
+                        null
+                    }
                 }
         }
 
@@ -828,7 +833,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                             selectedItem = formStateBuilder.createDerivationPathSelectorAdditionalItem(
                                 blockchain = Blockchain.Unknown,
                                 type = DerivationPathSelectorType.DEFAULT,
-                                derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle(),
+                                derivationPath = "",
                             ),
                         ),
                     ),
