@@ -151,7 +151,9 @@ private class CreateWalletTangemWallet(
     ) {
         val config = CardConfig.createConfig(card)
         val walletsOnCard = card.wallets.map { it.curve }.toSet()
-        val curves = card.supportedCurves.intersect(config.mandatoryCurves.toSet()).subtract(walletsOnCard).toList()
+        val curves = config.mandatoryCurves.toSet()
+            .intersect(card.supportedCurves.toSet())
+            .subtract(walletsOnCard).toList()
 
         if (curves.isEmpty()) {
             val createWalletResponses = card.wallets.map { wallet ->
