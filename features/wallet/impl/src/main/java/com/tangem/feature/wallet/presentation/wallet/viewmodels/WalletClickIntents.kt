@@ -52,4 +52,6 @@ internal interface WalletClickIntents : TxHistoryClickIntents {
     fun onReceiveClick()
 
     fun onSellClick()
+
+    fun onManageTokensClick()
 }
