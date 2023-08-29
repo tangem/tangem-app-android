@@ -14,8 +14,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
@@ -23,6 +25,7 @@ import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.tap.features.tokens.impl.domain.models.Token.Network
+import com.tangem.tap.features.tokens.impl.presentation.models.SupportTokensState
 import com.tangem.tap.features.tokens.impl.presentation.models.TokensListArgs
 import com.tangem.tap.features.tokens.impl.presentation.router.TokensListRouter
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
@@ -41,6 +44,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.plus
+import timber.log.Timber
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as BlockchainToken
 
@@ -309,7 +313,7 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                if (isUnsupportedToken(blockchain)) {
+                if (isUnsupportedBlockchain(blockchain)) {
                     router.openUnsupportedNetworkAlert(blockchain)
                 } else {
                     analyticsSender.sendWhenBlockchainAdded(blockchain)
@@ -354,20 +358,43 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                if (isUnsupportedToken(token.blockchain)) {
-                    router.openUnsupportedNetworkAlert(token.blockchain)
-                } else {
-                    analyticsSender.sendWhenTokenAdded(token.token)
-                    changedTokensList.add(token)
-                    toggledNetwork.changeToggleState()
+                when (isUnsupportedToken(token.blockchain)) {
+                    SupportTokensState.SolanaNetworkUnsupported -> router.openSolanaTokensNotSupportAlert()
+                    SupportTokensState.SupportedToken -> {
+                        analyticsSender.sendWhenTokenAdded(token.token)
+                        changedTokensList.add(token)
+                        toggledNetwork.changeToggleState()
+                    }
+                    SupportTokensState.UnsupportedCurve -> router.openUnsupportedNetworkAlert(token.blockchain)
+                    null -> Timber.e("Something went wrong in isUnsupportedToken (no scanResponse found)")
                 }
             }
         }
     }
 
-    private fun isUnsupportedToken(blockchain: Blockchain): Boolean {
+    private fun isUnsupportedToken(blockchain: Blockchain): SupportTokensState? {
         val scanResponse = reduxStateHolder.scanResponse
-        val canHandleToken = scanResponse?.card?.canHandleToken(
+        val cardTypesResolver = scanResponse?.cardTypesResolver ?: return null
+        val supportedTokens = scanResponse.card.supportedTokens(cardTypesResolver)
+
+        // refactor this later by moving all this logic in card config
+        if (!supportedTokens.contains(Blockchain.Solana)) {
+            return SupportTokensState.SolanaNetworkUnsupported
+        }
+        val canHandleToken = scanResponse.card.canHandleToken(
+            supportedTokens = supportedTokens,
+            blockchain = blockchain,
+            cardTypesResolver = cardTypesResolver,
+        )
+        if (!canHandleToken) {
+            return SupportTokensState.UnsupportedCurve
+        }
+        return SupportTokensState.SupportedToken
+    }
+
+    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+        val scanResponse = reduxStateHolder.scanResponse
+        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
             blockchain = blockchain,
             cardTypesResolver = scanResponse.cardTypesResolver,
         ) ?: false

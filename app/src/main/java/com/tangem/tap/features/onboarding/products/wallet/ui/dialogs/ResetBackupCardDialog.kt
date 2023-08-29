@@ -10,12 +10,13 @@ import com.tangem.wallet.R
 object ResetBackupCardDialog {
     fun create(context: Context, cardId: String): AlertDialog {
         return AlertDialog.Builder(context).apply {
-            setTitle(R.string.common_warning)
+            setTitle(R.string.common_attention)
             setMessage(R.string.onboarding_linking_error_card_with_wallets)
-            setPositiveButton(R.string.common_continue) { _, _ ->
-                store.dispatch(BackupAction.ResetBackupCard(cardId))
+            setPositiveButton(R.string.common_cancel) { _, _ ->
+                /* no-op */
             }
-            setNegativeButton(R.string.common_cancel) { _, _ ->
+            setNegativeButton(R.string.common_reset) { _, _ ->
+                store.dispatch(BackupAction.ResetBackupCard(cardId))
             }
             setOnDismissListener {
                 store.dispatch(GlobalAction.HideDialog)
