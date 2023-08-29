@@ -33,7 +33,7 @@ fun HorizontalActionChips(
     ) {
         items(
             items = buttons,
-            key = { config -> "${config.text.hashCode()} ${config.iconResId}" },
+            key = { config -> config.text.hashCode() },
             itemContent = { ActionButton(config = it) },
         )
     }
