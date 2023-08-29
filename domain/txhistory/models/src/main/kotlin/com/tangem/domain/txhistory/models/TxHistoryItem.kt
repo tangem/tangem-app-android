@@ -11,8 +11,11 @@ data class TxHistoryItem(
     val amount: BigDecimal,
 ) {
     sealed interface TransactionDirection {
-        data class Incoming(val from: String) : TransactionDirection
-        data class Outgoing(val to: String) : TransactionDirection
+
+        val address: Address
+
+        data class Incoming(override val address: Address) : TransactionDirection
+        data class Outgoing(override val address: Address) : TransactionDirection
     }
 
     sealed interface TransactionType {
@@ -20,4 +23,9 @@ data class TxHistoryItem(
     }
 
     enum class TxStatus { Confirmed, Unconfirmed }
+
+    sealed class Address {
+        data class Single(val rawAddress: String) : Address()
+        object Multiple : Address()
+    }
 }
