@@ -35,8 +35,14 @@ data class CryptoCurrencyStatus(
         /** The change in price of the token. */
         open val priceChange: BigDecimal? = null
 
-        /** Indicates if there are any transactions in progress related to the token. */
-        open val hasTransactionsInProgress: Boolean = false
+        /** Indicates if there are any transactions in progress related to the cryptocurrency network. */
+        open val hasCurrentNetworkTransactions: Boolean = false
+
+        /** The pending cryptocurrency transactions. */
+        open val pendingTransactions: Set<PendingTransaction> = emptySet()
+
+        /** The network address */
+        open val networkAddress: NetworkAddress? = null
     }
 
     /** Represents the Loading state of a token, typically while fetching its details. */
@@ -58,15 +64,18 @@ data class CryptoCurrencyStatus(
      * @property fiatAmount The fiat equivalent of the token's amount.
      * @property fiatRate The exchange rate used for converting the token amount to fiat.
      * @property priceChange The change in price of the token.
-     * @property hasTransactionsInProgress Indicates if there are any transactions in progress related to the token
-     * network.
+     * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
+     * cryptocurrency network.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class Loaded(
         override val amount: BigDecimal,
         override val fiatAmount: BigDecimal,
         override val fiatRate: BigDecimal,
         override val priceChange: BigDecimal,
-        override val hasTransactionsInProgress: Boolean,
+        override val hasCurrentNetworkTransactions: Boolean,
+        override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 
     /**
@@ -76,25 +85,32 @@ data class CryptoCurrencyStatus(
      * @property fiatAmount The fiat equivalent of the token's amount (optional).
      * @property fiatRate The exchange rate used for converting the token amount to fiat (optional).
      * @property priceChange The change in price of the token (optional).
-     * @property hasTransactionsInProgress Indicates if there are any transactions in progress related to the token
-     * network.
+     * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
+     * cryptocurrency network.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class Custom(
         override val amount: BigDecimal,
         override val fiatAmount: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val priceChange: BigDecimal?,
-        override val hasTransactionsInProgress: Boolean,
+        override val hasCurrentNetworkTransactions: Boolean,
+        override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 
     /**
      * Represents a state where the token is available, but there is no current quote available for it.
      *
      * @property amount The amount of the token.
-     * @property hasTransactionsInProgress Indicates if there are any transactions in progress related to the token.
+     * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
+     * cryptocurrency network.
+     * @property pendingTransactions The current cryptocurrency transactions.
      */
     data class NoQuote(
         override val amount: BigDecimal,
-        override val hasTransactionsInProgress: Boolean,
+        override val hasCurrentNetworkTransactions: Boolean,
+        override val pendingTransactions: Set<PendingTransaction>,
+        override val networkAddress: NetworkAddress?,
     ) : Status()
 }
