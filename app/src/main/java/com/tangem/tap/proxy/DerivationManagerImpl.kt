@@ -30,6 +30,7 @@ import com.tangem.tap.scope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
+import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
 
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -51,7 +52,7 @@ class DerivationManagerImpl(
             val scanResponse = appStateHolder.scanResponse
             if (scanResponse != null) {
                 val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
-                val appCurrency = com.tangem.tap.features.wallet.models.Currency.fromBlockchainNetwork(
+                val appCurrency = WalletModelCurrency.fromBlockchainNetwork(
                     blockchainNetwork,
                     appToken,
                 )
@@ -91,7 +92,7 @@ class DerivationManagerImpl(
 
     private fun deriveMissingBlockchains(
         scanResponse: ScanResponse,
-        currencyList: List<com.tangem.tap.features.wallet.models.Currency>,
+        currencyList: List<WalletModelCurrency>,
         onSuccess: (ScanResponse) -> Unit,
         onFailure: (Exception) -> Unit,
     ) {
@@ -158,7 +159,7 @@ class DerivationManagerImpl(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<com.tangem.tap.features.wallet.models.Currency>,
+        currencyList: List<WalletModelCurrency>,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
@@ -183,11 +184,12 @@ class DerivationManagerImpl(
         val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
         if (toDerive.isEmpty()) return null
 
-        currencyList.find { it is com.tangem.tap.features.wallet.models.Currency.Blockchain && it.blockchain == Blockchain.Cardano } ?.let { currency ->
-            currency.derivationPath?.let {
-                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+        currencyList.find { it is WalletModelCurrency.Blockchain && it.blockchain == Blockchain.Cardano }
+            ?.let { currency ->
+                currency.derivationPath?.let {
+                    bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+                }
             }
-        }
 
         return DerivationData(
             derivations = mapKeyOfWalletPublicKey to toDerive,
