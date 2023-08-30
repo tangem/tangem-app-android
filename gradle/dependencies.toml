@@ -80,7 +80,7 @@ okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-337"
+tangemBlockchainSdk = "develop-338"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-293"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
