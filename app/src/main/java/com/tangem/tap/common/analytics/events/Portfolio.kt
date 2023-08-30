@@ -18,5 +18,4 @@ sealed class Portfolio(
     class TokenTapped : Portfolio("Token is Tapped")
 
     class OrganizeTokens : Portfolio("Button - Organize Tokens")
-
 }
