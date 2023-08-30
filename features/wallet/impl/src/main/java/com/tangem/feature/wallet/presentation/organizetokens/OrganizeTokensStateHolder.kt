@@ -7,6 +7,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.feature.wallet.presentation.common.utils.CryptoCurrencyToIconStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
@@ -30,7 +31,8 @@ internal class OrganizeTokensStateHolder(
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
 
     private val tokenListConverter by lazy {
-        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider)
+        val iconConverter = CryptoCurrencyToIconStateConverter()
+        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider, iconConverter)
         val itemsConverter = TokenListToListStateConverter(
             tokensConverter = tokensConverter,
             groupsConverter = NetworkGroupToDraggableItemsConverter(tokensConverter),
