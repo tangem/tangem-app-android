@@ -55,9 +55,8 @@ data class ExpectedAwards(
 )
 
 data class ExpectedAward(
-    val currency: String,
-    val paymentDate: LocalDate,
-    val amount: Int
+    val paymentDate: String,
+    val amount: String
 )
 
 enum class DiscountType {
