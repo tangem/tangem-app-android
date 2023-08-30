@@ -18,10 +18,11 @@ sealed class OrganizeTokensScreen(
         grouping: AnalyticsParam.OnOffState,
         organizeSortType: AnalyticsParam.OrganizeSortType,
     ) : OrganizeTokensScreen(
-        "Button - Apply", params = mapOf(
+        "Button - Apply",
+        params = mapOf(
             "Group" to grouping.value,
-            "Sort" to organizeSortType.value
-        )
+            "Sort" to organizeSortType.value,
+        ),
     )
 
     object Cancel : OrganizeTokensScreen("Button - Cancel")

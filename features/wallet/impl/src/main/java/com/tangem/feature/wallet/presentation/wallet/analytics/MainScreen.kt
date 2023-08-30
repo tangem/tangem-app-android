@@ -26,5 +26,4 @@ sealed class MainScreen(
     object NoticeBackupYourWalletTapped : MainScreen("Notice - Backup Your Wallet Tapped")
     object NoticeScanYourCardTapped : MainScreen("Notice - Scan Your Card Tapped")
     object NoticeWalletLocked : MainScreen("Notice - Wallet Locked")
-
 }

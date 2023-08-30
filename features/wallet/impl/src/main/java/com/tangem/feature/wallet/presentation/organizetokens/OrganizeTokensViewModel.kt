@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class OrganizeTokensViewModel @Inject constructor(
     private val getTokenListUseCase: GetTokenListUseCase,
@@ -109,7 +110,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
         }
     }
 
-
     override fun onApplyClick() {
         viewModelScope.launch(Dispatchers.Default) {
             stateHolder.updateStateToDisplayProgress()
@@ -122,14 +122,14 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
             sendAnalyticsEvent(
                 isGroupedByNetwork = isGroupedByNetwork,
-                isSortedByBalance = isSortedByBalance
+                isSortedByBalance = isSortedByBalance,
             )
 
             val result = applyTokenListSortingUseCase(
                 userWalletId = userWalletId,
                 sortedTokensIds = resolver.resolve(listState, tokenList),
                 isGroupedByNetwork = isGroupedByNetwork,
-                isSortedByBalance = isSortedByBalance
+                isSortedByBalance = isSortedByBalance,
             )
 
             result.fold(
@@ -186,18 +186,19 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     private fun sendAnalyticsEvent(isGroupedByNetwork: Boolean, isSortedByBalance: Boolean) {
-        analyticsEventsHandler.send(OrganizeTokensScreen.Apply(
-            grouping = if (isGroupedByNetwork) {
-                AnalyticsParam.OnOffState.On
-            } else {
-                AnalyticsParam.OnOffState.Off
-            },
-            organizeSortType = if (isSortedByBalance) {
-                AnalyticsParam.OrganizeSortType.ByBalance
-            } else {
-                AnalyticsParam.OrganizeSortType.Manually
-            }
-        ))
+        analyticsEventsHandler.send(
+            OrganizeTokensScreen.Apply(
+                grouping = if (isGroupedByNetwork) {
+                    AnalyticsParam.OnOffState.On
+                } else {
+                    AnalyticsParam.OnOffState.Off
+                },
+                organizeSortType = if (isSortedByBalance) {
+                    AnalyticsParam.OrganizeSortType.ByBalance
+                } else {
+                    AnalyticsParam.OrganizeSortType.Manually
+                },
+            ),
+        )
     }
-
 }

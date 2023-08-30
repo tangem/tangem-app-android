@@ -92,7 +92,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val analyticsEventsHandler: AnalyticsEventHandler
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
@@ -135,7 +135,6 @@ internal class WalletViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         analyticsEventsHandler.send(MainScreen.ScreenOpened)
 
-    
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
 
@@ -143,7 +142,6 @@ internal class WalletViewModel @Inject constructor(
                 router.openSaveUserWalletScreen()
             }
         }
-
 
         getWalletsUseCase()
             .flowWithLifecycle(owner.lifecycle)
