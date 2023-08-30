@@ -1,12 +1,14 @@
 package com.tangem.core.navigation
 
 /**
- * Navigation state holder
+ * Navigation controller that based on redux actions
  *
  * @author Andrew Khokhlov on 10/07/2023
  */
-interface NavigationStateHolder {
+interface ReduxNavController {
 
     /** Navigate by [action] */
     fun navigate(action: NavigationAction)
+
+    fun getBackStack(): List<AppScreen>
 }
