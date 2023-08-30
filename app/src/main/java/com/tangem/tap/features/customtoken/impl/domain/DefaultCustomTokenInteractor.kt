@@ -127,7 +127,7 @@ class DefaultCustomTokenInteractor(
         val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano } ?.let { currency ->
+        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano }?.let { currency ->
             currency.derivationPath?.let {
                 bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
