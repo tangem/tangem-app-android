@@ -190,6 +190,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
+                    appStateHolder = appStateHolder,
                 ),
             ),
         )
