@@ -9,7 +9,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
-import java.util.*
+import java.util.EnumSet
 
 object DetailsReducer {
     fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
@@ -49,7 +49,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
-        wallets = action.wallets,
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
         appSettingsState = AppSettingsState(
