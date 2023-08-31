@@ -131,6 +131,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     sellService = makeSellExchangeService(config),
                     primaryRules = CardExchangeRules(cardProvider),
                 )
+// [REDACTED_TODO_COMMENT]
+                store.state.daggerGraphState.get(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
