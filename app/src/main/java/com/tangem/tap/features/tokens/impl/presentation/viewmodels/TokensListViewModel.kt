@@ -378,7 +378,7 @@ internal class TokensListViewModel @Inject constructor(
         val supportedTokens = scanResponse.card.supportedTokens(cardTypesResolver)
 
         // refactor this later by moving all this logic in card config
-        if (!supportedTokens.contains(Blockchain.Solana)) {
+        if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
             return SupportTokensState.SolanaNetworkUnsupported
         }
         val canHandleToken = scanResponse.card.canHandleToken(
