@@ -201,7 +201,6 @@ internal class WalletViewModel @Inject constructor(
     private fun updateSingleCurrencyContent(index: Int, isRefreshing: Boolean) {
         val wallet = getWallet(index)
         val blockchain = getCardTypeResolver(index).getBlockchain()
-        updateButtons(userWalletId = wallet.walletId, currencyId = blockchain.id)
         updateTxHistory(
             blockchain = blockchain,
             derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
@@ -244,15 +243,18 @@ internal class WalletViewModel @Inject constructor(
                     isRefreshing = isRefreshing,
                 )
 
-                either.onRight { status -> cryptoCurrencyStatus = status }
+                either.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(userWalletId = userWalletId, currency = status.currency)
+                }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currencyId: String) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, tokenId = currencyId)
+    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
