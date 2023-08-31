@@ -50,7 +50,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                 expanded = showDropdownMenu,
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
                 onDismissRequest = { showDropdownMenu = false },
-                offset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacingNegative10),
+                offset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacing10.times(-1)),
                 content = {
                     config.tokenDetailsAppBarMenuConfig.items.fastForEach {
                         AppBarDropdownItem(

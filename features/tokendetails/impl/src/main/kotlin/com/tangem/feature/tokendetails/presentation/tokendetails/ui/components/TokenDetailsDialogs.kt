@@ -1,11 +1,9 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 
@@ -19,48 +17,21 @@ internal fun TokenDetailsDialogs(state: TokenDetailsState) {
 
 @Composable
 private fun TokenDetailsDialog(config: TokenDetailsDialogConfig) {
-    AlertDialog(
-        onDismissRequest = config.onDismissRequest,
-        containerColor = TangemTheme.colors.background.primary,
-        title = {
-            Text(
-                text = config.content.title.resolveReference(),
-                style = TangemTheme.typography.h2,
-            )
-        },
-        titleContentColor = TangemTheme.colors.text.primary1,
-        text = {
-            Text(
-                text = config.content.text.resolveReference(),
-                style = TangemTheme.typography.body2,
-            )
-        },
-        textContentColor = TangemTheme.colors.text.secondary,
-        confirmButton = {
-            TextButton(
-                onClick = config.content.confirmButtonConfig.onClick,
-                content = {
-                    Text(
-                        text = config.content.confirmButtonConfig.text.resolveReference(),
-                        style = TangemTheme.typography.button,
-                        color = config.content.confirmButtonConfig.textColorProvider(),
-                    )
-                },
-            )
-        },
+    BasicDialog(
+        message = config.content.message.resolveReference(),
+        confirmButton = DialogButton(
+            title = config.content.confirmButtonConfig.text.resolveReference(),
+            warning = config.content.confirmButtonConfig.warning,
+            onClick = config.content.confirmButtonConfig.onClick,
+        ),
+        onDismissDialog = config.onDismissRequest,
+        title = config.content.title.resolveReference(),
         dismissButton = config.content.cancelButtonConfig?.let { cancelButtonConfig ->
-            {
-                TextButton(
-                    onClick = cancelButtonConfig.onClick,
-                    content = {
-                        Text(
-                            text = cancelButtonConfig.text.resolveReference(),
-                            style = TangemTheme.typography.button,
-                            color = cancelButtonConfig.textColorProvider(),
-                        )
-                    },
-                )
-            }
+            DialogButton(
+                title = cancelButtonConfig.text.resolveReference(),
+                warning = cancelButtonConfig.warning,
+                onClick = cancelButtonConfig.onClick,
+            )
         },
     )
 }

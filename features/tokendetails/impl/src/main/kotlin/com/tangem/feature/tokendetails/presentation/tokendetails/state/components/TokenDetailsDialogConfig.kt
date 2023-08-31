@@ -1,10 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tokendetails.impl.R
 
 /**
@@ -23,14 +20,14 @@ internal data class TokenDetailsDialogConfig(
     sealed class DialogContentConfig {
 
         abstract val title: TextReference
-        abstract val text: TextReference
+        abstract val message: TextReference
         abstract val confirmButtonConfig: ButtonConfig
         abstract val cancelButtonConfig: ButtonConfig?
 
         data class ButtonConfig(
             val text: TextReference,
-            val textColorProvider: @Composable () -> Color,
             val onClick: () -> Unit,
+            val warning: Boolean = false,
         )
 
         data class ConfirmHideConfig(
@@ -43,18 +40,17 @@ internal data class TokenDetailsDialogConfig(
                 formatArgs = wrappedList(currencySymbol),
             )
 
-            override val text: TextReference = TextReference.Res(R.string.token_details_hide_alert_message)
+            override val message: TextReference = TextReference.Res(R.string.token_details_hide_alert_message)
 
             override val cancelButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.common_cancel),
-                textColorProvider = { TangemTheme.colors.text.secondary },
                 onClick = onCancelClick,
             )
 
             override val confirmButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.token_details_hide_alert_hide),
-                textColorProvider = { TangemTheme.colors.text.warning },
                 onClick = onConfirmClick,
+                warning = true,
             )
         }
 
@@ -68,7 +64,7 @@ internal data class TokenDetailsDialogConfig(
                 formatArgs = wrappedList(currencySymbol),
             )
 
-            override val text: TextReference = TextReference.Res(
+            override val message: TextReference = TextReference.Res(
                 id = R.string.token_details_unable_hide_alert_message,
                 formatArgs = wrappedList(currencySymbol, networkName),
             )
@@ -78,7 +74,6 @@ internal data class TokenDetailsDialogConfig(
 
             override val confirmButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.common_ok),
-                textColorProvider = { TangemTheme.colors.text.primary1 },
                 onClick = onConfirmClick,
             )
         }
