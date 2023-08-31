@@ -11,7 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
@@ -46,7 +46,7 @@ fun IntroScreen(state: IntroState, modifier: Modifier = Modifier) {
         Box {
             OnboardingActionBlock(
                 firstActionContent = {
-                    PrimaryButtonIconStart(
+                    PrimaryButtonIconEnd(
                         modifier = Modifier
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
