@@ -7,7 +7,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.tokens.error.CurrencyError
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -170,7 +170,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     }
 
     data class SingleCurrencyLoadedBalanceModel(
-        val cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
+        val cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
         val isRefreshing: Boolean,
     )
 }
