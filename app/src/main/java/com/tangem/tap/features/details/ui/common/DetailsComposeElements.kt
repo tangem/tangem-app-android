@@ -12,6 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
@@ -27,6 +28,10 @@ fun SettingsScreensScaffold(
 ) {
     BackHandler(true, onBackClick)
 
+    SystemBarsEffect {
+        setSystemBarsColor(backgroundColor)
+    }
+
     Scaffold(
         topBar = {
             EmptyTopBarWithNavigation(
@@ -37,9 +42,13 @@ fun SettingsScreensScaffold(
         modifier = modifier.systemBarsPadding(),
         backgroundColor = backgroundColor,
         floatingActionButton = { fab?.invoke() },
-    ) {
+    ) { paddings ->
         if (titleRes != null) {
-            Box(modifier = modifier.fillMaxSize()) {
+            Box(
+                modifier = modifier
+                    .padding(paddings)
+                    .fillMaxSize(),
+            ) {
                 background?.invoke()
 
                 Column(modifier = modifier.fillMaxWidth()) {
