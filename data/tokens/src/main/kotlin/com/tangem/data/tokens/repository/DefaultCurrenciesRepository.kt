@@ -78,19 +78,18 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun getMultiCurrencyWalletCurrencies(
-        userWalletId: UserWalletId,
-        refresh: Boolean,
-    ): Flow<List<CryptoCurrency>> = channelFlow {
-        val userWallet = getUserWallet(userWalletId)
-        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        return channelFlow {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
-        launch(dispatchers.io) {
-            getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
-        }
+            launch(dispatchers.io) {
+                getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
+            }
 
-        launch(dispatchers.io) {
-            fetchTokensIfCacheExpired(userWallet, refresh)
+            launch(dispatchers.io) {
+                fetchTokensIfCacheExpired(userWallet, refresh = false)
+            }
         }
     }
 
@@ -102,7 +101,11 @@ internal class DefaultCurrenciesRepository(
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
         fetchTokensIfCacheExpired(userWallet, refresh)
-        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId))
+
+        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
+            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+        }
+
         return responseCurrenciesFactory.createCurrencies(
             response = storedTokens,
             card = userWallet.scanResponse.card,
