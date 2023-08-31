@@ -2,7 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import androidx.annotation.DrawableRes
 
-data class TokenInfoBlockState(
+internal data class TokenInfoBlockState(
     val name: String,
     val iconUrl: String,
     val currency: Currency,
