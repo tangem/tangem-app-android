@@ -22,7 +22,7 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
+import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -73,7 +73,7 @@ internal class WalletViewModel @Inject constructor(
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
-    private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyUseCase,
+    private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -180,7 +180,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to update tokens list if state isn't WalletMultiCurrencyState"
         }
 
-        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id, refresh = isRefreshing)
+        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
                 uiState = stateFactory.getStateByTokensList(
