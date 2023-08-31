@@ -6,6 +6,7 @@ import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
 import com.tangem.data.tokens.utils.UserTokensResponseFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -27,6 +28,7 @@ internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
+    private val userMarketCoinsStore: UserMarketCoinsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CurrenciesRepository {
@@ -172,6 +174,7 @@ internal class DefaultCurrenciesRepository(
             val response = tangemTechApi.getUserTokens(userWallet.walletId.stringValue)
 
             userTokensStore.store(userWallet.walletId, response)
+            fetchUserMarketCoinsByIds(userWallet.walletId, response)
         } catch (e: Throwable) {
             handleFetchTokensErrorOrThrow(userWallet, e)
         }
@@ -180,6 +183,17 @@ internal class DefaultCurrenciesRepository(
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
         userTokensStore.store(userWalletId, response)
         tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+    }
+
+    private suspend fun fetchUserMarketCoinsByIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
+        try {
+            val response = tangemTechApi.getCoins(
+                networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId },
+            )
+            userMarketCoinsStore.store(userWalletId, response)
+        } catch (e: Throwable) {
+            Timber.e("Unable to fetch user market coins for: ${userWalletId.stringValue} ${e.message}")
+        }
     }
 
     private suspend fun handleFetchTokensErrorOrThrow(userWallet: UserWallet, error: Throwable) {
