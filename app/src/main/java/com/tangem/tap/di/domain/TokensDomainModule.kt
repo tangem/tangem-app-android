@@ -116,4 +116,10 @@ internal object TokensDomainModule {
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(rampStateManager, marketCryptoCurrencyRepository, dispatchers)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCurrenciesUseCase {
+        return GetCurrenciesUseCase(currenciesRepository = currenciesRepository)
+    }
 }

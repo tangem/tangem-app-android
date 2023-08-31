@@ -40,9 +40,13 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
+    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) {
         removeCurrencyResult.onLeft { throw it }
     }
+
+    override suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
