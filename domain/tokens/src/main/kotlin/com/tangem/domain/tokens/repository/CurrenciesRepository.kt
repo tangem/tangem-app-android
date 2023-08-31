@@ -48,18 +48,21 @@ interface CurrenciesRepository {
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
-     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads remote cryptocurrencies if they have expired.
      *
      * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<List<CryptoCurrency>>
+    fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
      * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads cryptocurrencies if they have expired or if [refresh] is `true`.
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param refresh A boolean flag indicating whether the data should be refreshed.
