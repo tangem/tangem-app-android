@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import android.util.Log
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
@@ -58,6 +59,7 @@ internal class WalletNotificationsListFactory(
                         add(element = WalletNotification.BackupCard(onClick = clickIntents::onBackupCardClick))
                     }
 
+                    Log.i("WalletViewModel", "hasMissedDerivations ${tokenList?.hasMissedDerivations()}")
                     if (tokenList != null && tokenList.hasMissedDerivations()) {
                         add(element = WalletNotification.ScanCard(onClick = clickIntents::onScanCardClick))
                     }
@@ -132,6 +134,10 @@ internal class WalletNotificationsListFactory(
             TokenList.NotInitialized -> emptyList()
         }
 
+        Log.i(
+            "WalletViewModel",
+            "Missed derivation ${statuses.firstOrNull { it is CryptoCurrencyStatus.MissedDerivation }}",
+        )
         return statuses.any { it is CryptoCurrencyStatus.MissedDerivation }
     }
 
