@@ -5,7 +5,7 @@ import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.tokens.error.CurrencyError
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -199,7 +199,7 @@ internal class WalletStateFactory(
     fun getLockedState(): WalletState = lockedConverter.convert(Unit)
 
     fun getSingleCurrencyLoadedBalanceState(
-        cryptoCurrencyEither: Either<CurrencyError, CryptoCurrencyStatus>,
+        cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
         isRefreshing: Boolean,
     ): WalletState {
         return singleCurrencyLoadedBalanceConverter.convert(

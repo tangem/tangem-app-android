@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import com.tangem.domain.tokens.error.CurrencyError
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.*
  * @property networksRepository Repository for managing and fetching information related to blockchain networks.
  * @property dispatchers Provides coroutine dispatchers.
  */
-class GetPrimaryCurrencyUseCase(
+class GetPrimaryCurrencyStatusUpdatesUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
@@ -32,27 +32,22 @@ class GetPrimaryCurrencyUseCase(
      *
      * @param userWalletId The unique identifier of the user's wallet.
      * @param refresh A boolean flag indicating whether the data should be refreshed.
-     * @return A [Flow] emitting either a [CurrencyError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
+     * @return A [Flow] emitting either a [CurrencyStatusError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
-    operator fun invoke(
-        userWalletId: UserWalletId,
-        refresh: Boolean = false,
-    ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
+    operator fun invoke(userWalletId: UserWalletId): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
-            emitAll(getPrimaryCurrency(userWalletId, refresh))
+            emitAll(getPrimaryCurrency(userWalletId))
         }.flowOn(dispatchers.io)
     }
 
     private suspend fun getPrimaryCurrency(
         userWalletId: UserWalletId,
-        refresh: Boolean,
-    ): Flow<Either<CurrencyError, CryptoCurrencyStatus>> {
+    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             userWalletId = userWalletId,
-            refresh = refresh,
         )
 
         return operations.getPrimaryCurrencyStatusFlow().map { maybeCurrency ->

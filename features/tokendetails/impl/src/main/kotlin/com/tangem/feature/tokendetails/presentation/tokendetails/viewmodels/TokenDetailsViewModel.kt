@@ -11,7 +11,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetCurrencyUseCase
+import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
@@ -39,7 +39,7 @@ import kotlin.properties.Delegates
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
-    private val getCurrencyUseCase: GetCurrencyUseCase,
+    private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
@@ -71,7 +71,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onCreate(owner: LifecycleOwner) {
         getWallet()
-        updateContent(selectedWallet = wallet, refresh = false)
+        updateContent(selectedWallet = wallet)
     }
 
     private fun getWallet() {
@@ -82,8 +82,8 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
     }
 
-    private fun updateContent(selectedWallet: UserWallet, refresh: Boolean) {
-        updateMarketPrice(selectedWallet = selectedWallet, refresh = refresh)
+    private fun updateContent(selectedWallet: UserWallet) {
+        updateMarketPrice(selectedWallet = selectedWallet)
         updateButtons(userWalletId = selectedWallet.walletId, currencyId = cryptoCurrency.id.value)
         updateTxHistory()
     }
@@ -96,8 +96,11 @@ internal class TokenDetailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateMarketPrice(selectedWallet: UserWallet, refresh: Boolean) {
-        getCurrencyUseCase(userWalletId = selectedWallet.walletId, currencyId = cryptoCurrency.id, refresh = refresh)
+    private fun updateMarketPrice(selectedWallet: UserWallet) {
+        getCurrencyStatusUpdatesUseCase(
+            userWalletId = selectedWallet.walletId,
+            currencyId = cryptoCurrency.id,
+        )
             .distinctUntilChanged()
             .onEach { either ->
                 uiState = stateFactory.getCurrencyLoadedBalanceState(either)
