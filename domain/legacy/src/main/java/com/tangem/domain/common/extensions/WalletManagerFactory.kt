@@ -91,20 +91,16 @@ private fun makePublicKey(
     // we should generate second key for cardano
     // because cardano address generation for wallet2 requires keys from 2 derivations
     // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
-    if (blockchain == Blockchain.Cardano) {
-        CardanoAddressConfig.useExtendedAddressing = isWallet2
+    if (blockchain == Blockchain.Cardano && isWallet2) {
+        val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
+        val secondDerivedKey = derivedWalletKeys[extendedDerivationPath] ?: error("No derivation found")
 
-        if (isWallet2) {
-            val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
-            val secondDerivedKey = derivedWalletKeys[extendedDerivationPath] ?: error("No derivation found")
+        val secondDerivationKey = Wallet.HDKey(secondDerivedKey, extendedDerivationPath)
 
-            val secondDerivationKey = Wallet.HDKey(secondDerivedKey, extendedDerivationPath)
-
-            return Wallet.PublicKey(
-                seedKey = seedKey,
-                derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey),
-            )
-        }
+        return Wallet.PublicKey(
+            seedKey = seedKey,
+            derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey),
+        )
     }
 
     return Wallet.PublicKey(
