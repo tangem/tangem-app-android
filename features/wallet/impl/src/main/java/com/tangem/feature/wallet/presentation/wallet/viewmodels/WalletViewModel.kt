@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
@@ -180,6 +181,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to update tokens list if state isn't WalletMultiCurrencyState"
         }
 
+        Log.i("WalletViewModel", "updateMultiCurrencyContent")
         getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
@@ -188,6 +190,7 @@ internal class WalletViewModel @Inject constructor(
                     isRefreshing = isRefreshing,
                 )
 
+                Log.i("WalletViewModel", "updateNotifications")
                 updateNotifications(
                     index = index,
                     tokenList = tokenListEither.fold(ifLeft = { null }, ifRight = { it }),
@@ -313,12 +316,18 @@ internal class WalletViewModel @Inject constructor(
                 .doOnSuccess {
                     // If card's public key is null then user wallet will be null
                     val userWallet = UserWalletBuilder(scanResponse = it).build()
+                    Log.i("WalletViewModel", "User wallet: $userWallet")
 
                     if (userWallet != null) {
-                        saveWalletUseCase(userWallet)
+                        saveWalletUseCase(userWallet = userWallet, canOverride = true)
                             .onLeft {
+                                Log.i("WalletViewModel", "Save left: $it")
+
                                 // Rollback policy if card saving was failed
                                 setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
+                            }
+                            .onRight {
+                                Log.i("WalletViewModel", "Save right")
                             }
                     } else {
                         // Rollback policy if card saving was failed
@@ -326,6 +335,7 @@ internal class WalletViewModel @Inject constructor(
                     }
                 }
                 .doOnFailure {
+                    Log.i("WalletViewModel", "Scan error $it")
                     // Rollback policy if card scanning was failed
                     setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
                 }
