@@ -131,6 +131,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     sellService = makeSellExchangeService(config),
                     primaryRules = CardExchangeRules(cardProvider),
                 )
+                // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
+                store.state.daggerGraphState.get(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
