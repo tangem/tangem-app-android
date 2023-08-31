@@ -55,10 +55,7 @@ internal class MockCurrenciesRepository(
         return token.getOrElse { e -> throw e }
     }
 
-    override fun getMultiCurrencyWalletCurrencies(
-        userWalletId: UserWalletId,
-        refresh: Boolean,
-    ): Flow<List<CryptoCurrency>> {
+    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
 
