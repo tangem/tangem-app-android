@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.tokens.error.CurrencyError
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokens
@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-internal class GetPrimaryCurrencyUseCaseTest {
+internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
 
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val userWalletId = UserWalletId(value = null)
@@ -47,7 +47,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
     @Test
     fun `when token getting failed then error should be received`() = runTest {
         // Given
-        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = CurrencyStatusError.DataError(DataError.NetworkError.NoInternetConnection).left()
 
         val useCase = getUseCase(token = DataError.NetworkError.NoInternetConnection.left())
 
@@ -75,7 +75,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
     @Test
     fun `when networks statuses getting failed then error should be received`() = runTest {
         // Given
-        val expectedResult = CurrencyError.DataError(DataError.NetworkError.NoInternetConnection).left()
+        val expectedResult = CurrencyStatusError.DataError(DataError.NetworkError.NoInternetConnection).left()
 
         val useCase = getUseCase(statuses = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
@@ -88,7 +88,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
 
     @Test
     fun `when networks statuses flow is empty then error should be received`() = runTest {
-        val expectedResult = CurrencyError.UnableToCreateCurrency.left()
+        val expectedResult = CurrencyStatusError.UnableToCreateCurrency.left()
 
         val useCase = getUseCase(statuses = flowOf())
 
@@ -153,7 +153,7 @@ internal class GetPrimaryCurrencyUseCaseTest {
         removeCurrencyResult: Either<DataError, Unit> = Unit.right(),
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
-    ) = GetPrimaryCurrencyUseCase(
+    ) = GetPrimaryCurrencyStatusUpdatesUseCase(
         dispatchers = dispatchers,
         currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
