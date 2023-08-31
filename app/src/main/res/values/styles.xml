@@ -53,6 +53,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="fontWeight">500</item>
         <item name="lineHeight">16sp</item>
+        <item name="iconPadding">4dp</item>
     </style>
 
     <style name="TapPrimaryButton" parent="BaseTapButton">
