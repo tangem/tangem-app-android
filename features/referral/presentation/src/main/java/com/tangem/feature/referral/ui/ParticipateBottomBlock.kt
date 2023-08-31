@@ -54,7 +54,7 @@ internal fun ParticipateBottomBlock(
                 top = TangemTheme.dimens.spacing24,
                 bottom = TangemTheme.dimens.spacing16,
             )
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         PersonalCodeCard(code = code)
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
@@ -72,11 +72,9 @@ internal fun ParticipateBottomBlock(
     }
 }
 
+@Suppress("LongMethod", "MagicNumber")
 @Composable
-private fun CountersAndAwards(
-    purchasedWalletCount: Int,
-    expectedAwards: ExpectedAwards?,
-) {
+private fun CountersAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
     val elementsCountToShowInLessMode = 3
     val isExpanded = remember { mutableStateOf(false) }
 
@@ -97,7 +95,7 @@ private fun CountersAndAwards(
             CornersToRound.TOP_2
         } else {
             CornersToRound.ALL_4
-        }
+        },
 
     )
 
@@ -172,13 +170,13 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
     Surface(
         shape = RoundedCornerShape(
             bottomStart = TangemTheme.dimens.radius12,
-            bottomEnd = TangemTheme.dimens.radius12
-        )
+            bottomEnd = TangemTheme.dimens.radius12,
+        ),
     ) {
         Column(
             modifier = Modifier.background(TangemTheme.colors.background.primary),
 
-            ) {
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -213,7 +211,6 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
                     contentDescription = null,
                 )
             }
-
         }
     }
 }
@@ -229,7 +226,7 @@ private fun ExtraItems(extraItems: List<ExpectedAward>) {
                 endText = expectedAward.amount,
                 endTextColor = TangemTheme.colors.text.primary1,
                 endTextStyle = TangemTheme.typography.subtitle2,
-                cornersToRound = CornersToRound.ZERO
+                cornersToRound = CornersToRound.ZERO,
 
             )
         }
@@ -337,13 +334,13 @@ private fun Preview_ParticipateBottomBlock_InLightTheme() {
                         ),
                         ExpectedAward(
                             amount = "20 USDT",
-                            paymentDate = "6 Aug 2023"
+                            paymentDate = "6 Aug 2023",
                         ),
                         ExpectedAward(
                             amount = "30 USDT",
-                            paymentDate = "10 Aug 2023"
+                            paymentDate = "10 Aug 2023",
                         ),
-                    )
+                    ),
                 ),
                 onAgreementClick = {},
                 onShowCopySnackbar = {},
@@ -396,9 +393,11 @@ private fun Preview_ParticipateBottomBlock_Without_Awards_And_Purchased_Wallets_
 @Composable
 private fun LessMoreButton_White() {
     TangemTheme(isDark = false) {
-        LessMoreButton(isExpanded = remember {
-            mutableStateOf(false)
-        })
+        LessMoreButton(
+            isExpanded = remember {
+                mutableStateOf(false)
+            },
+        )
     }
 }
 
@@ -420,4 +419,3 @@ private fun Preview_ParticipateBottomBlock_Without_Awards_InDarkTheme() {
         }
     }
 }
-

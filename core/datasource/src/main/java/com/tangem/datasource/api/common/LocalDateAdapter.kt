@@ -9,7 +9,7 @@ import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
 class LocalDateAdapter : JsonAdapter<LocalDate>() {
-    
+
     private val formatter = DateTimeFormat.forPattern("yyyy-MM-dd")
 
     @FromJson

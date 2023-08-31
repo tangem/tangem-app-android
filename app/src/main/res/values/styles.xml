@@ -60,7 +60,7 @@
     </style>
 
     <style name="TapSecondaryButton" parent="BaseTapButton">
-        <item name="android:backgroundTint">@color/selector_btn_secondary</item>
+        <it.em name="android:backgroundTint">@color/selector_btn_secondary</it./em>
         <item name="android:textColor">@color/selector_btn_content_secondary</item>
     </style>
 

@@ -55,7 +55,6 @@ private fun AgreementHtmlView(url: String) {
                     allowFileAccess = false
                 }
             }
-
         },
     )
 }

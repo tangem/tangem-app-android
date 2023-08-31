@@ -1,7 +1,6 @@
 package com.tangem.feature.referral.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -10,9 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
+@Suppress("LongParameterList")
 @Composable
 internal fun AwardText(
     startText: String,
@@ -25,7 +24,7 @@ internal fun AwardText(
 ) {
     Surface(
         shape = cornersToRound.getShape(),
-        color = TangemTheme.colors.background.primary
+        color = TangemTheme.colors.background.primary,
     ) {
         Column {
             Row(
@@ -59,10 +58,9 @@ internal fun AwardText(
     }
 }
 
-
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_AwardItem_Light() {
+private fun Preview_AwardItem_Light() {
     TangemTheme {
         AwardText(
             startText = "startText",
@@ -71,8 +69,7 @@ fun Preview_AwardItem_Light() {
             endText = "endText",
             endTextColor = TangemTheme.colors.text.primary1,
             endTextStyle = TangemTheme.typography.subtitle2,
-            cornersToRound = CornersToRound.TOP_2
+            cornersToRound = CornersToRound.TOP_2,
         )
     }
-
 }

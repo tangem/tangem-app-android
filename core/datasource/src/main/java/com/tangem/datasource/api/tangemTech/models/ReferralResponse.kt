@@ -6,7 +6,7 @@ import org.joda.time.LocalDate
 data class ReferralResponse(
     @Json(name = "conditions") val conditions: Conditions,
     @Json(name = "referral") val referral: Referral?,
-    @Json(name = "expectedAwards") val expectedAwards: ExpectedAwards?
+    @Json(name = "expectedAwards") val expectedAwards: ExpectedAwards?,
 ) {
 
     data class Conditions(

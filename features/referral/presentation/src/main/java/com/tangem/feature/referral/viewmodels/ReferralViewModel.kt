@@ -129,7 +129,7 @@ internal class ReferralViewModel @Inject constructor(
             code = referral.promocode,
             shareLink = referral.shareLink,
             url = tosLink,
-            expectedAwards = expectedAwards
+            expectedAwards = expectedAwards,
         )
         is ReferralData.NonParticipantData -> ReferralInfoState.NonParticipantContent(
             award = getAwardValue(),

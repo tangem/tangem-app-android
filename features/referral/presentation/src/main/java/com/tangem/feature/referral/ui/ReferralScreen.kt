@@ -260,7 +260,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
             formatAwardConditionsString(
                 quantity = award,
                 network = networkName,
-                address = if (!address.isNullOrBlank()) " $address" else ""
+                address = if (!address.isNullOrBlank()) " $address" else "",
             ),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
@@ -268,13 +268,8 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
     }
 }
 
-
 @Composable
-private fun formatAwardConditionsString(
-    quantity: String,
-    network: String,
-    address: String
-): AnnotatedString {
+private fun formatAwardConditionsString(quantity: String, network: String, address: String): AnnotatedString {
     val rawString = stringResource(R.string.referral_point_currencies_description, quantity, network, address)
 
     val pattern = Regex("\\^\\^(.*?)\\^\\^")
@@ -479,8 +474,6 @@ private fun getMessageForErrorSnackbar(errorSnackbar: ErrorSnackbar): String {
     }
 }
 
-
-
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 private fun Preview_ReferralScreen_Participant_InLightTheme() {
@@ -497,7 +490,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
-                    expectedAwards = null
+                    expectedAwards = null,
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
@@ -526,7 +519,7 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
-                    expectedAwards = null
+                    expectedAwards = null,
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
@@ -564,13 +557,13 @@ private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
                             ),
                             ExpectedAward(
                                 amount = "20 USDT",
-                                paymentDate = "6 Aug 2023"
+                                paymentDate = "6 Aug 2023",
                             ),
                             ExpectedAward(
                                 amount = "30 USDT",
-                                paymentDate = "10 Aug 2023"
+                                paymentDate = "10 Aug 2023",
                             ),
-                        )
+                        ),
                     ),
                 ),
                 errorSnackbar = null,

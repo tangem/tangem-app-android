@@ -28,7 +28,7 @@ internal data class ReferralStateHolder(
             val code: String,
             val shareLink: String,
             override val url: String,
-            val expectedAwards: ExpectedAwards?
+            val expectedAwards: ExpectedAwards?,
         ) : ReferralInfoState, ReferralInfoContentState
 
         data class NonParticipantContent(

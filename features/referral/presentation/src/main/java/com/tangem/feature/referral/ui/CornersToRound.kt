@@ -10,8 +10,10 @@ internal enum class CornersToRound {
     ALL_4,
     TOP_2,
     BOTTOM_2,
-    ZERO;
+    ZERO,
+    ;
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun getShape(): RoundedCornerShape {
         val radius = TangemTheme.dimens.radius12

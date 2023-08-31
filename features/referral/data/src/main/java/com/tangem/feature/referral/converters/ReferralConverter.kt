@@ -39,7 +39,7 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
                 ),
                 expectedAwards = value.expectedAwards?.let {
                     expectedAwardsConverter.convert(it)
-                }
+                },
             )
         } else {
             ReferralData.NonParticipantData(
@@ -73,9 +73,9 @@ private class ExpectedAwardsConverter : Converter<ReferralResponse.ExpectedAward
             expectedAwards = value.list.map {
                 ExpectedAward(
                     paymentDate = it.paymentDate.toDateTimeAtStartOfDay().millis.toDateFormat(),
-                    amount = "${it.amount} ${it.currency}"
+                    amount = "${it.amount} ${it.currency}",
                 )
-            }
+            },
         )
     }
 
@@ -92,7 +92,6 @@ private class ExpectedAwardsConverter : Converter<ReferralResponse.ExpectedAward
             dateFormatter.print(localDate)
         }
     }
-
 }
 
 private class TokenConverter : Converter<ReferralResponse.Conditions.Award.Token, TokenData> {
