@@ -20,19 +20,16 @@ internal class CurrenciesStatusesOperations(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val userWalletId: UserWalletId,
-    private val refresh: Boolean,
 ) {
 
     constructor(
         userWalletId: UserWalletId,
-        refresh: Boolean,
         useCase: GetTokenListUseCase,
     ) : this(
         currenciesRepository = useCase.currenciesRepository,
         quotesRepository = useCase.quotesRepository,
         networksRepository = useCase.networksRepository,
         userWalletId = userWalletId,
-        refresh = refresh,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,15 +48,15 @@ internal class CurrenciesStatusesOperations(
 
                 emit(emptyCurrenciesStatuses.right())
                 return@transformLatest
-            } else if (!refresh) {
-                val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
-                    currencies = nonEmptyCurrencies,
-                    maybeNetworkStatuses = null,
-                    maybeQuotes = null,
-                )
-
-                emit(maybeLoadingCurrenciesStatuses)
             }
+
+            val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
+                currencies = nonEmptyCurrencies,
+                maybeNetworkStatuses = null,
+                maybeQuotes = null,
+            )
+
+            emit(maybeLoadingCurrenciesStatuses)
 
             val (networksIds, currenciesIds) = getIds(nonEmptyCurrencies)
 
@@ -168,7 +165,7 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getMultiCurrencyWalletCurrencies(): Flow<Either<Error, List<CryptoCurrency>>> {
-        return currenciesRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh)
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
             .map<List<CryptoCurrency>, Either<Error, List<CryptoCurrency>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyCurrencies.left()) }
@@ -188,14 +185,14 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
-        return quotesRepository.getQuotes(tokensIds, refresh)
+        return quotesRepository.getQuotesUpdates(tokensIds)
             .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyQuotes.left()) }
     }
 
     private fun getNetworksStatuses(networks: NonEmptySet<Network.ID>): Flow<Either<Error, Set<NetworkStatus>>> {
-        return networksRepository.getNetworkStatuses(userWalletId, networks, refresh)
+        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
