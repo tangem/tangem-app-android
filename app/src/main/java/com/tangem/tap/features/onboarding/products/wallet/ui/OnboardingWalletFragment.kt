@@ -208,6 +208,8 @@ class OnboardingWalletFragment :
 
     private fun setupCreateWalletState() = with(binding) {
         layoutButtonsCommon.btnWalletMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
+
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingWalletAction.CreateWallet)
@@ -247,6 +249,7 @@ class OnboardingWalletFragment :
 
         with(layoutButtonsCommon) {
             btnWalletMainAction.text = getText(R.string.onboarding_button_backup_now)
+            btnWalletMainAction.icon = null
             btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
@@ -265,6 +268,7 @@ class OnboardingWalletFragment :
 
         with(layoutButtonsCommon) {
             btnWalletMainAction.text = getString(R.string.onboarding_button_scan_origin_card)
+            btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
             btnWalletAlternativeAction.hide()
             btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
         }
@@ -281,6 +285,7 @@ class OnboardingWalletFragment :
         layoutButtonsAddCards.root.show()
         layoutButtonsCommon.root.hide()
         layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
+        layoutButtonsAddCards.btnAddCard.setIconResource(R.drawable.ic_tangem_24)
         if (state.backupCardsNumber < state.maxBackupCards) {
             layoutButtonsAddCards.btnAddCard.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
         } else {
@@ -362,6 +367,7 @@ class OnboardingWalletFragment :
             state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
         )
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
         animator.showWritePrimaryCard(state)
@@ -394,6 +400,7 @@ class OnboardingWalletFragment :
             R.string.onboarding_button_backup_card_format,
             cardNumber,
         )
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
@@ -412,6 +419,7 @@ class OnboardingWalletFragment :
 
         tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
+        layoutButtonsCommon.btnWalletMainAction.icon = null
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
