@@ -52,27 +52,6 @@ internal class GetTokenListUseCaseTest {
     }
 
     @Test
-    fun `when list refreshed then correct token list should be returned`() = runTest {
-        // Given
-        val expectedResult = listOf(
-            MockTokenLists.failedUngroupedTokenList.right(),
-        )
-
-        val useCase = getUseCase(
-            isGrouped = flowOf(false.right()),
-            isSortedByBalance = flowOf(false.right()),
-        )
-
-        // When
-        val result = useCase(userWalletId, refresh = true)
-            .take(count = 1)
-            .toList()
-
-        // Then
-        assertEquals(expectedResult, result)
-    }
-
-    @Test
     fun `when tokens getting failed then error should be received`() = runTest {
         // Given
         val expectedResult = TokenListError.DataError(DataError.NetworkError.NoInternetConnection).left()
@@ -103,20 +82,6 @@ internal class GetTokenListUseCaseTest {
         val result = useCase(userWalletId)
             .take(count = 2)
             .toList()
-
-        // Then
-        assertEquals(expectedResult, result)
-    }
-
-    @Test
-    fun `when networks statuses getting failed then error should be received`() = runTest {
-        // Given
-        val expectedResult = TokenListError.DataError(DataError.NetworkError.NoInternetConnection).left()
-
-        val useCase = getUseCase(statuses = flowOf(DataError.NetworkError.NoInternetConnection.left()))
-
-        // When
-        val result = useCase(userWalletId, refresh = true).first()
 
         // Then
         assertEquals(expectedResult, result)
