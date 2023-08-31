@@ -1,10 +1,15 @@
 package com.tangem.feature.wallet.presentation.common.component
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -22,13 +27,27 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 
 // TODO: Add custom token state: [REDACTED_JIRA]
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TokenItem(
     state: TokenItemState,
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
 ) {
-    BaseContainer(modifier = modifier) {
+    val hapticFeedback = LocalHapticFeedback.current
+    val containerModifier: Modifier = remember(state) {
+        when (state) {
+            is TokenItemState.Content -> modifier.combinedClickable(
+                onClick = state.onItemClick,
+                onLongClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    state.onItemLongClick()
+                },
+            )
+            else -> modifier
+        }
+    }
+    BaseContainer(modifier = containerModifier) {
         val (iconRef, cryptoInfoRef, fiatInfoRef) = createRefs()
 
         TokenIcon(
@@ -60,7 +79,7 @@ internal fun TokenItem(
 }
 
 @Composable
-inline fun BaseContainer(
+private inline fun BaseContainer(
     modifier: Modifier = Modifier,
     crossinline content: @Composable ConstraintLayoutScope.() -> Unit,
 ) {
