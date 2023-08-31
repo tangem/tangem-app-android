@@ -1,16 +1,14 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.StateType
-import java.util.*
+import java.util.EnumSet
 
 data class DetailsState(
     val scanResponse: ScanResponse? = null,
-    val wallets: List<Wallet> = emptyList(),
     val cardSettingsState: CardSettingsState? = null,
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
