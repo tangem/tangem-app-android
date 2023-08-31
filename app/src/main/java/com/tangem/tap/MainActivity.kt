@@ -4,10 +4,11 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
@@ -25,6 +26,7 @@ import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -52,6 +54,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import javax.inject.Inject
@@ -108,6 +112,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
+    private val viewModel: MainViewModel by viewModels()
+    private var isInitializing: Boolean = true
+
     // TODO: fixme: inject through DI
     private val intentProcessor: IntentProcessor = IntentProcessor()
 
@@ -118,11 +125,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
+        bootstrapMainStateUpdates()
+
+        splashScreen.setKeepOnScreenCondition { isInitializing }
+
         setContentView(R.layout.activity_main)
         systemActions()
+
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         cardSdkLifecycleObserver.onCreate(context = this)
@@ -198,12 +211,23 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 
+    private fun bootstrapMainStateUpdates() {
+        viewModel.state
+            .onEach { state ->
+                isInitializing = state is GlobalSettingsState.Loading
+
+                when (state) {
+                    is GlobalSettingsState.Content -> {
+                        MutableAppThemeModeHolder.value = state.appThemeMode
+                    }
+                    is GlobalSettingsState.Loading -> Unit
+                }
+            }
+            .launchIn(lifecycleScope)
+    }
+
     private fun systemActions() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
-        windowInsetsController.isAppearanceLightStatusBars = true
-        windowInsetsController.isAppearanceLightNavigationBars = true
 
         supportFragmentManager.registerFragmentLifecycleCallbacks(
             NavBarInsetsFragmentLifecycleCallback(),
