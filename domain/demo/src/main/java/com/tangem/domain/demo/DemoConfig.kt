@@ -398,6 +398,12 @@ class DemoConfig {
         "AB02000000048063",
         "AB02000000023736",
         "AB02000000058187",
+
+        // Wallet 2
+        "AF04000000012006",
+        "AF04000000012014",
+        "AF04000000012022",
+        "AF04000000012030",
     )
 
     @Suppress("ClassOrdering")
@@ -405,6 +411,7 @@ class DemoConfig {
         "FB20000000000186", // Note ETH
         "FB10000000000196", // Note BTC
         "FB30000000000176", // Wallet
+        "FB40000000120060", // Wallet 2
     )
 
     @Suppress("ClassOrdering")
