@@ -99,7 +99,10 @@ internal class WalletStateFactory(
     }
 
     private val refreshStateConverter by lazy {
-        WalletRefreshStateConverter(currentStateProvider = currentStateProvider)
+        WalletRefreshStateConverter(
+            currentStateProvider = currentStateProvider,
+            intents = clickIntents,
+        )
     }
 
     private val cryptoCurrencyActionsConverter by lazy {

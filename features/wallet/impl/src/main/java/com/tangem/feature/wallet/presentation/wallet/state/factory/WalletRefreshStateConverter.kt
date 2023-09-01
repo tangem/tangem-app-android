@@ -6,93 +6,105 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyS
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
 internal class WalletRefreshStateConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val intents: WalletClickIntents,
 ) : Converter<Boolean, WalletState> {
 
     override fun convert(value: Boolean): WalletState {
+        val state = currentStateProvider()
+        val contentState = state as? WalletState.ContentState ?: return state
+
         return if (value) {
-            getRefreshingState()
+            contentState.getRefreshingState()
         } else {
-            getRefreshedState()
+            contentState.getRefreshedState()
         }
     }
 
-    private fun getRefreshedState(): WalletState {
-        return when (val state = currentStateProvider()) {
-            is WalletMultiCurrencyState.Content -> state.getRefreshedState()
-            is WalletSingleCurrencyState.Content -> state.getRefreshedState()
-            else -> state
+    private fun WalletState.ContentState.getRefreshingState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshingState()
+            is WalletSingleCurrencyState.Content -> getRefreshingState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
         }
     }
 
-    private fun getRefreshingState(): WalletState {
-        return when (val state = currentStateProvider()) {
-            is WalletMultiCurrencyState.Content -> state.getRefreshingState()
-            is WalletSingleCurrencyState.Content -> state.getRefreshingState()
-            else -> state
+    private fun WalletState.ContentState.getRefreshedState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshedState()
+            is WalletSingleCurrencyState.Content -> getRefreshedState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
         }
     }
 
-    private fun WalletMultiCurrencyState.Content.getRefreshedState(): WalletMultiCurrencyState.Content {
+    private fun WalletMultiCurrencyState.Content.getRefreshingState(): WalletMultiCurrencyState {
         return copy(
-            pullToRefreshConfig = createPullToRefreshConfig(isRefreshing = false),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            tokensListState = updateTokenListState(isRefreshing = true),
         )
     }
 
-    private fun WalletSingleCurrencyState.Content.getRefreshedState(): WalletSingleCurrencyState.Content {
+    private fun WalletSingleCurrencyState.Content.getRefreshingState(): WalletSingleCurrencyState {
         return copy(
-            pullToRefreshConfig = createPullToRefreshConfig(isRefreshing = false),
-            buttons = buttons.mapToEnabledButtons(),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            buttons = updateButtons(isRefreshing = true),
         )
     }
 
-    private fun WalletMultiCurrencyState.Content.getRefreshingState(): WalletMultiCurrencyState.Content {
+    private fun WalletMultiCurrencyState.Content.getRefreshedState(): WalletMultiCurrencyState {
         return copy(
-            pullToRefreshConfig = createPullToRefreshConfig(isRefreshing = true),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            tokensListState = updateTokenListState(isRefreshing = false),
         )
     }
 
-    private fun WalletSingleCurrencyState.Content.getRefreshingState(): WalletSingleCurrencyState.Content {
+    private fun WalletSingleCurrencyState.Content.getRefreshedState(): WalletSingleCurrencyState {
         return copy(
-            pullToRefreshConfig = createPullToRefreshConfig(isRefreshing = true),
-            buttons = buttons.mapToDisabledButton(),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            buttons = updateButtons(isRefreshing = false),
         )
     }
 
-    private fun WalletState.ContentState.createPullToRefreshConfig(isRefreshing: Boolean): WalletPullToRefreshConfig {
+    private fun WalletMultiCurrencyState.updateTokenListState(isRefreshing: Boolean): WalletTokensListState {
+        return when (val state = tokensListState) {
+            is WalletTokensListState.Content -> {
+                val onOrganizeTokensClick = if (isRefreshing) null else intents::onOrganizeTokensClick
+
+                state.copy(onOrganizeTokensClick = onOrganizeTokensClick)
+            }
+            is WalletTokensListState.Locked,
+            is WalletTokensListState.Loading,
+            is WalletTokensListState.Empty,
+            -> state
+        }
+    }
+
+    private fun WalletSingleCurrencyState.updateButtons(isRefreshing: Boolean): PersistentList<WalletManageButton> {
+        return buttons.mutate {
+            it.mapNotNull { button ->
+                when (button) {
+                    is WalletManageButton.Buy -> button.copy(enabled = isRefreshing)
+                    is WalletManageButton.Send -> button.copy(enabled = isRefreshing)
+                    is WalletManageButton.Sell -> button.copy(enabled = isRefreshing)
+                    is WalletManageButton.Receive -> button
+                    is WalletManageButton.Swap -> null
+                }
+            }
+        }
+    }
+
+    private fun WalletState.ContentState.updatePullToRefreshConfig(isRefreshing: Boolean): WalletPullToRefreshConfig {
         return pullToRefreshConfig.copy(isRefreshing = isRefreshing)
-    }
-
-    private fun PersistentList<WalletManageButton>.mapToDisabledButton(): PersistentList<WalletManageButton> {
-        return this.mutate {
-            it.mapNotNull { button ->
-                when (button) {
-                    is WalletManageButton.Buy -> button.copy(enabled = false)
-                    is WalletManageButton.Send -> button.copy(enabled = false)
-                    is WalletManageButton.Receive -> button
-                    is WalletManageButton.Sell -> button.copy(enabled = false)
-                    is WalletManageButton.Swap -> null
-                }
-            }
-        }
-    }
-
-    private fun PersistentList<WalletManageButton>.mapToEnabledButtons(): PersistentList<WalletManageButton> {
-        return this.mutate {
-            it.mapNotNull { button ->
-                when (button) {
-                    is WalletManageButton.Buy -> button.copy(enabled = true)
-                    is WalletManageButton.Send -> button.copy(enabled = true)
-                    is WalletManageButton.Receive -> button
-                    is WalletManageButton.Sell -> button.copy(enabled = true)
-                    is WalletManageButton.Swap -> null
-                }
-            }
-        }
     }
 }

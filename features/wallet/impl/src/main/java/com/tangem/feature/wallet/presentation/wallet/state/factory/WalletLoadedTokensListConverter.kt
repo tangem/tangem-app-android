@@ -45,9 +45,7 @@ internal class WalletLoadedTokensListConverter(
     override fun convert(value: Either<TokenListError, TokenList>): WalletState {
         return value.fold(
             ifLeft = tokenListErrorConverter::convert,
-            ifRight = {
-                tokenListStateConverter.convert(it)
-            },
+            ifRight = tokenListStateConverter::convert,
         )
     }
 }
