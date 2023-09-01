@@ -2,8 +2,11 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.iconResId
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
@@ -11,6 +14,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfo
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSkeletonStateConverter.SkeletonModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -24,7 +28,7 @@ internal class TokenDetailsSkeletonStateConverter(
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
-                onMoreClick = clickIntents::onMoreClick,
+                tokenDetailsAppBarMenuConfig = createMenu(),
             ),
             tokenInfoBlockState = TokenInfoBlockState(
                 name = value.cryptoCurrency.name,
@@ -47,8 +51,19 @@ internal class TokenDetailsSkeletonStateConverter(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+            dialogConfig = null,
         )
     }
+
+    private fun createMenu(): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
+        items = persistentListOf(
+            TokenDetailsAppBarMenuConfig.MenuItem(
+                title = TextReference.Res(id = R.string.token_details_hide_token),
+                textColorProvider = { TangemTheme.colors.text.warning },
+                onClick = clickIntents::onHideClick,
+            ),
+        ),
+    )
 
     private fun createButtons(): ImmutableList<TokenDetailsActionButton> {
         return persistentListOf(
