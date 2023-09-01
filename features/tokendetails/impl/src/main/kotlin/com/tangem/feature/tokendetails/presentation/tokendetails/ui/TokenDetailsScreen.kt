@@ -16,6 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 
@@ -56,6 +57,8 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
             )
             txHistoryItems(state = state.txHistoryState, txHistoryItems = txHistoryItems)
         }
+
+        TokenDetailsDialogs(state = state)
     }
 }
 
