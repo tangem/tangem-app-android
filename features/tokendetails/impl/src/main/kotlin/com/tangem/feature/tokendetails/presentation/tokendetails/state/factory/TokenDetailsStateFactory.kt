@@ -12,6 +12,7 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
@@ -80,5 +81,38 @@ internal class TokenDetailsStateFactory(
         txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
     ): TokenDetailsState {
         return loadedTxHistoryConverter.convert(txHistoryEither)
+    }
+
+    fun getStateWithClosedDialog(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(dialogConfig = state.dialogConfig?.copy(isShow = false))
+    }
+
+    fun getStateWithConfirmHideTokenDialog(currency: CryptoCurrency): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
+                    currencySymbol = currency.symbol,
+                    onConfirmClick = clickIntents::onHideConfirmed,
+                    onCancelClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithLinkedTokensDialog(currency: CryptoCurrency): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
+                    currencySymbol = currency.symbol,
+                    networkName = currency.network.name,
+                    onConfirmClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
     }
 }
