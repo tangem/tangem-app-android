@@ -26,34 +26,30 @@ internal fun AwardText(
         shape = cornersToRound.getShape(),
         color = TangemTheme.colors.background.primary,
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(TangemTheme.dimens.size48)
-                    .padding(
-                        horizontal = TangemTheme.dimens.spacing16,
-                        vertical = TangemTheme.dimens.spacing12,
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = startText,
-                    color = startTextColor,
-                    maxLines = 1,
-                    style = startTextStyle,
-                )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(TangemTheme.dimens.size48)
+                .padding(
+                    horizontal = TangemTheme.dimens.spacing16,
+                    vertical = TangemTheme.dimens.spacing12,
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = startText,
+                color = startTextColor,
+                maxLines = 1,
+                style = startTextStyle,
+            )
 
-                Row {
-                    Text(
-                        text = endText,
-                        color = endTextColor,
-                        maxLines = 1,
-                        style = endTextStyle,
-                    )
-                }
-            }
+            Text(
+                text = endText,
+                color = endTextColor,
+                maxLines = 1,
+                style = endTextStyle,
+            )
         }
     }
 }

@@ -66,18 +66,25 @@ internal fun ParticipateBottomBlock(
             onShareClick = onShareClick,
         )
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
-        CountersAndAwards(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
+        CounterAndAwards(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
     }
 }
 
-@Suppress("LongMethod", "MagicNumber")
 @Composable
-private fun CountersAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
-    val elementsCountToShowInLessMode = 3
-    val isExpanded = remember { mutableStateOf(false) }
+private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
+    Counter(purchasedWalletCount, expectedAwards)
 
+    if (expectedAwards != null) {
+        Awards(expectedAwards)
+    } else if (purchasedWalletCount != 0) {
+        EmptyUpcomingPayments()
+    }
+}
+
+@Composable
+private fun Counter(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
     val isExpectedAwardsPresent = expectedAwards != null
 
     AwardText(
@@ -96,73 +103,80 @@ private fun CountersAndAwards(purchasedWalletCount: Int, expectedAwards: Expecte
         } else {
             CornersToRound.ALL_4
         },
+    )
+}
 
+@Suppress("MagicNumber")
+@Composable
+private fun Awards(expectedAwards: ExpectedAwards) {
+    val elementsCountToShowInLessMode = 3
+    val isExpanded = remember { mutableStateOf(false) }
+
+    Divider(
+        color = TangemTheme.colors.stroke.primary,
+        thickness = TangemTheme.dimens.size0_5,
+    )
+    AwardText(
+        startText = stringResource(id = R.string.referral_expected_awards),
+        startTextColor = TangemTheme.colors.text.tertiary,
+        startTextStyle = TangemTheme.typography.subtitle2,
+        endText = pluralStringResource(
+            id = R.plurals.referral_number_of_wallets,
+            count = expectedAwards.numberOfWallets,
+            expectedAwards.numberOfWallets,
+        ),
+        endTextColor = TangemTheme.colors.text.tertiary,
+        endTextStyle = TangemTheme.typography.body2,
+        cornersToRound = CornersToRound.ZERO,
     )
 
-    if (expectedAwards != null) {
-        Divider(
-            color = TangemTheme.colors.stroke.primary,
-            thickness = TangemTheme.dimens.size0_5,
-        )
+    val initialItems = expectedAwards.expectedAwards.take(elementsCountToShowInLessMode)
+    val extraItems = expectedAwards.expectedAwards.drop(elementsCountToShowInLessMode)
+
+    initialItems.forEachIndexed { index, expectedAward ->
         AwardText(
-            startText = stringResource(id = R.string.referral_expected_awards),
-            startTextColor = TangemTheme.colors.text.tertiary,
+            startText = expectedAward.paymentDate,
+            startTextColor = TangemTheme.colors.text.primary1,
             startTextStyle = TangemTheme.typography.subtitle2,
-            endText = pluralStringResource(
-                id = R.plurals.referral_number_of_wallets,
-                count = expectedAwards.numberOfWallets,
-                expectedAwards.numberOfWallets,
-            ),
-            endTextColor = TangemTheme.colors.text.tertiary,
-            endTextStyle = TangemTheme.typography.body2,
-            cornersToRound = CornersToRound.ZERO,
-        )
-
-        val initialItems = expectedAwards.expectedAwards.take(elementsCountToShowInLessMode)
-        val extraItems = expectedAwards.expectedAwards.drop(elementsCountToShowInLessMode)
-
-        initialItems.forEachIndexed { index, expectedAward ->
-            AwardText(
-                startText = expectedAward.paymentDate,
-                startTextColor = TangemTheme.colors.text.primary1,
-                startTextStyle = TangemTheme.typography.subtitle2,
-                endText = expectedAward.amount,
-                endTextColor = TangemTheme.colors.text.primary1,
-                endTextStyle = TangemTheme.typography.subtitle2,
-                cornersToRound = if (index == initialItems.size - 1 && extraItems.isEmpty()) {
-                    CornersToRound.BOTTOM_2
-                } else {
-                    CornersToRound.ZERO
-                },
-            )
-        }
-
-        AnimatedVisibility(
-            visible = isExpanded.value,
-            enter = fadeIn() + expandVertically(),
-            exit = shrinkVertically() + fadeOut(),
-        ) {
-            ExtraItems(extraItems = extraItems)
-        }
-
-        if (expectedAwards.expectedAwards.size > 3) {
-            LessMoreButton(isExpanded = isExpanded)
-        }
-    } else if (purchasedWalletCount != 0) {
-        Divider(
-            color = TangemTheme.colors.stroke.primary,
-            thickness = TangemTheme.dimens.size0_5,
-        )
-        AwardText(
-            startText = stringResource(id = R.string.referral_expected_awards),
-            startTextColor = TangemTheme.colors.text.tertiary,
-            startTextStyle = TangemTheme.typography.subtitle2,
-            endText = "",
-            endTextColor = TangemTheme.colors.text.tertiary,
-            endTextStyle = TangemTheme.typography.body2,
-            cornersToRound = CornersToRound.BOTTOM_2,
+            endText = expectedAward.amount,
+            endTextColor = TangemTheme.colors.text.primary1,
+            endTextStyle = TangemTheme.typography.subtitle2,
+            cornersToRound = if (index == initialItems.size - 1 && extraItems.isEmpty()) {
+                CornersToRound.BOTTOM_2
+            } else {
+                CornersToRound.ZERO
+            },
         )
     }
+
+    AnimatedVisibility(
+        visible = isExpanded.value,
+        enter = fadeIn() + expandVertically(),
+        exit = shrinkVertically() + fadeOut(),
+    ) {
+        ExtraItems(extraItems = extraItems)
+    }
+
+    if (expectedAwards.expectedAwards.size > elementsCountToShowInLessMode) {
+        LessMoreButton(isExpanded = isExpanded)
+    }
+}
+
+@Composable
+private fun EmptyUpcomingPayments() {
+    Divider(
+        color = TangemTheme.colors.stroke.primary,
+        thickness = TangemTheme.dimens.size0_5,
+    )
+    AwardText(
+        startText = stringResource(id = R.string.referral_expected_awards),
+        startTextColor = TangemTheme.colors.text.tertiary,
+        startTextStyle = TangemTheme.typography.subtitle2,
+        endText = "",
+        endTextColor = TangemTheme.colors.text.tertiary,
+        endTextStyle = TangemTheme.typography.body2,
+        cornersToRound = CornersToRound.BOTTOM_2,
+    )
 }
 
 @Composable
