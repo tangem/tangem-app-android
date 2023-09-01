@@ -12,13 +12,11 @@ android {
 dependencies {
 
     /** Project - Domain */
-    implementation(projects.domain.core)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
 
     /** Project - Data */
     implementation(projects.core.datasource)
-    implementation(projects.data.common)
 
     /** Project - Utils */
     implementation(projects.core.utils)
@@ -29,6 +27,4 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.timber)
-    implementation(deps.jodatime)
 }
