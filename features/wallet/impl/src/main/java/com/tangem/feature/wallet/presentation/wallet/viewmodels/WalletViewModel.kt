@@ -22,6 +22,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
@@ -74,6 +75,7 @@ internal class WalletViewModel @Inject constructor(
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
+    private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
@@ -152,6 +154,7 @@ internal class WalletViewModel @Inject constructor(
         wallets = sourceList
 
         val currentState = uiState
+        val prevSelectedWalletIndex = (uiState as? WalletState.ContentState)?.walletsListConfig?.selectedWalletIndex
         val selectedWalletIndex = if (currentState is WalletLockedState) {
             currentState.getSelectedWalletIndex()
         } else {
@@ -162,9 +165,12 @@ internal class WalletViewModel @Inject constructor(
             sourceList.indexOfFirst { it.walletId == selectedWallet.walletId }
         }
 
-        uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
+        // Restart content items observation only when a new user wallet is selected
+        if (prevSelectedWalletIndex != selectedWalletIndex) {
+            uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
 
-        updateContentItems(index = selectedWalletIndex)
+            updateContentItems(index = selectedWalletIndex)
+        }
     }
 
     private fun updateContentItems(index: Int, isRefreshing: Boolean = false) {
@@ -328,6 +334,9 @@ internal class WalletViewModel @Inject constructor(
                             }
                             .onRight {
                                 Log.i("WalletViewModel", "Save right")
+
+                                // Reload currencies with missed derivation
+                                fetchTokenListUseCase(userWallet.walletId)
                             }
                     } else {
                         // Rollback policy if card saving was failed
