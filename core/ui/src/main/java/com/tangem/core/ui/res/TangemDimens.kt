@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-@Suppress("ConstructorParameterNaming")
+@Suppress("ConstructorParameterNaming", "MagicNumber")
 @Immutable
 data class TangemDimens internal constructor(
     // region Elevation

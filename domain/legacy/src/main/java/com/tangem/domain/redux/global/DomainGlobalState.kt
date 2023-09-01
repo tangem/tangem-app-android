@@ -2,7 +2,6 @@ package com.tangem.domain.redux.global
 
 import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.datasource.api.tangemTech.TangemTechService
-import com.tangem.domain.DomainDialog
 import com.tangem.domain.models.scan.ScanResponse
 
 /**
@@ -14,7 +13,6 @@ data class DomainGlobalState(
     val scanResponse: ScanResponse? = null,
     //
     val networkServices: NetworkServices = NetworkServices(),
-    val dialog: DomainDialog? = null,
 )
 
 data class NetworkServices(
