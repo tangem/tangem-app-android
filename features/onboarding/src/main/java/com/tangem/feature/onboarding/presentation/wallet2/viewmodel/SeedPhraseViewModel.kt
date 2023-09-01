@@ -116,6 +116,12 @@ class SeedPhraseViewModel @Inject constructor(
         this.mediator = mediator
     }
 
+    fun setCardArtworkUri(cardArtworkUri: String) {
+        if (uiState.introState.cardImageUrl != cardArtworkUri) {
+            uiState = uiBuilder.setCardArtwork(uiState, cardArtworkUri)
+        }
+    }
+
     private fun createUiActions(): UiActions = UiActions(
         introActions = IntroUiAction(
             buttonCreateWalletClick = ::buttonCreateWalletClick,
