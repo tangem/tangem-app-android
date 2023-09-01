@@ -199,7 +199,6 @@ class OnboardingWalletFragment :
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(
                 state = state.backupState,
-                isWallet2 = state.wallet2State != null,
             )
 
             else -> {}
@@ -224,9 +223,9 @@ class OnboardingWalletFragment :
         animator.setupCreateWalletState()
     }
 
-    private fun setBackupState(state: BackupState, isWallet2: Boolean) {
+    private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
-            BackupStep.InitBackup -> showBackupIntro(state, isWallet2)
+            BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
             BackupStep.AddBackupCards -> showAddBackupCards(state)
             BackupStep.SetAccessCode -> showSetAccessCode()
@@ -238,7 +237,7 @@ class OnboardingWalletFragment :
         }
     }
 
-    private fun showBackupIntro(state: BackupState, isWallet2: Boolean) = with(binding) {
+    private fun showBackupIntro(state: BackupState) = with(binding) {
         imvFirstBackupCard.show()
         imvSecondBackupCard.show()
 
@@ -254,7 +253,7 @@ class OnboardingWalletFragment :
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
             btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup && !isWallet2)
+            btnWalletAlternativeAction.show(state.canSkipBackup)
         }
         animator.showBackupIntro(state)
     }
