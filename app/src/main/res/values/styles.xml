@@ -3,10 +3,14 @@
     <style name="BaseAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar" />
 
     <style name="AppTheme" parent="BaseAppTheme">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
-        <item name="android:textColor">@color/darkGray6</item>
+        <item name="colorPrimary">@color/menu_accent_color</item>
+        <item name="colorSecondary">@color/menu_accent_color</item>
+        <item name="android:textColor">@color/text_primary_1</item>
         <item name="actionMenuTextColor">@color/menu_accent_color</item>
+
+        <item name="colorControlNormal">@color/text_secondary</item>
+        <item name="colorControlActivated">@color/accent</item>
+        <item name="colorControlHighlight">@color/accent</item>
 
         <item name="materialCardViewStyle">@style/Widget.AppTheme.CardView</item>
     </style>
@@ -22,13 +26,19 @@
     <!-- Toolbar - overrides the menu text color to use a selector that responds to whether it's enabled or not -->
     <style name="ThemeOverlay.MyTheme.Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
         <!-- Color used in the icons of menu actions (i.e. non-overflow menu items). This is just convention, this will affect anything that uses ?attr/colorControlNormal) -->
-        <item name="colorControlNormal">@color/menu_item_color</item>
+        <item name="colorControlNormal">@color/text_secondary</item>
         <!-- Color used in the text of menu actions (i.e. non-overflow menu items) -->
-        <item name="actionMenuTextColor">@color/menu_item_color</item>
+        <item name="actionMenuTextColor">@color/text_secondary</item>
     </style>
 
     <style name="ThemeOverlay.MyTheme.Toolbar.AccentColorMenu" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
         <item name="actionMenuTextColor">@color/accent</item>
+    </style>
+
+
+    <style name="Widget.MaterialComponents.Toolbar.PrimarySurface" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="titleTextColor">@color/text_primary_1</item>
+        <item name="subtitleTextColor">@color/text_secondary</item>
     </style>
 
     <!-- EditText -->
@@ -36,6 +46,16 @@
     <style name="EditTextThemeOverlay" parent="ThemeOverlay.AppCompat">
         <item name="colorAccent">@color/accent</item>
         <item name="colorPrimary">@color/accent</item>
+    </style>
+
+    <style name="SecondaryTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:textColorHint">@color/text_secondary</item>
+        <item name="boxStrokeColor">@color/selector_edit_text_secondary</item>
+        <item name="helperTextTextColor">@color/text_secondary</item>
+        <item name="boxBackgroundColor">@color/background_secondary</item>
+        <item name="colorError">@color/icon_warning</item>
+        <item name="errorTextColor">@color/icon_warning</item>
+        <item name="boxStrokeErrorColor">@color/icon_warning</item>
     </style>
 
     <style name="BaseTapButton" parent="Widget.Material3.Button">
@@ -88,11 +108,12 @@
     </style>
 
     <style name="TapChip" parent="@style/Widget.MaterialComponents.Chip.Choice">
-        <item name="chipBackgroundColor">@color/selector_chip_background</item>
+        <item name="chipBackgroundColor">@color/icon_primary_2</item>
         <item name="chipStrokeColor">@color/selector_chip_stroke</item>
         <item name="chipStrokeWidth">1dp</item>
         <item name="android:minWidth">100dp</item>
         <item name="android:textAlignment">center</item>
+        <item name="android:textColor">@color/selector_chip_text</item>
     </style>
 
     <style name="TextViewOnboarding">
@@ -100,32 +121,32 @@
     </style>
 
     <style name="TextViewOnboarding.Header">
-        <item name="android:textColor">#060606</item>
+        <item name="android:textColor">@color/text_primary_1</item>
         <item name="android:textSize">24sp</item>
         <item name="android:lineSpacingExtra">4sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <style name="TextViewOnboarding.Body">
-        <item name="android:textColor">#686868</item>
+        <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">16sp</item>
         <item name="android:lineSpacingExtra">4sp</item>
     </style>
 
     <style name="heading">
         <item name="android:textSize">24sp</item>
-        <item name="android:textColor">#060606</item>
+        <item name="android:textColor">@color/text_primary_1</item>
     </style>
 
     <style name="title">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">#060606</item>
+        <item name="android:textColor">@color/text_primary_1</item>
         <item name="android:textStyle">bold</item>
     </style>
 
     <style name="description">
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">#686868</item>
+        <item name="android:textColor">@color/text_secondary</item>
     </style>
 
 
