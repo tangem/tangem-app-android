@@ -38,8 +38,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.wallet.analytics.MainScreen
-import com.tangem.feature.wallet.presentation.wallet.analytics.Portfolio
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenEvent
+import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -133,7 +133,7 @@ internal class WalletViewModel @Inject constructor(
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
-        analyticsEventsHandler.send(MainScreen.ScreenOpened)
+        analyticsEventsHandler.send(WalletScreenEvent.ScreenOpened)
 
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
@@ -309,7 +309,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onScanCardClick() {
-        analyticsEventsHandler.send(MainScreen.NoticeScanYourCardTapped)
+        analyticsEventsHandler.send(WalletScreenEvent.NoticeScanYourCardTapped)
 
         val prevRequestPolicyStatus = getBiometricsStatusUseCase()
 
@@ -343,7 +343,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onDetailsClick() = router.openDetailsScreen()
 
     override fun onBackupCardClick() {
-        analyticsEventsHandler.send(MainScreen.NoticeBackupYourWalletTapped)
+        analyticsEventsHandler.send(WalletScreenEvent.NoticeBackupYourWalletTapped)
 
         router.openOnboardingScreen()
     }
@@ -387,7 +387,7 @@ internal class WalletViewModel @Inject constructor(
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
-        analyticsEventsHandler.send(MainScreen.WalletSwipe)
+        analyticsEventsHandler.send(WalletScreenEvent.WalletSwipe)
 
         /*
          * When wallet is changed it's necessary to stop the last jobs.
@@ -441,7 +441,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe() {
-        analyticsEventsHandler.send(Portfolio.Refreshed)
+        analyticsEventsHandler.send(PortfolioEvent.Refreshed)
 
         if (uiState is WalletState.Initial || uiState is WalletLockedState) return
 
@@ -459,7 +459,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onOrganizeTokensClick() {
-        analyticsEventsHandler.send(Portfolio.OrganizeTokens)
+        analyticsEventsHandler.send(PortfolioEvent.OrganizeTokens)
 
         val state = requireNotNull(uiState as? WalletState.ContentState)
         val index = state.walletsListConfig.selectedWalletIndex
@@ -502,7 +502,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onManageTokensClick() {
-        analyticsEventsHandler.send(Portfolio.ButtonManageTokens)
+        analyticsEventsHandler.send(PortfolioEvent.ButtonManageTokens)
 
         router.openManageTokensScreen()
     }
@@ -542,7 +542,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
-        analyticsEventsHandler.send(MainScreen.NoticeWalletLocked)
+        analyticsEventsHandler.send(WalletScreenEvent.NoticeWalletLocked)
 
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = when (state) {
@@ -553,7 +553,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTokenItemClick(currency: CryptoCurrency) {
-        analyticsEventsHandler.send(Portfolio.TokenTapped)
+        analyticsEventsHandler.send(PortfolioEvent.TokenTapped)
         router.openTokenDetails(currency = currency)
     }
 
