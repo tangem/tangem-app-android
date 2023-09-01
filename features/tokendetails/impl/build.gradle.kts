@@ -27,6 +27,7 @@ dependencies {
     implementation(deps.compose.paging)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.ui.utils)
 
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
