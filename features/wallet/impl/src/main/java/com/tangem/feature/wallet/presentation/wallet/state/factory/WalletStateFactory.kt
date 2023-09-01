@@ -157,7 +157,6 @@ internal class WalletStateFactory(
                 isBottomSheetShow = true,
                 onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
-            else -> state
         }
     }
 
@@ -171,7 +170,6 @@ internal class WalletStateFactory(
                 bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
             )
             is WalletSingleCurrencyState.Locked -> state.copy(isBottomSheetShow = false)
-            else -> state
         }
     }
 

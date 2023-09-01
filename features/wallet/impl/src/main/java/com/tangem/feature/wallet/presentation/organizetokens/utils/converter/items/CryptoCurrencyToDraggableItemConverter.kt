@@ -13,8 +13,9 @@ import com.tangem.utils.converter.Converter
 
 internal class CryptoCurrencyToDraggableItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val iconStateConverter: CryptoCurrencyToIconStateConverter,
 ) : Converter<CryptoCurrencyStatus, DraggableItem.Token> {
+
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     override fun convert(value: CryptoCurrencyStatus): DraggableItem.Token {
         return createDraggableToken(value, appCurrencyProvider())
