@@ -18,7 +18,7 @@ import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
+internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
@@ -30,6 +30,7 @@ class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         AppSettingsScreen(
+            modifier = modifier,
             state = screenState.value,
             onBackClick = {
                 store.dispatch(DetailsAction.ResetCardSettingsData)

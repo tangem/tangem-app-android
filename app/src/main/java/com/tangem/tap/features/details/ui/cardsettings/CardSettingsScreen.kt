@@ -22,10 +22,15 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun CardSettingsScreen(state: CardSettingsScreenState, onBackClick: () -> Unit) {
+internal fun CardSettingsScreen(
+    state: CardSettingsScreenState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val needReadCard = state.cardDetails == null
 
     SettingsScreensScaffold(
+        modifier = modifier,
         content = {
             if (needReadCard) {
                 CardSettingsReadCard(state.onScanCardClick)
@@ -40,7 +45,7 @@ fun CardSettingsScreen(state: CardSettingsScreenState, onBackClick: () -> Unit) 
 
 @Suppress("MagicNumber")
 @Composable
-fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
+private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -99,7 +104,7 @@ fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
 
 @Suppress("ComplexMethod")
 @Composable
-fun CardSettings(state: CardSettingsScreenState) {
+private fun CardSettings(state: CardSettingsScreenState) {
     if (state.cardDetails == null) return
 
     LazyColumn(

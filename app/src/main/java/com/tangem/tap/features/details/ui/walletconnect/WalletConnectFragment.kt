@@ -14,12 +14,13 @@ import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectState> {
+internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectState> {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
@@ -36,6 +37,7 @@ class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectSt
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         WalletConnectScreen(
+            modifier = modifier,
             state = screenState.value,
             onBackClick = {
                 if (screenState.value.isLoading) {
@@ -51,8 +53,8 @@ class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectSt
     }
 
     override fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(android.R.transition.fade)
-        exitTransition = inflateTransition(android.R.transition.fade)
+        enterTransition = inflateTransition(R.transition.fade)
+        exitTransition = inflateTransition(R.transition.fade)
 
         return true
     }

@@ -28,8 +28,9 @@ import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit) {
+internal fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        modifier = modifier,
         content = { Content(state = state) },
         onBackClick = onBackClick,
     )

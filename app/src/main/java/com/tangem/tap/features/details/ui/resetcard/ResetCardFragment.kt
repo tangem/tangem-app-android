@@ -10,12 +10,13 @@ import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
+internal class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
@@ -28,14 +29,15 @@ class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         ResetCardScreen(
+            modifier = modifier,
             state = screenState.value,
             onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
         )
     }
 
     override fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(android.R.transition.fade)
-        exitTransition = inflateTransition(android.R.transition.fade)
+        enterTransition = inflateTransition(R.transition.fade)
+        exitTransition = inflateTransition(R.transition.fade)
 
         return true
     }
