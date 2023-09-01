@@ -176,6 +176,12 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                state.cardArtworkUri?.let {
+                    seedPhraseViewModel.setCardArtworkUri(it.toString())
+                    loadImageIntoImageView(it, binding.imvFrontCard)
+                    loadImageIntoImageView(it, binding.imvFirstBackupCard)
+                    loadImageIntoImageView(it, binding.imvSecondBackupCard)
+                }
             }
             else -> {
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
