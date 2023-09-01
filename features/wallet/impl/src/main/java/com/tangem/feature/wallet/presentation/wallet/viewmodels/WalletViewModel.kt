@@ -23,7 +23,7 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyUseCase
+import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -76,7 +76,7 @@ internal class WalletViewModel @Inject constructor(
     private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
-    private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyUseCase,
+    private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -186,7 +186,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to update tokens list if state isn't WalletMultiCurrencyState"
         }
 
-        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id, refresh = isRefreshing)
+        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
             .distinctUntilChanged()
             .onEach { tokenListEither ->
                 uiState = stateFactory.getStateByTokensList(
@@ -207,7 +207,6 @@ internal class WalletViewModel @Inject constructor(
     private fun updateSingleCurrencyContent(index: Int, isRefreshing: Boolean) {
         val wallet = getWallet(index)
         val blockchain = getCardTypeResolver(index).getBlockchain()
-        updateButtons(userWalletId = wallet.walletId, currencyId = blockchain.id)
         updateTxHistory(
             blockchain = blockchain,
             derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
@@ -250,15 +249,18 @@ internal class WalletViewModel @Inject constructor(
                     isRefreshing = isRefreshing,
                 )
 
-                either.onRight { status -> cryptoCurrencyStatus = status }
+                either.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(userWalletId = userWalletId, currency = status.currency)
+                }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currencyId: String) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, tokenId = currencyId)
+    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
