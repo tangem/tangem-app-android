@@ -2,6 +2,9 @@ package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
@@ -13,7 +16,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 internal object TokenDetailsPreviewData {
 
-    val tokenDetailsTopAppBarConfig = TokenDetailsTopAppBarConfig(onBackClick = {}, onMoreClick = {})
+    val tokenDetailsTopAppBarConfig = TokenDetailsTopAppBarConfig(
+        onBackClick = {},
+        tokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
+            persistentListOf(
+                TokenDetailsAppBarMenuConfig.MenuItem(
+                    title = TextReference.Res(id = R.string.token_details_hide_token),
+                    textColorProvider = { TangemTheme.colors.text.warning },
+                    onClick = { },
+                ),
+            ),
+        ),
+    )
 
     val tokenInfoBlockStateWithLongNameInMainCurrency = TokenInfoBlockState(
         name = "Stellar (XLM) with long name test",
@@ -67,5 +81,6 @@ internal object TokenDetailsPreviewData {
                 value = TxHistoryState.getDefaultLoadingTransactions {},
             ),
         ),
+        dialogConfig = null,
     )
 }
