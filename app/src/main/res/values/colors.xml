@@ -3,7 +3,7 @@
 
     <color name="colorPrimary">#0029FF</color>
     <color name="colorSecondary">#0022D4</color>
-    <color name="accent">#19C878</color>
+    <color name="accent">#0099FF</color>
 
     <color name="menu_accent_color">@color/accent</color>
 
@@ -11,7 +11,7 @@
 
     <color name="warning">#FFB71B</color>
 
-    <color name="toolbarColor">@color/backgroundLightGray</color>
+    <color name="toolbarColor">@color/background_secondary</color>
 
     <color name="white">#FFFFFF</color>
     <color name="lightGray0">#F3F3F3</color>
@@ -19,12 +19,10 @@
     <color name="lightGray5">#D1D1D6</color>
     <color name="darkGray1">#8E8E90</color>
     <color name="darkGray2">#666668</color>
-    <color name="darkGray3">#48484A</color>
+
     <color name="darkGray4">#3A3A3C</color>
     <color name="darkGray6">#1C1C1E</color>
 
-    <color name="backgroundWhite">#FFFFFF</color>
-    <color name="backgroundLightGray">#F9F9F9</color>
     <color name="buttonGray">#F4F5F6</color>
     <color name="textGray">#DE000000</color>
 
@@ -61,9 +59,10 @@
     <color name="icon_attention">#FFB71B</color>
     <color name="icon_inactive">#C9C9C9</color>
     <color name="icon_informative">#B0B0B0</color>
+    <color name="icon_primary_1">#1E1E1E</color>
     <color name="icon_primary_2">#FFFFFF</color>
     <color name="icon_secondary">#656565</color>
-    <color name="icon_warning">#DE1010</color>
+    <color name="icon_warning">#FF3333</color>
 
 
     <color name="text_attention">#FFB71B</color>
