@@ -105,7 +105,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun onStart() {
         super.onStart()
-        setStatusBarColor(R.color.backgroundWhite)
+        setStatusBarColor(R.color.background_primary)
     }
 
     private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
