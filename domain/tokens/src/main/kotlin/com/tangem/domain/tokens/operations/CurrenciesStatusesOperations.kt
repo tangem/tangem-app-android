@@ -80,6 +80,15 @@ internal class CurrenciesStatusesOperations(
         return getCurrencyStatusFlow(currency)
     }
 
+    suspend fun getNetworkCoinFlow(networkId: Network.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
+        val currency = recover(
+            block = { getNetworkCoin(networkId) },
+            recover = { return flowOf(it.left()) },
+        )
+
+        return getCurrencyStatusFlow(currency)
+    }
+
     suspend fun getPrimaryCurrencyStatusFlow(): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getPrimaryCurrency() },
@@ -173,6 +182,12 @@ internal class CurrenciesStatusesOperations(
 
     private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(currencyId: CryptoCurrency.ID): CryptoCurrency {
         return Either.catch { currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, currencyId) }
+            .mapLeft { Error.DataError(it) }
+            .bind()
+    }
+
+    private suspend fun Raise<Error>.getNetworkCoin(networkId: Network.ID): CryptoCurrency {
+        return Either.catch { currenciesRepository.getNetworkCoin(userWalletId, networkId) }
             .mapLeft { Error.DataError(it) }
             .bind()
     }

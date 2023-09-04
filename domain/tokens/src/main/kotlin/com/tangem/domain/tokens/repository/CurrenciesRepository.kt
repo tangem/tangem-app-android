@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -102,6 +103,14 @@ interface CurrenciesRepository {
      * ID provided.
      */
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
+
+    /**
+     * Get the coin for a specific network.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param networkId    The unique identifier of the network.
+     */
+    suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin
 
     /**
      * Determines whether the tokens within a specific multi-currency user wallet are grouped.
