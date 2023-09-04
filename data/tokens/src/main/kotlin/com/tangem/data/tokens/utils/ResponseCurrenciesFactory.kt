@@ -28,7 +28,7 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
         return response.tokens.mapNotNull { createCurrency(it, card) }
     }
 
-    private fun createCurrency(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
+    fun createCurrency(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
             Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
