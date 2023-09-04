@@ -1,18 +1,7 @@
 package com.tangem.tap.features.details.ui.details
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -27,12 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.ScreenTitle
@@ -41,20 +28,17 @@ import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit) {
-    SystemBarsEffect {
-        setSystemBarsColor(color = TangemColorPalette.Light1)
-    }
-
+internal fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        modifier = modifier,
         content = { Content(state = state) },
         onBackClick = onBackClick,
     )
 }
 
 @Composable
-fun Content(state: DetailsScreenState) {
-    Box {
+private fun Content(state: DetailsScreenState, modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,7 +62,7 @@ fun Content(state: DetailsScreenState) {
             Text(
                 text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
                 style = TangemTheme.typography.caption,
-                color = colorResource(id = R.color.text_tertiary),
+                color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
             )
         }
@@ -87,7 +71,7 @@ fun Content(state: DetailsScreenState) {
 }
 
 @Composable
-fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
+private fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
     Row(
         modifier = Modifier
             .defaultMinSize(minHeight = 84.dp)
@@ -100,7 +84,7 @@ fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
             painter = painterResource(id = R.drawable.ic_walletconnect),
             contentDescription = stringResource(id = R.string.wallet_connect_title),
             modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-            tint = colorResource(id = R.color.all_colors_azure),
+            tint = TangemColorPalette.Azure,
         )
         Column(
             modifier = Modifier.defaultMinSize(minHeight = 56.dp),
@@ -111,20 +95,20 @@ fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
                 text = stringResource(id = R.string.wallet_connect_title),
                 modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
                 style = TangemTheme.typography.h3,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
             Text(
                 text = stringResource(id = R.string.wallet_connect_subtitle),
                 modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
                 style = TangemTheme.typography.body1,
-                color = colorResource(id = R.color.text_secondary),
+                color = TangemTheme.colors.text.secondary,
             )
         }
     }
 }
 
 @Composable
-fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> Unit) {
+private fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> Unit) {
     Row(
         modifier = Modifier
             .height(56.dp)
@@ -137,20 +121,20 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
             painter = painterResource(id = item.iconRes),
             contentDescription = stringResource(id = item.titleRes),
             modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-            tint = colorResource(id = R.color.icon_secondary),
+            tint = TangemTheme.colors.icon.secondary,
         )
         Column(modifier = Modifier.padding(end = 20.dp)) {
             Text(
                 text = stringResource(id = item.titleRes),
                 modifier = Modifier,
                 style = TangemTheme.typography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
             if (item == SettingsElement.AppCurrency) {
                 Text(
                     text = appCurrency,
                     style = TangemTheme.typography.body2,
-                    color = colorResource(id = R.color.text_secondary),
+                    color = TangemTheme.colors.text.secondary,
                 )
             }
         }
@@ -158,7 +142,7 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
 }
 
 @Composable
-fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
+private fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
     LazyRow(
         modifier = Modifier.padding(start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -170,14 +154,14 @@ fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable { onSocialNetworkClick(it) },
-                tint = colorResource(id = R.color.icon_informative),
+                tint = TangemTheme.colors.icon.informative,
             )
         }
     }
 }
 
 @Composable
-fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
+private fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     SnackbarHost(
@@ -206,9 +190,9 @@ fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
     }
 }
 
+// region Preview
 @Composable
-@Preview
-private fun Preview() {
+private fun DetailsScreenContentSample() {
     DetailsScreen(
         state = DetailsScreenState(
             elements = SettingsElement.values().toList(),
@@ -221,3 +205,20 @@ private fun Preview() {
         onBackClick = {},
     )
 }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun DetailsScreenContentPreview_Light() {
+    TangemTheme(isDark = false) {
+        DetailsScreenContentSample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun DetailsScreenContentPreview_Dark() {
+    TangemTheme(isDark = true) {
+        DetailsScreenContentSample()
+    }
+}
+// endregion Preview
