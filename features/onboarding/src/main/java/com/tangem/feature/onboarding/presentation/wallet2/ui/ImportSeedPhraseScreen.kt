@@ -18,9 +18,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import com.tangem.core.ui.components.Notifier
-import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TangemTextFieldsDefault
-import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
@@ -65,7 +64,7 @@ fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Mo
         Box {
             OnboardingActionBlock(
                 firstActionContent = {
-                    PrimaryButtonIconStart(
+                    PrimaryButtonIconEnd(
                         modifier = Modifier
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),

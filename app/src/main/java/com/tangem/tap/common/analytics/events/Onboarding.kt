@@ -45,6 +45,16 @@ sealed class Onboarding(
             event = "Backup Finished",
             params = mapOf("Cards count" to "$cardsCount"),
         )
+
+        object ResetCancelEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Cancel"),
+        )
+
+        object ResetPerformEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Reset"),
+        )
     }
 
     sealed class Topup(
