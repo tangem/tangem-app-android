@@ -18,9 +18,11 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.tokens.getIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
@@ -39,7 +41,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import com.tangem.feature.swap.domain.models.domain.Currency as SwapCurrency
 
+@Suppress("LargeClass")
 class TradeCryptoMiddleware {
+
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun handle(state: () -> AppState?, action: TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
 
@@ -52,11 +57,10 @@ class TradeCryptoMiddleware {
                 openSwap(currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency())
             }
             is TradeCryptoAction.New.Buy -> proceedNewBuyAction(state, action)
-            TradeCryptoAction.New.Send -> store.dispatch(WalletAction.Send())
             is TradeCryptoAction.New.Sell -> proceedNewSellAction(action)
-            is TradeCryptoAction.New.Swap -> {
-                openSwap(currency = action.cryptoCurrency.toSwapCurrency())
-            }
+            is TradeCryptoAction.New.Swap -> openSwap(currency = action.cryptoCurrency.toSwapCurrency())
+            is TradeCryptoAction.New.SendToken -> handleNewSendToken(action = action)
+            is TradeCryptoAction.New.SendCoin -> handleNewSendCoin(action = action)
         }
     }
 
@@ -299,6 +303,100 @@ class TradeCryptoMiddleware {
                 contractAddress = this.token.contractAddress,
                 decimalCount = decimals,
             )
+        }
+    }
+
+    private fun handleNewSendToken(action: TradeCryptoAction.New.SendToken) {
+        val cryptoStatus = action.tokenStatus
+        val currency = cryptoStatus.currency
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+
+        scope.launch {
+            val walletManager = store.state.daggerGraphState
+                .get(DaggerGraphState::walletManagersFacade)
+                .getOrCreateWalletManager(
+                    userWallet = action.userWallet,
+                    blockchain = blockchain,
+                    derivationPath = blockchain.derivationPath(
+                        style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
+                    ),
+                )
+
+            if (walletManager == null) {
+                val error = TapError.UnsupportedState(stateError = "WalletManager is null")
+                FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
+                store.dispatchErrorNotification(error)
+                return@launch
+            }
+
+            val sendableAmounts = walletManager.wallet.amounts.values.filter { it.type is AmountType.Token }
+            when (currency) {
+                is CryptoCurrency.Coin -> error("Action.tokenStatus.currency is Coin")
+                is CryptoCurrency.Token -> {
+                    store.dispatchOnMain(
+                        action = PrepareSendScreen(
+                            walletManager = walletManager,
+                            coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                            coinRate = action.coinFiatRate,
+                            tokenAmount = sendableAmounts.first(),
+                            tokenRate = cryptoStatus.value.fiatRate,
+                        ),
+                    )
+                }
+            }
+
+            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
+        }
+    }
+
+    private fun handleNewSendCoin(action: TradeCryptoAction.New.SendCoin) {
+        val cryptoStatus = action.coinStatus
+        val currency = cryptoStatus.currency
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+
+        scope.launch {
+            val walletManager = store.state.daggerGraphState
+                .get(DaggerGraphState::walletManagersFacade)
+                .getOrCreateWalletManager(
+                    userWallet = action.userWallet,
+                    blockchain = blockchain,
+                    derivationPath = blockchain.derivationPath(
+                        style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
+                    ),
+                )
+
+            if (walletManager == null) {
+                val error = TapError.UnsupportedState(stateError = "WalletManager is null")
+                FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
+                store.dispatchErrorNotification(error)
+                return@launch
+            }
+
+            val sendableAmounts = walletManager.wallet.amounts.values.filter { it.type == AmountType.Coin }
+            when (currency) {
+                is CryptoCurrency.Coin -> {
+                    val amountToSend = sendableAmounts.find { it.currencySymbol == currency.symbol }
+
+                    if (amountToSend == null) {
+                        val error = TapError.UnsupportedState(stateError = "Amount to send is null")
+                        FirebaseCrashlytics.getInstance()
+                            .recordException(IllegalStateException(error.stateError))
+                        store.dispatchErrorNotification(error)
+                        return@launch
+                    }
+
+                    store.dispatchOnMain(
+                        action = PrepareSendScreen(
+                            walletManager = walletManager,
+                            coinAmount = amountToSend,
+                            coinRate = cryptoStatus.value.fiatRate,
+                        ),
+                    )
+                }
+                is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
+            }
+
+            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
         }
     }
 }
