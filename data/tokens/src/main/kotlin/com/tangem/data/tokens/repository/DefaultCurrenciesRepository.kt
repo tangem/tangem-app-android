@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -7,10 +8,12 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -188,6 +191,27 @@ internal class DefaultCurrenciesRepository(
         }
 
         responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse.card)
+    }
+
+    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+        val userWallet = getUserWallet(userWalletId)
+        ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
+
+        fetchTokensIfCacheExpired(userWallet = userWallet, refresh = false)
+
+        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
+            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+        }
+
+        val storedCoin = storedTokens.tokens.find { it.networkId == Blockchain.fromId(networkId.value).toNetworkId() }
+            ?: error("Coin in this network $networkId not found")
+
+        val coin = responseCurrenciesFactory.createCurrency(
+            responseToken = storedCoin,
+            card = userWallet.scanResponse.card,
+        )
+
+        return coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
