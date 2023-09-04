@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/backgroundWhite"
+    android:background="@color/background_primary"
     android:minHeight="420dp"
     tools:layout_gravity="bottom">
 
@@ -25,7 +25,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:background="@drawable/shape_circle"
-        android:backgroundTint="@color/backgroundWhite"
+        android:backgroundTint="@color/background_primary"
         app:layout_constraintBottom_toBottomOf="@id/iv_cross"
         app:layout_constraintEnd_toEndOf="@id/iv_cross"
         app:layout_constraintStart_toStartOf="@id/iv_cross"

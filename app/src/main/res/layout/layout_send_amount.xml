@@ -44,20 +44,21 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            app:boxBackgroundColor="@color/backgroundLightGray"
+            style="@style/SecondaryTextInputLayout"
             app:errorIconDrawable="@null">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etAmountToSend"
+                android:background="@color/background_secondary"
                 android:layout_width="match_parent"
                 android:layout_height="82dp"
-                android:background="@color/backgroundLightGray"
                 android:fontFamily="sans-serif-light"
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:paddingStart="0dp"
                 android:paddingEnd="96dp"
                 android:textSize="@dimen/text_size_amount_to_send"
+                android:textColor="@color/text_primary_1"
                 tools:text="139" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -74,7 +75,7 @@
         android:drawablePadding="10dp"
         android:fontFamily="sans-serif-light"
         android:textAllCaps="true"
-        android:textColor="@color/blue"
+        android:textColor="@color/accent"
         android:textSize="32sp"
         app:drawableEndCompat="@drawable/ic_arrows_up_down"
         app:layout_constraintEnd_toEndOf="parent"
@@ -88,7 +89,7 @@
         android:layout_gravity="end"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:textColor="@color/darkGray1"
+        android:textColor="@color/text_tertiary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/flAmountToSend" />
