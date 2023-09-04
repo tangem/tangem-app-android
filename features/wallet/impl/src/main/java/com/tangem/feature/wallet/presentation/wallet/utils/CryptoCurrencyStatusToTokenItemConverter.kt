@@ -2,12 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
-import com.tangem.core.ui.extensions.iconResId
-import com.tangem.core.ui.extensions.networkBadgeIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.common.utils.CryptoCurrencyToIconStateConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -17,6 +16,8 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private val isWalletContentHidden: Boolean,
     private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
+
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
@@ -37,9 +38,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         return TokenItemState.Content(
             id = currency.id.value,
             name = currency.name,
-            tokenIconUrl = currency.iconUrl,
-            tokenIconResId = currency.iconResId,
-            networkBadgeIconResId = currency.networkBadgeIconResId,
+            icon = iconStateConverter.convert(currency),
             amount = getFormattedAmount(),
             hasPending = value.hasCurrentNetworkTransactions,
             tokenOptions = if (isWalletContentHidden) {
@@ -50,7 +49,6 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                     config = getPriceChangeConfig(),
                 )
             },
-            isTestnet = currency.network.isTestnet,
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(currency) },
         )
@@ -72,9 +70,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(
         id = currency.id.value,
         name = currency.name,
-        tokenIconUrl = currency.iconUrl,
-        tokenIconResId = currency.iconResId,
-        networkBadgeIconResId = currency.networkBadgeIconResId,
+        icon = iconStateConverter.convert(currency),
     )
 
     private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeConfig {
