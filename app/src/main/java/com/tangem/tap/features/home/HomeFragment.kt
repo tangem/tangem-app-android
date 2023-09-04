@@ -17,13 +17,13 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.tokens.TokensAction
 import com.tangem.feature.learn2earn.presentation.Learn2earnViewModel
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.home.redux.Stories
-import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
