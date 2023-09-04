@@ -332,6 +332,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onManageTokensClick() {
+        reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
         router.openManageTokensScreen()
     }
 
