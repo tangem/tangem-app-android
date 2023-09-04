@@ -17,16 +17,14 @@ import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.token.TokenCryptoInfoBlock
 import com.tangem.feature.wallet.presentation.common.component.token.TokenFiatInfoBlock
-import com.tangem.feature.wallet.presentation.common.component.token.TokenIcon
+import com.tangem.feature.wallet.presentation.common.component.token.icon.TokenIcon
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 
-// TODO: Add custom token state: [REDACTED_JIRA]
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TokenItem(
@@ -90,7 +88,7 @@ private inline fun BaseContainer(
     ) {
         ConstraintLayout(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(
                     horizontal = TangemTheme.dimens.spacing14,
                     vertical = TangemTheme.dimens.spacing14,
@@ -111,7 +109,6 @@ private fun Modifier.constrainAsOptionsItem(scope: ConstraintLayoutScope, ref: C
 }
 
 // region preview
-
 @Preview
 @Composable
 private fun Preview_Tokens_LightTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
@@ -136,6 +133,8 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
         WalletPreviewData.tokenItemHiddenState,
         WalletPreviewData.loadingTokenItemState,
         WalletPreviewData.testnetTokenItemVisibleState,
+        WalletPreviewData.customTokenItemVisibleState,
+        WalletPreviewData.customTestnetTokenItemVisibleState,
     ),
 )
 
