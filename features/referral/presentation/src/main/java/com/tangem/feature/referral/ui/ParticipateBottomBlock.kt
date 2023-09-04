@@ -81,7 +81,6 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
             EmptyUpcomingPayments()
         }
     }
-
 }
 
 @Composable
