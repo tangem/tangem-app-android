@@ -44,7 +44,7 @@ internal class WalletStateFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
-    private val tokenActionsProvider by lazy { TokenActionsProvider(currentStateProvider = currentStateProvider) }
+    private val tokenActionsProvider by lazy { TokenActionsProvider(clickIntents) }
     private val skeletonConverter by lazy { WalletSkeletonStateConverter(currentStateProvider, clickIntents) }
 
     private val tokenListErrorConverter by lazy {
@@ -185,12 +185,12 @@ internal class WalletStateFactory(
         }
     }
 
-    fun getStateWithTokenActionBottomSheet(tokenId: String): WalletState {
+    fun getStateWithTokenActionBottomSheet(currencyStatus: CryptoCurrencyStatus): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> state.copy(
                 tokenActionsBottomSheet = ActionsBottomSheetConfig(
                     isShow = true,
-                    actions = tokenActionsProvider.provideActions(tokenId = tokenId),
+                    actions = tokenActionsProvider.provideActions(currencyStatus),
                     onDismissRequest = clickIntents::onDismissActionsBottomSheet,
                 ),
             )
