@@ -50,7 +50,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                 )
             },
             onItemClick = { clickIntents.onTokenItemClick(currency) },
-            onItemLongClick = { clickIntents.onTokenItemLongClick(currency) },
+            onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )
     }
 
