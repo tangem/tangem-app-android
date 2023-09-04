@@ -88,6 +88,7 @@ private fun materialThemeColors(colors: TangemColors, isDark: Boolean): Colors {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun lightThemeColors(): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
@@ -135,6 +136,7 @@ private fun lightThemeColors(): TangemColors {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun darkThemeColors(): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
