@@ -1,9 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.tokens.utils.CardCurrenciesFactory
-import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
-import com.tangem.data.tokens.utils.UserTokensResponseFactory
+import com.tangem.data.tokens.utils.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
@@ -55,6 +53,53 @@ internal class DefaultCurrenciesRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
+    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        return withContext(dispatchers.io) {
+            val savedCurrencies = requireNotNull(
+                value = userTokensStore.getSyncOrNull(userWalletId),
+                lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
+            )
+
+            val newCoins = createCoinsForNewTokens(
+                userWalletId = userWalletId,
+                newTokens = currencies.filterIsInstance<CryptoCurrency.Token>(),
+                savedCurrencies = savedCurrencies.tokens,
+            )
+
+            val newCurrencies = newCoins + currencies
+
+            storeAndPushTokens(
+                userWalletId = userWalletId,
+                response = savedCurrencies.copy(
+                    tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
+                ),
+            )
+        }
+    }
+
+    private suspend fun createCoinsForNewTokens(
+        userWalletId: UserWalletId,
+        newTokens: List<CryptoCurrency.Token>,
+        savedCurrencies: List<UserTokensResponse.Token>,
+    ): List<CryptoCurrency.Coin> {
+        return newTokens
+            .filterNot { savedCurrencies.hasCoinForToken(it) } // tokens without coins
+            .mapNotNull {
+                CryptoCurrencyFactory().createCoin(
+                    blockchain = getBlockchain(networkId = it.network.id),
+                    derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
+                )
+            }
+    }
+
+    private fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
+        return any {
+            val blockchain = getBlockchain(networkId = token.network.id)
+
+            it.id == getCoinId(blockchain).rawCurrencyId
+        }
+    }
+
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
         withContext(dispatchers.io) {
             val savedCurrencies = requireNotNull(
@@ -70,6 +115,23 @@ internal class DefaultCurrenciesRepository(
                 ),
             )
         }
+
+    override suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        return withContext(dispatchers.io) {
+            val savedCurrencies = requireNotNull(
+                value = userTokensStore.getSyncOrNull(userWalletId),
+                lazyMessage = { "Saved tokens empty. Can not perform remove currencies action" },
+            )
+
+            val tokens = currencies.map(userTokensResponseFactory::createResponseToken)
+            storeAndPushTokens(
+                userWalletId = userWalletId,
+                response = savedCurrencies.copy(
+                    tokens = savedCurrencies.tokens.filterNot(tokens::contains),
+                ),
+            )
+        }
+    }
 
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {
