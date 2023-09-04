@@ -7,7 +7,7 @@ import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import org.rekotlin.Store
 
-class ResetCardViewModel(private val store: Store<AppState>) {
+internal class ResetCardViewModel(private val store: Store<AppState>) {
 
     fun updateState(state: CardSettingsState?): ResetCardScreenState {
         val descriptionText = state?.cardInfo
