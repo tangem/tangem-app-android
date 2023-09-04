@@ -7,7 +7,7 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import org.rekotlin.Store
 
-class AppSettingsViewModel(private val store: Store<AppState>) {
+internal class AppSettingsViewModel(private val store: Store<AppState>) {
 
     fun updateState(state: DetailsState): AppSettingsScreenState {
         return with(state.appSettingsState) {
