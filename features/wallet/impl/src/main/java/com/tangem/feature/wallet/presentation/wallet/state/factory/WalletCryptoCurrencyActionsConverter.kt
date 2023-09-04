@@ -40,7 +40,10 @@ internal class WalletCryptoCurrencyActionsConverter(
                         WalletManageButton.Sell(enabled = action.enabled, onClick = clickIntents::onSellClick)
                     }
                     is TokenActionsState.ActionState.Send -> {
-                        WalletManageButton.Send(enabled = action.enabled, onClick = clickIntents::onSendClick)
+                        WalletManageButton.Send(
+                            enabled = action.enabled,
+                            onClick = clickIntents::onSingleCurrencySendClick,
+                        )
                     }
                     is TokenActionsState.ActionState.Swap -> null
                 }
