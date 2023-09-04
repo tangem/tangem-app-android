@@ -1,36 +1,32 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import com.tangem.common.Provider
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Converter from loaded [TokenItemState.Content] to ImmutableList<[TokenActionButtonConfig]>
  *
- * @property currentStateProvider current ui state provider
+ * @property clickIntents screen click intents
  *
  */
-@Suppress("UnusedPrivateMember")
-internal class TokenActionsProvider(
-    private val currentStateProvider: Provider<WalletState>,
-) {
+internal class TokenActionsProvider(private val clickIntents: WalletClickIntents) {
 
-    @Suppress("UnusedPrivateMember")
-    fun provideActions(tokenId: String): ImmutableList<TokenActionButtonConfig> {
+    fun provideActions(cryptoCurrencyStatus: CryptoCurrencyStatus): ImmutableList<TokenActionButtonConfig> {
         // TODO: [REDACTED_JIRA]
-        return mockTokenActionButtonConfig().toImmutableList()
+        return mockTokenActionButtonConfig(cryptoCurrencyStatus).toImmutableList()
     }
 
-    private fun mockTokenActionButtonConfig(): List<TokenActionButtonConfig> {
+    private fun mockTokenActionButtonConfig(cryptoCurrencyStatus: CryptoCurrencyStatus): List<TokenActionButtonConfig> {
         return listOf(
             TokenActionButtonConfig(
                 text = "Send",
                 iconResId = R.drawable.ic_plus_24,
-                onClick = {},
+                onClick = { clickIntents.onMultiCurrencySendClick(cryptoCurrencyStatus) },
             ),
             TokenActionButtonConfig(
                 text = "Buy",
