@@ -11,7 +11,7 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Suppress("LongParameterList")
 @Composable
-internal fun TangemButton(
+fun TangemButton(
     text: String,
     icon: TangemButtonIconPosition,
     onClick: () -> Unit,
