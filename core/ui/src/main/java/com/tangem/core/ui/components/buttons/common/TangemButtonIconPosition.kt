@@ -1,8 +1,10 @@
 package com.tangem.core.ui.components.buttons.common
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 
-internal sealed interface TangemButtonIconPosition {
+@Immutable
+sealed interface TangemButtonIconPosition {
     val iconResId: Int?
 
     data class Start(@DrawableRes override val iconResId: Int) : TangemButtonIconPosition
