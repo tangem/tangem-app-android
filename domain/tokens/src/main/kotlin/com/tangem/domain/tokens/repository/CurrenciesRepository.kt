@@ -32,7 +32,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param currencies The currencies which must be added.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
@@ -52,7 +52,7 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param currencies The currencies which must be removed.
-     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
     suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)

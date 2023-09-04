@@ -119,7 +119,7 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCurrenciesUseCase {
-        return GetCurrenciesUseCase(currenciesRepository = currenciesRepository)
+    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
+        return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
 }

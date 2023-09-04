@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
-class GetCurrenciesUseCase(private val currenciesRepository: CurrenciesRepository) {
+class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRepository) {
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
