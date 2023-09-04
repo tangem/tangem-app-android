@@ -12,6 +12,7 @@ sealed class OnboardingWalletAction : Action {
     object GetToCreateWalletStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
     data class WalletWasCreated(
+        val shouldSendAnalyticsEvent: Boolean,
         val result: CompletionResult<CreateProductWalletTaskResponse>,
     ) : OnboardingWalletAction()
 
