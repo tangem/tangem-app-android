@@ -104,14 +104,16 @@ private fun handleWalletAction(action: Action) {
             scanResponse ?: return
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(scanResponse)
-                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(true, result))
             }
         }
         is OnboardingWalletAction.WalletWasCreated -> {
             scanResponse ?: return
             when (val result = action.result) {
                 is CompletionResult.Success -> {
-                    Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    if (action.shouldSendAnalyticsEvent) {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    }
                     // here we must use updated scanResponse after createWallet & derivation
                     val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
                         card = result.data.card,
@@ -268,7 +270,8 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                     CompletionResult.Failure(mediateResult.error)
                 }
             }
-            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+            // do not send analytics event for wallet2 flow, cause its already sent
+            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(false, result))
         }
 
         else -> Unit
