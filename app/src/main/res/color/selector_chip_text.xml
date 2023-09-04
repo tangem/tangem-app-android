@@ -3,7 +3,7 @@
     <item android:color="@color/accent" android:state_enabled="true" android:state_selected="true" />
     <item android:color="@color/accent" android:state_checked="true" android:state_enabled="true" />
 
-    <item android:color="@color/text_secondary" android:state_enabled="true" />
-    <item android:color="@color/text_secondary" />
+    <item android:color="@color/text_primary_1" android:state_enabled="true" />
+    <item android:color="@color/text_primary_1" />
 
 </selector>
