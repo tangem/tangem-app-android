@@ -1,19 +1,9 @@
 package com.tangem.tap.features.details.ui.appsettings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,8 +21,9 @@ import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
 
 @Composable
-fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit) {
+internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        modifier = modifier,
         content = { AppSettings(state = state) },
         titleRes = R.string.app_settings_title,
         onBackClick = onBackClick,
