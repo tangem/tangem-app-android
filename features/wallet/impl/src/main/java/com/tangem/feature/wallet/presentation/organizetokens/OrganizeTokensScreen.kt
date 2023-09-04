@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -37,7 +39,10 @@ import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import org.burnoutcrew.reorderable.*
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 @Composable
 internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
