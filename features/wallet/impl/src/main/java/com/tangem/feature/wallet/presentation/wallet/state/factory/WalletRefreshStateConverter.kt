@@ -91,12 +91,14 @@ internal class WalletRefreshStateConverter(
     }
 
     private fun WalletSingleCurrencyState.updateButtons(isRefreshing: Boolean): PersistentList<WalletManageButton> {
+        val isButtonsEnabled = !isRefreshing
+
         return buttons.mutate {
             it.mapNotNull { button ->
                 when (button) {
-                    is WalletManageButton.Buy -> button.copy(enabled = isRefreshing)
-                    is WalletManageButton.Send -> button.copy(enabled = isRefreshing)
-                    is WalletManageButton.Sell -> button.copy(enabled = isRefreshing)
+                    is WalletManageButton.Buy -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Receive -> button
                     is WalletManageButton.Swap -> null
                 }

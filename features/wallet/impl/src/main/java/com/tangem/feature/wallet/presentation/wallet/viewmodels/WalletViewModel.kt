@@ -127,6 +127,7 @@ internal class WalletViewModel @Inject constructor(
     private val marketPriceJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val notificationsJobHolder = JobHolder()
+    private val refreshContentJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch(dispatchers.main) {
@@ -151,6 +152,10 @@ internal class WalletViewModel @Inject constructor(
         wallets = sourceList
 
         val currentState = uiState
+        val previousSelectedWalletIndex = (currentState as? WalletState.ContentState)
+            ?.walletsListConfig
+            ?.selectedWalletIndex
+
         val selectedWalletIndex = if (currentState is WalletLockedState) {
             currentState.getSelectedWalletIndex()
         } else {
@@ -161,31 +166,32 @@ internal class WalletViewModel @Inject constructor(
             sourceList.indexOfFirst { it.walletId == selectedWallet.walletId }
         }
 
-        uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
+        if (previousSelectedWalletIndex != selectedWalletIndex) {
+            uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
 
-        updateContentItems(index = selectedWalletIndex)
+            getContentItemsUpdates(index = selectedWalletIndex)
+        }
     }
 
-    private fun updateContentItems(index: Int, refresh: Boolean = false) {
-        val cardTypeResolver = getCardTypeResolver(index)
+    private fun getContentItemsUpdates(index: Int) {
+        /*
+         * When wallet is changed it's necessary to stop the last jobs.
+         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
+         */
+        tokensJobHolder.update(job = null)
+        marketPriceJobHolder.update(job = null)
+        buttonsJobHolder.update(job = null)
+        notificationsJobHolder.update(job = null)
+        refreshContentJobHolder.update(job = null)
+
+        val wallet = getWallet(index)
+
         when {
-            getWallet(index).isLocked -> {
+            wallet.isLocked -> {
                 uiState = stateFactory.getLockedState()
             }
-            cardTypeResolver.isMultiwalletAllowed() -> {
-                if (refresh) {
-                    refreshMultiCurrencyContent(index)
-                } else {
-                    getMultiCurrencyContent(index)
-                }
-            }
-            !cardTypeResolver.isMultiwalletAllowed() -> {
-                if (refresh) {
-                    refreshSingleCurrencyContent(index)
-                } else {
-                    getSingleCurrencyContent(index)
-                }
-            }
+            wallet.isMultiCurrency -> getMultiCurrencyContent(index)
+            !wallet.isMultiCurrency -> getSingleCurrencyContent(index)
         }
     }
 
@@ -210,14 +216,15 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun refreshMultiCurrencyContent(walletIndex: Int) {
+        uiState = stateFactory.getRefreshingState()
         val wallet = getWallet(walletIndex)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val result = fetchTokenListUseCase(wallet.walletId, refresh = true)
 
             uiState = stateFactory.getRefreshedState()
             uiState = result.fold(stateFactory::getStateByTokenListError) { uiState }
-        }
+        }.saveIn(refreshContentJobHolder)
     }
 
     private fun getSingleCurrencyContent(index: Int) {
@@ -232,14 +239,15 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun refreshSingleCurrencyContent(walletIndex: Int) {
+        uiState = stateFactory.getRefreshingState()
         val wallet = getWallet(walletIndex)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val result = fetchCurrencyStatusUseCase(wallet.walletId, refresh = true)
 
             uiState = stateFactory.getRefreshedState()
             uiState = result.fold(stateFactory::getStateByCurrencyStatusError) { uiState }
-        }
+        }.saveIn(refreshContentJobHolder)
     }
 
     private fun updateTxHistory(blockchain: Blockchain, derivationStyle: DerivationStyle?) {
@@ -403,14 +411,9 @@ internal class WalletViewModel @Inject constructor(
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
-        /*
-         * When wallet is changed it's necessary to stop the last jobs.
-         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
-         */
-        tokensJobHolder.update(job = null)
-        marketPriceJobHolder.update(job = null)
-        buttonsJobHolder.update(job = null)
-        notificationsJobHolder.update(job = null)
+        viewModelScope.launch(dispatchers.io) {
+            selectWalletUseCase(getWallet(index = index).walletId)
+        }
 
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
         if (cacheState != null) {
@@ -423,10 +426,12 @@ internal class WalletViewModel @Inject constructor(
                 cacheState
             }
 
-            if (cacheState.isLoadingState()) updateContentItems(index)
+            if (cacheState.isLoadingState()) {
+                getContentItemsUpdates(index)
+            }
         } else {
             uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
-            updateContentItems(index = index)
+            getContentItemsUpdates(index = index)
         }
     }
 
@@ -455,15 +460,18 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe() {
-        if (uiState is WalletState.Initial || uiState is WalletLockedState) return
+        val selectedWalletIndex = (uiState as? WalletState.ContentState)
+            ?.walletsListConfig
+            ?.selectedWalletIndex
+            ?: return
 
-        viewModelScope.launch(dispatchers.io) {
-            uiState = stateFactory.getRefreshingState()
-
-            updateContentItems(
-                index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
-                refresh = true,
-            )
+        when (uiState) {
+            is WalletMultiCurrencyState.Content -> refreshMultiCurrencyContent(selectedWalletIndex)
+            is WalletSingleCurrencyState.Content -> refreshSingleCurrencyContent(selectedWalletIndex)
+            is WalletState.Initial,
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> Unit
         }
     }
 
@@ -513,10 +521,12 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onReloadClick() {
-        uiState = stateFactory.getRefreshingState()
-        getSingleCurrencyContent(
-            index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
-        )
+        val selectedWalletIndex = (uiState as? WalletSingleCurrencyState)
+            ?.walletsListConfig
+            ?.selectedWalletIndex
+            ?: return
+
+        refreshSingleCurrencyContent(selectedWalletIndex)
     }
 
     override fun onExploreClick() {
