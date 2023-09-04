@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.tangem.wallet.R
 
 @Immutable
-data class DetailsScreenState(
+internal data class DetailsScreenState(
     val elements: List<SettingsElement>,
     val tangemLinks: List<SocialNetworkLink>,
     val tangemVersion: String,
@@ -19,7 +19,7 @@ data class DetailsScreenState(
 }
 
 @Immutable
-enum class SettingsElement(
+internal enum class SettingsElement(
     val iconRes: Int,
     val titleRes: Int,
 ) {
@@ -37,12 +37,12 @@ enum class SettingsElement(
 }
 
 @Immutable
-data class SocialNetworkLink(
+internal data class SocialNetworkLink(
     val network: SocialNetwork,
     val url: String,
 )
 
-sealed class EventError {
+internal sealed class EventError {
     object Empty : EventError()
     data class DemoReferralNotAvailable(val onErrorShow: () -> Unit) : EventError()
 }
@@ -58,7 +58,7 @@ sealed class SocialNetwork(val id: String, val iconRes: Int) {
     object Discord : SocialNetwork("Discord", R.drawable.ic_discord)
 }
 
-object TangemSocialAccounts {
+internal object TangemSocialAccounts {
     val accountsEn: List<SocialNetworkLink> = listOf(
         SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat"),
         SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
