@@ -2,6 +2,8 @@ package com.tangem.tap.features.onboarding.products.wallet.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
@@ -13,9 +15,10 @@ object ResetBackupCardDialog {
             setTitle(R.string.common_attention)
             setMessage(R.string.onboarding_linking_error_card_with_wallets)
             setPositiveButton(R.string.common_cancel) { _, _ ->
-                /* no-op */
+                Analytics.send(Onboarding.Backup.ResetCancelEvent)
             }
             setNegativeButton(R.string.common_reset) { _, _ ->
+                Analytics.send(Onboarding.Backup.ResetPerformEvent)
                 store.dispatch(BackupAction.ResetBackupCard(cardId))
             }
             setOnDismissListener {
