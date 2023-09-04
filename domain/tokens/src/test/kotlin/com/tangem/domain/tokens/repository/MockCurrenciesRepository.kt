@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -72,6 +73,10 @@ internal class MockCurrenciesRepository(
         require(token.id == id)
 
         return token
+    }
+
+    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+        TODO("Not yet implemented")
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
