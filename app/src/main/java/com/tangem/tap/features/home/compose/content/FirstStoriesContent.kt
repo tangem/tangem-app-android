@@ -5,21 +5,15 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -28,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.FontSizeRange
 import com.tangem.tap.common.compose.TextAutoSize
 import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
@@ -37,6 +33,8 @@ import com.tangem.wallet.R
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 @Composable
 fun FirstStoriesContent(isPaused: Boolean, duration: Int, onHideContent: (Boolean) -> Unit) {
+    val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+
     val screenState = remember { mutableStateOf(StartingScreenState.INIT) }
     val progress = remember { Animatable(0f) }
 
@@ -123,15 +121,32 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int, onHideContent: (Boolea
                     ) { modifier ->
                         Image(
                             modifier = modifier.fillMaxWidth(),
-                            painter = painterResource(id = R.drawable.meet_tangem),
+                            painter = painterResource(id = R.drawable.img_meet_tangem),
                             contentDescription = "Tangem Wallet card",
                         )
                     }
                 }
             }
         }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(TangemTheme.dimens.size72 + bottomInsetsPx.dp)
+                .background(BottomGradient),
+        )
     }
 }
+
+private val BottomGradient: Brush = Brush.verticalGradient(
+    colors = listOf(
+        TangemColorPalette.Black.copy(alpha = 0f),
+        TangemColorPalette.Black.copy(alpha = 0.75f),
+        TangemColorPalette.Black.copy(alpha = 0.95f),
+        TangemColorPalette.Black,
+    ),
+)
 
 private enum class StartingScreenState {
     INIT, BUY, STORE, SEND, PAY, EXCHANGE, BORROW, LEND, SHOW_CARD, MEET_TANGEM
