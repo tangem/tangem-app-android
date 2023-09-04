@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.Store
 
-class DetailsViewModel(private val store: Store<AppState>) {
+internal class DetailsViewModel(private val store: Store<AppState>) {
 
     var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
         private set
