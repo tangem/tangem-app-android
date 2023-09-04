@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.tap.features.details.redux.AppSetting
 
-data class AppSettingsScreenState(
+internal data class AppSettingsScreenState(
     val settings: Map<AppSetting, Boolean> = emptyMap(),
     val showEnrollBiometricsCard: Boolean = false,
     val isTogglesEnabled: Boolean = false,
