@@ -74,6 +74,7 @@ internal class WalletViewModel @Inject constructor(
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -121,7 +122,7 @@ internal class WalletViewModel @Inject constructor(
     var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
     private var wallets: List<UserWallet> by Delegates.notNull()
-    private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    private var singleWalletCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private val tokensJobHolder = JobHolder()
     private val marketPriceJobHolder = JobHolder()
@@ -300,7 +301,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBuyClick() {
         val state = uiState as? WalletState.ContentState ?: return
-        val status = cryptoCurrencyStatus ?: return
+        val status = singleWalletCryptoCurrencyStatus ?: return
         val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
         reduxStateHolder.dispatch(
@@ -312,8 +313,48 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    override fun onSendClick() {
-        reduxStateHolder.dispatch(TradeCryptoAction.New.Send)
+    override fun onSingleCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
+        val state = uiState as? WalletState.ContentState ?: return
+
+        val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        val coinStatus = if (userWallet.isMultiCurrency) cryptoCurrencyStatus else singleWalletCryptoCurrencyStatus
+
+        reduxStateHolder.dispatch(
+            action = TradeCryptoAction.New.SendCoin(
+                userWallet = userWallet,
+                coinStatus = coinStatus ?: return,
+            ),
+        )
+    }
+
+    override fun onMultiCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
+            onSingleCurrencySendClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
+            return
+        }
+
+        val state = uiState as? WalletState.ContentState ?: return
+
+        viewModelScope.launch(dispatchers.io) {
+            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+            getNetworkCoinStatusUseCase(
+                userWalletId = userWallet.walletId,
+                networkId = cryptoCurrencyStatus.currency.network.id,
+            )
+                .take(count = 1)
+                .collectLatest {
+                    it.onRight { coinStatus ->
+                        reduxStateHolder.dispatch(
+                            action = TradeCryptoAction.New.SendToken(
+                                userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex),
+                                tokenStatus = cryptoCurrencyStatus,
+                                coinFiatRate = coinStatus.value.fiatRate,
+                            ),
+                        )
+                    }
+                }
+        }
     }
 
     override fun onReceiveClick() {
@@ -321,7 +362,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onSellClick() {
-        val status = cryptoCurrencyStatus ?: return
+        val status = singleWalletCryptoCurrencyStatus ?: return
 
         reduxStateHolder.dispatch(
             TradeCryptoAction.New.Sell(
@@ -384,10 +425,8 @@ internal class WalletViewModel @Inject constructor(
         router.openTokenDetails(currency = currency)
     }
 
-    override fun onTokenItemLongClick(currency: CryptoCurrency) {
-        uiState = stateFactory.getStateWithTokenActionBottomSheet(
-            tokenId = currency.id.value,
-        )
+    override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        uiState = stateFactory.getStateWithTokenActionBottomSheet(cryptoCurrencyStatus)
     }
 
     override fun onRenameClick(userWalletId: UserWalletId, name: String) {
@@ -504,7 +543,7 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
 
                 maybeCryptoCurrencyStatus.onRight { status ->
-                    cryptoCurrencyStatus = status
+                    singleWalletCryptoCurrencyStatus = status
                     updateButtons(userWalletId = userWalletId, currency = status.currency)
                 }
             }
