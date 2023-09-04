@@ -55,9 +55,9 @@ internal fun ParticipateBottomBlock(
                 bottom = TangemTheme.dimens.spacing16,
             )
             .padding(horizontal = TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         PersonalCodeCard(code = code)
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
@@ -65,22 +65,23 @@ internal fun ParticipateBottomBlock(
             onCopyClick = onCopyClick,
             onShareClick = onShareClick,
         )
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         CounterAndAwards(purchasedWalletCount = purchasedWalletCount, expectedAwards = expectedAwards)
-        Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClick = onAgreementClick)
     }
 }
 
 @Composable
 private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) {
-    Counter(purchasedWalletCount, expectedAwards)
+    Column {
+        Counter(purchasedWalletCount, expectedAwards)
 
-    if (expectedAwards != null) {
-        Awards(expectedAwards)
-    } else if (purchasedWalletCount != 0) {
-        EmptyUpcomingPayments()
+        if (expectedAwards != null) {
+            Awards(expectedAwards)
+        } else if (purchasedWalletCount != 0) {
+            EmptyUpcomingPayments()
+        }
     }
+
 }
 
 @Composable
