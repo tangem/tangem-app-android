@@ -405,8 +405,6 @@ class DemoConfig {
         "AF04000000012014",
         "AF04000000012022",
         "AF04000000012030",
-
-        // "AF02000000000003",
     )
 
     @Suppress("ClassOrdering")
