@@ -42,6 +42,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 actionButtons = createButtons(),
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.cryptoCurrency.name),
+            pendingTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),

@@ -82,5 +82,6 @@ internal object TokenDetailsPreviewData {
             ),
         ),
         dialogConfig = null,
+        pendingTxs = persistentListOf(),
     )
 }
