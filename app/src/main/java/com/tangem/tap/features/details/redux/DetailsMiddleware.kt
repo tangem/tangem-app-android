@@ -123,7 +123,7 @@ class DetailsMiddleware {
                     scope.launch {
                         val userWalletId = UserWalletIdBuilder.card(card).build()
 
-                        tangemSdkManager.resetToFactorySettings(card.cardId)
+                        tangemSdkManager.resetToFactorySettings(card.cardId, true)
                             .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
                             .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
                             .doOnSuccess {
