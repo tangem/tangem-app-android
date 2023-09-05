@@ -37,7 +37,7 @@ class DeviceFlipDetector(context: Context) {
                         isScreenDown = true
                         lastTriggerTime = currentTime
                     } else if (zAxisValue >= zAxisThreshold) {
-                        if (isScreenDown && (currentTime - lastTriggerTime <= throttleTimeMs)) {
+                        if (isScreenDown && currentTime - lastTriggerTime <= throttleTimeMs) {
                             lastTriggerTime = currentTime
                             trySend(Unit)
                         }
