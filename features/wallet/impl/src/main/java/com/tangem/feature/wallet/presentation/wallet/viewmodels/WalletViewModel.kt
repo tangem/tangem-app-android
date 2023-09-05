@@ -173,167 +173,6 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun getContentItemsUpdates(index: Int) {
-        /*
-         * When wallet is changed it's necessary to stop the last jobs.
-         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
-         */
-        tokensJobHolder.update(job = null)
-        marketPriceJobHolder.update(job = null)
-        buttonsJobHolder.update(job = null)
-        notificationsJobHolder.update(job = null)
-        refreshContentJobHolder.update(job = null)
-
-        val wallet = getWallet(index)
-
-        when {
-            wallet.isLocked -> {
-                uiState = stateFactory.getLockedState()
-            }
-            wallet.isMultiCurrency -> getMultiCurrencyContent(index)
-            !wallet.isMultiCurrency -> getSingleCurrencyContent(index)
-        }
-    }
-
-    private fun getMultiCurrencyContent(walletIndex: Int) {
-        val state = requireNotNull(uiState as? WalletMultiCurrencyState) {
-            "Impossible to get a token list updates if state isn't WalletMultiCurrencyState"
-        }
-
-        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[walletIndex].id)
-            .distinctUntilChanged()
-            .onEach { maybeTokenList ->
-                uiState = stateFactory.getStateByTokensList(maybeTokenList)
-
-                updateNotifications(
-                    index = walletIndex,
-                    tokenList = maybeTokenList.fold(ifLeft = { null }, ifRight = { it }),
-                )
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(tokensJobHolder)
-    }
-
-    private fun refreshMultiCurrencyContent(walletIndex: Int) {
-        uiState = stateFactory.getRefreshingState()
-        val wallet = getWallet(walletIndex)
-
-        viewModelScope.launch(dispatchers.io) {
-            val result = fetchTokenListUseCase(wallet.walletId, refresh = true)
-
-            uiState = stateFactory.getRefreshedState()
-            uiState = result.fold(stateFactory::getStateByTokenListError) { uiState }
-        }.saveIn(refreshContentJobHolder)
-    }
-
-    private fun getSingleCurrencyContent(index: Int) {
-        val wallet = getWallet(index)
-        val blockchain = getCardTypeResolver(index).getBlockchain()
-        updateTxHistory(
-            blockchain = blockchain,
-            derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
-        )
-        updateMarketPrice(userWalletId = wallet.walletId)
-        updateNotifications(index)
-    }
-
-    private fun refreshSingleCurrencyContent(walletIndex: Int) {
-        uiState = stateFactory.getRefreshingState()
-        val wallet = getWallet(walletIndex)
-
-        viewModelScope.launch(dispatchers.io) {
-            val result = fetchCurrencyStatusUseCase(wallet.walletId, refresh = true)
-
-            uiState = stateFactory.getRefreshedState()
-            uiState = result.fold(stateFactory::getStateByCurrencyStatusError) { uiState }
-        }.saveIn(refreshContentJobHolder)
-    }
-
-    private fun updateTxHistory(blockchain: Blockchain, derivationStyle: DerivationStyle?) {
-        viewModelScope.launch(dispatchers.io) {
-            val derivationPath = blockchain.derivationPath(style = derivationStyle)?.rawPath
-
-            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                networkId = Network.ID(blockchain.id),
-                derivationPath = derivationPath,
-            )
-
-            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
-
-            txHistoryItemsCountEither.onRight {
-                uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        networkId = Network.ID(blockchain.id),
-                        derivationPath = derivationPath,
-                    ).map {
-                        it.cachedIn(viewModelScope)
-                    },
-                )
-            }
-        }
-    }
-
-    // It also update wallet balance
-    private fun updateMarketPrice(userWalletId: UserWalletId) {
-        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
-            .distinctUntilChanged()
-            .onEach { maybeCryptoCurrencyStatus ->
-                uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
-
-                maybeCryptoCurrencyStatus.onRight { status ->
-                    cryptoCurrencyStatus = status
-                    updateButtons(userWalletId = userWalletId, currency = status.currency)
-                }
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(marketPriceJobHolder)
-    }
-
-    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
-            .distinctUntilChanged()
-            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(buttonsJobHolder)
-    }
-
-    private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
-        notificationsListFactory.create(
-            cardTypesResolver = getCardTypeResolver(index = index),
-            tokenList = tokenList,
-        )
-            .distinctUntilChanged()
-            .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(notificationsJobHolder)
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        viewModelScope.launch(dispatchers.io) {
-            saveSelectedWallet()
-        }
-    }
-
-    private suspend fun saveSelectedWallet() {
-        val state = uiState
-        if (state is WalletState.ContentState) {
-            selectWalletUseCase(getWallet(index = state.walletsListConfig.selectedWalletIndex).walletId)
-        }
-    }
-
-    private fun getWallet(index: Int): UserWallet {
-        return requireNotNull(
-            value = wallets.getOrNull(index),
-            lazyMessage = { "WalletsList doesn't contain element with index = $index" },
-        )
-    }
-
-    private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
-
     override fun onBackClick() {
         viewModelScope.launch(dispatchers.main) {
             router.popBackStack(screen = if (shouldSaveUserWalletsUseCase()) AppScreen.Welcome else AppScreen.Home)
@@ -432,30 +271,6 @@ internal class WalletViewModel @Inject constructor(
         } else {
             uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
             getContentItemsUpdates(index = index)
-        }
-    }
-
-    private fun WalletState.isLoadingState(): Boolean {
-        // Check the base components
-        if (this is WalletState.ContentState) {
-            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading ||
-                notifications.isEmpty()
-        }
-
-        // Check the special components
-        return when (this) {
-            is WalletMultiCurrencyState -> {
-                val hasLoadingTokens = tokensListState is WalletTokensListState.ContentState &&
-                    (tokensListState as WalletTokensListState.ContentState).items
-                        .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
-                        .any { it.state is TokenItemState.Loading }
-
-                tokensListState is WalletTokensListState.Loading || hasLoadingTokens
-            }
-            is WalletSingleCurrencyState -> {
-                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading
-            }
-            is WalletState.Initial -> false
         }
     }
 
@@ -589,18 +404,6 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
-        return getSelectedAppCurrencyUseCase()
-            .map { maybeAppCurrency ->
-                maybeAppCurrency.getOrElse { AppCurrency.Default }
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = AppCurrency.Default,
-            )
-    }
-
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
     }
@@ -614,4 +417,188 @@ internal class WalletViewModel @Inject constructor(
             )
         }
     }
+
+    private fun getContentItemsUpdates(index: Int) {
+        /*
+         * When wallet is changed it's necessary to stop the last jobs.
+         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
+         */
+        tokensJobHolder.update(job = null)
+        marketPriceJobHolder.update(job = null)
+        buttonsJobHolder.update(job = null)
+        notificationsJobHolder.update(job = null)
+        refreshContentJobHolder.update(job = null)
+
+        val wallet = getWallet(index)
+
+        when {
+            wallet.isLocked -> {
+                uiState = stateFactory.getLockedState()
+            }
+            wallet.isMultiCurrency -> getMultiCurrencyContent(index)
+            !wallet.isMultiCurrency -> getSingleCurrencyContent(index)
+        }
+    }
+
+    private fun getMultiCurrencyContent(walletIndex: Int) {
+        val state = requireNotNull(uiState as? WalletMultiCurrencyState) {
+            "Impossible to get a token list updates if state isn't WalletMultiCurrencyState"
+        }
+
+        getTokenListUseCase(userWalletId = state.walletsListConfig.wallets[walletIndex].id)
+            .distinctUntilChanged()
+            .onEach { maybeTokenList ->
+                uiState = stateFactory.getStateByTokensList(maybeTokenList)
+
+                updateNotifications(
+                    index = walletIndex,
+                    tokenList = maybeTokenList.fold(ifLeft = { null }, ifRight = { it }),
+                )
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(tokensJobHolder)
+    }
+
+    private fun getSingleCurrencyContent(index: Int) {
+        val wallet = getWallet(index)
+        val blockchain = getCardTypeResolver(index).getBlockchain()
+        updateTxHistory(
+            blockchain = blockchain,
+            derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
+        )
+        updateMarketPrice(userWalletId = wallet.walletId)
+        updateNotifications(index)
+    }
+
+    private fun updateTxHistory(blockchain: Blockchain, derivationStyle: DerivationStyle?) {
+        viewModelScope.launch(dispatchers.io) {
+            val derivationPath = blockchain.derivationPath(style = derivationStyle)?.rawPath
+
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
+                networkId = Network.ID(blockchain.id),
+                derivationPath = derivationPath,
+            )
+
+            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+
+            txHistoryItemsCountEither.onRight {
+                uiState = stateFactory.getLoadedTxHistoryState(
+                    txHistoryEither = txHistoryItemsUseCase(
+                        networkId = Network.ID(blockchain.id),
+                        derivationPath = derivationPath,
+                    ).map {
+                        it.cachedIn(viewModelScope)
+                    },
+                )
+            }
+        }
+    }
+
+    // It also update wallet balance
+    private fun updateMarketPrice(userWalletId: UserWalletId) {
+        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
+            .distinctUntilChanged()
+            .onEach { maybeCryptoCurrencyStatus ->
+                uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
+
+                maybeCryptoCurrencyStatus.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(userWalletId = userWalletId, currency = status.currency)
+                }
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(marketPriceJobHolder)
+    }
+
+    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(buttonsJobHolder)
+    }
+
+    private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
+        notificationsListFactory.create(
+            cardTypesResolver = getCardTypeResolver(index = index),
+            tokenList = tokenList,
+        )
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(notificationsJobHolder)
+    }
+
+    private fun refreshMultiCurrencyContent(walletIndex: Int) {
+        uiState = stateFactory.getRefreshingState()
+        val wallet = getWallet(walletIndex)
+
+        viewModelScope.launch(dispatchers.io) {
+            val result = fetchTokenListUseCase(wallet.walletId, refresh = true)
+
+            uiState = stateFactory.getRefreshedState()
+            uiState = result.fold(stateFactory::getStateByTokenListError) { uiState }
+        }.saveIn(refreshContentJobHolder)
+    }
+
+    private fun refreshSingleCurrencyContent(walletIndex: Int) {
+        uiState = stateFactory.getRefreshingState()
+        val wallet = getWallet(walletIndex)
+
+        viewModelScope.launch(dispatchers.io) {
+            val result = fetchCurrencyStatusUseCase(wallet.walletId, refresh = true)
+
+            uiState = stateFactory.getRefreshedState()
+            uiState = result.fold(stateFactory::getStateByCurrencyStatusError) { uiState }
+        }.saveIn(refreshContentJobHolder)
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
+    }
+
+    private fun WalletState.isLoadingState(): Boolean {
+        // Check the base components
+        if (this is WalletState.ContentState) {
+            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading ||
+                notifications.isEmpty()
+        }
+
+        // Check the special components
+        return when (this) {
+            is WalletMultiCurrencyState -> {
+                val hasLoadingTokens = tokensListState is WalletTokensListState.ContentState &&
+                    (tokensListState as WalletTokensListState.ContentState).items
+                        .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
+                        .any { it.state is TokenItemState.Loading }
+
+                tokensListState is WalletTokensListState.Loading || hasLoadingTokens
+            }
+            is WalletSingleCurrencyState -> {
+                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading
+            }
+            is WalletState.Initial -> false
+        }
+    }
+
+    private fun getWallet(index: Int): UserWallet {
+        return requireNotNull(
+            value = wallets.getOrNull(index),
+            lazyMessage = { "WalletsList doesn't contain element with index = $index" },
+        )
+    }
+
+    private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
 }
