@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
 /**
@@ -39,7 +40,7 @@ data class CryptoCurrencyStatus(
         open val hasCurrentNetworkTransactions: Boolean = false
 
         /** The pending cryptocurrency transactions. */
-        open val pendingTransactions: Set<PendingTransaction> = emptySet()
+        open val pendingTransactions: Set<TxHistoryItem> = emptySet()
 
         /** The network address */
         open val networkAddress: NetworkAddress? = null
@@ -74,7 +75,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal,
         override val priceChange: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
     ) : Status()
 
@@ -95,7 +96,7 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal?,
         override val priceChange: BigDecimal?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
     ) : Status()
 
@@ -110,7 +111,7 @@ data class CryptoCurrencyStatus(
     data class NoQuote(
         override val amount: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
     ) : Status()
 }
