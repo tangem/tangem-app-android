@@ -22,6 +22,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBott
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
+import com.tangem.feature.wallet.presentation.wallet.utils.CurrencyStatusErrorConverter
+import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -45,9 +47,16 @@ internal class WalletStateFactory(
     private val tokenActionsProvider by lazy { TokenActionsProvider(currentStateProvider = currentStateProvider) }
     private val skeletonConverter by lazy { WalletSkeletonStateConverter(currentStateProvider, clickIntents) }
 
+    private val tokenListErrorConverter by lazy {
+        TokenListErrorConverter(currentStateProvider)
+    }
+    private val currencyStatusErrorConverter by lazy {
+        CurrencyStatusErrorConverter(currentStateProvider)
+    }
     private val loadedTokensListConverter by lazy {
         WalletLoadedTokensListConverter(
             currentStateProvider = currentStateProvider,
+            tokenListErrorConverter = tokenListErrorConverter,
             cardTypeResolverProvider = currentCardTypeResolverProvider,
             currentWalletProvider = currentWalletProvider,
             appCurrencyProvider = appCurrencyProvider,
@@ -76,6 +85,7 @@ internal class WalletStateFactory(
             cardTypeResolverProvider = currentCardTypeResolverProvider,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
+            currencyStatusErrorConverter = currencyStatusErrorConverter,
         )
     }
 
@@ -91,8 +101,7 @@ internal class WalletStateFactory(
     private val refreshStateConverter by lazy {
         WalletRefreshStateConverter(
             currentStateProvider = currentStateProvider,
-            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
-            clickIntents = clickIntents,
+            intents = clickIntents,
         )
     }
 
@@ -114,13 +123,12 @@ internal class WalletStateFactory(
         )
     }
 
-    fun getStateByTokensList(tokenListEither: Either<TokenListError, TokenList>, isRefreshing: Boolean): WalletState {
-        return loadedTokensListConverter.convert(
-            value = WalletLoadedTokensListConverter.LoadedTokensListModel(
-                tokenListEither = tokenListEither,
-                isRefreshing = isRefreshing,
-            ),
-        )
+    fun getStateByTokensList(maybeTokenList: Either<TokenListError, TokenList>): WalletState {
+        return loadedTokensListConverter.convert(maybeTokenList)
+    }
+
+    fun getStateByTokenListError(error: TokenListError): WalletState {
+        return tokenListErrorConverter.convert(error)
     }
 
     fun getStateByNotifications(notifications: ImmutableList<WalletNotification>): WalletState {
@@ -131,7 +139,9 @@ internal class WalletStateFactory(
         }
     }
 
-    fun getStateAfterContentRefreshing(): WalletState = refreshStateConverter.convert(Unit)
+    fun getRefreshingState(): WalletState = refreshStateConverter.convert(value = true)
+
+    fun getRefreshedState(): WalletState = refreshStateConverter.convert(value = false)
 
     fun getStateWithOpenWalletBottomSheet(content: WalletBottomSheetConfig.BottomSheetContentConfig): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
@@ -157,6 +167,7 @@ internal class WalletStateFactory(
                 isBottomSheetShow = true,
                 onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
+            else -> state
         }
     }
 
@@ -170,6 +181,7 @@ internal class WalletStateFactory(
                 bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
             )
             is WalletSingleCurrencyState.Locked -> state.copy(isBottomSheetShow = false)
+            else -> state
         }
     }
 
@@ -199,18 +211,16 @@ internal class WalletStateFactory(
     fun getLockedState(): WalletState = lockedConverter.convert(Unit)
 
     fun getSingleCurrencyLoadedBalanceState(
-        cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
-        isRefreshing: Boolean,
+        maybeCryptoCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
     ): WalletState {
-        return singleCurrencyLoadedBalanceConverter.convert(
-            value = WalletSingleCurrencyLoadedBalanceConverter.SingleCurrencyLoadedBalanceModel(
-                cryptoCurrencyEither = cryptoCurrencyEither,
-                isRefreshing = isRefreshing,
-            ),
-        )
+        return singleCurrencyLoadedBalanceConverter.convert(maybeCryptoCurrencyStatus)
     }
 
     fun getSingleCurrencyManageButtonsState(actions: List<TokenActionsState.ActionState>): WalletState {
         return cryptoCurrencyActionsConverter.convert(value = actions)
+    }
+
+    fun getStateByCurrencyStatusError(error: CurrencyStatusError): WalletState {
+        return currencyStatusErrorConverter.convert(error)
     }
 }

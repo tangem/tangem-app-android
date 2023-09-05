@@ -8,8 +8,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.toPersistentList
 
 internal class WalletCryptoCurrencyActionsConverter(
     private val currentStateProvider: Provider<WalletState>,
@@ -26,7 +26,7 @@ internal class WalletCryptoCurrencyActionsConverter(
         }
     }
 
-    private fun List<TokenActionsState.ActionState>.mapToManageButtons(): ImmutableList<WalletManageButton> {
+    private fun List<TokenActionsState.ActionState>.mapToManageButtons(): PersistentList<WalletManageButton> {
         return this
             .mapNotNull { action ->
                 when (action) {
@@ -45,6 +45,6 @@ internal class WalletCryptoCurrencyActionsConverter(
                     is TokenActionsState.ActionState.Swap -> null
                 }
             }
-            .toImmutableList()
+            .toPersistentList()
     }
 }
