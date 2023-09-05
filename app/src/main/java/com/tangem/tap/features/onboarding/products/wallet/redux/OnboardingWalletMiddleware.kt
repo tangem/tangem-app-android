@@ -460,7 +460,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
 
         is BackupAction.ResetBackupCard -> {
-            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId) }
+            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId, false) }
         }
 
         else -> Unit
