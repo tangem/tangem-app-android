@@ -1,8 +1,7 @@
 <resources>
-
-    <style name="BaseAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar" />
-
-    <style name="AppTheme" parent="BaseAppTheme">
+    <!-- Base application theme. -->
+    <style name="BaseAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorSecondary">@color/colorSecondary</item>
         <item name="android:textColor">@color/darkGray6</item>
@@ -10,6 +9,8 @@
 
         <item name="materialCardViewStyle">@style/Widget.AppTheme.CardView</item>
     </style>
+
+    <style name="AppTheme" parent="BaseAppTheme" />
 
     <style name="SplashTheme" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/background_splash</item>
