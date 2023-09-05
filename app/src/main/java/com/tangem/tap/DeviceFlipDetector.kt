@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.SystemClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,7 @@ class DeviceFlipDetector(context: Context) {
 
             override fun onSensorChanged(event: SensorEvent?) {
                 event?.let {
-                    val currentTime = System.currentTimeMillis()
+                    val currentTime = SystemClock.elapsedRealtime()
                     val zAxisValue = it.values[2]
 
                     if (zAxisValue < zAxisThreshold && !isScreenDown) {
