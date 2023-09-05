@@ -39,8 +39,11 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.AppSettings -> {
             handlePrivacyAction(action, detailsState)
         }
-        is DetailsAction.ChangeAppCurrency ->
-            detailsState.copy(appCurrency = action.fiatCurrency)
+        is DetailsAction.ChangeAppCurrency -> detailsState.copy(
+            appSettingsState = detailsState.appSettingsState.copy(
+                selectedFiatCurrency = action.fiatCurrency,
+            ),
+        )
         is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
         else -> detailsState
     }
@@ -50,11 +53,11 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
     return DetailsState(
         scanResponse = action.scanResponse,
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        appCurrency = store.state.globalState.appCurrency,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = preferencesStorage.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+            selectedFiatCurrency = store.state.globalState.appCurrency,
         ),
     )
 }
