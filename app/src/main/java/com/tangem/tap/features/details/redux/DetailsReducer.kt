@@ -9,7 +9,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
-import java.util.*
+import java.util.EnumSet
 
 object DetailsReducer {
     fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
@@ -39,8 +39,11 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.AppSettings -> {
             handlePrivacyAction(action, detailsState)
         }
-        is DetailsAction.ChangeAppCurrency ->
-            detailsState.copy(appCurrency = action.fiatCurrency)
+        is DetailsAction.ChangeAppCurrency -> detailsState.copy(
+            appSettingsState = detailsState.appSettingsState.copy(
+                selectedFiatCurrency = action.fiatCurrency,
+            ),
+        )
         is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
         else -> detailsState
     }
@@ -49,13 +52,12 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
-        wallets = action.wallets,
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        appCurrency = store.state.globalState.appCurrency,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = preferencesStorage.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+            selectedFiatCurrency = store.state.globalState.appCurrency,
         ),
     )
 }

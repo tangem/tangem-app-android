@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -40,9 +41,13 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
+    override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) {
         removeCurrencyResult.onLeft { throw it }
     }
+
+    override suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
@@ -55,10 +60,7 @@ internal class MockCurrenciesRepository(
         return token.getOrElse { e -> throw e }
     }
 
-    override fun getMultiCurrencyWalletCurrencies(
-        userWalletId: UserWalletId,
-        refresh: Boolean,
-    ): Flow<List<CryptoCurrency>> {
+    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
 
@@ -71,6 +73,10 @@ internal class MockCurrenciesRepository(
         require(token.id == id)
 
         return token
+    }
+
+    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+        TODO("Not yet implemented")
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {

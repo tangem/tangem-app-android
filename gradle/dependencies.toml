@@ -80,7 +80,7 @@ okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-338"
+tangemBlockchainSdk = "develop-340"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-293"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
@@ -138,6 +138,7 @@ lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", v
 # region Compose
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-runtime" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-runtime" }
+compose-ui-utils = { module = "androidx.compose.ui:ui-util", version.ref = "compose-runtime" }
 compose-animation = { module = "androidx.compose.animation:animation", version.ref = "compose-runtime" }
 compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose-foundation" }
 compose-material = { module = "androidx.compose.material:material", version.ref = "compose-material" }

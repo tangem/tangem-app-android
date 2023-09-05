@@ -1,7 +1,9 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -14,6 +16,16 @@ import dagger.hilt.android.scopes.ViewModelScoped
 @Module
 @InstallIn(ViewModelComponent::class)
 internal object TokensDomainModule {
+
+    @Provides
+    @ViewModelScoped
+    fun provideFetchTokenListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchTokenListUseCase {
+        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+    }
 
     @Provides
     @ViewModelScoped
@@ -42,8 +54,8 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetCurrencyUseCase {
-        return GetCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetCurrencyStatusUpdatesUseCase {
+        return GetCurrencyStatusUpdatesUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
@@ -53,8 +65,23 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetPrimaryCurrencyUseCase {
-        return GetPrimaryCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetPrimaryCurrencyStatusUpdatesUseCase {
+        return GetPrimaryCurrencyStatusUpdatesUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideFetchCurrencyStatusUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchCurrencyStatusUseCase {
+        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository)
     }
 
     @Provides
@@ -83,8 +110,32 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideGetCryptoCurrencyActionsUseCase(
+        rampStateManager: RampStateManager,
+        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
-        return GetCryptoCurrencyActionsUseCase(dispatchers)
+        return GetCryptoCurrencyActionsUseCase(rampStateManager, marketCryptoCurrencyRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCurrencyStatusByNetworkUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetNetworkCoinStatusUseCase {
+        return GetNetworkCoinStatusUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
+        return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
 }

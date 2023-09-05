@@ -1,97 +1,60 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.TextButton
-import com.tangem.core.ui.components.WarningTextButton
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButton
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.redux.AppSetting
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsAlertsFactory
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Alert
 import com.tangem.wallet.R
 
 @Composable
-internal fun SettingsAlertDialog(
-    element: AppSetting,
-    onDialogStateChange: (AppSetting?) -> Unit,
-    onSettingToggle: () -> Unit,
-) {
-    val text = when (element) {
-        AppSetting.SaveWallets -> R.string.app_settings_off_saved_wallet_alert_message
-        AppSetting.SaveAccessCode -> R.string.app_settings_off_saved_access_code_alert_message
-    }
-
-    AlertDialog(
-        onDismissRequest = { onDialogStateChange(null) },
-        confirmButton = {
-            TextButton(
-                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                text = stringResource(id = R.string.common_cancel),
-                onClick = {
-                    onDialogStateChange(null)
-                },
-            )
-        },
-        dismissButton = {
-            WarningTextButton(
-                text = stringResource(id = R.string.common_delete),
-                onClick = {
-                    onDialogStateChange(null)
-                    onSettingToggle()
-                },
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(id = R.string.common_attention),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.h2,
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(id = text),
-                color = TangemTheme.colors.text.secondary,
-                style = TangemTheme.typography.body2,
-            )
-        },
-        shape = TangemTheme.shapes.roundedCornersLarge,
+internal fun SettingsAlertDialog(alert: Alert) {
+    BasicDialog(
+        title = alert.title.resolveReference(),
+        message = alert.description.resolveReference(),
+        isDismissable = false,
+        confirmButton = DialogButton(
+            title = alert.confirmText.resolveReference(),
+            warning = true,
+            onClick = alert.onConfirm,
+        ),
+        dismissButton = DialogButton(
+            title = stringResource(id = R.string.common_cancel),
+            onClick = alert.onDismiss,
+        ),
+        onDismissDialog = alert.onDismiss,
     )
 }
 
 // region Preview
-@Composable
-private fun SettingsAlertDialogSample(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
-    ) {
-        SettingsAlertDialog(
-            element = AppSetting.SaveAccessCode,
-            onDialogStateChange = {},
-            onSettingToggle = { },
-        )
-    }
-}
-
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun SettingsAlertDialogPreview_Light() {
+private fun AlertDialogPreview_Light(@PreviewParameter(AlertDialogProvider::class) dialog: Alert) {
     TangemTheme {
-        SettingsAlertDialogSample()
+        SettingsAlertDialog(alert = dialog)
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun SettingsAlertDialogPreview_Dark() {
+private fun AlertDialogPreview_Dark(@PreviewParameter(AlertDialogProvider::class) dialog: Alert) {
     TangemTheme(isDark = true) {
-        SettingsAlertDialogSample()
+        SettingsAlertDialog(alert = dialog)
     }
 }
+
+private class AlertDialogProvider : CollectionPreviewParameterProvider<Alert>(
+    collection = buildList {
+        val alertsFactory = AppSettingsAlertsFactory()
+
+        alertsFactory.createDeleteSavedAccessCodesAlert({}, {}).let(::add)
+        alertsFactory.createDeleteSavedWalletsAlert({}, {}).let(::add)
+    },
+)
 // endregion Preview
