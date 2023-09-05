@@ -20,6 +20,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.ScreenTitle
@@ -44,39 +46,53 @@ private fun Content(state: DetailsScreenState, modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {
-            ScreenTitle(titleRes = R.string.details_title, Modifier.padding(bottom = 52.dp))
-            state.elements.map { element ->
-                if (element == SettingsElement.WalletConnect) {
-                    WalletConnectDetailsItem(onItemsClick = state.onItemsClick)
-                } else {
-                    DetailsItem(
-                        item = element,
-                        appCurrency = state.appCurrency,
-                        onItemsClick = { state.onItemsClick(element) },
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            TangemSocialAccounts(state.tangemLinks, state.onSocialNetworkClick)
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
-                style = TangemTheme.typography.caption,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
+            ScreenTitle(titleRes = R.string.details_title)
+            SpacerH(height = TangemTheme.dimens.spacing36)
+            SettingsItems(
+                items = state.elements,
+                onItemsClick = state.onItemsClick,
             )
+            SpacerHMax()
+            TangemSocialAccounts(
+                links = state.tangemLinks,
+                onSocialNetworkClick = state.onSocialNetworkClick,
+            )
+            SpacerH(height = TangemTheme.dimens.spacing16)
+            TangemAppVersion(
+                appNameRes = state.appNameRes,
+                version = state.tangemVersion,
+            )
+            SpacerH(height = TangemTheme.dimens.spacing24)
         }
         ShowSnackbarIfNeeded(state.showErrorSnackbar.value)
     }
 }
 
 @Composable
-private fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
+private fun SettingsItems(items: List<SettingsElement>, onItemsClick: (SettingsElement) -> Unit) {
+    items.forEach { item ->
+        val onItemClick = remember(item) {
+            { onItemsClick(item) }
+        }
+
+        if (item == SettingsElement.WalletConnect) {
+            WalletConnectDetailsItem(onItemClick)
+        } else {
+            DetailsItem(
+                item = item,
+                onItemClick = onItemClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WalletConnectDetailsItem(onItemClick: () -> Unit) {
     Row(
         modifier = Modifier
             .defaultMinSize(minHeight = 84.dp)
             .fillMaxWidth()
-            .clickable { onItemsClick(SettingsElement.WalletConnect) },
+            .clickable(onClick = onItemClick),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -108,12 +124,12 @@ private fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
 }
 
 @Composable
-private fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> Unit) {
+private fun DetailsItem(item: SettingsElement, onItemClick: () -> Unit) {
     Row(
         modifier = Modifier
             .height(56.dp)
             .fillMaxWidth()
-            .clickable(onClick = onItemsClick),
+            .clickable(onClick = onItemClick),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -130,13 +146,6 @@ private fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
-            if (item == SettingsElement.AppCurrency) {
-                Text(
-                    text = appCurrency,
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                )
-            }
         }
     }
 }
@@ -190,6 +199,16 @@ private fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
     }
 }
 
+@Composable
+private fun TangemAppVersion(appNameRes: Int, version: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        text = "${stringResource(id = appNameRes)} $version",
+        style = TangemTheme.typography.caption,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
 // region Preview
 @Composable
 private fun DetailsScreenContentSample() {
@@ -198,7 +217,6 @@ private fun DetailsScreenContentSample() {
             elements = SettingsElement.values().toList(),
             tangemLinks = TangemSocialAccounts.accountsEn,
             tangemVersion = "Tangem 2.14.12 (343)",
-            appCurrency = "Dollar",
             onItemsClick = {},
             onSocialNetworkClick = {},
         ),
