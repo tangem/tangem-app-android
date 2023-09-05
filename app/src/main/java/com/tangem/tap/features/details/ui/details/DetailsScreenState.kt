@@ -10,7 +10,6 @@ internal data class DetailsScreenState(
     val elements: List<SettingsElement>,
     val tangemLinks: List<SocialNetworkLink>,
     val tangemVersion: String,
-    val appCurrency: String,
     val onItemsClick: (SettingsElement) -> Unit,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
     val showErrorSnackbar: MutableState<EventError> = mutableStateOf(EventError.Empty),
@@ -24,14 +23,13 @@ internal enum class SettingsElement(
     val titleRes: Int,
 ) {
     WalletConnect(R.drawable.ic_walletconnect, R.string.wallet_connect_title),
-    Chat(R.drawable.ic_chat, R.string.details_chat),
-    SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),
+    LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
     ReferralProgram(R.drawable.ic_add_friends, R.string.details_referral_title),
     CardSettings(R.drawable.ic_card_settings, R.string.card_settings_title),
-    AppCurrency(R.drawable.ic_currency, R.string.details_row_title_currency),
     AppSettings(R.drawable.ic_settings, R.string.app_settings_title),
-    LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
-    TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App
+    Chat(R.drawable.ic_chat, R.string.details_chat),
+    SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),
+    TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App,
     PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy),
     TesterMenu(R.drawable.ic_alert_24, R.string.tester_menu),
 }

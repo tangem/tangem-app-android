@@ -36,6 +36,14 @@ internal sealed class AppSettingsScreenState {
             val isChecked: Boolean,
             val onCheckedChange: (Boolean) -> Unit,
         ) : Item()
+
+        data class Button(
+            override val id: String,
+            val title: TextReference,
+            val description: TextReference,
+            val isEnabled: Boolean,
+            val onClick: () -> Unit,
+        ) : Item()
     }
 
     data class Alert(

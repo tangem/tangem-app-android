@@ -42,7 +42,6 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
             elements = createSettingsItems(state),
             tangemLinks = getSocialLinks(),
             tangemVersion = getTangemAppVersion(),
-            appCurrency = state.appCurrency.name,
             onItemsClick = { handleClickingSettingsItem(it) },
             onSocialNetworkClick = { handleSocialNetworkClick(it) },
         )
@@ -60,7 +59,6 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.LinkMoreCards -> if (state.createBackupAllowed) it else null
                 SettingsElement.PrivacyPolicy -> if (state.privacyPolicyUrl != null) it else null
                 SettingsElement.AppSettings -> if (state.appSettingsState.isBiometricsAvailable) it else null
-                SettingsElement.AppCurrency -> if (cardTypesResolver.isMultiwalletAllowed()) null else it
                 SettingsElement.ReferralProgram -> if (cardTypesResolver.isTangemWallet()) it else null
                 SettingsElement.TesterMenu -> if (BuildConfig.TESTER_MENU_ENABLED) it else null
                 else -> it
@@ -90,9 +88,6 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
             SettingsElement.CardSettings -> {
                 Analytics.send(Settings.ButtonCardSettings())
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
-            }
-            SettingsElement.AppCurrency -> {
-                store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
             }
             SettingsElement.AppSettings -> {
                 Analytics.send(Settings.ButtonAppSettings())
