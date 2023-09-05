@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 import com.tangem.wallet.R
 
@@ -43,6 +44,16 @@ internal class AppSettingsItemsFactory {
             isEnabled = isEnabled,
             isChecked = isChecked,
             onCheckedChange = onCheckedChange,
+        )
+    }
+
+    fun createSelectAppCurrencyButton(currentAppCurrencyName: String, onClick: () -> Unit): Item.Button {
+        return Item.Button(
+            id = "select_app_currency_button",
+            title = resourceReference(R.string.details_row_title_currency),
+            description = stringReference(currentAppCurrencyName),
+            isEnabled = true,
+            onClick = onClick,
         )
     }
 }
