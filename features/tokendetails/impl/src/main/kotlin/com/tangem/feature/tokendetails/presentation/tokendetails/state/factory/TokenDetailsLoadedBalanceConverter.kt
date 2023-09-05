@@ -10,13 +10,21 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryToTransactionStateConverter
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val symbol: String,
+    private val decimals: Int,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
+
+    private val txHistoryItemConverter by lazy {
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals)
+    }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
         return value.fold(ifLeft = { convertError() }, ifRight = ::convert)
@@ -33,6 +41,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return state.copy(
             tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+            pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList(),
         )
     }
 
