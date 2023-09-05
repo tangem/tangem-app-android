@@ -2,8 +2,6 @@ package com.tangem.tap.features.details.ui.appsettings
 
 import android.os.Bundle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
@@ -24,14 +22,12 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     private val viewModel = AppSettingsViewModel(store)
-    private var screenState: MutableState<AppSettingsScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState))
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         AppSettingsScreen(
             modifier = modifier,
-            state = screenState.value,
+            state = viewModel.uiState,
             onBackClick = {
                 store.dispatch(DetailsAction.ResetCardSettingsData)
                 store.dispatch(NavigationAction.PopBackTo())
@@ -73,6 +69,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state)
+        viewModel.updateState(state)
     }
 }
