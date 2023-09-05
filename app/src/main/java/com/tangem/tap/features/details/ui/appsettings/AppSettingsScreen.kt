@@ -1,224 +1,113 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SpacerH24
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW32
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.redux.AppSetting
-import com.tangem.tap.features.details.ui.appsettings.components.EnrollBiometricsCard
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
+import com.tangem.tap.features.details.ui.appsettings.components.CardItem
 import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
+import com.tangem.tap.features.details.ui.appsettings.components.SwitchItem
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
-import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
         modifier = modifier,
-        content = { AppSettings(state = state) },
+        content = {
+            when (state) {
+                is AppSettingsScreenState.Content -> AppSettings(state = state)
+                is AppSettingsScreenState.Loading -> Unit
+            }
+        },
         titleRes = R.string.app_settings_title,
         onBackClick = onBackClick,
     )
 }
 
 @Composable
-private fun AppSettings(state: AppSettingsScreenState) {
-    var dialogType by remember { mutableStateOf<AppSetting?>(null) }
-    val onDialogStateChange: (AppSetting?) -> Unit = { dialogType = it }
-
-    dialogType?.let {
-        SettingsAlertDialog(
-            element = it,
-            onDialogStateChange = onDialogStateChange,
-            onSettingToggle = { state.onSettingToggled(it, false) },
-        )
+private fun AppSettings(state: AppSettingsScreenState.Content) {
+    val alert by rememberUpdatedState(newValue = state.alert)
+    alert?.let { safeAlert ->
+        SettingsAlertDialog(alert = safeAlert)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (state.showEnrollBiometricsCard) {
-            EnrollBiometricsCard(onClick = state.onEnrollBiometrics)
-            SpacerH24()
-        }
-
-        AppSettingsElement(
-            state = state,
-            setting = AppSetting.SaveWallets,
-            onDialogStateChange = onDialogStateChange,
-        )
-        SpacerH32()
-        AppSettingsElement(
-            state = state,
-            setting = AppSetting.SaveAccessCode,
-            onDialogStateChange = onDialogStateChange,
-        )
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun AppSettingsElement(
-    state: AppSettingsScreenState,
-    setting: AppSetting,
-    onDialogStateChange: (AppSetting?) -> Unit,
-) {
-    val titleRes = when (setting) {
-        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet
-        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes
-    }
-    val subtitleRes = when (setting) {
-        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet_footer
-        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes_footer
-    }
-    val checked = state.settings[setting] ?: false
-
-    val titleTextColor by rememberUpdatedState(
-        newValue = if (state.isTogglesEnabled) {
-            TangemTheme.colors.text.primary1
-        } else {
-            TangemTheme.colors.text.secondary
-        },
-    )
-    val descriptionTextColor by rememberUpdatedState(
-        newValue = if (state.isTogglesEnabled) {
-            TangemTheme.colors.text.secondary
-        } else {
-            TangemTheme.colors.text.tertiary
-        },
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing20),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(
-            modifier = Modifier.weight(weight = .9f),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = stringResource(id = titleRes),
-                style = TangemTheme.typography.subtitle1,
-                color = titleTextColor,
-            )
-            SpacerH4()
-            Text(
-                text = stringResource(id = subtitleRes),
-                style = TangemTheme.typography.body2,
-                color = descriptionTextColor,
-            )
-        }
-        SpacerW32()
-        TangemSwitch(
-            checked = checked,
-            enabled = state.isTogglesEnabled,
-            onCheckedChange = { isChecked ->
-                onCheckedChange(
-                    element = setting,
-                    enabled = isChecked,
-                    onSettingToggled = state.onSettingToggled,
-                    onDialogStateChange = onDialogStateChange,
+    LazyColumn {
+        items(
+            items = state.items,
+            key = Item::id,
+        ) { item ->
+            when (item) {
+                is Item.Card -> CardItem(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                    item = item,
                 )
-            },
-        )
-    }
-}
-
-private fun onCheckedChange(
-    element: AppSetting,
-    enabled: Boolean,
-    onSettingToggled: (AppSetting, Boolean) -> Unit,
-    onDialogStateChange: (AppSetting?) -> Unit,
-) {
-    // Show warning if user wants to disable the switch
-    if (!enabled) {
-        onDialogStateChange(element)
-    } else {
-        onSettingToggled(element, true)
+                is Item.Switch -> SwitchItem(
+                    modifier = Modifier.padding(
+                        vertical = TangemTheme.dimens.spacing16,
+                        horizontal = TangemTheme.dimens.spacing20,
+                    ),
+                    item = item,
+                )
+            }
+        }
     }
 }
 
 // region Preview
-@Composable
-private fun AppSettingsScreenSample(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
-    ) {
-        AppSettingsScreen(
-            state = AppSettingsScreenState(
-                settings = mapOf(
-                    AppSetting.SaveWallets to true,
-                    AppSetting.SaveAccessCode to false,
-                ),
-                showEnrollBiometricsCard = false,
-                isTogglesEnabled = true,
-                onSettingToggled = { _, _ -> },
-                onEnrollBiometrics = {},
-            ),
-            onBackClick = { },
-        )
-    }
-}
-
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun AppSettingsScreenPreview_Light() {
+private fun AppSettingsScreenPreview_Light(
+    @PreviewParameter(AppSettingsScreenStateProvider::class) state: AppSettingsScreenState,
+) {
     TangemTheme {
-        AppSettingsScreenSample()
+        AppSettingsScreen(state = state, onBackClick = {})
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun AppSettingsScreenPreview_Dark() {
+private fun AppSettingsScreenPreview_Dark(
+    @PreviewParameter(AppSettingsScreenStateProvider::class) state: AppSettingsScreenState,
+) {
     TangemTheme(isDark = true) {
-        AppSettingsScreenSample()
+        AppSettingsScreen(state = state, onBackClick = {})
     }
 }
 
-@Composable
-private fun AppSettingsScreen_EnrollBiometrics_Sample(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.background(TangemTheme.colors.background.primary)) {
-        AppSettingsScreen(
-            state = AppSettingsScreenState(
-                settings = mapOf(
-                    AppSetting.SaveWallets to true,
-                    AppSetting.SaveAccessCode to false,
-                ),
-                showEnrollBiometricsCard = true,
-                isTogglesEnabled = false,
-                onSettingToggled = { _, _ -> },
-                onEnrollBiometrics = {},
-            ),
-            onBackClick = { },
+private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvider<AppSettingsScreenState>(
+    collection = buildList {
+        val itemsFactory = AppSettingsItemsFactory()
+        val dialogsFactory = AppSettingsAlertsFactory()
+        val items = persistentListOf(
+            itemsFactory.createEnrollBiometricsCard {},
+            itemsFactory.createSaveWalletsSwitch(isChecked = true, isEnabled = true, { _ -> }),
+            itemsFactory.createSaveAccessCodeSwitch(isChecked = false, isEnabled = true) { _ -> },
         )
-    }
-}
 
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AppSettingsScreen_EnrollBiometrics_Preview_Light() {
-    TangemTheme {
-        AppSettingsScreen_EnrollBiometrics_Sample()
-    }
-}
+        AppSettingsScreenState.Content(
+            items = items,
+            alert = null,
+        ).let(::add)
 
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun AppSettingsScreen_EnrollBiometrics_Preview_Dark() {
-    TangemTheme(isDark = true) {
-        AppSettingsScreen_EnrollBiometrics_Sample()
-    }
-}
+        AppSettingsScreenState.Content(
+            items = items,
+            alert = dialogsFactory.createDeleteSavedWalletsAlert({}, {}),
+        ).let(::add)
+
+        AppSettingsScreenState.Content(
+            items = items,
+            alert = dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}),
+        ).let(::add)
+    },
+)
 // endregion Preview
