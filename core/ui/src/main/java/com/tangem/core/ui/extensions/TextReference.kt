@@ -50,6 +50,53 @@ sealed interface TextReference {
     data class Combined(val refs: WrappedList<TextReference>) : TextReference
 }
 
+/**
+ * Creates a [TextReference] using a string resource ID with optional format arguments.
+ *
+ * @param id The resource ID of the string.
+ * @param formatArgs A list of format arguments to be applied to the string resource.
+ * @return A [TextReference] representing the string resource with format arguments.
+ */
+fun resourceReference(@StringRes id: Int, formatArgs: WrappedList<Any> = WrappedList(emptyList())): TextReference {
+    return TextReference.Res(id, formatArgs)
+}
+
+/**
+ * Creates a [TextReference] using a plain string value.
+ *
+ * @param value The plain string value.
+ * @return A [TextReference] representing the provided string value.
+ */
+fun stringReference(value: String): TextReference {
+    return TextReference.Str(value)
+}
+
+/**
+ * Creates a [TextReference] using a plural string resource ID with count and optional format arguments.
+ *
+ * @param id The resource ID of the plural string.
+ * @param count The count value to determine the plural form.
+ * @param formatArgs A list of format arguments to be applied to the plural string resource.
+ * @return A [TextReference] representing the plural string resource with count and format arguments.
+ */
+fun pluralReference(
+    @PluralsRes id: Int,
+    count: Int,
+    formatArgs: WrappedList<Any> = WrappedList(emptyList()),
+): TextReference {
+    return TextReference.PluralRes(id, count, formatArgs)
+}
+
+/**
+ * Combines multiple [TextReference] instances into a single [TextReference].
+ *
+ * @param refs A list of [TextReference] instances to be combined.
+ * @return A [TextReference] representing the combined text references.
+ */
+fun combinedReference(refs: WrappedList<TextReference>): TextReference {
+    return TextReference.Combined(refs)
+}
+
 /** Resolve [TextReference] as [String] */
 @Composable
 @ReadOnlyComposable
