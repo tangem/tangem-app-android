@@ -34,6 +34,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 
