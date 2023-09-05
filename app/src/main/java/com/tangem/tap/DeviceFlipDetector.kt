@@ -33,10 +33,8 @@ class DeviceFlipDetector(context: Context) {
                     val zAxisValue = it.values[2]
 
                     if (zAxisValue < zAxisThreshold && !isScreenDown) {
-                        // if (!isScreenDown) {
-                            isScreenDown = true
-                            lastTriggerTime = currentTime
-                        // }
+                        isScreenDown = true
+                        lastTriggerTime = currentTime
                     } else if (zAxisValue >= zAxisThreshold) {
                         if (isScreenDown && (currentTime - lastTriggerTime <= throttleTimeMs)) {
                             lastTriggerTime = currentTime
@@ -54,5 +52,4 @@ class DeviceFlipDetector(context: Context) {
 
         awaitClose { sensorManager.unregisterListener(listener) }
     }
-    
 }
