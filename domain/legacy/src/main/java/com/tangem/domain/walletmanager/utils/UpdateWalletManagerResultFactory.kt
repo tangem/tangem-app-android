@@ -3,37 +3,37 @@ package com.tangem.domain.walletmanager.utils
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.common.extensions.amountToCreateAccount
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
-import org.joda.time.Instant
 import timber.log.Timber
 import java.math.BigDecimal
-import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 internal class UpdateWalletManagerResultFactory {
 
     fun getResult(walletManager: WalletManager): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
+        val addresses = getAvailableAddresses(wallet.addresses)
 
         return UpdateWalletManagerResult.Verified(
             defaultAddress = wallet.address,
-            addresses = getAvailableAddresses(wallet.addresses),
+            addresses = addresses,
             currenciesAmounts = getTokensAmounts(wallet.amounts.values.toSet()),
-            currentTransactions = getCurrentTransactions(wallet.recentTransactions.toSet()),
+            currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
         )
     }
 
     fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
+        val addresses = getAvailableAddresses(wallet.addresses)
 
         return UpdateWalletManagerResult.Verified(
             defaultAddress = wallet.address,
-            addresses = getAvailableAddresses(wallet.addresses),
+            addresses = addresses,
             currenciesAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
-            currentTransactions = getCurrentTransactions(wallet.recentTransactions.toSet()),
+            currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
         )
     }
 
@@ -70,12 +70,15 @@ internal class UpdateWalletManagerResultFactory {
         }
     }
 
-    private fun getCurrentTransactions(recentTransactions: Set<TransactionData>): Set<CryptoCurrencyTransaction> {
+    private fun getCurrentTransactions(
+        walletAddresses: Set<String>,
+        recentTransactions: Set<TransactionData>,
+    ): Set<CryptoCurrencyTransaction> {
         val unconfirmedTransactions = recentTransactions.filter {
             it.status == TransactionStatus.Unconfirmed
         }
 
-        return unconfirmedTransactions.mapNotNullTo(hashSetOf(), ::createCurrencyTransaction)
+        return unconfirmedTransactions.mapNotNullTo(hashSetOf()) { createCurrencyTransaction(walletAddresses, it) }
     }
 
     private fun createCurrencyAmount(amount: Amount): CryptoCurrencyAmount? {
@@ -92,28 +95,75 @@ internal class UpdateWalletManagerResultFactory {
         }
     }
 
-    private fun createCurrencyTransaction(data: TransactionData): CryptoCurrencyTransaction? {
-        val fromAddress = takeAddressIfNotUnknown(data.sourceAddress)
-        val toAddress = takeAddressIfNotUnknown(data.destinationAddress)
-        val amount = getTransactionAmountValue(data.amount) ?: return null
-        val sentAt = getTransactionSentTime(data.date) ?: return null
-
+    private fun createCurrencyTransaction(
+        walletAddresses: Set<String>,
+        data: TransactionData,
+    ): CryptoCurrencyTransaction? {
         return when (val type = data.amount.type) {
-            is AmountType.Coin -> CryptoCurrencyTransaction.Coin(
-                amount = amount,
-                fromAddress = fromAddress,
-                toAddress = toAddress,
-                sentAt = sentAt,
-            )
-            is AmountType.Token -> CryptoCurrencyTransaction.Token(
-                tokenId = type.token.id,
-                tokenContractAddress = type.token.contractAddress,
-                amount = amount,
-                fromAddress = fromAddress,
-                toAddress = toAddress,
-                sentAt = sentAt,
-            )
+            is AmountType.Coin -> {
+                val txHistoryItem = createTxHistoryItem(walletAddresses, data) ?: return null
+                CryptoCurrencyTransaction.Coin(txHistoryItem)
+            }
+            is AmountType.Token -> {
+                val txHistoryItem = createTxHistoryItem(walletAddresses, data) ?: return null
+                CryptoCurrencyTransaction.Token(
+                    tokenId = type.token.id,
+                    tokenContractAddress = type.token.contractAddress,
+                    txHistoryItem = txHistoryItem,
+                )
+            }
             is AmountType.Reserve -> null
+        }
+    }
+
+    private fun createTxHistoryItem(walletAddresses: Set<String>, data: TransactionData): TxHistoryItem? {
+        val direction = extractDirection(walletAddresses, data) ?: run {
+            Timber.w("Can not determine address for $data")
+            return null
+        }
+        val hash = data.hash ?: return null
+        val millis = data.date?.timeInMillis ?: return null
+        val amount = getTransactionAmountValue(data.amount) ?: return null
+
+        return TxHistoryItem(
+            txHash = hash,
+            timestampInMillis = TimeUnit.SECONDS.toMillis(millis),
+            direction = direction,
+            status = when (data.status) {
+                TransactionStatus.Confirmed -> TxHistoryItem.TxStatus.Confirmed
+                TransactionStatus.Unconfirmed -> TxHistoryItem.TxStatus.Unconfirmed
+            },
+            type = TxHistoryItem.TransactionType.Transfer,
+            amount = amount,
+        )
+    }
+
+    private fun extractDirection(
+        walletAddresses: Set<String>,
+        data: TransactionData,
+    ): TxHistoryItem.TransactionDirection? {
+        val fromAddress = data.sourceAddress
+        val toAddress = data.destinationAddress
+
+        return when {
+            toAddress in walletAddresses -> {
+                TxHistoryItem.TransactionDirection.Incoming(TxHistoryItem.Address.Single(fromAddress))
+            }
+            fromAddress in walletAddresses -> {
+                TxHistoryItem.TransactionDirection.Outgoing(TxHistoryItem.Address.Single(toAddress))
+            }
+            else -> {
+                Timber.e(
+                    """
+                    Unable to find transaction direction
+                    |- To address: ${data.destinationAddress}
+                    |- From address: ${data.sourceAddress}
+                    |- Network addresses: $walletAddresses
+                    """.trimIndent(),
+                )
+
+                return null
+            }
         }
     }
 
@@ -139,25 +189,5 @@ internal class UpdateWalletManagerResultFactory {
         }
 
         return value
-    }
-
-    private fun getTransactionSentTime(date: Calendar?): DateTime? {
-        if (date == null) {
-            Timber.e("Transaction date must not be null")
-            return null
-        }
-
-        val instant = Instant.ofEpochMilli(date.timeInMillis)
-        val timeZone = DateTimeZone.forTimeZone(date.timeZone)
-
-        return instant.toDateTime(timeZone)
-    }
-
-    private fun takeAddressIfNotUnknown(address: String): String? {
-        return address.takeIf { it.isNotBlank() && it != UNKNOWN_TRANSACTION_ADDRESS }
-    }
-
-    private companion object {
-        const val UNKNOWN_TRANSACTION_ADDRESS = "unknown"
     }
 }
