@@ -28,17 +28,22 @@ class UserTokensRepository(
     private val networkConnectionManager: NetworkConnectionManager,
 ) {
 
-    suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
-        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
+    suspend fun getUserTokens(card: CardDTO, derivationStyle: DerivationStyle?): List<Currency> =
+        withContext(dispatchers.io) {
+            val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
 
-        if (DemoHelper.isDemoCardId(card.cardId)) {
-            return@withContext loadTokensOffline(userWalletId = userWalletId).ifEmpty(::loadDemoCurrencies)
+            if (DemoHelper.isDemoCardId(card.cardId)) {
+                return@withContext loadTokensOffline(userWalletId = userWalletId).ifEmpty {
+                    loadDemoCurrencies(
+                        derivationStyle,
+                    )
+                }
+            }
+
+            if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userWalletId = userWalletId)
+
+            return@withContext remoteGetUserTokens(userWalletId = userWalletId)
         }
-
-        if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userWalletId = userWalletId)
-
-        return@withContext remoteGetUserTokens(userWalletId = userWalletId)
-    }
 
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
         val userWalletId = getUserWalletId(card) ?: return@withContext
@@ -48,28 +53,29 @@ class UserTokensRepository(
     }
 
     // FIXME: Move to data layer
-    suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
-        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
-        val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
+    suspend fun loadBlockchainsToDerive(card: CardDTO, derivationStyle: DerivationStyle?): List<BlockchainNetwork> =
+        withContext(dispatchers.io) {
+            val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
+            val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
 
-        if (DemoHelper.isDemoCardId(card.cardId)) {
-            return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies()::toBlockchainNetworks)
+            if (DemoHelper.isDemoCardId(card.cardId)) {
+                return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies(derivationStyle)::toBlockchainNetworks)
+            }
+
+            return@withContext blockchainNetworks
         }
-
-        return@withContext blockchainNetworks
-    }
 
     private fun loadTokensOffline(userWalletId: String): List<Currency> {
         return storageService.getUserTokens(userWalletId = userWalletId) ?: emptyList()
     }
 
     // FIXME: Move to user wallet config
-    private fun loadDemoCurrencies(): List<Currency> {
+    private fun loadDemoCurrencies(derivationStyle: DerivationStyle?): List<Currency> {
         return DemoHelper.config.demoBlockchains
             .map { blockchain ->
                 BlockchainNetwork(
                     blockchain = blockchain,
-                    derivationPath = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath,
+                    derivationPath = blockchain.derivationPath(derivationStyle)?.rawPath,
                     tokens = emptyList(),
                 )
             }
