@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopB
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -99,7 +99,7 @@ internal class WalletLockedConverter(
         )
     }
 
-    private fun createButtons(): ImmutableList<WalletManageButton> {
+    private fun createButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Buy(enabled = false, onClick = {}),
             WalletManageButton.Send(enabled = false, onClick = {}),
