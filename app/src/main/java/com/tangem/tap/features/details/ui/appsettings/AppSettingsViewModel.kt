@@ -16,7 +16,7 @@ import org.rekotlin.Store
 internal class AppSettingsViewModel(private val store: Store<AppState>) {
 
     private val itemsFactory = AppSettingsItemsFactory()
-    private val dialogsFactory = AppSettingsDialogsFactory()
+    private val alertsFactory = AppSettingsAlertsFactory()
 
     var uiState: AppSettingsScreenState by mutableStateOf(AppSettingsScreenState.Loading)
         private set
@@ -24,7 +24,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
     fun updateState(state: DetailsState) {
         uiState = AppSettingsScreenState.Content(
             items = buildItems(state.appSettingsState),
-            dialog = (uiState as? AppSettingsScreenState.Content)?.dialog,
+            alert = (uiState as? AppSettingsScreenState.Content)?.alert,
         )
     }
 
@@ -72,7 +72,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         } else {
             updateContentState {
                 copy(
-                    dialog = dialogsFactory.createDeleteSavedWalletsAlert(
+                    alert = alertsFactory.createDeleteSavedWalletsAlert(
                         onDelete = {
                             onSettingsToggled(AppSetting.SaveWallets, enable = false)
                             dismissDialog()
@@ -90,7 +90,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         } else {
             updateContentState {
                 copy(
-                    dialog = dialogsFactory.createDeleteSavedAccessCodesAlert(
+                    alert = alertsFactory.createDeleteSavedAccessCodesAlert(
                         onDelete = {
                             onSettingsToggled(AppSetting.SaveAccessCode, enable = false)
                             dismissDialog()
@@ -107,7 +107,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
     }
 
     private fun dismissDialog() {
-        updateContentState { copy(dialog = null) }
+        updateContentState { copy(alert = null) }
     }
 
     private fun updateContentState(block: AppSettingsScreenState.Content.() -> AppSettingsScreenState.Content) {

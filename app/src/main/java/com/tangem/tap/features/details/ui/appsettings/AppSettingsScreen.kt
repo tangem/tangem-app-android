@@ -36,11 +36,9 @@ internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () ->
 
 @Composable
 private fun AppSettings(state: AppSettingsScreenState.Content) {
-    val dialog by rememberUpdatedState(newValue = state.dialog)
-
-    when (val safeDialog = dialog) {
-        is AppSettingsScreenState.Dialog.Alert -> SettingsAlertDialog(dialog = safeDialog)
-        null -> Unit
+    val alert by rememberUpdatedState(newValue = state.alert)
+    alert?.let { safeAlert ->
+        SettingsAlertDialog(alert = safeAlert)
     }
 
     LazyColumn {
@@ -89,7 +87,7 @@ private fun AppSettingsScreenPreview_Dark(
 private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvider<AppSettingsScreenState>(
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
-        val dialogsFactory = AppSettingsDialogsFactory()
+        val dialogsFactory = AppSettingsAlertsFactory()
         val items = persistentListOf(
             itemsFactory.createEnrollBiometricsCard {},
             itemsFactory.createSaveWalletsSwitch(isChecked = true, isEnabled = true, { _ -> }),
@@ -98,17 +96,17 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
 
         AppSettingsScreenState.Content(
             items = items,
-            dialog = null,
+            alert = null,
         ).let(::add)
 
         AppSettingsScreenState.Content(
             items = items,
-            dialog = dialogsFactory.createDeleteSavedWalletsAlert({}, {}),
+            alert = dialogsFactory.createDeleteSavedWalletsAlert({}, {}),
         ).let(::add)
 
         AppSettingsScreenState.Content(
             items = items,
-            dialog = dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}),
+            alert = dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}),
         ).let(::add)
     },
 )

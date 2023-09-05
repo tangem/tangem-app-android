@@ -12,7 +12,7 @@ internal sealed class AppSettingsScreenState {
 
     data class Content(
         val items: ImmutableList<Item>,
-        val dialog: Dialog?,
+        val alert: Alert?,
     ) : AppSettingsScreenState()
 
     @Immutable
@@ -38,17 +38,11 @@ internal sealed class AppSettingsScreenState {
         ) : Item()
     }
 
-    @Immutable
-    sealed class Dialog {
-
-        abstract val onDismiss: () -> Unit
-
-        data class Alert(
-            val title: TextReference,
-            val description: TextReference,
-            val confirmText: TextReference,
-            val onConfirm: () -> Unit,
-            override val onDismiss: () -> Unit,
-        ) : Dialog()
-    }
+    data class Alert(
+        val title: TextReference,
+        val description: TextReference,
+        val confirmText: TextReference,
+        val onConfirm: () -> Unit,
+        val onDismiss: () -> Unit,
+    )
 }
