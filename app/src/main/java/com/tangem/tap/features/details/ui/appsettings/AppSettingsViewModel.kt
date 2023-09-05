@@ -9,6 +9,7 @@ import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.Store
@@ -42,6 +43,11 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
                 itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics).let(::add)
             }
 
+            itemsFactory.createSelectAppCurrencyButton(
+                currentAppCurrencyName = state.selectedFiatCurrency.name,
+                onClick = ::showAppCurrencySelector,
+            ).let(::add)
+
             if (state.isBiometricsAvailable) {
                 val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
@@ -64,6 +70,10 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
 
     private fun enrollBiometrics() {
         store.dispatchOnMain(DetailsAction.AppSettings.EnrollBiometrics)
+    }
+
+    private fun showAppCurrencySelector() {
+        store.dispatchOnMain(WalletAction.AppCurrencyAction.ChooseAppCurrency)
     }
 
     private fun onSaveWalletsToggled(isChecked: Boolean) {
