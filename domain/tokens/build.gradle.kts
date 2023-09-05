@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
 
