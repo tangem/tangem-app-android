@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
+import com.tangem.tap.features.details.ui.appsettings.components.ButtonItem
 import com.tangem.tap.features.details.ui.appsettings.components.CardItem
 import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
 import com.tangem.tap.features.details.ui.appsettings.components.SwitchItem
@@ -49,6 +50,10 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
             when (item) {
                 is Item.Card -> CardItem(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                    item = item,
+                )
+                is Item.Button -> ButtonItem(
+                    modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
                     item = item,
                 )
                 is Item.Switch -> SwitchItem(
@@ -90,6 +95,7 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
         val dialogsFactory = AppSettingsAlertsFactory()
         val items = persistentListOf(
             itemsFactory.createEnrollBiometricsCard {},
+            itemsFactory.createSelectAppCurrencyButton(currentAppCurrencyName = "US Dollar") {},
             itemsFactory.createSaveWalletsSwitch(isChecked = true, isEnabled = true, { _ -> }),
             itemsFactory.createSaveAccessCodeSwitch(isChecked = false, isEnabled = true) { _ -> },
         )
