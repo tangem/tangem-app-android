@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 @ExperimentalCoroutinesApi
 class DeviceFlipDetector(context: Context) {
 
-    private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
 
     private val zAxisThreshold = -6
