@@ -18,10 +18,7 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
-import com.tangem.tap.features.send.ui.dialogs.KaspaWarningDialog
-import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
-import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
-import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
+import com.tangem.tap.features.send.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.utils.ROUGH_SIGN
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
@@ -124,6 +121,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
+    @Suppress("ComplexMethod")
     private fun handleSendScreen(fg: SendFragment, state: SendState) = with(fg.binding) {
         when (state.dialog) {
             is SendAction.Dialog.TezosWarningDialog -> {
@@ -135,6 +133,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             is SendAction.Dialog.KaspaWarningDialog -> {
                 if (dialog == null) {
                     dialog = KaspaWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.ChiaWarningDialog -> {
+                if (dialog == null) {
+                    dialog = ChiaWarningDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
                 }
             }
