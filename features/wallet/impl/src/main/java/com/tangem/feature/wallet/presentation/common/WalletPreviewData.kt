@@ -365,7 +365,7 @@ internal object WalletPreviewData {
                         ),
                     ),
                 ),
-                onOrganizeTokensClick = {},
+                organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Visible(isEnabled = true, {}),
             ),
             pullToRefreshConfig = WalletPullToRefreshConfig(
                 isRefreshing = false,
