@@ -22,7 +22,7 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun CardItem(item: Item.Card, modifier: Modifier = Modifier) {
+internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors.button.disabled,
@@ -62,7 +62,7 @@ internal fun CardItem(item: Item.Card, modifier: Modifier = Modifier) {
 @Composable
 private fun CardItemPreview_Light(@PreviewParameter(CardItemProvider::class) item: Item.Card) {
     TangemTheme {
-        CardItem(item = item)
+        SettingsCardItem(item = item)
     }
 }
 
@@ -70,7 +70,7 @@ private fun CardItemPreview_Light(@PreviewParameter(CardItemProvider::class) ite
 @Composable
 private fun CardItemPreview_Dark(@PreviewParameter(CardItemProvider::class) item: Item.Card) {
     TangemTheme(isDark = true) {
-        CardItem(item = item)
+        SettingsCardItem(item = item)
     }
 }
 

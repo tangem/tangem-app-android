@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.appsettings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.AppSetting
@@ -17,7 +18,7 @@ import org.rekotlin.Store
 internal class AppSettingsViewModel(private val store: Store<AppState>) {
 
     private val itemsFactory = AppSettingsItemsFactory()
-    private val alertsFactory = AppSettingsAlertsFactory()
+    private val dialogsFactory = AppSettingsDialogsFactory()
 
     var uiState: AppSettingsScreenState by mutableStateOf(AppSettingsScreenState.Loading)
         private set
@@ -25,7 +26,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
     fun updateState(state: DetailsState) {
         uiState = AppSettingsScreenState.Content(
             items = buildItems(state.appSettingsState),
-            alert = (uiState as? AppSettingsScreenState.Content)?.alert,
+            dialog = (uiState as? AppSettingsScreenState.Content)?.dialog,
         )
     }
 
@@ -63,6 +64,10 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
                     onCheckedChange = ::onSaveAccessCodesToggled,
                 ).let(::add)
             }
+
+            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
+                showThemeModeSelector(state.selectedThemeMode)
+            }.let(::add)
         }
 
         return items.toImmutableList()
@@ -76,13 +81,28 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         store.dispatchOnMain(WalletAction.AppCurrencyAction.ChooseAppCurrency)
     }
 
+    private fun showThemeModeSelector(selectedMode: AppThemeMode) {
+        updateContentState {
+            copy(
+                dialog = dialogsFactory.createThemeModeSelectorDialog(
+                    selectedModeIndex = selectedMode.ordinal,
+                    onSelect = { mode ->
+                        store.dispatchOnMain(DetailsAction.AppSettings.ChangeAppThemeMode(mode))
+                        dismissDialog()
+                    },
+                    onDismiss = ::dismissDialog,
+                ),
+            )
+        }
+    }
+
     private fun onSaveWalletsToggled(isChecked: Boolean) {
         if (isChecked) {
             onSettingsToggled(AppSetting.SaveWallets, enable = true)
         } else {
             updateContentState {
                 copy(
-                    alert = alertsFactory.createDeleteSavedWalletsAlert(
+                    dialog = dialogsFactory.createDeleteSavedWalletsAlert(
                         onDelete = {
                             onSettingsToggled(AppSetting.SaveWallets, enable = false)
                             dismissDialog()
@@ -100,7 +120,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         } else {
             updateContentState {
                 copy(
-                    alert = alertsFactory.createDeleteSavedAccessCodesAlert(
+                    dialog = dialogsFactory.createDeleteSavedAccessCodesAlert(
                         onDelete = {
                             onSettingsToggled(AppSetting.SaveAccessCode, enable = false)
                             dismissDialog()
@@ -117,7 +137,7 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
     }
 
     private fun dismissDialog() {
-        updateContentState { copy(alert = null) }
+        updateContentState { copy(dialog = null) }
     }
 
     private fun updateContentState(block: AppSettingsScreenState.Content.() -> AppSettingsScreenState.Content) {
