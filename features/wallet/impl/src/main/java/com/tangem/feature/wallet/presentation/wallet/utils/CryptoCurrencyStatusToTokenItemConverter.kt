@@ -41,17 +41,11 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             icon = iconStateConverter.convert(currency),
             amount = getFormattedAmount(),
             hasPending = value.hasCurrentNetworkTransactions,
-            tokenOptions = if (isBalanceHidden) {
-                TokenItemState.TokenOptionsState.Hidden(
-                    fiatAmount = getFormattedFiatAmount(),
-                    config = getPriceChangeConfig(),
-                )
-            } else {
-                TokenItemState.TokenOptionsState.Visible(
-                    fiatAmount = getFormattedFiatAmount(),
-                    config = getPriceChangeConfig(),
-                )
-            },
+            tokenOptions = TokenItemState.TokenOptionsState(
+                fiatAmount = getFormattedFiatAmount(),
+                config = getPriceChangeConfig(),
+                balanceHidden = isBalanceHidden
+            ),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )

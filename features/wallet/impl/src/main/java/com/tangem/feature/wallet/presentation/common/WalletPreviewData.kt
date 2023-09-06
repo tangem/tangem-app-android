@@ -123,12 +123,13 @@ internal object WalletPreviewData {
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
-            tokenOptions = TokenOptionsState.Visible(
+            tokenOptions = TokenOptionsState(
                 fiatAmount = "321 $",
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
+                balanceHidden = false
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -149,12 +150,14 @@ internal object WalletPreviewData {
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
-            tokenOptions = TokenOptionsState.Hidden(
+            tokenOptions = TokenOptionsState(
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
-                fiatAmount = "321 $"
+                fiatAmount = "321 $",
+                balanceHidden = false
+
             ),
             onItemClick = {},
             onItemLongClick = {},

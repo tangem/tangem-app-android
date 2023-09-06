@@ -230,7 +230,7 @@ internal class WalletStateFactory(
     fun getHiddenBalanceState(hiddenBalance: Boolean): WalletState {
         return when (val state = currentStateProvider() as? WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> {
-                val patchedTokens = (state.tokensListState as? WalletTokensListState.Content)?.let { content ->
+                val updatedTokensList = (state.tokensListState as? WalletTokensListState.Content)?.let { content ->
                     content.copy(items = content.items.map { tokenListItemState ->
                         if (tokenListItemState is WalletTokensListState.TokensListItemState.Token) {
                             if (tokenListItemState.state is TokenItemState.Content) {
@@ -257,7 +257,7 @@ internal class WalletStateFactory(
                             it.updateHiddenState(hiddenBalance)
                         }.toImmutableList()
                     ),
-                    tokensListState = patchedTokens
+                    tokensListState = updatedTokensList
                 )
             }
 

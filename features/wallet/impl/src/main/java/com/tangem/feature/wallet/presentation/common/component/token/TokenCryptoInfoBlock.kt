@@ -39,7 +39,7 @@ private fun ContentBlock(state: TokenItemState.ContentState, modifier: Modifier 
 
         AmountText(
             amount = when (state) {
-                is TokenItemState.Content -> if (state.tokenOptions is TokenOptionsState.Hidden) DOTS else state.amount
+                is TokenItemState.Content -> if (state.tokenOptions.balanceHidden) DOTS else state.amount
                 is TokenItemState.Draggable -> state.fiatAmount
                 is TokenItemState.Unreachable -> null
             },

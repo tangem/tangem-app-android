@@ -57,9 +57,10 @@ private fun ContentBlock(state: TokenOptionsState, modifier: Modifier = Modifier
             modifier = Modifier.align(Alignment.End),
         ) {
             Text(
-                text = when (it) {
-                    is TokenOptionsState.Visible -> it.fiatAmount
-                    is TokenOptionsState.Hidden -> DOTS
+                text = if (it.balanceHidden) {
+                    DOTS
+                } else {
+                    it.fiatAmount
                 },
                 style = TangemTypography.body2,
                 color = TangemTheme.colors.text.primary1,
