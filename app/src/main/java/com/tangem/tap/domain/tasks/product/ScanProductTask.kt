@@ -247,7 +247,10 @@ private class ScanWalletProcessor(
         derivationStyleProvider: DerivationStyleProvider,
     ): List<BlockchainNetwork> {
         val userTokensRepository = userTokensRepository ?: return emptyList()
-        val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card)
+        val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(
+            card,
+            derivationStyleProvider.getDerivationStyle(),
+        )
             .toMutableList()
             .ifEmpty {
                 mutableListOf(
