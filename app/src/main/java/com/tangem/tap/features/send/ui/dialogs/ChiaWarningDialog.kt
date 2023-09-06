@@ -6,6 +6,7 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
+// TODO: https://tangem.atlassian.net/browse/AND-4480
 object ChiaWarningDialog {
 
     fun create(context: Context, dialog: SendAction.Dialog.ChiaWarningDialog): AlertDialog {
