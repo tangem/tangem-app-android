@@ -174,7 +174,7 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                     null
                 } else {
                     ColorFilter.tint(TangemColorPalette.Dark6)
-                }
+                },
             )
             when (config.currentStory) {
                 Stories.OneInchPromo -> Learn2earnStoriesScreen(config.onLearn2earnClick)
