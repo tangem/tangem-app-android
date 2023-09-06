@@ -4,11 +4,11 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.features.welcome.redux.WelcomeAction
-import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
  */
 class BackgroundScanIntentHandler(
     private val hasSavedUserWalletsProvider: () -> Boolean,
+    private val lifecycleCoroutineScope: LifecycleCoroutineScope,
 ) : IntentHandler {
 
     private val nfcActions = arrayOf(
@@ -40,12 +41,12 @@ class BackgroundScanIntentHandler(
         intent.action = null
         if (hasSavedUserWalletsProvider.invoke()) {
             // TODO: Remove delay after [REDACTED_JIRA]
-            scope.launch {
+            lifecycleCoroutineScope.launch {
                 delay(timeMillis = 200)
-                store.dispatchWithMain(WelcomeAction.ProceedWithCard)
+                store.dispatchWithMain(WelcomeAction.ProceedWithCard(lifecycleCoroutineScope))
             }
         } else {
-            store.dispatchWithMain(HomeAction.ReadCard())
+            store.dispatchWithMain(HomeAction.ReadCard(lifecycleCoroutineScope = lifecycleCoroutineScope))
         }
 
         return true
