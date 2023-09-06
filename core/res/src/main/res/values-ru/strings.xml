@@ -568,5 +568,5 @@
     <string name="welcome_unlock">Войти с %s</string>
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
-    <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="welcome_unlock_title">С возвращением!</string>
 </resources>
