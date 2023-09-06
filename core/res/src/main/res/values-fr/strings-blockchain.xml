@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="address_type_default"></string>
+  <string name="address_type_legacy"></string>
   <string name="common_fee_error">Échec de réception des commissions</string>
+  <string name="common_utxo_validate_withdrawal_message_warning"></string>
+  <string name="eth_gas_required_exceeds_allowance"></string>
+  <string name="generic_error_code"></string>
+  <string name="kaspa_withdrawal_message_warning"></string>
   <string name="no_account_generic">Pour créer un compte, téléchargez %1$s+ %2$s</string>
+  <string name="no_account_polkadot"></string>
   <string name="send_error_dust_amount_format">Le montant minimal est de %s</string>
   <string name="send_error_dust_change">Le reste est trop petit</string>
   <string name="send_error_invalid_fee_value">Commission non valide</string>
+  <string name="send_error_minimum_balance_format"></string>
   <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %s + commissions ou plus</string>
   <string name="send_error_unknown">Erreur inconnue</string>
   <string name="send_validation_amount_exceeds_balance">Le montant dépasse le solde</string>
