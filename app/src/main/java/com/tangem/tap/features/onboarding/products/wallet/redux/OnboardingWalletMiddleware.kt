@@ -146,12 +146,12 @@ private fun handleWalletAction(action: Action) {
                 is CompletionResult.Failure -> Unit
             }
         }
-        OnboardingWalletAction.FinishOnboarding -> {
+        is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
 
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(HomeAction.ReadCard())
+                store.dispatch(HomeAction.ReadCard(lifecycleCoroutineScope = action.lifecycleCoroutineScope))
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
@@ -460,7 +460,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
 
         is BackupAction.ResetBackupCard -> {
-            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId) }
+            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId, false) }
         }
 
         else -> Unit
