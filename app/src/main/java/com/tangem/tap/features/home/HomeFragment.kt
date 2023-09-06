@@ -13,6 +13,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -26,6 +27,7 @@ import com.tangem.tap.features.home.redux.Stories
 import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
 
 @AndroidEntryPoint
@@ -94,7 +96,11 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
             onLearn2earnClick = learn2earnViewModel.uiState.storyScreenState.onClick,
             onScanButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
-                store.dispatch(HomeAction.ReadCard())
+                lifecycleScope.launch {
+                    store.dispatch(
+                        HomeAction.ReadCard(lifecycleCoroutineScope = lifecycleScope),
+                    )
+                }
             },
             onShopButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonBuyCards())
