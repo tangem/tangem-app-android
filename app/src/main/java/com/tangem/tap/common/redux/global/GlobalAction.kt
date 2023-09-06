@@ -6,6 +6,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.analytics.topup.TopUpController
@@ -103,4 +104,5 @@ sealed class GlobalAction : Action {
     }
 
     data class UpdateUserWalletsListManager(val manager: UserWalletsListManager) : GlobalAction()
+    data class ChangeAppThemeMode(val appThemeMode: AppThemeMode) : GlobalAction()
 }
