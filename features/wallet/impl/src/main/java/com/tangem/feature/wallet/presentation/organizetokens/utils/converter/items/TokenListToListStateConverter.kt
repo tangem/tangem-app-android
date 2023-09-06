@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.it
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
-import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteItems
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
@@ -25,7 +24,6 @@ internal class TokenListToListStateConverter(
         return OrganizeTokensListState.GroupedByNetwork(
             items = groupsConverter.convertList(tokenList.groups)
                 .flatten()
-                .uniteItems()
                 .toPersistentList(),
         )
     }
@@ -34,8 +32,7 @@ internal class TokenListToListStateConverter(
     private fun createListState(tokenList: TokenList.Ungrouped): OrganizeTokensListState.Ungrouped {
         return OrganizeTokensListState.Ungrouped(
             items = tokensConverter.convertList(tokenList.currencies)
-                .uniteItems()
-                .toPersistentList() as PersistentList<DraggableItem.Token>,
+                .toPersistentList(),
         )
     }
 

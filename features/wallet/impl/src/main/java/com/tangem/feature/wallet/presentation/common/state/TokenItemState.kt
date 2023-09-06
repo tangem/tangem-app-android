@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.extensions.TextReference
 
 /** Token item state */
 @Immutable
@@ -19,6 +20,7 @@ internal sealed interface TokenItemState {
     data class Locked(override val id: String) : TokenItemState
 
     /** Content state */
+    @Immutable
     sealed class ContentState : TokenItemState {
 
         abstract val icon: IconState
@@ -54,13 +56,13 @@ internal sealed interface TokenItemState {
      * @property id                    unique id
      * @property icon                  token icon state
      * @property name                  token name
-     * @property fiatAmount            fiat amount of token
+     * @property info                  token info (e.g. fiat balance or status)
      */
     data class Draggable(
         override val id: String,
         override val icon: IconState,
         override val name: String,
-        val fiatAmount: String,
+        val info: TextReference,
     ) : ContentState()
 
     /**

@@ -164,7 +164,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             icon = tokenIconState,
             name = "Polygon",
-            fiatAmount = "3 172,14 $",
+            info = stringReference(value = "3 172,14 $"),
         )
     }
 
