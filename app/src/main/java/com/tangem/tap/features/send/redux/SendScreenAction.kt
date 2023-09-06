@@ -155,6 +155,13 @@ sealed class SendAction : SendScreenAction {
             val onOk: () -> Unit,
         ) : Dialog()
 
+        data class ChiaWarningDialog(
+            val blockchainName: String,
+            val maxOutputs: Int,
+            val maxAmount: BigDecimal,
+            val onOk: () -> Unit,
+        ) : Dialog()
+
         sealed class SendTransactionFails : Dialog() {
             data class CardSdkError(val error: TangemSdkError) : Dialog()
             data class BlockchainSdkError(val error: com.tangem.blockchain.common.BlockchainSdkError) : Dialog()
