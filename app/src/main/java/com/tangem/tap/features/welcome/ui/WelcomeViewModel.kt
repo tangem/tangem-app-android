@@ -1,5 +1,6 @@
 package com.tangem.tap.features.welcome.ui
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModel
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
@@ -30,9 +31,9 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
         store.dispatch(WelcomeAction.ProceedWithBiometrics)
     }
 
-    fun scanCard() {
+    fun scanCard(lifecycleCoroutineScope: LifecycleCoroutineScope) {
         Analytics.send(SignIn.ButtonCardSignIn())
-        store.dispatch(WelcomeAction.ProceedWithCard)
+        store.dispatch(WelcomeAction.ProceedWithCard(lifecycleCoroutineScope))
     }
 
     fun closeError() {
