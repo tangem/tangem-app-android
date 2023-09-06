@@ -110,7 +110,7 @@ internal class OrganizeTokensStateHolder(
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = dragAndDropIntents::onItemDragged,
-                onDragStart = dragAndDropIntents::onItemDraggingStart,
+                onItemDragStart = dragAndDropIntents::onItemDraggingStart,
                 onItemDragEnd = dragAndDropIntents::onItemDraggingEnd,
                 canDragItemOver = dragAndDropIntents::canDragItemOver,
             ),
