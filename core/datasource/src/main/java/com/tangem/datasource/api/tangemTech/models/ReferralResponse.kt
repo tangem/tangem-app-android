@@ -1,14 +1,12 @@
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
+import org.joda.time.LocalDate
 
-/**
- * Main response class for referral API
- * contains all necessary info about users program status
- */
 data class ReferralResponse(
     @Json(name = "conditions") val conditions: Conditions,
     @Json(name = "referral") val referral: Referral?,
+    @Json(name = "expectedAwards") val expectedAwards: ExpectedAwards?,
 ) {
 
     data class Conditions(
@@ -45,4 +43,16 @@ data class ReferralResponse(
         @Json(name = "walletsPurchased") val walletsPurchased: Int,
         @Json(name = "termsAcceptedAt") val termsAcceptedAt: String?,
     )
+
+    data class ExpectedAwards(
+        @Json(name = "numberOfWallets") val numberOfWallets: Int,
+        @Json(name = "list") val list: List<AwardItem>,
+    ) {
+
+        data class AwardItem(
+            @Json(name = "currency") val currency: String,
+            @Json(name = "paymentDate") val paymentDate: LocalDate,
+            @Json(name = "amount") val amount: Int,
+        )
+    }
 }
