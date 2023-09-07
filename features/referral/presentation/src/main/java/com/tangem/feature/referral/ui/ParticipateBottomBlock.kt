@@ -189,7 +189,6 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
     ) {
         Column(
             modifier = Modifier.background(TangemTheme.colors.background.primary),
-
         ) {
             Row(
                 modifier = Modifier
