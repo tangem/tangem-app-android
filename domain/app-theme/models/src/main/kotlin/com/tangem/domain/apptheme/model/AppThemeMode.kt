@@ -26,5 +26,10 @@ enum class AppThemeMode {
          * The default [AppThemeMode].
          */
         val DEFAULT: AppThemeMode = FORCE_LIGHT
+
+        /**
+         * List of available [AppThemeMode]s.
+         * */
+        val available: List<AppThemeMode> = values().toList()
     }
 }
