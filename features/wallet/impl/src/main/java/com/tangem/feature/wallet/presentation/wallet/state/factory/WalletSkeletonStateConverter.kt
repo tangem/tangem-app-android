@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
+import androidx.annotation.DrawableRes
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -33,12 +35,12 @@ internal class WalletSkeletonStateConverter(
 ) : Converter<SkeletonModel, WalletState.ContentState> {
 
     override fun convert(value: SkeletonModel): WalletState.ContentState {
-        val cardTypeResolver = value.wallets[value.selectedWalletIndex].scanResponse.cardTypesResolver
+        val selectedWallet = value.wallets[value.selectedWalletIndex]
 
-        return if (cardTypeResolver.isMultiwalletAllowed()) {
+        return if (selectedWallet.isMultiCurrency) {
             createMultiCurrencyState(value = value)
         } else {
-            createSingleCurrencyState(value = value, currencyName = cardTypeResolver.getBlockchain().currency)
+            createSingleCurrencyState(value = value, currencyName = selectedWallet.getPrimaryCurrencyName())
         }
     }
 
@@ -74,6 +76,10 @@ internal class WalletSkeletonStateConverter(
         )
     }
 
+    private fun UserWallet.getPrimaryCurrencyName(): String {
+        return scanResponse.cardTypesResolver.getBlockchain().currency
+    }
+
     private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
             onScanCardClick = clickIntents::onScanCardClick,
@@ -84,44 +90,61 @@ internal class WalletSkeletonStateConverter(
     private fun createWalletsListConfig(value: SkeletonModel): WalletsListConfig {
         return WalletsListConfig(
             selectedWalletIndex = value.selectedWalletIndex,
-            wallets = value.wallets.map(::createWalletState).toImmutableList(),
+            wallets = value.wallets.mapIndexed(::createWalletCardState).toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
         )
     }
 
-    private fun createWalletState(wallet: UserWallet): WalletCardState {
-        val state = currentStateProvider()
-
-        // If it isn't first initialization (example, when user unlocks wallet)
-        return if (state is WalletState.ContentState) {
-            val initializedWallet = state.walletsListConfig.wallets.first { it.id == wallet.walletId }
-
-            // If wallet is initialized, return it, otherwise return loading state
-            if (initializedWallet !is WalletCardState.Loading) {
-                initializedWallet.copySealed(title = wallet.name)
-            } else {
-                createWalletLoadingState(wallet)
-            }
-        } else {
-            createWalletLoadingState(wallet)
-        }
+    /**
+     * Create wallet card state by [index] and [wallet].
+     * If current wallet card state is initialized, then method returns it.
+     * Otherwise, returns loading wallet card state.
+     */
+    private fun createWalletCardState(index: Int, wallet: UserWallet): WalletCardState {
+        return currentStateProvider().getInitializedWalletCardState(index) ?: wallet.mapToWalletCardState()
     }
 
-    private fun createWalletLoadingState(wallet: UserWallet): WalletCardState {
-        val cardTypeResolver = wallet.scanResponse.cardTypesResolver
+    private fun WalletState.getInitializedWalletCardState(index: Int): WalletCardState? {
+        return (this as? WalletState.ContentState)?.walletsListConfig?.wallets?.getOrNull(index)
+    }
 
-        return WalletCardState.Loading(
-            id = wallet.walletId,
-            title = wallet.name,
-            additionalInfo = if (cardTypeResolver.isMultiwalletAllowed()) {
-                WalletAdditionalInfoFactory.resolve(cardTypesResolver = cardTypeResolver, wallet = wallet)
-            } else {
-                null
-            },
-            imageResId = WalletImageResolver.resolve(cardTypesResolver = cardTypeResolver),
+    private fun UserWallet.mapToWalletCardState(): WalletCardState {
+        return if (isLocked) mapToLockedWalletCardState() else mapToLoadingWalletCardState()
+    }
+
+    private fun UserWallet.mapToLockedWalletCardState(): WalletCardState {
+        return WalletCardState.LockedContent(
+            id = walletId,
+            title = name,
+            additionalInfo = createAdditionalInfo(),
+            imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
             onDeleteClick = clickIntents::onDeleteClick,
         )
+    }
+
+    private fun UserWallet.mapToLoadingWalletCardState(): WalletCardState {
+        return WalletCardState.Loading(
+            id = walletId,
+            title = name,
+            additionalInfo = createAdditionalInfo(),
+            imageResId = createImageResId(),
+            onRenameClick = clickIntents::onRenameClick,
+            onDeleteClick = clickIntents::onDeleteClick,
+        )
+    }
+
+    private fun UserWallet.createAdditionalInfo(): TextReference? {
+        return if (isMultiCurrency) {
+            WalletAdditionalInfoFactory.resolve(cardTypesResolver = scanResponse.cardTypesResolver, wallet = this)
+        } else {
+            null
+        }
+    }
+
+    @DrawableRes
+    private fun UserWallet.createImageResId(): Int? {
+        return WalletImageResolver.resolve(cardTypesResolver = scanResponse.cardTypesResolver)
     }
 
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
