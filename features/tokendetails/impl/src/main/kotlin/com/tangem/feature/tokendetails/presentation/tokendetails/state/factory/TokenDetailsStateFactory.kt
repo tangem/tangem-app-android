@@ -59,6 +59,12 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    private val refreshStateConverter by lazy {
+        TokenDetailsRefreshStateConverter(
+            currentStateProvider = currentStateProvider,
+        )
+    }
+
     fun getInitialState(cryptoCurrency: CryptoCurrency): TokenDetailsState {
         return skeletonStateConverter.convert(
             TokenDetailsSkeletonStateConverter.SkeletonModel(cryptoCurrency = cryptoCurrency),
@@ -116,5 +122,13 @@ internal class TokenDetailsStateFactory(
                 ),
             ),
         )
+    }
+
+    fun getRefreshingState(): TokenDetailsState {
+        return refreshStateConverter.convert(true)
+    }
+
+    fun getRefreshedState(): TokenDetailsState {
+        return refreshStateConverter.convert(false)
     }
 }
