@@ -7,14 +7,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
 internal class WalletRefreshStateConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val intents: WalletClickIntents,
 ) : Converter<Boolean, WalletState> {
 
     override fun convert(value: Boolean): WalletState {
@@ -77,16 +75,21 @@ internal class WalletRefreshStateConverter(
     }
 
     private fun WalletMultiCurrencyState.updateTokenListState(isRefreshing: Boolean): WalletTokensListState {
-        return when (val state = tokensListState) {
+        return when (val listState = tokensListState) {
             is WalletTokensListState.Content -> {
-                val onOrganizeTokensClick = if (isRefreshing) null else intents::onOrganizeTokensClick
-
-                state.copy(onOrganizeTokensClick = onOrganizeTokensClick)
+                when (listState.organizeTokensButton) {
+                    is WalletTokensListState.OrganizeTokensButtonState.Hidden -> listState
+                    is WalletTokensListState.OrganizeTokensButtonState.Visible -> listState.copy(
+                        organizeTokensButton = listState.organizeTokensButton.copy(
+                            isEnabled = !isRefreshing,
+                        ),
+                    )
+                }
             }
             is WalletTokensListState.Locked,
             is WalletTokensListState.Loading,
             is WalletTokensListState.Empty,
-            -> state
+            -> listState
         }
     }
 
