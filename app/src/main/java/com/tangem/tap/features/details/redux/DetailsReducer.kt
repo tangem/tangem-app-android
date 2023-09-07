@@ -58,6 +58,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             saveWallets = preferencesStorage.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedFiatCurrency = store.state.globalState.appCurrency,
+            selectedThemeMode = store.state.globalState.appThemeMode,
         ),
     )
 }
@@ -194,6 +195,11 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
             appSettingsState = state.appSettingsState.copy(
                 needEnrollBiometrics = action.needEnrollBiometrics,
+            ),
+        )
+        is DetailsAction.AppSettings.ChangeAppThemeMode -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                selectedThemeMode = action.appThemeMode,
             ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,
