@@ -21,7 +21,7 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 import com.tangem.tap.features.details.ui.common.TangemSwitch
 
 @Composable
-internal fun SwitchItem(item: Item.Switch, modifier: Modifier = Modifier) {
+internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier) {
     val titleTextColor by rememberUpdatedState(
         newValue = if (item.isEnabled) {
             TangemTheme.colors.text.primary1
@@ -72,7 +72,7 @@ internal fun SwitchItem(item: Item.Switch, modifier: Modifier = Modifier) {
 @Composable
 private fun SwitchItemPreview_Light(@PreviewParameter(SwitchItemProvider::class) item: Item.Switch) {
     TangemTheme {
-        SwitchItem(item = item)
+        SettingsSwitchItem(item = item)
     }
 }
 
@@ -80,7 +80,7 @@ private fun SwitchItemPreview_Light(@PreviewParameter(SwitchItemProvider::class)
 @Composable
 private fun SwitchItemPreview_Dark(@PreviewParameter(SwitchItemProvider::class) item: Item.Switch) {
     TangemTheme(isDark = true) {
-        SwitchItem(item = item)
+        SettingsSwitchItem(item = item)
     }
 }
 
