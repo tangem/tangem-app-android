@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -67,6 +68,10 @@ sealed class DetailsAction : Action {
         object EnrollBiometrics : AppSettings()
         data class BiometricsStatusChanged(
             val needEnrollBiometrics: Boolean,
+        ) : AppSettings()
+
+        data class ChangeAppThemeMode(
+            val appThemeMode: AppThemeMode,
         ) : AppSettings()
     }
 
