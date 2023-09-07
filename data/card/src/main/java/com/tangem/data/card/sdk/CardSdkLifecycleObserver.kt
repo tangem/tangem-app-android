@@ -12,6 +12,6 @@ interface CardSdkLifecycleObserver {
     /** Callback of creating activity [context]  */
     fun onCreate(context: Context)
 
-    /** Callback of destroying activity */
-    fun onDestroy()
+    /** Callback of destroying activity [context] */
+    fun onDestroy(context: Context)
 }
