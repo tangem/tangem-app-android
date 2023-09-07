@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -41,18 +42,34 @@ internal class WalletLoadedTxHistoryConverter(
     }
 
     private fun convertError(error: TxHistoryListError): WalletState {
-        return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = when (error) {
-                is TxHistoryListError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
-                }
-            },
-        )
+        return when (val state = currentStateProvider()) {
+            is WalletSingleCurrencyState.Content -> {
+                state.copy(
+                    txHistoryState = when (error) {
+                        is TxHistoryListError.DataError -> {
+                            TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                        }
+                    },
+                )
+            }
+            is WalletMultiCurrencyState.Content,
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            is WalletState.Initial,
+            -> state
+        }
     }
 
     private fun convert(items: Flow<PagingData<TxHistoryItem>>): WalletState {
-        return requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content).copy(
-            txHistoryState = walletTxHistoryItemFlowConverter.convert(value = items),
-        )
+        return when (val state = currentStateProvider()) {
+            is WalletSingleCurrencyState.Content -> {
+                state.copy(txHistoryState = walletTxHistoryItemFlowConverter.convert(value = items))
+            }
+            is WalletMultiCurrencyState.Content,
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            is WalletState.Initial,
+            -> state
+        }
     }
 }

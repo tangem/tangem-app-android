@@ -6,6 +6,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -20,7 +21,7 @@ internal class TokenListToWalletStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isWalletContentHidden: Boolean,
     clickIntents: WalletClickIntents,
-) : Converter<TokenList, WalletMultiCurrencyState.Content> {
+) : Converter<TokenList, WalletState> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         isWalletContentHidden = isWalletContentHidden,
@@ -28,12 +29,20 @@ internal class TokenListToWalletStateConverter(
         clickIntents = clickIntents,
     )
 
-    override fun convert(value: TokenList): WalletMultiCurrencyState.Content {
-        val state = requireNotNull(currentStateProvider() as? WalletMultiCurrencyState.Content)
-        return state.copy(
-            walletsListConfig = state.updateSelectedWallet(fiatBalance = value.totalFiatBalance),
-            tokensListState = tokenListToContentConverter.convert(value = value),
-        )
+    override fun convert(value: TokenList): WalletState {
+        return when (val state = currentStateProvider()) {
+            is WalletMultiCurrencyState.Content -> {
+                state.copy(
+                    walletsListConfig = state.updateSelectedWallet(fiatBalance = value.totalFiatBalance),
+                    tokensListState = tokenListToContentConverter.convert(value = value),
+                )
+            }
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Content,
+            is WalletSingleCurrencyState.Locked,
+            is WalletState.Initial,
+            -> state
+        }
     }
 
     private fun WalletMultiCurrencyState.updateSelectedWallet(fiatBalance: TokenList.FiatBalance): WalletsListConfig {
