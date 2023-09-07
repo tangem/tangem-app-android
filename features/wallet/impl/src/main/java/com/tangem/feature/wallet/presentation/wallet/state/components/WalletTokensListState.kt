@@ -5,6 +5,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import javax.annotation.concurrent.Immutable
 
 /**
  * Wallet tokens list state
@@ -20,11 +21,10 @@ internal sealed class WalletTokensListState {
      * Wallet content token list state
      *
      * @property items                  content items
-     * @property onOrganizeTokensClick  lambda be invoked when organize tokens button is clicked
      */
     sealed class ContentState(
         open val items: ImmutableList<TokensListItemState>,
-        open val onOrganizeTokensClick: (() -> Unit)?,
+        open val organizeTokensButton: OrganizeTokensButtonState,
     ) : WalletTokensListState()
 
     /**
@@ -37,18 +37,18 @@ internal sealed class WalletTokensListState {
             TokensListItemState.Token(state = TokenItemState.Loading(id = FIRST_LOADING_TOKEN_ID)),
             TokensListItemState.Token(state = TokenItemState.Loading(id = SECOND_LOADING_TOKEN_ID)),
         ),
-    ) : ContentState(items = items, onOrganizeTokensClick = null)
+    ) : ContentState(items = items, organizeTokensButton = OrganizeTokensButtonState.Hidden)
 
     /**
      * Content state
      *
      * @property items                 content items
-     * @property onOrganizeTokensClick lambda be invoked when organize tokens button is clicked
+     * @property organizeTokensButton  represents the state of the 'Organize Tokens' button
      */
     data class Content(
         override val items: ImmutableList<TokensListItemState>,
-        override val onOrganizeTokensClick: (() -> Unit)?,
-    ) : ContentState(items, onOrganizeTokensClick)
+        override val organizeTokensButton: OrganizeTokensButtonState,
+    ) : ContentState(items, organizeTokensButton)
 
     /** Locked content state */
     object Locked : ContentState(
@@ -56,10 +56,32 @@ internal sealed class WalletTokensListState {
             TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
             TokensListItemState.Token(state = TokenItemState.Locked(id = LOCKED_TOKEN_ID)),
         ),
-        onOrganizeTokensClick = null,
+        organizeTokensButton = OrganizeTokensButtonState.Hidden,
     )
 
+    /**
+     * Represents the state of the 'Organize Tokens' button.
+     */
+    @Immutable
+    sealed class OrganizeTokensButtonState {
+
+        /** Represents the state where the 'Organize Tokens' button is hidden. */
+        object Hidden : OrganizeTokensButtonState()
+
+        /**
+         * Represents the state where the 'Organize Tokens' button is visible.
+         *
+         * @property isEnabled Indicates if the button is enabled or not.
+         * @property onClick Callback to be executed when the button is clicked.
+         */
+        data class Visible(
+            val isEnabled: Boolean,
+            val onClick: () -> Unit,
+        ) : OrganizeTokensButtonState()
+    }
+
     /** Tokens list item state */
+    @Immutable
     sealed interface TokensListItemState {
 
         /**
