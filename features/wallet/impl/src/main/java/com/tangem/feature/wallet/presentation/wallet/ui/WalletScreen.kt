@@ -26,10 +26,11 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencySt
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.OrganizeTokensButtonState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
-import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
+import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.controlButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
@@ -110,9 +111,15 @@ private fun WalletContent(state: WalletState.ContentState) {
                 contentItems(state = state, txHistoryItems = txHistoryItems, modifier = movableItemModifier)
 
                 if (state is WalletMultiCurrencyState) {
-                    val tokensListState = state.tokensListState
-                    if (tokensListState is WalletTokensListState.ContentState) {
-                        organizeButton(onClick = tokensListState.onOrganizeTokensClick, modifier = itemModifier)
+                    val contentTokenListState = state.tokensListState as? WalletTokensListState.ContentState
+                    val organizeTokensButton = contentTokenListState?.organizeTokensButton
+
+                    if (organizeTokensButton is OrganizeTokensButtonState.Visible) {
+                        organizeTokensButton(
+                            modifier = itemModifier,
+                            isEnabled = organizeTokensButton.isEnabled,
+                            onClick = organizeTokensButton.onClick,
+                        )
                     }
                 }
             }
