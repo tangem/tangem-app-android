@@ -47,6 +47,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -63,7 +64,7 @@ import kotlin.properties.Delegates
 internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
@@ -130,6 +131,11 @@ internal class WalletViewModel @Inject constructor(
     private val notificationsJobHolder = JobHolder()
     private val refreshContentJobHolder = JobHolder()
 
+    private val walletsUpdateActionResolver = WalletsUpdateActionResolver(
+        currentStateProvider = Provider { uiState },
+        getSelectedWalletUseCase = getSelectedWalletUseCase,
+    )
+
     override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
@@ -148,29 +154,48 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {
-        if (sourceList.isEmpty()) return
-
         wallets = sourceList
 
-        val currentState = uiState
-        val previousSelectedWalletIndex = (currentState as? WalletState.ContentState)
-            ?.walletsListConfig
-            ?.selectedWalletIndex
+        if (sourceList.isEmpty()) return
 
-        val selectedWalletIndex = if (currentState is WalletLockedState) {
-            currentState.getSelectedWalletIndex()
-        } else {
-            val selectedWallet = getSelectedWalletUseCase().fold(
-                ifLeft = { error("Selected wallet is null") },
-                ifRight = { it },
-            )
-            sourceList.indexOfFirst { it.walletId == selectedWallet.walletId }
+        when (val action = walletsUpdateActionResolver.resolve(sourceList)) {
+            is WalletsUpdateActionResolver.Action.InitialWallets -> {
+                loadAndUpdateState(index = action.selectedWalletIndex)
+            }
+            is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
+                uiState = stateFactory.getStateWithUpdatedWalletName(name = action.name)
+            }
+            is WalletsUpdateActionResolver.Action.UnlockWallet -> {
+                uiState = stateFactory.getUnlockedState(action)
+
+                getContentItemsUpdates(index = action.selectedWalletIndex)
+            }
+            is WalletsUpdateActionResolver.Action.DeleteWallet -> {
+                deleteWalletAndUpdateState(action = action)
+            }
+            is WalletsUpdateActionResolver.Action.AddWallet -> {
+                loadAndUpdateState(index = action.selectedWalletIndex)
+            }
+            is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
+    }
 
-        if (previousSelectedWalletIndex != selectedWalletIndex) {
-            uiState = stateFactory.getSkeletonState(wallets = sourceList, selectedWalletIndex = selectedWalletIndex)
+    private fun loadAndUpdateState(index: Int) {
+        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
 
-            getContentItemsUpdates(index = selectedWalletIndex)
+        getContentItemsUpdates(index = index)
+    }
+
+    private fun deleteWalletAndUpdateState(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+        val cacheState = WalletStateCache.getState(userWalletId = action.selectedWalletId)
+        if (cacheState != null) {
+            uiState = stateFactory.getStateWithoutDeletedWallet(cacheState, action)
+
+            if (cacheState.isLoadingState()) {
+                getContentItemsUpdates(action.selectedWalletIndex)
+            }
+        } else {
+            loadAndUpdateState(index = action.selectedWalletIndex)
         }
     }
 
@@ -181,23 +206,56 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onScanCardClick() {
+        viewModelScope.launch(dispatchers.io) {
+            scanCardProcessor.scan()
+                .doOnSuccess {
+                    // If card's public key is null then user wallet will be null
+                    val userWallet = UserWalletBuilder(scanResponse = it).build()
+
+                    if (userWallet != null) {
+                        saveWalletUseCase(userWallet = userWallet, canOverride = false)
+                    }
+                }
+        }
+    }
+
+    override fun onScanCardNotificationClick() {
+        scanToUpdateSelectedWallet(
+            onSuccessSave = {
+                // Reload currencies with missed derivation
+                fetchTokenListUseCase(userWalletId = it.walletId)
+            },
+        )
+    }
+
+    override fun onScanToUnlockWalletClick() {
+        scanToUpdateSelectedWallet()
+    }
+
+    private fun scanToUpdateSelectedWallet(onSuccessSave: suspend (UserWallet) -> Unit = {}) {
+        val state = uiState as? WalletState.ContentState ?: return
+
         val prevRequestPolicyStatus = getBiometricsStatusUseCase()
 
         // Update access the code policy according access code saving status
         setAccessCodeRequestPolicyUseCase(isBiometricsRequestPolicy = getAccessCodeSavingStatusUseCase())
 
         viewModelScope.launch(dispatchers.io) {
-            scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
+            scanCardProcessor.scan(
+                cardId = getWallet(state.walletsListConfig.selectedWalletIndex).cardId,
+                allowsRequestAccessCodeFromRepository = true,
+            )
                 .doOnSuccess {
                     // If card's public key is null then user wallet will be null
                     val userWallet = UserWalletBuilder(scanResponse = it).build()
 
                     if (userWallet != null) {
-                        saveWalletUseCase(userWallet)
+                        saveWalletUseCase(userWallet = userWallet, canOverride = true)
                             .onLeft {
                                 // Rollback policy if card saving was failed
                                 setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
                             }
+                            .onRight { onSuccessSave(userWallet) }
                     } else {
                         // Rollback policy if card saving was failed
                         setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
@@ -245,10 +303,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onWalletChange(index: Int) {
-        val state = requireNotNull(uiState as? WalletState.ContentState) {
-            "Impossible to change wallet if state isn't WalletState.ContentState"
-        }
-
+        val state = uiState as? WalletState.ContentState ?: return
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
         viewModelScope.launch(dispatchers.io) {
@@ -256,15 +311,26 @@ internal class WalletViewModel @Inject constructor(
         }
 
         val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
-        if (cacheState != null) {
-            uiState = if (cacheState is WalletState.ContentState) {
-                cacheState.copySealed(
-                    walletsListConfig = state.walletsListConfig.copy(selectedWalletIndex = index),
-                    pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false),
-                )
-            } else {
-                cacheState
-            }
+        if (cacheState != null && cacheState !is WalletLockedState) {
+            uiState = cacheState.copySealed(
+                walletsListConfig = state.walletsListConfig.copy(
+                    selectedWalletIndex = index,
+                    wallets = state.walletsListConfig.wallets
+                        .mapIndexed { mapIndex, currentWallet ->
+                            val cacheWallet = cacheState.walletsListConfig.wallets.getOrNull(mapIndex)
+
+                            if (currentWallet is WalletCardState.Loading && cacheWallet != null &&
+                                cacheWallet.isLoaded()
+                            ) {
+                                cacheWallet
+                            } else {
+                                currentWallet
+                            }
+                        }
+                        .toImmutableList(),
+                ),
+                pullToRefreshConfig = cacheState.pullToRefreshConfig.copy(isRefreshing = false),
+            )
 
             if (cacheState.isLoadingState()) {
                 getContentItemsUpdates(index)
@@ -273,6 +339,10 @@ internal class WalletViewModel @Inject constructor(
             uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
             getContentItemsUpdates(index = index)
         }
+    }
+
+    private fun WalletCardState.isLoaded(): Boolean {
+        return this !is WalletCardState.Loading && this !is WalletCardState.LockedContent
     }
 
     override fun onRefreshSwipe() {
@@ -436,10 +506,11 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onDeleteClick(userWalletId: UserWalletId) {
+        val state = uiState as? WalletState.ContentState ?: return
+
         viewModelScope.launch(dispatchers.io) {
             val either = deleteWalletUseCase(userWalletId)
 
-            val state = requireNotNull(uiState as? WalletState.ContentState)
             if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) onBackClick()
         }
     }
@@ -611,9 +682,10 @@ internal class WalletViewModel @Inject constructor(
 
     private fun WalletState.isLoadingState(): Boolean {
         // Check the base components
-        if (this is WalletState.ContentState) {
-            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading ||
-                notifications.isEmpty()
+        if (this is WalletState.ContentState &&
+            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading
+        ) {
+            return true
         }
 
         // Check the special components
