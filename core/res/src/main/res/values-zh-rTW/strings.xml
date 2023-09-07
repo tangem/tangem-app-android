@@ -259,8 +259,6 @@
     <string name="referral_error_failed_to_load_info">無法加載有關推薦計劃的消息。請稍後再試</string>
     <string name="referral_error_failed_to_load_info_with_reason">無法加載有關推薦計劃的消息。原因：%s。請稍後再試</string>
     <string name="referral_friends_bought_title">您的朋友買</string>
-    <string name="referral_point_currencies_description_prefix">會得到</string>
-    <string name="referral_point_currencies_description_suffix">對於你的朋友在你的 %1$s 網絡地址%2$s上購買的每個錢包</string>
     <string name="referral_point_currencies_title">你</string>
     <string name="referral_point_discount_description_prefix">得到</string>
     <string name="referral_point_discount_description_value">%s 折扣</string>
