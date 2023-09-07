@@ -325,8 +325,6 @@
         <item quantity="other">за %d кошельков</item>
     </plurals>
     <string name="referral_point_currencies_description">Получите ^^%1$s^^ на ваш адрес в сети %2$s %3$s ^^спустя 30 дней^^ за каждый кошелек, который купит ваш друг</string>
-    <string name="referral_point_currencies_description_prefix">Получите</string>
-    <string name="referral_point_currencies_description_suffix">на ваш адрес в сети %1$s%2$s за каждый кошелек, который купит ваш друг</string>
     <string name="referral_point_currencies_title">Вы</string>
     <string name="referral_point_discount_description_prefix">Получит</string>
     <string name="referral_point_discount_description_suffix">при покупке кошелька на сайте tangem.com</string>

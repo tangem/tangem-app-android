@@ -320,8 +320,6 @@
         <item quantity="other">for %d wallets</item>
     </plurals>
     <string name="referral_point_currencies_description">Will get ^^%1$s^^ for each wallet bought by your friend on your %2$s network address %3$s ^^30 days after^^ that</string>
-    <string name="referral_point_currencies_description_prefix">Will get</string>
-    <string name="referral_point_currencies_description_suffix">for each wallet bought by your friend on your %1$s network address%2$s</string>
     <string name="referral_point_currencies_title">You</string>
     <string name="referral_point_discount_description_prefix">Will get a</string>
     <string name="referral_point_discount_description_suffix">when buying a wallet on tangem.com</string>
