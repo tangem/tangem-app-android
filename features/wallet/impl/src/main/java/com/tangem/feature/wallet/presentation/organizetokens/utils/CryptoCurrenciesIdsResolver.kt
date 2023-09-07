@@ -11,7 +11,7 @@ internal class CryptoCurrenciesIdsResolver {
         val draggableTokens = when (listState) {
             is OrganizeTokensListState.Empty -> return emptyList()
             is OrganizeTokensListState.GroupedByNetwork -> listState.items.filterIsInstance<DraggableItem.Token>()
-            is OrganizeTokensListState.Ungrouped -> listState.items
+            is OrganizeTokensListState.Ungrouped -> listState.items.filterIsInstance<DraggableItem.Token>()
         }
         val currenciesStatuses = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
