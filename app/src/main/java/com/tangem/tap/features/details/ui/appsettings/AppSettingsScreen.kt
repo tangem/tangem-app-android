@@ -11,11 +11,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
-import com.tangem.tap.features.details.ui.appsettings.components.ButtonItem
-import com.tangem.tap.features.details.ui.appsettings.components.CardItem
-import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
-import com.tangem.tap.features.details.ui.appsettings.components.SwitchItem
+import com.tangem.tap.features.details.ui.appsettings.components.*
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.persistentListOf
@@ -37,9 +35,11 @@ internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () ->
 
 @Composable
 private fun AppSettings(state: AppSettingsScreenState.Content) {
-    val alert by rememberUpdatedState(newValue = state.alert)
-    alert?.let { safeAlert ->
-        SettingsAlertDialog(alert = safeAlert)
+    val dialog by rememberUpdatedState(newValue = state.dialog)
+    when (val safeDialog = dialog) {
+        is AppSettingsScreenState.Dialog.Alert -> SettingsAlertDialog(dialog = safeDialog)
+        is AppSettingsScreenState.Dialog.Selector -> SettingsSelectorDialog(dialog = safeDialog)
+        null -> Unit
     }
 
     LazyColumn {
@@ -48,15 +48,15 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
             key = Item::id,
         ) { item ->
             when (item) {
-                is Item.Card -> CardItem(
+                is Item.Card -> SettingsCardItem(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
                     item = item,
                 )
-                is Item.Button -> ButtonItem(
+                is Item.Button -> SettingsButtonItem(
                     modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
                     item = item,
                 )
-                is Item.Switch -> SwitchItem(
+                is Item.Switch -> SettingsSwitchItem(
                     modifier = Modifier.padding(
                         vertical = TangemTheme.dimens.spacing16,
                         horizontal = TangemTheme.dimens.spacing20,
@@ -92,27 +92,17 @@ private fun AppSettingsScreenPreview_Dark(
 private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvider<AppSettingsScreenState>(
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
-        val dialogsFactory = AppSettingsAlertsFactory()
         val items = persistentListOf(
             itemsFactory.createEnrollBiometricsCard {},
             itemsFactory.createSelectAppCurrencyButton(currentAppCurrencyName = "US Dollar") {},
             itemsFactory.createSaveWalletsSwitch(isChecked = true, isEnabled = true, { _ -> }),
             itemsFactory.createSaveAccessCodeSwitch(isChecked = false, isEnabled = true) { _ -> },
+            itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
         AppSettingsScreenState.Content(
             items = items,
-            alert = null,
-        ).let(::add)
-
-        AppSettingsScreenState.Content(
-            items = items,
-            alert = dialogsFactory.createDeleteSavedWalletsAlert({}, {}),
-        ).let(::add)
-
-        AppSettingsScreenState.Content(
-            items = items,
-            alert = dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}),
+            dialog = null,
         ).let(::add)
     },
 )
