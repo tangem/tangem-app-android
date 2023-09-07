@@ -43,7 +43,7 @@ internal sealed class WalletTokensListState {
      * Content state
      *
      * @property items                 content items
-     * @property onOrganizeTokensClick lambda be invoked when organize tokens button is clicked
+     * @property organizeTokensButton  represents the state of the 'Organize Tokens' button
      */
     data class Content(
         override val items: ImmutableList<TokensListItemState>,
@@ -59,18 +59,24 @@ internal sealed class WalletTokensListState {
         organizeTokensButton = OrganizeTokensButtonState.Hidden,
     )
 
+    /**
+     * Represents the state of the 'Organize Tokens' button.
+     */
     @Immutable
     sealed class OrganizeTokensButtonState {
 
-        abstract val onClick: () -> Unit
+        /** Represents the state where the 'Organize Tokens' button is hidden. */
+        object Hidden : OrganizeTokensButtonState()
 
-        object Hidden : OrganizeTokensButtonState() {
-            override val onClick: () -> Unit = {}
-        }
-
+        /**
+         * Represents the state where the 'Organize Tokens' button is visible.
+         *
+         * @property isEnabled Indicates if the button is enabled or not.
+         * @property onClick Callback to be executed when the button is clicked.
+         */
         data class Visible(
             val isEnabled: Boolean,
-            override val onClick: () -> Unit,
+            val onClick: () -> Unit,
         ) : OrganizeTokensButtonState()
     }
 

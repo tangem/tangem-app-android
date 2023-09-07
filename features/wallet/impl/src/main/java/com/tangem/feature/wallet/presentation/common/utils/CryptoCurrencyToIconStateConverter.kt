@@ -11,21 +11,9 @@ import com.tangem.utils.converter.Converter
 internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, TokenItemState.IconState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState.IconState {
-        val isUnreachable = when (value.value) {
-            is CryptoCurrencyStatus.Loading,
-            is CryptoCurrencyStatus.Loaded,
-            is CryptoCurrencyStatus.Custom,
-            is CryptoCurrencyStatus.NoAccount,
-            is CryptoCurrencyStatus.NoQuote,
-            -> false
-            is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.Unreachable,
-            -> true
-        }
-
         return when (val currency = value.currency) {
-            is CryptoCurrency.Coin -> getIconStateForCoin(currency, isUnreachable)
-            is CryptoCurrency.Token -> getIconStateForToken(currency, isUnreachable)
+            is CryptoCurrency.Coin -> getIconStateForCoin(currency, value.value.isError)
+            is CryptoCurrency.Token -> getIconStateForToken(currency, value.value.isError)
         }
     }
 
@@ -40,7 +28,7 @@ internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStat
         )
     }
 
-    private fun getIconStateForToken(token: CryptoCurrency.Token, isUnreachable: Boolean): TokenItemState.IconState {
+    private fun getIconStateForToken(token: CryptoCurrency.Token, isErrorStatus: Boolean): TokenItemState.IconState {
         val background = token.tryGetBackgroundForTokenIcon()
         val tint = getTintForTokenIcon(background)
 
@@ -49,13 +37,13 @@ internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStat
                 tint = tint,
                 background = background,
                 networkBadgeIconResId = token.networkIconResId,
-                isGrayscale = token.network.isTestnet || isUnreachable,
+                isGrayscale = token.network.isTestnet || isErrorStatus,
             )
         } else {
             TokenItemState.IconState.TokenIcon(
                 url = token.iconUrl,
                 networkBadgeIconResId = token.networkIconResId,
-                isGrayscale = token.network.isTestnet || isUnreachable,
+                isGrayscale = token.network.isTestnet || isErrorStatus,
                 fallbackTint = tint,
                 fallbackBackground = background,
             )

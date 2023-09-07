@@ -50,16 +50,10 @@ internal class CryptoCurrencyToDraggableItemConverter(
             id = getTokenItemId(currency.id),
             icon = iconStateConverter.convert(currencyStatus),
             name = currency.name,
-            info = when (currencyStatus.value) {
-                is CryptoCurrencyStatus.Custom,
-                is CryptoCurrencyStatus.Loaded,
-                is CryptoCurrencyStatus.Loading,
-                is CryptoCurrencyStatus.NoAccount,
-                is CryptoCurrencyStatus.NoQuote,
-                -> stringReference(getFormattedFiatAmount(currencyStatus, appCurrency))
-                is CryptoCurrencyStatus.MissedDerivation,
-                is CryptoCurrencyStatus.Unreachable,
-                -> resourceReference(id = R.string.common_unreachable)
+            info = if (currencyStatus.value.isError) {
+                resourceReference(id = R.string.common_unreachable)
+            } else {
+                stringReference(getFormattedFiatAmount(currencyStatus, appCurrency))
             },
         )
     }
