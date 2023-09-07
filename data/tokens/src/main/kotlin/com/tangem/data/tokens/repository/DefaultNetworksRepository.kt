@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
@@ -68,23 +69,27 @@ internal class DefaultNetworksRepository(
         networks: Set<Network.ID>,
         refresh: Boolean,
     ) {
-        cacheRegistry.invokeOnExpire(
-            key = getNetworksStatusesCacheKey(userWalletId),
-            skipCache = refresh,
-            block = { fetchNetworksStatuses(userWalletId, networks) },
-        )
-    }
-
-    private suspend fun fetchNetworksStatuses(userWalletId: UserWalletId, networks: Set<Network.ID>) {
         coroutineScope {
             networks
                 .map { networkId ->
                     async {
-                        fetchNetworkStatus(userWalletId, networkId)
+                        fetchNetworkStatusIfCacheExpired(userWalletId, networkId, refresh)
                     }
                 }
                 .awaitAll()
         }
+    }
+
+    private suspend fun fetchNetworkStatusIfCacheExpired(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        refresh: Boolean,
+    ) {
+        cacheRegistry.invokeOnExpire(
+            key = getNetworksStatusesCacheKey(userWalletId, networkId),
+            skipCache = refresh,
+            block = { fetchNetworkStatus(userWalletId, networkId) },
+        )
     }
 
     private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, networkId: Network.ID) {
@@ -97,6 +102,17 @@ internal class DefaultNetworksRepository(
             networkId = networkId,
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
+
+        // Invalidate cache key if wallet manager update failed
+        when (result) {
+            is UpdateWalletManagerResult.Verified,
+            is UpdateWalletManagerResult.NoAccount,
+            -> Unit
+            is UpdateWalletManagerResult.Unreachable,
+            is UpdateWalletManagerResult.MissedDerivation,
+            -> cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, networkId))
+        }
+
         val networkStatus = networkStatusFactory.createNetworkStatus(
             networkId = networkId,
             result = result,
@@ -126,5 +142,7 @@ internal class DefaultNetworksRepository(
         }
     }
 
-    private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId): String = "network_status_$userWalletId"
+    private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId, nerworkId: Network.ID): String {
+        return "network_status_${userWalletId}_${nerworkId.value}"
+    }
 }
