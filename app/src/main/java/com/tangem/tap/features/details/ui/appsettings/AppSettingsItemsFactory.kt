@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 import com.tangem.wallet.R
 
@@ -52,6 +53,22 @@ internal class AppSettingsItemsFactory {
             id = "select_app_currency_button",
             title = resourceReference(R.string.details_row_title_currency),
             description = stringReference(currentAppCurrencyName),
+            isEnabled = true,
+            onClick = onClick,
+        )
+    }
+
+    fun createSelectThemeModeButton(currentThemeMode: AppThemeMode, onClick: () -> Unit): Item.Button {
+        return Item.Button(
+            id = "select_theme_mode_button",
+            title = resourceReference(R.string.app_settings_theme_selector_title),
+            description = resourceReference(
+                id = when (currentThemeMode) {
+                    AppThemeMode.FORCE_DARK -> R.string.app_settings_theme_mode_dark
+                    AppThemeMode.FORCE_LIGHT -> R.string.app_settings_theme_mode_light
+                    AppThemeMode.FOLLOW_SYSTEM -> R.string.app_settings_theme_mode_system
+                },
+            ),
             isEnabled = true,
             onClick = onClick,
         )
