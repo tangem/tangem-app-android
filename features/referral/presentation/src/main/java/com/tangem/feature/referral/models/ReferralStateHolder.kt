@@ -1,5 +1,7 @@
 package com.tangem.feature.referral.models
 
+import com.tangem.feature.referral.domain.models.ExpectedAwards
+
 internal data class ReferralStateHolder(
     val headerState: HeaderState,
     val referralInfoState: ReferralInfoState,
@@ -26,6 +28,7 @@ internal data class ReferralStateHolder(
             val code: String,
             val shareLink: String,
             override val url: String,
+            val expectedAwards: ExpectedAwards?,
         ) : ReferralInfoState, ReferralInfoContentState
 
         data class NonParticipantContent(
