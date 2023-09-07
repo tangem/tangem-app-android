@@ -20,7 +20,7 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun ButtonItem(item: Item.Button, modifier: Modifier = Modifier) {
+internal fun SettingsButtonItem(item: Item.Button, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors.background.secondary,
@@ -55,7 +55,7 @@ internal fun ButtonItem(item: Item.Button, modifier: Modifier = Modifier) {
 @Composable
 private fun ButtonItemPreview_Light(@PreviewParameter(ButtonItemProvider::class) item: Item.Button) {
     TangemTheme {
-        ButtonItem(item = item)
+        SettingsButtonItem(item = item)
     }
 }
 
@@ -63,7 +63,7 @@ private fun ButtonItemPreview_Light(@PreviewParameter(ButtonItemProvider::class)
 @Composable
 private fun ButtonItemPreview_Dark(@PreviewParameter(ButtonItemProvider::class) item: Item.Button) {
     TangemTheme(isDark = true) {
-        ButtonItem(item = item)
+        SettingsButtonItem(item = item)
     }
 }
 
