@@ -173,7 +173,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
-        cardSdkLifecycleObserver.onDestroy()
+        cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
     }
 
