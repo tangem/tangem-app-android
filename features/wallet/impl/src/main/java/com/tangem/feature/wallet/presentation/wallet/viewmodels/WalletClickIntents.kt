@@ -12,6 +12,10 @@ internal interface WalletClickIntents : TxHistoryClickIntents {
 
     fun onScanCardClick()
 
+    fun onScanCardNotificationClick()
+
+    fun onScanToUnlockWalletClick()
+
     fun onDetailsClick()
 
     fun onBackupCardClick()
