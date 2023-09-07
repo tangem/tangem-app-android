@@ -1,0 +1,19 @@
+package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
+
+import com.tangem.common.Provider
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.utils.converter.Converter
+
+internal class TokenDetailsRefreshStateConverter(
+    private val currentStateProvider: Provider<TokenDetailsState>,
+) : Converter<Boolean, TokenDetailsState> {
+
+    override fun convert(value: Boolean): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.createPullToRefresh(value)
+    }
+
+    private fun TokenDetailsState.createPullToRefresh(value: Boolean): TokenDetailsState {
+        return copy(pullToRefreshConfig = pullToRefreshConfig.copy(isRefreshing = value))
+    }
+}
