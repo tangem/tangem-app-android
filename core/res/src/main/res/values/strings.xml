@@ -28,11 +28,16 @@
     <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card.</string>
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
     <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
+    <string name="app_settings_theme_mode_dark">Dark</string>
+    <string name="app_settings_theme_mode_light">Light</string>
+    <string name="app_settings_theme_mode_system">System default</string>
+    <string name="app_settings_theme_selector_title">Theme</string>
     <string name="app_settings_title">App Settings</string>
     <string name="biometric_lockout_permanent_warning_description">Please scan the card</string>
     <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card</string>
     <string name="biometric_lockout_warning_title">Too many attempts</string>
     <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
+    <string name="button_start_backup_process">Start backup process</string>
     <plurals name="card_label_card_count">
         <item quantity="one">%d card</item>
         <item quantity="other">%d cards</item>
@@ -41,6 +46,7 @@
     <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_title">Access code recovery</string>
+    <string name="card_settings_action_sheet_reset">Reset</string>
     <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
@@ -95,7 +101,6 @@
     <string name="common_reject">Reject</string>
     <string name="common_reload">Reload</string>
     <string name="common_rename">Rename</string>
-    <string name="common_reset">Reset</string>
     <string name="common_save_changes">Save changes</string>
     <string name="common_search">Search</string>
     <string name="common_search_tokens">Search tokens</string>
@@ -194,7 +199,7 @@
     </plurals>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
-    <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
+    <string name="main_no_backup_warning_title">Your wallet hasn\'t been backed up</string>
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 48 hours</string>
@@ -206,6 +211,7 @@
         <item quantity="other">You need to generate addresses for %d new networks using your card</item>
     </plurals>
     <string name="main_warning_missing_derivation_title">Some addresses are missing</string>
+    <string name="notification_title_not_enough_funds">Unable to cover %1$s fee</string>
     <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
     <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
@@ -233,7 +239,7 @@
     <string name="onboarding_button_skip_backup">Skip for later</string>
     <string name="onboarding_button_what_does_it_mean">How does it work?</string>
     <string name="onboarding_create_wallet_body">Let\'s generate all the keys on your card and create a secure wallet</string>
-    <string name="onboarding_create_wallet_button_create_wallet">Create a wallet</string>
+    <string name="onboarding_create_wallet_button_create_wallet">Create wallet</string>
     <string name="onboarding_create_wallet_header">Create a wallet</string>
     <string name="onboarding_create_wallet_options_button_options">Other options</string>
     <string name="onboarding_create_wallet_options_message">Your keys will be securely generated inside the card. There is no seed phrase, which means nobody can export or steal it.</string>
@@ -400,7 +406,7 @@
     <string name="story_meet_pay">Pay</string>
     <string name="story_meet_send">Send</string>
     <string name="story_meet_store">Store</string>
-    <string name="story_meet_title">Meet\nTangem</string>
+    <string name="story_meet_title">Meet Tangem</string>
     <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
     <string name="story_web3_title">DeFi Compatible</string>
     <string name="swapping_approve_information_text">Approvals are considered an industry standard across all decentralized exchanges and protect your wallet from being accessed by a smart contract without your permission. By design, smart contracts can\'t access your tokens unless you approve access from your end. By \"unlocking\" your tokens, you are give permission to the 1inch smart contract to spend your assets. The miners of the network are compensated with a gas fee (paid by you) to record this action on the blockchain. Once permission has been granted you will be able to swap your token.</string>
