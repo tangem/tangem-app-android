@@ -91,6 +91,9 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
                 userWalletsListManager = action.manager,
             )
         }
+        is GlobalAction.ChangeAppThemeMode -> globalState.copy(
+            appThemeMode = action.appThemeMode,
+        )
         else -> globalState
     }
 }
