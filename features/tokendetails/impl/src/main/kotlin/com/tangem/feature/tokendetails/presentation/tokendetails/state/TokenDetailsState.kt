@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import kotlinx.collections.immutable.PersistentList
 
 internal data class TokenDetailsState(
@@ -14,4 +15,5 @@ internal data class TokenDetailsState(
     val pendingTxs: PersistentList<TransactionState>,
     val txHistoryState: TxHistoryState,
     val dialogConfig: TokenDetailsDialogConfig?,
+    val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
 )
