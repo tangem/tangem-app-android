@@ -23,6 +23,7 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -173,6 +174,9 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var currenciesRepository: CurrenciesRepository
 
+    @Inject
+    lateinit var appThemeModeRepository: AppThemeModeRepository
+
     override fun onCreate() {
         super.onCreate()
 
@@ -195,6 +199,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     walletManagersFacade = walletManagersFacade,
                     appStateHolder = appStateHolder,
                     currenciesRepository = currenciesRepository,
+                    appThemeModeRepository = appThemeModeRepository,
                 ),
             ),
         )
