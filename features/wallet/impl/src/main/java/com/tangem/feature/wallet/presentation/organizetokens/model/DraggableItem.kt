@@ -51,12 +51,11 @@ internal sealed class DraggableItem {
     }
 
     /**
-     * Helper item used to detect possible positions where a network group can be placed.
-     * Used only on [OrganizeTokensListState.GroupedByNetwork] and placed between network groups.
+     * Helper item used to detect possible positions where a draggable item can be placed.
      *
      * @property id ID of the placeholder
      * */
-    data class GroupPlaceholder(
+    data class Placeholder(
         override val id: String,
     ) : DraggableItem() {
         override val showShadow: Boolean = false
@@ -109,7 +108,7 @@ internal sealed class DraggableItem {
      * @return updated [DraggableItem]
      * */
     fun updateRoundingMode(mode: RoundingMode): DraggableItem = when (this) {
-        is GroupPlaceholder -> this
+        is Placeholder -> this
         is GroupHeader -> this.copy(roundingMode = mode)
         is Token -> this.copy(roundingMode = mode)
     }
@@ -122,7 +121,7 @@ internal sealed class DraggableItem {
      * @return updated [DraggableItem]
      * */
     fun updateShadowVisibility(show: Boolean): DraggableItem = when (this) {
-        is GroupPlaceholder -> this
+        is Placeholder -> this
         is GroupHeader -> this.copy(showShadow = show)
         is Token -> this.copy(showShadow = show)
     }
