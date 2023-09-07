@@ -36,6 +36,6 @@ internal class NetworkGroupToDraggableItemsConverter(
     )
 
     private fun createTokens(group: NetworkGroup): List<DraggableItem.Token> {
-        return itemConverter.convertList(group.currencies.toList())
+        return itemConverter.convertList(group.currencies)
     }
 }
