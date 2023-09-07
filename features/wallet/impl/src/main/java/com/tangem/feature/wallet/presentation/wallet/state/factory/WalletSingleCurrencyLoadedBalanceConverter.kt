@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -26,22 +27,31 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
     private val currencyStatusErrorConverter: CurrencyStatusErrorConverter,
-) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, WalletSingleCurrencyState.Content> {
+) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, WalletState> {
 
-    override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): WalletSingleCurrencyState.Content {
+    override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): WalletState {
         return value.fold(
             ifLeft = currencyStatusErrorConverter::convert,
             ifRight = ::convertContent,
         )
     }
 
-    private fun convertContent(status: CryptoCurrencyStatus): WalletSingleCurrencyState.Content {
-        val state = requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
-        val currencyName = state.marketPriceBlockState.currencyName
-        return state.copy(
-            walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
-            marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
-        )
+    private fun convertContent(status: CryptoCurrencyStatus): WalletState {
+        return when (val state = currentStateProvider()) {
+            is WalletSingleCurrencyState.Content -> {
+                val currencyName = state.marketPriceBlockState.currencyName
+
+                state.copy(
+                    walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
+                    marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+                )
+            }
+            is WalletMultiCurrencyState.Content,
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            is WalletState.Initial,
+            -> state
+        }
     }
 
     private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
