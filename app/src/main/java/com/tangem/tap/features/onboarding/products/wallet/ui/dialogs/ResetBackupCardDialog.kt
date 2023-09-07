@@ -15,7 +15,7 @@ object ResetBackupCardDialog {
             setPositiveButton(R.string.common_cancel) { _, _ ->
                 /* no-op */
             }
-            setNegativeButton(R.string.common_reset) { _, _ ->
+            setNegativeButton(R.string.card_settings_action_sheet_reset) { _, _ ->
                 store.dispatch(BackupAction.ResetBackupCard(cardId))
             }
             setOnDismissListener {
