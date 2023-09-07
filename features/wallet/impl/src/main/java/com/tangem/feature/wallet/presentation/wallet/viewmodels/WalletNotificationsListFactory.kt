@@ -59,7 +59,7 @@ internal class WalletNotificationsListFactory(
                     }
 
                     if (tokenList != null && tokenList.hasMissedDerivations()) {
-                        add(element = WalletNotification.ScanCard(onClick = clickIntents::onScanCardClick))
+                        add(element = WalletNotification.ScanCard(onClick = clickIntents::onScanCardNotificationClick))
                     }
 
                     if (isUserAlreadyRateAppCallback()) {
