@@ -22,6 +22,10 @@ internal abstract class KeylessDataStoreDecorator<Value : Any>(
         store(Unit, item)
     }
 
+    open suspend fun isEmpty(): Boolean {
+        return getSyncOrNull() == null
+    }
+
     private companion object {
         const val STRING_KEY = "key"
     }

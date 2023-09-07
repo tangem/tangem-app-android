@@ -11,8 +11,9 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
@@ -48,6 +49,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -169,7 +171,40 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onSendClick() {
-        reduxStateHolder.dispatch(TradeCryptoAction.New.Send)
+        val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
+
+        when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                reduxStateHolder.dispatch(
+                    action = TradeCryptoAction.New.SendCoin(
+                        userWallet = wallet,
+                        coinStatus = cryptoCurrencyStatus,
+                    ),
+                )
+            }
+            is CryptoCurrency.Token -> sendToken(status = cryptoCurrencyStatus)
+        }
+    }
+
+    private fun sendToken(status: CryptoCurrencyStatus) {
+        viewModelScope.launch(dispatchers.io) {
+            getNetworkCoinStatusUseCase(
+                userWalletId = wallet.walletId,
+                networkId = status.currency.network.id,
+            )
+                .take(count = 1)
+                .collectLatest {
+                    it.onRight { coinStatus ->
+                        reduxStateHolder.dispatch(
+                            action = TradeCryptoAction.New.SendToken(
+                                userWallet = wallet,
+                                tokenStatus = status,
+                                coinFiatRate = coinStatus.value.fiatRate,
+                            ),
+                        )
+                    }
+                }
+        }
     }
 
     override fun onReceiveClick() {

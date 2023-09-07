@@ -3,14 +3,10 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.iconResId
+import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSkeletonStateConverter.SkeletonModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
@@ -38,7 +34,7 @@ internal class TokenDetailsSkeletonStateConverter(
                     is CryptoCurrency.Token -> TokenInfoBlockState.Currency.Token(
                         networkName = currency.network.standardType.name,
                         blockchainName = currency.network.name,
-                        networkIcon = currency.iconResId,
+                        networkIcon = currency.networkIconResId,
                     )
                 },
             ),

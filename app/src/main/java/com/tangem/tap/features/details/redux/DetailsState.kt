@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.Button
@@ -12,7 +13,6 @@ data class DetailsState(
     val cardSettingsState: CardSettingsState? = null,
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
-    val appCurrency: FiatCurrency = FiatCurrency.Default,
     val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType
 
@@ -55,6 +55,8 @@ data class AppSettingsState(
     val isBiometricsAvailable: Boolean = false,
     val needEnrollBiometrics: Boolean = false,
     val isInProgress: Boolean = false,
+    val selectedFiatCurrency: FiatCurrency = FiatCurrency.Default,
+    val selectedThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
