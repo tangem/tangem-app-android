@@ -1,110 +1,78 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import com.tangem.common.Provider
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 internal class WalletLockedConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val currentWalletProvider: Provider<UserWallet>,
     private val clickIntents: WalletClickIntents,
 ) : Converter<Unit, WalletState> {
 
     override fun convert(value: Unit): WalletState {
         return when (val state = currentStateProvider()) {
-            is WalletState.ContentState -> {
-                val cardTypeResolver = currentCardTypeResolverProvider()
-
-                if (cardTypeResolver.isMultiwalletAllowed()) {
-                    state.toMultiCurrencyLockedState(cardTypeResolver)
-                } else {
-                    state.toSingleCurrencyLockedState(cardTypeResolver)
-                }
-            }
-            is WalletState.Initial -> state
+            is WalletMultiCurrencyState.Content -> state.toMultiCurrencyLockedState()
+            is WalletSingleCurrencyState.Content -> state.toSingleCurrencyLockedState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            is WalletState.Initial,
+            -> state
         }
     }
 
-    private fun WalletState.ContentState.toMultiCurrencyLockedState(
-        cardTypeResolver: CardTypesResolver,
-    ): WalletMultiCurrencyState.Locked {
+    private fun WalletMultiCurrencyState.Content.toMultiCurrencyLockedState(): WalletState {
         return WalletMultiCurrencyState.Locked(
             onBackClick = onBackClick,
-            topBarConfig = createTopBarConfig(),
-            walletsListConfig = createWalletsListConfig(cardTypeResolver),
-            pullToRefreshConfig = pullToRefreshConfig,
+            topBarConfig = topBarConfig.updateCallback(),
+            walletsListConfig = walletsListConfig,
+            pullToRefreshConfig = pullToRefreshConfig.stopRefreshing(),
             onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
             onUnlockClick = clickIntents::onUnlockWalletClick,
-            onScanClick = clickIntents::onScanCardClick,
+            onScanClick = clickIntents::onScanToUnlockWalletClick,
         )
     }
 
-    private fun WalletState.ContentState.toSingleCurrencyLockedState(
-        cardTypeResolver: CardTypesResolver,
-    ): WalletSingleCurrencyState.Locked {
+    private fun WalletSingleCurrencyState.Content.toSingleCurrencyLockedState(): WalletState {
         return WalletSingleCurrencyState.Locked(
             onBackClick = onBackClick,
-            topBarConfig = createTopBarConfig(),
-            walletsListConfig = createWalletsListConfig(cardTypeResolver),
-            pullToRefreshConfig = pullToRefreshConfig,
-            buttons = createButtons(),
+            topBarConfig = topBarConfig.updateCallback(),
+            walletsListConfig = walletsListConfig,
+            pullToRefreshConfig = pullToRefreshConfig.stopRefreshing(),
+            buttons = buttons.disableButtons(),
             onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
             onUnlockClick = clickIntents::onUnlockWalletClick,
-            onScanClick = clickIntents::onScanCardClick,
+            onScanClick = clickIntents::onScanToUnlockWalletClick,
             onExploreClick = clickIntents::onExploreClick,
         )
     }
 
-    private fun WalletState.ContentState.createTopBarConfig(): WalletTopBarConfig {
-        return topBarConfig.copy(onMoreClick = clickIntents::onUnlockWalletNotificationClick)
+    private fun WalletTopBarConfig.updateCallback(): WalletTopBarConfig {
+        return copy(onMoreClick = clickIntents::onUnlockWalletNotificationClick)
     }
 
-    private fun WalletState.ContentState.createWalletsListConfig(
-        cardTypeResolver: CardTypesResolver,
-    ): WalletsListConfig {
-        return walletsListConfig.copy(
-            wallets = walletsListConfig.wallets
-                .map { walletCardState ->
-                    WalletCardState.LockedContent(
-                        id = walletCardState.id,
-                        title = walletCardState.title,
-                        additionalInfo = if (cardTypeResolver.isMultiwalletAllowed()) {
-                            WalletAdditionalInfoFactory.resolve(
-                                cardTypesResolver = cardTypeResolver,
-                                wallet = currentWalletProvider(),
-                            )
-                        } else {
-                            null
-                        },
-                        imageResId = walletCardState.imageResId,
-                        onRenameClick = walletCardState.onRenameClick,
-                        onDeleteClick = walletCardState.onDeleteClick,
-                    )
+    private fun WalletPullToRefreshConfig.stopRefreshing(): WalletPullToRefreshConfig {
+        return copy(isRefreshing = false)
+    }
+
+    private fun PersistentList<WalletManageButton>.disableButtons(): PersistentList<WalletManageButton> {
+        return this
+            .map { button ->
+                when (button) {
+                    is WalletManageButton.Buy -> button.copy(enabled = false)
+                    is WalletManageButton.Sell -> button.copy(enabled = false)
+                    is WalletManageButton.Send -> button.copy(enabled = false)
+                    is WalletManageButton.Swap -> button.copy(enabled = false)
+                    is WalletManageButton.Receive -> button
                 }
-                .toImmutableList(),
-        )
-    }
-
-    private fun createButtons(): PersistentList<WalletManageButton> {
-        return persistentListOf(
-            WalletManageButton.Buy(enabled = false, onClick = {}),
-            WalletManageButton.Send(enabled = false, onClick = {}),
-            WalletManageButton.Receive(onClick = {}),
-            WalletManageButton.Sell(enabled = false, onClick = {}),
-        )
+            }
+            .toPersistentList()
     }
 }
