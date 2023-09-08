@@ -20,8 +20,8 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotification>, modifier: Modifier = Modifier) {
     items(
         items = configs,
-        key = { it.state.title.hashCode() },
-        contentType = { it.state::class.java },
-        itemContent = { Notification(state = it.state, modifier = modifier.animateItemPlacement()) },
+        key = { it.config.title.hashCode() },
+        contentType = { it.config::class.java },
+        itemContent = { Notification(config = it.config, modifier = modifier.animateItemPlacement()) },
     )
 }
