@@ -178,11 +178,19 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
             )
             when (config.currentStory) {
                 Stories.OneInchPromo -> Learn2earnStoriesScreen(config.onLearn2earnClick)
-                Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStoryDuration) {
+                Stories.TangemIntro -> FirstStoriesContent(
+                    isPaused = isPaused,
+                    duration = currentStoryDuration,
+                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
+                ) {
                     hideContent = it
                 }
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStoryDuration)
-                Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStoryDuration)
+                is Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
+                    isPaused = isPaused,
+                    stepDuration = currentStoryDuration,
+                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
+                )
                 Stories.Currencies -> StoriesCurrencies(isPaused, currentStoryDuration)
                 Stories.Web3 -> StoriesWeb3(isPaused, currentStoryDuration)
                 Stories.WalletForEveryone -> StoriesWalletForEveryone(currentStoryDuration)
