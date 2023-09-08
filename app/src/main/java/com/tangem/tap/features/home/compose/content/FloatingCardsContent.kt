@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,9 +22,13 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 @Composable
-fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int) {
+fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int, isNewWalletAvailable: MutableState<Boolean>) {
     val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
-    val imageBitmap = asImageBitmap(R.drawable.img_card_placeholder_wallet_2)
+    val imageBitmap = if (isNewWalletAvailable.value) {
+        asImageBitmap(R.drawable.img_card_placeholder_wallet_2)
+    } else {
+        asImageBitmap(R.drawable.card_placeholder_wallet)
+    }
     val cards = listOf(
         FloatingCard.first(),
         FloatingCard.second(),
