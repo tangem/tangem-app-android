@@ -29,5 +29,7 @@ sealed class HomeAction : Action {
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
     data class GoToShop(val userCountryCode: String?) : HomeAction()
 
+    data class UpdateCountryCode(val userCountryCode: String) : HomeAction()
+
     data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
 }
