@@ -1,9 +1,12 @@
 package com.tangem.tap.features.home.redux
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.StateType
+import java.util.Locale
 
 data class HomeState(
     val scanInProgress: Boolean = false,
@@ -19,7 +22,16 @@ data class HomeState(
 
     fun stepOf(story: Stories): Int = stories.indexOf(story)
 
+    fun onCountryCodeUpdate(homeState: HomeState, countryCode: String) {
+        val isNewWalletAvailable = !(countryCode == RUSSIA_COUNTRY_CODE || countryCode == BELARUS_COUNTRY_CODE)
+        homeState.stories.forEach {
+            it.isNewWalletAvailable.value = isNewWalletAvailable
+        }
+    }
+
     companion object {
+        private const val RUSSIA_COUNTRY_CODE = "ru"
+        private const val BELARUS_COUNTRY_CODE = "by"
         fun initDefaultStories(): List<Stories> = listOf(
             Stories.TangemIntro,
             Stories.RevolutionaryWallet,
@@ -28,12 +40,18 @@ data class HomeState(
             Stories.Web3,
             Stories.WalletForEveryone,
         )
+
+        fun isNewWalletAvailableInit(): Boolean {
+            val locale = Locale.getDefault().language
+            return !(locale == RUSSIA_COUNTRY_CODE || locale == BELARUS_COUNTRY_CODE)
+        }
     }
 }
 
 sealed class Stories(
     val isDarkBackground: Boolean,
     val duration: Int,
+    val isNewWalletAvailable: MutableState<Boolean> = mutableStateOf(HomeState.isNewWalletAvailableInit()),
 ) {
     object OneInchPromo : Stories(true, duration = 8000)
     object TangemIntro : Stories(true, duration = 8000)
