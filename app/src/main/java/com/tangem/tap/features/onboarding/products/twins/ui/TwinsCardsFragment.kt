@@ -375,6 +375,9 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
+        mainBinding.onboardingTopContainer.imvCardBackground.backgroundTintList =
+            requireContext().resources.getColorStateList(R.color.onboarding_card_background, null)
+
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
     }
 
