@@ -27,7 +27,6 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
-import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -150,8 +149,8 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
-    @Inject
-    lateinit var learn2earnInteractor: Learn2earnInteractor
+    // @Inject
+    // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
     lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
@@ -232,7 +231,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
-            learn2earnInteractor.init()
+            // learn2earnInteractor.init()
         }
 
         initTopUpController()
