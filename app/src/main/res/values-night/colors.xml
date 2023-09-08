@@ -2,7 +2,7 @@
 <resources>
 
 
-    <color name="background_action">#C9C9C9</color>
+    <color name="background_action">#303030</color>
     <!--<color name="background_plain">#000000</color>-->
     <color name="background_primary">#1E1E1E</color>
     <color name="background_secondary">#000000</color>
@@ -19,6 +19,11 @@
 
     <!--<color name="field_focused">#3B3B3B</color>-->
     <!--<color name="field_primary">#303030</color>-->
+
+    <color name="onboarding_card_background">#3B3B3B</color>
+    <color name="onboarding_twin_wave_1">#3E3E3E</color>
+    <color name="onboarding_twin_wave_2">#404040</color>
+    <color name="onboarding_twin_wave_3">#444444</color>
 
     <color name="icon_accent">#1ACE80</color>
     <color name="icon_attention">#FFB71B</color>
