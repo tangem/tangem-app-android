@@ -36,13 +36,19 @@
     <color name="blue">@color/colorSecondary</color>
     <color name="blue_pale">#E0E6FA</color>
 
+    <color name="onboarding_card_background">#F3F3F3</color>
+    <color name="onboarding_twin_wave_1">#DDDEE0</color>
+    <color name="onboarding_twin_wave_2">#DCDCDC</color>
+    <color name="onboarding_twin_wave_3">#D9D9D9</color>
+
+
     <color name="warning_info">#1C1C1E</color>
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
     <color name="all_colors_azure">#007AFF</color>
 
-    <color name="background_action">#000000</color>
+    <color name="background_action">#FFFFFF</color>
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
 
