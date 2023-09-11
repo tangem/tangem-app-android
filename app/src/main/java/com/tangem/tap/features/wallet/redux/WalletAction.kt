@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -73,7 +74,10 @@ sealed class WalletAction : Action {
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
-    data class Scan(val onScanSuccessEvent: AnalyticsEvent?) : WalletAction()
+    data class Scan(
+        val onScanSuccessEvent: AnalyticsEvent?,
+        val lifecycleScope: LifecycleCoroutineScope,
+    ) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction()
 
@@ -109,7 +113,7 @@ sealed class WalletAction : Action {
     data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
 
     object CreateWallet : WalletAction()
-    object ChangeWallet : WalletAction()
+    data class ChangeWallet(val lifecycleScope: LifecycleCoroutineScope) : WalletAction()
     object ShowSaveWalletIfNeeded : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
