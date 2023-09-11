@@ -8,8 +8,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -53,6 +53,22 @@ internal class DefaultCurrenciesRepository(
         storeAndPushTokens(userWalletId, response)
     }
 
+    override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
+        withContext(dispatchers.io) {
+            val savedCurrencies = requireNotNull(
+                value = userTokensStore.getSyncOrNull(userWalletId),
+                lazyMessage = { "Saved tokens empty. Can not perform remove currency action" },
+            )
+
+            val token = userTokensResponseFactory.createResponseToken(currency)
+            storeAndPushTokens(
+                userWalletId = userWalletId,
+                response = savedCurrencies.copy(
+                    tokens = savedCurrencies.tokens.filter { it != token },
+                ),
+            )
+        }
+
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
@@ -62,20 +78,38 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun getMultiCurrencyWalletCurrencies(
+    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        return channelFlow {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            launch(dispatchers.io) {
+                getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
+            }
+
+            launch(dispatchers.io) {
+                fetchTokensIfCacheExpired(userWallet, refresh = false)
+            }
+        }
+    }
+
+    override suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean,
-    ): Flow<List<CryptoCurrency>> = channelFlow {
+    ): List<CryptoCurrency> {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
-        launch(dispatchers.io) {
-            getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
+        fetchTokensIfCacheExpired(userWallet, refresh)
+
+        val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
+            "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        launch(dispatchers.io) {
-            fetchTokensIfCacheExpired(userWallet, refresh)
-        }
+        return responseCurrenciesFactory.createCurrencies(
+            response = storedTokens,
+            card = userWallet.scanResponse.card,
+        )
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -164,7 +198,7 @@ internal class DefaultCurrenciesRepository(
 
             tangemTechApi.saveUserTokens(userWallet.walletId.stringValue, response)
         } else {
-            throw error
+            Timber.e(error, "Unable to fetch currencies for: ${userWallet.walletId}")
         }
     }
 
