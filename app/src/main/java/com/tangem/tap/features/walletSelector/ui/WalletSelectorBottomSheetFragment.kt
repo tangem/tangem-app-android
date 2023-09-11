@@ -7,35 +7,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
+import com.tangem.core.ui.components.wallets.RenameWalletDialogContent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeBottomSheetFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
-import com.tangem.tap.features.walletSelector.ui.components.BiometricsDisabledWarningContent
-import com.tangem.tap.features.walletSelector.ui.components.BiometricsLockoutWarningContent
-import com.tangem.tap.features.walletSelector.ui.components.KeyInvalidatedWarningContent
-import com.tangem.tap.features.walletSelector.ui.components.RemoveWalletDialogContent
-import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
-import com.tangem.tap.features.walletSelector.ui.components.WalletSelectorScreenContent
+import com.tangem.tap.features.walletSelector.ui.components.*
 import com.tangem.tap.features.walletSelector.ui.model.DialogModel
 import com.tangem.tap.features.walletSelector.ui.model.WarningModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
-internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<WalletSelectorScreenState>() {
+internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
+
     private val viewModel by viewModels<WalletSelectorViewModel>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -45,10 +42,8 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     }
 
     @Composable
-    override fun provideState(): State<WalletSelectorScreenState> = viewModel.state.collectAsState()
-
-    @Composable
-    override fun ScreenContent(state: WalletSelectorScreenState, modifier: Modifier) {
+    override fun ScreenContent(modifier: Modifier) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val dialog by rememberUpdatedState(newValue = state.dialog)
@@ -90,7 +85,13 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
         if (dialog == null) return
         when (dialog) {
             is DialogModel.RemoveWalletDialog -> RemoveWalletDialogContent(dialog)
-            is DialogModel.RenameWalletDialog -> RenameWalletDialogContent(dialog)
+            is DialogModel.RenameWalletDialog -> {
+                RenameWalletDialogContent(
+                    name = dialog.currentName,
+                    onConfirm = dialog.onConfirm,
+                    onDismiss = dialog.onDismiss,
+                )
+            }
             is WarningModel.BiometricsLockoutWarning -> BiometricsLockoutWarningContent(dialog)
             is WarningModel.KeyInvalidatedWarning -> KeyInvalidatedWarningContent(dialog)
             is WarningModel.BiometricsDisabledWarning -> BiometricsDisabledWarningContent(dialog)
