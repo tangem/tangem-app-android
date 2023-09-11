@@ -1,6 +1,7 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.datasource.config.ConfigManager
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.analytics.topup.TopUpController
@@ -29,6 +30,7 @@ data class GlobalState(
     val userCountryCode: String? = null,
     val userWalletsListManager: UserWalletsListManager? = null,
     val topUpController: TopUpController? = null,
+    val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
 ) : StateType
 
 typealias CryptoCurrencyName = String
