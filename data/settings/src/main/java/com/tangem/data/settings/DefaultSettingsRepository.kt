@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultSettingsRepository(
     private val preferencesDataSource: PreferencesDataSource,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val isBalanceHiddenStore: HiddenBalanceSettingsStore,
+    private val balanceHidingSettingsStore: HiddenBalanceSettingsStore,
 ) : SettingsRepository {
 
     override suspend fun isUserAlreadyRateApp(): Boolean {
@@ -24,15 +24,15 @@ internal class DefaultSettingsRepository(
         return withContext(dispatchers.io) { preferencesDataSource.shouldShowSaveUserWalletScreen }
     }
 
-    override fun isBalanceHiddenEvents(): Flow<BalanceHidingSettings> {
-        return isBalanceHiddenStore.get()
+    override fun balanceHidingSettingsEvents(): Flow<BalanceHidingSettings> {
+        return balanceHidingSettingsStore.get()
     }
 
-    override suspend fun storeBalanceHiddenFlag(balanceHidingSettings: BalanceHidingSettings) {
-        isBalanceHiddenStore.store(balanceHidingSettings)
+    override suspend fun storeBalanceHidingSettings(balanceHidingSettings: BalanceHidingSettings) {
+        balanceHidingSettingsStore.store(balanceHidingSettings)
     }
 
     override suspend fun getBalanceHidingSettings(): BalanceHidingSettings {
-        return isBalanceHiddenStore.getSyncOrDefault()
+        return balanceHidingSettingsStore.getSyncOrDefault()
     }
 }

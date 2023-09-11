@@ -13,7 +13,7 @@ class ListenToFlipsUseCase(
         return flipDetector.deviceFlipEvents().onEach {
             val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
 
-            settingsRepository.storeBalanceHiddenFlag(balanceHidingSettings.copy(
+            settingsRepository.storeBalanceHidingSettings(balanceHidingSettings.copy(
                 isBalanceHidden = !balanceHidingSettings.isBalanceHidden
             ))
         }

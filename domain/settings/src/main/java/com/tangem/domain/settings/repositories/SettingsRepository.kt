@@ -9,9 +9,9 @@ interface SettingsRepository {
 
     suspend fun shouldShowSaveUserWalletScreen(): Boolean
 
-    fun isBalanceHiddenEvents(): Flow<BalanceHidingSettings>
+    fun balanceHidingSettingsEvents(): Flow<BalanceHidingSettings>
 
-    suspend fun storeBalanceHiddenFlag(isBalanceHidden: BalanceHidingSettings)
+    suspend fun storeBalanceHidingSettings(isBalanceHidden: BalanceHidingSettings)
 
     suspend fun getBalanceHidingSettings(): BalanceHidingSettings
 }
