@@ -11,6 +11,7 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -176,6 +177,12 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                state.cardArtworkUri?.let {
+                    seedPhraseViewModel.setCardArtworkUri(it.toString())
+                    loadImageIntoImageView(it, binding.imvFrontCard)
+                    loadImageIntoImageView(it, binding.imvFirstBackupCard)
+                    loadImageIntoImageView(it, binding.imvSecondBackupCard)
+                }
             }
             else -> {
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
@@ -422,7 +429,9 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            store.dispatch(OnboardingWalletAction.FinishOnboarding)
+            lifecycleScope.launch {
+                store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
+            }
         }
 
         animator.showSuccess {
