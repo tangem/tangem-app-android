@@ -1,6 +1,6 @@
 package com.tangem.tap.features.details.featuretoggles
 
-internal interface DetailsFeatureToggles {
+interface DetailsFeatureToggles {
 
     val isRedesignedAppCurrencySelectorEnabled: Boolean
 }
