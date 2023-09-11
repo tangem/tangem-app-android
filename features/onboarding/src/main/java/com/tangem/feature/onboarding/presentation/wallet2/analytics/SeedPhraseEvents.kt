@@ -23,10 +23,18 @@ sealed class SeedPhraseEvents(
     }
 }
 
-object OnboardingSeedButtonOtherOptions : AnalyticsEvent(
-    category = "Onboarding / Create Wallet",
-    event = "Button - Other Options",
-)
+sealed class CreateWalletEvents(
+    event: String,
+    params: Map<String, String> = mapOf(),
+) : AnalyticsEvent(ONBOARDING_CREATE_WALLET, event, params) {
+
+    object OnboardingSeedButtonCreateWallet : CreateWalletEvents("Button - Create Wallet")
+
+    object OnboardingSeedButtonOtherOptions : CreateWalletEvents("Button - Other Options")
+    companion object {
+        const val ONBOARDING_CREATE_WALLET = "Onboarding / Create Wallet"
+    }
+}
 
 enum class SeedPhraseSource {
     IMPORTED, GENERATED
