@@ -19,4 +19,6 @@ interface TokenDetailsClickIntents : TxHistoryClickIntents {
     fun onHideClick()
 
     fun onHideConfirmed()
+
+    fun onRefreshSwipe()
 }
