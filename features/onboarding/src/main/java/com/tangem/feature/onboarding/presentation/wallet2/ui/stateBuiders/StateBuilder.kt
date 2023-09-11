@@ -79,6 +79,13 @@ class StateBuilder(
         onBackClick = uiActions.menuNavigateBackClick,
     )
 
+    fun setCardArtwork(uiState: OnboardingSeedPhraseState, cardArtwork: String): OnboardingSeedPhraseState =
+        uiState.copy(
+            introState = uiState.introState.copy(
+                cardImageUrl = cardArtwork,
+            ),
+        )
+
     fun generateMnemonicComponents(uiState: OnboardingSeedPhraseState): OnboardingSeedPhraseState {
         return uiState.copy(
             aboutState = uiState.aboutState.copy(
