@@ -17,7 +17,7 @@ object ResetBackupCardDialog {
             setPositiveButton(R.string.common_cancel) { _, _ ->
                 Analytics.send(Onboarding.Backup.ResetCancelEvent)
             }
-            setNegativeButton(R.string.common_reset) { _, _ ->
+            setNegativeButton(R.string.card_settings_action_sheet_reset) { _, _ ->
                 Analytics.send(Onboarding.Backup.ResetPerformEvent)
                 store.dispatch(BackupAction.ResetBackupCard(cardId))
             }
