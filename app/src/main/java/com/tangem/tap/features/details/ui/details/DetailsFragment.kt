@@ -1,45 +1,48 @@
 package com.tangem.tap.features.details.ui.details
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.transition.TransitionInflater
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
-class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
+@AndroidEntryPoint
+internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
     private val detailsViewModel = DetailsViewModel(store)
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Analytics.send(Settings.ScreenOpened())
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                isTransitionGroup = true
-                TangemTheme {
-                    DetailsScreen(
-                        state = detailsViewModel.detailsScreenState.value,
-                        onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        DetailsScreen(
+            modifier = modifier,
+            state = detailsViewModel.detailsScreenState.value,
+            onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
+        )
+    }
+
+    override fun TransitionInflater.inflateTransitions(): Boolean {
+        enterTransition = inflateTransition(R.transition.fade)
+        exitTransition = inflateTransition(R.transition.fade)
+
+        return true
     }
 
     override fun onStart() {
