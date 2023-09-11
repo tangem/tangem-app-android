@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.utils
 
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
@@ -27,7 +28,8 @@ internal class ScrollOffsetCollector(
     private val LazyListItemInfo.halfItemSize get() = size.div(other = 2)
 
     override suspend fun emit(value: List<LazyListItemInfo>) {
-        if (!lazyListState.isScrollInProgress || dragInteraction.value == null || value.size <= 1) return
+        if (isNotUserInteraction() || value.size <= 1) return
+
         val firstItem = value.firstOrNull() ?: return
         val lastItem = value.lastOrNull() ?: return
 
@@ -36,5 +38,13 @@ internal class ScrollOffsetCollector(
         } else if (abs(lastItem.offset) > lastItem.halfItemSize) {
             callback(lastItem.index - 1)
         }
+    }
+
+    /**
+     * Sometimes the list is scrolled programmatically. Example: selecting a specific wallet when a user opens the
+     * screen for the first time or scans a new wallet. Therefore [ScrollOffsetCollector] should not respond to changes.
+     */
+    private fun isNotUserInteraction(): Boolean {
+        return !lazyListState.isScrollInProgress || dragInteraction.value !is DragInteraction.Start
     }
 }
