@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -134,8 +133,8 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected
             onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
-                unselectedColor = colorResource(id = R.color.icon_secondary),
-                selectedColor = colorResource(id = R.color.icon_accent),
+                unselectedColor = TangemTheme.colors.icon.secondary,
+                selectedColor = TangemTheme.colors.icon.accent,
             ),
         )
 
@@ -143,13 +142,13 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = subtitle,
                 style = TangemTheme.typography.body2,
-                color = colorResource(id = R.color.text_secondary),
+                color = TangemTheme.colors.text.secondary,
             )
         }
     }
