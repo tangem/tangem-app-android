@@ -24,13 +24,6 @@ fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blo
         // multiwallet supports all blockchains, move this logic to config
         Blockchain.values().toMutableList()
     }
-    // disabled Cardano for wallet 2 for now, should be enabled after key processed
-    // ([REDACTED_JIRA])
-    if (cardTypesResolver.isWallet2()) {
-        supportedBlockchains.apply {
-            remove(Blockchain.Cardano)
-        }
-    }
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }
         .filter { it.isSupportedInApp() }

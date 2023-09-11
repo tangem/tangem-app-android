@@ -68,7 +68,7 @@ class ApplyTokenListSortingUseCase(
     private suspend fun Raise<TokenListSortingError>.getCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
         val tokens = catch(
             block = {
-                currenciesRepository.getMultiCurrencyWalletCurrencies(userWalletId, refresh = false).firstOrNull()
+                currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId).firstOrNull()
             },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
