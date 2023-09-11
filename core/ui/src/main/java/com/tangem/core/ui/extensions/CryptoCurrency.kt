@@ -1,45 +1,49 @@
 package com.tangem.core.ui.extensions
 
 import androidx.annotation.DrawableRes
-import com.tangem.core.ui.R
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.core.graphics.toColorInt
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.tokens.models.CryptoCurrency
 
-/**
- * Retrieves the resource ID for the network badge of a [CryptoCurrency].
- *
- * This property provides a way to fetch the appropriate drawable resource ID
- * for the network badge of a given cryptocurrency. For coins, this will typically
- * return null as they do not have network badges, while tokens will fetch the icon
- * based on their associated network ID.
- *
- * @return Drawable resource ID for the network badge or null if the cryptocurrency is a coin.
- */
-@get:DrawableRes
-val CryptoCurrency.networkBadgeIconResId: Int?
-    get() = when (this) {
-        is CryptoCurrency.Coin -> null
-        is CryptoCurrency.Token -> getActiveIconRes(network.id.value)
-    }
+private const val LIGHT_LUMINANCE = 0.5f
+private const val COLOR_HEX_START_INDEX = 2
+private const val COLOR_HEX_END_INDEX = 7
 
 /**
- * Retrieves the resource ID for the icon of a [CryptoCurrency].
+ * Retrieves the resource ID for the network of a [CryptoCurrency].
  *
- * This property provides a way to fetch the appropriate drawable resource ID
- * for the icon of a given cryptocurrency.
- *
- * @return Drawable resource ID for the cryptocurrency icon.
+ * @return Drawable resource ID for the network.
  */
 @get:DrawableRes
-val CryptoCurrency.iconResId: Int
-    get() = when (this) {
-        is CryptoCurrency.Coin -> {
-            val rawCoinId = id.rawCurrencyId
+val CryptoCurrency.networkIconResId: Int
+    get() = getActiveIconRes(network.id.value)
 
-            if (rawCoinId != null) {
-                getActiveIconResByCoinId(rawCoinId, network.id.value)
-            } else {
-                R.drawable.ic_alert_24
-            }
-        }
-        is CryptoCurrency.Token -> R.drawable.ic_alert_24
+/**
+ * Tries to extract a background color from the contract address of a token.
+ *
+ * @param fallbackColor The color to use as a fallback.
+ * @return The extracted background color or the fallback color if extraction fails or if it is a test network token.
+ */
+fun CryptoCurrency.Token.tryGetBackgroundForTokenIcon(fallbackColor: Color = TangemColorPalette.Black): Color {
+    if (network.isTestnet) return fallbackColor
+
+    return try {
+        val colorHex = "#" + contractAddress.substring(range = COLOR_HEX_START_INDEX..COLOR_HEX_END_INDEX)
+        Color(colorHex.toColorInt())
+    } catch (exception: Exception) {
+        fallbackColor
     }
+}
+
+/**
+ * Determines the tint color to be used for a token icon based on its background color.
+ * If the icon's background color is light, a dark tint is chosen; otherwise, a light tint is chosen.
+ *
+ * @param iconBackground The background color of the custom token icon.
+ * @return The tint color to be used for the icon.
+ */
+fun getTintForTokenIcon(iconBackground: Color): Color {
+    return if (iconBackground.luminance() > LIGHT_LUMINANCE) TangemColorPalette.Black else TangemColorPalette.White
+}
