@@ -1,6 +1,7 @@
 package com.tangem.tap.features.welcome.redux
 
 import android.content.Intent
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.core.TangemError
 import org.rekotlin.Action
 
@@ -10,7 +11,7 @@ internal sealed interface WelcomeAction : Action {
         data class Error(val error: TangemError) : WelcomeAction
     }
 
-    object ProceedWithCard : WelcomeAction {
+    data class ProceedWithCard(val lifecycleCoroutineScope: LifecycleCoroutineScope) : WelcomeAction {
         object Success : WelcomeAction
         data class Error(val error: TangemError) : WelcomeAction
     }

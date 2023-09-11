@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
@@ -65,7 +66,7 @@ internal class WelcomeFragment : ComposeFragment() {
                 showUnlockProgress = state.showUnlockWithBiometricsProgress,
                 showScanCardProgress = state.showUnlockWithCardProgress,
                 onUnlockClick = viewModel::unlockWallets,
-                onScanCardClick = viewModel::scanCard,
+                onScanCardClick = { viewModel.scanCard(lifecycleCoroutineScope = lifecycleScope) },
             )
 
             SnackbarHost(
