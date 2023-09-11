@@ -13,7 +13,7 @@ internal class TokenDetailsRefreshStateConverter(
         return state.createPullToRefresh(value)
     }
 
-    private fun TokenDetailsState.createPullToRefresh(value: Boolean): TokenDetailsState {
+    private fun TokenDetailsState.createPullToRefresh(isRefreshing: Boolean): TokenDetailsState {
         return copy(pullToRefreshConfig = pullToRefreshConfig.copy(isRefreshing = value))
     }
 }
