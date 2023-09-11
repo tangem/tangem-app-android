@@ -1,7 +1,9 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -108,8 +110,32 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideGetCryptoCurrencyActionsUseCase(
+        rampStateManager: RampStateManager,
+        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
-        return GetCryptoCurrencyActionsUseCase(dispatchers)
+        return GetCryptoCurrencyActionsUseCase(rampStateManager, marketCryptoCurrencyRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCurrencyStatusByNetworkUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetNetworkCoinStatusUseCase {
+        return GetNetworkCoinStatusUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
+        return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
 }
