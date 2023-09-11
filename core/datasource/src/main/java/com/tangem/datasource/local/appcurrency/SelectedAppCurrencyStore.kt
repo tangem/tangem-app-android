@@ -7,5 +7,9 @@ interface SelectedAppCurrencyStore {
 
     fun get(): Flow<CurrenciesResponse.Currency>
 
+    suspend fun getSyncOrNull(): CurrenciesResponse.Currency?
+
     suspend fun store(item: CurrenciesResponse.Currency)
+
+    suspend fun isEmpty(): Boolean
 }

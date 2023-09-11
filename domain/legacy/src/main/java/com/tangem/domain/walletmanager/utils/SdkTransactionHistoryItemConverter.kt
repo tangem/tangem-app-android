@@ -11,12 +11,7 @@ internal class SdkTransactionHistoryItemConverter : Converter<SdkTransactionHist
     override fun convert(value: SdkTransactionHistoryItem): TxHistoryItem = TxHistoryItem(
         txHash = value.txHash,
         timestampInMillis = value.timestamp,
-        direction = when (val direction = value.direction) {
-            is SdkTransactionHistoryItem.TransactionDirection.Incoming ->
-                TxHistoryItem.TransactionDirection.Incoming(direction.from)
-            is SdkTransactionHistoryItem.TransactionDirection.Outgoing ->
-                TxHistoryItem.TransactionDirection.Outgoing(direction.to)
-        },
+        direction = value.direction.toDomain(),
         status = when (value.status) {
             TransactionStatus.Confirmed -> TxHistoryItem.TxStatus.Confirmed
             TransactionStatus.Unconfirmed -> TxHistoryItem.TxStatus.Unconfirmed
@@ -26,4 +21,16 @@ internal class SdkTransactionHistoryItemConverter : Converter<SdkTransactionHist
         },
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
     )
+
+    private fun TransactionHistoryItem.TransactionDirection.toDomain() = when (this) {
+        is TransactionHistoryItem.TransactionDirection.Incoming ->
+            TxHistoryItem.TransactionDirection.Incoming(address.toDomain())
+        is TransactionHistoryItem.TransactionDirection.Outgoing ->
+            TxHistoryItem.TransactionDirection.Outgoing(address.toDomain())
+    }
+
+    private fun TransactionHistoryItem.Address.toDomain(): TxHistoryItem.Address = when (this) {
+        TransactionHistoryItem.Address.Multiple -> TxHistoryItem.Address.Multiple
+        is TransactionHistoryItem.Address.Single -> TxHistoryItem.Address.Single(rawAddress = rawAddress)
+    }
 }
