@@ -10,6 +10,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,6 +72,11 @@ internal object TokenDetailsPreviewData {
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencyName = "USDT")
 
+    private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
+        isRefreshing = false,
+        onRefresh = {},
+    )
+
     val tokenDetailsState = TokenDetailsState(
         topAppBarConfig = tokenDetailsTopAppBarConfig,
         tokenInfoBlockState = tokenInfoBlockState,
@@ -83,5 +89,6 @@ internal object TokenDetailsPreviewData {
         ),
         dialogConfig = null,
         pendingTxs = persistentListOf(),
+        pullToRefreshConfig = pullToRefreshConfig,
     )
 }
