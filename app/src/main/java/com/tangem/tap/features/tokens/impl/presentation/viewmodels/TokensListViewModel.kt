@@ -19,6 +19,10 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.TokenWithBlockchain
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
@@ -26,14 +30,11 @@ import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.tap.features.tokens.impl.domain.models.Token.Network
 import com.tangem.tap.features.tokens.impl.presentation.models.SupportTokensState
-import com.tangem.tap.features.tokens.impl.presentation.models.TokensListArgs
 import com.tangem.tap.features.tokens.impl.presentation.router.TokensListRouter
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
-import com.tangem.tap.features.tokens.legacy.redux.TokenWithBlockchain
-import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -43,9 +44,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.properties.Delegates
 import com.tangem.blockchain.common.Token as BlockchainToken
 
 /**
@@ -59,6 +62,7 @@ import com.tangem.blockchain.common.Token as BlockchainToken
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class TokensListViewModel @Inject constructor(
     private val interactor: TokensListInteractor,
@@ -66,9 +70,12 @@ internal class TokensListViewModel @Inject constructor(
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val reduxStateHolder: AppStateHolder,
     analyticsEventHandler: AnalyticsEventHandler,
+    getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    private val args = TokensListArgs()
+    private val isManageAccess = store.state.tokensState.isManageAccess
     private val analyticsSender = TokensListAnalyticsSender(analyticsEventHandler)
     private val actionsHandler = ActionsHandler(router = router, debouncer = Debouncer())
 
@@ -76,15 +83,36 @@ internal class TokensListViewModel @Inject constructor(
     var uiState by mutableStateOf(value = getInitialUiState())
         private set
 
-    private val changedTokensList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
-    private val changedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
+    private var currentTokensList: List<TokenWithBlockchain> by Delegates.notNull()
+    private var currentBlockchainList: List<Blockchain> by Delegates.notNull()
+
+    private var changedTokensList: MutableList<TokenWithBlockchain> by Delegates.notNull()
+    private var changedBlockchainList: MutableList<Blockchain> by Delegates.notNull()
+
+    private val tokensListMigration = TokensListMigration(
+        walletFeatureToggles = walletFeatureToggles,
+        getSelectedWalletUseCase = getSelectedWalletUseCase,
+        getCurrenciesUseCase = getCurrenciesUseCase,
+    )
+
+    init {
+        viewModelScope.launch(dispatchers.main) {
+            val (currentCoins, currentTokens) = tokensListMigration.getCurrentCryptoCurrencies()
+
+            currentBlockchainList = currentCoins
+            currentTokensList = currentTokens
+
+            changedBlockchainList = currentCoins.toMutableList()
+            changedTokensList = currentTokens.toMutableList()
+        }
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
-        if (args.isManageAccess) analyticsSender.sendWhenScreenOpened()
+        if (isManageAccess) analyticsSender.sendWhenScreenOpened()
     }
 
     private fun getInitialUiState(): TokensListStateHolder {
-        return if (args.isManageAccess) {
+        return if (isManageAccess) {
             TokensListStateHolder.ManageContent(
                 toolbarState = getInitialToolbarState(),
                 isLoading = true,
@@ -105,7 +133,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun getInitialToolbarState(): TokensListToolbarState {
-        return if (args.isManageAccess) {
+        return if (isManageAccess) {
             TokensListToolbarState.Title.Manage(
                 titleResId = R.string.add_tokens_title,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
@@ -130,7 +158,7 @@ internal class TokensListViewModel @Inject constructor(
 
         return interactor.getTokensList(searchText = searchText).map {
             it.map { token ->
-                if (args.isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
+                if (isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
             }
         }
     }
@@ -264,7 +292,12 @@ internal class TokensListViewModel @Inject constructor(
 
         fun onSaveButtonClick() {
             analyticsSender.sendWhenSaveButtonClicked()
-            store.dispatch(TokensAction.SaveChanges(changedTokensList, changedBlockchainList))
+            tokensListMigration.onSaveButtonClick(
+                currentTokensList = currentTokensList,
+                currentBlockchainList = currentBlockchainList,
+                changedTokensList = changedTokensList,
+                changedBlockchainList = changedBlockchainList,
+            )
         }
 
         private fun onSearchValueChange(newValue: String) {
@@ -291,7 +324,7 @@ internal class TokensListViewModel @Inject constructor(
 
             if (isRemoveAction) {
                 val isTokenWithSameBlockchainFound = changedTokensList.any { it.blockchain == blockchain }
-                val isAddedOnMainScreen = args.mainScreenBlockchainList.contains(blockchain)
+                val isAddedOnMainScreen = currentBlockchainList.contains(blockchain)
 
                 if (isTokenWithSameBlockchainFound) {
                     router.openUnableHideMainTokenAlert(
@@ -341,7 +374,7 @@ internal class TokensListViewModel @Inject constructor(
             val isRemoveAction = changedTokensList.contains(token)
 
             if (isRemoveAction) {
-                val isAddedOnMainScreen = args.mainScreenTokenList.contains(token)
+                val isAddedOnMainScreen = currentTokensList.contains(token)
 
                 if (isAddedOnMainScreen) {
                     router.openRemoveWalletAlert(
