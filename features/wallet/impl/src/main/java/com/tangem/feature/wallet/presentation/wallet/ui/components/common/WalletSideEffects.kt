@@ -19,7 +19,9 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollec
 @Composable
 internal fun WalletSideEffects(lazyListState: LazyListState, walletsListConfig: WalletsListConfig) {
     LaunchedEffect(key1 = walletsListConfig.selectedWalletIndex) {
-        lazyListState.scrollToItem(walletsListConfig.selectedWalletIndex)
+        if (!lazyListState.isScrollInProgress) {
+            lazyListState.animateScrollToItem(walletsListConfig.selectedWalletIndex)
+        }
     }
 
     val dragInteraction = lazyListState.interactionSource.interactions.collectAsState(initial = null)
