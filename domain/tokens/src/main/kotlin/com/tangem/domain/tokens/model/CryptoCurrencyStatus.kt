@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
 /**
@@ -20,8 +21,10 @@ data class CryptoCurrencyStatus(
 
     /**
      * Represents the various states a token can have, encapsulating different information based on the state.
+     *
+     * @property isError Indicates whether this status represents an error status.
      */
-    sealed class Status {
+    sealed class Status(val isError: Boolean) {
 
         /** The amount of the token. */
         open val amount: BigDecimal? = null
@@ -39,23 +42,23 @@ data class CryptoCurrencyStatus(
         open val hasCurrentNetworkTransactions: Boolean = false
 
         /** The pending cryptocurrency transactions. */
-        open val pendingTransactions: Set<PendingTransaction> = emptySet()
+        open val pendingTransactions: Set<TxHistoryItem> = emptySet()
 
         /** The network address */
         open val networkAddress: NetworkAddress? = null
     }
 
     /** Represents the Loading state of a token, typically while fetching its details. */
-    object Loading : Status()
+    object Loading : Status(isError = false)
 
     /** Represents a state where the token is not reachable. */
-    object Unreachable : Status()
+    object Unreachable : Status(isError = true)
 
     /** Represents a state where the token's derivation is missed. */
-    object MissedDerivation : Status()
+    object MissedDerivation : Status(isError = true)
 
     /** Represents a state where there is no account associated with the token. */
-    object NoAccount : Status()
+    object NoAccount : Status(isError = false)
 
     /**
      * Represents a Loaded state of a token with complete information.
@@ -74,9 +77,9 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal,
         override val priceChange: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
-    ) : Status()
+    ) : Status(isError = false)
 
     /**
      * Represents a Custom state of a token, typically used for user-defined tokens.
@@ -95,9 +98,9 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal?,
         override val priceChange: BigDecimal?,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
-    ) : Status()
+    ) : Status(isError = false)
 
     /**
      * Represents a state where the token is available, but there is no current quote available for it.
@@ -110,7 +113,7 @@ data class CryptoCurrencyStatus(
     data class NoQuote(
         override val amount: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
-        override val pendingTransactions: Set<PendingTransaction>,
+        override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress?,
-    ) : Status()
+    ) : Status(isError = false)
 }
