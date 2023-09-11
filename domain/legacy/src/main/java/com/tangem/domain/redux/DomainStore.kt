@@ -1,7 +1,5 @@
 package com.tangem.domain.redux
 
-import com.tangem.domain.DomainLayer
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenHub
 import com.tangem.domain.redux.global.DomainGlobalHub
 import org.rekotlin.Action
 import org.rekotlin.Store
@@ -9,10 +7,7 @@ import org.rekotlin.Store
 /**
 [REDACTED_AUTHOR]
  */
-private val RE_STORE_HUBS: List<ReStoreHub<DomainState, *>> = listOf(
-    DomainGlobalHub(),
-    AddCustomTokenHub(),
-)
+private val RE_STORE_HUBS: List<ReStoreHub<DomainState, *>> = listOf(DomainGlobalHub())
 
 val domainStore = Store(
     state = DomainState(),
@@ -37,7 +32,6 @@ private fun reduce(action: Action, domainState: DomainState?): DomainState {
             assembleReducedDomainState
         }
     }
-    DomainLayer.actionStateLogger.log(reducedStatesByAction)
 
     return assembleReducedDomainState
 }

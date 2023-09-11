@@ -65,7 +65,7 @@ private fun ActionsBottomSheetContent_Dark(
     @PreviewParameter(ActionsBottomSheetContentConfigProvider::class)
     config: ActionsBottomSheetConfig,
 ) {
-    TangemTheme(isDark = false) {
+    TangemTheme(isDark = true) {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         ActionsBottomSheetContent(actions = config.actions)
     }
