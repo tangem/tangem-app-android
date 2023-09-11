@@ -47,7 +47,7 @@ import timber.log.Timber
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
-    private val managePrivacyMiddleware = ManagePrivacyMiddleware()
+    private val appSettingsMiddleware = AppSettingsMiddleware()
     private val accessCodeRecoveryMiddleware = AccessCodeRecoveryMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
@@ -67,7 +67,7 @@ class DetailsMiddleware {
         when (action) {
             is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
             is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action, state)
-            is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
+            is DetailsAction.AppSettings -> appSettingsMiddleware.handle(state, action)
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
@@ -207,7 +207,7 @@ class DetailsMiddleware {
         }
     }
 
-    class ManagePrivacyMiddleware {
+    class AppSettingsMiddleware {
         fun handle(state: DetailsState, action: DetailsAction.AppSettings) {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
@@ -261,6 +261,8 @@ class DetailsMiddleware {
 
             scope.launch {
                 repository.changeAppThemeMode(appThemeMode)
+
+                store.dispatchWithMain(GlobalAction.ChangeAppThemeMode(appThemeMode))
             }
         }
 
