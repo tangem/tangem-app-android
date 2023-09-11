@@ -17,6 +17,16 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideFetchTokenListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchTokenListUseCase {
+        return FetchTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -28,13 +38,22 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideRemoveCurrencyUseCase(
+        currenciesRepository: CurrenciesRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): RemoveCurrencyUseCase {
+        return RemoveCurrencyUseCase(currenciesRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetCurrencyUseCase {
-        return GetCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetCurrencyStatusUpdatesUseCase {
+        return GetCurrencyStatusUpdatesUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
@@ -44,17 +63,31 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetPrimaryCurrencyUseCase {
-        return GetPrimaryCurrencyUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    ): GetPrimaryCurrencyStatusUpdatesUseCase {
+        return GetPrimaryCurrencyStatusUpdatesUseCase(
+            currenciesRepository,
+            quotesRepository,
+            networksRepository,
+            dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideFetchCurrencyStatusUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchCurrencyStatusUseCase {
+        return FetchCurrencyStatusUseCase(currenciesRepository, networksRepository, quotesRepository)
     }
 
     @Provides
     @ViewModelScoped
     fun provideToggleTokenListGroupingUseCase(
-        networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCase {
-        return ToggleTokenListGroupingUseCase(networksRepository, dispatchers)
+        return ToggleTokenListGroupingUseCase(dispatchers)
     }
 
     @Provides
@@ -70,5 +103,13 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ApplyTokenListSortingUseCase {
         return ApplyTokenListSortingUseCase(currenciesRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCryptoCurrencyActionsUseCase(
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCryptoCurrencyActionsUseCase {
+        return GetCryptoCurrencyActionsUseCase(dispatchers)
     }
 }

@@ -28,6 +28,16 @@ interface CurrenciesRepository {
     )
 
     /**
+     * Removes currency from a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currency The currency which must be removed.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * ID provided.
+     */
+    suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
+
+    /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -38,15 +48,29 @@ interface CurrenciesRepository {
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
-     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads remote cryptocurrencies if they have expired.
      *
      * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<List<CryptoCurrency>>
+    fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads cryptocurrencies if they have expired or if [refresh] is `true`.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh A boolean flag indicating whether the data should be refreshed.
+     * @return A list of [CryptoCurrency].
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCurrenciesSync(userWalletId: UserWalletId, refresh: Boolean): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.

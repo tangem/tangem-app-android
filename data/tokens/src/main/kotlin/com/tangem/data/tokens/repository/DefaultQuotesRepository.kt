@@ -9,11 +9,9 @@ import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal class DefaultQuotesRepository(
@@ -28,7 +26,7 @@ internal class DefaultQuotesRepository(
 
     private var quotesFetchedForAppCurrency: String? = null
 
-    override fun getQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
         return channelFlow {
             launch(dispatchers.io) {
                 quotesStore.get(currenciesIds)
@@ -38,9 +36,23 @@ internal class DefaultQuotesRepository(
 
             launch(dispatchers.io) {
                 selectedAppCurrencyStore.get().collectLatest { appCurrency ->
-                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh)
+                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
                 }
             }
+        }
+    }
+
+    override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
+        return withContext(dispatchers.io) {
+            val selectedAppCurrency = requireNotNull(selectedAppCurrencyStore.getSyncOrNull()) {
+                "Unable to get selected application currency to update quotes"
+            }
+
+            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
+
+            val quotes = quotesStore.get(currenciesIds).first()
+
+            quotesConverter.convertSet(quotes)
         }
     }
 
