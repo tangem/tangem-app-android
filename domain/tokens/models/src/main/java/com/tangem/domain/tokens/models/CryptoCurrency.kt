@@ -6,7 +6,7 @@ import java.io.Serializable
  * Represents a generic cryptocurrency.
  *
  * @property id Unique identifier for the cryptocurrency.
- * @property networkId Identifier for the network to which the cryptocurrency belongs.
+ * @property network The network to which the cryptocurrency belongs.
  * @property name Human-readable name of the cryptocurrency.
  * @property symbol Symbol of the cryptocurrency.
  * @property decimals Number of decimal places used by the cryptocurrency.
@@ -14,11 +14,11 @@ import java.io.Serializable
  * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
  * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
  */
-// TODO: [REDACTED_JIRA] delete serializable
+// FIXME: Remove serialization [REDACTED_JIRA]
 sealed class CryptoCurrency : Serializable {
 
     abstract val id: ID
-    abstract val networkId: Network.ID
+    abstract val network: Network
     abstract val name: String
     abstract val symbol: String
     abstract val decimals: Int
@@ -30,7 +30,7 @@ sealed class CryptoCurrency : Serializable {
      */
     data class Coin(
         override val id: ID,
-        override val networkId: Network.ID,
+        override val network: Network,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,
@@ -51,7 +51,7 @@ sealed class CryptoCurrency : Serializable {
      */
     data class Token(
         override val id: ID,
-        override val networkId: Network.ID,
+        override val network: Network,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,
@@ -59,8 +59,6 @@ sealed class CryptoCurrency : Serializable {
         override val derivationPath: String?,
         val contractAddress: String,
         val isCustom: Boolean,
-        val blockchainName: String, // TODO: Move this field to proper entity
-        val standardType: StandardType, // TODO: Move this field to proper entity
     ) : CryptoCurrency() {
 
         init {
@@ -79,6 +77,7 @@ sealed class CryptoCurrency : Serializable {
      * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
      * its ID of the custom token.
      */
+    // FIXME: Remove serialization [REDACTED_JIRA]
     data class ID(
         private val prefix: Prefix,
         private val networkId: Network.ID,
@@ -114,6 +113,7 @@ sealed class CryptoCurrency : Serializable {
          *
          * The suffix can either be a raw ID or a contract address.
          */
+        // FIXME: Remove serialization [REDACTED_JIRA]
         sealed class Suffix : Serializable {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
@@ -132,26 +132,6 @@ sealed class CryptoCurrency : Serializable {
 
         private companion object {
             const val DELIMITER = '#'
-        }
-    }
-
-    sealed class StandardType : Serializable {
-        abstract val name: String
-
-        object ERC20 : StandardType() {
-            override val name: String = "ERC20"
-        }
-        object TRC20 : StandardType() {
-            override val name: String = "TRC20"
-        }
-        object BEP20 : StandardType() {
-            override val name: String = "BEP20"
-        }
-        object BEP2 : StandardType() {
-            override val name: String = "BEP2"
-        }
-        class Unspecified(val tokenName: String) : StandardType() {
-            override val name: String = tokenName
         }
     }
 
