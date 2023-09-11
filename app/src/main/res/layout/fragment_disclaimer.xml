@@ -21,6 +21,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+            app:navigationIconTint="@color/icon_primary_1"
+            app:titleTextColor="@color/text_primary_1"
             app:title="@string/disclaimer_title" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -29,7 +31,7 @@
         android:id="@+id/cl_details_confirm"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="@color/background_secondary"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <WebView
