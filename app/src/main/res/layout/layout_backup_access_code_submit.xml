@@ -14,6 +14,7 @@
         android:layout_marginTop="14dp"
         android:paddingStart="32dp"
         android:paddingEnd="32dp"
+        android:textColor="@color/text_secondary"
         android:text="@string/onboarding_access_code_hint"
         android:textAlignment="center"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,12 +29,17 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="40dp"
         android:hint="@string/onboarding_wallet_info_title_third"
+        android:textColorHint="@color/text_primary_1"
         android:theme="@style/EditTextThemeOverlay"
         app:boxStrokeColor="@color/selector_edit_text"
         app:boxStrokeWidth="1dp"
         app:endIconDrawable="@drawable/selector_password_toggle"
+        app:boxStrokeErrorColor="@color/icon_warning"
         app:endIconMode="password_toggle"
         app:hintTextColor="@color/accent"
+        app:endIconTint="@color/icon_primary_1"
+        app:errorIconTint="@color/icon_warning"
+        app:errorTextColor="@color/icon_warning"
         app:layout_constraintTop_toBottomOf="@id/tv_access_code_enter_description">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -41,6 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textVisiblePassword"
+            android:textColor="@color/text_primary_1"
             android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -48,10 +55,10 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_access_code_submit"
         style="@style/TapPrimaryButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
+        android:layout_marginStart="@dimen/dimen16"
+        android:layout_marginEnd="@dimen/dimen16"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/access_code_btn_continue_margin_start"
-        android:layout_marginEnd="@dimen/access_code_btn_continue_margin_end"
         android:layout_marginBottom="@dimen/access_code_btn_continue_margin_bottom"
         android:text="@string/common_create"
         android:textSize="16sp"
