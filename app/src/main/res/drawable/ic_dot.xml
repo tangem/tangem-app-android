@@ -7,7 +7,7 @@
         android:thickness="4.5dp"
         android:useLevel="false">
       <solid
-          android:color="#80686868"
+          android:color="@color/icon_informative"
           android:fillAlpha="0.5"
           />
     </shape>
