@@ -11,7 +11,7 @@ internal data class OrganizeTokensState(
     val header: HeaderConfig,
     val actions: ActionsConfig,
     val dndConfig: DragAndDropConfig,
-    val scrollListToTop: StateEvent,
+    val scrollListToTop: StateEvent<Unit>,
 ) {
 
     data class HeaderConfig(
