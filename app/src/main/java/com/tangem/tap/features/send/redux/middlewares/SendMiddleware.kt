@@ -307,6 +307,19 @@ private fun sendTransaction(
                                 ),
                             )
                         }
+                        is BlockchainSdkError.Chia.UtxoAmountError -> {
+                            dispatch(
+                                SendAction.Dialog.ChiaWarningDialog(
+                                    blockchainName = Blockchain.Chia.fullName,
+                                    maxOutputs = error.maxOutputs,
+                                    maxAmount = error.maxAmount,
+                                    onOk = {
+                                        dispatch(AmountAction.SetAmount(error.maxAmount, isUserInput = false))
+                                        dispatch(AmountActionUi.CheckAmountToSend)
+                                    },
+                                ),
+                            )
+                        }
                         else -> {
                             when {
                                 error.customMessage.contains(DemoTransactionSender.ID) -> {
