@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
-import com.tangem.core.ui.components.wallet.WalletLockedContentState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -28,14 +27,17 @@ internal sealed class WalletTokensListState {
         open val onOrganizeTokensClick: (() -> Unit)?,
     ) : WalletTokensListState()
 
-    /** Loading content state */
-    object Loading : ContentState(
-        items = persistentListOf(
+    /**
+     * Loading content state
+     *
+     * @property items content items
+     */
+    data class Loading(
+        override val items: ImmutableList<TokensListItemState.Token> = persistentListOf(
             TokensListItemState.Token(state = TokenItemState.Loading(id = FIRST_LOADING_TOKEN_ID)),
             TokensListItemState.Token(state = TokenItemState.Loading(id = SECOND_LOADING_TOKEN_ID)),
         ),
-        onOrganizeTokensClick = null,
-    )
+    ) : ContentState(items = items, onOrganizeTokensClick = null)
 
     /**
      * Content state
@@ -49,15 +51,13 @@ internal sealed class WalletTokensListState {
     ) : ContentState(items, onOrganizeTokensClick)
 
     /** Locked content state */
-    object Locked :
-        ContentState(
-            items = persistentListOf(
-                TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
-                TokensListItemState.Token(state = TokenItemState.Loading(id = LOCKED_TOKEN_ID)),
-            ),
-            onOrganizeTokensClick = null,
+    object Locked : ContentState(
+        items = persistentListOf(
+            TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
+            TokensListItemState.Token(state = TokenItemState.Locked(id = LOCKED_TOKEN_ID)),
         ),
-        WalletLockedContentState
+        onOrganizeTokensClick = null,
+    )
 
     /** Tokens list item state */
     sealed interface TokensListItemState {
