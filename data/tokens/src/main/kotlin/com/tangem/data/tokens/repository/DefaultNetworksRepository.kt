@@ -16,14 +16,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 internal class DefaultNetworksRepository(
     private val walletManagersFacade: WalletManagersFacade,
@@ -45,10 +39,9 @@ internal class DefaultNetworksRepository(
         return networkConverter.convertSet(networksIds)
     }
 
-    override fun getNetworkStatuses(
+    override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network.ID>,
-        refresh: Boolean,
     ): Flow<Set<NetworkStatus>> = channelFlow {
         launch(dispatchers.io) {
             networksStatuses.collect {
@@ -57,8 +50,17 @@ internal class DefaultNetworksRepository(
         }
 
         launch(dispatchers.io) {
-            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
+            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
         }
+    }
+
+    override suspend fun getNetworkStatusesSync(
+        userWalletId: UserWalletId,
+        networks: Set<Network.ID>,
+        refresh: Boolean,
+    ): Set<NetworkStatus> = withContext(dispatchers.io) {
+        fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
+        networksStatuses.first().toSet()
     }
 
     private suspend fun fetchNetworksStatusesIfCacheExpired(
@@ -88,7 +90,7 @@ internal class DefaultNetworksRepository(
     private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, networkId: Network.ID) {
         val currencies = getCurrencies(userWalletId)
             .asSequence()
-            .filter { it.networkId == networkId }
+            .filter { it.network.id == networkId }
 
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
