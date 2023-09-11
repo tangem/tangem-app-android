@@ -304,7 +304,7 @@ internal object WalletPreviewData {
         onDismissRequest = {},
         actions = listOf(
             TokenActionButtonConfig(
-                text = "Send",
+                text = TextReference.Str("Send"),
                 iconResId = R.drawable.ic_share_24,
                 onClick = {},
             ),
