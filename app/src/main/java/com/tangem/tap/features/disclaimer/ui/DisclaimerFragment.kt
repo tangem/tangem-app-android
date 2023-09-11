@@ -122,6 +122,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 webView.loadLocalTermsOfServices()
             }
             else -> {
+                webView.setBackgroundColor(resources.getColor(R.color.transparent, null))
                 webView.loadUrl(disclaimer.getUri().toString())
             }
         }
