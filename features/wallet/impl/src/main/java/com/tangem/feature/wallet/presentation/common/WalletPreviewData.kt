@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.event.consumed
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
@@ -276,7 +276,7 @@ internal object WalletPreviewData {
                 onApplyClick = {},
                 onCancelClick = {},
             ),
-            scrollListToTop = consumed,
+            scrollListToTop = consumedEvent(),
         )
     }
 
