@@ -134,9 +134,12 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
-    suspend fun resetToFactorySettings(cardId: String): CompletionResult<CardDTO> {
+    suspend fun resetToFactorySettings(
+        cardId: String,
+        allowsRequestAccessCodeFromRepository: Boolean,
+    ): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetToFactorySettingsTask(),
+            runnable = ResetToFactorySettingsTask(allowsRequestAccessCodeFromRepository),
             cardId = cardId,
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
