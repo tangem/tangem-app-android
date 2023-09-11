@@ -6,7 +6,7 @@
         <item name="colorPrimary">@color/menu_accent_color</item>
         <item name="colorSecondary">@color/menu_accent_color</item>
         <item name="android:textColor">@color/text_primary_1</item>
-        <item name="actionMenuTextColor">@color/menu_accent_color</item>
+        <item name="actionMenuTextColor">@color/icon_primary_1</item>
 
         <item name="colorControlNormal">@color/text_secondary</item>
         <item name="colorControlActivated">@color/accent</item>
@@ -32,7 +32,7 @@
     </style>
 
     <style name="ThemeOverlay.MyTheme.Toolbar.AccentColorMenu" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
-        <item name="actionMenuTextColor">@color/accent</item>
+        <item name="actionMenuTextColor">@color/icon_primary_1</item>
     </style>
 
 
