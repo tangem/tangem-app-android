@@ -19,6 +19,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
@@ -38,7 +39,6 @@ import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -254,7 +254,7 @@ private fun sendTransaction(
                             ),
                         )
                         Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
-                        dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
+                        dispatch(TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
                     } else {
                         Analytics.send(
                             Basic.TransactionSent(
