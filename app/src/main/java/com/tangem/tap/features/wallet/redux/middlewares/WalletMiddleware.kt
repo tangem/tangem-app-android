@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -115,9 +116,9 @@ class WalletMiddleware {
             }
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                scope.launch {
+                action.lifecycleScope.launch {
                     delay(timeMillis = 700)
-                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.lifecycleScope))
                 }
             }
             is WalletAction.LoadData,
@@ -226,7 +227,7 @@ class WalletMiddleware {
                 showSaveWalletIfNeeded()
             }
             is WalletAction.ChangeWallet -> {
-                changeWallet(walletState)
+                changeWallet(walletState, action.lifecycleScope)
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
@@ -379,7 +380,7 @@ class WalletMiddleware {
         }
     }
 
-    private fun changeWallet(state: WalletState) {
+    private fun changeWallet(state: WalletState, lifecycleScope: LifecycleCoroutineScope) {
         when {
             state.canSaveUserWallets -> {
                 Analytics.send(MainScreen.ButtonMyWallets())
@@ -387,7 +388,12 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main)))
+                store.dispatch(
+                    WalletAction.Scan(
+                        onScanSuccessEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main),
+                        lifecycleScope = lifecycleScope,
+                    ),
+                )
             }
         }
     }
