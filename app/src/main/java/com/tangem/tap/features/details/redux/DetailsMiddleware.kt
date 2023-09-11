@@ -9,6 +9,7 @@ import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
@@ -221,6 +222,9 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
                 }
+                is DetailsAction.AppSettings.ChangeAppThemeMode -> {
+                    changeAppThemeMode(action.appThemeMode)
+                }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
@@ -250,6 +254,14 @@ class DetailsMiddleware {
         private fun enrollBiometrics() {
             Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication)
             store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
+        }
+
+        private fun changeAppThemeMode(appThemeMode: AppThemeMode) {
+            val repository = store.state.daggerGraphState.get(DaggerGraphState::appThemeModeRepository)
+
+            scope.launch {
+                repository.changeAppThemeMode(appThemeMode)
+            }
         }
 
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
