@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -28,6 +29,16 @@ interface CurrenciesRepository {
     )
 
     /**
+     * Add currencies to a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The currencies which must be added.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
      * Removes currency from a specific user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -36,6 +47,16 @@ interface CurrenciesRepository {
      * ID provided.
      */
     suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
+
+    /**
+     * Removes currencies from a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The currencies which must be removed.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
     /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
@@ -82,6 +103,14 @@ interface CurrenciesRepository {
      * ID provided.
      */
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
+
+    /**
+     * Get the coin for a specific network.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param networkId    The unique identifier of the network.
+     */
+    suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin
 
     /**
      * Determines whether the tokens within a specific multi-currency user wallet are grouped.
