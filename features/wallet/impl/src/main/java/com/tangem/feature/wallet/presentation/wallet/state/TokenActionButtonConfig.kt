@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.annotation.DrawableRes
+import com.tangem.core.ui.extensions.TextReference
 
 /**
  * Action button config
@@ -11,7 +12,7 @@ import androidx.annotation.DrawableRes
  * @property enabled   enabled
  */
 data class TokenActionButtonConfig(
-    val text: String,
+    val text: TextReference,
     @DrawableRes val iconResId: Int,
     val onClick: () -> Unit,
     val enabled: Boolean = true,
