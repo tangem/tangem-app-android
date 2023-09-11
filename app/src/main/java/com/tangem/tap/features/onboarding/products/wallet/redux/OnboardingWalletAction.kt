@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.CompletionResult
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -12,11 +13,12 @@ sealed class OnboardingWalletAction : Action {
     object GetToCreateWalletStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
     data class WalletWasCreated(
+        val shouldSendAnalyticsEvent: Boolean,
         val result: CompletionResult<CreateProductWalletTaskResponse>,
     ) : OnboardingWalletAction()
 
     object Done : OnboardingWalletAction()
-    object FinishOnboarding : OnboardingWalletAction()
+    data class FinishOnboarding(val lifecycleCoroutineScope: LifecycleCoroutineScope) : OnboardingWalletAction()
 
     object ResumeBackup : OnboardingWalletAction()
 
