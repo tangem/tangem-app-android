@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SimpleSettingsRow
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
@@ -38,7 +39,7 @@ private fun ActionsBottomSheetContent(actions: ImmutableList<TokenActionButtonCo
     ) {
         actions.forEach { action ->
             SimpleSettingsRow(
-                title = action.text,
+                title = action.text.resolveReference(),
                 icon = action.iconResId,
                 enabled = action.enabled,
                 onItemsClick = action.onClick,
