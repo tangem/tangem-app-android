@@ -49,10 +49,11 @@
         <item name="cornerRadius">14dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">@font/roboto_regular</item>
-        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+        <item name="android:letterSpacing">0.01</item>
         <item name="fontWeight">500</item>
         <item name="lineHeight">16sp</item>
+        <item name="iconPadding">4dp</item>
     </style>
 
     <style name="TapPrimaryButton" parent="BaseTapButton">
