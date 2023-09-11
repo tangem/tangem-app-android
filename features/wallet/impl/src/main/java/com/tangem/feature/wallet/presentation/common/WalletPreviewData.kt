@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumed
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -129,7 +130,7 @@ internal object WalletPreviewData {
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
-                balanceHidden = false
+                isBalanceHidden = false
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -156,7 +157,7 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
                 fiatAmount = "321 $",
-                balanceHidden = false
+                isBalanceHidden = false
 
             ),
             onItemClick = {},
@@ -169,7 +170,7 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             icon = tokenIconState,
             name = "Polygon",
-            fiatAmount = "3 172,14 $",
+            info = stringReference(value = "3 172,14 $"),
         )
     }
 
@@ -237,7 +238,7 @@ internal object WalletPreviewData {
                     )
                 }
 
-                val divider = DraggableItem.GroupPlaceholder(id = "divider_$networkNumber")
+                val divider = DraggableItem.Placeholder(id = "divider_$networkNumber")
 
                 buildList {
                     add(group)
@@ -272,7 +273,7 @@ internal object WalletPreviewData {
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = { _, _ -> },
-                onDragStart = {},
+                onItemDragStart = {},
                 canDragItemOver = { _, _ -> false },
                 onItemDragEnd = {},
             ),
@@ -370,7 +371,7 @@ internal object WalletPreviewData {
                         ),
                     ),
                 ),
-                onOrganizeTokensClick = {},
+                organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Visible(isEnabled = true, {}),
             ),
             pullToRefreshConfig = WalletPullToRefreshConfig(
                 isRefreshing = false,

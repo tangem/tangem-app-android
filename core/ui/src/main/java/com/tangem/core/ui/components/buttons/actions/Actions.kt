@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW8
-import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -99,7 +98,7 @@ private fun Button(
         val iconTint by animateColorAsState(
             targetValue = when {
                 !config.enabled -> TangemTheme.colors.icon.informative
-                config.dimContent -> TangemTheme.colors.icon.secondary
+                config.dimContent -> TangemTheme.colors.icon.informative
                 else -> TangemTheme.colors.icon.primary1
             },
             label = "Update tint color",
@@ -117,7 +116,7 @@ private fun Button(
         val textColor by animateColorAsState(
             targetValue = when {
                 !config.enabled -> TangemTheme.colors.text.disabled
-                config.dimContent -> TangemTheme.colors.text.secondary
+                config.dimContent -> TangemTheme.colors.text.tertiary
                 else -> TangemTheme.colors.text.primary1
             },
             label = "Update text color",

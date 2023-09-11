@@ -3,6 +3,7 @@ package com.tangem.tap.proxy.redux
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -38,6 +39,7 @@ data class DaggerGraphState(
     val appCurrencyRepository: AppCurrencyRepository? = null,
     val walletManagersFacade: WalletManagersFacade? = null,
     val appStateHolder: AppStateHolder? = null,
+    val appThemeModeRepository: AppThemeModeRepository? = null,
 
     // FIXME: It is used only for TokensList screen. Remove after refactoring of TokensList
     val currenciesRepository: CurrenciesRepository? = null,

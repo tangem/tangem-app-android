@@ -36,7 +36,9 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 

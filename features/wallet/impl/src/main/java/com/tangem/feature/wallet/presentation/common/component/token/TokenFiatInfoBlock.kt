@@ -57,7 +57,7 @@ private fun ContentBlock(state: TokenOptionsState, modifier: Modifier = Modifier
             modifier = Modifier.align(Alignment.End),
         ) {
             Text(
-                text = if (it.balanceHidden) {
+                text = if (it.isBalanceHidden) {
                     DOTS
                 } else {
                     it.fiatAmount

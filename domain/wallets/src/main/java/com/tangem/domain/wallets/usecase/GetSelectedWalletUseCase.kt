@@ -8,7 +8,8 @@ import com.tangem.domain.wallets.models.GetSelectedWalletError
 import com.tangem.domain.wallets.models.UserWallet
 
 /**
- * Use case for getting selected wallet
+ * Use case for getting selected wallet.
+ * Important! If all wallets is locked, use case returns a error.
  *
  * @property walletsStateHolder state holder for getting static initialized 'userWalletsListManager'
  *

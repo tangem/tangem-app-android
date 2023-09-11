@@ -38,13 +38,13 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         return TokenItemState.Content(
             id = currency.id.value,
             name = currency.name,
-            icon = iconStateConverter.convert(currency),
+            icon = iconStateConverter.convert(value = this),
             amount = getFormattedAmount(),
             hasPending = value.hasCurrentNetworkTransactions,
             tokenOptions = TokenItemState.TokenOptionsState(
                 fiatAmount = getFormattedFiatAmount(),
                 config = getPriceChangeConfig(),
-                balanceHidden = isBalanceHiddenProvider()
+                isBalanceHidden = isBalanceHiddenProvider()
             ),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
@@ -67,7 +67,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(
         id = currency.id.value,
         name = currency.name,
-        icon = iconStateConverter.convert(currency),
+        icon = iconStateConverter.convert(value = this),
     )
 
     private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeConfig {

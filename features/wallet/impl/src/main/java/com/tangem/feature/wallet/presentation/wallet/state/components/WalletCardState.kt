@@ -137,42 +137,6 @@ internal sealed interface WalletCardState {
         }
     }
 
-    fun updateHiddenState(hiddenBalance: Boolean) : WalletCardState {
-        return when {
-            this is Content && hiddenBalance -> {
-                contentToHidden(this)
-            }
-            this is HiddenContent && !hiddenBalance -> {
-                hiddenToContent(this)
-            }
-            else -> this
-        }
-    }
-
-    private fun contentToHidden(content: Content) : HiddenContent {
-        return HiddenContent(
-            id = content.id,
-            title = content.title,
-            additionalInfo = content.additionalInfo,
-            imageResId = content.imageResId,
-            onRenameClick = content.onRenameClick,
-            onDeleteClick = content.onDeleteClick,
-            balance = content.balance
-        )
-    }
-
-    private fun hiddenToContent(hiddenContent: HiddenContent) : Content {
-        return Content(
-            id = hiddenContent.id,
-            title = hiddenContent.title,
-            additionalInfo = hiddenContent.additionalInfo,
-            imageResId = hiddenContent.imageResId,
-            onRenameClick = hiddenContent.onRenameClick,
-            onDeleteClick = hiddenContent.onDeleteClick,
-            balance = hiddenContent.balance
-        )
-    }
-
     companion object {
         val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = "***") }
         val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = "—") }

@@ -10,12 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.Companion.DOTS
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 
 @Composable
 internal fun TokenCryptoInfoBlock(state: TokenItemState, modifier: Modifier = Modifier) {
@@ -39,8 +39,8 @@ private fun ContentBlock(state: TokenItemState.ContentState, modifier: Modifier 
 
         AmountText(
             amount = when (state) {
-                is TokenItemState.Content -> if (state.tokenOptions.balanceHidden) DOTS else state.amount
-                is TokenItemState.Draggable -> state.fiatAmount
+                is TokenItemState.Content -> if (state.tokenOptions.isBalanceHidden) DOTS else state.amount
+                is TokenItemState.Draggable -> state.info.resolveReference()
                 is TokenItemState.Unreachable -> null
             },
         )

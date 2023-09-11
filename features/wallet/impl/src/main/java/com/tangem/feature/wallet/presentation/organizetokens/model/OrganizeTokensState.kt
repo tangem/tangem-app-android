@@ -33,6 +33,6 @@ internal data class OrganizeTokensState(
         val onItemDragged: (ItemPosition, ItemPosition) -> Unit,
         val canDragItemOver: (ItemPosition, ItemPosition) -> Boolean,
         val onItemDragEnd: () -> Unit,
-        val onDragStart: (DraggableItem) -> Unit,
+        val onItemDragStart: (DraggableItem) -> Unit,
     )
 }

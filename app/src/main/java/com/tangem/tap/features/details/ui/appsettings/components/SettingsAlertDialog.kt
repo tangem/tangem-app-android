@@ -9,52 +9,52 @@ import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.ui.appsettings.AppSettingsAlertsFactory
-import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Alert
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsDialogsFactory
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Dialog
 import com.tangem.wallet.R
 
 @Composable
-internal fun SettingsAlertDialog(alert: Alert) {
+internal fun SettingsAlertDialog(dialog: Dialog.Alert) {
     BasicDialog(
-        title = alert.title.resolveReference(),
-        message = alert.description.resolveReference(),
+        title = dialog.title.resolveReference(),
+        message = dialog.description.resolveReference(),
         isDismissable = false,
         confirmButton = DialogButton(
-            title = alert.confirmText.resolveReference(),
+            title = dialog.confirmText.resolveReference(),
             warning = true,
-            onClick = alert.onConfirm,
+            onClick = dialog.onConfirm,
         ),
         dismissButton = DialogButton(
             title = stringResource(id = R.string.common_cancel),
-            onClick = alert.onDismiss,
+            onClick = dialog.onDismiss,
         ),
-        onDismissDialog = alert.onDismiss,
+        onDismissDialog = dialog.onDismiss,
     )
 }
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun AlertDialogPreview_Light(@PreviewParameter(AlertDialogProvider::class) dialog: Alert) {
+private fun AlertDialogPreview_Light(@PreviewParameter(AlertDialogProvider::class) dialog: Dialog.Alert) {
     TangemTheme {
-        SettingsAlertDialog(alert = dialog)
+        SettingsAlertDialog(dialog = dialog)
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun AlertDialogPreview_Dark(@PreviewParameter(AlertDialogProvider::class) dialog: Alert) {
+private fun AlertDialogPreview_Dark(@PreviewParameter(AlertDialogProvider::class) dialog: Dialog.Alert) {
     TangemTheme(isDark = true) {
-        SettingsAlertDialog(alert = dialog)
+        SettingsAlertDialog(dialog = dialog)
     }
 }
 
-private class AlertDialogProvider : CollectionPreviewParameterProvider<Alert>(
+private class AlertDialogProvider : CollectionPreviewParameterProvider<Dialog.Alert>(
     collection = buildList {
-        val alertsFactory = AppSettingsAlertsFactory()
+        val dialogsFactory = AppSettingsDialogsFactory()
 
-        alertsFactory.createDeleteSavedAccessCodesAlert({}, {}).let(::add)
-        alertsFactory.createDeleteSavedWalletsAlert({}, {}).let(::add)
+        dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}).let(::add)
+        dialogsFactory.createDeleteSavedWalletsAlert({}, {}).let(::add)
     },
 )
 // endregion Preview
