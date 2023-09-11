@@ -1,77 +1,17 @@
 package com.tangem.core.ui.components.transactions.state
 
 import androidx.paging.PagingData
-import com.tangem.core.ui.components.wallet.WalletLockedContentState
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 
-/**
- * Wallet transaction history state
- */
+/** Wallet transaction history state */
 sealed interface TxHistoryState {
 
     /**
      * Wallet transaction history state with content
      *
-     * @property items content items
+     * @property contentItems   content items
      */
-    sealed class ContentState(open val items: Flow<PagingData<TxHistoryItemState>>) : TxHistoryState
-
-    /**
-     * Loading state
-     *
-     * @property onExploreClick lambda be invoke when explore button was clicked
-     */
-    data class Loading(val onExploreClick: () -> Unit) : ContentState(
-        items = flowOf(
-            PagingData.from(
-                listOf(
-                    TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                    TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)),
-                ),
-            ),
-        ),
-    )
-
-    /**
-     * Wallet transaction history state with loading transactions
-     *
-     * @property itemsCount count of loading transactions
-     */
-    data class ContentWithLoadingItems(val itemsCount: Int) : ContentState(
-        items = flowOf(
-            value = PagingData.from(
-                data = buildList(capacity = itemsCount) {
-                    add(TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)))
-                },
-            ),
-        ),
-    )
-
-    /**
-     * Wallet transaction history state with content
-     *
-     * @property items content items
-     */
-    data class Content(override val items: Flow<PagingData<TxHistoryItemState>>) : ContentState(items)
-
-    /**
-     * Locked state
-     *
-     * @property onExploreClick lambda be invoke when explore button was clicked
-     */
-    data class Locked(val onExploreClick: () -> Unit) :
-        ContentState(
-            items = flowOf(
-                PagingData.from(
-                    listOf(
-                        TxHistoryItemState.Title(onExploreClick = onExploreClick),
-                        TxHistoryItemState.Transaction(state = TransactionState.Loading(txHash = LOADING_TX_HASH)),
-                    ),
-                ),
-            ),
-        ),
-        WalletLockedContentState
+    data class Content(val contentItems: MutableStateFlow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
     /**
      * Empty state
@@ -119,7 +59,18 @@ sealed interface TxHistoryState {
         data class Transaction(val state: TransactionState) : TxHistoryItemState
     }
 
-    private companion object {
-        const val LOADING_TX_HASH = "LOADING_TX_HASH"
+    companion object {
+        private const val LOADING_TX_HASH = "LOADING_TX_HASH"
+
+        fun getDefaultLoadingTransactions(onExploreClick: () -> Unit): PagingData<TxHistoryItemState> {
+            return PagingData.from(
+                data = listOf(
+                    TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                    TxHistoryItemState.Transaction(
+                        state = TransactionState.Loading(txHash = LOADING_TX_HASH),
+                    ),
+                ),
+            )
+        }
     }
 }

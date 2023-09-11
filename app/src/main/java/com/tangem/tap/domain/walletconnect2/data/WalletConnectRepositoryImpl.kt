@@ -251,7 +251,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
         }.groupBy { pair -> pair.first }
             .mapValues { entry -> entry.value.map { pair -> pair.second }.toSet() }
 
-        val preparedNamespaces = sessionProposal.requiredNamespaces
+        val preparedRequiredNamespaces = sessionProposal.requiredNamespaces
             .map { requiredNamespace ->
                 val accountsRequired = requiredNamespace.value.chains
                     ?.mapNotNull { chain -> userChains[chain] }
@@ -272,7 +272,9 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
         val sessionApproval = Wallet.Params.SessionApprove(
             proposerPublicKey = sessionProposal.proposerPublicKey,
-            namespaces = preparedNamespaces,
+            namespaces = preparedRequiredNamespaces.ifEmpty {
+                sessionProposal.createPreparedOptionalNamespaces(userChains)
+            },
         )
 
         Timber.d("Session approval is prepared for sending: $sessionApproval")
@@ -299,6 +301,25 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun Wallet.Model.SessionProposal.createPreparedOptionalNamespaces(
+        userChains: Map<String, Set<String>>,
+    ): Map<String, Wallet.Model.Namespace.Session> {
+        return optionalNamespaces
+            .map { optionalNamespace ->
+                val accountsOptional = optionalNamespace.value.chains
+                    ?.mapNotNull { chain -> userChains[chain] }
+                    ?.flatten() ?: emptyList()
+
+                val methods = optionalNamespace.value.methods
+                optionalNamespace.key to Wallet.Model.Namespace.Session(
+                    accounts = accountsOptional.distinct(),
+                    methods = methods,
+                    events = optionalNamespace.value.events,
+                )
+            }
+            .toMap()
     }
 
     override fun sendRequest(requestData: RequestData, result: String) {
