@@ -1,6 +1,7 @@
 package com.tangem.tap.di
 
-import com.tangem.core.navigation.NavigationStateHolder
+import com.tangem.core.navigation.ReduxNavController
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.Binds
@@ -19,5 +20,9 @@ internal interface AppStateHolderModule {
 
     @Binds
     @Singleton
-    fun bindsNavigationStateHolder(appStateHolder: AppStateHolder): NavigationStateHolder
+    fun bindsNavigationStateHolder(appStateHolder: AppStateHolder): ReduxNavController
+
+    @Binds
+    @Singleton
+    fun bindsReduxStateHolder(appStateHolder: AppStateHolder): ReduxStateHolder
 }
