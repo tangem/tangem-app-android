@@ -93,6 +93,8 @@ sealed class CryptoCurrency : Serializable {
 
         val rawCurrencyId: String? = (suffix as? Suffix.RawID)?.rawId
 
+        val rawNetworkId: String = networkId.value
+
         /**
          * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
          * These prefixes can help in quickly categorizing the type of cryptocurrency.
