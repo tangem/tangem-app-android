@@ -1,4 +1,4 @@
-package com.tangem.domain.settings.repositories
+package com.tangem.domain.balance_hiding
 
 import kotlinx.coroutines.flow.Flow
 

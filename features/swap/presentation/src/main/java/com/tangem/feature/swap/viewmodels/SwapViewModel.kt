@@ -7,8 +7,8 @@ import androidx.lifecycle.*
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
-import com.tangem.domain.settings.IsBalanceHiddenUseCase
-import com.tangem.domain.settings.ListenToFlipsUseCase
+import com.tangem.domain.balance_hiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balance_hiding.ListenToFlipsUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor

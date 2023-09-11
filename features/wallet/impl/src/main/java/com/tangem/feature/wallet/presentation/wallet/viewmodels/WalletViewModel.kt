@@ -12,6 +12,8 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balance_hiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balance_hiding.ListenToFlipsUseCase
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver

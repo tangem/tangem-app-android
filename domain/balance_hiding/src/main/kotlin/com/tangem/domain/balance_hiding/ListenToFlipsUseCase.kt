@@ -1,6 +1,5 @@
-package com.tangem.domain.settings
+package com.tangem.domain.balance_hiding
 
-import com.tangem.domain.settings.repositories.DeviceFlipDetector
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach

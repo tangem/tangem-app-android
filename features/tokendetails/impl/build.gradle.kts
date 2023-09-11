@@ -60,6 +60,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)

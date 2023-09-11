@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.balanceHiding)
 
     implementation(project(":common"))
     implementation(project(":core:analytics"))

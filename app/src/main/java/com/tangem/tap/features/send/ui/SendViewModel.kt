@@ -1,8 +1,8 @@
 package com.tangem.tap.features.send.ui
 
 import androidx.lifecycle.*
-import com.tangem.domain.settings.IsBalanceHiddenUseCase
-import com.tangem.domain.settings.ListenToFlipsUseCase
+import com.tangem.domain.balance_hiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balance_hiding.ListenToFlipsUseCase
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

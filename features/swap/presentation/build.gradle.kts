@@ -16,6 +16,9 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common)
 
+    /** Domain modules **/
+    implementation(projects.domain.balanceHiding)
+
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.appCompat)
