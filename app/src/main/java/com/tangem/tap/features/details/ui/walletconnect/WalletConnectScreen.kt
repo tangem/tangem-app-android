@@ -26,10 +26,15 @@ import com.tangem.wallet.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit) {
+internal fun WalletConnectScreen(
+    state: WalletConnectScreenState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
 
     SettingsScreensScaffold(
+        modifier = modifier,
         content = {
             if (state.sessions.isEmpty()) {
                 EmptyScreen(state)
