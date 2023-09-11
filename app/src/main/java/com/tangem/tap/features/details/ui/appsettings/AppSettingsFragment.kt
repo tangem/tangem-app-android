@@ -8,6 +8,7 @@ import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
@@ -22,7 +23,12 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
-    private val viewModel = AppSettingsViewModel(store)
+    @Inject
+    lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    private val viewModel by lazy(mode = LazyThreadSafetyMode.NONE) {
+        AppSettingsViewModel(store, detailsFeatureToggles)
+    }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
