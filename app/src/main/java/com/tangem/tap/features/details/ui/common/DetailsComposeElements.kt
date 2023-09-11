@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.common
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
@@ -12,20 +13,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
 @Composable
-fun SettingsScreensScaffold(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-    background: @Composable (() -> Unit)? = null,
-    fab: @Composable (() -> Unit)? = null,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
-    titleRes: Int? = null,
+internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    fab: @Composable (() -> Unit)? = null,
+    @StringRes titleRes: Int? = null,
 ) {
-    BackHandler(true, onBackClick)
+    val backgroundColor = TangemTheme.colors.background.secondary
+
+    BackHandler(onBack = onBackClick)
+    SystemBarsEffect {
+        setSystemBarsColor(backgroundColor)
+    }
 
     Scaffold(
         topBar = {
@@ -37,33 +42,30 @@ fun SettingsScreensScaffold(
         modifier = modifier.systemBarsPadding(),
         backgroundColor = backgroundColor,
         floatingActionButton = { fab?.invoke() },
-    ) {
-        if (titleRes != null) {
-            Box(modifier = modifier.fillMaxSize()) {
-                background?.invoke()
-
-                Column(modifier = modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(id = titleRes),
-                        modifier = modifier.padding(
-                            start = TangemTheme.dimens.spacing20,
-                            end = TangemTheme.dimens.spacing20,
-                            bottom = TangemTheme.dimens.spacing54,
-                        ),
-                        style = TangemTheme.typography.h1,
-                        color = TangemTheme.colors.text.primary1,
-                    )
-                    content()
-                }
+    ) { paddings ->
+        Column(
+            modifier = Modifier
+                .padding(paddings)
+                .fillMaxSize(),
+        ) {
+            if (titleRes != null) {
+                Text(
+                    text = stringResource(id = titleRes),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing20)
+                        .padding(bottom = TangemTheme.dimens.spacing36),
+                    style = TangemTheme.typography.h1,
+                    color = TangemTheme.colors.text.primary1,
+                )
             }
-        } else {
+
             content()
         }
     }
 }
 
 @Composable
-fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
+internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
@@ -73,7 +75,7 @@ fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EmptyTopBarWithNavigation(
+internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
     backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
@@ -95,7 +97,12 @@ fun EmptyTopBarWithNavigation(
 }
 
 @Composable
-fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+internal fun DetailsMainButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     PrimaryButtonIconEnd(
         text = title,
         enabled = enabled,
@@ -107,7 +114,7 @@ fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = M
 }
 
 @Composable
-fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

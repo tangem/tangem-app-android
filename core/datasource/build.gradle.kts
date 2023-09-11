@@ -11,6 +11,7 @@ dependencies {
     /** Project */
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
+    implementation(projects.domain.appTheme.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 

@@ -37,7 +37,6 @@ import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
-import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -311,17 +310,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         return when (item.itemId) {
             R.id.details_menu -> {
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
-                store.state.globalState.scanResponse?.let { scanResponse ->
-                    store.dispatch(
-                        DetailsAction.PrepareScreen(
-                            scanResponse = scanResponse,
-                            wallets = store.state.walletState.walletManagers.map { it.wallet },
-                        ),
-                    )
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
-                    true
-                }
-                false
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
+
+                true
             }
             else -> super.onOptionsItemSelected(item)
         }
