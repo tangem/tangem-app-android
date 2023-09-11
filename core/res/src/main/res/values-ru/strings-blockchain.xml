@@ -3,6 +3,9 @@
   <string name="address_type_default">По умолчанию</string>
   <string name="address_type_legacy">Устаревший</string>
   <string name="common_fee_error">Не удалось получить комиссию</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$d UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
+  <string name="eth_gas_required_exceeds_allowance">Недостаточно средств для совершения транзакции. Пожалуйста, пополните свой аккаунт.</string>
+  <string name="generic_error_code">Произошла ошибка. Код: %s.</string>
   <string name="kaspa_withdrawal_message_warning">Из-за ограничений Kaspa в одну транзакцию может поместиться только %1$d UTXO. Это означает, что вы можете отправить только %2$s или меньше. Вам нужно уменьшить сумму.</string>
   <string name="no_account_generic">Пополните счет на %1$s+ %2$s, чтобы создать аккаунт</string>
   <string name="no_account_polkadot">Аккаунт получателя не активирован. Отправьте %s или более для активации аккаунта.</string>
