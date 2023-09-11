@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -42,6 +43,21 @@ internal class AppSettingsItemsFactory {
             id = "save_access_codes_switch",
             title = resourceReference(R.string.app_settings_saved_access_codes),
             description = resourceReference(R.string.app_settings_saved_access_codes_footer),
+            isEnabled = isEnabled,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
+
+    fun createFlipToHideBalanceSwitch(
+        isChecked: Boolean,
+        isEnabled: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+    ): Item.Switch {
+        return Item.Switch(
+            id = "flip_to_hide_balance_switch",
+            title = TextReference.Str("Flip To Hide Balance"),
+            description = TextReference.Str("Description"),
             isEnabled = isEnabled,
             isChecked = isChecked,
             onCheckedChange = onCheckedChange,

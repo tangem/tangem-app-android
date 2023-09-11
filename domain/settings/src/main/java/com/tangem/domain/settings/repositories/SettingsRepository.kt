@@ -1,5 +1,6 @@
 package com.tangem.domain.settings.repositories
 
+import com.tangem.domain.balance_hiding.BalanceHidingSettings
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
@@ -8,9 +9,9 @@ interface SettingsRepository {
 
     suspend fun shouldShowSaveUserWalletScreen(): Boolean
 
-    fun isBalanceHiddenEvents(): Flow<Boolean>
+    fun isBalanceHiddenEvents(): Flow<BalanceHidingSettings>
 
-    suspend fun storeBalanceHiddenFlag(isBalanceHidden: Boolean)
+    suspend fun storeBalanceHiddenFlag(isBalanceHidden: BalanceHidingSettings)
 
-    suspend fun isBalanceHidden(): Boolean
+    suspend fun getBalanceHidingSettings(): BalanceHidingSettings
 }

@@ -2,7 +2,7 @@ package com.tangem.data.settings.di
 
 import com.tangem.data.settings.DefaultSettingsRepository
 import com.tangem.data.source.preferences.PreferencesDataSource
-import com.tangem.datasource.local.appcurrency.HiddenBalanceStore
+import com.tangem.datasource.local.appcurrency.HiddenBalanceSettingsStore
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -20,12 +20,12 @@ internal object SettingsDataModule {
     fun provideSettingsRepository(
         preferencesDataSource: PreferencesDataSource,
         dispatchers: CoroutineDispatcherProvider,
-        hiddenBalanceStore: HiddenBalanceStore,
+        hiddenBalanceSettingsStore: HiddenBalanceSettingsStore,
     ): SettingsRepository {
         return DefaultSettingsRepository(
             preferencesDataSource = preferencesDataSource,
             dispatchers = dispatchers,
-            isBalanceHiddenStore = hiddenBalanceStore,
+            isBalanceHiddenStore = hiddenBalanceSettingsStore,
         )
     }
 }

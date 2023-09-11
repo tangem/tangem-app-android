@@ -12,9 +12,11 @@ class ListenToFlipsUseCase(
 
     operator fun invoke(): Flow<Unit> {
         return flipDetector.deviceFlipEvents().onEach {
-            val isBalanceHidden = settingsRepository.isBalanceHidden()
+            val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
 
-            settingsRepository.storeBalanceHiddenFlag(!isBalanceHidden)
+            settingsRepository.storeBalanceHiddenFlag(balanceHidingSettings.copy(
+                isBalanceHidden = !balanceHidingSettings.isBalanceHidden
+            ))
         }
     }
 }

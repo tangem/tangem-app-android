@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.datasource)
 
     implementation(projects.domain.settings)
+    implementation(projects.domain.balanceHiding.models)
 
     implementation(projects.data.source.preferences)
 }

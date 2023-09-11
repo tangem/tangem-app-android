@@ -2,9 +2,10 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.local.appcurrency.HiddenBalanceStore
-import com.tangem.datasource.local.appcurrency.implementation.HiddenBalanceStateStore
+import com.tangem.datasource.local.appcurrency.HiddenBalanceSettingsStore
+import com.tangem.datasource.local.appcurrency.implementation.HiddenBalanceStateSettingsStore
 import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
+import com.tangem.domain.balance_hiding.BalanceHidingSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,13 +20,13 @@ internal object HiddenBalanceDataModule {
     fun provideHiddenBalanceStateStore(
         @ApplicationContext context: Context,
         @NetworkMoshi moshi: Moshi,
-    ): HiddenBalanceStore {
-        return HiddenBalanceStateStore(
+    ): HiddenBalanceSettingsStore {
+        return HiddenBalanceStateSettingsStore(
             dataStore = SharedPreferencesDataStore(
-                preferencesName = "is_balance_hidden",
+                preferencesName = "balance_hiding_settings",
                 context = context,
-                adapter = moshi.adapter(Boolean::class.java),
-            ),
+                adapter = moshi.adapter(BalanceHidingSettings::class.java),
+            )
         )
     }
 }

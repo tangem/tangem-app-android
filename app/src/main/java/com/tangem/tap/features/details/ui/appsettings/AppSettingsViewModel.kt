@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.AppSetting
@@ -15,7 +16,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.Store
 
-internal class AppSettingsViewModel(private val store: Store<AppState>) {
+internal class AppSettingsViewModel(
+    private val store: Store<AppState>,
+    private val settingsRepository: SettingsRepository,
+) {
 
     private val itemsFactory = AppSettingsItemsFactory()
     private val dialogsFactory = AppSettingsDialogsFactory()
@@ -64,6 +68,12 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
                     onCheckedChange = ::onSaveAccessCodesToggled,
                 ).let(::add)
             }
+
+            itemsFactory.createFlipToHideBalanceSwitch(
+                isChecked = true,
+                isEnabled = true,
+                onCheckedChange = ::onBalanceHiddenToggled
+            )
 
             itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
                 showThemeModeSelector(state.selectedThemeMode)
@@ -132,7 +142,15 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         }
     }
 
+    private fun onBalanceHiddenToggled(isChecked: Boolean) {
+
+    }
+
     private fun onSettingsToggled(setting: AppSetting, enable: Boolean) {
+        store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
+    }
+
+    private fun onFlipToHideBalanceToggled(setting: AppSetting, enable: Boolean) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
     }
 
