@@ -168,7 +168,7 @@ class DefaultWalletManagersFacade(
         }
     }
 
-    private suspend fun getOrCreateWalletManager(
+    override suspend fun getOrCreateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
         derivationPath: DerivationPath?,

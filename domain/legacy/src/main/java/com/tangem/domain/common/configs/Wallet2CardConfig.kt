@@ -16,6 +16,7 @@ object Wallet2CardConfig : CardConfig {
 
     /**
      * Logic to determine primary curve for blockchain in TangemWallet 2.0
+     * Order is important here
      */
     override fun primaryCurve(blockchain: Blockchain): EllipticCurve? {
         // order is important, new curve is preferred for wallet 2
@@ -28,6 +29,10 @@ object Wallet2CardConfig : CardConfig {
             }
             blockchain.getSupportedCurves().contains(EllipticCurve.Bls12381G2Aug) -> {
                 EllipticCurve.Bls12381G2Aug
+            }
+            // only for support cardano on Wallet2
+            blockchain.getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
+                EllipticCurve.Ed25519
             }
             else -> {
                 Timber.e("Unsupported blockchain, curve not found")
