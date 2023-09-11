@@ -7,6 +7,7 @@ import com.tangem.common.CardFilter
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
 import com.tangem.sdk.extensions.initWithBiometrics
+import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,14 +24,22 @@ internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, C
 
     private var _sdk: TangemSdk? = null
 
+    /** Weak reference of context that uses to create [TangemSdk] */
+    private var contextRef: WeakReference<Context> = WeakReference(null)
+
     override fun onCreate(context: Context) {
-        if (_sdk == null) {
-            _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
-        }
+        contextRef = WeakReference(context)
+        _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
     }
 
-    override fun onDestroy() {
-        _sdk = null
+    override fun onDestroy(context: Context) {
+        /*
+
+
+         */
+        if (contextRef.get() == context) {
+            _sdk = null
+        }
     }
 
     private companion object {
