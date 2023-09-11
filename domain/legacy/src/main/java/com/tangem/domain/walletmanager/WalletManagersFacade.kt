@@ -1,11 +1,15 @@
 package com.tangem.domain.walletmanager
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 
 // TODO: Move to its own module
@@ -60,4 +64,10 @@ interface WalletManagersFacade {
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
+
+    suspend fun getOrCreateWalletManager(
+        userWallet: UserWallet,
+        blockchain: Blockchain,
+        derivationPath: DerivationPath?,
+    ): WalletManager?
 }
