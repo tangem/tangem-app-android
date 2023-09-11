@@ -1,11 +1,12 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.models.CryptoCurrency
 import timber.log.Timber
+import com.tangem.blockchain.common.Token as SdkToken
 
+// FIXME: Make internal
 class CryptoCurrencyFactory {
 
     fun createToken(
@@ -19,9 +20,10 @@ class CryptoCurrencyFactory {
         }
 
         val id = getTokenId(blockchain, sdkToken)
+
         return CryptoCurrency.Token(
             id = id,
-            networkId = getNetworkId(blockchain),
+            network = getNetwork(blockchain) ?: return null,
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
@@ -29,8 +31,6 @@ class CryptoCurrencyFactory {
             isCustom = isCustomToken(id),
             contractAddress = sdkToken.contractAddress,
             derivationPath = getDerivationPath(blockchain, derivationStyleProvider),
-            blockchainName = blockchain.fullName,
-            standardType = getTokenStandardType(blockchain, sdkToken),
         )
     }
 
@@ -42,7 +42,7 @@ class CryptoCurrencyFactory {
 
         return CryptoCurrency.Coin(
             id = getCoinId(blockchain),
-            networkId = getNetworkId(blockchain),
+            network = getNetwork(blockchain) ?: return null,
             name = blockchain.fullName,
             symbol = blockchain.currency,
             iconUrl = getCoinIconUrl(blockchain),
