@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.legacy.redux
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
@@ -179,8 +180,14 @@ object TokensMiddleware {
             it.blockchain.getSupportedCurves().contains(curve)
         }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct()
+        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
+
+        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano }?.let { currency ->
+            currency.derivationPath?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+            }
+        }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys: ExtendedPublicKeysMap =
