@@ -25,7 +25,7 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
-    private val viewModel = AppSettingsViewModel(store, settingsRepository)
+    private val viewModel = AppSettingsViewModel(store)
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

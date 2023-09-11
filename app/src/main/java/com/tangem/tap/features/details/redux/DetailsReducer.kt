@@ -202,6 +202,11 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 selectedThemeMode = action.appThemeMode,
             ),
         )
+        is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                isHidingEnabled = action.hideBalance
+            )
+        )
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,
         -> state

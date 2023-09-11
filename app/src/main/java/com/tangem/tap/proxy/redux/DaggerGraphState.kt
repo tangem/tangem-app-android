@@ -7,6 +7,7 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.tester.api.TesterRouter
@@ -40,6 +41,7 @@ data class DaggerGraphState(
     val walletManagersFacade: WalletManagersFacade? = null,
     val appStateHolder: AppStateHolder? = null,
     val appThemeModeRepository: AppThemeModeRepository? = null,
+    val settingsRepository: SettingsRepository? = null,
 
     // FIXME: It is used only for TokensList screen. Remove after refactoring of TokensList
     val currenciesRepository: CurrenciesRepository? = null,

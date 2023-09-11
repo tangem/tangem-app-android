@@ -73,6 +73,10 @@ sealed class DetailsAction : Action {
         data class ChangeAppThemeMode(
             val appThemeMode: AppThemeMode,
         ) : AppSettings()
+
+        data class ChangeBalanceHiding(
+            val hideBalance: Boolean,
+        ) : AppSettings()
     }
 
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()

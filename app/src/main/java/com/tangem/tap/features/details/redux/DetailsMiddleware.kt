@@ -225,6 +225,9 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.ChangeAppThemeMode -> {
                     changeAppThemeMode(action.appThemeMode)
                 }
+                is DetailsAction.AppSettings.ChangeBalanceHiding -> {
+                    changeBalanceHiding(action.hideBalance)
+                }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
@@ -261,6 +264,19 @@ class DetailsMiddleware {
 
             scope.launch {
                 repository.changeAppThemeMode(appThemeMode)
+            }
+        }
+
+        private fun changeBalanceHiding(hideBalance: Boolean) {
+            val repository = store.state.daggerGraphState.get(DaggerGraphState::settingsRepository)
+
+            scope.launch {
+                val newState = repository.getBalanceHidingSettings().copy(
+                    isHidingEnabledInSettings = hideBalance,
+                    isBalanceHidden = false
+                )
+
+                repository.storeBalanceHidingSettings(newState)
             }
         }
 
