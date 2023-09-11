@@ -185,13 +185,18 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
-        cardSdkLifecycleObserver.onDestroy()
+        cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
     }
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
-        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider))
+        intentProcessor.addHandler(
+            BackgroundScanIntentHandler(
+                hasSavedWalletsProvider,
+                lifecycleScope,
+            ),
+        )
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
         intentProcessor.addHandler(BuyCurrencyIntentHandler())
         intentProcessor.addHandler(SellCurrencyIntentHandler())
@@ -244,7 +249,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
          */
         cardSdkLifecycleObserver.onCreate(context = this)
 
-        scope.launch {
+        lifecycleScope.launch {
             intentProcessor.handleIntent(intent)
         }
     }
@@ -316,8 +321,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
             store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
-            scope.launch {
-                val handler = BackgroundScanIntentHandler(hasSavedUserWalletsProvider = { true })
+            lifecycleScope.launch {
+                val handler = BackgroundScanIntentHandler(
+                    hasSavedUserWalletsProvider = { true },
+                    lifecycleCoroutineScope = lifecycleScope,
+                )
                 val isBackgroundScanHandled = handler.handleIntent(intentWhichStartedActivity)
                 val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
                 if (!isBackgroundScanHandled && hasNotIncompletedBackup) {
@@ -326,7 +334,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         } else {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
-            scope.launch {
+            lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity)
             }
         }

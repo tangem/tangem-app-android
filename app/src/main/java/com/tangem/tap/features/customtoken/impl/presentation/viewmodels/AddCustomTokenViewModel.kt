@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
@@ -212,11 +213,19 @@ internal class AddCustomTokenViewModel @Inject constructor(
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
                     scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
-                        ?.contains(blockchain) == true &&
-                        blockchain.derivationPath(derivationStyle)?.rawPath?.isNotEmpty() == true
+                        ?.contains(blockchain) == true && isDerivationPathNotEmpty(derivationStyle, blockchain)
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
+        }
+
+        private fun isDerivationPathNotEmpty(derivationStyle: DerivationStyle?, blockchain: Blockchain): Boolean {
+            // derivationStyle is null for cards without HD wallets, always return true
+            return if (derivationStyle != null) {
+                blockchain.derivationPath(derivationStyle)?.rawPath?.isNotEmpty() == true
+            } else {
+                true
+            }
         }
 
         private fun createTokenNameInputField(): AddCustomTokenInputField.TokenName {
@@ -288,7 +297,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 }
                 .sortedBy(Blockchain::fullName)
                 .mapNotNull {
-                    val derivationPath = it.derivationPath(derivationStyle)?.rawPath
+                    val derivationPath = if (derivationStyle != null) {
+                        it.derivationPath(derivationStyle)?.rawPath
+                    } else {
+                        // derivationStyle is null for cards without HDWallet, use DerivationStyle.V1
+                        it.derivationPath(DerivationStyle.V1)?.rawPath
+                    }
                     if (derivationPath?.isNotEmpty() == true) {
                         createDerivationPathSelectorAdditionalItem(
                             blockchain = it,
@@ -628,6 +642,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         if (blockchain == null) return null
 
         val derivationStyle = reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
+            ?: DerivationStyle.V1
 
         val derivationNetwork = if (blockchain == Blockchain.Unknown) {
             uiState.form.networkSelectorField.selectedItem.blockchain

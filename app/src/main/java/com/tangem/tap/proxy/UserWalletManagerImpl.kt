@@ -40,7 +40,7 @@ class UserWalletManagerImpl(
         val userTokensRepository =
             requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
         return if (card != null) {
-            userTokensRepository.getUserTokens(card)
+            userTokensRepository.getUserTokens(card, null) // refactor in https://tangem.atlassian.net/browse/AND-4470
                 .filter {
                     val checkCustom = if (isExcludeCustom) {
                         !it.isCustomCurrency(null)

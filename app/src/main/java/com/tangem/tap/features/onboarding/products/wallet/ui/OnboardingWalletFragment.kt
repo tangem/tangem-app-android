@@ -11,6 +11,7 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -21,6 +22,7 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
@@ -64,6 +66,7 @@ class OnboardingWalletFragment :
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
     private lateinit var cardsWidget: WalletCardsWidget
+    private var seedPhraseRouter: SeedPhraseRouter? = null
     private var accessCodeDialog: AccessCodeDialog? = null
 
     private lateinit var animator: BackupAnimator
@@ -77,7 +80,9 @@ class OnboardingWalletFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        seedPhraseViewModel.setRouter(makeSeedPhraseRouter())
+        val newSeedPhraseRouter = makeSeedPhraseRouter()
+        seedPhraseRouter = newSeedPhraseRouter
+        seedPhraseViewModel.setRouter(newSeedPhraseRouter)
         seedPhraseViewModel.setMediator(makeSeedPhraseMediator())
     }
 
@@ -172,6 +177,12 @@ class OnboardingWalletFragment :
         when {
             state.wallet2State != null -> {
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                state.cardArtworkUri?.let {
+                    seedPhraseViewModel.setCardArtworkUri(it.toString())
+                    loadImageIntoImageView(it, binding.imvFrontCard)
+                    loadImageIntoImageView(it, binding.imvFirstBackupCard)
+                    loadImageIntoImageView(it, binding.imvSecondBackupCard)
+                }
             }
             else -> {
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
@@ -195,7 +206,6 @@ class OnboardingWalletFragment :
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(
                 state = state.backupState,
-                isWallet2 = state.wallet2State != null,
             )
 
             else -> {}
@@ -220,9 +230,9 @@ class OnboardingWalletFragment :
         animator.setupCreateWalletState()
     }
 
-    private fun setBackupState(state: BackupState, isWallet2: Boolean) {
+    private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
-            BackupStep.InitBackup -> showBackupIntro(state, isWallet2)
+            BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
             BackupStep.AddBackupCards -> showAddBackupCards(state)
             BackupStep.SetAccessCode -> showSetAccessCode()
@@ -234,7 +244,7 @@ class OnboardingWalletFragment :
         }
     }
 
-    private fun showBackupIntro(state: BackupState, isWallet2: Boolean) = with(binding) {
+    private fun showBackupIntro(state: BackupState) = with(binding) {
         imvFirstBackupCard.show()
         imvSecondBackupCard.show()
 
@@ -250,7 +260,7 @@ class OnboardingWalletFragment :
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
             btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup && !isWallet2)
+            btnWalletAlternativeAction.show(state.canSkipBackup)
         }
         animator.showBackupIntro(state)
     }
@@ -419,7 +429,9 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            store.dispatch(OnboardingWalletAction.FinishOnboarding)
+            lifecycleScope.launch {
+                store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
+            }
         }
 
         animator.showSuccess {
@@ -443,6 +455,19 @@ class OnboardingWalletFragment :
     }
 
     override fun handleOnBackPressed() {
+        // workaround to use right navigation back for toolbar back btn on seed phrase flow
+        val isWallet2 =
+            store.state.globalState.onboardingState.onboardingManager?.scanResponse?.cardTypesResolver?.isWallet2()
+                ?: false
+        val seedPhraseRouter = seedPhraseRouter
+        if (seedPhraseRouter != null && isWallet2) {
+            seedPhraseRouter.navigateBack()
+        } else {
+            legacyOnBackHandler()
+        }
+    }
+
+    private fun legacyOnBackHandler() {
         store.dispatch(OnboardingWalletAction.OnBackPressed)
     }
 
@@ -453,7 +478,7 @@ class OnboardingWalletFragment :
     }
 
     private fun makeSeedPhraseRouter(): SeedPhraseRouter = SeedPhraseRouter(
-        onBack = ::handleOnBackPressed,
+        onBack = ::legacyOnBackHandler,
         onOpenChat = {
             store.dispatch(GlobalAction.OpenChat(SupportInfo()))
         },
