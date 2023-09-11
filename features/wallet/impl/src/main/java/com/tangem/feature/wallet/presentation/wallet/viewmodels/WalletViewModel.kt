@@ -496,7 +496,16 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        uiState = stateFactory.getStateWithTokenActionBottomSheet(cryptoCurrencyStatus)
+        val state = uiState as? WalletState.ContentState ?: return
+        val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
+        viewModelScope.launch(dispatchers.io) {
+            getCryptoCurrencyActionsUseCase
+                .invoke(userWallet.walletId, cryptoCurrencyStatus.currency)
+                .take(count = 1)
+                .collectLatest {
+                    uiState = stateFactory.getStateWithTokenActionBottomSheet(it)
+                }
+        }
     }
 
     override fun onRenameClick(userWalletId: UserWalletId, name: String) {
