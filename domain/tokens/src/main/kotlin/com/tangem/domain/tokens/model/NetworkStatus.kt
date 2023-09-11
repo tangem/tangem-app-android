@@ -33,20 +33,28 @@ data class NetworkStatus(
     object MissedDerivation : Status()
 
     /**
-     * Represents the verified state of the network, including the amounts associated with different cryptocurrencies and whether there are transactions in progress.
+     * Represents the verified state of the network, including the amounts associated with different cryptocurrencies
+     * and whether there are transactions in progress.
      *
+     * @property address Network addresses.
      * @property amounts A map containing the amounts associated with different cryptocurrencies within the network.
-     * @property hasTransactionsInProgress A boolean indicating whether there are transactions in progress within the network.
+     * @property pendingTransactions A map containing pending transactions associated with different cryptocurrencies
+     * within the network.
      */
     data class Verified(
+        val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, BigDecimal>,
-        val hasTransactionsInProgress: Boolean,
+        val pendingTransactions: Map<CryptoCurrency.ID, Set<PendingTransaction>>,
     ) : Status()
 
     /**
      * Represents the state where there is no account, and an amount is required to create one.
      *
+     * @property address Network addresses.
      * @property amountToCreateAccount The amount required to create an account within the network.
      */
-    data class NoAccount(val amountToCreateAccount: BigDecimal) : Status()
+    data class NoAccount(
+        val address: NetworkAddress,
+        val amountToCreateAccount: BigDecimal,
+    ) : Status()
 }
