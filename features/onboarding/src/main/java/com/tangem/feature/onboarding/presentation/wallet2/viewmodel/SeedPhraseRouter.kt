@@ -21,11 +21,11 @@ class SeedPhraseRouter(
     fun navigateBack() {
         _currentScreen.value = when (_currentScreen.value) {
             SeedPhraseScreen.CheckSeedPhrase -> SeedPhraseScreen.YourSeedPhrase
-            SeedPhraseScreen.Intro,
-            SeedPhraseScreen.AboutSeedPhrase,
-            SeedPhraseScreen.YourSeedPhrase,
+            SeedPhraseScreen.AboutSeedPhrase -> SeedPhraseScreen.Intro
             SeedPhraseScreen.ImportSeedPhrase,
-            -> {
+            SeedPhraseScreen.YourSeedPhrase,
+            -> SeedPhraseScreen.AboutSeedPhrase
+            SeedPhraseScreen.Intro -> {
                 onBack.invoke()
                 return
             }
