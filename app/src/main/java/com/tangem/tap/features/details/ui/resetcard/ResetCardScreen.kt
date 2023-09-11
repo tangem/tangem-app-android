@@ -1,12 +1,17 @@
 package com.tangem.tap.features.details.ui.resetcard
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,15 +42,19 @@ private fun ResetCardView(state: ResetCardScreenState) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Box {
-            Image(
-                painter = painterResource(id = R.drawable.ill_reset_background),
-                contentDescription = null,
-                modifier = Modifier.offset(y = (-82).dp),
+        ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 21.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.img_alert),
+                contentDescription = "",
+                tint = Color.Unspecified,
             )
-            ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
         }
-        Spacer(modifier = Modifier.weight(1f))
         Column(
             modifier = Modifier.offset(y = (-32).dp),
             verticalArrangement = Arrangement.Bottom,

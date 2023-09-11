@@ -97,6 +97,8 @@ private fun lightThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark2,
             tertiary = TangemColorPalette.Dark1,
             disabled = TangemColorPalette.Light4,
+            warning = TangemColorPalette.Amaranth,
+            attention = TangemColorPalette.Tangerine,
         ),
         icon = TangemColors.Icon(
             primary1 = TangemColorPalette.Black,
@@ -104,6 +106,8 @@ private fun lightThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark2,
             informative = TangemColorPalette.Light5,
             inactive = TangemColorPalette.Light4,
+            warning = TangemColorPalette.Amaranth,
+            attention = TangemColorPalette.Tangerine,
         ),
         button = TangemColors.Button(
             primary = TangemColorPalette.Dark6,
@@ -145,6 +149,8 @@ private fun darkThemeColors(): TangemColors {
             secondary = TangemColorPalette.Light5,
             tertiary = TangemColorPalette.Dark1,
             disabled = TangemColorPalette.Dark3,
+            warning = TangemColorPalette.Flamingo,
+            attention = TangemColorPalette.Mustard,
         ),
         icon = TangemColors.Icon(
             primary1 = TangemColorPalette.White,
@@ -152,6 +158,8 @@ private fun darkThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark1,
             informative = TangemColorPalette.Dark2,
             inactive = TangemColorPalette.Dark4,
+            warning = TangemColorPalette.Flamingo,
+            attention = TangemColorPalette.Mustard,
         ),
         button = TangemColors.Button(
             primary = TangemColorPalette.Light1,
