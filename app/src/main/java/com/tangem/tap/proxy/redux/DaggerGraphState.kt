@@ -6,6 +6,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -33,6 +34,7 @@ data class DaggerGraphState(
     val scanCardProcessor: ScanCardProcessor? = null,
     val cardSdkConfigRepository: CardSdkConfigRepository? = null,
     val appCurrencyRepository: AppCurrencyRepository? = null,
+    val walletManagersFacade: WalletManagersFacade? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
