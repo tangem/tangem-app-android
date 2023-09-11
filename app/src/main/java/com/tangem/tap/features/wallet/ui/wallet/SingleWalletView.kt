@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.domain.model.WalletDataModel
@@ -151,9 +152,9 @@ class SingleWalletView : WalletView() {
 
         val exchangeManager = store.state.globalState.exchangeManager
         binding?.rowButtons?.apply {
-            onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
-            onSellClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
-            onSwapClick = { store.dispatch(WalletAction.TradeCryptoAction.Swap) }
+            onBuyClick = { store.dispatch(TradeCryptoAction.Buy()) }
+            onSellClick = { store.dispatch(TradeCryptoAction.Sell) }
+            onSwapClick = { store.dispatch(TradeCryptoAction.Swap) }
             onTradeClick = {
                 store.dispatch(
                     WalletAction.DialogAction.ChooseTradeActionDialog(

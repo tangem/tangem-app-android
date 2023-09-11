@@ -37,5 +37,8 @@ fun createNetworkLoggingInterceptor(): Interceptor {
     return LoggingInterceptor.Builder()
         .setLevel(Level.BODY)
         .log(Log.VERBOSE)
+        .tag(NETWORK_LOGS_TAG)
         .build()
 }
+
+private const val NETWORK_LOGS_TAG = "NetworkLogs"
