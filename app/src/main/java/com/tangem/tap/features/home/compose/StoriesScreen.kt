@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.learn2earn.presentation.ui.Learn2earnStoriesScreen
 import com.tangem.tap.features.home.compose.content.*
@@ -169,15 +170,27 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                     .height(17.dp)
                     .alpha(if (hideContent) 0f else 1f)
                     .align(Alignment.Start),
-                colorFilter = if (config.currentStory.isDarkBackground) null else ColorFilter.tint(Color.Black),
+                colorFilter = if (config.currentStory.isDarkBackground) {
+                    null
+                } else {
+                    ColorFilter.tint(TangemColorPalette.Dark6)
+                },
             )
             when (config.currentStory) {
                 Stories.OneInchPromo -> Learn2earnStoriesScreen(config.onLearn2earnClick)
-                Stories.TangemIntro -> FirstStoriesContent(isPaused, currentStoryDuration) {
+                Stories.TangemIntro -> FirstStoriesContent(
+                    isPaused = isPaused,
+                    duration = currentStoryDuration,
+                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
+                ) {
                     hideContent = it
                 }
                 Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStoryDuration)
-                Stories.UltraSecureBackup -> StoriesUltraSecureBackup(isPaused, currentStoryDuration)
+                is Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
+                    isPaused = isPaused,
+                    stepDuration = currentStoryDuration,
+                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
+                )
                 Stories.Currencies -> StoriesCurrencies(isPaused, currentStoryDuration)
                 Stories.Web3 -> StoriesWeb3(isPaused, currentStoryDuration)
                 Stories.WalletForEveryone -> StoriesWalletForEveryone(currentStoryDuration)
