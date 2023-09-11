@@ -8,6 +8,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSkeletonStateConverter.SkeletonModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
@@ -49,6 +50,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 ),
             ),
             dialogConfig = null,
+            pullToRefreshConfig = createPullToRefresh(),
         )
     }
 
@@ -71,6 +73,11 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Swap(enabled = false, onClick = {}),
         )
     }
+
+    private fun createPullToRefresh(): TokenDetailsPullToRefreshConfig = TokenDetailsPullToRefreshConfig(
+        isRefreshing = false,
+        onRefresh = clickIntents::onRefreshSwipe,
+    )
 
     data class SkeletonModel(val cryptoCurrency: CryptoCurrency)
 }
