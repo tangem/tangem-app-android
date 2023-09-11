@@ -7,10 +7,10 @@ object HomeReducer {
     fun reduce(action: Action, state: AppState): HomeState = internalReduce(action, state)
 }
 
-private fun internalReduce(action: Action, state: AppState): HomeState {
-    if (action !is HomeAction) return state.homeState
+private fun internalReduce(action: Action, appState: AppState): HomeState {
+    if (action !is HomeAction) return appState.homeState
 
-    var state = state.homeState
+    var state = appState.homeState
     when (action) {
         is HomeAction.InsertStory -> {
             state = state.copy(
@@ -24,6 +24,9 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         }
         is HomeAction.ChangeScanCardButtonState -> {
             state = state.copy(btnScanState = action.state)
+        }
+        is HomeAction.UpdateCountryCode -> {
+            state.onCountryCodeUpdate(state, action.userCountryCode)
         }
         else -> {}
     }
