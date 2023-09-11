@@ -2,13 +2,12 @@ package com.tangem.tap.features.home.compose.content
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,7 +55,7 @@ fun StoriesRevolutionaryWallet(stepDuration: Int) {
 }
 
 @Composable
-fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
+fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int, isNewWalletAvailable: MutableState<Boolean>) {
     val subtitleText = buildAnnotatedString {
         append(stringResource(id = R.string.story_backup_description_1))
         append(" ")
@@ -75,7 +74,11 @@ fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
             )
         },
         bottomContent = {
-            FloatingCardsContent(isPaused, stepDuration)
+            FloatingCardsContent(
+                isPaused = isPaused,
+                stepDuration = stepDuration,
+                isNewWalletAvailable = isNewWalletAvailable,
+            )
         },
     )
 }
@@ -230,7 +233,13 @@ private fun RevolutionaryWalletPreview() {
 @Preview
 @Composable
 private fun UltraSecureBackupPreview() {
-    StoriesUltraSecureBackup(false, 6000)
+    StoriesUltraSecureBackup(
+        false,
+        6000,
+        remember {
+            mutableStateOf(true)
+        },
+    )
 }
 
 @Preview
