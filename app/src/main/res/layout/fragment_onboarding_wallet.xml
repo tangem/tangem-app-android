@@ -5,7 +5,7 @@
     android:id="@+id/coordinator_details_confirm"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/backgroundLightGray"
+    android:background="@color/background_secondary"
     android:clipChildren="false"
     android:clipToPadding="false"
     android:orientation="vertical">
@@ -183,7 +183,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="10dp"
                 android:layout_marginBottom="16dp"
-                android:background="@color/backgroundLightGray"
+                android:background="@color/background_secondary"
                 android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@id/layout_buttons_common"
                 app:layout_constraintEnd_toEndOf="parent"
