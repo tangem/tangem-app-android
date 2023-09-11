@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
@@ -29,6 +30,7 @@ import com.tangem.tap.scope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
+import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
 
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -50,7 +52,7 @@ class DerivationManagerImpl(
             val scanResponse = appStateHolder.scanResponse
             if (scanResponse != null) {
                 val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
-                val appCurrency = com.tangem.tap.features.wallet.models.Currency.fromBlockchainNetwork(
+                val appCurrency = WalletModelCurrency.fromBlockchainNetwork(
                     blockchainNetwork,
                     appToken,
                 )
@@ -90,7 +92,7 @@ class DerivationManagerImpl(
 
     private fun deriveMissingBlockchains(
         scanResponse: ScanResponse,
-        currencyList: List<com.tangem.tap.features.wallet.models.Currency>,
+        currencyList: List<WalletModelCurrency>,
         onSuccess: (ScanResponse) -> Unit,
         onFailure: (Exception) -> Unit,
     ) {
@@ -157,7 +159,7 @@ class DerivationManagerImpl(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<com.tangem.tap.features.wallet.models.Currency>,
+        currencyList: List<WalletModelCurrency>,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
@@ -171,7 +173,7 @@ class DerivationManagerImpl(
             it.blockchain.getSupportedCurves().contains(curve)
         }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct()
+        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
@@ -181,6 +183,13 @@ class DerivationManagerImpl(
 
         val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
         if (toDerive.isEmpty()) return null
+
+        currencyList.find { it is WalletModelCurrency.Blockchain && it.blockchain == Blockchain.Cardano }
+            ?.let { currency ->
+                currency.derivationPath?.let {
+                    bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+                }
+            }
 
         return DerivationData(
             derivations = mapKeyOfWalletPublicKey to toDerive,
