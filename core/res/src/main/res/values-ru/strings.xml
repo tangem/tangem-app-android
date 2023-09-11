@@ -28,11 +28,16 @@
     <string name="app_settings_saved_access_codes_footer">Подключите функцию хранения кодов доступа от карт на телефоне в зашифрованном виде, и при работе с картой вместо кода доступа будет запрашиваться биометрическая аутентификация.</string>
     <string name="app_settings_saved_wallet">Cохранение кошелька</string>
     <string name="app_settings_saved_wallet_footer">Подключите функцию привязки карты в приложении, а также возможность биометрической аутентификации. Подпись транзакции все так же потребует карту.</string>
+    <string name="app_settings_theme_mode_dark">Тёмная</string>
+    <string name="app_settings_theme_mode_light">Светлая</string>
+    <string name="app_settings_theme_mode_system">Как в системе</string>
+    <string name="app_settings_theme_selector_title">Тема</string>
     <string name="app_settings_title">Настройки приложения</string>
     <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту</string>
     <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту</string>
     <string name="biometric_lockout_warning_title">Слишком много попыток</string>
     <string name="biometric_unavailable_warning">Вы отключили биометрическую аутентификацию на вашем телефоне и не сможете сохранять кошельки в приложении. Для сохранения кошельков, пожалуйста, включите функцию биометрической аутентификации в настройках телефона.</string>
+    <string name="button_start_backup_process">Начать резервное копирование</string>
     <plurals name="card_label_card_count">
         <item quantity="one">%d карта</item>
         <item quantity="few">%d карты</item>
@@ -43,6 +48,7 @@
     <string name="card_settings_access_code_recovery_enabled_description">Использовать эту карту для сброса кода доступа на других картах в этом кошельке</string>
     <string name="card_settings_access_code_recovery_footer">Отключить возможность сброса кода доступа на этой карте или других картах этого кошелька</string>
     <string name="card_settings_access_code_recovery_title">Восстановление кода доступа</string>
+    <string name="card_settings_action_sheet_reset">Сбросить</string>
     <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
     <string name="card_settings_change_access_code">Смена кода доступа</string>
     <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
@@ -96,7 +102,6 @@
     <string name="common_reject">Отклонить</string>
     <string name="common_reload">Перезагрузить</string>
     <string name="common_rename">Переименовать</string>
-    <string name="common_reset">Сбросить</string>
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_search">Искать</string>
     <string name="common_search_tokens">Поиск токенов</string>
@@ -196,7 +201,7 @@
     </plurals>
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
-    <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
+    <string name="main_no_backup_warning_title">Резервное копирование не выполнено</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
     <string name="main_promotion_credited">1INCH токены будут зачислены на адрес вашего кошелька в сети %s в течение 48 часов</string>
@@ -210,6 +215,7 @@
         <item quantity="other">Вам надо сгенерировать адреса для %d новых сетей, используя вашу карту</item>
     </plurals>
     <string name="main_warning_missing_derivation_title">Некоторые адреса отсутствуют</string>
+    <string name="notification_title_not_enough_funds">Невозможно покрыть %1$s комиссию</string>
     <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
     <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
@@ -319,8 +325,6 @@
         <item quantity="other">за %d кошельков</item>
     </plurals>
     <string name="referral_point_currencies_description">Получите ^^%1$s^^ на ваш адрес в сети %2$s %3$s ^^спустя 30 дней^^ за каждый кошелек, который купит ваш друг</string>
-    <string name="referral_point_currencies_description_prefix">Получите</string>
-    <string name="referral_point_currencies_description_suffix">на ваш адрес в сети %1$s%2$s за каждый кошелек, который купит ваш друг</string>
     <string name="referral_point_currencies_title">Вы</string>
     <string name="referral_point_discount_description_prefix">Получит</string>
     <string name="referral_point_discount_description_suffix">при покупке кошелька на сайте tangem.com</string>
@@ -407,7 +411,7 @@
     <string name="story_meet_pay">Расплачивайтесь</string>
     <string name="story_meet_send">Отправляйте</string>
     <string name="story_meet_store">Храните</string>
-    <string name="story_meet_title">Встречайте\nTangem</string>
+    <string name="story_meet_title">Встречайте Tangem</string>
     <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
     <string name="story_web3_title">Поддержка DeFi</string>
     <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
