@@ -88,9 +88,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
             }
 
             PullRefreshIndicator(
+                modifier = Modifier.align(Alignment.TopCenter),
                 refreshing = state.pullToRefreshConfig.isRefreshing,
                 state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter),
             )
         }
 
