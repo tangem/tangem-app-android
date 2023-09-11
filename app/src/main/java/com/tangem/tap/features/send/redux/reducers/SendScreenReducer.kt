@@ -46,6 +46,7 @@ private class SendReducer : SendInternalReducer {
             }
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.KaspaWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.ChiaWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails.CardSdkError -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails.BlockchainSdkError -> sendState.copy(dialog = action)
             is SendAction.Dialog.RequestFeeError -> sendState.copy(dialog = action)
