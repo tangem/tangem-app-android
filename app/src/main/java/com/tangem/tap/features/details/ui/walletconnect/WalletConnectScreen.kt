@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,8 +60,8 @@ internal fun WalletConnectScreen(
 private fun AddSessionFab(onAddSession: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = onAddSession,
-        backgroundColor = colorResource(id = R.color.button_primary),
-        contentColor = colorResource(id = R.color.icon_primary_2),
+        backgroundColor = TangemTheme.colors.button.primary,
+        contentColor = TangemTheme.colors.icon.primary2,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier,
     ) {
@@ -78,7 +77,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
     if (state.isLoading) {
         LinearProgressIndicator(
             modifier = Modifier.fillMaxWidth(),
-            color = colorResource(id = R.color.icon_accent),
+            color = TangemTheme.colors.icon.accent,
         )
     }
     Column(
@@ -91,7 +90,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         Image(
             painter = painterResource(id = R.drawable.ic_walletconnect),
             contentDescription = "",
-            colorFilter = ColorFilter.tint(colorResource(id = R.color.icon_inactive)),
+            colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
             contentScale = ContentScale.FillWidth,
             modifier = Modifier.width(width = 100.dp),
         )
@@ -99,7 +98,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         Text(
             text = stringResource(id = R.string.wallet_connect_subtitle),
             style = TangemTheme.typography.body2,
-            color = colorResource(id = R.color.text_tertiary),
+            color = TangemTheme.colors.text.tertiary,
         )
     }
 }
@@ -111,7 +110,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(2.dp),
-            color = colorResource(id = R.color.icon_accent),
+            color = TangemTheme.colors.icon.accent,
         )
     } else {
         Spacer(modifier = Modifier.height(2.dp))
@@ -132,7 +131,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
                 Text(
                     text = session.description,
                     style = TangemTheme.typography.subtitle1,
-                    color = colorResource(id = R.color.text_primary_1),
+                    color = TangemTheme.colors.text.primary1,
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(
@@ -144,7 +143,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cross_rounded_24),
                         contentDescription = "",
-                        tint = colorResource(id = R.color.icon_warning),
+                        tint = TangemTheme.colors.icon.warning,
                     )
                 }
             }
