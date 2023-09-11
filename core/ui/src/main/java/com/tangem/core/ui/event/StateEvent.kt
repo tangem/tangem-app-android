@@ -9,32 +9,34 @@ import androidx.compose.runtime.Immutable
  * re-triggered on recompositions or state changes.
  */
 @Immutable
-sealed class StateEvent {
-
-    /** Defines the action to be executed when the event is consumed. */
-    protected abstract val onConsume: () -> Unit
+sealed class StateEvent<in A> {
 
     /**
      * Represents an already consumed state event.
      * Events of this type will not trigger any further actions.
      */
-    object Consumed : StateEvent() {
-        override val onConsume: () -> Unit = {}
+    class Consumed<A> : StateEvent<A>() {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            return other is Consumed<*>
+        }
+
+        override fun hashCode(): Int {
+            return javaClass.hashCode()
+        }
     }
 
     /**
      * Represents a state event that has been triggered but not yet consumed.
      *
+     * @property data The data provided by the event.
      * @property onConsume The action to be executed when the event is consumed.
      */
-    data class Triggered(override val onConsume: () -> Unit) : StateEvent()
-
-    /**
-     * Consumes the event, triggering any associated action.
-     */
-    fun consume() {
-        onConsume()
-    }
+    data class Triggered<A>(
+        val data: A,
+        internal val onConsume: () -> Unit,
+    ) : StateEvent<A>()
 }
 
 /**
@@ -43,9 +45,11 @@ sealed class StateEvent {
  * @param onConsume The action to be executed when the event is consumed.
  * @return A triggered state event.
  */
-fun triggered(onConsume: () -> Unit): StateEvent.Triggered = StateEvent.Triggered(onConsume)
+fun <A> triggeredEvent(data: A, onConsume: () -> Unit): StateEvent<A> = StateEvent.Triggered(data, onConsume)
 
 /**
- * Represents a statically defined [StateEvent.Consumed] event.
+ * Creates a [StateEvent.Consumed] instance.
+ *
+ * @return A consumed state event.
  */
-val consumed: StateEvent.Consumed = StateEvent.Consumed
+fun <A> consumedEvent(): StateEvent<A> = StateEvent.Consumed()
