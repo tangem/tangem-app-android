@@ -1,11 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,12 +30,18 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import kotlinx.collections.immutable.PersistentList
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState) {
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
+        val pullRefreshState = rememberPullRefreshState(
+            refreshing = state.pullToRefreshConfig.isRefreshing,
+            onRefresh = state.pullToRefreshConfig.onRefresh,
+        )
+
         val txHistoryItems = if (state.txHistoryState is TxHistoryState.Content) {
             state.txHistoryState.contentItems.collectAsLazyPagingItems()
         } else {
@@ -45,34 +52,46 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         val itemModifier = Modifier
             .padding(top = betweenItemsPadding)
             .padding(horizontal = horizontalPadding)
-        LazyColumn(
+
+        Box(
             modifier = Modifier
-                .padding(paddingValues = scaffoldPaddings)
-                .fillMaxSize(),
+                .padding(scaffoldPaddings)
+                .pullRefresh(pullRefreshState),
         ) {
-            item {
-                TokenInfoBlock(
-                    modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing4)
-                        .padding(horizontal = horizontalPadding),
-                    state = state.tokenInfoBlockState,
-                )
-            }
-            item { TokenDetailsBalanceBlock(modifier = itemModifier, state = state.tokenBalanceBlockState) }
-            item(
-                key = MarketPriceBlockState::class.java,
-                contentType = MarketPriceBlockState::class.java,
-                content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
-            )
-            if (state.txHistoryState is TxHistoryState.NotSupported && state.pendingTxs.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+            ) {
                 item {
-                    PendingTxsBlock(
-                        pendingTxs = state.pendingTxs,
-                        modifier = itemModifier,
+                    TokenInfoBlock(
+                        modifier = Modifier
+                            .padding(top = TangemTheme.dimens.spacing4)
+                            .padding(horizontal = horizontalPadding),
+                        state = state.tokenInfoBlockState,
                     )
                 }
+                item { TokenDetailsBalanceBlock(modifier = itemModifier, state = state.tokenBalanceBlockState) }
+                item(
+                    key = MarketPriceBlockState::class.java,
+                    contentType = MarketPriceBlockState::class.java,
+                    content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
+                )
+                if (state.txHistoryState is TxHistoryState.NotSupported && state.pendingTxs.isNotEmpty()) {
+                    item {
+                        PendingTxsBlock(
+                            pendingTxs = state.pendingTxs,
+                            modifier = itemModifier,
+                        )
+                    }
+                }
+                txHistoryItems(state = state.txHistoryState, txHistoryItems = txHistoryItems)
             }
-            txHistoryItems(state = state.txHistoryState, txHistoryItems = txHistoryItems)
+
+            PullRefreshIndicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                refreshing = state.pullToRefreshConfig.isRefreshing,
+                state = pullRefreshState,
+            )
         }
 
         TokenDetailsDialogs(state = state)
