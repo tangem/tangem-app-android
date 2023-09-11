@@ -12,17 +12,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeButton
@@ -52,11 +56,7 @@ internal fun WalletScreen(state: WalletState) {
 private fun WalletContent(state: WalletState.ContentState) {
     val walletsListState = rememberLazyListState()
 
-    Scaffold(
-        topBar = { WalletTopBar(config = state.topBarConfig) },
-        containerColor = TangemTheme.colors.background.secondary,
-    ) { scaffoldPaddings ->
-
+    BaseScaffold(state = state) { scaffoldPaddings ->
         val movableItemModifier = Modifier.changeWalletAnimator(walletsListState)
         val pullRefreshState = rememberPullRefreshState(
             refreshing = state.pullToRefreshConfig.isRefreshing,
@@ -69,9 +69,9 @@ private fun WalletContent(state: WalletState.ContentState) {
                 .pullRefresh(pullRefreshState),
         ) {
             val txHistoryItems = if (state is WalletSingleCurrencyState &&
-                state.txHistoryState is TxHistoryState.ContentState
+                state.txHistoryState is TxHistoryState.Content
             ) {
-                (state.txHistoryState as? TxHistoryState.ContentState)?.items?.collectAsLazyPagingItems()
+                (state.txHistoryState as? TxHistoryState.Content)?.contentItems?.collectAsLazyPagingItems()
             } else {
                 null
             }
@@ -84,7 +84,10 @@ private fun WalletContent(state: WalletState.ContentState) {
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = TangemTheme.dimens.spacing8),
+                contentPadding = PaddingValues(
+                    top = TangemTheme.dimens.spacing8,
+                    bottom = TangemTheme.dimens.spacing92,
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item {
@@ -122,12 +125,49 @@ private fun WalletContent(state: WalletState.ContentState) {
         }
     }
 
-    val bottomSheetConfig = state.bottomSheetConfig
+    WalletBottomSheets(state = state)
+
+    WalletSideEffects(lazyListState = walletsListState, walletsListConfig = state.walletsListConfig)
+}
+
+@Composable
+private fun BaseScaffold(state: WalletState.ContentState, content: @Composable (PaddingValues) -> Unit) {
+    Scaffold(
+        topBar = { WalletTopBar(config = state.topBarConfig) },
+        floatingActionButton = {
+            if (state is WalletMultiCurrencyState.Content) {
+                ManageTokensButton(onManageTokensClick = state.onManageTokensClick)
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        containerColor = TangemTheme.colors.background.secondary,
+        content = content,
+    )
+}
+
+@Composable
+private fun ManageTokensButton(onManageTokensClick: () -> Unit) {
+    PrimaryButton(
+        text = stringResource(id = R.string.main_manage_tokens),
+        onClick = onManageTokensClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens.spacing16),
+    )
+}
+
+@Composable
+private fun WalletBottomSheets(state: WalletState) {
+    val bottomSheetConfig = (state as? WalletState.ContentState)?.bottomSheetConfig
     if (bottomSheetConfig != null && bottomSheetConfig.isShow) {
         WalletBottomSheet(config = bottomSheetConfig)
     }
 
-    WalletSideEffects(lazyListState = walletsListState, walletsListConfig = state.walletsListConfig)
+    (state as? WalletMultiCurrencyState.Content)?.let { multiCurrencyState ->
+        if (multiCurrencyState.tokenActionsBottomSheet != null && multiCurrencyState.tokenActionsBottomSheet.isShow) {
+            TokenActionsBottomSheet(config = multiCurrencyState.tokenActionsBottomSheet)
+        }
+    }
 }
 
 // region Preview

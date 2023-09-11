@@ -30,6 +30,7 @@ internal class WalletLoadedTxHistoryConverter(
 
     private val walletTxHistoryItemFlowConverter by lazy {
         WalletTxHistoryItemFlowConverter(
+            currentStateProvider = currentStateProvider,
             blockchain = currentCardTypeResolverProvider().getBlockchain(),
             clickIntents = clickIntents,
         )
