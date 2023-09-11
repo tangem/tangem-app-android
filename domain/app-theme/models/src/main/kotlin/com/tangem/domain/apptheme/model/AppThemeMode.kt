@@ -25,7 +25,7 @@ enum class AppThemeMode {
         /**
          * The default [AppThemeMode].
          */
-        val DEFAULT: AppThemeMode = FORCE_LIGHT
+        val DEFAULT: AppThemeMode = FOLLOW_SYSTEM
 
         /**
          * List of available [AppThemeMode]s.
