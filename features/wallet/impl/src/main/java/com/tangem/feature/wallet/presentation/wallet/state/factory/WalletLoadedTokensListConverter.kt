@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletLoadedTokensListConverter.LoadedTokensListModel
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -27,11 +26,12 @@ import com.tangem.utils.converter.Converter
  */
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val tokenListErrorConverter: TokenListErrorConverter,
     appCurrencyProvider: Provider<AppCurrency>,
     cardTypeResolverProvider: Provider<CardTypesResolver>,
     currentWalletProvider: Provider<UserWallet>,
     clickIntents: WalletClickIntents,
-) : Converter<LoadedTokensListModel, WalletState> {
+) : Converter<Either<TokenListError, TokenList>, WalletState> {
 
     private val tokenListStateConverter = TokenListToWalletStateConverter(
         currentStateProvider = currentStateProvider,
@@ -42,26 +42,10 @@ internal class WalletLoadedTokensListConverter(
         clickIntents = clickIntents,
     )
 
-    private val tokenListErrorStateConverter = TokenListErrorConverter(
-        currentStateProvider = currentStateProvider,
-    )
-
-    override fun convert(value: LoadedTokensListModel): WalletState {
-        return value.tokenListEither.fold(
-            ifLeft = tokenListErrorStateConverter::convert,
-            ifRight = {
-                tokenListStateConverter.convert(
-                    value = TokenListToWalletStateConverter.TokensListModel(
-                        tokenList = it,
-                        isRefreshing = value.isRefreshing,
-                    ),
-                )
-            },
+    override fun convert(value: Either<TokenListError, TokenList>): WalletState {
+        return value.fold(
+            ifLeft = tokenListErrorConverter::convert,
+            ifRight = tokenListStateConverter::convert,
         )
     }
-
-    data class LoadedTokensListModel(
-        val tokenListEither: Either<TokenListError, TokenList>,
-        val isRefreshing: Boolean,
-    )
 }
