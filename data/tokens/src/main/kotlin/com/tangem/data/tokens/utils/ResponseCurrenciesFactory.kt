@@ -59,10 +59,10 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
         }
     }
 
-    private fun createCoin(blockchain: Blockchain, responseToken: UserTokensResponse.Token): CryptoCurrency.Coin {
+    private fun createCoin(blockchain: Blockchain, responseToken: UserTokensResponse.Token): CryptoCurrency.Coin? {
         return CryptoCurrency.Coin(
             id = getCoinId(blockchain),
-            networkId = getNetworkId(blockchain),
+            network = getNetwork(blockchain) ?: return null,
             name = responseToken.name,
             symbol = responseToken.symbol,
             decimals = responseToken.decimals,
@@ -71,12 +71,12 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
         )
     }
 
-    private fun createToken(blockchain: Blockchain, sdkToken: Token, derivationPath: String?): CryptoCurrency.Token {
+    private fun createToken(blockchain: Blockchain, sdkToken: Token, derivationPath: String?): CryptoCurrency.Token? {
         val id = getTokenId(blockchain, sdkToken)
 
         return CryptoCurrency.Token(
             id = id,
-            networkId = getNetworkId(blockchain),
+            network = getNetwork(blockchain) ?: return null,
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             decimals = sdkToken.decimals,
@@ -84,8 +84,6 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
             contractAddress = sdkToken.contractAddress,
             isCustom = isCustomToken(id),
-            blockchainName = blockchain.fullName,
-            standardType = getTokenStandardType(blockchain, sdkToken),
         )
     }
 }

@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 internal class MockNetworksRepository(
@@ -18,11 +19,18 @@ internal class MockNetworksRepository(
         return networks.getOrElse { throw it }
     }
 
-    override fun getNetworkStatuses(
+    override fun getNetworkStatusesUpdates(
+        userWalletId: UserWalletId,
+        networks: Set<Network.ID>,
+    ): Flow<Set<NetworkStatus>> {
+        return statuses.map { it.getOrElse { e -> throw e } }
+    }
+
+    override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
         networks: Set<Network.ID>,
         refresh: Boolean,
-    ): Flow<Set<NetworkStatus>> {
-        return statuses.map { it.getOrElse { e -> throw e } }
+    ): Set<NetworkStatus> {
+        return getNetworkStatusesUpdates(userWalletId, networks).first()
     }
 }
