@@ -1,12 +1,20 @@
 package com.tangem.core.ui.components.buttons.common
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.res.TangemTheme
 
 @Suppress("LongParameterList")
@@ -30,67 +38,77 @@ fun TangemButton(
         elevation = elevation,
         shape = size.toShape(),
         colors = colors,
-        contentPadding = if (showProgress) ButtonDefaults.ContentPadding else size.toContentPadding(icon = icon),
+        contentPadding = size.toContentPadding(icon = icon),
     ) {
-        ButtonContent(
-            text = text,
-            textStyle = textStyle,
+        ButtonContentContainer(
             buttonIcon = icon,
-            colors = colors,
+            iconPadding = size.toIconPadding(),
             showProgress = showProgress,
-            enabled = enabled,
-            size = size,
+            progressIndicator = {
+                CircularProgressIndicator(
+                    modifier = Modifier.buttonContentSize(textStyle),
+                    color = colors.contentColor(enabled = enabled).value,
+                    strokeWidth = TangemTheme.dimens.size4,
+                )
+            },
+            text = {
+                Text(
+                    modifier = Modifier.alignByBaseline(),
+                    text = text,
+                    style = textStyle,
+                    color = colors.contentColor(enabled = enabled).value,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            },
+            icon = { iconResId ->
+                Icon(
+                    modifier = Modifier.buttonContentSize(textStyle),
+                    painter = painterResource(id = iconResId),
+                    tint = colors.contentColor(enabled = enabled).value,
+                    contentDescription = null,
+                )
+            },
         )
     }
 }
 
 @Suppress("LongParameterList")
 @Composable
-private fun ButtonContent(
-    text: String,
-    textStyle: TextStyle,
+private inline fun RowScope.ButtonContentContainer(
     buttonIcon: TangemButtonIconPosition,
-    colors: ButtonColors,
-    size: TangemButtonSize,
-    enabled: Boolean,
+    iconPadding: Dp,
     showProgress: Boolean,
+    progressIndicator: @Composable RowScope.() -> Unit,
+    text: @Composable RowScope.() -> Unit,
+    icon: @Composable RowScope.(Int) -> Unit,
 ) {
-    val icon = @Composable { iconResId: Int ->
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size20),
-            painter = painterResource(id = iconResId),
-            tint = colors.contentColor(enabled = enabled).value,
-            contentDescription = null,
-        )
+    if (showProgress) {
+        progressIndicator()
+    } else {
+        if (buttonIcon is TangemButtonIconPosition.Start) {
+            icon(buttonIcon.iconResId)
+            SpacerW(width = iconPadding)
+        }
+        text()
+        if (buttonIcon is TangemButtonIconPosition.End) {
+            SpacerW(width = iconPadding)
+            icon(buttonIcon.iconResId)
+        }
+    }
+}
+
+private fun Modifier.buttonContentSize(buttonTextStyle: TextStyle): Modifier = composed {
+    val minContentElementSize = TangemTheme.dimens.size20
+    val maxContentElementSize = remember(key1 = buttonTextStyle.lineHeight) {
+        buttonTextStyle.lineHeight.value.dp + 4.dp
     }
 
-    if (showProgress) {
-        Box(modifier = Modifier.wrapContentSize()) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(TangemTheme.dimens.size24),
-                color = colors.contentColor(enabled = enabled).value,
-                strokeWidth = TangemTheme.dimens.size4,
-            )
-        }
-    } else {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(size.toIconPadding()),
-        ) {
-            if (buttonIcon is TangemButtonIconPosition.Start) {
-                icon(buttonIcon.iconResId)
-            }
-            Text(
-                text = text,
-                style = textStyle,
-                color = colors.contentColor(enabled = enabled).value,
-                maxLines = 1,
-            )
-            if (buttonIcon is TangemButtonIconPosition.End) {
-                icon(buttonIcon.iconResId)
-            }
-        }
-    }
+    this.requiredSizeIn(
+        minWidth = minContentElementSize,
+        minHeight = minContentElementSize,
+        maxWidth = maxContentElementSize,
+        maxHeight = maxContentElementSize,
+    )
 }
