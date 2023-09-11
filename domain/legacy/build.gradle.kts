@@ -30,6 +30,7 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.jodatime)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
