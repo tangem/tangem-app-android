@@ -8,13 +8,18 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumed
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import com.tangem.feature.wallet.presentation.wallet.state.*
+import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.persistentListOf
@@ -87,12 +92,34 @@ internal object WalletPreviewData {
         )
     }
 
+    private val coinIconState
+        get() = TokenItemState.IconState.CoinIcon(
+            url = null,
+            fallbackResId = R.drawable.img_polygon_22,
+            isGrayscale = false,
+        )
+
+    private val tokenIconState
+        get() = TokenItemState.IconState.TokenIcon(
+            url = null,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
+            fallbackTint = TangemColorPalette.Black,
+            fallbackBackground = TangemColorPalette.Meadow,
+            isGrayscale = false,
+        )
+
+    private val customTokenIconState
+        get() = TokenItemState.IconState.CustomTokenIcon(
+            tint = TangemColorPalette.Black,
+            background = TangemColorPalette.Meadow,
+            networkBadgeIconResId = R.drawable.img_polygon_22,
+            isGrayscale = false,
+        )
+
     val tokenItemVisibleState by lazy {
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
-            tokenIconUrl = null,
-            tokenIconResId = R.drawable.img_polygon_22,
-            networkBadgeIconResId = R.drawable.img_polygon_22,
+            icon = coinIconState,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -103,7 +130,6 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
-            isTestnet = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -112,16 +138,14 @@ internal object WalletPreviewData {
     val testnetTokenItemVisibleState by lazy {
         tokenItemVisibleState.copy(
             name = "Polygon testnet",
-            isTestnet = true,
+            icon = tokenIconState.copy(isGrayscale = true),
         )
     }
 
     val tokenItemHiddenState by lazy {
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
-            tokenIconUrl = null,
-            tokenIconResId = R.drawable.img_polygon_22,
-            networkBadgeIconResId = R.drawable.img_polygon_22,
+            icon = tokenIconState,
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
@@ -131,7 +155,6 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
             ),
-            isTestnet = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -140,22 +163,34 @@ internal object WalletPreviewData {
     val tokenItemDragState by lazy {
         TokenItemState.Draggable(
             id = UUID.randomUUID().toString(),
-            tokenIconUrl = null,
-            tokenIconResId = R.drawable.img_polygon_22,
-            networkBadgeIconResId = R.drawable.img_polygon_22,
+            icon = tokenIconState,
             name = "Polygon",
-            isTestnet = false,
-            fiatAmount = "3 172,14 $",
+            info = stringReference(value = "3 172,14 $"),
         )
     }
 
     val tokenItemUnreachableState by lazy {
         TokenItemState.Unreachable(
             id = UUID.randomUUID().toString(),
-            tokenIconUrl = null,
-            tokenIconResId = R.drawable.img_polygon_22,
-            networkBadgeIconResId = R.drawable.img_polygon_22,
+            icon = tokenIconState,
             name = "Polygon",
+        )
+    }
+
+    val customTokenItemVisibleState by lazy {
+        tokenItemVisibleState.copy(
+            name = "Polygon custom",
+            icon = customTokenIconState.copy(
+                tint = TangemColorPalette.White,
+                background = TangemColorPalette.Black,
+            ),
+        )
+    }
+
+    val customTestnetTokenItemVisibleState by lazy {
+        tokenItemVisibleState.copy(
+            name = "Polygon custom testnet",
+            icon = customTokenIconState.copy(isGrayscale = true),
         )
     }
 
@@ -188,7 +223,6 @@ internal object WalletPreviewData {
                             tokenItemState = tokenItemDragState.copy(
                                 id = "${group.id}_token_$tokenNumber",
                                 name = "Token $tokenNumber from $networkNumber network",
-                                networkBadgeIconResId = R.drawable.img_eth_22.takeIf { i != 0 },
                             ),
                             groupId = group.id,
                             roundingMode = when {
@@ -199,7 +233,7 @@ internal object WalletPreviewData {
                     )
                 }
 
-                val divider = DraggableItem.GroupPlaceholder(id = "divider_$networkNumber")
+                val divider = DraggableItem.Placeholder(id = "divider_$networkNumber")
 
                 buildList {
                     add(group)
@@ -234,7 +268,7 @@ internal object WalletPreviewData {
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = { _, _ -> },
-                onDragStart = {},
+                onItemDragStart = {},
                 canDragItemOver = { _, _ -> false },
                 onItemDragEnd = {},
             ),
@@ -299,8 +333,6 @@ internal object WalletPreviewData {
                         tokenItemVisibleState.copy(
                             id = "token_1",
                             name = "Ethereum",
-                            tokenIconResId = R.drawable.img_eth_22,
-                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -308,8 +340,6 @@ internal object WalletPreviewData {
                         tokenItemVisibleState.copy(
                             id = "token_2",
                             name = "Ethereum",
-                            tokenIconResId = R.drawable.img_eth_22,
-                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -317,8 +347,6 @@ internal object WalletPreviewData {
                         tokenItemVisibleState.copy(
                             id = "token_3",
                             name = "Ethereum",
-                            tokenIconResId = R.drawable.img_eth_22,
-                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -326,8 +354,6 @@ internal object WalletPreviewData {
                         tokenItemVisibleState.copy(
                             id = "token_4",
                             name = "Ethereum",
-                            tokenIconResId = R.drawable.img_eth_22,
-                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
@@ -336,13 +362,11 @@ internal object WalletPreviewData {
                         tokenItemVisibleState.copy(
                             id = "token_5",
                             name = "Ethereum",
-                            tokenIconResId = R.drawable.img_eth_22,
-                            networkBadgeIconResId = null,
                             amount = "1,89340821 ETH",
                         ),
                     ),
                 ),
-                onOrganizeTokensClick = {},
+                organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Visible(isEnabled = true, {}),
             ),
             pullToRefreshConfig = WalletPullToRefreshConfig(
                 isRefreshing = false,

@@ -51,11 +51,11 @@ internal class WalletLoadingTxHistoryConverter(
         }
     }
 
-    private fun convert(value: Int): WalletSingleCurrencyState.Content {
-        val state = requireNotNull(currentStateProvider() as? WalletSingleCurrencyState.Content)
-        val txHistoryContent = requireNotNull(state.txHistoryState as? Content)
+    private fun convert(value: Int): WalletState {
+        val state = currentStateProvider()
+        val txHistoryContent = (state as? WalletSingleCurrencyState.Content)?.txHistoryState as? Content
 
-        txHistoryContent.contentItems.update {
+        txHistoryContent?.contentItems?.update {
             PagingData.from(
                 data = listOf(TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick)) +
                     MutableList(
