@@ -20,7 +20,5 @@ internal fun TokenListOperations.Error.mapToTokenListError(): TokenListError {
         is TokenListOperations.Error.DataError -> TokenListError.DataError(this.cause)
         is TokenListOperations.Error.UnableToSortTokenList ->
             TokenListError.UnableToSortTokenList(this.unsortedTokenList)
-        is TokenListOperations.Error.UnableToGroupTokenList ->
-            TokenListError.UnableToSortTokenList(this.ungroupedTokenList)
     }
 }
