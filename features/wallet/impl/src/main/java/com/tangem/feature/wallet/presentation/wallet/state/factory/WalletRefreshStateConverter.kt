@@ -1,124 +1,115 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.*
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.update
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.mutate
 
 internal class WalletRefreshStateConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
-    private val clickIntents: WalletClickIntents,
-) : Converter<Unit, WalletState> {
+) : Converter<Boolean, WalletState> {
 
-    override fun convert(value: Unit): WalletState {
-        return when (val state = currentStateProvider()) {
-            is WalletMultiCurrencyState.Content -> state.getRefreshState()
-            is WalletSingleCurrencyState.Content -> state.getRefreshState()
-            else -> state
-        }
-    }
+    override fun convert(value: Boolean): WalletState {
+        val state = currentStateProvider()
+        val contentState = state as? WalletState.ContentState ?: return state
 
-    private fun WalletMultiCurrencyState.Content.getRefreshState(): WalletMultiCurrencyState.Content {
-        return copy(
-            walletsListConfig = createWalletsListConfig(),
-            pullToRefreshConfig = createPullToRefreshConfig(),
-            tokensListState = createTokenListState(),
-        )
-    }
-
-    private fun WalletSingleCurrencyState.Content.getRefreshState(): WalletSingleCurrencyState.Content {
-        return copy(
-            walletsListConfig = createWalletsListConfig(),
-            pullToRefreshConfig = createPullToRefreshConfig(),
-            buttons = buttons.mapToDisabledButton(),
-            txHistoryState = createTxHistoryState(),
-            marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = marketPriceBlockState.currencyName),
-        )
-    }
-
-    private fun WalletState.ContentState.createWalletsListConfig(): WalletsListConfig {
-        val selectedWallet = walletsListConfig.wallets[walletsListConfig.selectedWalletIndex]
-        val additionalInfo = if (currentCardTypeResolverProvider().isMultiwalletAllowed()) {
-            selectedWallet.additionalInfo
+        return if (value) {
+            contentState.getRefreshingState()
         } else {
-            null
+            contentState.getRefreshedState()
         }
+    }
 
-        return walletsListConfig.copy(
-            wallets = walletsListConfig.wallets.toPersistentList().set(
-                index = walletsListConfig.selectedWalletIndex,
-                element = WalletCardState.Loading(
-                    id = selectedWallet.id,
-                    title = selectedWallet.title,
-                    additionalInfo = additionalInfo,
-                    imageResId = selectedWallet.imageResId,
-                    onRenameClick = selectedWallet.onRenameClick,
-                    onDeleteClick = selectedWallet.onDeleteClick,
-                ),
-            ),
+    private fun WalletState.ContentState.getRefreshingState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshingState()
+            is WalletSingleCurrencyState.Content -> getRefreshingState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
+        }
+    }
+
+    private fun WalletState.ContentState.getRefreshedState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshedState()
+            is WalletSingleCurrencyState.Content -> getRefreshedState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
+        }
+    }
+
+    private fun WalletMultiCurrencyState.Content.getRefreshingState(): WalletMultiCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            tokensListState = updateTokenListState(isRefreshing = true),
         )
     }
 
-    private fun WalletState.ContentState.createPullToRefreshConfig(): WalletPullToRefreshConfig {
-        return pullToRefreshConfig.copy(isRefreshing = true)
+    private fun WalletSingleCurrencyState.Content.getRefreshingState(): WalletSingleCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            buttons = updateButtons(isRefreshing = true),
+        )
     }
 
-    private fun WalletMultiCurrencyState.Content.createTokenListState(): WalletTokensListState {
-        return when (tokensListState) {
+    private fun WalletMultiCurrencyState.Content.getRefreshedState(): WalletMultiCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            tokensListState = updateTokenListState(isRefreshing = false),
+        )
+    }
+
+    private fun WalletSingleCurrencyState.Content.getRefreshedState(): WalletSingleCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            buttons = updateButtons(isRefreshing = false),
+        )
+    }
+
+    private fun WalletMultiCurrencyState.updateTokenListState(isRefreshing: Boolean): WalletTokensListState {
+        return when (val listState = tokensListState) {
             is WalletTokensListState.Content -> {
-                WalletTokensListState.Loading(
-                    items = tokensListState.items
-                        .filterIsInstance<TokensListItemState.Token>()
-                        .mapToLoadingTokenState(),
-                )
+                when (listState.organizeTokensButton) {
+                    is WalletTokensListState.OrganizeTokensButtonState.Hidden -> listState
+                    is WalletTokensListState.OrganizeTokensButtonState.Visible -> listState.copy(
+                        organizeTokensButton = listState.organizeTokensButton.copy(
+                            isEnabled = !isRefreshing,
+                        ),
+                    )
+                }
             }
-            is WalletTokensListState.Empty -> WalletTokensListState.Loading()
-            is WalletTokensListState.Loading,
             is WalletTokensListState.Locked,
-            -> tokensListState
+            is WalletTokensListState.Loading,
+            is WalletTokensListState.Empty,
+            -> listState
         }
     }
 
-    private fun List<TokensListItemState.Token>.mapToLoadingTokenState(): ImmutableList<TokensListItemState.Token> {
-        return this
-            .map { TokensListItemState.Token(state = TokenItemState.Loading(id = it.state.id)) }
-            .toImmutableList()
-    }
+    private fun WalletSingleCurrencyState.updateButtons(isRefreshing: Boolean): PersistentList<WalletManageButton> {
+        val isButtonsEnabled = !isRefreshing
 
-    private fun ImmutableList<WalletManageButton>.mapToDisabledButton(): ImmutableList<WalletManageButton> {
-        return this
-            .mapNotNull { button ->
+        return buttons.mutate {
+            it.mapNotNull { button ->
                 when (button) {
-                    is WalletManageButton.Buy -> button.copy(enabled = false)
-                    is WalletManageButton.Send -> button.copy(enabled = false)
+                    is WalletManageButton.Buy -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Receive -> button
-                    is WalletManageButton.Sell -> button.copy(enabled = false)
                     is WalletManageButton.Swap -> null
                 }
             }
-            .toImmutableList()
+        }
     }
 
-    private fun WalletSingleCurrencyState.Content.createTxHistoryState(): TxHistoryState {
-        if (txHistoryState is TxHistoryState.Content) {
-            txHistoryState.contentItems.update {
-                TxHistoryState.getDefaultLoadingTransactions(onExploreClick = clickIntents::onExploreClick)
-            }
-        }
-
-        return txHistoryState
+    private fun WalletState.ContentState.updatePullToRefreshConfig(isRefreshing: Boolean): WalletPullToRefreshConfig {
+        return pullToRefreshConfig.copy(isRefreshing = isRefreshing)
     }
 }
