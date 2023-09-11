@@ -1,7 +1,7 @@
 package com.tangem.data.settings
 
 import com.tangem.data.source.preferences.PreferencesDataSource
-import com.tangem.datasource.local.appcurrency.HiddenBalanceSettingsStore
+import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.domain.balance_hiding.BalanceHidingSettings
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultSettingsRepository(
     private val preferencesDataSource: PreferencesDataSource,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val balanceHidingSettingsStore: HiddenBalanceSettingsStore,
+    private val balanceHidingSettingsStore: BalanceHidingSettingsStore,
 ) : SettingsRepository {
 
     override suspend fun isUserAlreadyRateApp(): Boolean {
