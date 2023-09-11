@@ -28,7 +28,7 @@ class NetworkModule {
     fun provideTangemTechApi(@NetworkMoshi moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
+            .baseUrl(if (BuildConfig.DEBUG) DEV_TANGEM_TECH_BASE_URL else PROD_TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(
