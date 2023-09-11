@@ -199,16 +199,15 @@ internal class WalletStateFactory(
                 bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
             )
             is WalletSingleCurrencyState.Locked -> state.copy(isBottomSheetShow = false)
-            else -> state
         }
     }
 
-    fun getStateWithTokenActionBottomSheet(currencyStatus: CryptoCurrencyStatus): WalletState {
+    fun getStateWithTokenActionBottomSheet(tokenActions: TokenActionsState): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> state.copy(
                 tokenActionsBottomSheet = ActionsBottomSheetConfig(
                     isShow = true,
-                    actions = tokenActionsProvider.provideActions(currencyStatus),
+                    actions = tokenActionsProvider.provideActions(tokenActions),
                     onDismissRequest = clickIntents::onDismissActionsBottomSheet,
                 ),
             )
