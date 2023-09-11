@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletStores.implementation
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.*
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -126,8 +127,9 @@ internal class DefaultWalletStoresManager(
 
     private suspend fun fetchMultiWallets(userWallet: UserWallet): CompletionResult<Unit> {
         val scanResponse = userWallet.scanResponse
+        val derivationStyle = scanResponse.derivationStyleProvider.getDerivationStyle()
         val userTokens = withContext(Dispatchers.IO) {
-            userTokensRepository.getUserTokens(scanResponse.card)
+            userTokensRepository.getUserTokens(scanResponse.card, derivationStyle)
         }
         val userWalletId = userWallet.walletId
 
