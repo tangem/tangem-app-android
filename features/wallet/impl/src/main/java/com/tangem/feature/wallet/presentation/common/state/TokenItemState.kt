@@ -84,8 +84,9 @@ internal sealed interface TokenItemState {
     @Immutable
     sealed class IconState {
 
-        abstract val networkBadgeIconResId: Int?
         abstract val isGrayscale: Boolean
+        abstract val isCustom: Boolean
+        abstract val networkBadgeIconResId: Int?
 
         /**
          * Represents a coin icon.
@@ -98,6 +99,7 @@ internal sealed interface TokenItemState {
             val url: String?,
             @DrawableRes val fallbackResId: Int,
             override val isGrayscale: Boolean,
+            override val isCustom: Boolean,
         ) : IconState() {
 
             override val networkBadgeIconResId: Int? = null
@@ -118,7 +120,10 @@ internal sealed interface TokenItemState {
             override val isGrayscale: Boolean,
             val fallbackTint: Color,
             val fallbackBackground: Color,
-        ) : IconState()
+        ) : IconState() {
+
+            override val isCustom: Boolean = false
+        }
 
         /**
          * Represents a custom token icon.
@@ -133,7 +138,10 @@ internal sealed interface TokenItemState {
             val background: Color,
             @DrawableRes override val networkBadgeIconResId: Int,
             override val isGrayscale: Boolean,
-        ) : IconState()
+        ) : IconState() {
+
+            override val isCustom: Boolean = false
+        }
     }
 
     /** Token options state */
