@@ -19,23 +19,31 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 
 @Composable
-internal fun ContentIcon(icon: TokenItemState.IconState, colorFilter: ColorFilter?, modifier: Modifier = Modifier) {
+internal fun ContentIcon(
+    icon: TokenItemState.IconState,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    modifier: Modifier = Modifier,
+) {
     when (icon) {
         is TokenItemState.IconState.CoinIcon -> CoinIcon(
             modifier = modifier,
             url = icon.url,
             fallbackResId = icon.fallbackResId,
+            alpha = alpha,
             colorFilter = colorFilter,
         )
         is TokenItemState.IconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
+            alpha = alpha,
             colorFilter = colorFilter,
             errorIcon = {
                 CustomTokenIcon(
                     modifier = modifier,
                     tint = icon.fallbackTint,
                     background = icon.fallbackBackground,
+                    alpha = alpha,
                 )
             },
         )
@@ -43,6 +51,7 @@ internal fun ContentIcon(icon: TokenItemState.IconState, colorFilter: ColorFilte
             modifier = modifier,
             tint = icon.tint,
             background = icon.background,
+            alpha = alpha,
         )
     }
 }
@@ -51,6 +60,7 @@ internal fun ContentIcon(icon: TokenItemState.IconState, colorFilter: ColorFilte
 private fun CoinIcon(
     url: String?,
     @DrawableRes fallbackResId: Int,
+    alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
 ) {
@@ -62,10 +72,12 @@ private fun CoinIcon(
         errorIcon = {
             Image(
                 painter = painterResource(id = fallbackResId),
+                alpha = alpha,
                 colorFilter = colorFilter,
                 contentDescription = null,
             )
         },
+        alpha = alpha,
         colorFilter = colorFilter,
     )
 }
@@ -73,6 +85,7 @@ private fun CoinIcon(
 @Composable
 private fun TokenIcon(
     url: String?,
+    alpha: Float,
     colorFilter: ColorFilter?,
     errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
@@ -84,17 +97,18 @@ private fun TokenIcon(
             modifier = modifier,
             iconData = url,
             errorIcon = errorIcon,
+            alpha = alpha,
             colorFilter = colorFilter,
         )
     }
 }
 
 @Composable
-private fun CustomTokenIcon(tint: Color, background: Color, modifier: Modifier = Modifier) {
+private fun CustomTokenIcon(tint: Color, background: Color, alpha: Float, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(
-                color = background,
+                color = background.copy(alpha = alpha),
                 shape = CircleShape,
             ),
         contentAlignment = Alignment.Center,
@@ -102,7 +116,7 @@ private fun CustomTokenIcon(tint: Color, background: Color, modifier: Modifier =
         Icon(
             modifier = Modifier.matchParentSize(),
             painter = painterResource(id = R.drawable.ic_custom_token_44),
-            tint = tint,
+            tint = tint.copy(alpha = alpha),
             contentDescription = null,
         )
     }
@@ -111,6 +125,7 @@ private fun CustomTokenIcon(tint: Color, background: Color, modifier: Modifier =
 @Composable
 private inline fun DefaultCurrencyIcon(
     iconData: Any,
+    alpha: Float,
     colorFilter: ColorFilter?,
     crossinline errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
@@ -123,6 +138,7 @@ private inline fun DefaultCurrencyIcon(
             .build(),
         loading = { LoadingIcon() },
         error = { errorIcon() },
+        alpha = alpha,
         colorFilter = colorFilter,
         contentDescription = null,
     )
