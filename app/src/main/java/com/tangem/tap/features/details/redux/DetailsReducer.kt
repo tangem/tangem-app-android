@@ -45,6 +45,15 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
             ),
         )
         is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
+        is DetailsAction.ScanAndSaveUserWallet -> detailsState.copy(
+            isScanningInProgress = true,
+        )
+        is DetailsAction.ScanAndSaveUserWallet.Error -> detailsState.copy(
+            isScanningInProgress = false,
+        )
+        is DetailsAction.ScanAndSaveUserWallet.Success -> detailsState.copy(
+            isScanningInProgress = false,
+        )
         else -> detailsState
     }
 }

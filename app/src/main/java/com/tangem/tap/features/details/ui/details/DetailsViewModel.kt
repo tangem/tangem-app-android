@@ -133,7 +133,7 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
     }
 
     private fun scanAndSaveUserWallet() {
-        store.dispatch(DetailsAction.ScanAndSaveWallet)
+        store.dispatch(DetailsAction.ScanAndSaveUserWallet)
     }
 
     private fun navigateToWalletConnect() {
