@@ -39,7 +39,7 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
     private val swapInteractor: SwapInteractor,

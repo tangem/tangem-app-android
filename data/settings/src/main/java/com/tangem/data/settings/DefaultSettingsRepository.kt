@@ -19,5 +19,4 @@ internal class DefaultSettingsRepository(
     override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
         return withContext(dispatchers.io) { preferencesDataSource.shouldShowSaveUserWalletScreen }
     }
-
 }

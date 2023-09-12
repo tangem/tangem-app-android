@@ -2,7 +2,6 @@ package com.tangem.data.settings.di
 
 import com.tangem.data.settings.DefaultSettingsRepository
 import com.tangem.data.source.preferences.PreferencesDataSource
-import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module

@@ -61,8 +61,8 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.state.globalState.appThemeMode,
             isHidingEnabled = runBlocking {
-                store.state.daggerGraphState.balanceHidingRepository?.getBalanceHidingSettings()?.isHidingEnabledInSettings
-                    ?: false
+                store.state.daggerGraphState.balanceHidingRepository?.getBalanceHidingSettings()
+                    ?.isHidingEnabledInSettings ?: false
             },
         ),
     )
