@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletToke
 internal fun MultiCurrencyContentItem(state: WalletTokensListState.TokensListItemState, modifier: Modifier = Modifier) {
     when (state) {
         is WalletTokensListState.TokensListItemState.NetworkGroupTitle -> {
-            NetworkGroupItem(networkName = state.value.resolveReference(), modifier = modifier)
+            NetworkGroupItem(networkName = state.name.resolveReference(), modifier = modifier)
         }
         is WalletTokensListState.TokensListItemState.Token -> {
             TokenItem(state = state.state, modifier = modifier)
