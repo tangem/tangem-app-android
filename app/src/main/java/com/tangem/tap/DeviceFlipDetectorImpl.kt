@@ -10,8 +10,9 @@ import com.tangem.domain.balancehiding.DeviceFlipDetector
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import timber.log.Timber
 
-class DeviceFlipDetectorImpl(context: Context) : DeviceFlipDetector() {
+class DeviceFlipDetectorImpl(context: Context) : DeviceFlipDetector {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
@@ -35,8 +36,10 @@ class DeviceFlipDetectorImpl(context: Context) : DeviceFlipDetector() {
                     if (zAxisValue < zAxisThreshold && !isScreenDown) {
                         isScreenDown = true
                         lastTriggerTime = currentTime
+                        Timber.tag("onSensorChanged").d("screen down")
                     } else if (zAxisValue >= zAxisThreshold) {
                         if (isScreenDown && currentTime - lastTriggerTime <= throttleTimeMs) {
+                            Timber.tag("onSensorChanged").d("screen up!")
                             lastTriggerTime = currentTime
                             trySend(Unit)
                         }

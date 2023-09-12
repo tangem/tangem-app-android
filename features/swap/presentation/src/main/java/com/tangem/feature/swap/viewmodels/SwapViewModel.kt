@@ -96,10 +96,10 @@ internal class SwapViewModel @Inject constructor(
             .flowWithLifecycle(owner.lifecycle)
             .flowOn(dispatchers.io)
             .onEach { hidden ->
+                isBalanceHidden = hidden
                 withContext(dispatchers.main) {
                     uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
                 }
-                isBalanceHidden = hidden
             }
             .launchIn(viewModelScope)
 

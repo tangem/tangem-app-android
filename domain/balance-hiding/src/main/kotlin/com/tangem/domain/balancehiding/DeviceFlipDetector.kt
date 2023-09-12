@@ -2,7 +2,7 @@ package com.tangem.domain.balancehiding
 
 import kotlinx.coroutines.flow.Flow
 
-abstract class DeviceFlipDetector {
+interface DeviceFlipDetector {
 
-    abstract fun deviceFlipEvents(): Flow<Unit>
+    fun deviceFlipEvents(): Flow<Unit>
 }

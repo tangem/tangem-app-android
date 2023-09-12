@@ -106,8 +106,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
                 isBalanceHidden = hidden
+                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)

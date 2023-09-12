@@ -159,8 +159,8 @@ internal class WalletViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = isBalanceHidden)
                 isBalanceHidden = hidden
+                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = hidden)
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
