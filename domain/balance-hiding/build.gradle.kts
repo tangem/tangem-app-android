@@ -5,6 +5,6 @@ plugins {
 
 dependencies {
     implementation(deps.kotlin.coroutines)
-    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.balanceHiding.models)
 }

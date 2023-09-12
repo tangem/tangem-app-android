@@ -24,6 +24,7 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -179,7 +180,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     lateinit var appThemeModeRepository: AppThemeModeRepository
 
     @Inject
-    lateinit var settingsRepository: SettingsRepository
+    lateinit var balanceHidingRepository: BalanceHidingRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -204,7 +205,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     appStateHolder = appStateHolder,
                     currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
-                    settingsRepository = settingsRepository,
+                    balanceHidingRepository = balanceHidingRepository,
                 ),
             ),
         )

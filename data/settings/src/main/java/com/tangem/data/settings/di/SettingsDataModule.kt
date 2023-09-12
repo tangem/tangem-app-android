@@ -20,12 +20,10 @@ internal object SettingsDataModule {
     fun provideSettingsRepository(
         preferencesDataSource: PreferencesDataSource,
         dispatchers: CoroutineDispatcherProvider,
-        balanceHidingSettingsStore: BalanceHidingSettingsStore,
     ): SettingsRepository {
         return DefaultSettingsRepository(
             preferencesDataSource = preferencesDataSource,
             dispatchers = dispatchers,
-            balanceHidingSettingsStore = balanceHidingSettingsStore,
         )
     }
 }

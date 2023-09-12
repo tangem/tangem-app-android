@@ -120,6 +120,7 @@ include(":domain:balance-hiding:models")
 // region Data modules
 include(":data:app-currency")
 include(":data:app-theme")
+include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")

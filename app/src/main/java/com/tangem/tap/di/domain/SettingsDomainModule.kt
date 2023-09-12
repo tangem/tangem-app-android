@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import android.content.Context
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.DeviceFlipDetectorImpl
@@ -43,9 +44,9 @@ internal object SettingsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesIsBalanceHiddenUseCase(settingsRepository: SettingsRepository): IsBalanceHiddenUseCase {
+    fun providesIsBalanceHiddenUseCase(balanceHidingRepository: BalanceHidingRepository): IsBalanceHiddenUseCase {
         return IsBalanceHiddenUseCase(
-            settingsRepository = settingsRepository,
+            balanceHidingRepository = balanceHidingRepository,
         )
     }
 
@@ -53,11 +54,11 @@ internal object SettingsDomainModule {
     @ViewModelScoped
     fun providesListenUseCase(
         @ApplicationContext context: Context,
-        settingsRepository: SettingsRepository,
+        balanceHidingRepository: BalanceHidingRepository,
     ): ListenToFlipsUseCase {
         return ListenToFlipsUseCase(
             flipDetector = DeviceFlipDetectorImpl(context),
-            settingsRepository = settingsRepository,
+            balanceHidingRepository = balanceHidingRepository,
         )
     }
 }

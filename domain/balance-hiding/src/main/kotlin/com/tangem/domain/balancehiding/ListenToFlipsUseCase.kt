@@ -1,21 +1,21 @@
 package com.tangem.domain.balancehiding
 
-import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 
 class ListenToFlipsUseCase(
     private val flipDetector: DeviceFlipDetector,
-    private val settingsRepository: SettingsRepository,
+    private val balanceHidingRepository: BalanceHidingRepository,
 ) {
 
     suspend operator fun invoke(): Flow<Unit> {
-        return if (settingsRepository.getBalanceHidingSettings().isHidingEnabledInSettings) {
+        return if (balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings) {
             flipDetector.deviceFlipEvents().onEach {
-                val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
+                val balanceHidingSettings = balanceHidingRepository.getBalanceHidingSettings()
 
-                settingsRepository.storeBalanceHidingSettings(
+                balanceHidingRepository.storeBalanceHidingSettings(
                     balanceHidingSettings.copy(
                         isBalanceHidden = !balanceHidingSettings.isBalanceHidden,
                     ),
