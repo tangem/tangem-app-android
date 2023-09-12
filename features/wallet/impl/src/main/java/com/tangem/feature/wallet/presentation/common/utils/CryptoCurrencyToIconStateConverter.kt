@@ -25,6 +25,7 @@ internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStat
             url = coin.iconUrl,
             fallbackResId = coin.networkIconResId,
             isGrayscale = coin.network.isTestnet || isUnreachable,
+            isCustom = coin.isCustom,
         )
     }
 
