@@ -17,6 +17,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 
 private const val GRAY_SCALE_SATURATION = 0f
+private const val GRAY_SCALE_ALPHA = 0.4f
+private const val NORMAL_ALPHA = 1f
 
 @Composable
 internal fun TokenIcon(state: TokenItemState, modifier: Modifier = Modifier) {
@@ -58,19 +60,18 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
 @Composable
 private fun BoxScope.ContentIconContainer(icon: TokenItemState.IconState, modifier: Modifier = Modifier) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
-    val colorFilter = remember(icon.isGrayscale) {
+    val (alpha, colorFilter) = remember(icon.isGrayscale) {
         if (icon.isGrayscale) {
-            ColorFilter.colorMatrix(
-                colorMatrix = ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) },
-            )
+            GRAY_SCALE_ALPHA to GrayscaleColorFilter
         } else {
-            null
+            NORMAL_ALPHA to null
         }
     }
 
     ContentIcon(
         modifier = modifier,
         icon = icon,
+        alpha = alpha,
         colorFilter = colorFilter,
     )
 
@@ -80,6 +81,7 @@ private fun BoxScope.ContentIconContainer(icon: TokenItemState.IconState, modifi
                 .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
                 .align(Alignment.TopEnd),
             iconResId = requireNotNull(icon.networkBadgeIconResId),
+            alpha = alpha,
             colorFilter = colorFilter,
         )
     }
@@ -93,3 +95,6 @@ private fun BoxScope.ContentIconContainer(icon: TokenItemState.IconState, modifi
 private inline fun BaseContainer(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(modifier = modifier.size(size = TangemTheme.dimens.size40), content = content)
 }
+
+private val GrayscaleColorFilter: ColorFilter
+    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
