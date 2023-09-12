@@ -12,14 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/**
- * Send screen view model
- *
- * @property dispatchers                        coroutine dispatchers provider
- * @property appStateHolder                     redux state holder
- *
- * @author Andrew Khokhlov on 15/06/2023
- */
 @HiltViewModel
 internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
