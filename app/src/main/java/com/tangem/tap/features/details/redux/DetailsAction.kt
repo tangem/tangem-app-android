@@ -27,6 +27,7 @@ sealed class DetailsAction : Action {
 
     data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
+    object ScanAndSaveWallet : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {
         object Open : AccessCodeRecovery()

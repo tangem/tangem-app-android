@@ -13,6 +13,7 @@ data class DetailsState(
     val cardSettingsState: CardSettingsState? = null,
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
+    val isScanningInProgress: Boolean = false,
     val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType
 
