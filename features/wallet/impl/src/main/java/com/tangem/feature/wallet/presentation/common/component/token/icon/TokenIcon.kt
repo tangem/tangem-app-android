@@ -84,7 +84,7 @@ private fun BoxScope.ContentIconContainer(icon: TokenItemState.IconState, modifi
         )
     }
 
-    if (icon is TokenItemState.IconState.CustomTokenIcon) {
+    if (icon.isCustom) {
         CustomBadge(modifier = Modifier.align(Alignment.BottomEnd))
     }
 }
