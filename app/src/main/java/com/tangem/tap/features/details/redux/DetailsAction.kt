@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.core.ui.extensions.TextReference
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -72,6 +73,7 @@ sealed class DetailsAction : Action {
 
         data class CheckBiometricsStatus(
             val awaitStatusChange: Boolean,
+            val lifecycleCoroutineScope: LifecycleCoroutineScope,
         ) : AppSettings()
 
         object EnrollBiometrics : AppSettings()
