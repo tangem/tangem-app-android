@@ -26,8 +26,11 @@ val CryptoCurrency.networkIconResId: Int
  * @param fallbackColor The color to use as a fallback.
  * @return The extracted background color or the fallback color if extraction fails or if it is a test network token.
  */
-fun CryptoCurrency.Token.tryGetBackgroundForTokenIcon(fallbackColor: Color = TangemColorPalette.Black): Color {
-    if (network.isTestnet) return fallbackColor
+fun CryptoCurrency.Token.tryGetBackgroundForTokenIcon(
+    isGrayscale: Boolean,
+    fallbackColor: Color = TangemColorPalette.Black,
+): Color {
+    if (isGrayscale) return TangemColorPalette.Dark2
 
     return try {
         val colorHex = "#" + contractAddress.substring(range = COLOR_HEX_START_INDEX..COLOR_HEX_END_INDEX)
