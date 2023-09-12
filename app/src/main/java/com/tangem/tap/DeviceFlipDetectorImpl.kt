@@ -6,7 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.SystemClock
-import com.tangem.domain.balance_hiding.DeviceFlipDetector
+import com.tangem.domain.balancehiding.DeviceFlipDetector
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

@@ -9,8 +9,8 @@ import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balance_hiding.IsBalanceHiddenUseCase
-import com.tangem.domain.balance_hiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase

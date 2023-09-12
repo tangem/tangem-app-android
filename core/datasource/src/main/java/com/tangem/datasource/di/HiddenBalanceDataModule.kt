@@ -5,7 +5,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.datasource.local.appcurrency.implementation.BalanceStateHidingSettingsStore
 import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
-import com.tangem.domain.balance_hiding.BalanceHidingSettings
+import com.tangem.domain.balancehiding.BalanceHidingSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

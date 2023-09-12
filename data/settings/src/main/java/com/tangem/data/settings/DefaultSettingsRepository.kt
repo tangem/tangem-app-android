@@ -2,7 +2,7 @@ package com.tangem.data.settings
 
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
-import com.tangem.domain.balance_hiding.BalanceHidingSettings
+import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow

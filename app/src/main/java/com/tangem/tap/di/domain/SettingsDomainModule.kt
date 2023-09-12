@@ -1,8 +1,8 @@
 package com.tangem.tap.di.domain
 
 import android.content.Context
-import com.tangem.domain.balance_hiding.IsBalanceHiddenUseCase
-import com.tangem.domain.balance_hiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.DeviceFlipDetectorImpl

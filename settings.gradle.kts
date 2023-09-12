@@ -112,8 +112,8 @@ include(":domain:app-currency")
 include(":domain:app-currency:models")
 include(":domain:app-theme")
 include(":domain:app-theme:models")
-include(":domain:balance_hiding")
-include(":domain:balance_hiding:models")
+include(":domain:balance-hiding")
+include(":domain:balance-hiding:models")
 
 // endregion Domain modules
 

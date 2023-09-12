@@ -1,6 +1,6 @@
 package com.tangem.domain.settings.repositories
 
-import com.tangem.domain.balance_hiding.BalanceHidingSettings
+import com.tangem.domain.balancehiding.BalanceHidingSettings
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
