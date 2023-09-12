@@ -14,7 +14,12 @@ import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun NetworkBadge(@DrawableRes iconResId: Int, colorFilter: ColorFilter?, modifier: Modifier = Modifier) {
+internal fun NetworkBadge(
+    @DrawableRes iconResId: Int,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size18)
@@ -29,6 +34,7 @@ internal fun NetworkBadge(@DrawableRes iconResId: Int, colorFilter: ColorFilter?
                 .matchParentSize(),
             painter = painterResource(id = iconResId),
             colorFilter = colorFilter,
+            alpha = alpha,
             contentDescription = null,
         )
     }
