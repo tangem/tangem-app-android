@@ -7,10 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -20,6 +17,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.event.EventEffect
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -27,14 +28,21 @@ import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
     SettingsScreensScaffold(
         modifier = modifier,
+        snackbarHostState = snackbarHostState,
         content = { Content(state = state) },
         onBackClick = onBackClick,
+    )
+
+    ShowSnackbarIfNeeded(
+        snackbarHostState = snackbarHostState,
+        messageEvent = state.showSnackbar,
     )
 }
 
@@ -63,8 +71,6 @@ private fun Content(state: DetailsScreenState, modifier: Modifier = Modifier) {
             )
             SpacerH(height = TangemTheme.dimens.spacing16)
         }
-
-        ShowSnackbarIfNeeded(state.showErrorSnackbar.value)
     }
 }
 
@@ -203,32 +209,18 @@ private fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetwork
 }
 
 @Composable
-private fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
-    SnackbarHost(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(vertical = TangemTheme.dimens.spacing16)
-            .fillMaxWidth(),
-        hostState = snackbarHostState,
-    )
-    val errorTitle = when (snackbarErrorState) {
-        is EventError.DemoReferralNotAvailable -> stringResource(id = R.string.alert_demo_feature_disabled)
-        EventError.Empty -> ""
-    }
-    if (snackbarErrorState != EventError.Empty) {
-        SideEffect {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(errorTitle)
-            }
-            when (snackbarErrorState) {
-                is EventError.DemoReferralNotAvailable -> snackbarErrorState.onErrorShow.invoke()
-                else -> {
-                    /*no-op*/
-                }
-            }
+private fun ShowSnackbarIfNeeded(snackbarHostState: SnackbarHostState, messageEvent: StateEvent<TextReference>) {
+    var message: TextReference? by remember { mutableStateOf(value = null) }
+    val resolvedMessage by rememberUpdatedState(newValue = message?.resolveReference())
+
+    LaunchedEffect(resolvedMessage) {
+        resolvedMessage?.let {
+            snackbarHostState.showSnackbar(it)
         }
+    }
+
+    EventEffect(messageEvent) {
+        message = it
     }
 }
 
@@ -277,6 +269,7 @@ private class DetailsScreenStateProvider : CollectionPreviewParameterProvider<De
             }.toImmutableList(),
             tangemLinks = TangemSocialAccounts.accountsEn,
             tangemVersion = "Tangem 2.14.12 (343)",
+            showSnackbar = consumedEvent(),
             onSocialNetworkClick = {},
         ).let(::add)
 
@@ -292,6 +285,7 @@ private class DetailsScreenStateProvider : CollectionPreviewParameterProvider<De
             }.toImmutableList(),
             tangemLinks = TangemSocialAccounts.accountsRu,
             tangemVersion = "Tangem 2.14.12 (343)",
+            showSnackbar = consumedEvent(),
             onSocialNetworkClick = {},
         ).let(::add)
     },

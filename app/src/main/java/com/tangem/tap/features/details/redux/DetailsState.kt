@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -14,6 +15,7 @@ data class DetailsState(
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
     val isScanningInProgress: Boolean = false,
+    val error: TextReference? = null,
     val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType
 

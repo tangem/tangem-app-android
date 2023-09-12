@@ -515,14 +515,18 @@ class DetailsMiddleware {
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
 
-                val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+                val walletFeatureToggles = store.state.daggerGraphState
+                    .get(DaggerGraphState::walletFeatureToggles)
+
                 if (!walletFeatureToggles.isRedesignedScreenEnabled) {
                     store.onUserWalletSelected(userWallet)
                 }
             }
     }
 
-    private fun TangemError.toTextReference(): TextReference {
+    private fun TangemError.toTextReference(): TextReference? {
+        if (silent) return null
+
         return messageResId?.let(::resourceReference) ?: stringReference(customMessage)
     }
 }

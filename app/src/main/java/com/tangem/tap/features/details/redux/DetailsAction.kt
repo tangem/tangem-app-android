@@ -32,8 +32,10 @@ sealed class DetailsAction : Action {
 
         object Success : DetailsAction()
 
-        data class Error(val error: TextReference) : DetailsAction()
+        data class Error(val error: TextReference?) : DetailsAction()
     }
+
+    object DismissError : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {
         object Open : AccessCodeRecovery()

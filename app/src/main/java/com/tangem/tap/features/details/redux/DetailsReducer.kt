@@ -15,6 +15,7 @@ object DetailsReducer {
     fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun internalReduce(action: Action, state: AppState): DetailsState {
     if (action !is DetailsAction) return state.detailsState
     val detailsState = state.detailsState
@@ -50,9 +51,13 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         )
         is DetailsAction.ScanAndSaveUserWallet.Error -> detailsState.copy(
             isScanningInProgress = false,
+            error = action.error,
         )
         is DetailsAction.ScanAndSaveUserWallet.Success -> detailsState.copy(
             isScanningInProgress = false,
+        )
+        is DetailsAction.DismissError -> detailsState.copy(
+            error = null,
         )
         else -> detailsState
     }

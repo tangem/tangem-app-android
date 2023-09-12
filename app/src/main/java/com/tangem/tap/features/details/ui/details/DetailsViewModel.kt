@@ -5,6 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -45,7 +49,8 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
             elements = createSettingsItems(state),
             tangemLinks = getSocialLinks(),
             tangemVersion = getTangemAppVersion(),
-            onSocialNetworkClick = { handleSocialNetworkClick(it) },
+            showSnackbar = triggerErrorSnackbarIfNeeded(state.error),
+            onSocialNetworkClick = ::handleSocialNetworkClick,
         )
     }
 
@@ -93,6 +98,22 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
                 .takeIf { BuildConfig.TESTER_MENU_ENABLED }
                 ?.let(::add)
         }.toImmutableList()
+    }
+
+    private fun triggerErrorSnackbarIfNeeded(text: TextReference?): StateEvent<TextReference> {
+        return if (text == null) {
+            consumedEvent()
+        } else {
+            triggeredEvent(text) {
+                store.dispatch(DetailsAction.DismissError)
+            }
+        }
+    }
+
+    private fun getTangemAppVersion(): String {
+        val versionCode: Int = BuildConfig.VERSION_CODE
+        val versionName: String = BuildConfig.VERSION_NAME
+        return "$versionName ($versionCode)"
     }
 
     private fun navigateToTesterMenu() {
@@ -153,12 +174,6 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
         } else {
             TangemSocialAccounts.accountsEn
         }
-    }
-
-    private fun getTangemAppVersion(): String {
-        val versionCode: Int = BuildConfig.VERSION_CODE
-        val versionName: String = BuildConfig.VERSION_NAME
-        return "$versionName ($versionCode)"
     }
 
     private fun bootstrapScreenState() {

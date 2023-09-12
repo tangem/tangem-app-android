@@ -2,8 +2,7 @@ package com.tangem.tap.features.details.ui.details
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -16,8 +15,8 @@ internal data class DetailsScreenState(
     val elements: ImmutableList<SettingsItem>,
     val tangemLinks: ImmutableList<SocialNetworkLink>,
     val tangemVersion: String,
+    val showSnackbar: StateEvent<TextReference>,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
-    val showErrorSnackbar: MutableState<EventError> = mutableStateOf(EventError.Empty),
 ) {
     val appNameRes: Int = R.string.tangem_app_name
 }
