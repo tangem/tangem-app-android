@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.appsettings
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
@@ -38,7 +39,7 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel.checkBiometricsStatus()
+        viewModel.checkBiometricsStatus(lifecycleScope)
     }
 
     override fun TransitionInflater.inflateTransitions(): Boolean {
@@ -59,7 +60,7 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
 
     override fun onResume() {
         super.onResume()
-        viewModel.refreshBiometricsStatus()
+        viewModel.refreshBiometricsStatus(lifecycleScope)
     }
 
     override fun onStop() {
