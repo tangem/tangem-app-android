@@ -8,6 +8,7 @@ import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import java.util.EnumSet
 
@@ -59,6 +60,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.state.globalState.appThemeMode,
+            isHidingEnabled = runBlocking {
+                store.state.daggerGraphState.settingsRepository?.getBalanceHidingSettings()?.isHidingEnabledInSettings ?: false
+            }
         ),
     )
 }

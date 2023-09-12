@@ -8,6 +8,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -38,9 +39,12 @@ internal class SendViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        listenToFlipsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
+
     }
 }

@@ -2,6 +2,7 @@ package com.tangem.domain.balance_hiding
 
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 
 class ListenToFlipsUseCase(
@@ -9,13 +10,17 @@ class ListenToFlipsUseCase(
     private val settingsRepository: SettingsRepository,
 ) {
 
-    operator fun invoke(): Flow<Unit> {
-        return flipDetector.deviceFlipEvents().onEach {
-            val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
+    suspend operator fun invoke(): Flow<Unit> {
+        return if (settingsRepository.getBalanceHidingSettings().isHidingEnabledInSettings) {
+            flipDetector.deviceFlipEvents().onEach {
+                val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
 
-            settingsRepository.storeBalanceHidingSettings(balanceHidingSettings.copy(
-                isBalanceHidden = !balanceHidingSettings.isBalanceHidden
-            ))
+                settingsRepository.storeBalanceHidingSettings(balanceHidingSettings.copy(
+                    isBalanceHidden = !balanceHidingSettings.isBalanceHidden
+                ))
+            }
+        } else {
+            flow {  }
         }
     }
 }

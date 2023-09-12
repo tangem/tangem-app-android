@@ -99,7 +99,7 @@ internal class WalletViewModel @Inject constructor(
     var router: InnerWalletRouter by Delegates.notNull()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private val isBalanceHiddenFlow: StateFlow<Boolean> = createIsBalanceHiddenFlow()
+    private var isBalanceHidden = true
 
     private val notificationsListFactory = WalletNotificationsListFactory(
         wasCardScannedCallback = getCardWasScannedUseCase::invoke,
@@ -119,7 +119,7 @@ internal class WalletViewModel @Inject constructor(
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider(isBalanceHiddenFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
     )
 
@@ -158,16 +158,19 @@ internal class WalletViewModel @Inject constructor(
 
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { isBalanceHidden ->
+            .onEach { hidden ->
                 uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = isBalanceHidden)
+                isBalanceHidden = hidden
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
 
-        listenToFlipsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {
@@ -695,14 +698,6 @@ internal class WalletViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
-    }
-
-    private fun createIsBalanceHiddenFlow(): StateFlow<Boolean> {
-        return isBalanceHiddenUseCase.invoke().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = true,
-        )
     }
 
     private fun WalletState.isLoadingState(): Boolean {

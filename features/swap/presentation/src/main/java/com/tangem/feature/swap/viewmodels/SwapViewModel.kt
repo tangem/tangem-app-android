@@ -57,15 +57,11 @@ internal class SwapViewModel @Inject constructor(
     )
     private val derivationPath = savedStateHandle.get<String>(SwapFragment.DERIVATION_PATH)
 
-    private val isBalanceHiddenFlow: StateFlow<Boolean> = isBalanceHiddenUseCase.invoke().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = true,
-    )
+    private var isBalanceHidden = true
 
     private val stateBuilder = StateBuilder(
         actions = createUiActions(),
-        isBalanceHiddenProvider = Provider(isBalanceHiddenFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
     )
 
     private val inputNumberFormatter =
@@ -99,17 +95,20 @@ internal class SwapViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .flowOn(dispatchers.io)
-            .onEach { isBalanceHidden ->
+            .onEach { hidden ->
                 withContext(dispatchers.main) {
                     uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
                 }
+                isBalanceHidden = hidden
             }
             .launchIn(viewModelScope)
 
-        listenToFlipsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
     }
 
     override fun onCleared() {

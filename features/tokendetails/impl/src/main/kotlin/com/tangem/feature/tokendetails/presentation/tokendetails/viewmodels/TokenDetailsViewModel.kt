@@ -68,12 +68,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var wallet by Delegates.notNull<UserWallet>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private val isBalanceHiddenFlow: StateFlow<Boolean> = createIsBalanceHiddenFlow()
+    private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider(isBalanceHiddenFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
@@ -85,19 +85,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         getWallet()
         updateContent(selectedWallet = wallet)
-
-        isBalanceHiddenUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .onEach { isBalanceHidden ->
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = isBalanceHidden)
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-
-        listenToFlipsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        handleBalanceHiding(owner)
     }
 
     private fun getWallet() {
@@ -112,6 +100,24 @@ internal class TokenDetailsViewModel @Inject constructor(
         updateMarketPrice(selectedWallet = selectedWallet)
         updateButtons(userWalletId = selectedWallet.walletId, currency = cryptoCurrency)
         updateTxHistory()
+    }
+
+    private fun handleBalanceHiding(owner: LifecycleOwner) {
+        isBalanceHiddenUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .onEach { hidden ->
+                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
+                isBalanceHidden = hidden
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
     }
 
     private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
@@ -168,15 +174,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
-            )
-    }
-
-    private fun createIsBalanceHiddenFlow(): StateFlow<Boolean> {
-        return isBalanceHiddenUseCase.invoke()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = true,
             )
     }
 
