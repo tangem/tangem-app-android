@@ -65,6 +65,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoAmount,
             // TODO:  https://tangem.atlassian.net/browse/AND-4292
             is CryptoCurrencyStatus.Unreachable,
             -> {
@@ -89,6 +90,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
             -> MarketPriceBlockState.Error(currencyName)
         }

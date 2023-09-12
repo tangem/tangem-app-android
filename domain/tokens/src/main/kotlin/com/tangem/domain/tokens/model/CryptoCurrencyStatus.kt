@@ -54,7 +54,10 @@ data class CryptoCurrencyStatus(
     /** Represents a state where the cryptocurrency is not reachable. */
     object Unreachable : Status(isError = true)
 
-    /** Represents a state where the token's derivation is missed. */
+    /** Represents a state where the cryptocurrency's network amount not found. */
+    object NoAmount : Status(isError = true)
+
+    /** Represents a state where the cryptocurrency's derivation is missed. */
     object MissedDerivation : Status(isError = true)
 
     /** Represents a state where there is no account associated with the cryptocurrency. */
