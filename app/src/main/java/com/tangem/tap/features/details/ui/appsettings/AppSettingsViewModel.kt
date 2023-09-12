@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.AppSetting
@@ -17,7 +16,7 @@ import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.Store
 
 internal class AppSettingsViewModel(
-    private val store: Store<AppState>
+    private val store: Store<AppState>,
 ) {
 
     private val itemsFactory = AppSettingsItemsFactory()
@@ -71,7 +70,7 @@ internal class AppSettingsViewModel(
             itemsFactory.createFlipToHideBalanceSwitch(
                 isChecked = state.isHidingEnabled,
                 isEnabled = true,
-                onCheckedChange = ::onFlipToHideBalanceToggled
+                onCheckedChange = ::onFlipToHideBalanceToggled,
             ).let(::add)
 
             itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {

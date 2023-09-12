@@ -12,7 +12,7 @@ internal class BalanceStateHidingSettingsStore(
     override suspend fun getSyncOrDefault(): BalanceHidingSettings {
         return getSyncOrNull() ?: BalanceHidingSettings(
             isHidingEnabledInSettings = false,
-            isBalanceHidden = false
+            isBalanceHidden = false,
         )
     }
 }

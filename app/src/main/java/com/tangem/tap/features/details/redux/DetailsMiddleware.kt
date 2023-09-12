@@ -273,7 +273,7 @@ class DetailsMiddleware {
             scope.launch {
                 val newState = repository.getBalanceHidingSettings().copy(
                     isHidingEnabledInSettings = hideBalance,
-                    isBalanceHidden = false
+                    isBalanceHidden = false,
                 )
 
                 repository.storeBalanceHidingSettings(newState)

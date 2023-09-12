@@ -26,7 +26,7 @@ internal object HiddenBalanceDataModule {
                 preferencesName = "balance_hiding_settings",
                 context = context,
                 adapter = moshi.adapter(BalanceHidingSettings::class.java),
-            )
+            ),
         )
     }
 }

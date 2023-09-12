@@ -61,8 +61,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.state.globalState.appThemeMode,
             isHidingEnabled = runBlocking {
-                store.state.daggerGraphState.settingsRepository?.getBalanceHidingSettings()?.isHidingEnabledInSettings ?: false
-            }
+                store.state.daggerGraphState.settingsRepository?.getBalanceHidingSettings()?.isHidingEnabledInSettings
+                    ?: false
+            },
         ),
     )
 }
@@ -208,8 +209,8 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         )
         is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
             appSettingsState = state.appSettingsState.copy(
-                isHidingEnabled = action.hideBalance
-            )
+                isHidingEnabled = action.hideBalance,
+            ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,

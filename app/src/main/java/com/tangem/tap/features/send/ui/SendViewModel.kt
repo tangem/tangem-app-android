@@ -25,7 +25,7 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val appStateHolder: AppStateHolder,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -45,6 +45,5 @@ internal class SendViewModel @Inject constructor(
                 .flowOn(dispatchers.io)
                 .collect()
         }
-
     }
 }

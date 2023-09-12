@@ -15,12 +15,14 @@ class ListenToFlipsUseCase(
             flipDetector.deviceFlipEvents().onEach {
                 val balanceHidingSettings = settingsRepository.getBalanceHidingSettings()
 
-                settingsRepository.storeBalanceHidingSettings(balanceHidingSettings.copy(
-                    isBalanceHidden = !balanceHidingSettings.isBalanceHidden
-                ))
+                settingsRepository.storeBalanceHidingSettings(
+                    balanceHidingSettings.copy(
+                        isBalanceHidden = !balanceHidingSettings.isBalanceHidden,
+                    ),
+                )
             }
         } else {
-            flow {  }
+            flow { }
         }
     }
 }

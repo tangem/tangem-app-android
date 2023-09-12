@@ -13,5 +13,4 @@ class IsBalanceHiddenUseCase(
             it.isBalanceHidden
         }
     }
-
 }
