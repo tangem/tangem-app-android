@@ -8,7 +8,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
@@ -39,42 +38,46 @@ class DefaultWalletManagersFacade(
 
     override suspend fun update(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
+        network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(networkId.value)
+        val blockchain = Blockchain.fromId(network.id.value)
+        val derivationPath = network.derivationPath.value
 
-        return getAndUpdateWalletManager(userWallet, blockchain, extraTokens)
+        return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
     }
 
-    override suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String {
+    override suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network): String {
         val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
 
-        val blockchain = Blockchain.fromId(networkId.value)
-
-        return getOrCreateWalletManager(
+        val walletManager = getOrCreateWalletManager(
             userWallet = userWallet,
             blockchain = blockchain,
-            derivationPath = blockchain
-                .derivationPath(userWallet.scanResponse.derivationStyleProvider.getDerivationStyle()),
+            derivationPath = network.derivationPath.value,
         )
-            ?.wallet
-            ?.getExploreUrl()
-            .orEmpty()
-    }
 
-    override suspend fun getTxHistoryState(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        rawDerivationPath: String?,
-    ): TxHistoryState {
-        val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(networkId.value)
-        val derivationPath = rawDerivationPath?.let(::DerivationPath)
-        val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
+        requireNotNull(walletManager) {
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
+
+        return walletManager.wallet.getExploreUrl()
+    }
+
+    override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        requireNotNull(walletManager) {
+            "Unable to get a wallet manager for blockchain: $blockchain"
+        }
+
         return walletManager
             .getTransactionHistoryState(walletManager.wallet.address)
             .let(txHistoryStateConverter::convert)
@@ -82,17 +85,22 @@ class DefaultWalletManagersFacade(
 
     override suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
-        rawDerivationPath: String?,
+        network: Network,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(networkId.value)
-        val derivationPath = rawDerivationPath?.let(::DerivationPath)
-        val walletManager = requireNotNull(getOrCreateWalletManager(userWallet, blockchain, derivationPath)) {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        requireNotNull(walletManager) {
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
+
         val itemsResult = walletManager.getTransactionsHistory(
             address = walletManager.wallet.address,
             page = page,
@@ -118,12 +126,12 @@ class DefaultWalletManagersFacade(
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
+        derivationPath: String?,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         val scanResponse = userWallet.scanResponse
-        val derivationPath = blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
 
-        if (derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath.rawPath)) {
+        if (derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)) {
             Timber.e("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
@@ -171,21 +179,21 @@ class DefaultWalletManagersFacade(
     override suspend fun getOrCreateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
-        derivationPath: DerivationPath?,
+        derivationPath: String?,
     ): WalletManager? {
         val userWalletId = userWallet.walletId
 
         var walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = derivationPath?.rawPath,
+            derivationPath = derivationPath,
         )
 
         if (walletManager == null) {
             walletManager = walletManagerFactory.createWalletManager(
                 scanResponse = userWallet.scanResponse,
                 blockchain = blockchain,
-                derivationPath = derivationPath,
+                derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
             ) ?: return null
 
             walletManagersStore.store(userWalletId, walletManager)

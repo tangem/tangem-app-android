@@ -2,7 +2,6 @@ package com.tangem.domain.walletmanager
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.PaginationWrapper
@@ -22,52 +21,53 @@ interface WalletManagersFacade {
      * Updates the wallet manager associated with a user's wallet and network.
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param networkId The network ID.
+     * @param network The network.
      * @param extraTokens Additional tokens.
      * @return The result of updating the wallet manager.
      */
     suspend fun update(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
+        network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult
 
-    suspend fun getExploreUrl(userWalletId: UserWalletId, networkId: Network.ID): String
+    /**
+     * Returns network explorer URL of the wallet manager associated with a user's wallet and network.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param network The network.
+     *
+     * @return The network explorer URL, maybe empty if the wallet manager was not found.
+     * */
+    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network): String
 
     /**
      * Returns transactions count
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param networkId The network ID.
-     * @param rawDerivationPath Derivation path in raw form.
-
+     * @param network The network.
      */
-    suspend fun getTxHistoryState(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        rawDerivationPath: String?,
-    ): TxHistoryState
+    suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState
 
     /**
      * Returns transaction history items wrapped to pagination
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param networkId The network ID.
-     * @param rawDerivationPath Derivation path in raw form.
+     * @param network The network.
      * @param page Pagination page.
      * @param pageSize Pagination size.
      */
     suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
-        rawDerivationPath: String?,
+        network: Network,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
 
+    // TODO: Remove after refactoring
     suspend fun getOrCreateWalletManager(
         userWallet: UserWallet,
         blockchain: Blockchain,
-        derivationPath: DerivationPath?,
+        derivationPath: String?,
     ): WalletManager?
 }
