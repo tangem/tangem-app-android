@@ -97,6 +97,7 @@ internal object WalletPreviewData {
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
+            isCustom = false,
         )
 
     private val tokenIconState
