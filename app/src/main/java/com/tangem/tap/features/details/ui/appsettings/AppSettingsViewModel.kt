@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.appsettings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -30,12 +31,22 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
         )
     }
 
-    fun checkBiometricsStatus() {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = false))
+    fun checkBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
+        store.dispatch(
+            DetailsAction.AppSettings.CheckBiometricsStatus(
+                awaitStatusChange = false,
+                lifecycleCoroutineScope = lifecycleScope,
+            ),
+        )
     }
 
-    fun refreshBiometricsStatus() {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = true))
+    fun refreshBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
+        store.dispatch(
+            DetailsAction.AppSettings.CheckBiometricsStatus(
+                awaitStatusChange = true,
+                lifecycleCoroutineScope = lifecycleScope,
+            ),
+        )
     }
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
