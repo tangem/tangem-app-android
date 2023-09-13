@@ -20,26 +20,18 @@ import javax.inject.Singleton
 internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, CardSdkLifecycleObserver {
 
     override val sdk: TangemSdk
-        get() = requireNotNull(value = _sdk) { "Impossible to get the TangemSdk when activity is destroyed" }
+        get() = requireNotNull(value = _sdk?.get()) { "Impossible to get the TangemSdk when activity is destroyed" }
 
-    private var _sdk: TangemSdk? = null
-
-    /** Weak reference of context that uses to create [TangemSdk] */
-    private var contextRef: WeakReference<Context> = WeakReference(null)
+    private var _sdk: WeakReference<TangemSdk?>? = null
 
     override fun onCreate(context: Context) {
-        contextRef = WeakReference(context)
-        _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
+        _sdk = WeakReference(TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config))
     }
 
     override fun onDestroy(context: Context) {
-        /*
-
-
-         */
-        if (contextRef.get() == context) {
-            _sdk = null
-        }
+        // Commented out to prevent crash on getting sdk when it's null.
+        // FIXME: We still should find the real cause and fix it properly.
+        // _sdk = null
     }
 
     private companion object {
