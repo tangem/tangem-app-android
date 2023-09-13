@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
  * */
 @Immutable
 internal sealed class DraggableItem {
-    abstract val id: String
+    abstract val id: Any
     abstract val roundingMode: RoundingMode
     abstract val showShadow: Boolean
 
@@ -26,7 +26,7 @@ internal sealed class DraggableItem {
      * @property showShadow if true then item should be elevated
      * */
     data class GroupHeader(
-        override val id: String,
+        override val id: Int,
         val networkName: String,
         override val roundingMode: RoundingMode = RoundingMode.None,
         override val showShadow: Boolean = false,
@@ -43,7 +43,7 @@ internal sealed class DraggableItem {
      * */
     data class Token(
         val tokenItemState: TokenItemState.Draggable,
-        val groupId: String,
+        val groupId: Int,
         override val showShadow: Boolean = false,
         override val roundingMode: RoundingMode = RoundingMode.None,
     ) : DraggableItem() {
