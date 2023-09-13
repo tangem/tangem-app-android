@@ -215,8 +215,16 @@ internal class WalletStateFactory(
         }
     }
 
-    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletState {
-        return loadingTransactionsStateConverter.convert(value = itemsCountEither)
+    fun getLoadingTxHistoryState(
+        itemsCountEither: Either<TxHistoryStateError, Int>,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): WalletState {
+        return loadingTransactionsStateConverter.convert(
+            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(
+                historyLoadingState = itemsCountEither,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ),
+        )
     }
 
     fun getLoadedTxHistoryState(
@@ -233,8 +241,8 @@ internal class WalletStateFactory(
         return singleCurrencyLoadedBalanceConverter.convert(maybeCryptoCurrencyStatus)
     }
 
-    fun getSingleCurrencyManageButtonsState(actions: List<TokenActionsState.ActionState>): WalletState {
-        return cryptoCurrencyActionsConverter.convert(value = actions)
+    fun getSingleCurrencyManageButtonsState(actionsState: TokenActionsState): WalletState {
+        return cryptoCurrencyActionsConverter.convert(value = actionsState)
     }
 
     fun getStateByCurrencyStatusError(error: CurrencyStatusError): WalletState {
