@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
@@ -21,21 +22,24 @@ class GetCryptoCurrencyActionsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<TokenActionsState> {
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): Flow<TokenActionsState> {
         return flow {
-            val actionStates = createTokenActionsState(userWalletId, cryptoCurrency)
+            val actionStates = createTokenActionsState(userWalletId, cryptoCurrencyStatus)
             emit(actionStates)
         }.flowOn(dispatchers.io)
     }
 
     private suspend fun createTokenActionsState(
         userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWalletId,
-            cryptoCurrencyId = cryptoCurrency.id,
-            states = createListOfActions(userWalletId, cryptoCurrency),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            states = createListOfActions(userWalletId, cryptoCurrencyStatus.currency),
         )
     }
 
