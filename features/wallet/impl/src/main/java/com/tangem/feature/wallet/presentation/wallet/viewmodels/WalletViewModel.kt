@@ -366,18 +366,21 @@ internal class WalletViewModel @Inject constructor(
         router.openOrganizeTokensScreen(walletId)
     }
 
-    override fun onBuyClick() {
+    override fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val state = uiState as? WalletState.ContentState ?: return
-        val status = singleWalletCryptoCurrencyStatus ?: return
         val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
         reduxStateHolder.dispatch(
             TradeCryptoAction.New.Buy(
                 userWallet = wallet,
-                cryptoCurrencyStatus = status,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
                 appCurrencyCode = selectedAppCurrencyFlow.value.code,
             ),
         )
+    }
+
+    override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        // todo implement onSwapClick [REDACTED_JIRA]
     }
 
     override fun onSingleCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
@@ -424,16 +427,14 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    override fun onReceiveClick() {
+    override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         // TODO: [REDACTED_JIRA]
     }
 
-    override fun onSellClick() {
-        val status = singleWalletCryptoCurrencyStatus ?: return
-
+    override fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         reduxStateHolder.dispatch(
             TradeCryptoAction.New.Sell(
-                cryptoCurrencyStatus = status,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
                 appCurrencyCode = selectedAppCurrencyFlow.value.code,
             ),
         )
@@ -501,7 +502,7 @@ internal class WalletViewModel @Inject constructor(
         val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
         viewModelScope.launch(dispatchers.io) {
             getCryptoCurrencyActionsUseCase
-                .invoke(userWallet.walletId, cryptoCurrencyStatus.currency)
+                .invoke(userWallet.walletId, cryptoCurrencyStatus)
                 .take(count = 1)
                 .collectLatest {
                     uiState = stateFactory.getStateWithTokenActionBottomSheet(it)
@@ -591,7 +592,10 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(network)
 
-            uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+            uiState = stateFactory.getLoadingTxHistoryState(
+                itemsCountEither = txHistoryItemsCountEither,
+                cryptoCurrencyStatus = singleWalletCryptoCurrencyStatus ?: return@launch,
+            )
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
@@ -613,7 +617,7 @@ internal class WalletViewModel @Inject constructor(
 
                 maybeCryptoCurrencyStatus.onRight { status ->
                     singleWalletCryptoCurrencyStatus = status
-                    updateButtons(userWalletId = userWalletId, currency = status.currency)
+                    updateButtons(userWalletId = userWalletId, currencyStatus = status)
                     updateTxHistory(status.currency.network)
                 }
             }
@@ -622,10 +626,10 @@ internal class WalletViewModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
+    private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrencyStatus = currencyStatus)
             .distinctUntilChanged()
-            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actions = it.states) }
+            .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actionsState = it) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(buttonsJobHolder)
