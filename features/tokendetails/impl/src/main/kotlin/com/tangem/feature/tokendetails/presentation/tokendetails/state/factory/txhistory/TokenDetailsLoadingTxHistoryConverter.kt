@@ -3,17 +3,17 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.flow.update
 
 internal class TokenDetailsLoadingTxHistoryConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
-    private val clickIntents: TxHistoryClickIntents,
+    private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Either<TxHistoryStateError, Int>, TokenDetailsState> {
 
     override fun convert(value: Either<TxHistoryStateError, Int>): TokenDetailsState {
