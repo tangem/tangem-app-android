@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -27,6 +28,14 @@ sealed class DetailsAction : Action {
 
     data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
+    object ScanAndSaveUserWallet : DetailsAction() {
+
+        object Success : DetailsAction()
+
+        data class Error(val error: TextReference?) : DetailsAction()
+    }
+
+    object DismissError : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {
         object Open : AccessCodeRecovery()
