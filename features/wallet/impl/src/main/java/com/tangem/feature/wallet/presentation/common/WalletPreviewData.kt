@@ -206,7 +206,7 @@ internal object WalletPreviewData {
                 val networkNumber = index + 1
 
                 val group = DraggableItem.GroupHeader(
-                    id = "group_$networkNumber",
+                    id = networkNumber,
                     networkName = "$networkNumber",
                     roundingMode = when (index) {
                         0 -> DraggableItem.RoundingMode.Top()
@@ -328,7 +328,7 @@ internal object WalletPreviewData {
             walletsListConfig = walletListConfig,
             tokensListState = WalletTokensListState.Content(
                 persistentListOf(
-                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Bitcoin")),
+                    TokensListItemState.NetworkGroupTitle(id = 0, stringReference("Bitcoin")),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_1",
@@ -357,7 +357,7 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Ethereum")),
+                    TokensListItemState.NetworkGroupTitle(id = 1, stringReference("Ethereum")),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_5",

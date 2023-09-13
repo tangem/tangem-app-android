@@ -11,8 +11,7 @@ import java.io.Serializable
  * @property symbol Symbol of the cryptocurrency.
  * @property decimals Number of decimal places used by the cryptocurrency.
  * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
- * @property derivationPath Optional path used for key derivation. `null` if the wallet does not support the
- * [HD Wallet](https://coinsutra.com/hd-wallets-deterministic-wallet/) feature.
+ * @property isCustom Indicates whether the currency is a custom user-added currency or not.
  */
 // FIXME: Remove serialization [REDACTED_JIRA]
 sealed class CryptoCurrency : Serializable {
@@ -23,7 +22,7 @@ sealed class CryptoCurrency : Serializable {
     abstract val symbol: String
     abstract val decimals: Int
     abstract val iconUrl: String?
-    abstract val derivationPath: String?
+    abstract val isCustom: Boolean
 
     /**
      * Represents a native coin in the blockchain network.
@@ -35,7 +34,7 @@ sealed class CryptoCurrency : Serializable {
         override val symbol: String,
         override val decimals: Int,
         override val iconUrl: String?,
-        override val derivationPath: String?,
+        override val isCustom: Boolean,
     ) : CryptoCurrency() {
 
         init {
@@ -47,7 +46,6 @@ sealed class CryptoCurrency : Serializable {
      * Represents a token in the blockchain network, typically a non-native asset.
      *
      * @property contractAddress Address of the contract managing the token.
-     * @property isCustom Indicates whether the token is a custom user-added token or not.
      */
     data class Token(
         override val id: ID,
@@ -56,9 +54,8 @@ sealed class CryptoCurrency : Serializable {
         override val symbol: String,
         override val decimals: Int,
         override val iconUrl: String?,
-        override val derivationPath: String?,
+        override val isCustom: Boolean,
         val contractAddress: String,
-        val isCustom: Boolean,
     ) : CryptoCurrency() {
 
         init {
@@ -80,34 +77,70 @@ sealed class CryptoCurrency : Serializable {
     // FIXME: Remove serialization [REDACTED_JIRA]
     data class ID(
         private val prefix: Prefix,
-        private val networkId: Network.ID,
+        private val body: Body,
         private val suffix: Suffix,
     ) : Serializable {
 
         val value: String = buildString {
             append(prefix.value)
-            append(networkId.value)
-            append(DELIMITER)
+            append(PREFIX_DELIMITER)
+            append(body.value)
+            append(SUFFIX_DELIMITER)
             append(suffix.value)
         }
 
+        /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null`. */
         val rawCurrencyId: String? = (suffix as? Suffix.RawID)?.rawId
 
-        val rawNetworkId: String = networkId.value
+        /** Represents a raw cryptocurrency's network ID. */
+        val rawNetworkId: String = when (body) {
+            is Body.NetworkId -> body.rawId
+            is Body.NetworkIdWithDerivationPath -> body.rawId
+        }
 
         /**
          * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
+         *
          * These prefixes can help in quickly categorizing the type of cryptocurrency.
          */
         enum class Prefix(val value: String) {
             /** Prefix for standard coins. */
-            COIN_PREFIX(value = "coin_"),
+            COIN_PREFIX(value = "coin"),
 
             /** Prefix for standard tokens. */
-            TOKEN_PREFIX(value = "token_"),
+            TOKEN_PREFIX(value = "token"),
+        }
 
-            /** Prefix for custom tokens. */
-            CUSTOM_TOKEN_PREFIX(value = "custom_"),
+        /**
+         * Represents the body part of the cryptocurrency ID.
+         *
+         * The body can be either a raw network ID or a raw network ID with a network derivation path.
+         */
+        sealed class Body {
+
+            /** The value of the body. */
+            abstract val value: String
+
+            /** Represents a raw network ID. */
+            data class NetworkId(val rawId: String) : Body() {
+                override val value: String = rawId
+            }
+
+            /**
+             * Represents a raw network ID with a network derivation path.
+             *
+             * Should be used for a cryptocurrencies with custom derivation path.
+             * */
+            data class NetworkIdWithDerivationPath(
+                val rawId: String,
+                val derivationPath: String,
+            ) : Body() {
+                override val value: String = buildString {
+                    append(rawId)
+                    append(DERIVATION_PATH_DELIMITER)
+                    append(derivationPath.hashCode())
+                }
+            }
         }
 
         /**
@@ -132,8 +165,14 @@ sealed class CryptoCurrency : Serializable {
             }
         }
 
+        override fun toString(): String {
+            return "ID(value='$value')"
+        }
+
         private companion object {
-            const val DELIMITER = '#'
+            const val PREFIX_DELIMITER = '_'
+            const val SUFFIX_DELIMITER = '#'
+            const val DERIVATION_PATH_DELIMITER = 'd'
         }
     }
 
@@ -142,6 +181,5 @@ sealed class CryptoCurrency : Serializable {
         require(symbol.isNotBlank()) { "Crypto currency symbol must not be blank" }
         require(iconUrl?.isNotBlank() ?: true) { "Crypto currency icon URL must not be blank" }
         require(decimals >= 0) { "Crypto currency decimal must not be less then zero, but it is: $decimals" }
-        require(derivationPath?.isNotBlank() ?: true) { "Crypto currency derivation path must not be blank" }
     }
 }
