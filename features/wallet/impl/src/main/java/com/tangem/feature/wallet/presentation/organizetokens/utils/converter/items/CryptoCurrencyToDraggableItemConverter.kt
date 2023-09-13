@@ -36,7 +36,7 @@ internal class CryptoCurrencyToDraggableItemConverter(
     ): DraggableItem.Token {
         return DraggableItem.Token(
             tokenItemState = createTokenItemState(currencyStatus, appCurrency),
-            groupId = getGroupHeaderId(currencyStatus.currency.network.id),
+            groupId = getGroupHeaderId(currencyStatus.currency.network),
         )
     }
 
