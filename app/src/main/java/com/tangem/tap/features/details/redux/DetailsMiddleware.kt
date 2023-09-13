@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -9,6 +10,9 @@ import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
@@ -19,6 +23,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -73,37 +78,8 @@ class DetailsMiddleware {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
             }
             is DetailsAction.AccessCodeRecovery -> accessCodeRecoveryMiddleware.handle(state, action)
-            DetailsAction.ScanCard -> {
-                scope.launch {
-                    store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor)
-                        .scan(allowsRequestAccessCodeFromRepository = true)
-                        .doOnSuccess { scanResponse ->
-                            // if we use biometric, scanResponse in GlobalState is null, and crashes NPE on twin cards
-                            store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
-                            val currentUserWalletId = state.scanResponse
-                                ?.let { UserWalletIdBuilder.scanResponse(it).build() }
-                            val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse)
-                                .build()
-                            val isSameWallet = currentUserWalletId == scannedUserWalletId
-
-                            if (isSameWallet) {
-                                store.dispatchOnMain(
-                                    DetailsAction.PrepareCardSettingsData(
-                                        scanResponse.card,
-                                        scanResponse.cardTypesResolver,
-                                    ),
-                                )
-                            } else {
-                                store.dispatchDialogShow(
-                                    AppDialog.SimpleOkDialogRes(
-                                        headerId = R.string.common_warning,
-                                        messageId = R.string.error_wrong_wallet_tapped,
-                                    ),
-                                )
-                            }
-                        }
-                }
-            }
+            is DetailsAction.ScanCard -> scanCard(state)
+            is DetailsAction.ScanAndSaveUserWallet -> scanAndSaveUserWallet()
         }
     }
 
@@ -459,5 +435,98 @@ class DetailsMiddleware {
                 is DetailsAction.AccessCodeRecovery.SaveChanges.Success -> Unit
             }
         }
+    }
+
+    private fun scanCard(state: DetailsState) = scope.launch {
+        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor)
+            .scan(allowsRequestAccessCodeFromRepository = true)
+            .doOnSuccess { scanResponse ->
+                // if we use biometric, scanResponse in GlobalState is null, and crashes NPE on twin cards
+                store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
+                val currentUserWalletId = state.scanResponse
+                    ?.let { UserWalletIdBuilder.scanResponse(it).build() }
+                val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse)
+                    .build()
+                val isSameWallet = currentUserWalletId == scannedUserWalletId
+
+                if (isSameWallet) {
+                    store.dispatchOnMain(
+                        DetailsAction.PrepareCardSettingsData(
+                            scanResponse.card,
+                            scanResponse.cardTypesResolver,
+                        ),
+                    )
+                } else {
+                    store.dispatchDialogShow(
+                        AppDialog.SimpleOkDialogRes(
+                            headerId = R.string.common_warning,
+                            messageId = R.string.error_wrong_wallet_tapped,
+                        ),
+                    )
+                }
+            }
+    }
+
+    private fun scanAndSaveUserWallet() = scope.launch(Dispatchers.IO) {
+        val cardSdkConfigRepository = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
+
+        val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
+
+        // Update access code policy for access code saving when a card was scanned
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+        )
+
+        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
+            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.MyWallets),
+            onWalletNotCreated = {
+                // No need to rollback policy, continue with the policy set before the card scan
+                store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
+                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+            },
+            disclaimerWillShow = {
+                store.dispatchOnMain(NavigationAction.PopBackTo())
+            },
+            onSuccess = { scanResponse ->
+                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+                    .doOnFailure { error ->
+                        // Rollback policy if card saving was failed
+                        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        Timber.e(error, "Unable to save user wallet")
+
+                        store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+                    }
+            },
+            onFailure = { error ->
+                // Rollback policy if card scanning was failed
+                cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                Timber.e(error, "Unable to scan card")
+                store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+            },
+        )
+    }
+
+    private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
+        val userWallet = UserWalletBuilder(scanResponse).build()
+            ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
+
+        return userWalletsListManager.save(userWallet)
+            .doOnSuccess {
+                store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
+                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+
+                val walletFeatureToggles = store.state.daggerGraphState
+                    .get(DaggerGraphState::walletFeatureToggles)
+
+                if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+                    store.onUserWalletSelected(userWallet)
+                }
+            }
+    }
+
+    private fun TangemError.toTextReference(): TextReference? {
+        if (silent) return null
+
+        return messageResId?.let(::resourceReference) ?: stringReference(customMessage)
     }
 }
