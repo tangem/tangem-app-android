@@ -19,12 +19,11 @@ class DefaultTxHistoryRepository(
     private val userWalletsStore: UserWalletsStore,
 ) : TxHistoryRepository {
 
-    override suspend fun getTxHistoryItemsCount(networkId: Network.ID, derivationPath: String?): Int {
+    override suspend fun getTxHistoryItemsCount(network: Network): Int {
         val userWallet = getUserWallet()
         val state = walletManagersFacade.getTxHistoryState(
             userWalletId = userWallet.walletId,
-            networkId = networkId,
-            rawDerivationPath = derivationPath,
+            network = network,
         )
         return when (state) {
             is TxHistoryState.Failed.FetchError -> throw TxHistoryStateError.DataError(state.exception)
@@ -34,11 +33,7 @@ class DefaultTxHistoryRepository(
         }
     }
 
-    override fun getTxHistoryItems(
-        networkId: Network.ID,
-        derivationPath: String?,
-        pageSize: Int,
-    ): Flow<PagingData<TxHistoryItem>> {
+    override fun getTxHistoryItems(network: Network, pageSize: Int): Flow<PagingData<TxHistoryItem>> {
         val userWallet = getUserWallet()
         return Pager(
             config = PagingConfig(
@@ -49,8 +44,7 @@ class DefaultTxHistoryRepository(
                     loadPage = { page: Int, pageSize: Int ->
                         walletManagersFacade.getTxHistoryItems(
                             userWalletId = userWallet.walletId,
-                            networkId = networkId,
-                            rawDerivationPath = derivationPath,
+                            network = network,
                             page = page,
                             pageSize = pageSize,
                         )
