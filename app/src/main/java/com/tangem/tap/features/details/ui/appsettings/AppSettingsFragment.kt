@@ -8,6 +8,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.res.TangemTheme
@@ -27,7 +28,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        viewModel.checkBiometricsStatus()
+        viewModel.checkBiometricsStatus(lifecycleScope)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -58,7 +59,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun onResume() {
         super.onResume()
-        viewModel.refreshBiometricsStatus()
+        viewModel.refreshBiometricsStatus(lifecycleScope)
     }
 
     override fun onStop() {
