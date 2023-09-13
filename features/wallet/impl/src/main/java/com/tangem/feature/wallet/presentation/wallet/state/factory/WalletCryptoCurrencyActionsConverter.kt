@@ -14,9 +14,9 @@ import kotlinx.collections.immutable.toPersistentList
 internal class WalletCryptoCurrencyActionsConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val clickIntents: WalletClickIntents,
-) : Converter<List<TokenActionsState.ActionState>, WalletState> {
+) : Converter<TokenActionsState, WalletState> {
 
-    override fun convert(value: List<TokenActionsState.ActionState>): WalletState {
+    override fun convert(value: TokenActionsState): WalletState {
         return when (val state = currentStateProvider()) {
             is WalletSingleCurrencyState.Content -> state.copy(buttons = value.mapToManageButtons())
             is WalletSingleCurrencyState.Locked,
@@ -26,23 +26,31 @@ internal class WalletCryptoCurrencyActionsConverter(
         }
     }
 
-    private fun List<TokenActionsState.ActionState>.mapToManageButtons(): PersistentList<WalletManageButton> {
-        return this
+    private fun TokenActionsState.mapToManageButtons(): PersistentList<WalletManageButton> {
+        return this.states
             .mapNotNull { action ->
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
-                        WalletManageButton.Buy(enabled = action.enabled, onClick = clickIntents::onBuyClick)
+                        WalletManageButton.Buy(
+                            enabled = action.enabled,
+                            onClick = { clickIntents.onBuyClick(cryptoCurrencyStatus) },
+                        )
                     }
                     is TokenActionsState.ActionState.Receive -> {
-                        WalletManageButton.Receive(onClick = clickIntents::onReceiveClick)
+                        WalletManageButton.Receive(
+                            onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus) },
+                        )
                     }
                     is TokenActionsState.ActionState.Sell -> {
-                        WalletManageButton.Sell(enabled = action.enabled, onClick = clickIntents::onSellClick)
+                        WalletManageButton.Sell(
+                            enabled = action.enabled,
+                            onClick = { clickIntents.onSellClick(cryptoCurrencyStatus) },
+                        )
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
                             enabled = action.enabled,
-                            onClick = clickIntents::onSingleCurrencySendClick,
+                            onClick = { clickIntents.onSingleCurrencySendClick(cryptoCurrencyStatus) },
                         )
                     }
                     is TokenActionsState.ActionState.Swap -> null
