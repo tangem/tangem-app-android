@@ -17,6 +17,7 @@ internal object MockNetworks {
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
     val network2 = Network(
@@ -24,6 +25,7 @@ internal object MockNetworks {
         name = "Network Two",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
     val network3 = Network(
@@ -31,22 +33,21 @@ internal object MockNetworks {
         name = "Network Three",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
-    val networks = nonEmptySetOf(network1, network2, network3)
-
     val networkStatus1 = NetworkStatus(
-        networkId = network1.id,
+        network = network1,
         value = NetworkStatus.Unreachable,
     )
 
     val networkStatus2 = NetworkStatus(
-        networkId = network2.id,
+        network = network2,
         value = NetworkStatus.MissedDerivation,
     )
 
     val networkStatus3 = NetworkStatus(
-        networkId = network3.id,
+        network = network3,
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
             address = NetworkAddress.Single(defaultAddress = "mock"),
