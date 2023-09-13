@@ -3,8 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -15,7 +13,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -461,14 +458,18 @@ internal class WalletViewModel @Inject constructor(
             val wallet = getWallet(
                 index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
             )
-            router.openTxHistoryWebsite(
-                url = getExploreUrlUseCase(
-                    userWalletId = wallet.walletId,
-                    networkId = Network.ID(
-                        value = wallet.scanResponse.cardTypesResolver.getBlockchain().id,
+            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
+                .firstOrNull()
+                ?.getOrNull()
+
+            if (currencyStatus != null) {
+                router.openTxHistoryWebsite(
+                    url = getExploreUrlUseCase(
+                        userWalletId = wallet.walletId,
+                        network = currencyStatus.currency.network,
                     ),
-                ),
-            )
+                )
+            }
         }
     }
 
@@ -582,31 +583,20 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getSingleCurrencyContent(index: Int) {
         val wallet = getWallet(index)
-        val blockchain = getCardTypeResolver(index).getBlockchain()
-        updateTxHistory(
-            blockchain = blockchain,
-            derivationStyle = wallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
-        )
-        updateMarketPrice(userWalletId = wallet.walletId)
+        updatePrimaryCurrencyStatus(userWalletId = wallet.walletId)
         updateNotifications(index)
     }
 
-    private fun updateTxHistory(blockchain: Blockchain, derivationStyle: DerivationStyle?) {
+    private fun updateTxHistory(network: Network) {
         viewModelScope.launch(dispatchers.io) {
-            val derivationPath = blockchain.derivationPath(style = derivationStyle)?.rawPath
-
-            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                networkId = Network.ID(blockchain.id),
-                derivationPath = derivationPath,
-            )
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(network)
 
             uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
                     txHistoryEither = txHistoryItemsUseCase(
-                        networkId = Network.ID(blockchain.id),
-                        derivationPath = derivationPath,
+                        network,
                     ).map {
                         it.cachedIn(viewModelScope)
                     },
@@ -615,8 +605,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    // It also update wallet balance
-    private fun updateMarketPrice(userWalletId: UserWalletId) {
+    private fun updatePrimaryCurrencyStatus(userWalletId: UserWalletId) {
         getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
             .distinctUntilChanged()
             .onEach { maybeCryptoCurrencyStatus ->
@@ -625,6 +614,7 @@ internal class WalletViewModel @Inject constructor(
                 maybeCryptoCurrencyStatus.onRight { status ->
                     singleWalletCryptoCurrencyStatus = status
                     updateButtons(userWalletId = userWalletId, currency = status.currency)
+                    updateTxHistory(status.currency.network)
                 }
             }
             .flowOn(dispatchers.io)
