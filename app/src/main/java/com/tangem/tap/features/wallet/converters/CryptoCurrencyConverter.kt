@@ -18,6 +18,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
             is Currency.Blockchain -> requireNotNull(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = value.blockchain,
+                    extraDerivationPath = value.derivationPath,
                     derivationStyleProvider = requireNotNull(
                         store.state.globalState
                             .userWalletsListManager
@@ -31,6 +32,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
                 cryptoCurrencyFactory.createToken(
                     sdkToken = value.token,
                     blockchain = value.blockchain,
+                    extraDerivationPath = value.derivationPath,
                     derivationStyleProvider = requireNotNull(
                         store.state.globalState
                             .userWalletsListManager
@@ -49,7 +51,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
         return when (value) {
             is CryptoCurrency.Coin -> Currency.Blockchain(
                 blockchain = blockchain,
-                derivationPath = value.derivationPath,
+                derivationPath = value.network.derivationPath.value,
             )
             is CryptoCurrency.Token -> Currency.Token(
                 token = Token(
@@ -60,7 +62,7 @@ internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrenc
                     id = value.id.value,
                 ),
                 blockchain = blockchain,
-                derivationPath = value.derivationPath,
+                derivationPath = value.network.derivationPath.value,
             )
         }
     }

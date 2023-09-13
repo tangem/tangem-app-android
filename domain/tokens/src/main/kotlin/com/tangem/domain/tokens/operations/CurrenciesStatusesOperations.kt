@@ -58,11 +58,11 @@ internal class CurrenciesStatusesOperations(
 
             emit(maybeLoadingCurrenciesStatuses)
 
-            val (networksIds, currenciesIds) = getIds(nonEmptyCurrencies)
+            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
             val currenciesFlow = combine(
                 getQuotes(currenciesIds),
-                getNetworksStatuses(networksIds),
+                getNetworksStatuses(networks),
             ) { maybeQuotes, maybeNetworksStatuses ->
                 createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
             }
@@ -99,7 +99,7 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val (networksIds, currenciesIds) = getIds(nonEmptyListOf(currency))
+        val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
         val quoteFlow = getQuotes(currenciesIds)
             .map { maybeQuotes ->
@@ -108,15 +108,15 @@ internal class CurrenciesStatusesOperations(
                 }
             }
 
-        val statusFlow = getNetworksStatuses(networksIds)
+        val statusFlow = getNetworksStatuses(networks)
             .map { maybeStatuses ->
                 maybeStatuses.map { statuses ->
-                    statuses.singleOrNull { it.networkId == currency.network.id }
+                    statuses.singleOrNull { it.network == currency.network }
                 }
             }
 
         return combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
-            createStatus(currency, maybeQuote, maybeNetworkStatus)
+            createCurrencyStatus(currency, maybeQuote, maybeNetworkStatus)
         }
     }
 
@@ -135,13 +135,13 @@ internal class CurrenciesStatusesOperations(
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
-            val networkStatus = networksStatuses?.firstOrNull { it.networkId == currency.network.id }
+            val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
 
-            createStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
+            createCurrencyStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
         }
     }
 
-    private fun createStatus(
+    private fun createCurrencyStatus(
         currency: CryptoCurrency,
         maybeQuote: Either<Error, Quote?>,
         maybeNetworkStatus: Either<Error, NetworkStatus?>,
@@ -154,10 +154,10 @@ internal class CurrenciesStatusesOperations(
             null
         }
 
-        createStatus(currency, quote, networkStatus, ignoreQuote = quoteRetrievingFailed)
+        createCurrencyStatus(currency, quote, networkStatus, ignoreQuote = quoteRetrievingFailed)
     }
 
-    private fun createStatus(
+    private fun createCurrencyStatus(
         currency: CryptoCurrency,
         quote: Quote?,
         networkStatus: NetworkStatus?,
@@ -206,7 +206,7 @@ internal class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyQuotes.left()) }
     }
 
-    private fun getNetworksStatuses(networks: NonEmptySet<Network.ID>): Flow<Either<Error, Set<NetworkStatus>>> {
+    private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
         return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
@@ -215,17 +215,17 @@ internal class CurrenciesStatusesOperations(
 
     private fun getIds(
         currencies: NonEmptyList<CryptoCurrency>,
-    ): Pair<NonEmptySet<Network.ID>, NonEmptySet<CryptoCurrency.ID>> {
+    ): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {
         val currencyIdToNetworkId = currencies.associate { currency ->
-            currency.id to currency.network.id
+            currency.id to currency.network
         }
         val currenciesIds = currencyIdToNetworkId.keys.toNonEmptySetOrNull()
-        val networksIds = currencyIdToNetworkId.values.toNonEmptySetOrNull()
+        val networks = currencyIdToNetworkId.values.toNonEmptySetOrNull()
 
         requireNotNull(currenciesIds) { "Currencies IDs cannot be empty" }
-        requireNotNull(networksIds) { "Networks IDs cannot be empty" }
+        requireNotNull(networks) { "Networks IDs cannot be empty" }
 
-        return networksIds to currenciesIds
+        return networks to currenciesIds
     }
 
     sealed class Error {

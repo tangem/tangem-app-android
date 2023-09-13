@@ -30,6 +30,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> value.mapToUnreachableTokenItemState()
         }
     }
