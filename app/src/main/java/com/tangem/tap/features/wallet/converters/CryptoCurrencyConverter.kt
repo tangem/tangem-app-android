@@ -16,26 +16,22 @@ internal class CryptoCurrencyConverter : Converter<Currency, CryptoCurrency> {
             is Currency.Blockchain -> requireNotNull(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = value.blockchain,
-                    derivationStyleProvider = requireNotNull(
-                        store.state.globalState
-                            .userWalletsListManager
-                            ?.selectedUserWalletSync
-                            ?.scanResponse
-                            ?.derivationStyleProvider,
-                    ),
+                    derivationStyleProvider = store.state.globalState
+                        .userWalletsListManager
+                        ?.selectedUserWalletSync
+                        ?.scanResponse
+                        ?.derivationStyleProvider,
                 ),
             )
             is Currency.Token -> requireNotNull(
                 cryptoCurrencyFactory.createToken(
                     sdkToken = value.token,
                     blockchain = value.blockchain,
-                    derivationStyleProvider = requireNotNull(
-                        store.state.globalState
-                            .userWalletsListManager
-                            ?.selectedUserWalletSync
-                            ?.scanResponse
-                            ?.derivationStyleProvider,
-                    ),
+                    derivationStyleProvider = store.state.globalState
+                        .userWalletsListManager
+                        ?.selectedUserWalletSync
+                        ?.scanResponse
+                        ?.derivationStyleProvider,
                 ),
             )
         }

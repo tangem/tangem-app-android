@@ -12,7 +12,7 @@ class CryptoCurrencyFactory {
     fun createToken(
         sdkToken: SdkToken,
         blockchain: Blockchain,
-        derivationStyleProvider: DerivationStyleProvider,
+        derivationStyleProvider: DerivationStyleProvider?,
     ): CryptoCurrency.Token? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -34,7 +34,7 @@ class CryptoCurrencyFactory {
         )
     }
 
-    fun createCoin(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider): CryptoCurrency.Coin? {
+    fun createCoin(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider?): CryptoCurrency.Coin? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
             return null

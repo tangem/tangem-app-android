@@ -22,8 +22,8 @@ internal fun isCustomToken(tokenId: ID): Boolean {
     return tokenId.rawCurrencyId == null
 }
 
-internal fun getDerivationPath(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider): String? {
-    return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+internal fun getDerivationPath(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider?): String? {
+    return blockchain.derivationPath(derivationStyleProvider?.getDerivationStyle())?.rawPath
 }
 
 internal fun getBlockchain(networkId: Network.ID): Blockchain {
