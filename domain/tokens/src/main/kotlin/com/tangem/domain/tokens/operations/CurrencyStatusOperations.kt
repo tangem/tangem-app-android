@@ -26,7 +26,7 @@ internal class CurrencyStatusOperations(
     }
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
-        val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
+        val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.NoAmount
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
