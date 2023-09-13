@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -20,18 +21,15 @@ import kotlinx.collections.immutable.toImmutableList
 internal class TokenActionsProvider(private val clickIntents: WalletClickIntents) {
 
     fun provideActions(tokenActions: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
-        return convertTokenActionsState(tokenActions)
-    }
-
-    private fun convertTokenActionsState(
-        tokenActionsState: TokenActionsState,
-    ): ImmutableList<TokenActionButtonConfig> {
-        return tokenActionsState.states
-            .map(::tokenActionStateMapper)
+        return tokenActions.states
+            .map { mapTokenActionState(it, tokenActions.cryptoCurrencyStatus) }
             .toImmutableList()
     }
 
-    private fun tokenActionStateMapper(actionsState: TokenActionsState.ActionState): TokenActionButtonConfig {
+    private fun mapTokenActionState(
+        actionsState: TokenActionsState.ActionState,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): TokenActionButtonConfig {
         val title: TextReference
         val icon: Int
         val action: () -> Unit
@@ -39,27 +37,27 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
             is TokenActionsState.ActionState.Buy -> {
                 title = resourceReference(R.string.common_buy)
                 icon = R.drawable.ic_plus_24
-                action = { }
+                action = { clickIntents.onBuyClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Receive -> {
                 title = resourceReference(R.string.common_receive)
                 icon = R.drawable.ic_arrow_down_24
-                action = { }
+                action = { clickIntents.onReceiveClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Sell -> {
                 title = resourceReference(R.string.common_sell)
                 icon = R.drawable.ic_currency_24
-                action = { }
+                action = { clickIntents.onSellClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Send -> {
                 title = resourceReference(R.string.common_send)
                 icon = R.drawable.ic_arrow_up_24
-                action = { }
+                action = { clickIntents.onMultiCurrencySendClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Swap -> {
                 title = resourceReference(R.string.common_swap)
                 icon = R.drawable.ic_exchange_horizontal_24
-                action = { }
+                action = { clickIntents.onSwapClick(cryptoCurrencyStatus) }
             }
         }
         return TokenActionButtonConfig(
