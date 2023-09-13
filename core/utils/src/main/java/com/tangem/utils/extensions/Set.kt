@@ -3,6 +3,8 @@ package com.tangem.utils.extensions
 /**
  * Replaces an element in the set with the provided item based on the predicate.
  *
+ * !!!This function is not thread-safe!!!
+ *
  * @param item The element to replace the existing one.
  * @param predicate The condition to replace an existing element.
  * @return [Boolean] indicating whether an element was replaced.
@@ -18,7 +20,8 @@ inline fun <T> MutableSet<T>.replaceBy(item: T, predicate: (T) -> Boolean): Bool
 
 /**
  * Adds the specified element to the set or replaces an existing element.
- * The predicate defines the condition to replace the existing element.
+ *
+ * !!!This function is not thread-safe!!!
  *
  * @param item The element to be added or replace the existing one.
  * @param predicate The condition to replace an existing element.
