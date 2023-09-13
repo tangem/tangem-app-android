@@ -11,7 +11,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.swap.presentation.SwapFragment
@@ -128,9 +127,7 @@ class TradeCryptoMiddleware {
                     .getOrCreateWalletManager(
                         userWallet = action.userWallet,
                         blockchain = blockchain,
-                        derivationPath = blockchain.derivationPath(
-                            style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
-                        ),
+                        derivationPath = currency.network.derivationPath.value,
                     )
 
                 if (walletManager !is EthereumWalletManager) {
@@ -317,9 +314,7 @@ class TradeCryptoMiddleware {
                 .getOrCreateWalletManager(
                     userWallet = action.userWallet,
                     blockchain = blockchain,
-                    derivationPath = blockchain.derivationPath(
-                        style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
-                    ),
+                    derivationPath = currency.network.derivationPath.value,
                 )
 
             if (walletManager == null) {
@@ -360,9 +355,7 @@ class TradeCryptoMiddleware {
                 .getOrCreateWalletManager(
                     userWallet = action.userWallet,
                     blockchain = blockchain,
-                    derivationPath = blockchain.derivationPath(
-                        style = action.userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
-                    ),
+                    derivationPath = currency.network.derivationPath.value,
                 )
 
             if (walletManager == null) {

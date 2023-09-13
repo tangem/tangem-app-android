@@ -53,7 +53,7 @@ internal sealed class WalletTokensListState {
     /** Locked content state */
     object Locked : ContentState(
         items = persistentListOf(
-            TokensListItemState.NetworkGroupTitle(value = TextReference.Res(id = R.string.main_tokens)),
+            TokensListItemState.NetworkGroupTitle(id = 42, name = TextReference.Res(id = R.string.main_tokens)),
             TokensListItemState.Token(state = TokenItemState.Locked(id = LOCKED_TOKEN_ID)),
         ),
         organizeTokensButton = OrganizeTokensButtonState.Hidden,
@@ -84,19 +84,26 @@ internal sealed class WalletTokensListState {
     @Immutable
     sealed interface TokensListItemState {
 
+        val id: Any
+
         /**
          * Network group title item
          *
-         * @property value network name
+         * @property name network name
          */
-        data class NetworkGroupTitle(val value: TextReference) : TokensListItemState
+        data class NetworkGroupTitle(
+            override val id: Int,
+            val name: TextReference,
+        ) : TokensListItemState
 
         /**
          * Token item
          *
          * @property state token item state
          */
-        data class Token(val state: TokenItemState) : TokensListItemState
+        data class Token(val state: TokenItemState) : TokensListItemState {
+            override val id: String = state.id
+        }
     }
 
     private companion object {
