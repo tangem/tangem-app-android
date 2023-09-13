@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.AppSetting
@@ -32,11 +33,21 @@ class AppSettingsViewModel(private val store: Store<AppState>) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
     }
 
-    fun checkBiometricsStatus() {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = false))
+    fun checkBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
+        store.dispatch(
+            DetailsAction.AppSettings.CheckBiometricsStatus(
+                awaitStatusChange = false,
+                lifecycleCoroutineScope = lifecycleScope,
+            ),
+        )
     }
 
-    fun refreshBiometricsStatus() {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = true))
+    fun refreshBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
+        store.dispatch(
+            DetailsAction.AppSettings.CheckBiometricsStatus(
+                awaitStatusChange = true,
+                lifecycleCoroutineScope = lifecycleScope,
+            ),
+        )
     }
 }
