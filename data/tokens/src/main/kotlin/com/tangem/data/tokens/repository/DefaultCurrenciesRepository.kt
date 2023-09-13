@@ -8,6 +8,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
@@ -35,8 +36,8 @@ internal class DefaultCurrenciesRepository(
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCurrenciesFactory(demoConfig)
-    private val cardCurrenciesFactory = CardCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(demoConfig)
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override suspend fun saveTokens(
@@ -90,6 +91,7 @@ internal class DefaultCurrenciesRepository(
             .mapNotNull {
                 CryptoCurrencyFactory().createCoin(
                     blockchain = getBlockchain(networkId = it.network.id),
+                    extraDerivationPath = it.network.derivationPath.value,
                     derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
                 )
             }
@@ -99,7 +101,7 @@ internal class DefaultCurrenciesRepository(
         return any {
             val blockchain = getBlockchain(networkId = token.network.id)
 
-            it.id == getCoinId(blockchain).rawCurrencyId
+            it.id == blockchain.toCoinId()
         }
     }
 
@@ -173,10 +175,7 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        return responseCurrenciesFactory.createCurrencies(
-            response = storedTokens,
-            card = userWallet.scanResponse.card,
-        )
+        return responseCurrenciesFactory.createCurrencies(storedTokens, userWallet.scanResponse)
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
@@ -190,7 +189,7 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse.card)
+        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse)
     }
 
     override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
@@ -206,10 +205,7 @@ internal class DefaultCurrenciesRepository(
         val storedCoin = storedTokens.tokens.find { it.networkId == Blockchain.fromId(networkId.value).toNetworkId() }
             ?: error("Coin in this network $networkId not found")
 
-        val coin = responseCurrenciesFactory.createCurrency(
-            responseToken = storedCoin,
-            card = userWallet.scanResponse.card,
-        )
+        val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
 
         return coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
     }
@@ -242,7 +238,7 @@ internal class DefaultCurrenciesRepository(
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
                 response = storedTokens,
-                card = userWallet.scanResponse.card,
+                scanResponse = userWallet.scanResponse,
             )
         }
     }
@@ -288,10 +284,7 @@ internal class DefaultCurrenciesRepository(
         if (NOT_FOUND_HTTP_CODE in errorMessage) {
             val response = userTokensStore.getSyncOrNull(userWallet.walletId)
                 ?: userTokensResponseFactory.createUserTokensResponse(
-                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(
-                        card = userWallet.scanResponse.card,
-                        derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
-                    ),
+                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
                     isGroupedByNetwork = false,
                     isSortedByBalance = false,
                 )
