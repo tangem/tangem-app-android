@@ -88,12 +88,11 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
-        updateButtons(userWalletId = selectedWallet.walletId, currency = cryptoCurrency)
         updateTxHistory()
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrency = currency)
+    private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrencyStatus = currencyStatus)
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
@@ -108,7 +107,10 @@ internal class TokenDetailsViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { either ->
                 uiState = stateFactory.getCurrencyLoadedBalanceState(either)
-                either.onRight { status -> cryptoCurrencyStatus = status }
+                either.onRight { status ->
+                    cryptoCurrencyStatus = status
+                    updateButtons(userWalletId = selectedWallet.walletId, currencyStatus = status)
+                }
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
