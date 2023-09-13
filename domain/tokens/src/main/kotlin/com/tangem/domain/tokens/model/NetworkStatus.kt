@@ -8,11 +8,11 @@ import java.math.BigDecimal
 /**
  * Represents the status of a specific blockchain network.
  *
- * @property networkId The unique identifier of the network for which the status is provided.
+ * @property network The network for which the status is provided.
  * @property value The specific status value, represented as a sealed class to encapsulate the various possible states of the network.
  */
 data class NetworkStatus(
-    val networkId: Network.ID,
+    val network: Network,
     val value: Status,
 ) {
 
