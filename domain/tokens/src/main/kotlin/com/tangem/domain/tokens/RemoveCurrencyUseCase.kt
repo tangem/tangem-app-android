@@ -27,10 +27,16 @@ class RemoveCurrencyUseCase(
     }
 
     suspend fun hasLinkedTokens(userWalletId: UserWalletId, currency: CryptoCurrency): Boolean {
-        val walletCurrencies = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId = userWalletId, refresh = false)
+        return when (currency) {
+            is CryptoCurrency.Coin -> {
+                val walletCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(
+                    userWalletId = userWalletId,
+                    refresh = false,
+                )
 
-        return currency is CryptoCurrency.Coin &&
-            walletCurrencies.any { it != currency && it.network.id == currency.network.id }
+                walletCurrencies.any { it is CryptoCurrency.Token && it.network == currency.network }
+            }
+            is CryptoCurrency.Token -> false
+        }
     }
 }

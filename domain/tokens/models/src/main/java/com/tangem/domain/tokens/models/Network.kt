@@ -11,6 +11,7 @@ import java.io.Serializable
  *
  * @property id The unique identifier of the network.
  * @property name The human-readable name of the network, such as "Ethereum" or "Bitcoin".
+ * @property derivationPath The path used to derive keys for this network.
  * @property isTestnet Indicates whether the network is a test network or a main network.
  * @property standardType The type of blockchain standard the network adheres to.
  */
@@ -18,6 +19,7 @@ import java.io.Serializable
 data class Network(
     val id: ID,
     val name: String,
+    val derivationPath: DerivationPath,
     val isTestnet: Boolean,
     val standardType: StandardType,
 ) : Serializable {
@@ -36,6 +38,39 @@ data class Network(
 
         init {
             require(value.isNotBlank()) { "Network ID must not be blank" }
+        }
+    }
+
+    /**
+     * Represents a path used to derive cryptographic keys for a blockchain network.
+     *
+     * This class represents such paths in a generic manner, allowing for predefined card-based paths,
+     * custom paths, or even no derivation path at all.
+     */
+    sealed class DerivationPath {
+
+        /** The actual derivation path value, if any. */
+        abstract val value: String?
+
+        /**
+         * Represents a predefined card-based derivation path.
+         *
+         * @property value The derivation path string.
+         */
+        data class Card(override val value: String) : DerivationPath()
+
+        /**
+         * Represents a custom derivation path specified by the user.
+         *
+         * @property value The derivation path string.
+         */
+        data class Custom(override val value: String) : DerivationPath()
+
+        /**
+         * Represents a lack of derivation path.
+         */
+        object None : DerivationPath() {
+            override val value: String? = null
         }
     }
 

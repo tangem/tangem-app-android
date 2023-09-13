@@ -298,7 +298,7 @@ object TokensMiddleware {
 
         val customTokensCandidates = currencyList
             .filter { Blockchain.fromId(it.network.id.value).getSupportedCurves().contains(curve) }
-            .mapNotNull(CryptoCurrency::derivationPath)
+            .mapNotNull { it.network.derivationPath.value }
             .map(::DerivationPath)
 
         val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
@@ -306,7 +306,7 @@ object TokensMiddleware {
 
         currencyList.find { it is CryptoCurrency.Coin && Blockchain.fromId(it.network.id.value) == Blockchain.Cardano }
             ?.let { currency ->
-                currency.derivationPath?.let {
+                currency.network.derivationPath.value?.let {
                     bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
                 }
             }
