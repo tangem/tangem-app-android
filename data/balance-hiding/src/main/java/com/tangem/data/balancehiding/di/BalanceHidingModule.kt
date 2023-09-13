@@ -1,6 +1,6 @@
 package com.tangem.data.balancehiding.di
 
-import com.tangem.data.balancehiding.BalanceHidingRepositoryImpl
+import com.tangem.data.balancehiding.DefaultBalanceHidingRepository
 import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import dagger.Module
@@ -18,7 +18,7 @@ internal object BalanceHidingModule {
     fun provideBalanceHidingRepository(
         balanceHidingSettingsStore: BalanceHidingSettingsStore,
     ): BalanceHidingRepository {
-        return BalanceHidingRepositoryImpl(
+        return DefaultBalanceHidingRepository(
             balanceHidingSettingsStore = balanceHidingSettingsStore,
         )
     }

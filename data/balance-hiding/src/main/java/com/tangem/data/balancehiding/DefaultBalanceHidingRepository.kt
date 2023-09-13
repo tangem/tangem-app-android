@@ -5,7 +5,7 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import kotlinx.coroutines.flow.Flow
 
-internal class BalanceHidingRepositoryImpl(
+internal class DefaultBalanceHidingRepository(
     private val balanceHidingSettingsStore: BalanceHidingSettingsStore,
 ) : BalanceHidingRepository {
 

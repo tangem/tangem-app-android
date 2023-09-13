@@ -144,7 +144,11 @@ private fun MainInfo(state: SwapStateHolder) {
         val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
         TransactionCard(
             type = state.sendCardData.type,
-            balance = if (state.sendCardData.isBalanceHidden) STARS else state.sendCardData.balance,
+            balance = if (state.sendCardData.isBalanceHidden) {
+                STARS
+            } else {
+                state.sendCardData.balance
+            },
             textFieldValue = state.sendCardData.amountTextFieldValue,
             amountEquivalent = state.sendCardData.amountEquivalent,
             tokenIconUrl = state.sendCardData.tokenIconUrl,

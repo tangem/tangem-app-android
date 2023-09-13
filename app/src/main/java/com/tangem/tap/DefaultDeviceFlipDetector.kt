@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import timber.log.Timber
 
-class DeviceFlipDetectorImpl(context: Context) : DeviceFlipDetector {
+class DefaultDeviceFlipDetector(context: Context) : DeviceFlipDetector {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)

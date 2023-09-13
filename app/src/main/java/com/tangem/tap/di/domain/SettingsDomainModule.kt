@@ -6,7 +6,7 @@ import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.tap.DeviceFlipDetectorImpl
+import com.tangem.tap.DefaultDeviceFlipDetector
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
@@ -57,7 +57,7 @@ internal object SettingsDomainModule {
         balanceHidingRepository: BalanceHidingRepository,
     ): ListenToFlipsUseCase {
         return ListenToFlipsUseCase(
-            flipDetector = DeviceFlipDetectorImpl(context),
+            flipDetector = DefaultDeviceFlipDetector(context),
             balanceHidingRepository = balanceHidingRepository,
         )
     }
