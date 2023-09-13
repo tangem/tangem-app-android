@@ -127,35 +127,38 @@ internal sealed class EventError {
 }
 
 sealed class SocialNetwork(val id: String, val iconRes: Int) {
-    object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)
     object Twitter : SocialNetwork("Twitter", R.drawable.ic_twitter)
-    object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook)
+    object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)
+    object Discord : SocialNetwork("Discord", R.drawable.ic_discord)
+    object Reddit : SocialNetwork("Reddit", R.drawable.ic_reddit)
     object Instagram : SocialNetwork("Instagram", R.drawable.ic_instagram)
     object GitHub : SocialNetwork("GitHub", R.drawable.ic_github)
-    object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube)
+    object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook)
     object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin)
-    object Discord : SocialNetwork("Discord", R.drawable.ic_discord)
+    object YouTube : SocialNetwork("YouTube", R.drawable.ic_youtube)
 }
 
 internal object TangemSocialAccounts {
     val accountsEn: ImmutableList<SocialNetworkLink> = persistentListOf(
+        SocialNetworkLink(SocialNetwork.Twitter, "https://x.com/tangem"),
         SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat"),
-        SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/tangem"),
+        SocialNetworkLink(SocialNetwork.Reddit, "https://www.reddit.com/r/Tangem/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
-        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/7AqTVyqdGS"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
     )
     val accountsRu: ImmutableList<SocialNetworkLink> = persistentListOf(
+        SocialNetworkLink(SocialNetwork.Twitter, "https://x.com/tangem"),
         SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat_ru"),
-        SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/tangem"),
+        SocialNetworkLink(SocialNetwork.Reddit, "https://www.reddit.com/r/Tangem/"),
         SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://facebook.com/TangemCards/"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
-        SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/7AqTVyqdGS"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
     )
 }
