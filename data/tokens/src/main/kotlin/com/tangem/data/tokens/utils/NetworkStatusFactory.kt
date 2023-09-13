@@ -14,12 +14,12 @@ import java.math.BigDecimal
 internal class NetworkStatusFactory {
 
     fun createNetworkStatus(
-        networkId: Network.ID,
+        network: Network,
         result: UpdateWalletManagerResult,
         currencies: Set<CryptoCurrency>,
     ): NetworkStatus {
         return NetworkStatus(
-            networkId = networkId,
+            network = network,
             value = when (result) {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
                 is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable
