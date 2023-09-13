@@ -3,37 +3,47 @@ package com.tangem.data.tokens.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.toCoinId
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.models.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
+internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
 
-    fun createCurrency(currencyId: CryptoCurrency.ID, response: UserTokensResponse, card: CardDTO): CryptoCurrency {
+    fun createCurrency(
+        currencyId: CryptoCurrency.ID,
+        response: UserTokensResponse,
+        scanResponse: ScanResponse,
+    ): CryptoCurrency {
         val responseTokenId = currencyId.rawCurrencyId
 
         val token = requireNotNull(response.tokens.firstOrNull { it.id == responseTokenId }) {
             "Unable find a token with provided ID: $responseTokenId"
         }
 
-        return requireNotNull(createCurrency(token, card)) {
+        return requireNotNull(createCurrency(token, scanResponse)) {
             "Unable to create a currency with provided ID: $currencyId"
         }
     }
 
-    fun createCurrencies(response: UserTokensResponse, card: CardDTO): List<CryptoCurrency> {
-        return response.tokens.mapNotNull { createCurrency(it, card) }
+    fun createCurrencies(response: UserTokensResponse, scanResponse: ScanResponse): List<CryptoCurrency> {
+        return response.tokens.mapNotNull { createCurrency(it, scanResponse) }
     }
 
-    fun createCurrency(responseToken: UserTokensResponse.Token, card: CardDTO): CryptoCurrency? {
+    fun createCurrency(responseToken: UserTokensResponse.Token, scanResponse: ScanResponse): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
             Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
             return null
         }
+
+        val cardDerivationStyleProvider = scanResponse.derivationStyleProvider
+        val card = scanResponse.card
 
         if (demoConfig.isDemoCardId(card.cardId)) {
             blockchain = blockchain.getTestnetVersion() ?: blockchain
@@ -41,9 +51,9 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
 
         val sdkToken = createSdkToken(responseToken)
         return if (sdkToken == null) {
-            createCoin(blockchain, responseToken)
+            createCoin(blockchain, responseToken, cardDerivationStyleProvider)
         } else {
-            createToken(blockchain, sdkToken, responseToken.derivationPath)
+            createToken(blockchain, sdkToken, responseToken.derivationPath, cardDerivationStyleProvider)
         }
     }
 
@@ -59,31 +69,43 @@ internal class ResponseCurrenciesFactory(private val demoConfig: DemoConfig) {
         }
     }
 
-    private fun createCoin(blockchain: Blockchain, responseToken: UserTokensResponse.Token): CryptoCurrency.Coin? {
+    private fun createCoin(
+        blockchain: Blockchain,
+        responseToken: UserTokensResponse.Token,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): CryptoCurrency.Coin? {
+        val network = getNetwork(blockchain, responseToken.derivationPath, derivationStyleProvider) ?: return null
+
         return CryptoCurrency.Coin(
-            id = getCoinId(blockchain),
-            network = getNetwork(blockchain) ?: return null,
+            id = getCoinId(network, blockchain.toCoinId()),
+            network = network,
             name = responseToken.name,
             symbol = responseToken.symbol,
             decimals = responseToken.decimals,
-            derivationPath = responseToken.derivationPath,
             iconUrl = getCoinIconUrl(blockchain),
+            isCustom = isCustomCoin(network),
         )
     }
 
-    private fun createToken(blockchain: Blockchain, sdkToken: Token, derivationPath: String?): CryptoCurrency.Token? {
-        val id = getTokenId(blockchain, sdkToken)
+    private fun createToken(
+        blockchain: Blockchain,
+        sdkToken: Token,
+        responseDerivationPath: String?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): CryptoCurrency.Token? {
+        val network = getNetwork(blockchain, responseDerivationPath, derivationStyleProvider)
+            ?: return null
+        val id = getTokenId(network, sdkToken)
 
         return CryptoCurrency.Token(
             id = id,
-            network = getNetwork(blockchain) ?: return null,
+            network = network,
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             decimals = sdkToken.decimals,
-            derivationPath = derivationPath,
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
             contractAddress = sdkToken.contractAddress,
-            isCustom = isCustomToken(id),
+            isCustom = isCustomToken(id, network),
         )
     }
 }
