@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -22,9 +23,11 @@ internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
     content: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    fab: @Composable (() -> Unit)? = null,
     @StringRes titleRes: Int? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    fab: @Composable () -> Unit = {},
 ) {
+    val state = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val backgroundColor = TangemTheme.colors.background.secondary
 
     BackHandler(onBack = onBackClick)
@@ -33,6 +36,7 @@ internal fun SettingsScreensScaffold(
     }
 
     Scaffold(
+        scaffoldState = state,
         topBar = {
             EmptyTopBarWithNavigation(
                 onBackClick = onBackClick,
@@ -41,27 +45,28 @@ internal fun SettingsScreensScaffold(
         },
         modifier = modifier.systemBarsPadding(),
         backgroundColor = backgroundColor,
-        floatingActionButton = { fab?.invoke() },
-    ) { paddings ->
-        Column(
-            modifier = Modifier
-                .padding(paddings)
-                .fillMaxSize(),
-        ) {
-            if (titleRes != null) {
-                Text(
-                    text = stringResource(id = titleRes),
-                    modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing20)
-                        .padding(bottom = TangemTheme.dimens.spacing36),
-                    style = TangemTheme.typography.h1,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            }
+        floatingActionButton = fab,
+        content = { paddings ->
+            Column(
+                modifier = Modifier
+                    .padding(paddings)
+                    .fillMaxSize(),
+            ) {
+                if (titleRes != null) {
+                    Text(
+                        text = stringResource(id = titleRes),
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing20)
+                            .padding(bottom = TangemTheme.dimens.spacing36),
+                        style = TangemTheme.typography.h1,
+                        color = TangemTheme.colors.text.primary1,
+                    )
+                }
 
-            content()
-        }
-    }
+                content()
+            }
+        },
+    )
 }
 
 @Composable
