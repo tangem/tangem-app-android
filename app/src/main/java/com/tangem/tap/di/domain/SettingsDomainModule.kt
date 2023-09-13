@@ -1,16 +1,19 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.IsBalanceHiddenUseCase
-import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
-import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import android.content.Context
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
+import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.tap.DefaultDeviceFlipDetector
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
@@ -41,7 +44,21 @@ internal object SettingsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesIsBalanceHiddenUseCase(): IsBalanceHiddenUseCase {
-        return IsBalanceHiddenUseCase()
+    fun providesIsBalanceHiddenUseCase(balanceHidingRepository: BalanceHidingRepository): IsBalanceHiddenUseCase {
+        return IsBalanceHiddenUseCase(
+            balanceHidingRepository = balanceHidingRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesListenUseCase(
+        @ApplicationContext context: Context,
+        balanceHidingRepository: BalanceHidingRepository,
+    ): ListenToFlipsUseCase {
+        return ListenToFlipsUseCase(
+            flipDetector = DefaultDeviceFlipDetector(context),
+            balanceHidingRepository = balanceHidingRepository,
+        )
     }
 }

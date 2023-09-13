@@ -9,8 +9,9 @@ import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.IsBalanceHiddenUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
@@ -52,6 +53,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -66,15 +68,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var wallet by Delegates.notNull<UserWallet>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private val isBalanceHiddenFlow: StateFlow<Boolean> = createIsBalanceHiddenFlow()
+    private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider(isBalanceHiddenFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals
+        decimals = cryptoCurrency.decimals,
     )
 
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
@@ -83,14 +85,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         getWallet()
         updateContent(selectedWallet = wallet)
-
-        isBalanceHiddenUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .onEach { isBalanceHidden ->
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = isBalanceHidden)
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        handleBalanceHiding(owner)
     }
 
     private fun getWallet() {
@@ -105,6 +100,24 @@ internal class TokenDetailsViewModel @Inject constructor(
         updateMarketPrice(selectedWallet = selectedWallet)
         updateButtons(userWalletId = selectedWallet.walletId, currency = cryptoCurrency)
         updateTxHistory()
+    }
+
+    private fun handleBalanceHiding(owner: LifecycleOwner) {
+        isBalanceHiddenUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .onEach { hidden ->
+                isBalanceHidden = hidden
+                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
     }
 
     private fun updateButtons(userWalletId: UserWalletId, currency: CryptoCurrency) {
@@ -161,15 +174,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
-            )
-    }
-
-    private fun createIsBalanceHiddenFlow(): StateFlow<Boolean> {
-        return isBalanceHiddenUseCase.invoke()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = true,
             )
     }
 

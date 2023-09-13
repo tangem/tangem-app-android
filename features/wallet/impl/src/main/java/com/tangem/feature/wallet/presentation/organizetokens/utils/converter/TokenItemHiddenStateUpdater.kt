@@ -18,5 +18,4 @@ internal class TokenItemHiddenStateUpdater {
             else -> optionsState
         }
     }
-
 }

@@ -58,7 +58,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                     actionButtons = currentState.actionButtons,
                     fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                     cryptoBalance = formatCryptoAmount(status),
-                    isBalanceHidden = isBalanceHiddenProvider()
+                    isBalanceHidden = isBalanceHiddenProvider(),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {

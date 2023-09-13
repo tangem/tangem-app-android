@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.Flow
  * @property currentWalletProvider           current wallet
  * @property clickIntents                    screen click intents
  */
+@Suppress("TooManyFunctions")
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
@@ -255,35 +256,35 @@ internal class WalletStateFactory(
         return when (val state = currentStateProvider() as? WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> {
                 val updatedTokensList = (state.tokensListState as? WalletTokensListState.Content)?.let { content ->
-                    content.copy(items = content.items.map { tokenListItemState ->
-                        if (tokenListItemState is WalletTokensListState.TokensListItemState.Token) {
-                            if (tokenListItemState.state is TokenItemState.Content) {
-                                tokenListItemState.copy(
-                                    state = tokenListItemState.state.copy(
-                                        tokenOptions = tokenItemHiddenStateUpdater.updateHiddenState(
-                                            optionsState = tokenListItemState.state.tokenOptions,
-                                            isBalanceHidden = isBalanceHidden
-                                        )
+                    content.copy(
+                        items = content.items.map { tokenListItemState ->
+                            if (tokenListItemState is WalletTokensListState.TokensListItemState.Token) {
+                                if (tokenListItemState.state is TokenItemState.Content) {
+                                    tokenListItemState.copy(
+                                        state = tokenListItemState.state.copy(
+                                            tokenOptions = tokenItemHiddenStateUpdater.updateHiddenState(
+                                                optionsState = tokenListItemState.state.tokenOptions,
+                                                isBalanceHidden = isBalanceHidden,
+                                            ),
+                                        ),
                                     )
-                                )
+                                } else {
+                                    tokenListItemState
+                                }
                             } else {
                                 tokenListItemState
                             }
-                        } else {
-                            tokenListItemState
-                        }
-                    }.toImmutableList())
-
+                        }.toImmutableList(),
+                    )
                 } ?: state.tokensListState
-
 
                 state.copy(
                     walletsListConfig = state.walletsListConfig.copy(
                         wallets = state.walletsListConfig.wallets.map {
                             walletHiddenBalanceStateUpdater.updateHiddenState(it, isBalanceHidden)
-                        }.toImmutableList()
+                        }.toImmutableList(),
                     ),
-                    tokensListState = updatedTokensList
+                    tokensListState = updatedTokensList,
                 )
             }
 
@@ -292,8 +293,8 @@ internal class WalletStateFactory(
                     walletsListConfig = state.walletsListConfig.copy(
                         wallets = state.walletsListConfig.wallets.map {
                             walletHiddenBalanceStateUpdater.updateHiddenState(it, isBalanceHidden)
-                        }.toImmutableList()
-                    )
+                        }.toImmutableList(),
+                    ),
                 )
             }
 

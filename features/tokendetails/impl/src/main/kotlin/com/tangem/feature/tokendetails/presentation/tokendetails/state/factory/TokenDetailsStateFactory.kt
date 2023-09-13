@@ -121,16 +121,15 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithUpdatedHidden(isBalanceHidden: Boolean) : TokenDetailsState {
+    fun getStateWithUpdatedHidden(isBalanceHidden: Boolean): TokenDetailsState {
         val currentState = currentStateProvider()
         val possibleTokenBalanceBlockState = currentState.tokenBalanceBlockState as?
             TokenDetailsBalanceBlockState.Content
 
         possibleTokenBalanceBlockState?.let {
             return currentState.copy(
-                tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden)
+                tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden),
             )
         } ?: return currentState
-
     }
- }
+}

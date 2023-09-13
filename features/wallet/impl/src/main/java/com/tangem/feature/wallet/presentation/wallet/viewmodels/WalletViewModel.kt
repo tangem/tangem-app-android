@@ -12,16 +12,15 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.IsBalanceHiddenUseCase
-import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
-import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -91,6 +90,7 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
@@ -99,7 +99,7 @@ internal class WalletViewModel @Inject constructor(
     var router: InnerWalletRouter by Delegates.notNull()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private val isBalanceHiddenFlow: StateFlow<Boolean> = createIsBalanceHiddenFlow()
+    private var isBalanceHidden = true
 
     private val notificationsListFactory = WalletNotificationsListFactory(
         wasCardScannedCallback = getCardWasScannedUseCase::invoke,
@@ -119,7 +119,7 @@ internal class WalletViewModel @Inject constructor(
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider(isBalanceHiddenFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
     )
 
@@ -158,11 +158,19 @@ internal class WalletViewModel @Inject constructor(
 
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { isBalanceHidden ->
-                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = isBalanceHidden)
+            .onEach { hidden ->
+                isBalanceHidden = hidden
+                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = hidden)
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .flowOn(dispatchers.io)
+                .collect()
+        }
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {
@@ -690,14 +698,6 @@ internal class WalletViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
-    }
-
-    private fun createIsBalanceHiddenFlow(): StateFlow<Boolean> {
-        return isBalanceHiddenUseCase.invoke().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = true,
-        )
     }
 
     private fun WalletState.isLoadingState(): Boolean {

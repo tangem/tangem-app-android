@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 
-internal class WalletHiddenBalanceStateUpdater() {
+internal class WalletHiddenBalanceStateUpdater {
 
-    fun updateHiddenState(walletCardState: WalletCardState, hiddenBalance: Boolean) : WalletCardState {
+    fun updateHiddenState(walletCardState: WalletCardState, hiddenBalance: Boolean): WalletCardState {
         return when {
             walletCardState is WalletCardState.Content && hiddenBalance -> {
                 contentToHidden(walletCardState)
@@ -16,7 +16,7 @@ internal class WalletHiddenBalanceStateUpdater() {
         }
     }
 
-    private fun contentToHidden(content: WalletCardState.Content) : WalletCardState.HiddenContent {
+    private fun contentToHidden(content: WalletCardState.Content): WalletCardState.HiddenContent {
         return WalletCardState.HiddenContent(
             id = content.id,
             title = content.title,
@@ -24,11 +24,11 @@ internal class WalletHiddenBalanceStateUpdater() {
             imageResId = content.imageResId,
             onRenameClick = content.onRenameClick,
             onDeleteClick = content.onDeleteClick,
-            balance = content.balance
+            balance = content.balance,
         )
     }
 
-    private fun hiddenToContent(hiddenContent: WalletCardState.HiddenContent) : WalletCardState.Content {
+    private fun hiddenToContent(hiddenContent: WalletCardState.HiddenContent): WalletCardState.Content {
         return WalletCardState.Content(
             id = hiddenContent.id,
             title = hiddenContent.title,
@@ -36,8 +36,7 @@ internal class WalletHiddenBalanceStateUpdater() {
             imageResId = hiddenContent.imageResId,
             onRenameClick = hiddenContent.onRenameClick,
             onDeleteClick = hiddenContent.onDeleteClick,
-            balance = hiddenContent.balance
+            balance = hiddenContent.balance,
         )
     }
-
 }

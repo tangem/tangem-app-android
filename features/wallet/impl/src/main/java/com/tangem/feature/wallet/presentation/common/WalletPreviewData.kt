@@ -130,7 +130,7 @@ internal object WalletPreviewData {
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
-                isBalanceHidden = false
+                isBalanceHidden = false,
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -157,7 +157,7 @@ internal object WalletPreviewData {
                     type = PriceChangeConfig.Type.UP,
                 ),
                 fiatAmount = "321 $",
-                isBalanceHidden = false
+                isBalanceHidden = false,
 
             ),
             onItemClick = {},

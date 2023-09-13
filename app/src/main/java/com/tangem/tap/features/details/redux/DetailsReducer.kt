@@ -8,6 +8,7 @@ import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import java.util.EnumSet
 
@@ -59,6 +60,10 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.state.globalState.appThemeMode,
+            isHidingEnabled = runBlocking {
+                store.state.daggerGraphState.balanceHidingRepository?.getBalanceHidingSettings()
+                    ?.isHidingEnabledInSettings ?: false
+            },
         ),
     )
 }
@@ -200,6 +205,11 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         is DetailsAction.AppSettings.ChangeAppThemeMode -> state.copy(
             appSettingsState = state.appSettingsState.copy(
                 selectedThemeMode = action.appThemeMode,
+            ),
+        )
+        is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                isHidingEnabled = action.hideBalance,
             ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,

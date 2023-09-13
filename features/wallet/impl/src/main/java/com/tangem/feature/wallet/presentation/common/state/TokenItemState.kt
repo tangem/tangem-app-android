@@ -143,8 +143,4 @@ internal sealed interface TokenItemState {
         val fiatAmount: String,
         val isBalanceHidden: Boolean,
     )
-
-    companion object {
-        const val DOTS = "***"
-    }
 }

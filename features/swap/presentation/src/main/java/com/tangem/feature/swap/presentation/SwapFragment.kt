@@ -24,6 +24,11 @@ class SwapFragment : Fragment() {
 
     private val viewModel by viewModels<SwapViewModel>()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         viewModel.setRouter(
             SwapRouter(
@@ -68,6 +73,11 @@ class SwapFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        lifecycle.removeObserver(viewModel)
+        super.onDestroy()
     }
 
     companion object {

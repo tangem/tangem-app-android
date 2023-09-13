@@ -10,6 +10,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
@@ -225,6 +226,9 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.ChangeAppThemeMode -> {
                     changeAppThemeMode(action.appThemeMode)
                 }
+                is DetailsAction.AppSettings.ChangeBalanceHiding -> {
+                    changeBalanceHiding(action.hideBalance)
+                }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
@@ -261,6 +265,19 @@ class DetailsMiddleware {
 
             scope.launch {
                 repository.changeAppThemeMode(appThemeMode)
+            }
+        }
+
+        private fun changeBalanceHiding(hideBalance: Boolean) {
+            val repository = store.state.daggerGraphState.get(DaggerGraphState::balanceHidingRepository)
+
+            scope.launch {
+                val newState = BalanceHidingSettings(
+                    isHidingEnabledInSettings = hideBalance,
+                    isBalanceHidden = false,
+                )
+
+                repository.storeBalanceHidingSettings(newState)
             }
         }
 

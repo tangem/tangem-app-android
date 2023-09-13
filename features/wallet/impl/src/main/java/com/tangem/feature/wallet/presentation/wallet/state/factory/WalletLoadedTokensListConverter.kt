@@ -24,6 +24,7 @@ import com.tangem.utils.converter.Converter
  *
  * @author Andrew Khokhlov on 25/07/2023
  */
+@Suppress("LongParameterList")
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val tokenListErrorConverter: TokenListErrorConverter,

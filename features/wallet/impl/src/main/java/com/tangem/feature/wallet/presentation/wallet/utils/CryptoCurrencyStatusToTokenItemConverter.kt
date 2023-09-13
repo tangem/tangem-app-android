@@ -44,7 +44,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             tokenOptions = TokenItemState.TokenOptionsState(
                 fiatAmount = getFormattedFiatAmount(),
                 config = getPriceChangeConfig(),
-                isBalanceHidden = isBalanceHiddenProvider()
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },

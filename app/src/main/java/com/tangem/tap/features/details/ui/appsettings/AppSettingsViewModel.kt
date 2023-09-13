@@ -15,7 +15,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.Store
 
-internal class AppSettingsViewModel(private val store: Store<AppState>) {
+internal class AppSettingsViewModel(
+    private val store: Store<AppState>,
+) {
 
     private val itemsFactory = AppSettingsItemsFactory()
     private val dialogsFactory = AppSettingsDialogsFactory()
@@ -64,6 +66,12 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
                     onCheckedChange = ::onSaveAccessCodesToggled,
                 ).let(::add)
             }
+
+            itemsFactory.createFlipToHideBalanceSwitch(
+                isChecked = state.isHidingEnabled,
+                isEnabled = true,
+                onCheckedChange = ::onFlipToHideBalanceToggled,
+            ).let(::add)
 
             itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
                 showThemeModeSelector(state.selectedThemeMode)
@@ -134,6 +142,10 @@ internal class AppSettingsViewModel(private val store: Store<AppState>) {
 
     private fun onSettingsToggled(setting: AppSetting, enable: Boolean) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
+    }
+
+    private fun onFlipToHideBalanceToggled(enable: Boolean) {
+        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
     }
 
     private fun dismissDialog() {
