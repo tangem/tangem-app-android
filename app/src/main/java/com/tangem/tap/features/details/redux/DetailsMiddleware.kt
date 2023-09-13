@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
@@ -193,7 +194,11 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
-                    checkBiometricsStatus(action.awaitStatusChange, state)
+                    checkBiometricsStatus(
+                        awaitStatusChange = action.awaitStatusChange,
+                        state = state,
+                        lifecycleScope = action.lifecycleCoroutineScope,
+                    )
                 }
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
@@ -212,8 +217,12 @@ class DetailsMiddleware {
          * @param awaitStatusChange If true then start a new coroutine and check the biometric status every 100
          * milliseconds until it changes
          * */
-        private fun checkBiometricsStatus(awaitStatusChange: Boolean, state: DetailsState) {
-            scope.launch {
+        private fun checkBiometricsStatus(
+            awaitStatusChange: Boolean,
+            state: DetailsState,
+            lifecycleScope: LifecycleCoroutineScope,
+        ) {
+            lifecycleScope.launch {
                 if (awaitStatusChange) {
                     while (state.appSettingsState.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
                         delay(timeMillis = 100)
