@@ -35,6 +35,7 @@ fun TangemTheme(
             LocalTangemTypography provides typography,
             LocalTangemDimens provides dimens,
             LocalTangemShapes provides shapes,
+            LocalIsInDarkTheme provides isDark,
         ) {
             ProvideTextStyle(
                 value = TangemTheme.typography.body1,
@@ -197,3 +198,5 @@ private val LocalTangemDimens = staticCompositionLocalOf {
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
     error("No TangemShapes provided")
 }
+
+val LocalIsInDarkTheme = staticCompositionLocalOf { false }
