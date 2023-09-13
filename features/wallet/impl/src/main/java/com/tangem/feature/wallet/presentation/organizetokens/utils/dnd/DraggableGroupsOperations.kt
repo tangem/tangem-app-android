@@ -7,7 +7,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteI
 
 internal class DraggableGroupsOperations {
 
-    private var groupIdToTokens: Map<String, List<DraggableItem.Token>>? = null
+    private var groupIdToTokens: Map<Int, List<DraggableItem.Token>>? = null
 
     fun collapseGroup(items: List<DraggableItem>, movingGroup: DraggableItem.GroupHeader): List<DraggableItem> {
         if (!groupIdToTokens.isNullOrEmpty()) return items
