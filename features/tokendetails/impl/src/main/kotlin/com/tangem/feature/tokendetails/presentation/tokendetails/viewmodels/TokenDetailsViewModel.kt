@@ -118,8 +118,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateTxHistory(refresh: Boolean = false) {
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                networkId = cryptoCurrency.network.id,
-                derivationPath = cryptoCurrency.derivationPath,
+                network = cryptoCurrency.network,
             )
 
             if (!refresh) {
@@ -129,8 +128,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
                     txHistoryEither = txHistoryItemsUseCase(
-                        networkId = cryptoCurrency.network.id,
-                        derivationPath = cryptoCurrency.derivationPath,
+                        network = cryptoCurrency.network,
                     ).map {
                         it.cachedIn(viewModelScope)
                     },
@@ -254,7 +252,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = wallet.walletId,
-                    networkId = cryptoCurrency.network.id,
+                    network = cryptoCurrency.network,
                 ),
             )
         }

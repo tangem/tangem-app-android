@@ -54,7 +54,6 @@ internal class TokensListMigration(
             }
             is Either.Right -> {
                 currentUserWallet = selectedWalletEither.value
-                val derivationStyle = currentUserWallet.scanResponse.derivationStyleProvider.getDerivationStyle()
 
                 when (val currenciesEither = getCurrenciesUseCase(userWalletId = selectedWalletEither.value.walletId)) {
                     is Either.Left -> {
@@ -65,7 +64,7 @@ internal class TokensListMigration(
                         TokensListCryptoCurrencies(
                             coins = currenciesEither.value
                                 .filterIsInstance<CryptoCurrency.Coin>()
-                                .filterNot { it.isCustomCurrency(derivationStyle) }
+                                .filterNot { it.isCustom }
                                 .also { currentNewCoins = it }
                                 .map { Blockchain.fromId(it.network.id.value) },
                             tokens = currenciesEither.value
@@ -89,12 +88,6 @@ internal class TokensListMigration(
                 }
             }
         }
-    }
-
-    private fun CryptoCurrency.Coin.isCustomCurrency(derivationStyle: DerivationStyle?): Boolean {
-        if (derivationPath == null || derivationStyle == null) return false
-
-        return derivationPath != Blockchain.fromId(network.id.value).derivationPath(derivationStyle)?.rawPath
     }
 
     private fun getLegacyCryptoCurrencies(): TokensListCryptoCurrencies {
@@ -157,12 +150,14 @@ internal class TokensListMigration(
                     cryptoCurrencyFactory.createToken(
                         sdkToken = it.token,
                         blockchain = it.blockchain,
+                        extraDerivationPath = null,
                         derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
                     )
                 },
                 changedCoins = changedBlockchainList.mapNotNull {
                     cryptoCurrencyFactory.createCoin(
                         blockchain = it,
+                        extraDerivationPath = null,
                         derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
                     )
                 },

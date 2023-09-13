@@ -31,7 +31,7 @@ internal class NetworkGroupToDraggableItemsConverter(
     }
 
     private fun createGroupHeader(group: NetworkGroup) = DraggableItem.GroupHeader(
-        id = getGroupHeaderId(group.network.id),
+        id = getGroupHeaderId(group.network),
         networkName = group.network.name,
     )
 
