@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 
@@ -29,7 +30,7 @@ internal sealed class WalletState {
         abstract val notifications: ImmutableList<WalletNotification>
 
         /** Bottom sheet config */
-        abstract val bottomSheetConfig: WalletBottomSheetConfig?
+        abstract val bottomSheetConfig: TangemBottomSheetConfig?
 
         /**
          * Util function that allow to make a copy
