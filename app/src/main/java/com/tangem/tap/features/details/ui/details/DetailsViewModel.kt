@@ -16,6 +16,7 @@ import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -35,7 +36,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.Store
 
-internal class DetailsViewModel(private val store: Store<AppState>) {
+internal class DetailsViewModel(
+    private val store: Store<AppState>,
+    private val darkThemeFeatureToggle: DarkThemeFeatureToggle,
+) { // TODO: change to Android ViewModel
 
     var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
         private set
@@ -180,7 +184,12 @@ internal class DetailsViewModel(private val store: Store<AppState>) {
         userWalletsListManager.selectedUserWallet
             .distinctUntilChanged()
             .onEach { selectedUserWallet ->
-                store.dispatchWithMain(DetailsAction.PrepareScreen(selectedUserWallet.scanResponse))
+                store.dispatchWithMain(
+                    DetailsAction.PrepareScreen(
+                        selectedUserWallet.scanResponse,
+                        darkThemeFeatureToggle.isDarkThemeEnabled,
+                    ),
+                )
             }
             .flowOn(Dispatchers.IO)
             .launchIn(scope)
