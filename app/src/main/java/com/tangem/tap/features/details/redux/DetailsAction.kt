@@ -1,7 +1,7 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.core.ui.extensions.TextReference
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -13,6 +13,7 @@ sealed class DetailsAction : Action {
 
     data class PrepareScreen(
         val scanResponse: ScanResponse,
+        val darkThemeSwitchEnabled: Boolean,
     ) : DetailsAction()
 
     object ReCreateTwinsWallet : DetailsAction()
