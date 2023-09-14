@@ -7,6 +7,8 @@ import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.navigation.AppScreen
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -27,6 +29,7 @@ import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
@@ -86,6 +89,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
+    private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
@@ -271,7 +275,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.CriticalWarningAlreadySignedHashes(
+            content = WalletBottomSheetConfig.CriticalWarningAlreadySignedHashes(
                 onOkClick = {},
                 onCancelClick = {},
             ),
@@ -284,7 +288,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onLikeTangemAppClick() {
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.LikeTangemApp(
+            content = WalletBottomSheetConfig.LikeTangemApp(
                 onRateTheAppClick = ::onRateTheAppClick,
                 onShareClick = ::onShareClick,
             ),
@@ -428,7 +432,31 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-// [REDACTED_TODO_COMMENT]
+        val state = uiState as? WalletState.ContentState ?: return
+
+        viewModelScope.launch(dispatchers.io) {
+            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+            val addresses = walletManagersFacade.getAddress(
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrencyStatus.currency.network,
+            )
+
+            val currency = cryptoCurrencyStatus.currency
+            uiState = stateFactory.getStateWithOpenWalletBottomSheet(
+                content = TokenReceiveBottomSheetConfig(
+                    name = currency.name,
+                    symbol = currency.symbol,
+                    network = currency.network.name,
+                    addresses = addresses.map {
+                        AddressModel(
+                            value = it.value,
+                            type = AddressModel.Type.valueOf(it.type.name),
+                        )
+                    },
+                ),
+            )
+        }
     }
 
     override fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {

@@ -15,6 +15,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SecondaryButtonIconStart
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -27,21 +29,17 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBott
  *
 * [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WalletBottomSheet(config: WalletBottomSheetConfig) {
-    ModalBottomSheet(
-        onDismissRequest = config.onDismissRequest,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = TangemTheme.colors.background.primary,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-    ) {
-        BottomSheetContent(config = config.content)
+internal fun WalletBottomSheet(config: TangemBottomSheetConfig) {
+    TangemBottomSheet(config) { content ->
+        BottomSheetContent(
+            config = content as WalletBottomSheetConfig,
+        )
     }
 }
 
 @Composable
-private fun BottomSheetContent(config: WalletBottomSheetConfig.BottomSheetContentConfig) {
+private fun BottomSheetContent(config: WalletBottomSheetConfig) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -90,10 +88,7 @@ private fun BottomSheetContent(config: WalletBottomSheetConfig.BottomSheetConten
 }
 
 @Composable
-private fun PrimaryButton(
-    config: WalletBottomSheetConfig.BottomSheetContentConfig.ButtonConfig,
-    modifier: Modifier = Modifier,
-) {
+private fun PrimaryButton(config: WalletBottomSheetConfig.ButtonConfig, modifier: Modifier = Modifier) {
     if (config.iconResId == null) {
         PrimaryButton(
             text = config.text.resolveReference(),
@@ -111,10 +106,7 @@ private fun PrimaryButton(
 }
 
 @Composable
-private fun SecondaryButton(
-    config: WalletBottomSheetConfig.BottomSheetContentConfig.ButtonConfig,
-    modifier: Modifier = Modifier,
-) {
+private fun SecondaryButton(config: WalletBottomSheetConfig.ButtonConfig, modifier: Modifier = Modifier) {
     if (config.iconResId == null) {
         SecondaryButton(
             text = config.text.resolveReference(),
@@ -139,7 +131,7 @@ private fun WalletBottomSheetContent_Light(
 ) {
     TangemTheme(isDark = false) {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
-        BottomSheetContent(config = config.content)
+        BottomSheetContent(config = config)
     }
 }
 
@@ -151,10 +143,10 @@ private fun WalletBottomSheetContent_Dark(
 ) {
     TangemTheme(isDark = false) {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
-        BottomSheetContent(config = config.content)
+        BottomSheetContent(config = config)
     }
 }
 
-private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<WalletBottomSheetConfig>(
+private class WalletBottomSheetConfigProvider : CollectionPreviewParameterProvider<TangemBottomSheetConfig>(
     collection = listOf(WalletPreviewData.bottomSheet),
 )

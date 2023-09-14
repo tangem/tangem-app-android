@@ -18,6 +18,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -25,6 +27,7 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.OrganizeTokensButtonState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
@@ -167,7 +170,15 @@ private fun ManageTokensButton(onManageTokensClick: () -> Unit) {
 private fun WalletBottomSheets(state: WalletState) {
     val bottomSheetConfig = (state as? WalletState.ContentState)?.bottomSheetConfig
     if (bottomSheetConfig != null && bottomSheetConfig.isShow) {
-        WalletBottomSheet(config = bottomSheetConfig)
+        when (bottomSheetConfig.content) {
+            is WalletBottomSheetConfig -> {
+                WalletBottomSheet(config = bottomSheetConfig)
+            }
+
+            is TokenReceiveBottomSheetConfig -> {
+                TokenReceiveBottomSheet(config = bottomSheetConfig)
+            }
+        }
     }
 
     (state as? WalletMultiCurrencyState.Content)?.let { multiCurrencyState ->
