@@ -3,6 +3,7 @@ package com.tangem.domain.walletmanager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
@@ -200,6 +201,21 @@ class DefaultWalletManagersFacade(
         }
 
         return walletManager
+    }
+
+    override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
+
+        return getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+            ?.wallet
+            ?.addresses
+            ?.sortedBy { it.type }
+            .orEmpty()
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
