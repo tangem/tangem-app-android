@@ -90,5 +90,6 @@ internal object TokenDetailsPreviewData {
         dialogConfig = null,
         pendingTxs = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
+        bottomSheetConfig = null,
     )
 }

@@ -16,6 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
@@ -48,6 +49,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
+    private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -209,7 +211,17 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onReceiveClick() {
-        // TODO: [REDACTED_JIRA]
+        viewModelScope.launch(dispatchers.io) {
+            val addresses = walletManagersFacade.getAddress(
+                userWalletId = wallet.walletId,
+                network = cryptoCurrency.network,
+            )
+
+            uiState = stateFactory.getStateWithReceiveBottomSheet(
+                currency = cryptoCurrency,
+                addresses = addresses,
+            )
+        }
     }
 
     override fun onSellClick() {
@@ -273,5 +285,9 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             uiState = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
+    }
+
+    override fun onDismissBottomSheet() {
+        uiState = stateFactory.getStateWithClosedBottomSheet()
     }
 }
