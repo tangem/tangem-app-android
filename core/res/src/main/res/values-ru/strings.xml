@@ -490,7 +490,7 @@
     <string name="user_wallet_list_unlock_all">Разблокировать все с %s</string>
     <string name="wallet_address_button_explore">История транзакций</string>
     <string name="wallet_balance_blockchain_unreachable">Сеть недоступна</string>
-    <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
+    <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуйте позже.</string>
     <string name="wallet_balance_loading">Баланс загружается…</string>
     <string name="wallet_balance_missing_derivation">Отсканируйте карту</string>
     <string name="wallet_balance_tx_in_progress">Транзакция подтверждается…</string>
