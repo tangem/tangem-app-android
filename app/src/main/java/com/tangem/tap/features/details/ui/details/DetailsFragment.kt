@@ -9,6 +9,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -19,13 +20,17 @@ import javax.inject.Inject
 @AndroidEntryPoint
 internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
-    private val detailsViewModel = DetailsViewModel(store)
-
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
+    @Inject
+    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
+
+    private lateinit var detailsViewModel: DetailsViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        detailsViewModel = DetailsViewModel(store, darkThemeFeatureToggle)
         Analytics.send(Settings.ScreenOpened())
     }
 
