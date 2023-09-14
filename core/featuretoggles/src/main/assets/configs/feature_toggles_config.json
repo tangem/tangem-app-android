@@ -26,5 +26,9 @@
     {
         "name": "REDESIGNED_APP_CURRENCY_SELECTOR_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "DARK_THEME_ENABLED",
+        "version": "undefined"
     }
 ]
