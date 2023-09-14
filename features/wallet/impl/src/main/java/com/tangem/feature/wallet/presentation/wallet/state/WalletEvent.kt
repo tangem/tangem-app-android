@@ -1,10 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
-sealed class WalletEvent {
+@Immutable
+internal sealed class WalletEvent {
 
-    class ChangeWallet(val index: Int) : WalletEvent()
+    data class ChangeWallet(val index: Int) : WalletEvent()
 
-    class ShowError(val text: TextReference) : WalletEvent()
+    data class ShowError(val text: TextReference) : WalletEvent()
 }

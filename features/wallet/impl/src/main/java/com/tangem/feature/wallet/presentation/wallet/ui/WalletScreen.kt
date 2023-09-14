@@ -47,23 +47,28 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
  * @author Andrew Khokhlov on 29/05/2023
  */
 @Composable
-internal fun WalletScreen(
-    state: WalletState,
-    walletsListState: LazyListState,
-    snackbarHostState: SnackbarHostState,
-    isAutoScroll: State<Boolean>,
-    onAutoScrollReset: () -> Unit,
-) {
+internal fun WalletScreen(state: WalletState) {
     BackHandler(onBack = state.onBackClick)
 
     when (state) {
         is WalletState.ContentState -> {
+            val walletsListState = rememberLazyListState()
+            val snackbarHostState = remember { SnackbarHostState() }
+            val isAutoScroll = remember { mutableStateOf(value = false) }
+
             WalletContent(
                 state = state,
                 walletsListState = walletsListState,
                 snackbarHostState = snackbarHostState,
                 isAutoScroll = isAutoScroll,
-                onAutoScrollReset = onAutoScrollReset,
+                onAutoScrollReset = { isAutoScroll.value = false },
+            )
+
+            WalletEventEffect(
+                walletsListState = walletsListState,
+                snackbarHostState = snackbarHostState,
+                event = state.event,
+                onAutoScrollSet = { isAutoScroll.value = true },
             )
         }
         is WalletState.Initial -> Unit
@@ -233,13 +238,7 @@ private fun WalletBottomSheets(state: WalletState) {
 @Composable
 private fun WalletScreenPreview_Light(@PreviewParameter(WalletScreenParameterProvider::class) state: WalletState) {
     TangemTheme {
-        WalletScreen(
-            state = state,
-            walletsListState = rememberLazyListState(),
-            snackbarHostState = remember { SnackbarHostState() },
-            isAutoScroll = remember { mutableStateOf(false) },
-            onAutoScrollReset = {},
-        )
+        WalletScreen(state = state)
     }
 }
 
@@ -247,13 +246,7 @@ private fun WalletScreenPreview_Light(@PreviewParameter(WalletScreenParameterPro
 @Composable
 private fun WalletScreenPreview_Dark(@PreviewParameter(WalletScreenParameterProvider::class) state: WalletState) {
     TangemTheme(isDark = true) {
-        WalletScreen(
-            state = state,
-            walletsListState = rememberLazyListState(),
-            snackbarHostState = remember { SnackbarHostState() },
-            isAutoScroll = remember { mutableStateOf(false) },
-            onAutoScrollReset = {},
-        )
+        WalletScreen(state = state)
     }
 }
 

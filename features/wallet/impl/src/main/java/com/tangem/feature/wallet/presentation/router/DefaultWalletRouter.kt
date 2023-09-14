@@ -1,12 +1,8 @@
 package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.os.bundleOf
@@ -28,7 +24,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
-import com.tangem.feature.wallet.presentation.wallet.ui.WalletEventEffect
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -54,24 +49,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
                 val viewModel = hiltViewModel<WalletViewModel>().apply { router = this@DefaultWalletRouter }
                 LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
 
-                val walletsListState = rememberLazyListState()
-                val snackbarHostState = remember { SnackbarHostState() }
-                val isAutoScroll = remember { mutableStateOf(value = false) }
-
-                WalletScreen(
-                    state = viewModel.uiState,
-                    walletsListState = walletsListState,
-                    snackbarHostState = snackbarHostState,
-                    isAutoScroll = isAutoScroll,
-                    onAutoScrollReset = { isAutoScroll.value = false },
-                )
-
-                WalletEventEffect(
-                    viewModel = viewModel,
-                    walletsListState = walletsListState,
-                    snackbarHostState = snackbarHostState,
-                    onAutoScrollSet = { isAutoScroll.value = true },
-                )
+                WalletScreen(state = viewModel.uiState)
             }
 
             composable(

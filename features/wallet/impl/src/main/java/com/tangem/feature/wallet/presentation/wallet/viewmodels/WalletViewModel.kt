@@ -30,8 +30,8 @@ import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.wallets.models.SaveWalletError
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.SaveWalletError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
@@ -123,9 +123,6 @@ internal class WalletViewModel @Inject constructor(
     /** Screen state */
     var uiState: WalletState by uiStateHolder(initialState = stateFactory.getInitialState())
 
-    private val _event = MutableStateFlow<WalletEvent?>(null)
-    val event = _event.asStateFlow()
-
     private var wallets: List<UserWallet> by Delegates.notNull()
     private var singleWalletCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
@@ -191,7 +188,11 @@ internal class WalletViewModel @Inject constructor(
             uiState = stateFactory.getStateWithoutDeletedWallet(cacheState, action)
 
             if (cacheState.isLoadingState()) {
-                _event.value = WalletEvent.ChangeWallet(action.selectedWalletIndex)
+                uiState = stateFactory.getStateAndTriggerEvent(
+                    state = uiState,
+                    event = WalletEvent.ChangeWallet(action.selectedWalletIndex),
+                    setUiState = { uiState = it },
+                )
                 getContentItemsUpdates(action.selectedWalletIndex)
             }
         } else {
@@ -202,7 +203,11 @@ internal class WalletViewModel @Inject constructor(
     private fun loadAndUpdateState(index: Int) {
         uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
 
-        _event.value = WalletEvent.ChangeWallet(index = index)
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ChangeWallet(index = index),
+            setUiState = { uiState = it },
+        )
 
         getContentItemsUpdates(index = index)
     }
@@ -226,8 +231,12 @@ internal class WalletViewModel @Inject constructor(
                                 when (saveWalletError) {
                                     is SaveWalletError.DataError -> Unit
                                     is SaveWalletError.WalletAlreadySaved -> {
-                                        _event.value = WalletEvent.ShowError(
-                                            text = TextReference.Res(saveWalletError.messageId),
+                                        uiState = stateFactory.getStateAndTriggerEvent(
+                                            state = uiState,
+                                            event = WalletEvent.ShowError(
+                                                text = TextReference.Res(saveWalletError.messageId),
+                                            ),
+                                            setUiState = { uiState = it },
                                         )
                                     }
                                 }
@@ -235,9 +244,12 @@ internal class WalletViewModel @Inject constructor(
                     }
                 }
                 .doOnFailure { tangemError ->
-                    _event.value = WalletEvent.ShowError(
-                        text = tangemError.messageResId?.let { TextReference.Res(id = it) }
-                            ?: TextReference.Str(value = tangemError.customMessage),
+                    uiState = stateFactory.getStateAndTriggerEvent(
+                        state = uiState,
+                        event = WalletEvent.ShowError(
+                            text = TextReference.Str(tangemError.customMessage),
+                        ),
+                        setUiState = { uiState = it },
                     )
                 }
         }
