@@ -32,6 +32,7 @@ compose-navigation = "2.5.3"
 compose-accompanist = "0.30.1"
 compose-paging = "3.2.0"
 compose-reorderable = "0.9.6"
+compoese-lifecycle-runtime = "2.6.1"
 # endregion Compose
 
 # region Other libraries
@@ -80,7 +81,7 @@ okHttp-prettyLogging = "3.1.0"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_4.11-348"
+tangemBlockchainSdk = "release-app_4.11-349"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "release-app_4.11-295"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
@@ -132,7 +133,7 @@ androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.r
 lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidxLifecycle" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
-lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compoese-lifecycle-runtime" }
 # region AndroidX
 
 # region Compose
