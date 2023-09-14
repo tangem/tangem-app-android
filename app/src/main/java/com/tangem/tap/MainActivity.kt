@@ -1,11 +1,14 @@
 package com.tangem.tap
 
+import android.app.Application
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.data.card.sdk.CardSdkLifecycleObserver
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -127,9 +131,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
+        if (!isDarkThemeFeatureEnabled(application)) {
+            setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
 
-        bootstrapMainStateUpdates()
+        bootstrapMainStateUpdates(application)
 
         splashScreen.setKeepOnScreenCondition { isInitializing }
 
@@ -163,6 +171,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 cardSdkConfigRepository = cardSdkConfigRepository,
             ),
         )
+    }
+
+    private fun isDarkThemeFeatureEnabled(application: Application): Boolean {
+        val featureToggle = (application as TapApplication).darkThemeFeatureToggle
+        return featureToggle.isDarkThemeEnabled
     }
 
     override fun onStart() {
@@ -216,14 +229,25 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 
-    private fun bootstrapMainStateUpdates() {
+    private fun bootstrapMainStateUpdates(application: Application) {
         viewModel.state
             .onEach { state ->
                 isInitializing = state is GlobalSettingsState.Loading
 
                 when (state) {
                     is GlobalSettingsState.Content -> {
-                        MutableAppThemeModeHolder.value = state.appThemeMode
+                        if (isDarkThemeFeatureEnabled(application)) {
+                            MutableAppThemeModeHolder.value = state.appThemeMode
+
+                            val mode = when (state.appThemeMode) {
+                                AppThemeMode.FORCE_DARK -> AppCompatDelegate.MODE_NIGHT_YES
+                                AppThemeMode.FORCE_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+                                AppThemeMode.FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                            }
+                            setDefaultNightMode(mode)
+                        } else {
+                            MutableAppThemeModeHolder.value = AppThemeMode.FORCE_LIGHT
+                        }
                     }
                     is GlobalSettingsState.Loading -> Unit
                 }
