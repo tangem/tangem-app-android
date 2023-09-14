@@ -1,8 +1,9 @@
 package com.tangem.tap.features.details.redux
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.blockchain.common.Wallet
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.Action
@@ -64,6 +65,7 @@ sealed class DetailsAction : Action {
 
         data class CheckBiometricsStatus(
             val awaitStatusChange: Boolean,
+            val lifecycleCoroutineScope: LifecycleCoroutineScope,
         ) : AppSettings()
 
         object EnrollBiometrics : AppSettings()
