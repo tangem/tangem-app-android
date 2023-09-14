@@ -190,9 +190,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
         walletView.onNewState(state)
 
-        if (!state.shouldShowDetails) {
-            binding.toolbar.menu.removeItem(R.id.details_menu)
-        } else if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
+        if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
             binding.toolbar.inflateMenu(R.menu.menu_wallet)
         }
 
@@ -336,6 +334,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         ),
     )
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
+        inflater.inflate(R.menu.menu_wallet, menu)
     }
 }
