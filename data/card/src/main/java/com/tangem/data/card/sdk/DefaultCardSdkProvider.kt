@@ -7,7 +7,6 @@ import com.tangem.common.CardFilter
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
 import com.tangem.sdk.extensions.initWithBiometrics
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
