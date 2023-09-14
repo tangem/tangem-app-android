@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.common
 
 import androidx.paging.PagingData
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
@@ -290,10 +291,10 @@ internal object WalletPreviewData {
     }
 
     val bottomSheet by lazy {
-        WalletBottomSheetConfig(
+        TangemBottomSheetConfig(
             isShow = false,
             onDismissRequest = {},
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = {},
                 onScanClick = {},
             ),
