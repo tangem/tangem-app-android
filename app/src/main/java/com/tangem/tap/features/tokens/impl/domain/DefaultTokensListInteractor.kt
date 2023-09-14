@@ -136,9 +136,9 @@ internal class DefaultTokensListInteractor(
 
     private suspend fun deriveMissingBlockchains(scanResponse: ScanResponse, currencies: List<Currency>) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivations = currencies.mapNotNull {
-            val curve = config.primaryCurve(it.blockchain)
-            curve?.let { getDerivations(curve, scanResponse, currencies) }
+        val derivations = currencies.mapNotNull { currency ->
+            val curve = config.primaryCurve(currency.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currency) }
         }.associate(transform = TokensMiddleware.DerivationData::derivations)
 
         if (derivations.isEmpty()) {
@@ -176,35 +176,36 @@ internal class DefaultTokensListInteractor(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<Currency>,
+        currency: Currency,
     ): TokensMiddleware.DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList
-            .map(Currency::blockchain)
-            .distinct()
-            .filter { it.getSupportedCurves().contains(curve) }
-            .mapNotNull { it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle()) }
+        val supportedCurves = currency.blockchain.getSupportedCurves()
+        val path = currency.derivationPath
+            ?.let {
+                currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            }
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList
-            .filter { it.blockchain.getSupportedCurves().contains(curve) }
-            .mapNotNull(Currency::derivationPath)
-            .map(::DerivationPath)
+        val customPath = currency.derivationPath?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano }?.let { currency ->
+        if (currency is Currency.Blockchain && currency.blockchain == Blockchain.Cardano) {
             currency.derivationPath?.let {
                 bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
         }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
-        val alreadyDerivedKeys = scanResponse.derivedKeys[mapKeyOfWalletPublicKey] ?: ExtendedPublicKeysMap(emptyMap())
+        val alreadyDerivedKeys: ExtendedPublicKeysMap =
+            scanResponse.derivedKeys[mapKeyOfWalletPublicKey] ?: ExtendedPublicKeysMap(emptyMap())
         val alreadyDerivedPaths = alreadyDerivedKeys.keys.toList()
 
-        val toDerive = bothCandidates.filterNot(alreadyDerivedPaths::contains)
+        val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
         if (toDerive.isEmpty()) return null
 
         return TokensMiddleware.DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
