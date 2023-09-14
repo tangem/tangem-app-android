@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -16,4 +17,5 @@ internal data class TokenDetailsState(
     val txHistoryState: TxHistoryState,
     val dialogConfig: TokenDetailsDialogConfig?,
     val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
+    val bottomSheetConfig: TangemBottomSheetConfig?,
 )
