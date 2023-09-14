@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -20,7 +21,7 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig?,
+        override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val tokensListState: WalletTokensListState,
         val tokenActionsBottomSheet: ActionsBottomSheetConfig?,
         val onManageTokensClick: () -> Unit,
@@ -42,10 +43,10 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
             WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick),
         )
 
-        override val bottomSheetConfig = WalletBottomSheetConfig(
+        override val bottomSheetConfig = TangemBottomSheetConfig(
             isShow = isBottomSheetShow,
             onDismissRequest = onBottomSheetDismiss,
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = onUnlockClick,
                 onScanClick = onScanClick,
             ),
