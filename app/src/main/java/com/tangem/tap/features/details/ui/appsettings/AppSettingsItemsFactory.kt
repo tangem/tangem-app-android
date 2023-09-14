@@ -56,8 +56,8 @@ internal class AppSettingsItemsFactory {
     ): Item.Switch {
         return Item.Switch(
             id = "flip_to_hide_balance_switch",
-            title = TextReference.Str("Flip To Hide Balance"), // TODO
-            description = TextReference.Str("Flip To Hide Balance"),
+            title = resourceReference(R.string.details_row_title_flip_to_hide),
+            description = resourceReference(R.string.details_row_description_flip_to_hide),
             isEnabled = isEnabled,
             isChecked = isChecked,
             onCheckedChange = onCheckedChange,
