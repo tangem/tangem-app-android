@@ -25,4 +25,6 @@ interface TokenDetailsClickIntents {
     fun onReloadClick()
 
     fun onExploreClick()
+
+    fun onDismissBottomSheet()
 }
