@@ -2,6 +2,7 @@ package com.tangem.domain.walletmanager
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.PaginationWrapper
@@ -70,4 +71,12 @@ interface WalletManagersFacade {
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager?
+
+    /**
+     * Returns ordered list of addresses for selected wallet for given currency
+     *
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address>
 }

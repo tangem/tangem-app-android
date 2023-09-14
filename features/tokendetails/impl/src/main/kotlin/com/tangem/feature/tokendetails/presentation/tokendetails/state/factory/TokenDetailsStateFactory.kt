@@ -2,7 +2,11 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import androidx.paging.PagingData
 import arrow.core.Either
+import com.tangem.blockchain.common.address.Address
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -130,5 +134,32 @@ internal class TokenDetailsStateFactory(
 
     fun getRefreshedState(): TokenDetailsState {
         return refreshStateConverter.convert(false)
+    }
+
+    fun getStateWithReceiveBottomSheet(currency: CryptoCurrency, addresses: List<Address>): TokenDetailsState {
+        return currentStateProvider().copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissBottomSheet,
+                content = TokenReceiveBottomSheetConfig(
+                    name = currency.name,
+                    symbol = currency.symbol,
+                    network = currency.network.name,
+                    addresses = addresses.map {
+                        AddressModel(
+                            value = it.value,
+                            type = AddressModel.Type.valueOf(it.type.name),
+                        )
+                    },
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithClosedBottomSheet(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(
+            bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
+        )
     }
 }
