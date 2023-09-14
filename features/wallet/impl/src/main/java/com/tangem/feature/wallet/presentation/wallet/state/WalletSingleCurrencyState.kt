@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.compose.runtime.Immutable
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -31,7 +32,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig?,
+        override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val buttons: PersistentList<WalletManageButton>,
         override val txHistoryState: TxHistoryState,
         val marketPriceBlockState: MarketPriceBlockState,
@@ -55,10 +56,10 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
             WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick),
         )
 
-        override val bottomSheetConfig = WalletBottomSheetConfig(
+        override val bottomSheetConfig = TangemBottomSheetConfig(
             isShow = isBottomSheetShow,
             onDismissRequest = onBottomSheetDismiss,
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = onUnlockClick,
                 onScanClick = onScanClick,
             ),
