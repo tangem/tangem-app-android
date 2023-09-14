@@ -73,6 +73,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.state.globalState.appThemeMode,
+            darkThemeSwitchEnabled = action.darkThemeSwitchEnabled,
         ),
     )
 }
