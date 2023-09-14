@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -18,7 +20,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetCon
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
@@ -161,10 +162,10 @@ internal class WalletStateFactory(
 
     fun getRefreshedState(): WalletState = refreshStateConverter.convert(value = false)
 
-    fun getStateWithOpenWalletBottomSheet(content: WalletBottomSheetConfig.BottomSheetContentConfig): WalletState {
+    fun getStateWithOpenWalletBottomSheet(content: TangemBottomSheetConfigContent): WalletState {
         return when (val state = currentStateProvider() as WalletState.ContentState) {
             is WalletMultiCurrencyState.Content -> state.copy(
-                bottomSheetConfig = WalletBottomSheetConfig(
+                bottomSheetConfig = TangemBottomSheetConfig(
                     isShow = true,
                     onDismissRequest = clickIntents::onDismissBottomSheet,
                     content = content,
@@ -175,7 +176,7 @@ internal class WalletStateFactory(
                 onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
             is WalletSingleCurrencyState.Content -> state.copy(
-                bottomSheetConfig = WalletBottomSheetConfig(
+                bottomSheetConfig = TangemBottomSheetConfig(
                     isShow = true,
                     onDismissRequest = clickIntents::onDismissBottomSheet,
                     content = content,
