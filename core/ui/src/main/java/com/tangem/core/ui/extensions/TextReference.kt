@@ -48,6 +48,12 @@ sealed interface TextReference {
      * @see [TextReference.plus] method
      */
     data class Combined(val refs: WrappedList<TextReference>) : TextReference
+
+    companion object {
+
+        /** Empty string as [TextReference] */
+        val EMPTY: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = "") }
+    }
 }
 
 /**
