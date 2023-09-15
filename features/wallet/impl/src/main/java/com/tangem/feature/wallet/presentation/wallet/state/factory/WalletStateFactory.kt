@@ -24,14 +24,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetCon
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.CurrencyStatusErrorConverter
-import com.tangem.feature.wallet.presentation.wallet.utils.WalletHiddenBalanceStateUpdater
+import com.tangem.feature.wallet.presentation.wallet.utils.WalletHiddenBalanceStateConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletsUpdateActionResolver
@@ -68,7 +67,7 @@ internal class WalletStateFactory(
 
     private val walletDeleteStateConverter by lazy { WalletDeleteStateConverter(currentStateProvider) }
 
-    private val walletHiddenBalanceStateUpdater by lazy { WalletHiddenBalanceStateUpdater() }
+    private val walletHiddenBalanceStateConverter by lazy { WalletHiddenBalanceStateConverter() }
 
     private val tokenItemHiddenStateUpdater by lazy { TokenItemHiddenStateUpdater() }
 
@@ -293,7 +292,7 @@ internal class WalletStateFactory(
                 state.copy(
                     walletsListConfig = state.walletsListConfig.copy(
                         wallets = state.walletsListConfig.wallets.map {
-                            walletHiddenBalanceStateUpdater.updateHiddenState(it, isBalanceHidden)
+                            walletHiddenBalanceStateConverter.updateHiddenState(it, isBalanceHidden)
                         }.toImmutableList(),
                     ),
                     tokensListState = updatedTokensList,
@@ -304,7 +303,7 @@ internal class WalletStateFactory(
                 state.copy(
                     walletsListConfig = state.walletsListConfig.copy(
                         wallets = state.walletsListConfig.wallets.map {
-                            walletHiddenBalanceStateUpdater.updateHiddenState(it, isBalanceHidden)
+                            walletHiddenBalanceStateConverter.updateHiddenState(it, isBalanceHidden)
                         }.toImmutableList(),
                     ),
                 )
