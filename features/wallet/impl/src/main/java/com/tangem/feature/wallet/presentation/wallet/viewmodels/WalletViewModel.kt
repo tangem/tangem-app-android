@@ -62,6 +62,7 @@ import kotlin.properties.Delegates
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 @HiltViewModel
 internal class WalletViewModel @Inject constructor(
+    // region Parameters
     private val getWalletsUseCase: GetWalletsUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
     getSelectedWalletUseCase: GetSelectedWalletUseCase,
@@ -92,6 +93,7 @@ internal class WalletViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
+    // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
     /** Feature router */
@@ -161,8 +163,8 @@ internal class WalletViewModel @Inject constructor(
         if (sourceList.isEmpty()) return
 
         when (val action = walletsUpdateActionResolver.resolve(sourceList)) {
-            is WalletsUpdateActionResolver.Action.InitialWallets -> {
-                loadAndUpdateState(index = action.selectedWalletIndex)
+            is WalletsUpdateActionResolver.Action.Initialize -> {
+                loadAndUpdateState(action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 uiState = stateFactory.getStateWithUpdatedWalletName(name = action.name)
@@ -176,7 +178,7 @@ internal class WalletViewModel @Inject constructor(
                 deleteWalletAndUpdateState(action = action)
             }
             is WalletsUpdateActionResolver.Action.AddWallet -> {
-                loadAndUpdateState(index = action.selectedWalletIndex)
+                loadAndUpdateState(action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
@@ -196,20 +198,14 @@ internal class WalletViewModel @Inject constructor(
                 getContentItemsUpdates(action.selectedWalletIndex)
             }
         } else {
-            loadAndUpdateState(index = action.selectedWalletIndex)
+            loadAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
         }
     }
 
-    private fun loadAndUpdateState(index: Int) {
-        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
+    private fun loadAndUpdateState(selectedWalletIndex: Int) {
+        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = selectedWalletIndex)
 
-        uiState = stateFactory.getStateAndTriggerEvent(
-            state = uiState,
-            event = WalletEvent.ChangeWallet(index = index),
-            setUiState = { uiState = it },
-        )
-
-        getContentItemsUpdates(index = index)
+        getContentItemsUpdates(index = selectedWalletIndex)
     }
 
     override fun onBackClick() {
