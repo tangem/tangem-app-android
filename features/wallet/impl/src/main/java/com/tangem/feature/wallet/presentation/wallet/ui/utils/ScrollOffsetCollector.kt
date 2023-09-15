@@ -1,50 +1,58 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.utils
 
-import androidx.compose.foundation.interaction.DragInteraction
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.State
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import kotlinx.coroutines.flow.FlowCollector
 import kotlin.math.abs
 
 /**
  * Flow collector for scroll items tracking.
- * If first visible item offset is greater than half item size, then [callback] be invoked.
- * If last visible item offset is greater than half item size, then [callback] be invoked.
+ * If first visible item offset is greater than half item size, then change selected wallet index.
+ * If last visible item offset is greater than half item size, then change selected wallet index.
  *
- * @property lazyListState   lazy list state
- * @property dragInteraction current drag interaction
- * @property callback        lambda be invoked when current scroll items is changed
+ * @property lazyListState     lazy list state
+ * @property walletsListConfig wallets list config
+ * @property isAutoScroll      check if last scrolling is auto scroll
  *
 [REDACTED_AUTHOR]
  */
 internal class ScrollOffsetCollector(
     private val lazyListState: LazyListState,
-    private val dragInteraction: State<Interaction?>,
-    private val callback: (Int) -> Unit,
+    private val walletsListConfig: WalletsListConfig,
+    private val isAutoScroll: State<Boolean>,
 ) : FlowCollector<List<LazyListItemInfo>> {
 
     private val LazyListItemInfo.halfItemSize get() = size.div(other = 2)
 
+    private var currentIndex = walletsListConfig.selectedWalletIndex
+        set(value) {
+            if (field != value) {
+                field = value
+            }
+        }
+
     override suspend fun emit(value: List<LazyListItemInfo>) {
-        if (isNotUserInteraction() || value.size <= 1) return
+        // Auto scroll must not change wallet
+        if (isAutoScroll.value) {
+            currentIndex = walletsListConfig.selectedWalletIndex
+            return
+        }
+
+        if (!lazyListState.isScrollInProgress || value.size <= 1) return
 
         val firstItem = value.firstOrNull() ?: return
         val lastItem = value.lastOrNull() ?: return
 
         if (abs(firstItem.offset) > firstItem.halfItemSize) {
-            callback(firstItem.index + 1)
+            val newIndex = firstItem.index + 1
+            currentIndex = newIndex
+            walletsListConfig.onWalletChange(newIndex)
         } else if (abs(lastItem.offset) > lastItem.halfItemSize) {
-            callback(lastItem.index - 1)
+            val newIndex = lastItem.index - 1
+            currentIndex = newIndex
+            walletsListConfig.onWalletChange(newIndex)
         }
-    }
-
-    /**
-     * Sometimes the list is scrolled programmatically. Example: selecting a specific wallet when a user opens the
-     * screen for the first time or scans a new wallet. Therefore [ScrollOffsetCollector] should not respond to changes.
-     */
-    private fun isNotUserInteraction(): Boolean {
-        return !lazyListState.isScrollInProgress || dragInteraction.value !is DragInteraction.Start
     }
 }
