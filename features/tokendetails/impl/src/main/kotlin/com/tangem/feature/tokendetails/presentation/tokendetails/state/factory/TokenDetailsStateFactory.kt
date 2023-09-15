@@ -177,5 +177,4 @@ internal class TokenDetailsStateFactory(
             )
         } ?: return currentState
     }
-
 }

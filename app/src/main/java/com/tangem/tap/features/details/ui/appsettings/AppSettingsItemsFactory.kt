@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode

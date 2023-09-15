@@ -6,7 +6,6 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.startWith
 
 internal class DefaultBalanceHidingRepository(
     private val balanceHidingSettingsStore: BalanceHidingSettingsStore,
