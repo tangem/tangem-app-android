@@ -18,6 +18,7 @@ import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -40,6 +41,7 @@ data class DaggerGraphState(
     val walletManagersFacade: WalletManagersFacade? = null,
     val appStateHolder: AppStateHolder? = null,
     val appThemeModeRepository: AppThemeModeRepository? = null,
+    val detailsFeatureToggles: DetailsFeatureToggles? = null,
 // [REDACTED_TODO_COMMENT]
     val currenciesRepository: CurrenciesRepository? = null,
 ) : StateType {

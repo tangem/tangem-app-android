@@ -20,6 +20,29 @@ internal sealed class AppCurrencySelectorState {
         abstract val items: PersistentList<Currency>
         abstract val onCurrencyClick: (Currency) -> Unit
         abstract val onTopBarActionClick: () -> Unit
+
+        fun copySealed(
+            selectedId: String? = this.selectedId,
+            items: PersistentList<Currency> = this.items,
+            scrollToSelected: StateEvent<Int> = this.scrollToSelected,
+            onCurrencyClick: (Currency) -> Unit = this.onCurrencyClick,
+            onTopBarActionClick: () -> Unit = this.onTopBarActionClick,
+        ): AppCurrencySelectorState = when (this) {
+            is Default -> this.copy(
+                selectedId = selectedId.orEmpty(),
+                items = items,
+                scrollToSelected = scrollToSelected,
+                onCurrencyClick = onCurrencyClick,
+                onTopBarActionClick = onTopBarActionClick,
+            )
+            is Search -> this.copy(
+                selectedId = selectedId.orEmpty(),
+                items = items,
+                scrollToSelected = scrollToSelected,
+                onCurrencyClick = onCurrencyClick,
+                onTopBarActionClick = onTopBarActionClick,
+            )
+        }
     }
 
     data class Default(
