@@ -66,9 +66,8 @@ internal class WalletStateFactory(
         WalletLoadedTokensListConverter(
             currentStateProvider = currentStateProvider,
             tokenListErrorConverter = tokenListErrorConverter,
-            cardTypeResolverProvider = currentCardTypeResolverProvider,
-            currentWalletProvider = currentWalletProvider,
             appCurrencyProvider = appCurrencyProvider,
+            currentWalletProvider = currentWalletProvider,
             clickIntents = clickIntents,
         )
     }
@@ -91,7 +90,6 @@ internal class WalletStateFactory(
     private val singleCurrencyLoadedBalanceConverter by lazy {
         WalletSingleCurrencyLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
-            cardTypeResolverProvider = currentCardTypeResolverProvider,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
             currencyStatusErrorConverter = currencyStatusErrorConverter,
@@ -186,7 +184,6 @@ internal class WalletStateFactory(
                 isBottomSheetShow = true,
                 onBottomSheetDismiss = clickIntents::onDismissBottomSheet,
             )
-            else -> state
         }
     }
 
