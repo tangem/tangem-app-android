@@ -6,6 +6,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -35,6 +37,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val buttons: PersistentList<WalletManageButton>,
         override val txHistoryState: TxHistoryState,
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
         val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletSingleCurrencyState()
 
@@ -49,6 +52,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val onScanClick: () -> Unit,
         override val isBottomSheetShow: Boolean = false,
         override val onBottomSheetDismiss: () -> Unit = {},
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
         val onExploreClick: () -> Unit,
     ) : WalletSingleCurrencyState(), WalletLockedState {
 
