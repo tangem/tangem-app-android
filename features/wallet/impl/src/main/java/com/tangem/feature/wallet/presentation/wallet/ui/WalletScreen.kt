@@ -8,8 +8,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -52,7 +58,9 @@ internal fun WalletScreen(state: WalletState) {
 
     when (state) {
         is WalletState.ContentState -> {
-            val walletsListState = rememberLazyListState()
+            val walletsListState = rememberLazyListState(
+                initialFirstVisibleItemIndex = state.walletsListConfig.selectedWalletIndex,
+            )
             val snackbarHostState = remember { SnackbarHostState() }
             val isAutoScroll = remember { mutableStateOf(value = false) }
 
