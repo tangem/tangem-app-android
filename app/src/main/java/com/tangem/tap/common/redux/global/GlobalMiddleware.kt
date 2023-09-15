@@ -66,7 +66,13 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            if (store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles).isRedesignedScreenEnabled) {
+            val daggerGraphState = store.state.daggerGraphState
+            val walletFeatureToggles = daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+            val detailsFeatureToggles = daggerGraphState.get(DaggerGraphState::detailsFeatureToggles)
+
+            if (walletFeatureToggles.isRedesignedScreenEnabled ||
+                detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled
+            ) {
                 restoreAppCurrencyNew()
             } else {
                 restoreAppCurrencyLegacy()

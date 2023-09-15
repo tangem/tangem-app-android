@@ -58,6 +58,10 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
 
     override fun getBackStack(): List<AppScreen> = mainStore?.state?.navigationState?.backStack.orEmpty()
 
+    override fun popBackStack(screen: AppScreen?) {
+        mainStore?.dispatch(NavigationAction.PopBackTo(screen))
+    }
+
     override fun dispatch(action: Action) {
         mainStore?.dispatch(action)
     }
