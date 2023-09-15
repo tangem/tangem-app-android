@@ -5,6 +5,8 @@ import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -16,10 +18,7 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
@@ -36,8 +35,10 @@ import kotlinx.coroutines.flow.Flow
  * @property currentStateProvider            current ui state provider
  * @property currentCardTypeResolverProvider current card type resolver
  * @property currentWalletProvider           current wallet
+ * @property appCurrencyProvider             app currency provider
  * @property clickIntents                    screen click intents
  */
+@Suppress("TooManyFunctions")
 internal class WalletStateFactory(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
@@ -245,5 +246,26 @@ internal class WalletStateFactory(
 
     fun getStateByCurrencyStatusError(error: CurrencyStatusError): WalletState {
         return currencyStatusErrorConverter.convert(error)
+    }
+
+    fun getStateAndTriggerEvent(
+        state: WalletState,
+        event: WalletEvent,
+        setUiState: (WalletState) -> Unit,
+    ): WalletState {
+        return when (state) {
+            is WalletState.ContentState -> state.copySealed(
+                event = triggeredEvent(
+                    data = event,
+                    onConsume = {
+                        val currentState = currentStateProvider()
+                        if (currentState is WalletState.ContentState) {
+                            setUiState(currentState.copySealed(event = consumedEvent()))
+                        }
+                    },
+                ),
+            )
+            is WalletState.Initial -> state
+        }
     }
 }
