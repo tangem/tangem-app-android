@@ -1,5 +1,6 @@
 package com.tangem.core.ui.extensions
 
+import android.content.res.Resources
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -115,6 +116,22 @@ fun TextReference.resolveReference(): String {
             buildString {
                 refs.forEach {
                     append(it.resolveReference())
+                }
+            }
+        }
+    }
+}
+
+/** Resolve [TextReference] as [String] using [resources] (non-composable context) */
+fun TextReference.resolveReference(resources: Resources): String {
+    return when (this) {
+        is TextReference.Res -> resources.getString(id, *formatArgs.toTypedArray())
+        is TextReference.PluralRes -> resources.getQuantityString(id, count, *formatArgs.toTypedArray())
+        is TextReference.Str -> value
+        is TextReference.Combined -> {
+            buildString {
+                refs.forEach {
+                    append(it.resolveReference(resources))
                 }
             }
         }
