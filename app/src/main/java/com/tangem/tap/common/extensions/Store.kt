@@ -7,6 +7,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,11 @@ suspend fun Store<AppState>.onUserWalletSelected(
     refresh: Boolean = false,
     sendAnalyticsEvent: Boolean = false,
 ) {
-    state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh, sendAnalyticsEvent)
+    val walletFeatureToggles = state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+
+    if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+        state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh, sendAnalyticsEvent)
+    }
 }
 
 fun Store<*>.dispatchToastNotification(resId: Int) {
