@@ -63,7 +63,9 @@ internal class WalletLoadedTxHistoryConverter(
     private fun convert(items: Flow<PagingData<TxHistoryItem>>): WalletState {
         return when (val state = currentStateProvider()) {
             is WalletSingleCurrencyState.Content -> {
-                state.copy(txHistoryState = walletTxHistoryItemFlowConverter.convert(value = items))
+                return state.copy(
+                    txHistoryState = walletTxHistoryItemFlowConverter.convert(value = items) ?: state.txHistoryState,
+                )
             }
             is WalletMultiCurrencyState.Content,
             is WalletMultiCurrencyState.Locked,
