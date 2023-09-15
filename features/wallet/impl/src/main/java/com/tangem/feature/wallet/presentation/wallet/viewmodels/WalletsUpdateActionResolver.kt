@@ -24,7 +24,7 @@ internal class WalletsUpdateActionResolver(
 
         return when (val state = currentStateProvider()) {
             is WalletState.Initial -> {
-                Action.InitialWallets(
+                Action.Initialize(
                     selectedWalletIndex = wallets.indexOfWallet(id = selectedWallet.walletId),
                 )
             }
@@ -138,7 +138,7 @@ internal class WalletsUpdateActionResolver(
 
     sealed class Action {
 
-        data class InitialWallets(val selectedWalletIndex: Int) : Action()
+        data class Initialize(val selectedWalletIndex: Int) : Action()
 
         data class UpdateWalletName(val name: String) : Action()
 
