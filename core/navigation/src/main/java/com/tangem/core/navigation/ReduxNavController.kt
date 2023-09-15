@@ -10,5 +10,7 @@ interface ReduxNavController {
     /** Navigate by [action] */
     fun navigate(action: NavigationAction)
 
+    fun popBackStack(screen: AppScreen? = null)
+
     fun getBackStack(): List<AppScreen>
 }
