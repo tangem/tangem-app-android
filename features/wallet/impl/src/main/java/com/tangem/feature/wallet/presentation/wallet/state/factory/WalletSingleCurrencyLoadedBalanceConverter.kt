@@ -6,7 +6,6 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
@@ -23,7 +22,6 @@ import java.math.BigDecimal
 
 internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
     private val currencyStatusErrorConverter: CurrencyStatusErrorConverter,
@@ -71,6 +69,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Error(currencyName)
         }
     }
@@ -89,7 +88,6 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     id = selectedWallet.id,
                     title = selectedWallet.title,
                     additionalInfo = WalletAdditionalInfoFactory.resolve(
-                        cardTypesResolver = cardTypeResolverProvider(),
                         wallet = currentWalletProvider(),
                         currencyAmount = status.amount,
                     ),
@@ -112,6 +110,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> {
                 WalletCardState.Error(
                     id = selectedWallet.id,

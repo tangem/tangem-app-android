@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -22,9 +22,11 @@ internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
     content: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    fab: @Composable (() -> Unit)? = null,
     @StringRes titleRes: Int? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    fab: @Composable () -> Unit = {},
 ) {
+    val state = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val backgroundColor = TangemTheme.colors.background.secondary
 
     BackHandler(onBack = onBackClick)
@@ -33,6 +35,7 @@ internal fun SettingsScreensScaffold(
     }
 
     Scaffold(
+        scaffoldState = state,
         topBar = {
             EmptyTopBarWithNavigation(
                 onBackClick = onBackClick,
@@ -41,27 +44,28 @@ internal fun SettingsScreensScaffold(
         },
         modifier = modifier.systemBarsPadding(),
         backgroundColor = backgroundColor,
-        floatingActionButton = { fab?.invoke() },
-    ) { paddings ->
-        Column(
-            modifier = Modifier
-                .padding(paddings)
-                .fillMaxSize(),
-        ) {
-            if (titleRes != null) {
-                Text(
-                    text = stringResource(id = titleRes),
-                    modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing20)
-                        .padding(bottom = TangemTheme.dimens.spacing36),
-                    style = TangemTheme.typography.h1,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            }
+        floatingActionButton = fab,
+        content = { paddings ->
+            Column(
+                modifier = Modifier
+                    .padding(paddings)
+                    .fillMaxSize(),
+            ) {
+                if (titleRes != null) {
+                    Text(
+                        text = stringResource(id = titleRes),
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing20)
+                            .padding(bottom = TangemTheme.dimens.spacing36),
+                        style = TangemTheme.typography.h1,
+                        color = TangemTheme.colors.text.primary1,
+                    )
+                }
 
-            content()
-        }
-    }
+                content()
+            }
+        },
+    )
 }
 
 @Composable
@@ -129,8 +133,8 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected
             onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
-                unselectedColor = colorResource(id = R.color.icon_secondary),
-                selectedColor = colorResource(id = R.color.icon_accent),
+                unselectedColor = TangemTheme.colors.icon.secondary,
+                selectedColor = TangemTheme.colors.icon.accent,
             ),
         )
 
@@ -138,13 +142,13 @@ internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = subtitle,
                 style = TangemTheme.typography.body2,
-                color = colorResource(id = R.color.text_secondary),
+                color = TangemTheme.colors.text.secondary,
             )
         }
     }

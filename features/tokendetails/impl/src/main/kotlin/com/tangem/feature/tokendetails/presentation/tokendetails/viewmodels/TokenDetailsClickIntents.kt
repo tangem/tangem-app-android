@@ -1,8 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
-
-interface TokenDetailsClickIntents : TxHistoryClickIntents {
+interface TokenDetailsClickIntents {
 
     fun onBackClick()
 
@@ -19,4 +17,14 @@ interface TokenDetailsClickIntents : TxHistoryClickIntents {
     fun onHideClick()
 
     fun onHideConfirmed()
+
+    fun onRefreshSwipe()
+
+    fun onBuyClick()
+
+    fun onReloadClick()
+
+    fun onExploreClick()
+
+    fun onDismissBottomSheet()
 }

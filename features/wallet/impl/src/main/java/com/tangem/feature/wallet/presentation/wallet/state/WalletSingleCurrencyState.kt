@@ -2,9 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.state
 
 import androidx.compose.runtime.Immutable
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -31,9 +34,10 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig?,
+        override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val buttons: PersistentList<WalletManageButton>,
         override val txHistoryState: TxHistoryState,
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
         val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletSingleCurrencyState()
 
@@ -48,6 +52,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val onScanClick: () -> Unit,
         override val isBottomSheetShow: Boolean = false,
         override val onBottomSheetDismiss: () -> Unit = {},
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
         val onExploreClick: () -> Unit,
     ) : WalletSingleCurrencyState(), WalletLockedState {
 
@@ -55,10 +60,10 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
             WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick),
         )
 
-        override val bottomSheetConfig = WalletBottomSheetConfig(
+        override val bottomSheetConfig = TangemBottomSheetConfig(
             isShow = isBottomSheetShow,
             onDismissRequest = onBottomSheetDismiss,
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = onUnlockClick,
                 onScanClick = onScanClick,
             ),

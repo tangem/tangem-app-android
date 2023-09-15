@@ -2,6 +2,7 @@ package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import java.util.*
 
@@ -13,6 +14,7 @@ object TapWorkarounds {
     private const val TEST_CARD_BATCH = "99FF"
     private const val TEST_CARD_ID_STARTS_WITH = "FF99"
     private val backupRequiredFirmwareVersion = FirmwareVersion(major = 6, minor = 21)
+    private val demoConfig = DemoConfig()
 
     val CardDTO.isTangemTwins: Boolean
         get() = TwinsHelper.getTwinCardNumber(cardId) != null
@@ -25,7 +27,7 @@ object TapWorkarounds {
 
     // for cards 6.21 and higher backup is not skippable
     val CardDTO.canSkipBackup: Boolean
-        get() = this.firmwareVersion < backupRequiredFirmwareVersion
+        get() = this.firmwareVersion < backupRequiredFirmwareVersion || demoConfig.isDemoCardId(cardId)
 
     val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"

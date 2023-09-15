@@ -2,11 +2,12 @@ package com.tangem.feature.wallet.presentation.common
 
 import androidx.paging.PagingData
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.event.consumed
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
@@ -98,6 +99,7 @@ internal object WalletPreviewData {
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
+            isCustom = false,
         )
 
     private val tokenIconState
@@ -211,7 +213,7 @@ internal object WalletPreviewData {
                 val networkNumber = index + 1
 
                 val group = DraggableItem.GroupHeader(
-                    id = "group_$networkNumber",
+                    id = networkNumber,
                     networkName = "$networkNumber",
                     roundingMode = when (index) {
                         0 -> DraggableItem.RoundingMode.Top()
@@ -281,7 +283,7 @@ internal object WalletPreviewData {
                 onApplyClick = {},
                 onCancelClick = {},
             ),
-            scrollListToTop = consumed,
+            scrollListToTop = consumedEvent(),
         )
     }
 
@@ -294,10 +296,10 @@ internal object WalletPreviewData {
     }
 
     val bottomSheet by lazy {
-        WalletBottomSheetConfig(
+        TangemBottomSheetConfig(
             isShow = false,
             onDismissRequest = {},
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = {},
                 onScanClick = {},
             ),
@@ -309,7 +311,7 @@ internal object WalletPreviewData {
         onDismissRequest = {},
         actions = listOf(
             TokenActionButtonConfig(
-                text = "Send",
+                text = TextReference.Str("Send"),
                 iconResId = R.drawable.ic_share_24,
                 onClick = {},
             ),
@@ -333,7 +335,7 @@ internal object WalletPreviewData {
             walletsListConfig = walletListConfig,
             tokensListState = WalletTokensListState.Content(
                 persistentListOf(
-                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Bitcoin")),
+                    TokensListItemState.NetworkGroupTitle(id = 0, stringReference("Bitcoin")),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_1",
@@ -362,7 +364,7 @@ internal object WalletPreviewData {
                             amount = "1,89340821 ETH",
                         ),
                     ),
-                    TokensListItemState.NetworkGroupTitle(TextReference.Str("Ethereum")),
+                    TokensListItemState.NetworkGroupTitle(id = 1, stringReference("Ethereum")),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_5",
@@ -386,6 +388,7 @@ internal object WalletPreviewData {
             bottomSheetConfig = bottomSheet,
             tokenActionsBottomSheet = actionsBottomSheet,
             onManageTokensClick = {},
+            event = consumedEvent(),
         )
     }
 
@@ -435,6 +438,7 @@ internal object WalletPreviewData {
                     ),
                 ),
             ),
+            event = consumedEvent(),
         )
     }
 }

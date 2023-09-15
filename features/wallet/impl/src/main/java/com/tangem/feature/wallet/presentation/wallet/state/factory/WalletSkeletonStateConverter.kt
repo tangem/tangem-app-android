@@ -136,7 +136,7 @@ internal class WalletSkeletonStateConverter(
 
     private fun UserWallet.createAdditionalInfo(): TextReference? {
         return if (isMultiCurrency) {
-            WalletAdditionalInfoFactory.resolve(cardTypesResolver = scanResponse.cardTypesResolver, wallet = this)
+            WalletAdditionalInfoFactory.resolve(wallet = this)
         } else {
             null
         }
@@ -144,7 +144,7 @@ internal class WalletSkeletonStateConverter(
 
     @DrawableRes
     private fun UserWallet.createImageResId(): Int? {
-        return WalletImageResolver.resolve(cardTypesResolver = scanResponse.cardTypesResolver)
+        return WalletImageResolver.resolve(userWallet = this)
     }
 
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {

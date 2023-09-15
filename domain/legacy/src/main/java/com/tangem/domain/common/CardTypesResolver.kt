@@ -25,8 +25,6 @@ interface CardTypesResolver {
 
     fun getPrimaryToken(): Token?
 
-    fun getBackupCardsCount(): Int
-
     fun isReleaseFirmwareType(): Boolean
 
     fun getRemainingSignatures(): Int?
