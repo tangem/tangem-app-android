@@ -258,7 +258,7 @@ private fun TitleText(title: String) {
     Text(
         text = title,
         color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.body2,
+        style = TangemTheme.typography.button,
         maxLines = 1,
     )
 }
@@ -334,7 +334,7 @@ private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier
 private fun AdditionalInfoText(text: TextReference) {
     Text(
         text = text.resolveReference(),
-        color = TangemTheme.colors.text.disabled,
+        color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption,
     )
 }
