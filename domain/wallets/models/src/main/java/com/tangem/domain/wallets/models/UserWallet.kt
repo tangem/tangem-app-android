@@ -9,8 +9,8 @@ import com.tangem.domain.models.scan.ScanResponse
  * @property name            User wallet name
  * @property walletId        User wallet [UserWalletId]
  * @property artworkUrl      User wallet card artwork URL
- * @property cardsInWallet   List of cards IDs assigned with this user's wallet. It will be a non-empty list
- *                              if card was backed up on current device.
+ * @property cardsInWallet   List of cards IDs assigned with this user's wallet. The list will be empty if the wallet
+ *                              has been backed up on another device.
  * @property isMultiCurrency Indicates whether this user wallet can work with more than one currency
  * @property scanResponse    [ScanResponse] of primary user's wallet card.
  */

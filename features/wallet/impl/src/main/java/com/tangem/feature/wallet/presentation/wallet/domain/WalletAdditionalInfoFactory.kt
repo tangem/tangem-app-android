@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.plus
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.util.cardTypesResolver
@@ -16,7 +17,7 @@ import java.math.BigDecimal
  */
 internal object WalletAdditionalInfoFactory {
 
-    private val DIVIDER by lazy { TextReference.Str(value = " • ") }
+    private val DIVIDER by lazy(mode = LazyThreadSafetyMode.NONE) { stringReference(value = " • ") }
 
     /**
      * Get additional info
