@@ -22,5 +22,9 @@
     {
         "name": "SHOPIFY_DYNAMIC_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_APP_CURRENCY_SELECTOR_ENABLED",
+        "version": "undefined"
     }
 ]
