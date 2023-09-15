@@ -84,6 +84,10 @@ sealed class DetailsAction : Action {
         data class ChangeAppThemeMode(
             val appThemeMode: AppThemeMode,
         ) : AppSettings()
+
+        data class ChangeAppCurrency(
+            val fiatCurrency: FiatCurrency,
+        ) : AppSettings()
     }
 
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()
