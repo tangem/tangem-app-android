@@ -118,7 +118,7 @@ internal class WalletsUnlockStateConverter(
             id = id,
             title = title,
             additionalInfo = userWallet.createAdditionalInfo(),
-            imageResId = WalletImageResolver.resolve(cardTypesResolver = userWallet.scanResponse.cardTypesResolver),
+            imageResId = WalletImageResolver.resolve(userWallet = userWallet),
             onRenameClick = onRenameClick,
             onDeleteClick = onDeleteClick,
         )
@@ -126,7 +126,7 @@ internal class WalletsUnlockStateConverter(
 
     private fun UserWallet.createAdditionalInfo(): TextReference? {
         return if (isMultiCurrency) {
-            WalletAdditionalInfoFactory.resolve(cardTypesResolver = scanResponse.cardTypesResolver, wallet = this)
+            WalletAdditionalInfoFactory.resolve(wallet = this)
         } else {
             null
         }
