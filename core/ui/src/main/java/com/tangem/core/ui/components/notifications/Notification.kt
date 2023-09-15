@@ -85,7 +85,7 @@ private fun BaseContainer(
     Surface(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size62)
-            .wrapContentWidth(),
+            .fillMaxWidth(),
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = containerColor,
     ) {
