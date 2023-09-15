@@ -88,6 +88,10 @@ sealed class DetailsAction : Action {
         data class ChangeBalanceHiding(
             val hideBalance: Boolean,
         ) : AppSettings()
+
+        data class ChangeAppCurrency(
+            val fiatCurrency: FiatCurrency,
+        ) : AppSettings()
     }
 
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()

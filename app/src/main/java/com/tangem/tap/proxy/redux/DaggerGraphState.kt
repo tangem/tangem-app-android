@@ -19,6 +19,7 @@ import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -42,6 +43,7 @@ data class DaggerGraphState(
     val appStateHolder: AppStateHolder? = null,
     val appThemeModeRepository: AppThemeModeRepository? = null,
     val balanceHidingRepository: BalanceHidingRepository? = null,
+    val detailsFeatureToggles: DetailsFeatureToggles? = null,
 
     // FIXME: It is used only for TokensList screen. Remove after refactoring of TokensList
     val currenciesRepository: CurrenciesRepository? = null,
