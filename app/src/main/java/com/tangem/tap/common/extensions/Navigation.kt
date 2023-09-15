@@ -7,6 +7,7 @@ import com.tangem.core.navigation.FragmentShareTransition
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
+import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
@@ -174,5 +175,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Welcome -> WelcomeFragment()
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
+        AppScreen.AppCurrencySelector -> AppCurrencySelectorFragment()
     }
 }
