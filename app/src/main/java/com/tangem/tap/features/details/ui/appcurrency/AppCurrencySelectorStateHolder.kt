@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
-internal class AppCurrencySelectorStateController(
+internal class AppCurrencySelectorStateHolder(
     private val intents: AppCurrencySelectorIntents,
     private val onSubscription: () -> Unit,
     stateFlowScope: CoroutineScope,
@@ -21,7 +21,7 @@ internal class AppCurrencySelectorStateController(
 
     private val stateFlowInternal: MutableStateFlow<AppCurrencySelectorState> = MutableStateFlow(getInitialState())
 
-    private val currencyConverter = CurrencyConverter()
+    private val currencyConverter by lazy(mode = LazyThreadSafetyMode.NONE) { CurrencyConverter() }
 
     val stateFlow: StateFlow<AppCurrencySelectorState> = stateFlowInternal
         .onSubscription { onSubscription() }

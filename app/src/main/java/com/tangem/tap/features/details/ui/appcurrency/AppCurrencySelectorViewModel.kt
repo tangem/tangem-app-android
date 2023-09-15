@@ -22,9 +22,9 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel(), AppCurrencySelectorIntents {
 
-    private val stateController = AppCurrencySelectorStateController(
+    private val stateController = AppCurrencySelectorStateHolder(
         intents = this,
-        onSubscription = { bootstrapCurrencies() },
+        onSubscription = { fetchCurrencies() },
         stateFlowScope = viewModelScope,
     )
 
@@ -53,7 +53,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
         stateController.updateStateWithoutSearch()
     }
 
-    private fun bootstrapCurrencies() {
+    private fun fetchCurrencies() {
         viewModelScope.launch(dispatchers.io) {
             val availableCurrencies = getAvailableCurrenciesUseCase()
                 .onRight(stateController::updateStateWithAvailableCurrencies)
