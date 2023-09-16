@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.common.component.token
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -87,13 +86,17 @@ private fun PriceChangeIcon(type: PriceChangeConfig.Type, modifier: Modifier = M
         label = "Update the price change's arrow",
         modifier = modifier,
     ) {
-        Image(
+        Icon(
             painter = painterResource(
                 id = when (it) {
-                    PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                    PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                    PriceChangeConfig.Type.UP -> R.drawable.ic_arrow_up_8
+                    PriceChangeConfig.Type.DOWN -> R.drawable.ic_arrow_down_8
                 },
             ),
+            tint = when (it) {
+                PriceChangeConfig.Type.UP -> TangemTheme.colors.icon.accent
+                PriceChangeConfig.Type.DOWN -> TangemTheme.colors.icon.warning
+            },
             contentDescription = null,
         )
     }
