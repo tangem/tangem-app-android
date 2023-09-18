@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
@@ -76,7 +77,17 @@ class DefaultCustomTokenInteractor(
             curve?.let { getDerivations(curve, scanResponse, currency) }
         }
 
-        val derivations = derivationDataList.associate(TokensMiddleware.DerivationData::derivations)
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -115,10 +126,7 @@ class DefaultCustomTokenInteractor(
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
         val supportedCurves = currency.blockchain.getSupportedCurves()
-        val path = currency.derivationPath
-            ?.let {
-                currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-            }
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
             .takeIf { supportedCurves.contains(curve) }
 
         val customPath = currency.derivationPath?.let {

@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
@@ -135,11 +136,22 @@ internal class DefaultTokensListInteractor(
 
     private suspend fun deriveMissingBlockchains(scanResponse: ScanResponse, currencies: List<Currency>) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivations = currencies.mapNotNull { currency ->
+        val derivationDataList = currencies.mapNotNull { currency ->
             val curve = config.primaryCurve(currency.blockchain)
             curve?.let { getDerivations(curve, scanResponse, currency) }
-        }.associate(transform = TokensMiddleware.DerivationData::derivations)
+        }
 
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
         if (derivations.isEmpty()) {
             submitAdd(scanResponse, currencies)
             return
@@ -180,10 +192,7 @@ internal class DefaultTokensListInteractor(
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
         val supportedCurves = currency.blockchain.getSupportedCurves()
-        val path = currency.derivationPath
-            ?.let {
-                currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-            }
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
             .takeIf { supportedCurves.contains(curve) }
 
         val customPath = currency.derivationPath?.let {
