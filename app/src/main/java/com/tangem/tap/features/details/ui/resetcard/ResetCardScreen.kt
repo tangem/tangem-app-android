@@ -76,42 +76,19 @@ private fun ResetCardView(state: ResetCardScreenState) {
             )
 
             Spacer(modifier = Modifier.size(28.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = { state.onAcceptWarningToggleClick(!state.accepted) },
-                    )
-                    .padding(top = 16.dp, bottom = 16.dp),
-            ) {
-                IconToggleButton(
-                    checked = state.accepted,
-                    onCheckedChange = state.onAcceptWarningToggleClick,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (state.accepted) {
-                                R.drawable.ic_accepted
-                            } else {
-                                R.drawable.ic_unticked
-                            },
-                        ),
-                        contentDescription = null,
-                        tint = if (state.accepted) {
-                            TangemTheme.colors.icon.accent
-                        } else {
-                            TangemTheme.colors.icon.secondary
-                        },
-                    )
-                }
-                Text(
-                    text = stringResource(id = R.string.reset_card_to_factory_warning_message),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                    modifier = Modifier.padding(end = 20.dp),
-                )
-            }
+
+            // TODO finalize texts
+            ConditionCheckBox(
+                checkedStateProvider = { state.acceptWarning1Checked },
+                onCheckedChange = { state.onAcceptWarning1ToggleClick(it) },
+                description = TextReference.Res(R.string.reset_card_to_factory_warning_message_1),
+            )
+
+            ConditionCheckBox(
+                checkedStateProvider = { state.acceptWarning2Checked },
+                onCheckedChange = { state.onAcceptWarning2ToggleClick(it) },
+                description = TextReference.Res(R.string.reset_card_to_factory_warning_message_2),
+            )
 
             Spacer(modifier = Modifier.size(16.dp))
             Box(
@@ -127,6 +104,50 @@ private fun ResetCardView(state: ResetCardScreenState) {
     }
 }
 
+@Composable
+private fun ConditionCheckBox(
+    checkedStateProvider: () -> Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    description: TextReference,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                onClick = { onCheckedChange.invoke(!checkedStateProvider()) },
+            )
+            .padding(top = 16.dp, bottom = 16.dp),
+    ) {
+        IconToggleButton(
+            checked = checkedStateProvider(),
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+        ) {
+            Icon(
+                painter = painterResource(
+                    if (checkedStateProvider()) {
+                        R.drawable.ic_accepted
+                    } else {
+                        R.drawable.ic_unticked
+                    },
+                ),
+                contentDescription = null,
+                tint = if (checkedStateProvider()) {
+                    TangemTheme.colors.icon.accent
+                } else {
+                    TangemTheme.colors.icon.secondary
+                },
+            )
+        }
+        Text(
+            text = description.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.secondary,
+            modifier = Modifier.padding(end = 20.dp),
+        )
+    }
+}
+
 // region Preview
 @Composable
 private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
@@ -138,7 +159,8 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
             state = ResetCardScreenState(
                 accepted = true,
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                onAcceptWarningToggleClick = {},
+                onAcceptWarning1ToggleClick = {},
+                onAcceptWarning2ToggleClick = {},
                 onResetButtonClick = {},
             ),
             onBackClick = {},

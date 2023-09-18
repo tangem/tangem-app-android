@@ -15,9 +15,12 @@ internal class ResetCardViewModel(private val store: Store<AppState>) {
             ?: TextReference.Str(value = "")
 
         return ResetCardScreenState(
-            accepted = state?.resetConfirmed ?: false,
+            accepted = state?.resetButtonEnabled ?: false,
             descriptionText = descriptionText,
-            onAcceptWarningToggleClick = { store.dispatch(DetailsAction.ResetToFactory.Confirm(it)) },
+            acceptWarning1Checked = state?.warning1Checked ?: false,
+            acceptWarning2Checked = state?.warning2Checked ?: false,
+            onAcceptWarning1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
+            onAcceptWarning2ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition2(it)) },
             onResetButtonClick = { store.dispatch(DetailsAction.ResetToFactory.Proceed) },
         )
     }
