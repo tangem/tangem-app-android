@@ -19,6 +19,7 @@ import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -28,11 +29,13 @@ import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.rekotlin.Store
 import timber.log.Timber
 
 class TapWalletManager(
@@ -75,17 +78,33 @@ class TapWalletManager(
         withMainContext {
             // Order is important
             store.dispatch(DisclaimerAction.SetDisclaimer(card.createDisclaimer()))
-            store.dispatch(WalletAction.UserWalletChanged(userWallet))
-            store.dispatch(WalletAction.UpdateCanSaveUserWallets(preferencesStorage.shouldSaveUserWallets))
+            store.dispatchWalletAction(action = WalletAction.UserWalletChanged(userWallet))
+            store.dispatchWalletAction(
+                action = WalletAction.UpdateCanSaveUserWallets(
+                    canSaveUserWallets = preferencesStorage.shouldSaveUserWallets,
+                ),
+            )
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
             store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
-            store.dispatch(WalletAction.Warnings.CheckIfNeeded)
+            store.dispatchWalletAction(action = WalletAction.Warnings.CheckIfNeeded)
         }
         setupWalletConnectV2(userWallet)
-        loadData(userWallet, refresh)
+
+        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+        if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+            loadData(userWallet = userWallet, refresh = refresh)
+        }
+    }
+
+    private fun Store<AppState>.dispatchWalletAction(action: WalletAction) {
+        val walletFeatureToggles = state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+
+        if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+            dispatch(action = action)
+        }
     }
 
     private fun setupWalletConnectV2(userWallet: UserWallet) {
