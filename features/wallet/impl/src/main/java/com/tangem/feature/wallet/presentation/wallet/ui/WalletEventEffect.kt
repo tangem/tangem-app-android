@@ -8,7 +8,6 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun WalletEventEffect(
@@ -24,7 +23,6 @@ internal fun WalletEventEffect(
             when (value) {
                 is WalletEvent.ChangeWallet -> {
                     onAutoScrollSet()
-                    delay(timeMillis = 800)
                     walletsListState.animateScrollToItem(index = value.index)
                 }
                 is WalletEvent.ShowError -> {
