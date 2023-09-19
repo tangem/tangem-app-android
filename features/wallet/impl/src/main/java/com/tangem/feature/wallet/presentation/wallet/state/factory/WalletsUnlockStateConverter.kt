@@ -80,7 +80,7 @@ internal class WalletsUnlockStateConverter(
     }
 
     private fun WalletTopBarConfig.updateCallback(): WalletTopBarConfig {
-        return copy(onMoreClick = clickIntents::onDetailsClick)
+        return copy(onDetailsClick = clickIntents::onDetailsClick)
     }
 
     private fun WalletsListConfig.unlockWallets(action: UnlockWalletAction): WalletsListConfig {
