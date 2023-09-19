@@ -164,12 +164,7 @@ internal class WalletViewModel @Inject constructor(
 
         when (val action = walletsUpdateActionResolver.resolve(sourceList)) {
             is WalletsUpdateActionResolver.Action.Initialize -> {
-                uiState = stateFactory.getSkeletonState(
-                    wallets = wallets,
-                    selectedWalletIndex = action.selectedWalletIndex,
-                )
-
-                getContentItemsUpdates(index = action.selectedWalletIndex)
+                initializeAndLoadState(selectedWalletIndex = action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 uiState = stateFactory.getStateWithUpdatedWalletName(name = action.name)
@@ -183,10 +178,16 @@ internal class WalletViewModel @Inject constructor(
                 deleteWalletAndUpdateState(action = action)
             }
             is WalletsUpdateActionResolver.Action.AddWallet -> {
-                loadAndUpdateState(action.selectedWalletIndex)
+                scrollAndUpdateState(action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
+    }
+
+    private fun initializeAndLoadState(selectedWalletIndex: Int) {
+        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = selectedWalletIndex)
+
+        getContentItemsUpdates(index = selectedWalletIndex)
     }
 
     private fun deleteWalletAndUpdateState(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -203,11 +204,12 @@ internal class WalletViewModel @Inject constructor(
                 getContentItemsUpdates(action.selectedWalletIndex)
             }
         } else {
-            loadAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
+            /* It's impossible case because user can delete only visible state, but we support this case */
+            scrollAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
         }
     }
 
-    private fun loadAndUpdateState(selectedWalletIndex: Int) {
+    private fun scrollAndUpdateState(selectedWalletIndex: Int) {
         uiState = stateFactory.getSkeletonState(
             wallets = wallets,
             selectedWalletIndex = selectedWalletIndex,
@@ -398,9 +400,7 @@ internal class WalletViewModel @Inject constructor(
                     getContentItemsUpdates(index)
                 }
             } else {
-                uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
-
-                getContentItemsUpdates(index = index)
+                initializeAndLoadState(selectedWalletIndex = index)
             }
         }
             .saveIn(onWalletChangeJobHolder)
