@@ -2,7 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.feature.wallet.presentation.wallet.state.components.*
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import kotlinx.collections.immutable.ImmutableList
 
 /**
