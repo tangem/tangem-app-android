@@ -10,8 +10,10 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryToTransactionStateConverter
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
@@ -32,8 +34,12 @@ internal class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun convertError(): TokenDetailsState {
-        // TODO:  [REDACTED_JIRA]
-        return currentStateProvider()
+        val state = currentStateProvider()
+        return state.copy(
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
+            marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencyName),
+            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachableNotification),
+        )
     }
 
     private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
@@ -68,7 +74,6 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.NoAmount,
-            // TODO:  [REDACTED_JIRA]
             is CryptoCurrencyStatus.Unreachable,
             -> {
                 TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
