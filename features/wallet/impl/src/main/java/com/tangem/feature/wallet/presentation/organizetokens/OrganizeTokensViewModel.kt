@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.organizetokens.analytics.OrganizeTokensAnalyticsEvent
+import com.tangem.feature.wallet.presentation.organizetokens.analytics.PortfolioOrganizeTokensAnalyticsEvent
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
@@ -71,7 +71,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
     override fun onCreate(owner: LifecycleOwner) {
-        analyticsEventsHandler.send(OrganizeTokensAnalyticsEvent.ScreenOpened)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
     }
 
     override fun onBackClick() {
@@ -79,7 +79,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onSortClick() {
-        analyticsEventsHandler.send(OrganizeTokensAnalyticsEvent.ByBalance)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
         viewModelScope.launch(dispatchers.default) {
             val list = tokenList ?: return@launch
@@ -95,7 +95,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onGroupClick() {
-        analyticsEventsHandler.send(OrganizeTokensAnalyticsEvent.Group)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
         viewModelScope.launch(dispatchers.default) {
             val list = tokenList ?: return@launch
@@ -145,7 +145,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onCancelClick() {
-        analyticsEventsHandler.send(OrganizeTokensAnalyticsEvent.Cancel)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Cancel)
 
         router.popBackStack()
     }
@@ -189,7 +189,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private fun sendAnalyticsEvent(isGroupedByNetwork: Boolean, isSortedByBalance: Boolean) {
         analyticsEventsHandler.send(
-            OrganizeTokensAnalyticsEvent.Apply(
+            PortfolioOrganizeTokensAnalyticsEvent.Apply(
                 grouping = if (isGroupedByNetwork) {
                     AnalyticsParam.OnOffState.On
                 } else {

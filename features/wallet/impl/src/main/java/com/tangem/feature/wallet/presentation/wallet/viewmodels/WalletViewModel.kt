@@ -38,6 +38,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
@@ -429,8 +430,14 @@ internal class WalletViewModel @Inject constructor(
             ?: return
 
         when (uiState) {
-            is WalletMultiCurrencyState.Content -> refreshMultiCurrencyContent(selectedWalletIndex)
-            is WalletSingleCurrencyState.Content -> refreshSingleCurrencyContent(selectedWalletIndex)
+            is WalletMultiCurrencyState.Content -> {
+                analyticsEventsHandler.send(PortfolioEvent.Refreshed)
+                refreshMultiCurrencyContent(selectedWalletIndex)
+            }
+            is WalletSingleCurrencyState.Content -> {
+                analyticsEventsHandler.send(PortfolioEvent.Refreshed)
+                refreshSingleCurrencyContent(selectedWalletIndex)
+            }
             is WalletState.Initial,
             is WalletMultiCurrencyState.Locked,
             is WalletSingleCurrencyState.Locked,
@@ -439,6 +446,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onOrganizeTokensClick() {
+        analyticsEventsHandler.send(PortfolioEvent.OrganizeTokens)
+
         val state = requireNotNull(uiState as? WalletState.ContentState)
         val index = state.walletsListConfig.selectedWalletIndex
         val walletId = state.walletsListConfig.wallets[index].id
@@ -545,6 +554,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onManageTokensClick() {
+        analyticsEventsHandler.send(PortfolioEvent.ButtonManageTokens)
         reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
         router.openManageTokensScreen()
     }
@@ -600,6 +610,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTokenItemClick(currency: CryptoCurrency) {
+        analyticsEventsHandler.send(PortfolioEvent.TokenTapped)
         router.openTokenDetails(currency = currency)
     }
 

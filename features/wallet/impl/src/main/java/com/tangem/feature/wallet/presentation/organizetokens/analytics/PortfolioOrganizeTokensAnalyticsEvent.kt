@@ -3,21 +3,21 @@ package com.tangem.feature.wallet.presentation.organizetokens.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 
-sealed class OrganizeTokensAnalyticsEvent(
+sealed class PortfolioOrganizeTokensAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Portfolio / Organize Tokens", event, params) {
 
-    object ScreenOpened : OrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")
+    object ScreenOpened : PortfolioOrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")
 
-    object ByBalance : OrganizeTokensAnalyticsEvent("Button - By Balance")
+    object ByBalance : PortfolioOrganizeTokensAnalyticsEvent("Button - By Balance")
 
-    object Group : OrganizeTokensAnalyticsEvent("Button - Group")
+    object Group : PortfolioOrganizeTokensAnalyticsEvent("Button - Group")
 
     class Apply(
         grouping: AnalyticsParam.OnOffState,
         organizeSortType: AnalyticsParam.OrganizeSortType,
-    ) : OrganizeTokensAnalyticsEvent(
+    ) : PortfolioOrganizeTokensAnalyticsEvent(
         "Button - Apply",
         params = mapOf(
             "Group" to grouping.value,
@@ -25,5 +25,5 @@ sealed class OrganizeTokensAnalyticsEvent(
         ),
     )
 
-    object Cancel : OrganizeTokensAnalyticsEvent("Button - Cancel")
+    object Cancel : PortfolioOrganizeTokensAnalyticsEvent("Button - Cancel")
 }
