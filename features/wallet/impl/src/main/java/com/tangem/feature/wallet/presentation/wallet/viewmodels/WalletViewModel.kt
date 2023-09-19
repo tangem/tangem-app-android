@@ -38,7 +38,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenEvent
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
@@ -133,7 +133,7 @@ internal class WalletViewModel @Inject constructor(
     private val notificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
-        analyticsEventsHandler.send(WalletScreenEvent.ScreenOpened)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.ScreenOpened)
 
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
@@ -309,7 +309,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onScanCardClick() {
-        analyticsEventsHandler.send(WalletScreenEvent.NoticeScanYourCardTapped)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeScanYourCardTapped)
 
         val prevRequestPolicyStatus = getBiometricsStatusUseCase()
 
@@ -343,7 +343,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onDetailsClick() = router.openDetailsScreen()
 
     override fun onBackupCardClick() {
-        analyticsEventsHandler.send(WalletScreenEvent.NoticeBackupYourWalletTapped)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeBackupYourWalletTapped)
 
         router.openOnboardingScreen()
     }
@@ -387,7 +387,7 @@ internal class WalletViewModel @Inject constructor(
 
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
-        analyticsEventsHandler.send(WalletScreenEvent.WalletSwipe)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.WalletSwipe)
 
         /*
          * When wallet is changed it's necessary to stop the last jobs.
@@ -542,7 +542,7 @@ internal class WalletViewModel @Inject constructor(
             "Impossible to unlock wallet if state isn't WalletLockedState"
         }
 
-        analyticsEventsHandler.send(WalletScreenEvent.NoticeWalletLocked)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeWalletLocked)
 
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
             content = when (state) {
