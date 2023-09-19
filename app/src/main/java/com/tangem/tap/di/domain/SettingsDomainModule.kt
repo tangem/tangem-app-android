@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import android.content.Context
 import com.tangem.domain.balancehiding.DeviceFlipDetector
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
@@ -13,7 +12,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module

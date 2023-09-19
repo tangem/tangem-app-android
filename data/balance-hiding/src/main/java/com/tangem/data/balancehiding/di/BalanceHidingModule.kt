@@ -32,9 +32,7 @@ internal object BalanceHidingModule {
 
     @Provides
     @Singleton
-    fun provideFlipDetector(
-        @ApplicationContext context: Context,
-    ): DeviceFlipDetector {
+    fun provideFlipDetector(@ApplicationContext context: Context): DeviceFlipDetector {
         return DefaultDeviceFlipDetector(context = context)
     }
 }
