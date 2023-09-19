@@ -11,7 +11,6 @@ sealed class WalletScreenAnalyticsEvent(
     object ScreenOpened : WalletScreenAnalyticsEvent("Screen opened")
     object WalletSwipe : WalletScreenAnalyticsEvent("Wallet Swipe")
 
-    // TODO
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : WalletScreenAnalyticsEvent(
         event = "Enable Biometric",
         params = mapOf("State" to state.value),
