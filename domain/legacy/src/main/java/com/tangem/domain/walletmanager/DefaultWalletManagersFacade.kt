@@ -1,8 +1,8 @@
 package com.tangem.domain.walletmanager
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
+import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -13,14 +13,17 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
+import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
+import java.math.BigDecimal
 // [REDACTED_TODO_COMMENT]
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
@@ -215,6 +218,49 @@ class DefaultWalletManagersFacade(
             ?.addresses
             ?.sortedBy { it.type }
             .orEmpty()
+    }
+
+    override suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent? {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
+        val manager = getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        if (manager !is RentProvider) return null
+
+        return when (val result = manager.minimalBalanceForRentExemption()) {
+            is Result.Success -> {
+                val balance = manager.wallet.fundsAvailable(AmountType.Coin)
+                val outgoingTxs = manager.wallet.recentTransactions
+                    .filter { it.sourceAddress == manager.wallet.address && it.amount.type == AmountType.Coin }
+
+                val rentExempt = result.data
+                val setRent = if (outgoingTxs.isEmpty()) {
+                    balance < rentExempt
+                } else {
+                    val outgoingAmount = outgoingTxs.sumOf { it.amount.value ?: BigDecimal.ZERO }
+                    val rest = balance.minus(outgoingAmount)
+                    balance < rest
+                }
+
+                if (setRent) CryptoCurrencyWarning.Rent(manager.rentAmount(), rentExempt) else null
+            }
+            is Result.Failure -> null
+        }
+    }
+
+    override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
+        val manager = getOrCreateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
