@@ -43,6 +43,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 actionButtons = createButtons(),
             ),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.cryptoCurrency.name),
+            notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(

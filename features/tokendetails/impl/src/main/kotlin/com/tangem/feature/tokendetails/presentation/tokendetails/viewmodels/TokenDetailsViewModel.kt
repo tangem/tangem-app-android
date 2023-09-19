@@ -53,6 +53,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
@@ -100,6 +101,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
         updateTxHistory()
+        updateWarnings(selectedWallet = selectedWallet)
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -124,6 +126,18 @@ internal class TokenDetailsViewModel @Inject constructor(
             .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+    }
+
+    private fun updateWarnings(selectedWallet: UserWallet) {
+        viewModelScope.launch {
+            getCurrencyWarningsUseCase.invoke(
+                userWalletId = selectedWallet.walletId,
+                currency = cryptoCurrency,
+            )
+                .distinctUntilChanged()
+                .onEach { uiState = stateFactory.getStateWithNotifications(it) }
+                .launchIn(viewModelScope)
+        }
     }
 
     private fun updateMarketPrice(selectedWallet: UserWallet) {
@@ -314,5 +328,13 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onCloseExistentialDepositNotification() {
+        uiState = stateFactory.getStateWithRemovedExistentialNotification()
+    }
+
+    override fun onCloseRentInfoNotification() {
+        uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 }
