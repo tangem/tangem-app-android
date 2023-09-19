@@ -78,14 +78,14 @@ private fun ResetCardView(state: ResetCardScreenState) {
             Spacer(modifier = Modifier.size(28.dp))
 
             ConditionCheckBox(
-                checkedStateProvider = { state.acceptWarning1Checked },
-                onCheckedChange = { state.onAcceptWarning1ToggleClick(it) },
+                checkedState = state.acceptCondition1Checked,
+                onCheckedChange = state.onAcceptCondition1ToggleClick,
                 description = TextReference.Res(R.string.reset_card_to_factory_warning_message_1),
             )
 
             ConditionCheckBox(
-                checkedStateProvider = { state.acceptWarning2Checked },
-                onCheckedChange = { state.onAcceptWarning2ToggleClick(it) },
+                checkedState = state.acceptCondition2Checked,
+                onCheckedChange = state.onAcceptCondition2ToggleClick,
                 description = TextReference.Res(R.string.reset_card_to_factory_warning_message_2),
             )
 
@@ -105,7 +105,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
 
 @Composable
 private fun ConditionCheckBox(
-    checkedStateProvider: () -> Boolean,
+    checkedState: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     description: TextReference,
 ) {
@@ -113,25 +113,25 @@ private fun ConditionCheckBox(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                onClick = { onCheckedChange.invoke(!checkedStateProvider()) },
+                onClick = { onCheckedChange.invoke(!checkedState) },
             )
-            .padding(top = 16.dp, bottom = 16.dp),
+            .padding(top = TangemTheme.dimens.size16, bottom = TangemTheme.dimens.size16),
     ) {
         IconToggleButton(
-            checked = checkedStateProvider(),
+            checked = checkedState,
             onCheckedChange = onCheckedChange,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+            modifier = Modifier.padding(start = TangemTheme.dimens.size20, end = TangemTheme.dimens.size20),
         ) {
             Icon(
                 painter = painterResource(
-                    if (checkedStateProvider()) {
+                    if (checkedState) {
                         R.drawable.ic_accepted
                     } else {
                         R.drawable.ic_unticked
                     },
                 ),
                 contentDescription = null,
-                tint = if (checkedStateProvider()) {
+                tint = if (checkedState) {
                     TangemTheme.colors.icon.accent
                 } else {
                     TangemTheme.colors.icon.secondary
@@ -142,7 +142,7 @@ private fun ConditionCheckBox(
             text = description.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
-            modifier = Modifier.padding(end = 20.dp),
+            modifier = Modifier.padding(end = TangemTheme.dimens.size20),
         )
     }
 }
@@ -158,8 +158,8 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
             state = ResetCardScreenState(
                 accepted = true,
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                onAcceptWarning1ToggleClick = {},
-                onAcceptWarning2ToggleClick = {},
+                onAcceptCondition1ToggleClick = {},
+                onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
             ),
             onBackClick = {},
