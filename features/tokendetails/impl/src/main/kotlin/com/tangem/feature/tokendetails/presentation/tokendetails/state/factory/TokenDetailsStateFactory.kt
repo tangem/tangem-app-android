@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -34,6 +35,10 @@ internal class TokenDetailsStateFactory(
 
     private val skeletonStateConverter by lazy {
         TokenDetailsSkeletonStateConverter(clickIntents = clickIntents)
+    }
+
+    private val notificationConverter by lazy {
+        TokenDetailsNotificationConverter(clickIntents = clickIntents)
     }
 
     private val tokenDetailsLoadedBalanceConverter by lazy {
@@ -176,5 +181,20 @@ internal class TokenDetailsStateFactory(
                 tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden),
             )
         } ?: return currentState
+    }
+
+    fun getStateWithNotifications(warnings: Set<CryptoCurrencyWarning>): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.convert(warnings))
+    }
+
+    fun getStateWithRemovedExistentialNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeExistentialDeposit(state))
+    }
+
+    fun getStateWithRemovedRentNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeRentInfo(state))
     }
 }

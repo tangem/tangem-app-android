@@ -1,8 +1,10 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -18,6 +20,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.Transaction
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -31,7 +34,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import kotlinx.collections.immutable.PersistentList
 
-@OptIn(ExperimentalMaterialApi::class)
+@Suppress("LongMethod")
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState) {
     Scaffold(
@@ -72,6 +76,12 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     )
                 }
                 item { TokenDetailsBalanceBlock(modifier = itemModifier, state = state.tokenBalanceBlockState) }
+                items(
+                    items = state.notifications,
+                    key = { it.config.title.hashCode() },
+                    contentType = { it.config::class.java },
+                    itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
+                )
                 item(
                     key = MarketPriceBlockState::class.java,
                     contentType = MarketPriceBlockState::class.java,
