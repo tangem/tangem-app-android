@@ -21,13 +21,13 @@ internal object WalletImageResolver {
     fun resolve(userWallet: UserWallet): Int? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         return when {
-            cardTypesResolver.isDev() -> R.drawable.ill_dev_120_106
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isTangemWallet() -> R.drawable.ill_wallet_120_106
             cardTypesResolver.isWhiteWallet() -> R.drawable.ill_old_wallet_120_106
             cardTypesResolver.isTangemTwins() -> R.drawable.ill_twin_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> resolveNote(blockchain = cardTypesResolver.getBlockchain())
+            cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
             else -> null
         }
     }
