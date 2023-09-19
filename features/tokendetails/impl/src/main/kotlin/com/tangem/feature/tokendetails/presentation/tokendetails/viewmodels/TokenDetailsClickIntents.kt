@@ -27,4 +27,8 @@ interface TokenDetailsClickIntents {
     fun onExploreClick()
 
     fun onDismissBottomSheet()
+
+    fun onCloseRentInfoNotification()
+
+    fun onCloseExistentialDepositNotification()
 }
