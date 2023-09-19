@@ -81,10 +81,7 @@ internal class WalletSkeletonStateConverter(
     }
 
     private fun createTopBarConfig(): WalletTopBarConfig {
-        return WalletTopBarConfig(
-            onScanCardClick = clickIntents::onScanCardClick,
-            onMoreClick = clickIntents::onDetailsClick,
-        )
+        return WalletTopBarConfig(onDetailsClick = clickIntents::onDetailsClick)
     }
 
     private fun createWalletsListConfig(value: SkeletonModel): WalletsListConfig {
