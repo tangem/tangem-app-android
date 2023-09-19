@@ -10,13 +10,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletState
  */
 internal object WalletStateCache {
 
-    private val states = mutableMapOf<UserWalletId, WalletState>()
+    private val states = mutableMapOf<UserWalletId, WalletState.ContentState>()
 
     /** Get state by [userWalletId] */
-    fun getState(userWalletId: UserWalletId): WalletState? = states[userWalletId]
+    fun getState(userWalletId: UserWalletId): WalletState.ContentState? = states[userWalletId]
 
     /** Add or update [state] by [userWalletId]  */
-    fun update(userWalletId: UserWalletId, state: WalletState) {
+    fun update(userWalletId: UserWalletId, state: WalletState.ContentState) {
         states[userWalletId] = state
     }
 }

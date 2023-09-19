@@ -1,10 +1,9 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.tokens.utils.CardCurrenciesFactory
-import com.tangem.data.tokens.utils.NetworkConverter
+import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
-import com.tangem.data.tokens.utils.ResponseCurrenciesFactory
+import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.DemoConfig
@@ -28,25 +27,18 @@ internal class DefaultNetworksRepository(
 ) : NetworksRepository {
 
     private val demoConfig by lazy { DemoConfig() }
-    private val networkConverter by lazy { NetworkConverter() }
-    private val cardCurrenciesFactory by lazy { CardCurrenciesFactory(demoConfig) }
-    private val responseCurrenciesFactory by lazy { ResponseCurrenciesFactory(demoConfig) }
+    private val cardCurrenciesFactory by lazy { CardCryptoCurrenciesFactory(demoConfig) }
+    private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory(demoConfig) }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
-    private val networksStatuses: MutableStateFlow<List<NetworkStatus>> = MutableStateFlow(emptyList())
-
-    override fun getNetworks(networksIds: Set<Network.ID>): Set<Network> {
-        return networkConverter.convertSet(networksIds)
-    }
+    private val networksStatuses: MutableStateFlow<Set<NetworkStatus>> = MutableStateFlow(hashSetOf())
 
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
-        networks: Set<Network.ID>,
+        networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> = channelFlow {
         launch(dispatchers.io) {
-            networksStatuses.collect {
-                send(it.toSet())
-            }
+            networksStatuses.collect(::send)
         }
 
         launch(dispatchers.io) {
@@ -56,7 +48,7 @@ internal class DefaultNetworksRepository(
 
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
-        networks: Set<Network.ID>,
+        networks: Set<Network>,
         refresh: Boolean,
     ): Set<NetworkStatus> = withContext(dispatchers.io) {
         fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
@@ -65,66 +57,86 @@ internal class DefaultNetworksRepository(
 
     private suspend fun fetchNetworksStatusesIfCacheExpired(
         userWalletId: UserWalletId,
-        networks: Set<Network.ID>,
+        networks: Set<Network>,
         refresh: Boolean,
     ) {
-        cacheRegistry.invokeOnExpire(
-            key = getNetworksStatusesCacheKey(userWalletId),
-            skipCache = refresh,
-            block = { fetchNetworksStatuses(userWalletId, networks) },
-        )
-    }
-
-    private suspend fun fetchNetworksStatuses(userWalletId: UserWalletId, networks: Set<Network.ID>) {
         coroutineScope {
             networks
-                .map { networkId ->
+                .map { network ->
                     async {
-                        fetchNetworkStatus(userWalletId, networkId)
+                        fetchNetworkStatusIfCacheExpired(userWalletId, network, refresh)
                     }
                 }
                 .awaitAll()
         }
     }
 
-    private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, networkId: Network.ID) {
-        val currencies = getCurrencies(userWalletId)
-            .asSequence()
-            .filter { it.network.id == networkId }
+    private suspend fun fetchNetworkStatusIfCacheExpired(
+        userWalletId: UserWalletId,
+        network: Network,
+        refresh: Boolean,
+    ) {
+        cacheRegistry.invokeOnExpire(
+            key = getNetworksStatusesCacheKey(userWalletId, network),
+            skipCache = refresh,
+            block = { fetchNetworkStatus(userWalletId, network) },
+        )
+    }
+
+    private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, network: Network) {
+        val currencies = getCurrencies(userWalletId, network)
 
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
-            networkId = networkId,
+            network = network,
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
+
         val networkStatus = networkStatusFactory.createNetworkStatus(
-            networkId = networkId,
+            network = network,
             result = result,
             currencies = currencies.toSet(),
         )
 
         networksStatuses.update { statuses ->
-            statuses.addOrReplace(networkStatus) { it.networkId == networkStatus.networkId }
+            statuses.addOrReplace(networkStatus) { it.network == networkStatus.network }
         }
+
+        invalidateCacheKeyIfNeeded(userWalletId, networkStatus)
     }
 
-    private suspend fun getCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+    private suspend fun getCurrencies(userWalletId: UserWalletId, network: Network): Sequence<CryptoCurrency> {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
 
-        return if (userWallet.isMultiCurrency) {
+        val currencies = if (userWallet.isMultiCurrency) {
             val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
                 "Unable to find tokens response for user wallet with provided ID: $userWalletId"
             }
 
-            responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse.card)
+            responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse).asSequence()
         } else {
             val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
 
-            listOf(currency)
+            sequenceOf(currency)
+        }
+
+        return currencies.filter { it.network == network }
+    }
+
+    private suspend fun invalidateCacheKeyIfNeeded(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
+        when (networkStatus.value) {
+            is NetworkStatus.Verified,
+            is NetworkStatus.NoAccount,
+            -> Unit
+            is NetworkStatus.Unreachable,
+            is NetworkStatus.MissedDerivation,
+            -> cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, networkStatus.network))
         }
     }
 
-    private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId): String = "network_status_$userWalletId"
+    private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId, network: Network): String {
+        return "network_status_${userWalletId}_${network.id}_${network.derivationPath.value}"
+    }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -163,22 +164,14 @@ private fun CardContainer(
 
     var isRenameWalletDialogVisible by rememberSaveable { mutableStateOf(value = false) }
 
-    DropdownMenu(
-        expanded = isMenuVisible,
+    ManageWalletContextMenu(
+        isMenuVisible = isMenuVisible,
+        pressOffset = pressOffset,
+        itemHeight = itemHeight,
         onDismissRequest = { isMenuVisible = false },
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
-        offset = pressOffset.copy(y = pressOffset.y - itemHeight),
-    ) {
-        MenuItem(
-            textResId = R.string.common_rename,
-            imageVector = Icons.Outlined.Edit,
-            onClick = {
-                isMenuVisible = false
-                isRenameWalletDialogVisible = true
-            },
-        )
-        MenuItem(textResId = R.string.common_delete, imageVector = Icons.Outlined.Delete, onClick = onDeleteClick)
-    }
+        onShowRenameWalletDialogClick = { isRenameWalletDialogVisible = true },
+        onDeleteClick = onDeleteClick,
+    )
 
     if (isRenameWalletDialogVisible) {
         RenameWalletDialogContent(
@@ -188,6 +181,41 @@ private fun CardContainer(
                 isRenameWalletDialogVisible = false
             },
             onDismiss = { isRenameWalletDialogVisible = false },
+        )
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun ManageWalletContextMenu(
+    isMenuVisible: Boolean,
+    pressOffset: DpOffset,
+    itemHeight: Dp,
+    onDismissRequest: () -> Unit,
+    onShowRenameWalletDialogClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = isMenuVisible,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        offset = pressOffset.copy(y = pressOffset.y - itemHeight),
+    ) {
+        MenuItem(
+            textResId = R.string.common_rename,
+            imageVector = Icons.Outlined.Edit,
+            onClick = {
+                onDismissRequest()
+                onShowRenameWalletDialogClick()
+            },
+        )
+        MenuItem(
+            textResId = R.string.common_delete,
+            imageVector = Icons.Outlined.Delete,
+            onClick = {
+                onDismissRequest()
+                onDeleteClick()
+            },
         )
     }
 }
@@ -230,7 +258,7 @@ private fun TitleText(title: String) {
     Text(
         text = title,
         color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.body2,
+        style = TangemTheme.typography.button,
         maxLines = 1,
     )
 }
@@ -306,7 +334,7 @@ private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier
 private fun AdditionalInfoText(text: TextReference) {
     Text(
         text = text.resolveReference(),
-        color = TangemTheme.colors.text.disabled,
+        color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption,
     )
 }

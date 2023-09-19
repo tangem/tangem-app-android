@@ -32,7 +32,12 @@ import com.tangem.wallet.R
 
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 @Composable
-fun FirstStoriesContent(isPaused: Boolean, duration: Int, onHideContent: (Boolean) -> Unit) {
+fun FirstStoriesContent(
+    isPaused: Boolean,
+    duration: Int,
+    isNewWalletAvailable: MutableState<Boolean>,
+    onHideContent: (Boolean) -> Unit,
+) {
     val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
 
     val screenState = remember { mutableStateOf(StartingScreenState.INIT) }
@@ -115,13 +120,18 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int, onHideContent: (Boolea
                         .weight(1.2f)
                         .wrapContentSize(),
                 ) {
+                    val painter = if (isNewWalletAvailable.value) {
+                        painterResource(id = R.drawable.img_meet_tangem2)
+                    } else {
+                        painterResource(id = R.drawable.img_meet_tangem)
+                    }
                     StoriesBottomImageAnimation(
                         totalDuration = duration,
                         firstStepDuration = 400,
                     ) { modifier ->
                         Image(
                             modifier = modifier.fillMaxWidth(),
-                            painter = painterResource(id = R.drawable.img_meet_tangem),
+                            painter = painter,
                             contentDescription = "Tangem Wallet card",
                         )
                     }
@@ -178,5 +188,11 @@ private fun MutableState<StartingScreenState>.isMeetTangemDisplaying(): Boolean 
 @Preview
 @Composable
 private fun FirstStoriesPreview() {
-    FirstStoriesContent(false, 8000) {}
+    FirstStoriesContent(
+        false,
+        8000,
+        remember {
+            mutableStateOf(false)
+        },
+    ) {}
 }
