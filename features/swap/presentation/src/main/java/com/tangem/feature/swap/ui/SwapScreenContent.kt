@@ -326,16 +326,8 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
 
 @Composable
 private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
+    // order is important
     when {
-        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_give_permission),
-                enabled = true,
-                showProgress = state.swapButton.loading,
-                onClick = onPermissionWarningClick,
-            )
-        }
         state.warnings.any { it is SwapWarning.InsufficientFunds } -> {
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -343,6 +335,15 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 enabled = false,
                 showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
+            )
+        }
+        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.swapping_give_permission),
+                enabled = true,
+                showProgress = state.swapButton.loading,
+                onClick = onPermissionWarningClick,
             )
         }
         else -> {
