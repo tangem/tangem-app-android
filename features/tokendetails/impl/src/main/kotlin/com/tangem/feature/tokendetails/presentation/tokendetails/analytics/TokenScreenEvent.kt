@@ -11,7 +11,6 @@ sealed class TokenScreenEvent(
     error: Throwable? = null,
 ) : AnalyticsEvent("Token", event, params, error) {
 
-    // todo later, feature is not implemented yet
     class Refreshed(token: String) : TokenScreenEvent(
         event = "Refreshed",
         params = mapOf("Token" to token)
@@ -27,7 +26,6 @@ sealed class TokenScreenEvent(
         params = mapOf("Token" to token)
     )
 
-    // todo later, feature is not implemented yet
     class ButtonReload(token: String) : TokenScreenEvent(
         event = "Button - Reload",
         params = mapOf("Token" to token),
