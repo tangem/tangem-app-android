@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
@@ -37,6 +38,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -93,6 +95,7 @@ internal class WalletViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -141,6 +144,8 @@ internal class WalletViewModel @Inject constructor(
     )
 
     override fun onCreate(owner: LifecycleOwner) {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.ScreenOpened)
+
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
 
@@ -231,6 +236,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onScanCardClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeScanYourCardTapped)
+
         viewModelScope.launch(dispatchers.io) {
             scanCardProcessor.scan()
                 .doOnSuccess {
@@ -330,7 +337,10 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onDetailsClick() = router.openDetailsScreen()
 
-    override fun onBackupCardClick() = router.openOnboardingScreen()
+    override fun onBackupCardClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeBackupYourWalletTapped)
+        router.openOnboardingScreen()
+    }
 
     override fun onCriticalWarningAlreadySignedHashesClick() {
         uiState = stateFactory.getStateWithOpenWalletBottomSheet(
@@ -363,6 +373,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onWalletChange(index: Int) {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.WalletSwipe)
+
         val state = uiState as? WalletState.ContentState ?: return
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
@@ -567,6 +579,8 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onUnlockWalletClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeWalletLocked)
+
         viewModelScope.launch(dispatchers.io) {
             unlockWalletsUseCase()
         }
