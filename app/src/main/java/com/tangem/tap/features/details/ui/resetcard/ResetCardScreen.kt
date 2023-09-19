@@ -77,7 +77,6 @@ private fun ResetCardView(state: ResetCardScreenState) {
 
             Spacer(modifier = Modifier.size(28.dp))
 
-            // TODO finalize texts
             ConditionCheckBox(
                 checkedStateProvider = { state.acceptWarning1Checked },
                 onCheckedChange = { state.onAcceptWarning1ToggleClick(it) },
