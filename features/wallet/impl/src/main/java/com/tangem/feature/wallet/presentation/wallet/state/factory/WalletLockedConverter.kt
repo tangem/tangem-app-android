@@ -55,7 +55,7 @@ internal class WalletLockedConverter(
     }
 
     private fun WalletTopBarConfig.updateCallback(): WalletTopBarConfig {
-        return copy(onMoreClick = clickIntents::onUnlockWalletNotificationClick)
+        return copy(onDetailsClick = clickIntents::onUnlockWalletNotificationClick)
     }
 
     private fun WalletPullToRefreshConfig.stopRefreshing(): WalletPullToRefreshConfig {
