@@ -116,7 +116,7 @@ sealed class CryptoCurrency : Serializable {
          *
          * The body can be either a raw network ID or a raw network ID with a network derivation path.
          */
-        sealed class Body {
+        sealed class Body : Serializable {
 
             /** The value of the body. */
             abstract val value: String
