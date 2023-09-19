@@ -8,7 +8,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -22,15 +21,18 @@ class GetCurrencyWarningsUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    suspend operator fun invoke(userWallet: UserWallet, currency: CryptoCurrency): Flow<Set<CryptoCurrencyWarning>> {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Flow<Set<CryptoCurrencyWarning>> {
         return combine(
             getFeeWarningFlow(
-                userWalletId = userWallet.walletId,
+                userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
             ),
-            flowOf(walletManagersFacade.getRentInfo(userWallet.walletId, currency.network)),
-            flowOf(walletManagersFacade.getExistentialDeposit(userWallet.walletId, currency.network)),
+            flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
+            flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
         ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning ->
             setOfNotNull(
                 maybeRentWarning,
