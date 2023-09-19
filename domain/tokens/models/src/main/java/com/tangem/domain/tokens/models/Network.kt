@@ -47,7 +47,7 @@ data class Network(
      * This class represents such paths in a generic manner, allowing for predefined card-based paths,
      * custom paths, or even no derivation path at all.
      */
-    sealed class DerivationPath {
+    sealed class DerivationPath : Serializable {
 
         /** The actual derivation path value, if any. */
         abstract val value: String?
