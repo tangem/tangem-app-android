@@ -1,11 +1,14 @@
 package com.tangem.tap
 
+import android.app.Application
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.data.card.sdk.CardSdkLifecycleObserver
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -127,9 +131,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
+        if (!isDarkThemeFeatureEnabled(application)) {
+            setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
         super.onCreate(savedInstanceState)
 
-        bootstrapMainStateUpdates()
+        bootstrapMainStateUpdates(application)
 
         splashScreen.setKeepOnScreenCondition { isInitializing }
 
@@ -165,6 +173,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         )
     }
 
+    private fun isDarkThemeFeatureEnabled(application: Application): Boolean {
+        val featureToggle = (application as TapApplication).darkThemeFeatureToggle
+        return featureToggle.isDarkThemeEnabled
+    }
+
     override fun onStart() {
         super.onStart()
         dialogManager.onStart(this)
@@ -187,13 +200,18 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         intentProcessor.removeAll()
-        cardSdkLifecycleObserver.onDestroy()
+        cardSdkLifecycleObserver.onDestroy(this)
         super.onDestroy()
     }
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
-        intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider))
+        intentProcessor.addHandler(
+            BackgroundScanIntentHandler(
+                hasSavedWalletsProvider,
+                lifecycleScope,
+            ),
+        )
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
         intentProcessor.addHandler(BuyCurrencyIntentHandler())
         intentProcessor.addHandler(SellCurrencyIntentHandler())
@@ -211,14 +229,25 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 
-    private fun bootstrapMainStateUpdates() {
+    private fun bootstrapMainStateUpdates(application: Application) {
         viewModel.state
             .onEach { state ->
                 isInitializing = state is GlobalSettingsState.Loading
 
                 when (state) {
                     is GlobalSettingsState.Content -> {
-                        MutableAppThemeModeHolder.value = state.appThemeMode
+                        if (isDarkThemeFeatureEnabled(application)) {
+                            MutableAppThemeModeHolder.value = state.appThemeMode
+
+                            val mode = when (state.appThemeMode) {
+                                AppThemeMode.FORCE_DARK -> AppCompatDelegate.MODE_NIGHT_YES
+                                AppThemeMode.FORCE_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+                                AppThemeMode.FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                            }
+                            setDefaultNightMode(mode)
+                        } else {
+                            MutableAppThemeModeHolder.value = AppThemeMode.FORCE_LIGHT
+                        }
                     }
                     is GlobalSettingsState.Loading -> Unit
                 }
@@ -246,7 +275,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
          */
         cardSdkLifecycleObserver.onCreate(context = this)
 
-        scope.launch {
+        lifecycleScope.launch {
             intentProcessor.handleIntent(intent)
         }
     }
@@ -318,8 +347,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
             store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
-            scope.launch {
-                val handler = BackgroundScanIntentHandler(hasSavedUserWalletsProvider = { true })
+            lifecycleScope.launch {
+                val handler = BackgroundScanIntentHandler(
+                    hasSavedUserWalletsProvider = { true },
+                    lifecycleCoroutineScope = lifecycleScope,
+                )
                 val isBackgroundScanHandled = handler.handleIntent(intentWhichStartedActivity)
                 val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
                 if (!isBackgroundScanHandled && hasNotIncompletedBackup) {
@@ -328,7 +360,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         } else {
             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
-            scope.launch {
+            lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity)
             }
         }

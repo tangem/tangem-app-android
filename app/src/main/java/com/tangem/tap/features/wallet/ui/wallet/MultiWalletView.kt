@@ -6,7 +6,7 @@ import com.badoo.mvicore.modelWatcher
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.entities.FiatCurrency
@@ -14,7 +14,6 @@ import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.model.TotalFiatBalance
-import com.tangem.tap.features.tokens.legacy.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -106,14 +105,8 @@ class MultiWalletView : WalletView() {
         binding.btnAddToken.setOnClickListener {
             Analytics.send(Portfolio.ButtonManageTokens())
 
-            store.dispatch(
-                TokensAction.SetArgs.ManageAccess(
-                    wallets = state.walletsDataFromStores,
-                    derivationStyle = store.state.globalState.scanResponse
-                        ?.derivationStyleProvider?.getDerivationStyle(),
-                ),
-            )
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
+            store.dispatch(action = TokensAction.SetArgs.ManageAccess)
+            store.dispatch(action = NavigationAction.NavigateTo(screen = AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
     }

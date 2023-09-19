@@ -8,7 +8,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_add_card"
         style="@style/TapSecondaryIconButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -19,6 +19,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_continue"
+        android:layout_width="match_parent"
         style="@style/TapPrimaryButton"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"

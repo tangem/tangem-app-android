@@ -23,11 +23,12 @@ import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
-import com.tangem.feature.learn2earn.domain.api.Learn2earnInteractor
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -61,6 +62,8 @@ import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementa
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
@@ -151,8 +154,8 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
-    @Inject
-    lateinit var learn2earnInteractor: Learn2earnInteractor
+    // @Inject
+    // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
     lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
@@ -168,6 +171,18 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var walletManagersFacade: WalletManagersFacade
+
+    @Inject
+    lateinit var currenciesRepository: CurrenciesRepository
+
+    @Inject
+    lateinit var appThemeModeRepository: AppThemeModeRepository
+
+    @Inject
+    lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    @Inject
+    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
 
     override fun onCreate() {
         super.onCreate()
@@ -190,6 +205,9 @@ class TapApplication : Application(), ImageLoaderFactory {
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
                     appStateHolder = appStateHolder,
+                    currenciesRepository = currenciesRepository,
+                    appThemeModeRepository = appThemeModeRepository,
+                    detailsFeatureToggles = detailsFeatureToggles,
                 ),
             ),
         )
@@ -237,7 +255,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         //  https://tangem.atlassian.net/browse/AND-3859
         runBlocking {
             featureTogglesManager.init()
-            learn2earnInteractor.init()
+            // learn2earnInteractor.init()
         }
 
         initTopUpController()

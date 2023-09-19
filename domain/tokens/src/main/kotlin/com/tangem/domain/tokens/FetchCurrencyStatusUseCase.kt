@@ -75,7 +75,7 @@ class FetchCurrencyStatusUseCase(
         refresh: Boolean,
     ) = coroutineScope {
         val fetchStatus = async {
-            fetchNetworkStatus(userWalletId, currency.network.id, refresh)
+            fetchNetworkStatus(userWalletId, currency.network, refresh)
         }
         val fetchQuote = async {
             fetchQuote(currency.id, refresh)
@@ -101,11 +101,11 @@ class FetchCurrencyStatusUseCase(
 
     private suspend fun Raise<CurrencyStatusError>.fetchNetworkStatus(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
+        network: Network,
         refresh: Boolean,
     ) {
         catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(networkId), refresh) },
+            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
         ) {
             raise(CurrencyStatusError.DataError(it))
         }

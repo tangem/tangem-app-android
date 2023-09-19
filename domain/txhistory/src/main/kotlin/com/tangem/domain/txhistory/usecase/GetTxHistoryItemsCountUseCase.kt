@@ -9,10 +9,10 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepository
 
 class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
 
-    suspend operator fun invoke(networkId: Network.ID, derivationPath: String?): Either<TxHistoryStateError, Int> {
+    suspend operator fun invoke(network: Network): Either<TxHistoryStateError, Int> {
         return either {
             catch(
-                block = { repository.getTxHistoryItemsCount(networkId, derivationPath) },
+                block = { repository.getTxHistoryItemsCount(network) },
                 catch = { throwable ->
                     raise(
                         when (throwable) {

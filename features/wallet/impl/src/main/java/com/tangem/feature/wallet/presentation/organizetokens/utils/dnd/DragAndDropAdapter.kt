@@ -4,21 +4,17 @@ import com.tangem.common.Provider
 import com.tangem.feature.wallet.presentation.organizetokens.DragAndDropIntents
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.utils.common.divideMovingItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteItems
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.updateItems
 import kotlinx.collections.immutable.mutate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import org.burnoutcrew.reorderable.ItemPosition
 
 internal class DragAndDropAdapter(
     private val listStateProvider: Provider<OrganizeTokensListState>,
-    private val scope: CoroutineScope,
 ) : DragAndDropIntents {
 
     private val draggableGroupsOperations = DraggableGroupsOperations()
@@ -37,9 +33,12 @@ internal class DragAndDropAdapter(
         get() = listStateFlowInternal
 
     override fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean {
-        val items = (currentListState as? OrganizeTokensListState.GroupedByNetwork)
-            ?.items
-            ?: return true // If ungrouped then item can be moved anywhere
+        val items = when (val listState = currentListState) {
+            is OrganizeTokensListState.GroupedByNetwork -> listState.items
+            is OrganizeTokensListState.Empty,
+            is OrganizeTokensListState.Ungrouped,
+            -> return true // If ungrouped then item can be moved anywhere
+        }
 
         val (dragOverItem, draggingItem) = findItemsToMove(
             items = items,
@@ -54,7 +53,7 @@ internal class DragAndDropAdapter(
         return when (draggingItem) {
             is DraggableItem.GroupHeader -> checkCanMoveHeaderOver(dragOver, dragOverItem, items.lastIndex)
             is DraggableItem.Token -> checkCanMoveTokenOver(draggingItem, dragOverItem)
-            is DraggableItem.GroupPlaceholder -> false
+            is DraggableItem.Placeholder -> false
         }
     }
 
@@ -64,11 +63,11 @@ internal class DragAndDropAdapter(
 
         updateListState {
             when (item) {
-                is DraggableItem.GroupPlaceholder -> items
+                is DraggableItem.Placeholder -> items
                 is DraggableItem.GroupHeader -> draggableGroupsOperations.collapseGroup(items, item)
                 is DraggableItem.Token -> when (this) {
-                    is OrganizeTokensListState.GroupedByNetwork -> draggableGroupsOperations.divideGroups(items, item)
-                    is OrganizeTokensListState.Ungrouped -> divideTokens(items, item)
+                    is OrganizeTokensListState.GroupedByNetwork -> items.divideMovingItem(item)
+                    is OrganizeTokensListState.Ungrouped -> items.divideMovingItem(item)
                     is OrganizeTokensListState.Empty -> items
                 }
             }
@@ -76,21 +75,17 @@ internal class DragAndDropAdapter(
     }
 
     override fun onItemDraggingEnd() {
-        scope.launch(Dispatchers.IO) {
-            val draggingItem = currentDraggingItem ?: return@launch
+        val draggingItem = currentDraggingItem ?: return
 
-            delay(FINISH_DRAGGING_DELAY_MILLIS)
-
-            updateListState {
-                when (draggingItem) {
-                    is DraggableItem.GroupHeader -> draggableGroupsOperations.expandGroups(items)
-                    is DraggableItem.Token -> items.uniteItems()
-                    is DraggableItem.GroupPlaceholder -> items
-                }
+        updateListState {
+            when (draggingItem) {
+                is DraggableItem.GroupHeader -> draggableGroupsOperations.expandGroups(items)
+                is DraggableItem.Token -> items.uniteItems()
+                is DraggableItem.Placeholder -> items
             }
-
-            currentDraggingItem = null
         }
+
+        currentDraggingItem = null
     }
 
     override fun onItemDragged(from: ItemPosition, to: ItemPosition) = updateListState {
@@ -137,7 +132,7 @@ internal class DragAndDropAdapter(
         return when {
             moveOverItemPosition.index == 0 -> true
             moveOverItemPosition.index == lastItemIndex -> true
-            moveOverItem is DraggableItem.GroupPlaceholder -> true
+            moveOverItem is DraggableItem.Placeholder -> true
             else -> false
         }
     }
@@ -147,23 +142,7 @@ internal class DragAndDropAdapter(
         return when (moveOverItem) {
             is DraggableItem.GroupHeader -> false // Token item can not be moved to group item
             is DraggableItem.Token -> item.groupId == moveOverItem.groupId // Token item can not be moved over its group
-            is DraggableItem.GroupPlaceholder -> false
+            is DraggableItem.Placeholder -> false
         }
-    }
-
-    @Suppress("UNCHECKED_CAST") // Erased type
-    private fun divideTokens(
-        items: List<DraggableItem.Token>,
-        movingItem: DraggableItem.Token,
-    ): List<DraggableItem.Token> {
-        return items.map { token ->
-            token
-                .updateRoundingMode(DraggableItem.RoundingMode.All(showGap = true))
-                .updateShadowVisibility(show = token.id == movingItem.id)
-        } as List<DraggableItem.Token>
-    }
-
-    private companion object {
-        const val FINISH_DRAGGING_DELAY_MILLIS = 200L
     }
 }

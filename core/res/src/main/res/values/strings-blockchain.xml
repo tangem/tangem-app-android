@@ -3,6 +3,9 @@
   <string name="address_type_default">Default</string>
   <string name="address_type_legacy">Legacy</string>
   <string name="common_fee_error">Failed to get fee</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
+  <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
+  <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="kaspa_withdrawal_message_warning">Due to Kaspa limitations only %1$d UTXOs can fit in a single transaction. This means you can only send %2$s or less. You need to reduce the amount.</string>
   <string name="no_account_generic">Load %1$s+ %2$s to create account</string>
   <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>

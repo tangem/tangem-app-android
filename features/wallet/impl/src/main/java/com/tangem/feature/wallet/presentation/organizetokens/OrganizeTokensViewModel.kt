@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.organizetokens.analytics.OrganizeTokensScreen
+import com.tangem.feature.wallet.presentation.organizetokens.analytics.PortfolioOrganizeTokensAnalyticsEvent
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
@@ -21,8 +21,8 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.disabl
 import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapter
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +37,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val dispatchers: CoroutineDispatcherProvider,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, OrganizeTokensIntents {
 
@@ -46,7 +47,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private val dragAndDropAdapter = DragAndDropAdapter(
         listStateProvider = Provider { uiState.value.itemsState },
-        scope = viewModelScope,
     )
 
     private val stateHolder = OrganizeTokensStateHolder(
@@ -71,7 +71,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
     override fun onCreate(owner: LifecycleOwner) {
-        analyticsEventsHandler.send(OrganizeTokensScreen.ScreenOpened)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
     }
 
     override fun onBackClick() {
@@ -79,9 +79,9 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onSortClick() {
-        analyticsEventsHandler.send(OrganizeTokensScreen.ByBalance)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(dispatchers.default) {
             val list = tokenList ?: return@launch
 
             toggleTokenListSortingUseCase(list).fold(
@@ -95,9 +95,9 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onGroupClick() {
-        analyticsEventsHandler.send(OrganizeTokensScreen.Group)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(dispatchers.default) {
             val list = tokenList ?: return@launch
 
             toggleTokenListGroupingUseCase(list).fold(
@@ -111,7 +111,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onApplyClick() {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(dispatchers.default) {
             stateHolder.updateStateToDisplayProgress()
 
             val listState = uiState.value.itemsState
@@ -136,22 +136,24 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
                     stateHolder.updateStateToHideProgress()
-                    withContext(Dispatchers.Main) { router.popBackStack() }
+                    withContext(
+                        dispatchers.main,
+                    ) { router.popBackStack() }
                 },
             )
         }
     }
 
     override fun onCancelClick() {
-        analyticsEventsHandler.send(OrganizeTokensScreen.Cancel)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Cancel)
 
         router.popBackStack()
     }
 
     private fun bootstrapTokenList() {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(dispatchers.default) {
             val maybeTokenList = getTokenListUseCase(userWalletId)
-                .first { it.getOrNull()?.totalFiatBalance is TokenList.FiatBalance.Loaded }
+                .first { it.getOrNull()?.totalFiatBalance !is TokenList.FiatBalance.Loading }
 
             maybeTokenList.fold(
                 ifLeft = stateHolder::updateStateWithError,
@@ -187,7 +189,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private fun sendAnalyticsEvent(isGroupedByNetwork: Boolean, isSortedByBalance: Boolean) {
         analyticsEventsHandler.send(
-            OrganizeTokensScreen.Apply(
+            PortfolioOrganizeTokensAnalyticsEvent.Apply(
                 grouping = if (isGroupedByNetwork) {
                     AnalyticsParam.OnOffState.On
                 } else {

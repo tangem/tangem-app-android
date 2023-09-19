@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList.FiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -12,7 +11,6 @@ import com.tangem.utils.converter.Converter
 
 internal class FiatBalanceToWalletCardConverter(
     private val currentState: WalletCardState,
-    private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
     private val isWalletContentHidden: Boolean,
@@ -37,10 +35,7 @@ internal class FiatBalanceToWalletCardConverter(
             imageResId = imageResId,
             onDeleteClick = onDeleteClick,
             onRenameClick = onRenameClick,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(
-                cardTypesResolver = cardTypeResolverProvider(),
-                wallet = currentWalletProvider(),
-            ),
+            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
         )
     }
 
@@ -60,10 +55,7 @@ internal class FiatBalanceToWalletCardConverter(
             WalletCardState.Content(
                 id = currentState.id,
                 title = currentState.title,
-                additionalInfo = WalletAdditionalInfoFactory.resolve(
-                    cardTypesResolver = cardTypeResolverProvider(),
-                    wallet = currentWalletProvider(),
-                ),
+                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
                 imageResId = currentState.imageResId,
                 onRenameClick = currentState.onRenameClick,
                 onDeleteClick = currentState.onDeleteClick,
