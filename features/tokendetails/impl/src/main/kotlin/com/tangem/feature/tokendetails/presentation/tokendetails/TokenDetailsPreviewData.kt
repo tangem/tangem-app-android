@@ -83,6 +83,7 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
+        notifications = persistentListOf(),
         txHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
                 value = TxHistoryState.getDefaultLoadingTransactions {},
