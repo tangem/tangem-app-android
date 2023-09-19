@@ -9,7 +9,7 @@ class IsBalanceHiddenUseCase(
 ) {
 
     operator fun invoke(): Flow<Boolean> {
-        return balanceHidingRepository.balanceHidingSettingsEvents().map {
+        return balanceHidingRepository.getBalanceHidingSettingsFlow().map {
             it.isBalanceHidden
         }
     }

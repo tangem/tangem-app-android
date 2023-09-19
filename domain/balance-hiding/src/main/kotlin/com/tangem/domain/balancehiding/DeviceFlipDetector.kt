@@ -4,5 +4,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface DeviceFlipDetector {
 
-    fun deviceFlipEvents(): Flow<Unit>
+    fun getDeviceFlipFlow(): Flow<Unit>
 }

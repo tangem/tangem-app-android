@@ -11,7 +11,7 @@ internal class DefaultBalanceHidingRepository(
     private val balanceHidingSettingsStore: BalanceHidingSettingsStore,
 ) : BalanceHidingRepository {
 
-    override fun balanceHidingSettingsEvents(): Flow<BalanceHidingSettings> {
+    override fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings> {
         return balanceHidingSettingsStore.get()
             .onStart { emit(getBalanceHidingSettings()) }
             .distinctUntilChanged()

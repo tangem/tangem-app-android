@@ -1,12 +1,12 @@
 package com.tangem.tap.di.domain
 
 import android.content.Context
+import com.tangem.domain.balancehiding.DeviceFlipDetector
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.tap.DefaultDeviceFlipDetector
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
@@ -53,11 +53,11 @@ internal object SettingsDomainModule {
     @Provides
     @ViewModelScoped
     fun providesListenUseCase(
-        @ApplicationContext context: Context,
+        flipDetector: DeviceFlipDetector,
         balanceHidingRepository: BalanceHidingRepository,
     ): ListenToFlipsUseCase {
         return ListenToFlipsUseCase(
-            flipDetector = DefaultDeviceFlipDetector(context),
+            flipDetector = flipDetector,
             balanceHidingRepository = balanceHidingRepository,
         )
     }

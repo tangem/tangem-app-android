@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BalanceHidingRepository {
 
-    fun balanceHidingSettingsEvents(): Flow<BalanceHidingSettings>
+    fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings>
 
     suspend fun storeBalanceHidingSettings(isBalanceHidden: BalanceHidingSettings)
 
