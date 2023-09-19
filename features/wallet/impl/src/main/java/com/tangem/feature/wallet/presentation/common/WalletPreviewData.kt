@@ -32,7 +32,7 @@ import java.util.UUID
 @Suppress("LargeClass")
 internal object WalletPreviewData {
 
-    val walletTopBarConfig by lazy { WalletTopBarConfig(onScanCardClick = {}, onMoreClick = {}) }
+    val topBarConfig by lazy { WalletTopBarConfig(onDetailsClick = {}) }
 
     val walletCardContentState by lazy {
         WalletCardState.Content(
@@ -331,7 +331,7 @@ internal object WalletPreviewData {
     val multicurrencyWalletScreenState by lazy {
         WalletMultiCurrencyState.Content(
             onBackClick = {},
-            topBarConfig = walletTopBarConfig,
+            topBarConfig = topBarConfig,
             walletsListConfig = walletListConfig,
             tokensListState = WalletTokensListState.Content(
                 persistentListOf(
@@ -395,7 +395,7 @@ internal object WalletPreviewData {
     val singleWalletScreenState by lazy {
         WalletSingleCurrencyState.Content(
             onBackClick = {},
-            topBarConfig = walletTopBarConfig,
+            topBarConfig = topBarConfig,
             walletsListConfig = walletListConfig,
             pullToRefreshConfig = WalletPullToRefreshConfig(
                 isRefreshing = false,

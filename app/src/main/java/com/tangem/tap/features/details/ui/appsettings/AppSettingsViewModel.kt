@@ -108,6 +108,12 @@ internal class AppSettingsViewModel(
             itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
                 showThemeModeSelector(state.selectedThemeMode)
             }.let(::add)
+
+            if (state.darkThemeSwitchEnabled) {
+                itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
+                    showThemeModeSelector(state.selectedThemeMode)
+                }.let(::add)
+            }
         }
 
         return items.toImmutableList()

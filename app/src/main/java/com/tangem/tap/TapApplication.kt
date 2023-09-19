@@ -63,6 +63,7 @@ import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementa
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -183,6 +184,9 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    @Inject
+    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
 
     override fun onCreate() {
         super.onCreate()

@@ -182,7 +182,7 @@ internal class WalletViewModel @Inject constructor(
 
         when (val action = walletsUpdateActionResolver.resolve(sourceList)) {
             is WalletsUpdateActionResolver.Action.Initialize -> {
-                loadAndUpdateState(action.selectedWalletIndex)
+                initializeAndLoadState(selectedWalletIndex = action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 uiState = stateFactory.getStateWithUpdatedWalletName(name = action.name)
@@ -196,10 +196,16 @@ internal class WalletViewModel @Inject constructor(
                 deleteWalletAndUpdateState(action = action)
             }
             is WalletsUpdateActionResolver.Action.AddWallet -> {
-                loadAndUpdateState(action.selectedWalletIndex)
+                scrollAndUpdateState(action.selectedWalletIndex)
             }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
+    }
+
+    private fun initializeAndLoadState(selectedWalletIndex: Int) {
+        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = selectedWalletIndex)
+
+        getContentItemsUpdates(index = selectedWalletIndex)
     }
 
     private fun deleteWalletAndUpdateState(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -216,12 +222,22 @@ internal class WalletViewModel @Inject constructor(
                 getContentItemsUpdates(action.selectedWalletIndex)
             }
         } else {
-            loadAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
+            /* It's impossible case because user can delete only visible state, but we support this case */
+            scrollAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
         }
     }
 
-    private fun loadAndUpdateState(selectedWalletIndex: Int) {
-        uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = selectedWalletIndex)
+    private fun scrollAndUpdateState(selectedWalletIndex: Int) {
+        uiState = stateFactory.getSkeletonState(
+            wallets = wallets,
+            selectedWalletIndex = selectedWalletIndex,
+        )
+
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ChangeWallet(index = selectedWalletIndex),
+            setUiState = { uiState = it },
+        )
 
         getContentItemsUpdates(index = selectedWalletIndex)
     }
@@ -242,30 +258,42 @@ internal class WalletViewModel @Inject constructor(
                     if (userWallet != null) {
                         saveWalletUseCase(userWallet = userWallet, canOverride = false)
                             .onLeft { saveWalletError ->
-                                when (saveWalletError) {
-                                    is SaveWalletError.DataError -> Unit
-                                    is SaveWalletError.WalletAlreadySaved -> {
-                                        uiState = stateFactory.getStateAndTriggerEvent(
-                                            state = uiState,
-                                            event = WalletEvent.ShowError(
-                                                text = TextReference.Res(saveWalletError.messageId),
-                                            ),
-                                            setUiState = { uiState = it },
-                                        )
-                                    }
-                                }
+                                showErrorIfWalletNotSaved(
+                                    error = saveWalletError,
+                                    scannedWalletId = userWallet.walletId,
+                                )
                             }
                     }
                 }
-                .doOnFailure { tangemError ->
+        }
+    }
+
+    private fun showErrorIfWalletNotSaved(error: SaveWalletError, scannedWalletId: UserWalletId) {
+        when (error) {
+            is SaveWalletError.DataError -> Unit
+            is SaveWalletError.WalletAlreadySaved -> {
+                viewModelScope.launch(dispatchers.main) {
+                    val alreadySavedWalletIndex = (uiState as? WalletState.ContentState)?.walletsListConfig
+                        ?.wallets?.indexOfFirst { it.id == scannedWalletId }
+
+                    if (alreadySavedWalletIndex != null && alreadySavedWalletIndex != -1) {
+                        uiState = stateFactory.getStateAndTriggerEvent(
+                            state = uiState,
+                            event = WalletEvent.ChangeWallet(index = alreadySavedWalletIndex),
+                            setUiState = { uiState = it },
+                        )
+
+                        // Delay between events
+                        delay(timeMillis = 500L)
+                    }
+
                     uiState = stateFactory.getStateAndTriggerEvent(
                         state = uiState,
-                        event = WalletEvent.ShowError(
-                            text = TextReference.Str(tangemError.customMessage),
-                        ),
+                        event = WalletEvent.ShowError(text = TextReference.Res(error.messageId)),
                         setUiState = { uiState = it },
                     )
                 }
+            }
         }
     }
 
@@ -390,8 +418,7 @@ internal class WalletViewModel @Inject constructor(
                     getContentItemsUpdates(index)
                 }
             } else {
-                uiState = stateFactory.getSkeletonState(wallets = wallets, selectedWalletIndex = index)
-                getContentItemsUpdates(index = index)
+                initializeAndLoadState(selectedWalletIndex = index)
             }
         }
             .saveIn(onWalletChangeJobHolder)
