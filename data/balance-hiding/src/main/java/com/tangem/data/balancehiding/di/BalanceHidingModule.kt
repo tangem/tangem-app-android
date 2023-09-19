@@ -6,6 +6,7 @@ import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.domain.balancehiding.DeviceFlipDetector
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,9 +22,11 @@ internal object BalanceHidingModule {
     @Singleton
     fun provideBalanceHidingRepository(
         balanceHidingSettingsStore: BalanceHidingSettingsStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): BalanceHidingRepository {
         return DefaultBalanceHidingRepository(
             balanceHidingSettingsStore = balanceHidingSettingsStore,
+            dispatchers = dispatchers,
         )
     }
 

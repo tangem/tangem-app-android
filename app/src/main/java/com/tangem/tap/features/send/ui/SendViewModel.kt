@@ -23,7 +23,6 @@ internal class SendViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
             .onEach { isBalanceHidden ->
                 withContext(dispatchers.main) {
                     appStateHolder.mainStore?.dispatch(AmountAction.HideBalance(isBalanceHidden))
@@ -34,7 +33,6 @@ internal class SendViewModel @Inject constructor(
         viewModelScope.launch {
             listenToFlipsUseCase()
                 .flowWithLifecycle(owner.lifecycle)
-                .flowOn(dispatchers.io)
                 .collect()
         }
     }

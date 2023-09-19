@@ -109,13 +109,11 @@ internal class TokenDetailsViewModel @Inject constructor(
                 isBalanceHidden = hidden
                 uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
             }
-            .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
 
         viewModelScope.launch {
             listenToFlipsUseCase()
                 .flowWithLifecycle(owner.lifecycle)
-                .flowOn(dispatchers.io)
                 .collect()
         }
     }

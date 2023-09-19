@@ -94,7 +94,6 @@ internal class SwapViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .flowOn(dispatchers.io)
             .onEach { hidden ->
                 isBalanceHidden = hidden
                 withContext(dispatchers.main) {
@@ -106,7 +105,6 @@ internal class SwapViewModel @Inject constructor(
         viewModelScope.launch {
             listenToFlipsUseCase()
                 .flowWithLifecycle(owner.lifecycle)
-                .flowOn(dispatchers.io)
                 .collect()
         }
     }
