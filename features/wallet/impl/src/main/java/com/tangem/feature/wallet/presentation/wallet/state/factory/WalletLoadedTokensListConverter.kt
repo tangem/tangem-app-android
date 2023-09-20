@@ -24,11 +24,13 @@ import com.tangem.utils.converter.Converter
  *
 * [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class WalletLoadedTokensListConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val tokenListErrorConverter: TokenListErrorConverter,
     appCurrencyProvider: Provider<AppCurrency>,
     currentWalletProvider: Provider<UserWallet>,
+    isBalanceHiddenProvider: Provider<Boolean>,
     clickIntents: WalletClickIntents,
 ) : Converter<Either<TokenListError, TokenList>, WalletState> {
 
@@ -36,7 +38,7 @@ internal class WalletLoadedTokensListConverter(
         currentStateProvider = currentStateProvider,
         currentWalletProvider = currentWalletProvider,
         appCurrencyProvider = appCurrencyProvider,
-        isWalletContentHidden = false, // TODO: https://tangem.atlassian.net/browse/AND-4007
+        isBalanceHiddenProvider = isBalanceHiddenProvider,
         clickIntents = clickIntents,
     )
 
