@@ -25,7 +25,7 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun WalletCardState.toLoadingWalletCardState(): WalletCardState {
-        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onRenameClick, onDeleteClick)
+        return WalletCardState.Loading(id, title, imageResId, onRenameClick, onDeleteClick)
     }
 
     private fun WalletCardState.toErrorWalletCardState(): WalletCardState {
@@ -35,7 +35,6 @@ internal class FiatBalanceToWalletCardConverter(
             imageResId = imageResId,
             onDeleteClick = onDeleteClick,
             onRenameClick = onRenameClick,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
         )
     }
 
@@ -44,7 +43,6 @@ internal class FiatBalanceToWalletCardConverter(
             WalletCardState.HiddenContent(
                 id = currentState.id,
                 title = currentState.title,
-                additionalInfo = currentState.additionalInfo ?: WalletCardState.HIDDEN_BALANCE_TEXT,
                 imageResId = currentState.imageResId,
                 onRenameClick = currentState.onRenameClick,
                 onDeleteClick = currentState.onDeleteClick,
