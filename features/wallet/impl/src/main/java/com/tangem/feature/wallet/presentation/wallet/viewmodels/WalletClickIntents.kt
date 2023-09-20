@@ -9,9 +9,7 @@ internal interface WalletClickIntents {
 
     fun onBackClick()
 
-    fun onScanCardClick()
-
-    fun onScanCardNotificationClick()
+    fun onGenerateMissedAddressesClick()
 
     fun onScanToUnlockWalletClick()
 
@@ -19,15 +17,11 @@ internal interface WalletClickIntents {
 
     fun onBackupCardClick()
 
-    fun onCriticalWarningAlreadySignedHashesClick()
-
-    fun onCloseWarningAlreadySignedHashesClick()
+    fun onMultiWalletSignedHashesNotificationClick()
 
     fun onLikeTangemAppClick()
 
     fun onRateTheAppClick()
-
-    fun onShareClick()
 
     fun onWalletChange(index: Int)
 

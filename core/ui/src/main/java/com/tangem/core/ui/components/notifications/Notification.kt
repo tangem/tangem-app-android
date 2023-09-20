@@ -1,9 +1,7 @@
 package com.tangem.core.ui.components.notifications
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -25,9 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -46,7 +42,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
  */
 @Composable
 fun Notification(config: NotificationConfig, modifier: Modifier = Modifier, iconTint: Color? = null) {
-    BaseContainer(buttonsState = config.buttonsState, modifier = modifier) {
+    BaseContainer(buttonsState = config.buttonsState, onClick = config.onClick, modifier = modifier) {
         Column(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
@@ -56,6 +52,7 @@ fun Notification(config: NotificationConfig, modifier: Modifier = Modifier, icon
                 iconTint = iconTint,
                 title = config.title,
                 subtitle = config.subtitle,
+                isClickableComponent = config.onClick != null,
             )
 
             Buttons(state = config.buttonsState)
@@ -71,11 +68,12 @@ fun Notification(config: NotificationConfig, modifier: Modifier = Modifier, icon
 @Composable
 private fun BaseContainer(
     buttonsState: NotificationConfig.ButtonsState?,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val containerColor by rememberUpdatedState(
-        newValue = if (buttonsState != null) {
+        newValue = if (buttonsState != null || onClick != null) {
             TangemTheme.colors.background.primary
         } else {
             TangemTheme.colors.button.disabled
@@ -83,9 +81,11 @@ private fun BaseContainer(
     )
 
     Surface(
+        onClick = onClick ?: {},
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size62)
             .fillMaxWidth(),
+        enabled = onClick != null,
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = containerColor,
     ) {
@@ -94,15 +94,36 @@ private fun BaseContainer(
 }
 
 @Composable
-private fun MainContent(iconResId: Int, iconTint: Color?, title: TextReference, subtitle: TextReference) {
-    Row(horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing10)) {
+private fun MainContent(
+    iconResId: Int,
+    iconTint: Color?,
+    title: TextReference,
+    subtitle: TextReference,
+    isClickableComponent: Boolean,
+) {
+    Row {
         Icon(
             iconResId = iconResId,
             tint = iconTint,
             modifier = Modifier.align(alignment = Alignment.CenterVertically),
         )
 
+        SpacerW(width = TangemTheme.dimens.spacing10)
+
         TextsBlock(title = title, subtitle = subtitle)
+
+        if (isClickableComponent) {
+            SpacerWMax()
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chevron_right_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(size = TangemTheme.dimens.size20)
+                    .align(alignment = Alignment.CenterVertically),
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
     }
 }
 
@@ -130,7 +151,7 @@ private fun TextsBlock(title: TextReference, subtitle: TextReference) {
         Text(
             text = title.resolveReference(),
             color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.body2,
+            style = TangemTheme.typography.button,
         )
 
         Text(
@@ -141,16 +162,13 @@ private fun TextsBlock(title: TextReference, subtitle: TextReference) {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun Buttons(state: NotificationButtonsState?) {
-    AnimatedContent(targetState = state, label = "Update the buttons content") { animatedState ->
-        when (animatedState) {
-            is NotificationButtonsState.SecondaryButtonConfig -> SingleSecondaryButton(config = animatedState)
-            is NotificationButtonsState.PrimaryButtonConfig -> SinglePrimaryButton(config = animatedState)
-            is NotificationButtonsState.PairButtonsConfig -> PairButtons(config = animatedState)
-            null -> Unit
-        }
+    when (state) {
+        is NotificationButtonsState.SecondaryButtonConfig -> SingleSecondaryButton(config = state)
+        is NotificationButtonsState.PrimaryButtonConfig -> SinglePrimaryButton(config = state)
+        is NotificationButtonsState.PairButtonsConfig -> PairButtons(config = state)
+        null -> Unit
     }
 }
 
@@ -265,6 +283,12 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
             title = TextReference.Str(value = "Some networks are unreachable"),
             subtitle = TextReference.Str(value = "Check your network connection"),
             iconResId = R.drawable.img_attention_20,
+        ),
+        NotificationConfig(
+            title = TextReference.Str(value = "Used card"),
+            subtitle = TextReference.Str(value = "The card signed transactions in the past"),
+            iconResId = R.drawable.ic_alert_circle_24,
+            onClick = {},
         ),
         NotificationConfig(
             title = TextReference.Str(value = "Your wallet hasn’t been backed up"),
