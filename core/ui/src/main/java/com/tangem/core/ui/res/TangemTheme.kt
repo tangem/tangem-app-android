@@ -165,7 +165,7 @@ private fun darkThemeColors(): TangemColors {
         button = TangemColors.Button(
             primary = TangemColorPalette.Light1,
             secondary = TangemColorPalette.Dark5,
-            disabled = TangemColorPalette.Dark6,
+            disabled = TangemColorPalette.Dark5,
             positiveDisabled = TangemColorPalette.DarkGreen,
         ),
         background = TangemColors.Background(
