@@ -71,6 +71,7 @@
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
     <string name="common_biometrics">биометрией</string>
     <string name="common_buy">Купить</string>
+    <string name="common_buy_currency">Купить %1$s</string>
     <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_close">Закрыть</string>
@@ -192,6 +193,7 @@
     <string name="initial_message_tap_header">Приложите карту</string>
     <string name="internal_error_wallet_manager_not_found">Внутренняя ошибка: не удается найти менеджер кошельков</string>
     <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
+    <string name="main_empty_tokens_list_message">Чтобы начать отслеживать свои криптоактивы и транзакции, добавьте токены</string>
     <string name="main_get_bonus_subtitle">Вы успешно прошли все уроки и теперь можете получить 1INCH токены</string>
     <plurals name="main_learn_subtitle">
         <item quantity="one">Пройдите 3 урока и получите %d 1INCH токен на свой кошелек</item>
@@ -215,6 +217,8 @@
         <item quantity="other">Вам надо сгенерировать адреса для %d новых сетей, используя вашу карту</item>
     </plurals>
     <string name="main_warning_missing_derivation_title">Некоторые адреса отсутствуют</string>
+    <string name="manage_tokens_add">Добавить</string>
+    <string name="manage_tokens_edit">Изменить</string>
     <string name="notification_title_not_enough_funds">Невозможно покрыть %1$s комиссию</string>
     <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
@@ -325,6 +329,8 @@
         <item quantity="other">за %d кошельков</item>
     </plurals>
     <string name="referral_point_currencies_description">Получите ^^%1$s^^ на ваш адрес в сети %2$s %3$s ^^спустя 30 дней^^ за каждый кошелек, который купит ваш друг</string>
+    <string name="referral_point_currencies_description_prefix">Получите</string>
+    <string name="referral_point_currencies_description_suffix">на ваш адрес в сети %1$s%2$s за каждый кошелек, который купит ваш друг</string>
     <string name="referral_point_currencies_title">Вы</string>
     <string name="referral_point_discount_description_prefix">Получит</string>
     <string name="referral_point_discount_description_suffix">при покупке кошелька на сайте tangem.com</string>
@@ -491,10 +497,11 @@
     <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
     <string name="user_wallet_list_single_header">Одновалютные</string>
     <string name="user_wallet_list_title">Мои кошельки</string>
-    <string name="user_wallet_list_unlock_all">Разблокировать все с %s</string>
+    <string name="user_wallet_list_unlock_all">Разблокировать все</string>
+    <string name="user_wallet_list_unlock_all_with">Разблокировать все с %s</string>
     <string name="wallet_address_button_explore">История транзакций</string>
     <string name="wallet_balance_blockchain_unreachable">Сеть недоступна</string>
-    <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
+    <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуйте позже.</string>
     <string name="wallet_balance_loading">Баланс загружается…</string>
     <string name="wallet_balance_missing_derivation">Отсканируйте карту</string>
     <string name="wallet_balance_tx_in_progress">Транзакция подтверждается…</string>
@@ -577,5 +584,5 @@
     <string name="welcome_unlock">Войти с %s</string>
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
-    <string name="welcome_unlock_title">С возвращением!</string>
+    <string name="welcome_unlock_title">C возвращением!</string>
 </resources>
