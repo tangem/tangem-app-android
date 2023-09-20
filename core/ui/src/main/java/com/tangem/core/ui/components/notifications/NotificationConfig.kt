@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
  * @property subtitle     subtitle
  * @property iconResId    icon resource id
  * @property buttonsState buttons state
+ * @property onClick      lambda be invoked when notification is clicked
  * @property onCloseClick lambda be invoked when close button is clicked
  *
 [REDACTED_AUTHOR]
@@ -19,6 +20,7 @@ data class NotificationConfig(
     val subtitle: TextReference,
     @DrawableRes val iconResId: Int,
     val buttonsState: ButtonsState? = null,
+    val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
 ) {
 
