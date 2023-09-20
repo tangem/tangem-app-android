@@ -63,18 +63,6 @@ sealed class TokenScreenEvent(
     )
 
     // todo later, feature is not implemented yet
-    class ButtonCopyAddress(token: String) : TokenScreenEvent(
-        event = "Button - Copy Address",
-        params = mapOf("Token" to token),
-    )
-
-    // todo later, feature is not implemented yet
-    class ButtonShareAddress(token: String) : TokenScreenEvent(
-        event = "Button - Copy Address",
-        params = mapOf("Token" to token),
-    )
-
-    // todo later, feature is not implemented yet
     class Bought(token: String) : TokenScreenEvent(
         event = "Token Bought",
         params = mapOf("Token" to token),

@@ -151,6 +151,8 @@ internal class TokenDetailsStateFactory(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
+                    onCopyClick = clickIntents::onCopyClick,
+                    onShareClick = clickIntents::onShareAddressClick,
                 ),
             ),
         )

@@ -28,6 +28,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -539,6 +540,12 @@ internal class WalletViewModel @Inject constructor(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
+                    onCopyClick = {
+                        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                    },
+                    onShareClick = {
+                        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                    }
                 ),
             )
         }

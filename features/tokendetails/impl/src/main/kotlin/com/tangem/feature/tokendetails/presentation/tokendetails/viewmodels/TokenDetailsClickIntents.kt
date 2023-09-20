@@ -27,4 +27,9 @@ interface TokenDetailsClickIntents {
     fun onExploreClick()
 
     fun onDismissBottomSheet()
+
+    fun onCopyClick()
+
+    fun onShareAddressClick()
+
 }

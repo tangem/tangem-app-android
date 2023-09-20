@@ -16,7 +16,7 @@ sealed class WalletScreenAnalyticsEvent(
         params = mapOf("State" to state.value),
     )
 
-    // TODO
+    // TODO 
     class NoticeRateAppButton(result: AnalyticsParam.RateApp) : WalletScreenAnalyticsEvent(
         event = "Notice - Rate The App Button Tapped",
         params = mapOf("Result" to result.value),
