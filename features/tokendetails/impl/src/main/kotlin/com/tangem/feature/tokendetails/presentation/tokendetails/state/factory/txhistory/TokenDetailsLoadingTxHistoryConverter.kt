@@ -23,12 +23,8 @@ internal class TokenDetailsLoadingTxHistoryConverter(
     private fun convertError(error: TxHistoryStateError): TokenDetailsState {
         return currentStateProvider().copy(
             txHistoryState = when (error) {
-                is TxHistoryStateError.EmptyTxHistories -> {
-                    TxHistoryState.Empty(onBuyClick = clickIntents::onBuyClick)
-                }
-                is TxHistoryStateError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
-                }
+                is TxHistoryStateError.EmptyTxHistories -> TxHistoryState.Empty
+                is TxHistoryStateError.DataError -> TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
                 is TxHistoryStateError.TxHistoryNotImplemented -> {
                     TxHistoryState.NotSupported(onExploreClick = clickIntents::onExploreClick)
                 }
