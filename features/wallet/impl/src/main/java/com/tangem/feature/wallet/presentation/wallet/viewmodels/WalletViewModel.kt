@@ -711,7 +711,6 @@ internal class WalletViewModel @Inject constructor(
 
             uiState = stateFactory.getLoadingTxHistoryState(
                 itemsCountEither = txHistoryItemsCountEither,
-                cryptoCurrencyStatus = singleWalletCryptoCurrencyStatus ?: return@launch,
             )
 
             txHistoryItemsCountEither.onRight {
