@@ -9,6 +9,8 @@ import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
@@ -49,6 +51,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
+    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
@@ -65,19 +69,24 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var wallet by Delegates.notNull<UserWallet>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+    private var isBalanceHidden = true
+
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
+
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
         private set
 
     override fun onCreate(owner: LifecycleOwner) {
         getWallet()
         updateContent(selectedWallet = wallet)
+        handleBalanceHiding(owner)
     }
 
     private fun getWallet() {
@@ -91,6 +100,22 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
         updateTxHistory()
+    }
+
+    private fun handleBalanceHiding(owner: LifecycleOwner) {
+        isBalanceHiddenUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .onEach { hidden ->
+                isBalanceHidden = hidden
+                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
+            }
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .collect()
+        }
     }
 
     private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {

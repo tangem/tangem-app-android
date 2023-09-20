@@ -57,6 +57,7 @@ data class AppSettingsState(
     val saveAccessCodes: Boolean = false,
     val isBiometricsAvailable: Boolean = false,
     val needEnrollBiometrics: Boolean = false,
+    val isHidingEnabled: Boolean = false,
     val isInProgress: Boolean = false,
     val selectedFiatCurrency: FiatCurrency = FiatCurrency.Default,
     val selectedThemeMode: AppThemeMode = AppThemeMode.DEFAULT,

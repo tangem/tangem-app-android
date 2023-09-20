@@ -62,6 +62,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
