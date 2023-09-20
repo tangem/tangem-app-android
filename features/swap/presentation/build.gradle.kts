@@ -9,11 +9,15 @@ plugins {
 
 dependencies {
     /** Core modules */
-    implementation(project(":core:analytics"))
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:utils"))
-    implementation(project(":core:ui"))
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.utils)
+    implementation(projects.core.ui)
+    implementation(projects.common)
+
+    /** Domain modules **/
+    implementation(projects.domain.balanceHiding)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -30,10 +34,11 @@ dependencies {
     implementation(deps.compose.constraintLayout)
 
     /** Api */
-    implementation(project(":features:swap:api"))
+    implementation(projects.features.swap.api)
 
     /** Domain */
-    implementation(project(":features:swap:domain"))
+    implementation(projects.features.swap.domain)
+    implementation(projects.domain.settings)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
