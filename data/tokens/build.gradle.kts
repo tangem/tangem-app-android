@@ -41,4 +41,5 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.retrofit) // For HttpException
 }
