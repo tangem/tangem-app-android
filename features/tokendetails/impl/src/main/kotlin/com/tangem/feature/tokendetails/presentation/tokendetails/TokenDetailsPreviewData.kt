@@ -67,6 +67,7 @@ internal object TokenDetailsPreviewData {
         actionButtons = actionButtons,
         fiatBalance = "123,00$",
         cryptoBalance = "866,96 USDT",
+        isBalanceHidden = false,
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = actionButtons)
 

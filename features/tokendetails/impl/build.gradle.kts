@@ -53,12 +53,14 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
