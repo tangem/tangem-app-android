@@ -38,6 +38,7 @@
     <string name="card_settings_access_code_recovery_enabled_description">允許您使用此卡重置此錢包中其他卡上的訪問密碼</string>
     <string name="card_settings_access_code_recovery_footer">禁用重置此卡或此錢包中其他卡上的訪問密碼的功能</string>
     <string name="card_settings_access_code_recovery_title">恢復訪問密碼</string>
+    <string name="card_settings_action_sheet_reset">重置</string>
     <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
@@ -258,6 +259,8 @@
     <string name="referral_error_failed_to_load_info">無法加載有關推薦計劃的消息。請稍後再試</string>
     <string name="referral_error_failed_to_load_info_with_reason">無法加載有關推薦計劃的消息。原因：%s。請稍後再試</string>
     <string name="referral_friends_bought_title">您的朋友買</string>
+    <string name="referral_point_currencies_description_prefix">會得到</string>
+    <string name="referral_point_currencies_description_suffix">對於你的朋友在你的 %1$s 網絡地址%2$s上購買的每個錢包</string>
     <string name="referral_point_currencies_title">你</string>
     <string name="referral_point_discount_description_prefix">得到</string>
     <string name="referral_point_discount_description_value">%s 折扣</string>
@@ -277,7 +280,6 @@
     <string name="reset_card_to_factory_warning_message">我了解執行此操作後，我將無法再訪問當前錢包</string>
     <string name="reset_card_with_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包。您將無法恢復當前錢包或使用卡恢復訪問密碼</string>
     <string name="reset_card_without_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包並將其從應用程序中刪除。您將無法恢復當前錢包</string>
-    <string name="russian_bank_card_warning_subtitle">您有其他國家的銀行卡或銀聯卡嗎？</string>
     <string name="russian_bank_card_warning_title">目前不接受俄羅斯銀行卡</string>
     <string name="save_user_wallet_agreement_access_description">登錄應用程序並在不掃描卡片的情況下檢查您的資產</string>
     <string name="save_user_wallet_agreement_access_title">訪問應用程序</string>
@@ -402,7 +404,7 @@
     <string name="user_wallet_list_rename_popup_title">重新命名錢包</string>
     <string name="user_wallet_list_single_header">單一幣種</string>
     <string name="user_wallet_list_title">我的錢包</string>
-    <string name="user_wallet_list_unlock_all">用 %s 解鎖全部</string>
+    <string name="user_wallet_list_unlock_all_with">用 %s 解鎖全部</string>
     <string name="wallet_address_button_explore">交易記錄</string>
     <string name="wallet_balance_blockchain_unreachable">網路無法使用</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
