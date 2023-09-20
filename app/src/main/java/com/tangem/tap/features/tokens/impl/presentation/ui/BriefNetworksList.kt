@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import kotlinx.collections.immutable.ImmutableCollection
@@ -83,14 +82,14 @@ internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modi
                     .align(Alignment.TopEnd)
                     .size(TangemTheme.dimens.size7)
                     .clip(CircleShape)
-                    .background(TangemColorPalette.White),
+                    .background(TangemTheme.colors.background.secondary),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
                     modifier = Modifier
                         .size(TangemTheme.dimens.size5)
                         .clip(CircleShape)
-                        .background(TangemColorPalette.Meadow),
+                        .background(TangemTheme.colors.icon.accent),
                 )
             }
         }
