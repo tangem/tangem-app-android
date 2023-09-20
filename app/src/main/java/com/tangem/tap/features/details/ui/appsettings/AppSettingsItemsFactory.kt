@@ -48,6 +48,21 @@ internal class AppSettingsItemsFactory {
         )
     }
 
+    fun createFlipToHideBalanceSwitch(
+        isChecked: Boolean,
+        isEnabled: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+    ): Item.Switch {
+        return Item.Switch(
+            id = "flip_to_hide_balance_switch",
+            title = resourceReference(R.string.details_row_title_flip_to_hide),
+            description = resourceReference(R.string.details_row_description_flip_to_hide),
+            isEnabled = isEnabled,
+            isChecked = isChecked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
+
     fun createSelectAppCurrencyButton(currentAppCurrencyName: String, onClick: () -> Unit): Item.Button {
         return Item.Button(
             id = "select_app_currency_button",
