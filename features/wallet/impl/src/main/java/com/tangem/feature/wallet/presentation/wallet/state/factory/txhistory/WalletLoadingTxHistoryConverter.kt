@@ -6,7 +6,6 @@ import com.tangem.common.Converter
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.*
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -28,23 +27,19 @@ internal class WalletLoadingTxHistoryConverter(
 
     override fun convert(value: WalletLoadingTxHistoryModel): WalletState {
         return value.historyLoadingState.fold(
-            ifLeft = { convertError(it, value.cryptoCurrencyStatus) },
+            ifLeft = ::convertError,
             ifRight = ::convertRight,
         )
     }
 
-    private fun convertError(error: TxHistoryStateError, cryptoCurrencyStatus: CryptoCurrencyStatus): WalletState {
+    private fun convertError(error: TxHistoryStateError): WalletState {
         val state = currentStateProvider()
 
         return if (state is WalletSingleCurrencyState.Content) {
             state.copy(
                 txHistoryState = when (error) {
-                    is TxHistoryStateError.EmptyTxHistories -> {
-                        Empty(onBuyClick = { clickIntents.onBuyClick(cryptoCurrencyStatus) })
-                    }
-                    is TxHistoryStateError.DataError -> {
-                        Error(onReloadClick = clickIntents::onReloadClick)
-                    }
+                    is TxHistoryStateError.EmptyTxHistories -> Empty
+                    is TxHistoryStateError.DataError -> Error(onReloadClick = clickIntents::onReloadClick)
                     is TxHistoryStateError.TxHistoryNotImplemented -> {
                         NotSupported(onExploreClick = clickIntents::onExploreClick)
                     }
@@ -76,8 +71,5 @@ internal class WalletLoadingTxHistoryConverter(
         return state
     }
 
-    data class WalletLoadingTxHistoryModel(
-        val historyLoadingState: Either<TxHistoryStateError, Int>,
-        val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    )
+    data class WalletLoadingTxHistoryModel(val historyLoadingState: Either<TxHistoryStateError, Int>)
 }
