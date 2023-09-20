@@ -83,13 +83,13 @@ private fun ResetCardView(state: ResetCardScreenState) {
             ConditionCheckBox(
                 checkedState = state.acceptCondition1Checked,
                 onCheckedChange = state.onAcceptCondition1ToggleClick,
-                description = TextReference.Res(R.string.reset_card_to_factory_warning_message_1),
+                description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
             )
 
             ConditionCheckBox(
                 checkedState = state.acceptCondition2Checked,
                 onCheckedChange = state.onAcceptCondition2ToggleClick,
-                description = TextReference.Res(R.string.reset_card_to_factory_warning_message_2),
+                description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
             )
 
             Spacer(modifier = Modifier.size(16.dp))
