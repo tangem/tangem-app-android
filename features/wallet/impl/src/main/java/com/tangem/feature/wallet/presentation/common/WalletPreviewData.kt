@@ -381,10 +381,9 @@ internal object WalletPreviewData {
                 onRefresh = {},
             ),
             notifications = persistentListOf(
-                WalletNotification.UnreachableNetworks,
-                WalletNotification.LikeTangemApp(onClick = {}),
-                WalletNotification.BackupCard(onClick = {}),
-                WalletNotification.ScanCard(onClick = {}),
+                WalletNotification.Critical.DevCard,
+                WalletNotification.MissingAddresses(missingAddressesCount = 0, onGenerateClick = {}),
+                WalletNotification.Warning.NetworksUnreachable,
             ),
             bottomSheetConfig = bottomSheet,
             tokenActionsBottomSheet = actionsBottomSheet,
@@ -402,7 +401,7 @@ internal object WalletPreviewData {
                 isRefreshing = false,
                 onRefresh = {},
             ),
-            notifications = persistentListOf(WalletNotification.LikeTangemApp(onClick = {})),
+            notifications = persistentListOf(WalletNotification.Warning.NetworksUnreachable),
             buttons = manageButtons,
             bottomSheetConfig = bottomSheet,
             marketPriceBlockState = MarketPriceBlockState.Content(
