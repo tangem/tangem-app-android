@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 
-internal class TokenItemHiddenStateUpdater {
+internal class TokenItemHiddenStateConverter {
 
     fun updateHiddenState(
         optionsState: TokenItemState.TokenOptionsState,

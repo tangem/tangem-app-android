@@ -5,7 +5,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.os.SystemClock
 
-class FlipListener(private val action: () -> Unit) : SensorEventListener {
+internal class FlipListener(private val action: () -> Unit) : SensorEventListener {
 
     private val zAxisThreshold = -6
     private val throttleTimeMs = 3000
