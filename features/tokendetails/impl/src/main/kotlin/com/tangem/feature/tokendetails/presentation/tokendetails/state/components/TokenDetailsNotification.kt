@@ -42,7 +42,7 @@ sealed class TokenDetailsNotification(open val config: NotificationConfig) {
         ),
     )
 
-    data class NetworkFeeFee(
+    data class NetworkFee(
         private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
         private val onBuyClick: () -> Unit,
     ) : TokenDetailsNotification(
