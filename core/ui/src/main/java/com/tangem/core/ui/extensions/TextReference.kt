@@ -109,7 +109,13 @@ fun combinedReference(refs: WrappedList<TextReference>): TextReference {
 @ReadOnlyComposable
 fun TextReference.resolveReference(): String {
     return when (this) {
-        is TextReference.Res -> stringResource(id, *formatArgs.toTypedArray())
+        is TextReference.Res -> {
+            val args = formatArgs
+                .map { if (it is TextReference) it.resolveReference() else it }
+                .toTypedArray()
+
+            stringResource(id = id, *args)
+        }
         is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
         is TextReference.Combined -> {
@@ -125,7 +131,13 @@ fun TextReference.resolveReference(): String {
 /** Resolve [TextReference] as [String] using [resources] (non-composable context) */
 fun TextReference.resolveReference(resources: Resources): String {
     return when (this) {
-        is TextReference.Res -> resources.getString(id, *formatArgs.toTypedArray())
+        is TextReference.Res -> {
+            val args = formatArgs
+                .map { if (it is TextReference) it.resolveReference(resources) else it }
+                .toTypedArray()
+
+            resources.getString(id, *args)
+        }
         is TextReference.PluralRes -> resources.getQuantityString(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
         is TextReference.Combined -> {
