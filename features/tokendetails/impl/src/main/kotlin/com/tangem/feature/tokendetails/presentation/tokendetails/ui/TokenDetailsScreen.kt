@@ -34,6 +34,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import kotlinx.collections.immutable.PersistentList
 
+// TODO: Split to blocks https://tangem.atlassian.net/browse/AND-4606
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
