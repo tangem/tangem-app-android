@@ -32,7 +32,11 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
     }
 
     fun createCurrencies(response: UserTokensResponse, scanResponse: ScanResponse): List<CryptoCurrency> {
-        return response.tokens.mapNotNull { createCurrency(it, scanResponse) }
+        return response.tokens
+            .asSequence()
+            .mapNotNull { createCurrency(it, scanResponse) }
+            .distinctBy { it.id }
+            .toList()
     }
 
     fun createCurrency(responseToken: UserTokensResponse.Token, scanResponse: ScanResponse): CryptoCurrency? {
