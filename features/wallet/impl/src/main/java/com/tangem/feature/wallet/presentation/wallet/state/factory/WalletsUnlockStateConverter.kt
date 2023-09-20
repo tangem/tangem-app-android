@@ -3,11 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
@@ -117,19 +115,10 @@ internal class WalletsUnlockStateConverter(
         return WalletCardState.Loading(
             id = id,
             title = title,
-            additionalInfo = userWallet.createAdditionalInfo(),
             imageResId = WalletImageResolver.resolve(userWallet = userWallet),
             onRenameClick = onRenameClick,
             onDeleteClick = onDeleteClick,
         )
-    }
-
-    private fun UserWallet.createAdditionalInfo(): TextReference? {
-        return if (isMultiCurrency) {
-            WalletAdditionalInfoFactory.resolve(wallet = this)
-        } else {
-            null
-        }
     }
 
     private fun WalletPullToRefreshConfig.stopRefreshing(): WalletPullToRefreshConfig {
