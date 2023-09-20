@@ -19,31 +19,31 @@ internal class TokenDetailsNotificationConverter(
 
     fun removeExistentialDeposit(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.ExistentialDepositNotification }
+        newNotifications.removeBy { it is TokenDetailsNotification.ExistentialDeposit }
         return newNotifications.toImmutableList()
     }
 
     fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.RentInfoNotification }
+        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
         return newNotifications.toImmutableList()
     }
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFeeFeeNotification(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFeeFee(
                 feeInfo = warning,
                 onBuyClick = clickIntents::onBuyClick,
             )
-            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDepositNotification(
+            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
                 onCloseClick = clickIntents::onCloseExistentialDepositNotification,
             )
-            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfoNotification(
+            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
                 rentInfo = warning,
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
-            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachableNotification
+            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachable
         }
     }
 }
