@@ -19,6 +19,7 @@ androidxSplashScreen = "1.0.1"
 androidxFragment = "1.5.3"
 androidxLifecycle = "2.5.1"
 androidx-paging = "3.1.1"
+androidx-palette = "1.0.0"
 # endregion AndroidX
 
 # region Compose
@@ -134,6 +135,7 @@ lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8",
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
 lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compoese-lifecycle-runtime" }
+androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
 # region AndroidX
 
 # region Compose
