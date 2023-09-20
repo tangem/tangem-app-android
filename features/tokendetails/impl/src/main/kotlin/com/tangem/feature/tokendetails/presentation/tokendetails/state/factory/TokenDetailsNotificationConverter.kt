@@ -31,7 +31,7 @@ internal class TokenDetailsNotificationConverter(
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFeeFee(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
                 feeInfo = warning,
                 onBuyClick = clickIntents::onBuyClick,
             )
