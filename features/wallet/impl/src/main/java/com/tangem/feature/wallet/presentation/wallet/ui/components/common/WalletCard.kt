@@ -241,15 +241,6 @@ private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
     ) {
         TitleText(title = state.title)
-
-        AnimatedVisibility(visible = state is WalletCardState.HiddenContent, label = "Update the hidden icon") {
-            Icon(
-                modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                painter = painterResource(id = R.drawable.ic_eye_off_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
-            )
-        }
     }
 }
 
