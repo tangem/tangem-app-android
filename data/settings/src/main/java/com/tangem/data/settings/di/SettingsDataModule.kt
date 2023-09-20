@@ -20,6 +20,9 @@ internal object SettingsDataModule {
         preferencesDataSource: PreferencesDataSource,
         dispatchers: CoroutineDispatcherProvider,
     ): SettingsRepository {
-        return DefaultSettingsRepository(preferencesDataSource = preferencesDataSource, dispatchers = dispatchers)
+        return DefaultSettingsRepository(
+            preferencesDataSource = preferencesDataSource,
+            dispatchers = dispatchers,
+        )
     }
 }
