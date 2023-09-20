@@ -99,6 +99,16 @@ internal class AppSettingsViewModel(
                 ).let(::add)
             }
 
+            itemsFactory.createFlipToHideBalanceSwitch(
+                isChecked = state.isHidingEnabled,
+                isEnabled = true,
+                onCheckedChange = ::onFlipToHideBalanceToggled,
+            ).let(::add)
+
+            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
+                showThemeModeSelector(state.selectedThemeMode)
+            }.let(::add)
+
             if (state.darkThemeSwitchEnabled) {
                 itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
                     showThemeModeSelector(state.selectedThemeMode)
@@ -176,6 +186,10 @@ internal class AppSettingsViewModel(
 
     private fun onSettingsToggled(setting: AppSetting, enable: Boolean) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
+    }
+
+    private fun onFlipToHideBalanceToggled(enable: Boolean) {
+        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
     }
 
     private fun dismissDialog() {
