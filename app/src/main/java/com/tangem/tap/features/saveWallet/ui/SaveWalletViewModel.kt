@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SaveWalletViewModel @Inject constructor(
-    private val analyticsEventHandler: AnalyticsEventHandler
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), StoreSubscriber<SaveWalletState> {
     private val stateInternal = MutableStateFlow(SaveWalletScreenState())
     val state: StateFlow<SaveWalletScreenState> = stateInternal

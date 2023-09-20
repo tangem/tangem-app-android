@@ -23,23 +23,30 @@ internal fun getNetwork(
         id = Network.ID(blockchain.id),
         name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
-        derivationPath = getDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
+        derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
         standardType = getNetworkStandardType(blockchain),
     )
 }
 
-private fun getDerivationPath(
+private fun getNetworkDerivationPath(
     blockchain: Blockchain,
     extraDerivationPath: String?,
-    derivationStyleProvider: DerivationStyleProvider,
+    cardDerivationStyleProvider: DerivationStyleProvider,
 ): Network.DerivationPath {
-    val cardDerivationPath = getCardDerivationPath(blockchain, derivationStyleProvider)
+    val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
 
-    return when {
-        cardDerivationPath.isNullOrBlank() -> Network.DerivationPath.None
-        extraDerivationPath == cardDerivationPath -> Network.DerivationPath.Card(extraDerivationPath)
-        !extraDerivationPath.isNullOrBlank() -> Network.DerivationPath.Custom(extraDerivationPath)
-        else -> Network.DerivationPath.None
+    return if (extraDerivationPath.isNullOrBlank()) {
+        if (defaultDerivationPath.isNullOrBlank()) {
+            Network.DerivationPath.None
+        } else {
+            Network.DerivationPath.Card(defaultDerivationPath)
+        }
+    } else {
+        if (extraDerivationPath == defaultDerivationPath) {
+            Network.DerivationPath.Card(defaultDerivationPath)
+        } else {
+            Network.DerivationPath.Custom(extraDerivationPath)
+        }
     }
 }
 
@@ -53,6 +60,9 @@ private fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType
     }
 }
 
-private fun getCardDerivationPath(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider): String? {
+private fun getDefaultDerivationPath(
+    blockchain: Blockchain,
+    derivationStyleProvider: DerivationStyleProvider,
+): String? {
     return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
 }

@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
@@ -207,6 +208,9 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.ChangeAppThemeMode -> {
                     changeAppThemeMode(action.appThemeMode)
                 }
+                is DetailsAction.AppSettings.ChangeBalanceHiding -> {
+                    changeBalanceHiding(action.hideBalance)
+                }
                 is DetailsAction.AppSettings.ChangeAppCurrency -> {
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
                     store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
@@ -254,6 +258,19 @@ class DetailsMiddleware {
                 repository.changeAppThemeMode(appThemeMode)
 
                 store.dispatchWithMain(GlobalAction.ChangeAppThemeMode(appThemeMode))
+            }
+        }
+
+        private fun changeBalanceHiding(hideBalance: Boolean) {
+            val repository = store.state.daggerGraphState.get(DaggerGraphState::balanceHidingRepository)
+
+            scope.launch {
+                val newState = BalanceHidingSettings(
+                    isHidingEnabledInSettings = hideBalance,
+                    isBalanceHidden = false,
+                )
+
+                repository.storeBalanceHidingSettings(newState)
             }
         }
 
