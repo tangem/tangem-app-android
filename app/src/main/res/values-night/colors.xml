@@ -7,7 +7,7 @@
     <color name="background_primary">#1E1E1E</color>
     <color name="background_secondary">#000000</color>
 
-    <color name="button_disabled">#1E1E1E</color>
+    <color name="button_disabled">#303030</color>
     <!--<color name="button_positive">#1ACE80</color>-->
     <!--<color name="button_positive_disabled">#06311F</color>-->
     <color name="button_primary">#F5F5F5</color>
