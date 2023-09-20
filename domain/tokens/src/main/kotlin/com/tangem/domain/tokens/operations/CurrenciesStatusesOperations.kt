@@ -68,7 +68,7 @@ internal class CurrenciesStatusesOperations(
             }
 
             emitAll(currenciesFlow)
-        }.conflate()
+        }.cancellable()
     }
 
     suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<Either<Error, CryptoCurrencyStatus>> {

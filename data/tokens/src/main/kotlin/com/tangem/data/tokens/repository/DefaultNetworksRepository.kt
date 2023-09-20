@@ -12,11 +12,13 @@ import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 
 internal class DefaultNetworksRepository(
     private val walletManagersFacade: WalletManagersFacade,
@@ -41,10 +43,10 @@ internal class DefaultNetworksRepository(
             networksStatuses.collect(::send)
         }
 
-        launch(dispatchers.io) {
+        withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
         }
-    }
+    }.cancellable()
 
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
@@ -92,6 +94,8 @@ internal class DefaultNetworksRepository(
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
 
+        invalidateCacheKeyIfNeeded(userWalletId, network, result)
+
         val networkStatus = networkStatusFactory.createNetworkStatus(
             network = network,
             result = result,
@@ -101,8 +105,6 @@ internal class DefaultNetworksRepository(
         networksStatuses.update { statuses ->
             statuses.addOrReplace(networkStatus) { it.network == networkStatus.network }
         }
-
-        invalidateCacheKeyIfNeeded(userWalletId, networkStatus)
     }
 
     private suspend fun getCurrencies(userWalletId: UserWalletId, network: Network): Sequence<CryptoCurrency> {
@@ -125,18 +127,32 @@ internal class DefaultNetworksRepository(
         return currencies.filter { it.network == network }
     }
 
-    private suspend fun invalidateCacheKeyIfNeeded(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
-        when (networkStatus.value) {
-            is NetworkStatus.Verified,
-            is NetworkStatus.NoAccount,
+    private suspend fun invalidateCacheKeyIfNeeded(
+        userWalletId: UserWalletId,
+        network: Network,
+        result: UpdateWalletManagerResult,
+    ) {
+        when (result) {
+            is UpdateWalletManagerResult.Verified,
+            is UpdateWalletManagerResult.NoAccount,
             -> Unit
-            is NetworkStatus.Unreachable,
-            is NetworkStatus.MissedDerivation,
-            -> cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, networkStatus.network))
+            is UpdateWalletManagerResult.Unreachable,
+            is UpdateWalletManagerResult.MissedDerivation,
+            -> {
+                Timber.w(
+                    """
+                        Invalidate network cache key
+                        |- User wallet ID: $userWalletId
+                        |- Network: ${network.id}
+                    """.trimIndent(),
+                )
+
+                cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, network))
+            }
         }
     }
 
     private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId, network: Network): String {
-        return "network_status_${userWalletId}_${network.id}_${network.derivationPath.value}"
+        return "network_status_${userWalletId}_${network.id.value}_${network.derivationPath.value}"
     }
 }

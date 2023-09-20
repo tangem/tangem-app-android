@@ -8,7 +8,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
@@ -19,9 +18,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -110,14 +107,6 @@ internal class DefaultCurrenciesRepository(
             }
     }
 
-    private fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
-        return any {
-            val blockchain = getBlockchain(networkId = token.network.id)
-
-            it.id == blockchain.toCoinId()
-        }
-    }
-
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
         withContext(dispatchers.io) {
             val savedCurrencies = requireNotNull(
@@ -166,13 +155,14 @@ internal class DefaultCurrenciesRepository(
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
 
             launch(dispatchers.io) {
-                getMultiCurrencyWalletCurrencies(userWallet).collect(::send)
+                getMultiCurrencyWalletCurrencies(userWallet)
+                    .collectLatest(::send)
             }
 
-            launch(dispatchers.io) {
+            withContext(dispatchers.io) {
                 fetchTokensIfCacheExpired(userWallet, refresh = false)
             }
-        }
+        }.cancellable()
     }
 
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
@@ -232,7 +222,7 @@ internal class DefaultCurrenciesRepository(
                     .map { it.group == UserTokensResponse.GroupType.NETWORK }
                     .collect(::send)
             }
-        }
+        }.cancellable()
     }
 
     override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
@@ -244,7 +234,7 @@ internal class DefaultCurrenciesRepository(
                     .map { it.sort == UserTokensResponse.SortType.BALANCE }
                     .collect(::send)
             }
-        }
+        }.cancellable()
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {

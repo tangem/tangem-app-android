@@ -2,8 +2,10 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.CryptoCurrency.ID
 import com.tangem.domain.tokens.models.Network
 import com.tangem.blockchain.common.Token as SdkToken
@@ -58,6 +60,14 @@ internal fun getCoinIconUrl(blockchain: Blockchain): String? {
     }
 
     return coinId?.let(::getTokenIconUrlFromDefaultHost)
+}
+
+internal fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
+    return any {
+        val blockchain = getBlockchain(networkId = token.network.id)
+
+        it.id == blockchain.toCoinId()
+    }
 }
 
 private fun getCurrencyIdBody(network: Network): CurrencyIdBody {

@@ -24,23 +24,22 @@ internal class DefaultQuotesRepository(
 
     private val quotesConverter = QuotesConverter()
 
+    @Volatile
     private var quotesFetchedForAppCurrency: String? = null
 
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
-        return channelFlow {
-            launch(dispatchers.io) {
-                quotesStore.get(currenciesIds)
-                    .map(quotesConverter::convertSet)
-                    .collect(::send)
-            }
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> = channelFlow {
+        launch(dispatchers.io) {
+            quotesStore.get(currenciesIds)
+                .map(quotesConverter::convertSet)
+                .collectLatest(::send)
+        }
 
-            launch(dispatchers.io) {
-                selectedAppCurrencyStore.get().collectLatest { appCurrency ->
-                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
-                }
+        withContext(dispatchers.io) {
+            selectedAppCurrencyStore.get().collectLatest { appCurrency ->
+                fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
             }
         }
-    }
+    }.cancellable()
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
         return withContext(dispatchers.io) {
