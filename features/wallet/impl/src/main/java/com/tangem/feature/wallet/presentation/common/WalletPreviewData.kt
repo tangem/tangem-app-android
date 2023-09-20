@@ -63,6 +63,8 @@ internal object WalletPreviewData {
             imageResId = R.drawable.ill_businessman_3d,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
+            balance = "8923,05 $",
+            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
         )
     }
 
@@ -125,12 +127,13 @@ internal object WalletPreviewData {
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
-            tokenOptions = TokenOptionsState.Visible(
+            tokenOptions = TokenOptionsState(
                 fiatAmount = "321 $",
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
+                isBalanceHidden = false,
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -151,11 +154,14 @@ internal object WalletPreviewData {
             name = "Polygon",
             amount = "5,412 MATIC",
             hasPending = true,
-            tokenOptions = TokenOptionsState.Hidden(
+            tokenOptions = TokenOptionsState(
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
                     type = PriceChangeConfig.Type.UP,
                 ),
+                fiatAmount = "321 $",
+                isBalanceHidden = false,
+
             ),
             onItemClick = {},
             onItemLongClick = {},
