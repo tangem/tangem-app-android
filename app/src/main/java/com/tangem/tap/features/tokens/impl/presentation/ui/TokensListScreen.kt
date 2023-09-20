@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
@@ -70,6 +72,7 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
+        backgroundColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPadding ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
@@ -97,10 +100,10 @@ private fun LoadingContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = TangemColorPalette.White),
+            .background(color = TangemTheme.colors.background.secondary),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = TangemColorPalette.Meadow)
+        CircularProgressIndicator(color = TangemTheme.colors.icon.accent)
     }
 }
 
@@ -178,73 +181,71 @@ private fun SaveChangesButton(onClick: () -> Unit, modifier: Modifier = Modifier
     )
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
-private fun Preview_TokensListScreen_Loading() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ReadContent(
-                toolbarState = TokensListToolbarState.Title.Manage(
-                    titleResId = R.string.main_manage_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                    onAddCustomTokenClick = {},
-                ),
-                isLoading = true,
-                isDifferentAddressesBlockVisible = false,
-                tokens = emptyFlow(),
-                onTokensLoadStateChanged = {},
-            ),
-        )
+private fun Preview_TokensListScreen_Light(
+    @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
+) {
+    TangemTheme(isDark = false) {
+        TokensListScreen(stateHolder)
     }
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
-private fun Preview_TokensListScreen_Manage() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ManageContent(
-                toolbarState = TokensListToolbarState.Title.Manage(
-                    titleResId = R.string.main_manage_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                    onAddCustomTokenClick = {},
-                ),
-                isLoading = false,
-                isDifferentAddressesBlockVisible = true,
-                tokens = flowOf(
-                    PagingData.from(
-                        listOf(TokenListPreviewData.createManageToken()),
-                    ),
-                ),
-                onSaveButtonClick = {},
-                onTokensLoadStateChanged = {},
-            ),
-        )
+private fun Preview_TokensListScreen_Dark(
+    @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
+) {
+    TangemTheme(isDark = true) {
+        TokensListScreen(stateHolder)
     }
 }
 
-@Preview
-@Composable
-private fun Preview_TokensListScreen_Read() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ReadContent(
-                toolbarState = TokensListToolbarState.Title.Read(
-                    titleResId = R.string.common_search_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                ),
-                isLoading = false,
-                isDifferentAddressesBlockVisible = false,
-                tokens = flowOf(
-                    PagingData.from(
-                        listOf(TokenListPreviewData.createManageToken()),
-                    ),
-                ),
-                onTokensLoadStateChanged = {},
+private class TokensListScreenProvider : CollectionPreviewParameterProvider<TokensListStateHolder>(
+    collection = listOf(
+        TokensListStateHolder.ReadContent(
+            toolbarState = TokensListToolbarState.Title.Manage(
+                titleResId = R.string.main_manage_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+                onAddCustomTokenClick = {},
             ),
-        )
-    }
-}
+            isLoading = true,
+            isDifferentAddressesBlockVisible = false,
+            tokens = emptyFlow(),
+            onTokensLoadStateChanged = {},
+        ),
+        TokensListStateHolder.ManageContent(
+            toolbarState = TokensListToolbarState.Title.Manage(
+                titleResId = R.string.main_manage_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+                onAddCustomTokenClick = {},
+            ),
+            isLoading = false,
+            isDifferentAddressesBlockVisible = true,
+            tokens = flowOf(
+                PagingData.from(
+                    listOf(TokenListPreviewData.createManageToken()),
+                ),
+            ),
+            onSaveButtonClick = {},
+            onTokensLoadStateChanged = {},
+        ),
+        TokensListStateHolder.ReadContent(
+            toolbarState = TokensListToolbarState.Title.Read(
+                titleResId = R.string.common_search_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+            ),
+            isLoading = false,
+            isDifferentAddressesBlockVisible = false,
+            tokens = flowOf(
+                PagingData.from(
+                    listOf(TokenListPreviewData.createManageToken()),
+                ),
+            ),
+            onTokensLoadStateChanged = {},
+        ),
+    ),
+)
