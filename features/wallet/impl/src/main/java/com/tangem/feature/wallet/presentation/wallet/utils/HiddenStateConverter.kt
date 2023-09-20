@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Converter
 import com.tangem.common.Provider
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenItemHiddenStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
