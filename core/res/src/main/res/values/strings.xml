@@ -159,6 +159,8 @@
     <string name="details_row_title_cid">Card ID</string>
     <string name="details_row_title_create_backup">Link More Cards</string>
     <string name="details_row_title_currency">App Currency</string>
+    <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
+    <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
     <string name="details_row_title_issuer">Issuer</string>
     <string name="details_row_title_send_feedback">Send Feedback</string>
     <string name="details_row_title_signed_hashes">Signed</string>
