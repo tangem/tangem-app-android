@@ -146,30 +146,9 @@ internal sealed interface TokenItemState {
 
     /** Token options state */
     @Immutable
-    sealed interface TokenOptionsState {
-
-        val config: PriceChangeConfig
-
-        /**
-         * Visible token options state
-         *
-         * @property fiatAmount fiat amount of token
-         * @property config     value of price changing
-         */
-        data class Visible(
-            override val config: PriceChangeConfig,
-            val fiatAmount: String,
-        ) : TokenOptionsState
-
-        /**
-         * Hidden token options state
-         *
-         * @property config value of price changing
-         */
-        data class Hidden(override val config: PriceChangeConfig) : TokenOptionsState
-    }
-
-    companion object {
-        const val DOTS = "•••"
-    }
+    data class TokenOptionsState(
+        val config: PriceChangeConfig,
+        val fiatAmount: String,
+        val isBalanceHidden: Boolean,
+    )
 }

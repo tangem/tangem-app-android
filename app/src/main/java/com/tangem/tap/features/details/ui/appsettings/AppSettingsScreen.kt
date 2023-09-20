@@ -97,6 +97,7 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
             itemsFactory.createSelectAppCurrencyButton(currentAppCurrencyName = "US Dollar") {},
             itemsFactory.createSaveWalletsSwitch(isChecked = true, isEnabled = true, { _ -> }),
             itemsFactory.createSaveAccessCodeSwitch(isChecked = false, isEnabled = true) { _ -> },
+            itemsFactory.createFlipToHideBalanceSwitch(isChecked = false, isEnabled = true) { _ -> },
             itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
