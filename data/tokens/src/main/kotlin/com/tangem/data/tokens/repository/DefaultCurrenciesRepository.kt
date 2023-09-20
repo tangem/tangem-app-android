@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import timber.log.Timber
 
 internal class DefaultCurrenciesRepository(
@@ -252,14 +253,19 @@ internal class DefaultCurrenciesRepository(
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
-        try {
-            val response = tangemTechApi.getUserTokens(userWallet.walletId.stringValue)
+        val userWalletId = userWallet.walletId
 
-            userTokensStore.store(userWallet.walletId, response)
-            fetchUserMarketCoinsByIds(userWallet.walletId, response)
-        } catch (e: Throwable) {
-            handleFetchTokensErrorOrThrow(userWallet, e)
+        val response = try {
+            with(tangemTechApi.getUserTokens(userWalletId.stringValue)) {
+                // The response may contain repeated tokens
+                copy(tokens = tokens.distinct())
+            }
+        } catch (e: HttpException) {
+            handleCurrenciesNotFoundOrThrow(userWallet, e)
         }
+
+        userTokensStore.store(userWallet.walletId, response)
+        fetchUserMarketCoinsByIds(userWalletId, response)
     }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
@@ -269,30 +275,38 @@ internal class DefaultCurrenciesRepository(
 
     private suspend fun fetchUserMarketCoinsByIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
         try {
-            val response = tangemTechApi.getCoins(
-                networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId },
-            )
+            val networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId }
+            val response = tangemTechApi.getCoins(networkIds)
+
             userMarketCoinsStore.store(userWalletId, response)
         } catch (e: Throwable) {
-            Timber.e("Unable to fetch user market coins for: ${userWalletId.stringValue} ${e.message}")
+            Timber.e(e, "Unable to fetch user market coins for: ${userWalletId.stringValue}")
         }
     }
 
-    private suspend fun handleFetchTokensErrorOrThrow(userWallet: UserWallet, error: Throwable) {
-        val errorMessage = error.message ?: throw error
+    private suspend fun handleCurrenciesNotFoundOrThrow(
+        userWallet: UserWallet,
+        httpException: HttpException,
+    ): UserTokensResponse {
+        val userWalletId = userWallet.walletId
 
-        if (NOT_FOUND_HTTP_CODE in errorMessage) {
-            val response = userTokensStore.getSyncOrNull(userWallet.walletId)
-                ?: userTokensResponseFactory.createUserTokensResponse(
-                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
-                    isGroupedByNetwork = false,
-                    isSortedByBalance = false,
-                )
-
-            tangemTechApi.saveUserTokens(userWallet.walletId.stringValue, response)
-        } else {
-            Timber.e(error, "Unable to fetch currencies for: ${userWallet.walletId}")
+        if (httpException.code() != NOT_FOUND_HTTP_CODE) {
+            Timber.e(httpException, "Unable to fetch currencies for: $userWalletId")
+            throw httpException
         }
+
+        Timber.d("Requested currencies could not be found in the remote store for: $userWalletId")
+
+        val response = userTokensStore.getSyncOrNull(userWalletId)
+            ?: userTokensResponseFactory.createUserTokensResponse(
+                currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+                isGroupedByNetwork = false,
+                isSortedByBalance = false,
+            )
+
+        tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+
+        return response
     }
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
@@ -331,6 +345,6 @@ internal class DefaultCurrenciesRepository(
     private fun getTokensCacheKey(userWalletId: UserWalletId): String = "tokens_cache_key_${userWalletId.stringValue}"
 
     private companion object {
-        const val NOT_FOUND_HTTP_CODE = "404"
+        const val NOT_FOUND_HTTP_CODE = 404
     }
 }
