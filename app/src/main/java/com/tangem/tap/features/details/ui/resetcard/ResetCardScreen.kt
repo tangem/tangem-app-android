@@ -98,7 +98,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
             ) {
                 AnimatedContent(
                     targetState = state.resetButtonEnabled,
-                    label = "Update checked state"
+                    label = "Update checked state",
                 ) { buttonEnabled ->
                     DetailsMainButton(
                         title = stringResource(id = R.string.reset_card_to_factory_button_title),
@@ -106,7 +106,6 @@ private fun ResetCardView(state: ResetCardScreenState) {
                         enabled = buttonEnabled,
                     )
                 }
-
             }
         }
     }
@@ -114,11 +113,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun ConditionCheckBox(
-    checkedState: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    description: TextReference,
-) {
+private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) -> Unit, description: TextReference) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -149,7 +144,6 @@ private fun ConditionCheckBox(
                     },
                 )
             }
-
         }
         Text(
             text = description.resolveReference(),
