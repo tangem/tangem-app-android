@@ -12,7 +12,7 @@ import com.tangem.features.tokendetails.impl.R
 @Immutable
 sealed class TokenDetailsNotification(open val config: NotificationConfig) {
 
-    data class RentInfoNotification(
+    data class RentInfo(
         private val rentInfo: CryptoCurrencyWarning.Rent,
         private val onCloseClick: () -> Unit,
     ) : TokenDetailsNotification(
@@ -27,7 +27,7 @@ sealed class TokenDetailsNotification(open val config: NotificationConfig) {
         ),
     )
 
-    data class ExistentialDepositNotification(
+    data class ExistentialDeposit(
         private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
         private val onCloseClick: () -> Unit,
     ) : TokenDetailsNotification(
@@ -42,7 +42,7 @@ sealed class TokenDetailsNotification(open val config: NotificationConfig) {
         ),
     )
 
-    data class NetworkFeeFeeNotification(
+    data class NetworkFeeFee(
         private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
         private val onBuyClick: () -> Unit,
     ) : TokenDetailsNotification(
@@ -63,13 +63,13 @@ sealed class TokenDetailsNotification(open val config: NotificationConfig) {
             ),
             iconResId = feeInfo.currency.networkIconResId,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Str("Buy"),
+                text = TextReference.Res(R.string.common_buy),
                 onClick = onBuyClick,
             ),
         ),
     )
 
-    object NetworksUnreachableNotification : TokenDetailsNotification(
+    object NetworksUnreachable : TokenDetailsNotification(
         config = NotificationConfig(
             title = TextReference.Str("Some networks are unreachable"),
             subtitle = TextReference.Str("The problem is on the crypto-network side. It will be fixed soon."),
