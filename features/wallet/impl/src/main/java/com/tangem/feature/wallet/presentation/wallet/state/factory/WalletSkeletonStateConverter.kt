@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -113,7 +112,7 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.LockedContent(
             id = walletId,
             title = name,
-            additionalInfo = createAdditionalInfo(),
+            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
             onDeleteClick = clickIntents::onDeleteClick,
@@ -124,19 +123,10 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = walletId,
             title = name,
-            additionalInfo = createAdditionalInfo(),
             imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
             onDeleteClick = clickIntents::onDeleteClick,
         )
-    }
-
-    private fun UserWallet.createAdditionalInfo(): TextReference? {
-        return if (isMultiCurrency) {
-            WalletAdditionalInfoFactory.resolve(wallet = this)
-        } else {
-            null
-        }
     }
 
     @DrawableRes
