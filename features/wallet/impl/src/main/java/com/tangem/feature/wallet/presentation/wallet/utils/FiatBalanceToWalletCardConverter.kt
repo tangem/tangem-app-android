@@ -13,7 +13,7 @@ internal class FiatBalanceToWalletCardConverter(
     private val currentState: WalletCardState,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
-    private val isWalletContentHidden: Boolean,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<FiatBalance, WalletCardState> {
 
     override fun convert(value: FiatBalance): WalletCardState {
@@ -39,17 +39,23 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun FiatBalance.Loaded.convertToWalletCardState(): WalletCardState {
-        return if (isWalletContentHidden) {
+        val appCurrency = appCurrencyProvider()
+
+        return if (isBalanceHiddenProvider()) {
             WalletCardState.HiddenContent(
                 id = currentState.id,
                 title = currentState.title,
                 imageResId = currentState.imageResId,
                 onRenameClick = currentState.onRenameClick,
                 onDeleteClick = currentState.onDeleteClick,
+                balance = formatFiatAmount(
+                    fiatAmount = this.amount,
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                ),
+                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
             )
         } else {
-            val appCurrency = appCurrencyProvider()
-
             WalletCardState.Content(
                 id = currentState.id,
                 title = currentState.title,
