@@ -229,15 +229,9 @@ internal class WalletStateFactory(
         }
     }
 
-    fun getLoadingTxHistoryState(
-        itemsCountEither: Either<TxHistoryStateError, Int>,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): WalletState {
+    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletState {
         return loadingTransactionsStateConverter.convert(
-            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(
-                historyLoadingState = itemsCountEither,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ),
+            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(historyLoadingState = itemsCountEither),
         )
     }
 

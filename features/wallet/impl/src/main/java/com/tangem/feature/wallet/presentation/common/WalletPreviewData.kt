@@ -64,6 +64,7 @@ internal object WalletPreviewData {
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
             balance = "8923,05 $",
+            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
         )
     }
 
