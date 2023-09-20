@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
@@ -18,7 +19,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.Companion.DOTS
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
@@ -56,9 +56,10 @@ private fun ContentBlock(state: TokenOptionsState, modifier: Modifier = Modifier
             modifier = Modifier.align(Alignment.End),
         ) {
             Text(
-                text = when (it) {
-                    is TokenOptionsState.Visible -> it.fiatAmount
-                    is TokenOptionsState.Hidden -> DOTS
+                text = if (it.isBalanceHidden) {
+                    STARS
+                } else {
+                    it.fiatAmount
                 },
                 style = TangemTypography.body2,
                 color = TangemTheme.colors.text.primary1,

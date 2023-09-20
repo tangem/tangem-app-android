@@ -18,11 +18,16 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadedTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory.WalletLoadingTxHistoryConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.CurrencyStatusErrorConverter
+import com.tangem.feature.wallet.presentation.wallet.utils.HiddenStateConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletsUpdateActionResolver
@@ -44,6 +49,7 @@ internal class WalletStateFactory(
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: WalletClickIntents,
 ) {
 
@@ -57,6 +63,8 @@ internal class WalletStateFactory(
 
     private val walletDeleteStateConverter by lazy { WalletDeleteStateConverter(currentStateProvider) }
 
+    private val hiddenStateConverter by lazy { HiddenStateConverter(currentStateProvider) }
+
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(currentStateProvider)
     }
@@ -69,6 +77,7 @@ internal class WalletStateFactory(
             tokenListErrorConverter = tokenListErrorConverter,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
             clickIntents = clickIntents,
         )
     }
@@ -240,6 +249,10 @@ internal class WalletStateFactory(
 
     fun getStateByCurrencyStatusError(error: CurrencyStatusError): WalletState {
         return currencyStatusErrorConverter.convert(error)
+    }
+
+    fun getHiddenBalanceState(isBalanceHidden: Boolean): WalletState {
+        return hiddenStateConverter.convert(isBalanceHidden)
     }
 
     fun getStateAndTriggerEvent(
