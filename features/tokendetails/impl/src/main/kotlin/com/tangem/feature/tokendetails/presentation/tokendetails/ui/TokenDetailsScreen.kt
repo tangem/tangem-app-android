@@ -33,7 +33,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import kotlinx.collections.immutable.PersistentList
-
+// [REDACTED_TODO_COMMENT]
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
