@@ -44,6 +44,8 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Domain modules */
     implementation(projects.common)
