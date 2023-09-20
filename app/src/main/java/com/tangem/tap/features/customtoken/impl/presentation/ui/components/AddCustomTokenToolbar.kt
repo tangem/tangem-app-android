@@ -25,7 +25,10 @@ import com.tangem.tap.features.details.ui.cardsettings.resolveReference
  */
 @Composable
 internal fun AddCustomTokenToolbar(title: TextReference, onBackButtonClick: () -> Unit) {
-    TopAppBar(backgroundColor = TangemTheme.colors.background.secondary) {
+    TopAppBar(
+        backgroundColor = TangemTheme.colors.background.secondary,
+        elevation = TangemTheme.dimens.elevation0,
+    ) {
         IconButton(onClick = onBackButtonClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back_24),
