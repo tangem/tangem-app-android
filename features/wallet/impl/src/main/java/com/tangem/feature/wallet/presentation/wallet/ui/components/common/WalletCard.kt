@@ -310,21 +310,17 @@ private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
 @Composable
 private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state.additionalInfo,
+        targetState = state,
         label = "Update the additional text",
         modifier = modifier,
-    ) { additionalInfo ->
-        if (additionalInfo != null) {
-            AdditionalInfoText(text = additionalInfo)
-        } else {
-            when (state) {
-                is WalletCardState.Loading -> {
-                    RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
-                }
-                is WalletCardState.LockedContent -> {
-                    LockedContent(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
-                }
-                else -> Unit
+    ) { animatedState ->
+        when (animatedState) {
+            is WalletCardState.Content -> AdditionalInfoText(text = animatedState.additionalInfo)
+            is WalletCardState.LockedContent -> AdditionalInfoText(text = animatedState.additionalInfo)
+            is WalletCardState.Error -> AdditionalInfoText(text = WalletCardState.EMPTY_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> AdditionalInfoText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.Loading -> {
+                RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
             }
         }
     }
