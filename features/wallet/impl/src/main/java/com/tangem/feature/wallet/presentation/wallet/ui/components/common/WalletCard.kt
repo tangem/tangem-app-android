@@ -303,7 +303,9 @@ private fun NonContentBalanceText(text: TextReference) {
 }
 
 private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
-    return size(width = dimens.size102, height = dimens.size32)
+    return this
+        .padding(vertical = dimens.spacing4)
+        .size(width = dimens.size102, height = dimens.size24)
 }
 
 @OptIn(ExperimentalAnimationApi::class)
