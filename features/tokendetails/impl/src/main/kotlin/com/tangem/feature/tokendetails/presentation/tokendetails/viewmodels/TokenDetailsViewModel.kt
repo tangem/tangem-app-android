@@ -129,7 +129,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateWarnings(selectedWallet: UserWallet) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = selectedWallet.walletId,
                 currency = cryptoCurrency,
