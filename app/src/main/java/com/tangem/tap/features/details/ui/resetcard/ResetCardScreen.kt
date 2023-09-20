@@ -1,5 +1,7 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,6 +35,7 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
     )
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun ResetCardView(state: ResetCardScreenState) {
@@ -93,16 +96,23 @@ private fun ResetCardView(state: ResetCardScreenState) {
             Box(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             ) {
-                DetailsMainButton(
-                    title = stringResource(id = R.string.reset_card_to_factory_button_title),
-                    onClick = state.onResetButtonClick,
-                    enabled = state.resetButtonEnabled,
-                )
+                AnimatedContent(
+                    targetState = state.resetButtonEnabled,
+                    label = "Update checked state"
+                ) { buttonEnabled ->
+                    DetailsMainButton(
+                        title = stringResource(id = R.string.reset_card_to_factory_button_title),
+                        onClick = state.onResetButtonClick,
+                        enabled = buttonEnabled,
+                    )
+                }
+
             }
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun ConditionCheckBox(
     checkedState: Boolean,
@@ -122,21 +132,24 @@ private fun ConditionCheckBox(
             onCheckedChange = onCheckedChange,
             modifier = Modifier.padding(start = TangemTheme.dimens.size20, end = TangemTheme.dimens.size20),
         ) {
-            Icon(
-                painter = painterResource(
-                    if (checkedState) {
-                        R.drawable.ic_accepted
+            AnimatedContent(targetState = checkedState, label = "Update checked state") { checked ->
+                Icon(
+                    painter = painterResource(
+                        if (checked) {
+                            R.drawable.ic_accepted
+                        } else {
+                            R.drawable.ic_unticked
+                        },
+                    ),
+                    contentDescription = null,
+                    tint = if (checked) {
+                        TangemTheme.colors.icon.accent
                     } else {
-                        R.drawable.ic_unticked
+                        TangemTheme.colors.icon.secondary
                     },
-                ),
-                contentDescription = null,
-                tint = if (checkedState) {
-                    TangemTheme.colors.icon.accent
-                } else {
-                    TangemTheme.colors.icon.secondary
-                },
-            )
+                )
+            }
+
         }
         Text(
             text = description.resolveReference(),
