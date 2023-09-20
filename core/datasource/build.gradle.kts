@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding.models)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
