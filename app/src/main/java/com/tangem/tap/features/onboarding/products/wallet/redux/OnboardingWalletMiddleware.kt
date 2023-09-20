@@ -135,6 +135,7 @@ private fun handleWalletAction(action: Action) {
                     }
 
                     scope.launch {
+// [REDACTED_TODO_COMMENT]
                         userTokensRepository.saveUserTokens(
                             card = result.data.card,
                             tokens = blockchainNetworks.toCurrencies(),
