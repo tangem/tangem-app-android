@@ -38,7 +38,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return state.copy(
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
             marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencyName),
-            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachableNotification),
+            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
         )
     }
 
