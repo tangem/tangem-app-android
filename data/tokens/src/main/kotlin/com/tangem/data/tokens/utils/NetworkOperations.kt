@@ -35,11 +35,18 @@ private fun getNetworkDerivationPath(
 ): Network.DerivationPath {
     val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
 
-    return when {
-        defaultDerivationPath.isNullOrBlank() -> Network.DerivationPath.None
-        extraDerivationPath == defaultDerivationPath -> Network.DerivationPath.Card(extraDerivationPath)
-        !extraDerivationPath.isNullOrBlank() -> Network.DerivationPath.Custom(extraDerivationPath)
-        else -> Network.DerivationPath.None
+    return if (extraDerivationPath.isNullOrBlank()) {
+        if (defaultDerivationPath.isNullOrBlank()) {
+            Network.DerivationPath.None
+        } else {
+            Network.DerivationPath.Card(defaultDerivationPath)
+        }
+    } else {
+        if (extraDerivationPath == defaultDerivationPath) {
+            Network.DerivationPath.Card(defaultDerivationPath)
+        } else {
+            Network.DerivationPath.Custom(extraDerivationPath)
+        }
     }
 }
 
