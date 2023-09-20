@@ -135,6 +135,7 @@ private fun handleWalletAction(action: Action) {
                     }
 
                     scope.launch {
+                        // TODO: Use new repo https://tangem.atlassian.net/browse/AND-4616
                         userTokensRepository.saveUserTokens(
                             card = result.data.card,
                             tokens = blockchainNetworks.toCurrencies(),
