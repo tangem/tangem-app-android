@@ -135,6 +135,7 @@ private fun handleWalletAction(action: Action) {
                     }
 
                     scope.launch {
+                        // TODO: Use new repo [REDACTED_JIRA]
                         userTokensRepository.saveUserTokens(
                             card = result.data.card,
                             tokens = blockchainNetworks.toCurrencies(),
