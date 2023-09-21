@@ -12,7 +12,6 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 
@@ -72,7 +71,7 @@ interface WalletManagersFacade {
 
     // TODO: Remove after refactoring
     suspend fun getOrCreateWalletManager(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager?
