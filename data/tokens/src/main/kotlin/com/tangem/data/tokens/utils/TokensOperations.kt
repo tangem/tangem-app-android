@@ -2,16 +2,18 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.models.CryptoCurrency.ID
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency.ID
+import com.tangem.domain.tokens.model.Network
 import com.tangem.blockchain.common.Token as SdkToken
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Body as CurrencyIdBody
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body as CurrencyIdBody
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
 
 private const val DEFAULT_TOKENS_ICONS_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins"
 private const val TOKEN_ICON_SIZE = "large"
@@ -58,6 +60,14 @@ internal fun getCoinIconUrl(blockchain: Blockchain): String? {
     }
 
     return coinId?.let(::getTokenIconUrlFromDefaultHost)
+}
+
+internal fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
+    return any {
+        val blockchain = getBlockchain(networkId = token.network.id)
+
+        it.id == blockchain.toCoinId()
+    }
 }
 
 private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
