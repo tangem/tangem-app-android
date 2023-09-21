@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -50,38 +51,53 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.size40),
+                .padding(
+                    start = TangemTheme.dimens.size16,
+                    end = TangemTheme.dimens.size16,
+                    top = TangemTheme.dimens.size70,
+                )
         ) {
+            val circleColor = TangemTheme.colors.stroke.primary
+            Canvas(
+                modifier = Modifier
+                    .size(300.dp)
+                    .align(Alignment.Center)
+            ) {
+                drawCircle(
+                    color = circleColor,
+                    radius = size.minDimension / 2.0f
+                )
+            }
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context = LocalContext.current)
                     .data(cardArtwork?.artworkId)
                     .crossfade(enable = true)
                     .build(),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TangemTheme.dimens.size16,
-                        end = TangemTheme.dimens.size16,
-                        top = TangemTheme.dimens.size70,
-                    )
+                    .align(Alignment.Center)
                     .fillMaxWidth(),
-                loading = { },
-                error = { },
-                contentDescription = "",
+                loading = { /* no-op */ },
+                error = { /* no-op */ },
+                contentDescription = null,
             )
+
         }
         Spacer(modifier = Modifier.weight(1f))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+                .padding(
+                    start = TangemTheme.dimens.size16,
+                    end = TangemTheme.dimens.size16,
+                    bottom = TangemTheme.dimens.size32
+                ),
         ) {
             Text(
                 text = stringResource(id = R.string.scan_card_settings_title),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.h3,
             )
-            Spacer(modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
             Text(
                 text = stringResource(id = R.string.scan_card_settings_message),
                 color = TangemTheme.colors.text.secondary,
@@ -90,7 +106,7 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
                     .verticalScroll(rememberScrollState())
                     .weight(weight = 1f, fill = false),
             )
-            Spacer(modifier = Modifier.size(29.dp))
+            Spacer(modifier = Modifier.size(TangemTheme.dimens.size28))
             DetailsMainButton(
                 title = stringResource(id = R.string.scan_card_settings_button),
                 onClick = onScanCardClick,
