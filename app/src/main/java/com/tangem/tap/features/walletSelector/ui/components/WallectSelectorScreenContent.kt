@@ -177,7 +177,7 @@ private fun Footer(
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(
-                    id = R.string.user_wallet_list_unlock_all,
+                    id = R.string.user_wallet_list_unlock_all_with,
                     stringResource(id = R.string.common_biometrics),
                 ),
                 showProgress = showUnlockProgress,

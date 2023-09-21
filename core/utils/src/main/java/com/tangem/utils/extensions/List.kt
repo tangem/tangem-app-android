@@ -3,6 +3,8 @@ package com.tangem.utils.extensions
 /**
  * Removes an element from the collection based on the provided predicate.
  *
+ * !!!This function is not thread-safe!!!
+ *
  * @param predicate The condition to remove an element.
  * @return [Boolean] indicating whether an element was removed.
  */
@@ -33,7 +35,8 @@ inline fun <T> MutableList<T>.replaceBy(item: T, predicate: (T) -> Boolean): Boo
 
 /**
  * Adds the specified element to the list or replaces an existing element.
- * The predicate defines the condition to replace the existing element.
+ *
+ * !!!This function is not thread-safe!!!
  *
  * @param item The element to be added or replace the existing one.
  * @param predicate The condition to replace an existing element.
