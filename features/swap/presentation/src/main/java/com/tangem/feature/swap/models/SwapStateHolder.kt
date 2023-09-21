@@ -41,6 +41,7 @@ data class SwapCardData(
     val tokenIconUrl: String,
     val tokenCurrency: String,
     val balance: String,
+    val isBalanceHidden: Boolean,
     val isNotNativeToken: Boolean,
     val canSelectAnotherToken: Boolean = false,
 )
