@@ -3,13 +3,13 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday
@@ -18,7 +18,10 @@ import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormatterBuilder
@@ -29,7 +32,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val symbol: String,
     private val decimals: Int,
-    private val clickIntents: TxHistoryClickIntents,
+    private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
 
     /** Example, 2 Aug, 2023 */
