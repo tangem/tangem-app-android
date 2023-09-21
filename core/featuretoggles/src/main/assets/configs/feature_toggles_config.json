@@ -4,10 +4,6 @@
         "version": "4.3.1"
     },
     {
-        "name": "REDESIGNED_CUSTOM_TOKEN_SCREEN_ENABLED",
-        "version": "4.7.0"
-    },
-    {
         "name": "NEW_CARD_SCANNING_ENABLED",
         "version": "undefined"
     },
@@ -25,6 +21,14 @@
     },
     {
         "name": "SHOPIFY_DYNAMIC_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_APP_CURRENCY_SELECTOR_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "DARK_THEME_ENABLED",
         "version": "undefined"
     }
 ]

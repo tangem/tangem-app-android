@@ -164,6 +164,6 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
             isSortedByBalance = flowOf(),
         ),
         quotesRepository = MockQuotesRepository(quotes),
-        networksRepository = MockNetworksRepository(MockNetworks.networks.right(), statuses),
+        networksRepository = MockNetworksRepository(statuses),
     )
 }
