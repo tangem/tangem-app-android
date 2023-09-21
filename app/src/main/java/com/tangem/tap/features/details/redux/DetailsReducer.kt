@@ -8,13 +8,15 @@ import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
-import java.util.*
+import java.util.EnumSet
 
 object DetailsReducer {
     fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun internalReduce(action: Action, state: AppState): DetailsState {
     if (action !is DetailsAction) return state.detailsState
     val detailsState = state.detailsState
@@ -39,9 +41,25 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.AppSettings -> {
             handlePrivacyAction(action, detailsState)
         }
-        is DetailsAction.ChangeAppCurrency ->
-            detailsState.copy(appCurrency = action.fiatCurrency)
+        is DetailsAction.ChangeAppCurrency -> detailsState.copy(
+            appSettingsState = detailsState.appSettingsState.copy(
+                selectedFiatCurrency = action.fiatCurrency,
+            ),
+        )
         is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
+        is DetailsAction.ScanAndSaveUserWallet -> detailsState.copy(
+            isScanningInProgress = true,
+        )
+        is DetailsAction.ScanAndSaveUserWallet.Error -> detailsState.copy(
+            isScanningInProgress = false,
+            error = action.error,
+        )
+        is DetailsAction.ScanAndSaveUserWallet.Success -> detailsState.copy(
+            isScanningInProgress = false,
+        )
+        is DetailsAction.DismissError -> detailsState.copy(
+            error = null,
+        )
         else -> detailsState
     }
 }
@@ -49,13 +67,18 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
-        wallets = action.wallets,
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
-        appCurrency = store.state.globalState.appCurrency,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = preferencesStorage.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+            selectedFiatCurrency = store.state.globalState.appCurrency,
+            selectedThemeMode = store.state.globalState.appThemeMode,
+            isHidingEnabled = runBlocking {
+                store.state.daggerGraphState
+                    .get { balanceHidingRepository }.getBalanceHidingSettings().isHidingEnabledInSettings
+            },
+            darkThemeSwitchEnabled = action.darkThemeSwitchEnabled,
         ),
     )
 }
@@ -192,6 +215,21 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
             appSettingsState = state.appSettingsState.copy(
                 needEnrollBiometrics = action.needEnrollBiometrics,
+            ),
+        )
+        is DetailsAction.AppSettings.ChangeAppThemeMode -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                selectedThemeMode = action.appThemeMode,
+            ),
+        )
+        is DetailsAction.AppSettings.ChangeAppCurrency -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                selectedFiatCurrency = action.fiatCurrency,
+            ),
+        )
+        is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                isHidingEnabled = action.hideBalance,
             ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,

@@ -22,7 +22,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
     override val isDemoMode: Boolean
         get() = demoModeDatasource.isDemoModeActive
 
-    override suspend fun getReferralStatus(walletId: String): ReferralData {
+    override suspend fun getReferralData(walletId: String): ReferralData {
         return withContext(coroutineDispatcher.io) {
             referralConverter.convert(
                 referralApi.getReferralStatus(

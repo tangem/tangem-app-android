@@ -35,7 +35,6 @@ internal object TokensListInteractorModule {
                 reduxStateHolder = reduxStateHolder,
                 testnetTokensStorage = testnetTokensStorage,
             ),
-            reduxStateHolder = reduxStateHolder,
         )
     }
 }

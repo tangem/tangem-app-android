@@ -260,7 +260,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
         tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
-        val textColor = if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        val textColor = if (state.inputIsEnabled) R.color.accent else R.color.text_secondary
         tvAmountCurrency.setTextColor(fg.getColor(textColor))
     }
 

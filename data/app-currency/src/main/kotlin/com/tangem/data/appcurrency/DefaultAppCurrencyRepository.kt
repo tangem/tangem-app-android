@@ -88,6 +88,8 @@ internal class DefaultAppCurrencyRepository(
             Timber.e(e, "Unable to fetch available currencies")
 
             availableAppCurrenciesStore.store(getDefaultCurrenciesResponse())
+
+            throw e
         }
     }
 

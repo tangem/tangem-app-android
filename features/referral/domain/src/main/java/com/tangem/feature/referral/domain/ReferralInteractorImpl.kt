@@ -20,9 +20,11 @@ internal class ReferralInteractorImpl(
         get() = repository.isDemoMode
 
     override suspend fun getReferralStatus(): ReferralData {
-        val refStatus = repository.getReferralStatus(userWalletManager.getWalletId())
-        saveRefTokens(refStatus.tokens)
-        return refStatus
+        val referralData = repository.getReferralData(userWalletManager.getWalletId())
+
+        saveReferralTokens(referralData.tokens)
+
+        return referralData
     }
 
     override suspend fun startReferral(): ReferralData {
@@ -37,7 +39,7 @@ internal class ReferralInteractorImpl(
                 address = publicAddress,
             )
         } else {
-            error("tokens for ref is empty")
+            error("Tokens for ref is empty")
         }
     }
 
@@ -53,7 +55,7 @@ internal class ReferralInteractorImpl(
         return derivationPath
     }
 
-    private fun saveRefTokens(tokens: List<TokenData>) {
+    private fun saveReferralTokens(tokens: List<TokenData>) {
         tokensForReferral.clear()
         tokensForReferral.addAll(tokens)
     }
