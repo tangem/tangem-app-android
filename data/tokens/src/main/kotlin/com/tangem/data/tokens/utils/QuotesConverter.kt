@@ -1,7 +1,7 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.datasource.local.quote.model.StoredQuote
-import com.tangem.domain.tokens.models.Quote
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
 
 internal class QuotesConverter : Converter<StoredQuote, Quote> {

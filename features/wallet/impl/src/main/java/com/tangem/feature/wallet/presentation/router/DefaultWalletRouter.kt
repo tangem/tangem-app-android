@@ -19,7 +19,7 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
