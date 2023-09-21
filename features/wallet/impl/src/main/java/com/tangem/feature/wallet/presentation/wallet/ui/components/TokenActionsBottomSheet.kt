@@ -38,12 +38,14 @@ private fun ActionsBottomSheetContent(actions: ImmutableList<TokenActionButtonCo
         modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         actions.forEach { action ->
-            SimpleSettingsRow(
-                title = action.text.resolveReference(),
-                icon = action.iconResId,
-                enabled = action.enabled,
-                onItemsClick = action.onClick,
-            )
+            if (action.enabled) {
+                SimpleSettingsRow(
+                    title = action.text.resolveReference(),
+                    icon = action.iconResId,
+                    enabled = action.enabled,
+                    onItemsClick = action.onClick,
+                )
+            }
         }
     }
 }
