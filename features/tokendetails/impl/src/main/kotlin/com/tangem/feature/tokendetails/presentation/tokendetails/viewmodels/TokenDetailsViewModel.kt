@@ -170,9 +170,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        network = cryptoCurrency.network,
-                    ).map {
+                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
