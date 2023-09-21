@@ -37,7 +37,7 @@ internal class TangemCardTypesResolver(
 
     override fun isStart2Coin(): Boolean = card.isStart2Coin
 
-    override fun isDev(): Boolean = card.isTestCard
+    override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
 
     override fun isMultiwalletAllowed(): Boolean {
         return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&
@@ -70,8 +70,6 @@ internal class TangemCardTypesResolver(
             cardToken.decimals,
         )
     }
-
-    override fun getBackupCardsCount(): Int = card.wallets.size
 
     override fun isReleaseFirmwareType(): Boolean = card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release
 
@@ -110,5 +108,10 @@ internal class TangemCardTypesResolver(
                 Blockchain.fromId(blockchainName)
             }
         }
+    }
+
+    private companion object {
+
+        const val DEV_KIT_CARD_BATCH_ID = "CB83"
     }
 }
