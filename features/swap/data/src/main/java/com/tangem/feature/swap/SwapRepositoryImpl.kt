@@ -1,11 +1,18 @@
 package com.tangem.feature.swap
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
+import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
@@ -20,6 +27,7 @@ import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.tangem.blockchain.common.Token as SdkToken
 
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
@@ -150,6 +158,37 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     override fun getTangemFee(): Double {
         return configManager.config.swapReferrerAccount?.fee?.toDoubleOrNull() ?: 0.0
+    }
+
+    override suspend fun getCryptoCurrency(
+        userWallet: UserWallet,
+        currency: Currency,
+        network: Network,
+    ): CryptoCurrency? {
+        val blockchain = Blockchain.fromNetworkId(currency.networkId) ?: return null
+        val cryptoCurrencyFactory = CryptoCurrencyFactory()
+        return when (currency) {
+            is Currency.NativeToken -> {
+                cryptoCurrencyFactory.createCoin(
+                    blockchain = blockchain,
+                    extraDerivationPath = network.derivationPath.value,
+                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                )
+            }
+            is Currency.NonNativeToken -> {
+                val sdkToken = SdkToken(
+                    symbol = currency.symbol,
+                    contractAddress = currency.contractAddress,
+                    decimals = currency.decimalCount,
+                )
+                cryptoCurrencyFactory.createToken(
+                    sdkToken = sdkToken,
+                    blockchain = blockchain,
+                    extraDerivationPath = network.derivationPath.value,
+                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                )
+            }
+        } as CryptoCurrency
     }
 
     private fun getOneInchApi(networkId: String): OneInchApi {
