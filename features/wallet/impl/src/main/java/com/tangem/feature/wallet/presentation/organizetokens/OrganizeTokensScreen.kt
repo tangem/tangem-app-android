@@ -1,8 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -19,10 +18,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
@@ -37,7 +39,10 @@ import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import org.burnoutcrew.reorderable.*
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
 
 @Composable
 internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier = Modifier) {
@@ -91,27 +96,28 @@ private fun TokenList(
             canDragOver = dndConfig.canDragItemOver,
             onDragEnd = onDragEnd,
         )
-        val items = state.items
+
+        val listContentPadding = PaddingValues(
+            top = TangemTheme.dimens.spacing12,
+            bottom = TangemTheme.dimens.spacing92,
+            start = TangemTheme.dimens.spacing16,
+            end = TangemTheme.dimens.spacing16,
+        )
 
         LazyColumn(
             modifier = Modifier
-                .reorderable(reorderableListState)
                 .align(Alignment.TopCenter)
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .fillMaxSize(),
+                .reorderable(reorderableListState),
             state = reorderableListState.listState,
-            contentPadding = PaddingValues(
-                top = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing92,
-            ),
+            contentPadding = listContentPadding,
         ) {
             itemsIndexed(
-                items = items,
+                items = state.items,
                 key = { _, item -> item.id },
             ) { index, item ->
 
                 val onDragStart = remember(item) {
-                    { dndConfig.onDragStart(item) }
+                    { dndConfig.onItemDragStart(item) }
                 }
 
                 DraggableItem(
@@ -127,7 +133,6 @@ private fun TokenList(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LazyItemScope.DraggableItem(
     index: Int,
@@ -135,15 +140,18 @@ private fun LazyItemScope.DraggableItem(
     reorderableState: ReorderableLazyListState,
     onDragStart: () -> Unit,
 ) {
+    var isDragging by remember {
+        mutableStateOf(value = false)
+    }
+
+    val itemModifier = Modifier.applyShapeAndShadow(item.roundingMode, item.showShadow)
+
     ReorderableItem(
-        defaultDraggingModifier = Modifier.animateItemPlacement(
-            animationSpec = tween(easing = LinearOutSlowInEasing),
-        ),
-        state = reorderableState,
+        reorderableState = reorderableState,
         index = index,
         key = item.id,
-    ) { isDragging ->
-        val itemModifier = Modifier.applyShapeAndShadow(item.roundingMode, item.showShadow)
+    ) { isItemDragging ->
+        isDragging = isItemDragging
 
         when (item) {
             is DraggableItem.GroupHeader -> DraggableNetworkGroupItem(
@@ -157,10 +165,12 @@ private fun LazyItemScope.DraggableItem(
                 reorderableTokenListState = reorderableState,
             )
             // Should be presented in the list but remain invisible
-            is DraggableItem.GroupPlaceholder -> Box(modifier = Modifier.fillMaxWidth())
+            is DraggableItem.Placeholder -> Box(modifier = Modifier.fillMaxWidth())
         }
+    }
 
-        LaunchedEffect(isDragging) {
+    DisposableEffect(isDragging) {
+        onDispose {
             if (isDragging) {
                 onDragStart()
             }
@@ -283,57 +293,71 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
     }
 }
 
-private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMode, showShadow: Boolean): Modifier =
-    composed {
+private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMode, showShadow: Boolean): Modifier {
+    return composed {
         val radius by animateDpAsState(
-            targetValue = if (roundingMode !is DraggableItem.RoundingMode.None) {
-                TangemTheme.dimens.radius16
-            } else {
-                TangemTheme.dimens.radius0
+            targetValue = when (roundingMode) {
+                is DraggableItem.RoundingMode.None -> TangemTheme.dimens.radius0
+                is DraggableItem.RoundingMode.All -> TangemTheme.dimens.radius12
+                is DraggableItem.RoundingMode.Bottom,
+                is DraggableItem.RoundingMode.Top,
+                -> TangemTheme.dimens.radius16
             },
             label = "item_shape_radius",
         )
-        val shape = when (roundingMode) {
-            is DraggableItem.RoundingMode.None -> RectangleShape
-            is DraggableItem.RoundingMode.Top -> RoundedCornerShape(
-                topStart = radius,
-                topEnd = radius,
-            )
-            is DraggableItem.RoundingMode.Bottom -> RoundedCornerShape(
-                bottomStart = radius,
-                bottomEnd = radius,
-            )
-            is DraggableItem.RoundingMode.All -> RoundedCornerShape(
-                size = radius,
-            )
-        }
-
-        val paddingValue = TangemTheme.dimens.spacing4
-        val padding = if (roundingMode.showGap) {
-            when (roundingMode) {
-                is DraggableItem.RoundingMode.None -> null
-                is DraggableItem.RoundingMode.All -> PaddingValues(vertical = paddingValue)
-                is DraggableItem.RoundingMode.Top -> PaddingValues(top = paddingValue)
-                is DraggableItem.RoundingMode.Bottom -> PaddingValues(bottom = paddingValue)
-            }
-        } else {
-            null
-        }
+        val elevation by animateDpAsState(
+            targetValue = if (showShadow) {
+                TangemTheme.dimens.elevation8
+            } else {
+                TangemTheme.dimens.elevation0
+            },
+            label = "item_elevation",
+        )
 
         this
-            .let {
-                if (padding != null) {
-                    it.padding(padding)
-                } else {
-                    it
-                }
-            }
+            .padding(paddingValues = getItemGap(roundingMode))
             .shadow(
-                elevation = if (showShadow) TangemTheme.dimens.elevation12 else TangemTheme.dimens.elevation0,
-                shape = shape,
+                elevation = elevation,
+                shape = getItemShape(roundingMode, radius),
                 clip = true,
             )
     }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun getItemGap(roundingMode: DraggableItem.RoundingMode): PaddingValues {
+    val paddingValue = TangemTheme.dimens.spacing4
+
+    return if (roundingMode.showGap) {
+        when (roundingMode) {
+            is DraggableItem.RoundingMode.None -> PaddingValues(all = 0.dp)
+            is DraggableItem.RoundingMode.All -> PaddingValues(vertical = paddingValue)
+            is DraggableItem.RoundingMode.Top -> PaddingValues(top = paddingValue)
+            is DraggableItem.RoundingMode.Bottom -> PaddingValues(bottom = paddingValue)
+        }
+    } else {
+        PaddingValues(all = 0.dp)
+    }
+}
+
+@Stable
+private fun getItemShape(roundingMode: DraggableItem.RoundingMode, radius: Dp): Shape {
+    return when (roundingMode) {
+        is DraggableItem.RoundingMode.None -> RectangleShape
+        is DraggableItem.RoundingMode.Top -> RoundedCornerShape(
+            topStart = radius,
+            topEnd = radius,
+        )
+        is DraggableItem.RoundingMode.Bottom -> RoundedCornerShape(
+            bottomStart = radius,
+            bottomEnd = radius,
+        )
+        is DraggableItem.RoundingMode.All -> RoundedCornerShape(
+            size = radius,
+        )
+    }
+}
 
 // region Preview
 

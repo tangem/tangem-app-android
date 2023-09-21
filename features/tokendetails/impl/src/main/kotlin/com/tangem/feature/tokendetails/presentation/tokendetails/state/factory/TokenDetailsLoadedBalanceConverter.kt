@@ -10,21 +10,36 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryToTransactionStateConverter
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
+    private val symbol: String,
+    private val decimals: Int,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
+
+    private val txHistoryItemConverter by lazy {
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals)
+    }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
         return value.fold(ifLeft = { convertError() }, ifRight = ::convert)
     }
 
     private fun convertError(): TokenDetailsState {
-        // TODO:  [REDACTED_JIRA]
-        return currentStateProvider()
+        val state = currentStateProvider()
+        return state.copy(
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
+            marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencyName),
+            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
+        )
     }
 
     private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
@@ -33,6 +48,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return state.copy(
             tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+            pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList(),
         )
     }
 
@@ -48,6 +64,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                     actionButtons = currentState.actionButtons,
                     fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                     cryptoBalance = formatCryptoAmount(status),
+                    isBalanceHidden = isBalanceHiddenProvider(),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {
@@ -56,7 +73,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
-            // TODO:  [REDACTED_JIRA]
+            is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
             -> {
                 TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
@@ -80,6 +97,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
             -> MarketPriceBlockState.Error(currencyName)
         }
