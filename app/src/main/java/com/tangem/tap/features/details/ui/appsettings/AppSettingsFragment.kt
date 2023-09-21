@@ -32,55 +32,56 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
 
     private val viewModel by lazy(mode = LazyThreadSafetyMode.NONE) {
         AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
+    }
 
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            val inflater = TransitionInflater.from(requireContext())
-            enterTransition = inflater.inflateTransition(R.transition.fade)
-            exitTransition = inflater.inflateTransition(R.transition.fade)
-            viewModel.checkBiometricsStatus(lifecycleScope)
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.fade)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.checkBiometricsStatus(lifecycleScope)
+    }
 
-        @Composable
-        override fun ScreenContent(modifier: Modifier) {
-            AppSettingsScreen(
-                modifier = modifier,
-                state = viewModel.uiState,
-                onBackClick = {
-                    store.dispatch(DetailsAction.ResetCardSettingsData)
-                    store.dispatch(NavigationAction.PopBackTo())
-                },
-            )
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        AppSettingsScreen(
+            modifier = modifier,
+            state = viewModel.uiState,
+            onBackClick = {
+                store.dispatch(DetailsAction.ResetCardSettingsData)
+                store.dispatch(NavigationAction.PopBackTo())
+            },
+        )
+    }
 
-        override fun TransitionInflater.inflateTransitions(): Boolean {
-            enterTransition = inflateTransition(R.transition.fade)
-            exitTransition = inflateTransition(R.transition.fade)
+    override fun TransitionInflater.inflateTransitions(): Boolean {
+        enterTransition = inflateTransition(R.transition.fade)
+        exitTransition = inflateTransition(R.transition.fade)
 
-            return true
-        }
+        return true
+    }
 
-        override fun onStart() {
-            super.onStart()
-            store.subscribe(this) { state ->
-                state.skipRepeats { oldState, newState ->
-                    oldState.detailsState == newState.detailsState
-                }.select { it.detailsState }
-            }
-        }
-
-        override fun onResume() {
-            super.onResume()
-            viewModel.refreshBiometricsStatus(lifecycleScope)
-        }
-
-        override fun onStop() {
-            super.onStop()
-            store.unsubscribe(this)
-        }
-
-        override fun newState(state: DetailsState) {
-            if (activity == null || view == null) return
-            viewModel.updateState(state)
+    override fun onStart() {
+        super.onStart()
+        store.subscribe(this) { state ->
+            state.skipRepeats { oldState, newState ->
+                oldState.detailsState == newState.detailsState
+            }.select { it.detailsState }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshBiometricsStatus(lifecycleScope)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        store.unsubscribe(this)
+    }
+
+    override fun newState(state: DetailsState) {
+        if (activity == null || view == null) return
+        viewModel.updateState(state)
+    }
+}
