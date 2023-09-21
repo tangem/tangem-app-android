@@ -48,7 +48,7 @@ class FetchTokenListUseCase(
                 val fetchStatuses = async {
                     fetchNetworksStatuses(
                         userWalletId,
-                        currencies.mapTo(hashSetOf()) { it.network.id },
+                        currencies.mapTo(hashSetOf()) { it.network },
                         refresh,
                     )
                 }
@@ -81,11 +81,11 @@ class FetchTokenListUseCase(
 
     private suspend fun Raise<TokenListError>.fetchNetworksStatuses(
         userWalletId: UserWalletId,
-        networksIds: Set<Network.ID>,
+        networks: Set<Network>,
         refresh: Boolean,
     ) {
         catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, networksIds, refresh) },
+            block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
         ) {
             raise(TokenListError.DataError(it))
         }

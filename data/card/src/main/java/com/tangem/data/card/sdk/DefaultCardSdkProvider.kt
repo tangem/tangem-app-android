@@ -19,7 +19,7 @@ import javax.inject.Singleton
 internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, CardSdkLifecycleObserver {
 
     override val sdk: TangemSdk
-        get() = requireNotNull(value = _sdk) { "Impossible to get the TangemSdk when activity is destroyed" }
+        get() = requireNotNull(value = _sdk?.get()) { "Impossible to get the TangemSdk when activity is destroyed" }
 
     private var _sdk: TangemSdk? = null
 
