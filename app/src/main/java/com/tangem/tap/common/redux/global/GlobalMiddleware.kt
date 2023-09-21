@@ -5,10 +5,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -26,7 +24,11 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -150,28 +152,6 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 return
             }
             scope.launch { exchangeManager.update() }
-        }
-        is GlobalAction.ScanCard -> {
-            scope.launch {
-                tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
-                val result = tangemSdkManager.scanProduct(
-                    userTokensRepository = userTokensRepository,
-                    additionalBlockchainsToDerive = action.additionalBlockchainsToDerive,
-                    messageRes = action.messageResId,
-                )
-                withMainContext {
-                    store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
-                    when (result) {
-                        is CompletionResult.Success -> {
-                            tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
-                            action.onSuccess?.invoke(result.data)
-                        }
-                        is CompletionResult.Failure -> {
-                            action.onFailure?.invoke(result.error)
-                        }
-                    }
-                }
-            }
         }
         is GlobalAction.FetchUserCountry -> {
             scope.launch {
