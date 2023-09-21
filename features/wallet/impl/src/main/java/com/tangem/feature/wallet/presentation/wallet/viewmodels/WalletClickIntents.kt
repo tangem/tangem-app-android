@@ -9,7 +9,7 @@ internal interface WalletClickIntents {
 
     fun onBackClick()
 
-    fun onGenerateMissedAddressesClick()
+    fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
 
     fun onScanToUnlockWalletClick()
 
