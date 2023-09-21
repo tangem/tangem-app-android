@@ -1,13 +1,14 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.makeWalletManagerForApp
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 
 internal class WalletManagerFactory(
@@ -23,7 +24,7 @@ internal class WalletManagerFactory(
         blockchain: Blockchain,
         derivationPath: DerivationPath?,
     ): WalletManager? {
-        val derivationParams = getDerivationParams(derivationPath, scanResponse.card)
+        val derivationParams = getDerivationParams(derivationPath, scanResponse.derivationStyleProvider)
 
         return sdkWalletManagerFactory.makeWalletManagerForApp(
             scanResponse = scanResponse,
@@ -32,12 +33,11 @@ internal class WalletManagerFactory(
         )
     }
 
-    private fun getDerivationParams(derivationPath: DerivationPath?, card: CardDTO): DerivationParams? {
-        val derivationStyle = when {
-            !card.settings.isHDWalletAllowed -> return null
-            card.useOldStyleDerivation -> DerivationStyle.LEGACY
-            else -> DerivationStyle.NEW
-        }
+    private fun getDerivationParams(
+        derivationPath: DerivationPath?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): DerivationParams? {
+        val derivationStyle = derivationStyleProvider.getDerivationStyle() ?: return null
 
         return if (derivationPath == null) {
             DerivationParams.Default(derivationStyle)

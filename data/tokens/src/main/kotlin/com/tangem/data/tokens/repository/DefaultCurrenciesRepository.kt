@@ -65,13 +65,25 @@ internal class DefaultCurrenciesRepository(
                 lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
             )
 
+            val filteredCurrencies = currencies.toMutableList()
+            filteredCurrencies.filterNot { currency ->
+                val blockchain = getBlockchain(networkId = currency.network.id)
+                val networkId = blockchain.toNetworkId()
+                val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
+                savedCurrencies.tokens.firstOrNull { token ->
+                    token.contractAddress == contractAddress &&
+                        token.networkId == networkId &&
+                        token.derivationPath == currency.network.derivationPath.value
+                } != null
+            }
+
             val newCoins = createCoinsForNewTokens(
                 userWalletId = userWalletId,
-                newTokens = currencies.filterIsInstance<CryptoCurrency.Token>(),
+                newTokens = filteredCurrencies.filterIsInstance<CryptoCurrency.Token>(),
                 savedCurrencies = savedCurrencies.tokens,
             )
 
-            val newCurrencies = newCoins + currencies
+            val newCurrencies = newCoins + filteredCurrencies
 
             storeAndPushTokens(
                 userWalletId = userWalletId,
@@ -276,7 +288,7 @@ internal class DefaultCurrenciesRepository(
     private suspend fun fetchUserMarketCoinsByIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
         try {
             val networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId }
-            val response = tangemTechApi.getCoins(networkIds)
+            val response = tangemTechApi.getCoins(networkIds = networkIds)
 
             userMarketCoinsStore.store(userWalletId, response)
         } catch (e: Throwable) {
