@@ -5,7 +5,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 
 // TODO: Finalize notification strings [REDACTED_JIRA]
