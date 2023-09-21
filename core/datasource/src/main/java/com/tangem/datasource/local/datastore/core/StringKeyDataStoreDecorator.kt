@@ -16,7 +16,7 @@ internal abstract class StringKeyDataStoreDecorator<Key : Any, Value : Any>(
         return wrappedDataStore.getAll()
     }
 
-    override suspend fun getAllSyncOrNull(): List<Value> {
+    override suspend fun getAllSyncOrNull(): List<Value>? {
         return wrappedDataStore.getAllSyncOrNull()
     }
 
@@ -24,13 +24,13 @@ internal abstract class StringKeyDataStoreDecorator<Key : Any, Value : Any>(
         return wrappedDataStore.getSyncOrNull(provideStringKey(key))
     }
 
-    override suspend fun store(key: Key, item: Value) {
-        wrappedDataStore.store(provideStringKey(key), item)
+    override suspend fun store(key: Key, value: Value) {
+        wrappedDataStore.store(provideStringKey(key), value)
     }
 
-    override suspend fun store(items: Map<Key, Value>) {
+    override suspend fun store(values: Map<Key, Value>) {
         wrappedDataStore.store(
-            items = items.mapKeys { (key, _) -> provideStringKey(key) },
+            values = values.mapKeys { (key, _) -> provideStringKey(key) },
         )
     }
 
