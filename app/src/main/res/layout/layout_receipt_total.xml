@@ -47,7 +47,7 @@
             android:layout_gravity="end"
             android:layout_marginTop="4dp"
             android:gravity="end"
-            android:textColor="@color/darkGray1"
+            android:textColor="@color/text_tertiary"
             tools:text="123.29837729 ADA 39487593.109342039402938049 will be sent" />
 
     </LinearLayout>
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:text="@string/send_total_label"
-            android:textColor="@color/darkGray1"
+            android:textColor="@color/text_tertiary"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -74,7 +74,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textAllCaps="true"
-            android:textColor="@color/darkGray1"
+            android:textColor="@color/text_tertiary"
             android:textSize="14sp"
             android:textStyle="bold"
             tools:text="usd" />
