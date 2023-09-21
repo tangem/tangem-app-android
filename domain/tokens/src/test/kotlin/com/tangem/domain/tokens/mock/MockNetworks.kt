@@ -2,9 +2,9 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.Network
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
