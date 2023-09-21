@@ -6,7 +6,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 internal class CardCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
 
