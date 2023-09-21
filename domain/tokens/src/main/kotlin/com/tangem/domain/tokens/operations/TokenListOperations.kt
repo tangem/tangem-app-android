@@ -36,7 +36,7 @@ internal class TokenListOperations(
             either {
                 createTokenList(isGrouped.bind(), isSortedByBalance.bind())
             }
-        }.cancellable()
+        }
     }
 
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
