@@ -7,7 +7,6 @@ import com.tangem.common.CardFilter
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
 import com.tangem.sdk.extensions.initWithBiometrics
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,17 +19,18 @@ import javax.inject.Singleton
 internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, CardSdkLifecycleObserver {
 
     override val sdk: TangemSdk
-        get() = requireNotNull(value = _sdk?.get()) { "Impossible to get the TangemSdk when activity is destroyed" }
+        get() = requireNotNull(value = _sdk) { "Impossible to get the TangemSdk when activity is destroyed" }
 
-    private var _sdk: WeakReference<TangemSdk?>? = null
+    private var _sdk: TangemSdk? = null
 
     override fun onCreate(context: Context) {
-        _sdk = WeakReference(TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config))
+        _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
     }
 
     override fun onDestroy(context: Context) {
         // Commented out to prevent crash on getting sdk when it's null.
 // [REDACTED_TODO_COMMENT]
+        // idea: pass everywhere DefaultCardSdkProvider instead sdk to reach lazy access to sdk property
         // _sdk = null
     }
 
