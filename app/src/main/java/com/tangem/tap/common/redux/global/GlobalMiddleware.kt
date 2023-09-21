@@ -66,7 +66,13 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            if (store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles).isRedesignedScreenEnabled) {
+            val daggerGraphState = store.state.daggerGraphState
+            val walletFeatureToggles = daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+            val detailsFeatureToggles = daggerGraphState.get(DaggerGraphState::detailsFeatureToggles)
+
+            if (walletFeatureToggles.isRedesignedScreenEnabled ||
+                detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled
+            ) {
                 restoreAppCurrencyNew()
             } else {
                 restoreAppCurrencyLegacy()
@@ -131,6 +137,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     sellService = makeSellExchangeService(config),
                     primaryRules = CardExchangeRules(cardProvider),
                 )
+                // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
+                store.state.daggerGraphState.get(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
