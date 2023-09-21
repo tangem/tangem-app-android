@@ -38,6 +38,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.features.swap.domain)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.settings)
 
     /** Other libraries */
