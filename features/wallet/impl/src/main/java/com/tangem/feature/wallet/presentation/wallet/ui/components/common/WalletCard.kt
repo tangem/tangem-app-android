@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -163,22 +164,14 @@ private fun CardContainer(
 
     var isRenameWalletDialogVisible by rememberSaveable { mutableStateOf(value = false) }
 
-    DropdownMenu(
-        expanded = isMenuVisible,
+    ManageWalletContextMenu(
+        isMenuVisible = isMenuVisible,
+        pressOffset = pressOffset,
+        itemHeight = itemHeight,
         onDismissRequest = { isMenuVisible = false },
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
-        offset = pressOffset.copy(y = pressOffset.y - itemHeight),
-    ) {
-        MenuItem(
-            textResId = R.string.common_rename,
-            imageVector = Icons.Outlined.Edit,
-            onClick = {
-                isMenuVisible = false
-                isRenameWalletDialogVisible = true
-            },
-        )
-        MenuItem(textResId = R.string.common_delete, imageVector = Icons.Outlined.Delete, onClick = onDeleteClick)
-    }
+        onShowRenameWalletDialogClick = { isRenameWalletDialogVisible = true },
+        onDeleteClick = onDeleteClick,
+    )
 
     if (isRenameWalletDialogVisible) {
         RenameWalletDialogContent(
@@ -188,6 +181,41 @@ private fun CardContainer(
                 isRenameWalletDialogVisible = false
             },
             onDismiss = { isRenameWalletDialogVisible = false },
+        )
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun ManageWalletContextMenu(
+    isMenuVisible: Boolean,
+    pressOffset: DpOffset,
+    itemHeight: Dp,
+    onDismissRequest: () -> Unit,
+    onShowRenameWalletDialogClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = isMenuVisible,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        offset = pressOffset.copy(y = pressOffset.y - itemHeight),
+    ) {
+        MenuItem(
+            textResId = R.string.common_rename,
+            imageVector = Icons.Outlined.Edit,
+            onClick = {
+                onDismissRequest()
+                onShowRenameWalletDialogClick()
+            },
+        )
+        MenuItem(
+            textResId = R.string.common_delete,
+            imageVector = Icons.Outlined.Delete,
+            onClick = {
+                onDismissRequest()
+                onDeleteClick()
+            },
         )
     }
 }
@@ -213,15 +241,6 @@ private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
     ) {
         TitleText(title = state.title)
-
-        AnimatedVisibility(visible = state is WalletCardState.HiddenContent, label = "Update the hidden icon") {
-            Icon(
-                modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                painter = painterResource(id = R.drawable.ic_eye_off_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
-            )
-        }
     }
 }
 
@@ -230,7 +249,7 @@ private fun TitleText(title: String) {
     Text(
         text = title,
         color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.body2,
+        style = TangemTheme.typography.button,
         maxLines = 1,
     )
 }
@@ -275,28 +294,26 @@ private fun NonContentBalanceText(text: TextReference) {
 }
 
 private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
-    return size(width = dimens.size102, height = dimens.size32)
+    return this
+        .padding(vertical = dimens.spacing4)
+        .size(width = dimens.size102, height = dimens.size24)
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state.additionalInfo,
+        targetState = state,
         label = "Update the additional text",
         modifier = modifier,
-    ) { additionalInfo ->
-        if (additionalInfo != null) {
-            AdditionalInfoText(text = additionalInfo)
-        } else {
-            when (state) {
-                is WalletCardState.Loading -> {
-                    RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
-                }
-                is WalletCardState.LockedContent -> {
-                    LockedContent(modifier = Modifier.nonContentAdditionalInfoSize(TangemTheme.dimens))
-                }
-                else -> Unit
+    ) { animatedState ->
+        when (animatedState) {
+            is WalletCardState.Content -> AdditionalInfoText(text = animatedState.additionalInfo)
+            is WalletCardState.LockedContent -> AdditionalInfoText(text = animatedState.additionalInfo)
+            is WalletCardState.Error -> AdditionalInfoText(text = WalletCardState.EMPTY_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> AdditionalInfoText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.Loading -> {
+                RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
             }
         }
     }
@@ -306,7 +323,7 @@ private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier
 private fun AdditionalInfoText(text: TextReference) {
     Text(
         text = text.resolveReference(),
-        color = TangemTheme.colors.text.disabled,
+        color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption,
     )
 }
