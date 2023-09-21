@@ -303,7 +303,7 @@ private class CreateWalletTangemWallet(
 
     private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
         return when {
-            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains
+            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains.toList()
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
             else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
         }
