@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
