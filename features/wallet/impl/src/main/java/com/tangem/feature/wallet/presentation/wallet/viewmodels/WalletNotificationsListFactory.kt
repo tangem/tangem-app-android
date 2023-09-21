@@ -5,6 +5,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -30,7 +31,7 @@ internal class WalletNotificationsListFactory(
 
     fun create(
         cardTypesResolver: CardTypesResolver,
-        cryptoCurrencyList: List<CryptoCurrencyStatus.Status>,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
         return flow {
             emit(
@@ -78,21 +79,25 @@ internal class WalletNotificationsListFactory(
     }
 
     private fun MutableList<WalletNotification>.addMissingAddressesNotification(
-        cryptoCurrencyList: List<CryptoCurrencyStatus.Status>,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ) {
-        val missedAddressesCount = cryptoCurrencyList.getMissedAddressesCount()
+        val missedAddressCurrencies = cryptoCurrencyList.getMissedAddressCurrencies()
 
         addIf(
             element = WalletNotification.MissingAddresses(
-                missingAddressesCount = missedAddressesCount,
-                onGenerateClick = clickIntents::onGenerateMissedAddressesClick,
+                missingAddressesCount = missedAddressCurrencies.count(),
+                onGenerateClick = {
+                    clickIntents.onGenerateMissedAddressesClick(missedAddressCurrencies = missedAddressCurrencies)
+                },
             ),
-            condition = missedAddressesCount > 0,
+            condition = missedAddressCurrencies.isNotEmpty(),
         )
     }
 
-    private fun List<CryptoCurrencyStatus.Status>.getMissedAddressesCount(): Int {
-        return filterIsInstance<CryptoCurrencyStatus.MissedDerivation>().count()
+    private fun List<CryptoCurrencyStatus>.getMissedAddressCurrencies(): List<CryptoCurrency> {
+        return this
+            .filter { it.value is CryptoCurrencyStatus.MissedDerivation }
+            .map(CryptoCurrencyStatus::currency)
     }
 
     // TODO: [REDACTED_JIRA]
@@ -109,7 +114,7 @@ internal class WalletNotificationsListFactory(
 
     private suspend fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver,
-        cryptoCurrencyList: List<CryptoCurrencyStatus.Status>,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ) {
         addIf(
             element = WalletNotification.Warning.MissingBackup(
@@ -163,12 +168,12 @@ internal class WalletNotificationsListFactory(
         if (condition) add(element = element)
     }
 
-    private fun List<CryptoCurrencyStatus.Status>.hasUnreachableNetworks(): Boolean {
-        return any { it is CryptoCurrencyStatus.Unreachable }
+    private fun List<CryptoCurrencyStatus>.hasUnreachableNetworks(): Boolean {
+        return any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun List<CryptoCurrencyStatus.Status>.hasNoAccountStatus(): Boolean {
-        return any { it is CryptoCurrencyStatus.NoAccount }
+    private fun List<CryptoCurrencyStatus>.hasNoAccountStatus(): Boolean {
+        return any { it.value is CryptoCurrencyStatus.NoAccount }
     }
 
     private suspend fun checkSignedHashes(cardTypesResolver: CardTypesResolver, isDemo: Boolean): Boolean {
