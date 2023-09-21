@@ -4,6 +4,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 sealed class TradeCryptoAction : Action {
 
@@ -36,7 +37,13 @@ sealed class TradeCryptoAction : Action {
             val appCurrencyCode: String,
         ) : New()
 
-        object Send : New()
+        data class SendToken(
+            val userWallet: UserWallet,
+            val tokenStatus: CryptoCurrencyStatus,
+            val coinFiatRate: BigDecimal?,
+        ) : New()
+
+        data class SendCoin(val userWallet: UserWallet, val coinStatus: CryptoCurrencyStatus) : New()
 
         data class Swap(val cryptoCurrency: CryptoCurrency) : New()
     }

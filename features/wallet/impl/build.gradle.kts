@@ -44,6 +44,8 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Domain modules */
     implementation(projects.common)
@@ -60,6 +62,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
