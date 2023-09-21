@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,13 +44,16 @@ internal fun AgreementBottomSheetContent(url: String) {
 @Composable
 private fun AgreementHtmlView(url: String) {
     val state = rememberWebViewState(url)
+    val isInPreviewMode = LocalInspectionMode.current
     WebView(
         state = state,
         modifier = Modifier.background(TangemTheme.colors.background.secondary),
         onCreated = {
-            it.settings.apply {
-                javaScriptEnabled = false
-                allowFileAccess = false
+            if (!isInPreviewMode) {
+                it.settings.apply {
+                    javaScriptEnabled = false
+                    allowFileAccess = false
+                }
             }
         },
     )

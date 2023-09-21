@@ -4,7 +4,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 data class TokenActionsState(
     val walletId: UserWalletId,
-    val tokenId: String,
+    val cryptoCurrencyStatus: CryptoCurrencyStatus,
     val states: List<ActionState>,
 ) {
 

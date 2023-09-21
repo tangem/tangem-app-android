@@ -29,4 +29,5 @@ dependencies {
     implementation(deps.material)
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.zxing.qrCore)
 }
