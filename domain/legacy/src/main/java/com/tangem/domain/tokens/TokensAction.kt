@@ -3,7 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import org.rekotlin.Action
 
