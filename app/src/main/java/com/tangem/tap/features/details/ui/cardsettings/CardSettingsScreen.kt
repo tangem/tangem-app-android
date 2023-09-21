@@ -55,17 +55,17 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
                     start = TangemTheme.dimens.size16,
                     end = TangemTheme.dimens.size16,
                     top = TangemTheme.dimens.size70,
-                )
+                ),
         ) {
             val circleColor = TangemTheme.colors.stroke.primary
             Canvas(
                 modifier = Modifier
                     .size(300.dp)
-                    .align(Alignment.Center)
+                    .align(Alignment.Center),
             ) {
                 drawCircle(
                     color = circleColor,
-                    radius = size.minDimension / 2.0f
+                    radius = size.minDimension / 2.0f,
                 )
             }
             SubcomposeAsyncImage(
@@ -80,7 +80,6 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
                 error = { /* no-op */ },
                 contentDescription = null,
             )
-
         }
         Spacer(modifier = Modifier.weight(1f))
         Column(
@@ -89,7 +88,7 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
                 .padding(
                     start = TangemTheme.dimens.size16,
                     end = TangemTheme.dimens.size16,
-                    bottom = TangemTheme.dimens.size32
+                    bottom = TangemTheme.dimens.size32,
                 ),
         ) {
             Text(
