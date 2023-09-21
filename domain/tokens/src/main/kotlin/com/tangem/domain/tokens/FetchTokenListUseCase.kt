@@ -91,11 +91,11 @@ class FetchTokenListUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListError>.fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
+    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
         catch(
             block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
         ) {
-            raise(TokenListError.DataError(it))
+            /* Ignore error */
         }
     }
 }

@@ -144,13 +144,13 @@ class DefaultWalletManagersFacade(
         val scanResponse = userWallet.scanResponse
 
         if (derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)) {
-            Timber.e("Derivation missed for: $blockchain")
+            Timber.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
         val walletManager = getOrCreateWalletManager(userWallet, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable
         }
 
@@ -182,7 +182,7 @@ class DefaultWalletManagersFacade(
         } catch (e: BlockchainSdkError.AccountNotFound) {
             resultFactory.getNoAccountResult(walletManager)
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
             UpdateWalletManagerResult.Unreachable
         }

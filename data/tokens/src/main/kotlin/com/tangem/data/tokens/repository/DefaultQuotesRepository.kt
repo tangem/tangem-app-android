@@ -72,17 +72,15 @@ internal class DefaultQuotesRepository(
     }
 
     private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
-        try {
-            val response = tangemTechApi.getQuotes(
-                currencyId = appCurrencyId,
-                coinIds = rawCurrenciesIds.joinToString(separator = ","),
-            )
-
-            quotesStore.store(response)
+        val response = try {
+            val coinIds = rawCurrenciesIds.joinToString(separator = ",")
+            tangemTechApi.getQuotes(appCurrencyId, coinIds)
         } catch (e: Throwable) {
             Timber.e(e, "Unable to fetch quotes for: $rawCurrenciesIds")
             throw e
         }
+
+        quotesStore.store(response)
     }
 
     private suspend fun filterExpiredCurrenciesIds(

@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import timber.log.Timber
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
@@ -262,8 +264,8 @@ internal class DefaultCurrenciesRepository(
                 // The response may contain repeated tokens
                 copy(tokens = tokens.distinct())
             }
-        } catch (e: HttpException) {
-            handleCurrenciesNotFoundOrThrow(userWallet, e)
+        } catch (e: Throwable) {
+            handleFetchTokensError(userWallet, e)
         }
 
         userTokensStore.store(userWallet.walletId, response)
@@ -286,19 +288,8 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    private suspend fun handleCurrenciesNotFoundOrThrow(
-        userWallet: UserWallet,
-        httpException: HttpException,
-    ): UserTokensResponse {
+    private suspend fun handleFetchTokensError(userWallet: UserWallet, throwable: Throwable): UserTokensResponse {
         val userWalletId = userWallet.walletId
-
-        if (httpException.code() != NOT_FOUND_HTTP_CODE) {
-            Timber.e(httpException, "Unable to fetch currencies for: $userWalletId")
-            throw httpException
-        }
-
-        Timber.d("Requested currencies could not be found in the remote store for: $userWalletId")
-
         val response = userTokensStore.getSyncOrNull(userWalletId)
             ?: userTokensResponseFactory.createUserTokensResponse(
                 currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
@@ -306,7 +297,28 @@ internal class DefaultCurrenciesRepository(
                 isSortedByBalance = false,
             )
 
-        tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+        when (throwable) {
+            is ConnectException,
+            is UnknownHostException,
+            -> {
+                Timber.e("Unable to fetch currencies due to lack of internet connection")
+            }
+            is HttpException -> {
+                if (throwable.code() == NOT_FOUND_HTTP_CODE) {
+                    Timber.w(
+                        throwable,
+                        "Requested currencies could not be found in the remote store for: $userWalletId",
+                    )
+
+                    tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+                } else {
+                    Timber.e(throwable, "Unable to fetch currencies for: $userWalletId")
+                }
+            }
+            else -> {
+                throw throwable
+            }
+        }
 
         return response
     }
