@@ -38,6 +38,7 @@
     <string name="card_settings_access_code_recovery_enabled_description">允許您使用此卡重置此錢包中其他卡上的訪問密碼</string>
     <string name="card_settings_access_code_recovery_footer">禁用重置此卡或此錢包中其他卡上的訪問密碼的功能</string>
     <string name="card_settings_access_code_recovery_title">恢復訪問密碼</string>
+    <string name="card_settings_action_sheet_reset">重置</string>
     <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
     <string name="card_settings_change_access_code">更改訪問密碼</string>
     <string name="card_settings_change_access_code_footer">訪問密碼將僅在此卡上更改</string>
@@ -80,7 +81,6 @@
     <string name="common_origin_card">主卡片</string>
     <string name="common_reject">拒絕</string>
     <string name="common_rename">重新命名</string>
-    <string name="common_reset">重置</string>
     <string name="common_save_changes">保存設置</string>
     <string name="common_search">搜索</string>
     <string name="common_search_tokens">搜尋代幣</string>
@@ -280,7 +280,6 @@
     <string name="reset_card_to_factory_warning_message">我了解執行此操作後，我將無法再訪問當前錢包</string>
     <string name="reset_card_with_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包。您將無法恢復當前錢包或使用卡恢復訪問密碼</string>
     <string name="reset_card_without_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包並將其從應用程序中刪除。您將無法恢復當前錢包</string>
-    <string name="russian_bank_card_warning_subtitle">您有其他國家的銀行卡或銀聯卡嗎？</string>
     <string name="russian_bank_card_warning_title">目前不接受俄羅斯銀行卡</string>
     <string name="save_user_wallet_agreement_access_description">登錄應用程序並在不掃描卡片的情況下檢查您的資產</string>
     <string name="save_user_wallet_agreement_access_title">訪問應用程序</string>
@@ -405,7 +404,7 @@
     <string name="user_wallet_list_rename_popup_title">重新命名錢包</string>
     <string name="user_wallet_list_single_header">單一幣種</string>
     <string name="user_wallet_list_title">我的錢包</string>
-    <string name="user_wallet_list_unlock_all">用 %s 解鎖全部</string>
+    <string name="user_wallet_list_unlock_all_with">用 %s 解鎖全部</string>
     <string name="wallet_address_button_explore">交易記錄</string>
     <string name="wallet_balance_blockchain_unreachable">網路無法使用</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
