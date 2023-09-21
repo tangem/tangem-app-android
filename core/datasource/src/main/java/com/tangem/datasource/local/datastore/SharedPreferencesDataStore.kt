@@ -46,9 +46,9 @@ internal class SharedPreferencesDataStore<Value : Any>(
         return getAllInternal()
     }
 
-    override suspend fun store(key: String, item: Value) {
+    override suspend fun store(key: String, value: Value) {
         try {
-            val json = adapter.toJson(item)
+            val json = adapter.toJson(value)
 
             sharedPreferences.edit { putString(key, json) }
             writeTrigger.trigger()
@@ -57,8 +57,8 @@ internal class SharedPreferencesDataStore<Value : Any>(
         }
     }
 
-    override suspend fun store(items: Map<String, Value>) {
-        items.forEach { (key, item) ->
+    override suspend fun store(values: Map<String, Value>) {
+        values.forEach { (key, item) ->
             store(key, item)
         }
     }

@@ -3,7 +3,7 @@ package com.tangem.datasource.local.quote
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.quote.model.StoredQuote
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
