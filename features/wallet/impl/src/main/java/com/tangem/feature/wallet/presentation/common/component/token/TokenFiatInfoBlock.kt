@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.common.component.token
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -12,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
@@ -19,7 +19,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.Companion.DOTS
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
@@ -57,9 +56,10 @@ private fun ContentBlock(state: TokenOptionsState, modifier: Modifier = Modifier
             modifier = Modifier.align(Alignment.End),
         ) {
             Text(
-                text = when (it) {
-                    is TokenOptionsState.Visible -> it.fiatAmount
-                    is TokenOptionsState.Hidden -> DOTS
+                text = if (it.isBalanceHidden) {
+                    STARS
+                } else {
+                    it.fiatAmount
                 },
                 style = TangemTypography.body2,
                 color = TangemTheme.colors.text.primary1,
@@ -87,13 +87,17 @@ private fun PriceChangeIcon(type: PriceChangeConfig.Type, modifier: Modifier = M
         label = "Update the price change's arrow",
         modifier = modifier,
     ) {
-        Image(
+        Icon(
             painter = painterResource(
                 id = when (it) {
-                    PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                    PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                    PriceChangeConfig.Type.UP -> R.drawable.ic_arrow_up_8
+                    PriceChangeConfig.Type.DOWN -> R.drawable.ic_arrow_down_8
                 },
             ),
+            tint = when (it) {
+                PriceChangeConfig.Type.UP -> TangemTheme.colors.icon.accent
+                PriceChangeConfig.Type.DOWN -> TangemTheme.colors.icon.warning
+            },
             contentDescription = null,
         )
     }
