@@ -4,7 +4,6 @@ import android.content.res.Resources
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
 import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.card.FirmwareVersion
@@ -25,12 +24,12 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -38,7 +37,10 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigRepository, private val resources: Resources) {
+class TangemSdkManager(
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val resources: Resources,
+) {
 
     private val tangemSdk: TangemSdk
         get() = cardSdkConfigRepository.sdk
@@ -60,9 +62,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         get() = tangemSdk.biometricManager
 
     suspend fun scanProduct(
-        userTokensRepository: UserTokensRepository,
         cardId: String? = null,
-        additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
@@ -70,8 +70,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(
                 card = null,
-                userTokensRepository = userTokensRepository,
-                additionalBlockchainsToDerive = additionalBlockchainsToDerive,
+                derivationsFinder = derivationsFinder,
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             ),
             cardId = cardId,
