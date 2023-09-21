@@ -11,14 +11,14 @@ import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import com.tangem.wallet.R
 import com.tangem.tap.features.details.redux.CardInfo as ReduxCardInfo
 
-data class CardSettingsScreenState(
+internal data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
     val accessCodeRecoveryState: AccessCodeRecoveryState? = null,
     val onScanCardClick: () -> Unit,
     val onElementClick: (CardInfo) -> Unit,
 )
 
-sealed class CardInfo(
+internal sealed class CardInfo(
     val titleRes: TextReference,
     val subtitle: TextReference,
     val clickable: Boolean = false,
@@ -68,7 +68,7 @@ sealed class CardInfo(
 }
 
 // TODO("Remove and use the same from coreUI")
-sealed interface TextReference {
+internal sealed interface TextReference {
     class Res(@StringRes val id: Int, val formatArgs: List<Any> = emptyList()) : TextReference {
         constructor(@StringRes id: Int, vararg formatArgs: Any) : this(id, formatArgs.toList())
     }
@@ -78,7 +78,7 @@ sealed interface TextReference {
 
 @Composable
 @ReadOnlyComposable
-fun TextReference.resolveReference(): String {
+internal fun TextReference.resolveReference(): String {
     return when (this) {
         is TextReference.Res -> stringResource(this.id, *this.formatArgs.toTypedArray())
         is TextReference.Str -> this.value

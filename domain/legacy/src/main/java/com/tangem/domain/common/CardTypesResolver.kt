@@ -17,15 +17,13 @@ interface CardTypesResolver {
 
     fun isStart2Coin(): Boolean
 
-    fun isDev(): Boolean
+    fun isDevKit(): Boolean
 
     fun isMultiwalletAllowed(): Boolean
 
     fun getBlockchain(): Blockchain
 
     fun getPrimaryToken(): Token?
-
-    fun getBackupCardsCount(): Int
 
     fun isReleaseFirmwareType(): Boolean
 

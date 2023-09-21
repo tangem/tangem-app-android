@@ -11,24 +11,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 internal class MockNetworksRepository(
-    private val networks: Either<DataError, Set<Network>>,
     private val statuses: Flow<Either<DataError, Set<NetworkStatus>>>,
 ) : NetworksRepository {
 
-    override fun getNetworks(networksIds: Set<Network.ID>): Set<Network> {
-        return networks.getOrElse { throw it }
-    }
-
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
-        networks: Set<Network.ID>,
+        networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> {
         return statuses.map { it.getOrElse { e -> throw e } }
     }
 
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
-        networks: Set<Network.ID>,
+        networks: Set<Network>,
         refresh: Boolean,
     ): Set<NetworkStatus> {
         return getNetworkStatusesUpdates(userWalletId, networks).first()

@@ -154,9 +154,8 @@ class WarningsMiddleware {
                         store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     }
                     is SimpleResult.Failure ->
-                        if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            addWarningMessage(alreadySignedHashesWarning, true)
-                        } else if (signedHashes > 0) {
+                        if (signedHashes > 0 || result.error is BlockchainSdkError.SignatureCountNotMatched) {
+                            alreadySignedHashesWarning.isHidden = false
                             addWarningMessage(alreadySignedHashesWarning, true)
                         }
                     null -> Unit

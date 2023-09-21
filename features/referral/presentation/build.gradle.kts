@@ -32,6 +32,7 @@ dependencies {
     /** Other libraries */
     implementation(deps.compose.shimmer)
     implementation(deps.compose.accompanist.webView)
+    implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */
     implementation(deps.hilt.android)
