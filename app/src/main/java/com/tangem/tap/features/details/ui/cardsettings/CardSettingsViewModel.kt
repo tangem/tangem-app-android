@@ -5,10 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
-import com.tangem.common.extensions.guard
+import arrow.core.Either
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -19,24 +20,27 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.rekotlin.StoreSubscriber
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-internal class CardSettingsViewModel @Inject constructor() :
+internal class CardSettingsViewModel @Inject constructor(
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+) :
     ViewModel(), DefaultLifecycleObserver, StoreSubscriber<DetailsState> {
 
     var screenState: MutableState<CardSettingsScreenState> =
         mutableStateOf(updateState(store.state.detailsState.cardSettingsState))
 
     override fun onStart(owner: LifecycleOwner) {
-        val selectedWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("Unable to load/refresh wallets data, no user wallet selected")
-            return
+        when (val selectedWalletEither = getSelectedWalletUseCase()) {
+            is Either.Left -> {
+                Timber.e(selectedWalletEither.value.toString())
+            }
+            is Either.Right -> {
+                store.dispatchOnMain(WalletAction.UpdateUserWalletArtwork(selectedWalletEither.value.walletId))
+            }
         }
-
-        store.dispatchOnMain(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
 
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
