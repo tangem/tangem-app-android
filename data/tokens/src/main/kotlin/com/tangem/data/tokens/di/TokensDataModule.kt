@@ -7,6 +7,7 @@ import com.tangem.data.tokens.repository.DefaultNetworksRepository
 import com.tangem.data.tokens.repository.DefaultQuotesRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
+import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
@@ -68,6 +69,7 @@ internal object TokensDataModule {
     @Provides
     @Singleton
     fun provideNetworksRepository(
+        networksStatusesStore: NetworksStatusesStore,
         walletManagersFacade: WalletManagersFacade,
         userWalletsStore: UserWalletsStore,
         userTokensStore: UserTokensStore,
@@ -75,6 +77,7 @@ internal object TokensDataModule {
         dispatchers: CoroutineDispatcherProvider,
     ): NetworksRepository {
         return DefaultNetworksRepository(
+            networksStatusesStore = networksStatusesStore,
             walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
             userTokensStore = userTokensStore,

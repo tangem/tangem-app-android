@@ -4,7 +4,10 @@ import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.files.FileReader
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.utils.Trigger
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 @Deprecated("Use shared preferences data store instead")
@@ -33,16 +36,16 @@ internal class FileDataStore<Value : Any>(
         return getInternal(key)
     }
 
-    override suspend fun getAllSyncOrNull(): List<Value> {
+    override suspend fun getAllSyncOrNull(): List<Value>? {
         val e = NotImplementedError("`getAllSyncOrNull()` function not implemented for `FileDataStore`")
         Timber.e(e)
 
         throw e
     }
 
-    override suspend fun store(key: String, item: Value) {
+    override suspend fun store(key: String, value: Value) {
         try {
-            val json = adapter.toJson(item)
+            val json = adapter.toJson(value)
 
             fileReader.rewriteFile(json, key)
             writeTrigger.trigger()
@@ -51,8 +54,8 @@ internal class FileDataStore<Value : Any>(
         }
     }
 
-    override suspend fun store(items: Map<String, Value>) {
-        items.forEach { (key, item) ->
+    override suspend fun store(values: Map<String, Value>) {
+        values.forEach { (key, item) ->
             store(key, item)
         }
     }
