@@ -14,6 +14,8 @@ data class TokenActionsState(
 
         data class Buy(override val enabled: Boolean) : ActionState()
 
+        data class CopyAddress(override val enabled: Boolean) : ActionState()
+
         data class Sell(override val enabled: Boolean) : ActionState()
 
         data class Receive(override val enabled: Boolean) : ActionState()
