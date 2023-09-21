@@ -3,24 +3,35 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.Provider
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.*
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.*
+import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -43,6 +54,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -79,6 +91,7 @@ internal class WalletViewModel @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val scanCardProcessor: ScanCardProcessor,
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
@@ -252,16 +265,106 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    override fun onGenerateMissedAddressesClick() {
+    override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
+        val state = uiState as? WalletState.ContentState ?: return
+
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeScanYourCardTapped)
 
-        scanToUpdateSelectedWallet(
-            onSuccessSave = {
-                // Reload currencies with missed derivation
-                fetchTokenListUseCase(userWalletId = it.walletId)
-            },
-        )
+        viewModelScope.launch(dispatchers.io) {
+            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+            deriveMissingCurrencies(
+                scanResponse = userWallet.scanResponse,
+                currencyList = missedAddressCurrencies,
+            ) { scannedCardResponse ->
+                updateWalletUseCase(
+                    userWalletId = userWallet.walletId,
+                    update = { it.copy(scanResponse = scannedCardResponse) },
+                )
+                    .onRight {
+                        fetchTokenListUseCase(userWalletId = it.walletId, refresh = true)
+                    }
+            }
+        }
     }
+
+    // TODO: [REDACTED_JIRA]
+    private fun deriveMissingCurrencies(
+        scanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+        onSuccess: suspend (ScanResponse) -> Unit,
+    ) {
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivationDataList = currencyList.mapNotNull {
+            config.primaryCurve(blockchain = Blockchain.fromId(it.network.id.value))?.let { curve ->
+                getNewDerivations(curve, scanResponse, currencyList)
+            }
+        }
+
+        val derivations = derivationDataList
+            .associate(DerivationData::derivations)
+            .ifEmpty { return }
+
+        viewModelScope.launch(dispatchers.io) {
+            derivePublicKeysUseCase(cardId = null, derivations = derivations)
+                .onRight {
+                    val newDerivedKeys = it.entries
+                    val oldDerivedKeys = scanResponse.derivedKeys
+
+                    val walletKeys = (newDerivedKeys.keys + oldDerivedKeys.keys).toSet()
+
+                    val updatedDerivedKeys = walletKeys.associateWith { walletKey ->
+                        val oldDerivations = ExtendedPublicKeysMap(oldDerivedKeys[walletKey] ?: emptyMap())
+                        val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
+                        ExtendedPublicKeysMap(oldDerivations + newDerivations)
+                    }
+                    val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
+
+                    onSuccess(updatedScanResponse)
+                }
+        }
+    }
+
+    private fun getNewDerivations(
+        curve: EllipticCurve,
+        scanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ): DerivationData? {
+        val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
+
+        val manageTokensCandidates = currencyList
+            .map { Blockchain.fromId(it.network.id.value) }
+            .distinct()
+            .filter { it.getSupportedCurves().contains(curve) }
+            .mapNotNull { it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle()) }
+
+        val customTokensCandidates = currencyList
+            .filter { Blockchain.fromId(it.network.id.value).getSupportedCurves().contains(curve) }
+            .mapNotNull { it.network.derivationPath.value }
+            .map(::DerivationPath)
+
+        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        if (bothCandidates.isEmpty()) return null
+
+        currencyList.find { it is CryptoCurrency.Coin && Blockchain.fromId(it.network.id.value) == Blockchain.Cardano }
+            ?.let { currency ->
+                currency.network.derivationPath.value?.let {
+                    bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+                }
+            }
+
+        val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
+        val alreadyDerivedKeys: ExtendedPublicKeysMap =
+            scanResponse.derivedKeys[mapKeyOfWalletPublicKey] ?: ExtendedPublicKeysMap(emptyMap())
+        val alreadyDerivedPaths = alreadyDerivedKeys.keys.toList()
+
+        val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
+        if (toDerive.isEmpty()) return null
+
+        return DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
+    }
+
+    class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onScanToUnlockWalletClick() {
         scanToUpdateSelectedWallet()
@@ -708,13 +811,12 @@ internal class WalletViewModel @Inject constructor(
                     is TokenList.GroupedByNetwork -> {
                         tokenList.groups
                             .flatMap(NetworkGroup::currencies)
-                            .map(CryptoCurrencyStatus::value)
                     }
-                    is TokenList.Ungrouped -> tokenList.currencies.map(CryptoCurrencyStatus::value)
+                    is TokenList.Ungrouped -> tokenList.currencies
                     is TokenList.NotInitialized -> emptyList()
                 }
             } else {
-                listOfNotNull(singleWalletCryptoCurrencyStatus?.value)
+                listOfNotNull(singleWalletCryptoCurrencyStatus)
             },
         )
             .distinctUntilChanged()
