@@ -37,22 +37,22 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getNoAccountResult(walletManager: WalletManager): UpdateWalletManagerResult.NoAccount {
+    fun getNoAccountResult(walletManager: WalletManager): UpdateWalletManagerResult {
         val wallet = walletManager.wallet
         val blockchain = wallet.blockchain
-        val amountToCreateAccount = blockchain.amountToCreateAccount(
-            token = wallet.getTokens().firstOrNull(),
-        )
+        val firstWalletToken = wallet.getTokens().firstOrNull()
+        val amountToCreateAccount = blockchain.amountToCreateAccount(firstWalletToken)
 
-        requireNotNull(amountToCreateAccount) {
-            "Unable to get required amount to create account for: $blockchain"
+        return if (amountToCreateAccount == null) {
+            Timber.w("Unable to get required amount to create account for: $blockchain")
+            UpdateWalletManagerResult.Unreachable
+        } else {
+            UpdateWalletManagerResult.NoAccount(
+                defaultAddress = wallet.address,
+                addresses = getAvailableAddresses(wallet.addresses),
+                amountToCreateAccount = amountToCreateAccount,
+            )
         }
-
-        return UpdateWalletManagerResult.NoAccount(
-            defaultAddress = wallet.address,
-            addresses = getAvailableAddresses(wallet.addresses),
-            amountToCreateAccount = amountToCreateAccount,
-        )
     }
 
     private fun getTokensAmounts(amounts: Set<Amount>): Set<CryptoCurrencyAmount> {
@@ -153,7 +153,7 @@ internal class UpdateWalletManagerResultFactory {
                 TxHistoryItem.TransactionDirection.Outgoing(TxHistoryItem.Address.Single(toAddress))
             }
             else -> {
-                Timber.e(
+                Timber.w(
                     """
                     Unable to find transaction direction
                     |- To address: ${data.destinationAddress}
@@ -175,7 +175,7 @@ internal class UpdateWalletManagerResultFactory {
         val value = amount.value
 
         if (value == null) {
-            Timber.e("Currency amount must not be null: ${amount.currencySymbol}")
+            Timber.w("Currency amount must not be null: ${amount.currencySymbol}")
         }
 
         return value
@@ -185,7 +185,7 @@ internal class UpdateWalletManagerResultFactory {
         val value = amount.value
 
         if (value == null) {
-            Timber.e("Transaction amount must not be null: ${amount.currencySymbol}")
+            Timber.w("Transaction amount must not be null: ${amount.currencySymbol}")
         }
 
         return value

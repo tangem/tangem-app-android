@@ -3,7 +3,7 @@ package com.tangem.domain.txhistory.usecase
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 
