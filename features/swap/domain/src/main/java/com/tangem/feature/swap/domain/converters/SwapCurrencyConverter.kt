@@ -4,7 +4,7 @@ import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.lib.crypto.models.Currency as CryptoCurrency
 
-class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrency> {
+class SwapCurrencyConverter : TwoWayConverter<Currency, CryptoCurrency> {
 
     override fun convert(value: Currency): CryptoCurrency {
         return when (value) {
