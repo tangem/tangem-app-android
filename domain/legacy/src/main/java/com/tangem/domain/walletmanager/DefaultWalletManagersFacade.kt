@@ -60,11 +60,10 @@ class DefaultWalletManagersFacade(
         network: Network,
         addressType: AddressType,
     ): String {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
 
         val walletManager = getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
@@ -78,10 +77,9 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
@@ -101,10 +99,9 @@ class DefaultWalletManagersFacade(
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = currency.network.derivationPath.value,
         )
@@ -153,7 +150,11 @@ class DefaultWalletManagersFacade(
             return UpdateWalletManagerResult.MissedDerivation
         }
 
-        val walletManager = getOrCreateWalletManager(userWallet, blockchain, derivationPath)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWallet.walletId,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+        )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
             Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable
@@ -194,12 +195,11 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getOrCreateWalletManager(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val userWalletId = userWallet.walletId
-
+        val userWallet = getUserWallet(userWalletId)
         var walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
             blockchain = blockchain,
@@ -220,11 +220,10 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
 
         return getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
@@ -235,10 +234,9 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent? {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
         val manager = getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
@@ -266,10 +264,9 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
         val manager = getOrCreateWalletManager(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
