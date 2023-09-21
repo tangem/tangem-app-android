@@ -5,6 +5,8 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.card.DefaultDerivePublicKeysUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,4 +50,10 @@ internal object CardDomainModule {
     @Provides
     @ViewModelScoped
     fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig())
+
+    @Provides
+    @ViewModelScoped
+    fun provideDerivePublicKeysUseCase(tangemSdkManager: TangemSdkManager): DerivePublicKeysUseCase {
+        return DefaultDerivePublicKeysUseCase(tangemSdkManager = tangemSdkManager)
+    }
 }
