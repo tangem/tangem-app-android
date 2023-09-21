@@ -3,8 +3,8 @@ package com.tangem.feature.wallet.presentation.common.utils
 import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.utils.converter.Converter
 
