@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 @Suppress("TooManyFunctions")

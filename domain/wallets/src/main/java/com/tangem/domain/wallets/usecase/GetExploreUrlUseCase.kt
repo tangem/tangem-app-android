@@ -1,7 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.raise.catch
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
