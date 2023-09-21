@@ -1,7 +1,8 @@
 package com.tangem.tap.features.details.redux
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.tangem.blockchain.common.Wallet
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -12,7 +13,7 @@ sealed class DetailsAction : Action {
 
     data class PrepareScreen(
         val scanResponse: ScanResponse,
-        val wallets: List<Wallet>,
+        val darkThemeSwitchEnabled: Boolean,
     ) : DetailsAction()
 
     object ReCreateTwinsWallet : DetailsAction()
@@ -29,6 +30,14 @@ sealed class DetailsAction : Action {
 
     data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
     object ResetCardSettingsData : DetailsAction()
+    object ScanAndSaveUserWallet : DetailsAction() {
+
+        object Success : DetailsAction()
+
+        data class Error(val error: TextReference?) : DetailsAction()
+    }
+
+    object DismissError : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {
         object Open : AccessCodeRecovery()
@@ -71,6 +80,18 @@ sealed class DetailsAction : Action {
         object EnrollBiometrics : AppSettings()
         data class BiometricsStatusChanged(
             val needEnrollBiometrics: Boolean,
+        ) : AppSettings()
+
+        data class ChangeAppThemeMode(
+            val appThemeMode: AppThemeMode,
+        ) : AppSettings()
+
+        data class ChangeBalanceHiding(
+            val hideBalance: Boolean,
+        ) : AppSettings()
+
+        data class ChangeAppCurrency(
+            val fiatCurrency: FiatCurrency,
         ) : AppSettings()
     }
 

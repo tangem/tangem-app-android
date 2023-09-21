@@ -3,7 +3,7 @@ package com.tangem.tap.features.details.ui.securitymode
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.wallet.R
 
-data class SecurityModeScreenState(
+internal data class SecurityModeScreenState(
     val availableOptions: List<SecurityOption>,
     val selectedSecurityMode: SecurityOption,
     val isSaveChangesEnabled: Boolean,
@@ -11,7 +11,7 @@ data class SecurityModeScreenState(
     val onSaveChangesClicked: () -> Unit,
 )
 
-fun SecurityOption.toTitleRes(): Int {
+internal fun SecurityOption.toTitleRes(): Int {
     return when (this) {
         SecurityOption.LongTap -> R.string.details_manage_security_long_tap
         SecurityOption.PassCode -> R.string.details_manage_security_passcode

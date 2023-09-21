@@ -314,6 +314,6 @@ internal class GetTokenListUseCaseTest {
             isSortedByBalance = isSortedByBalance,
         ),
         quotesRepository = MockQuotesRepository(quotes),
-        networksRepository = MockNetworksRepository(MockNetworks.networks.right(), statuses),
+        networksRepository = MockNetworksRepository(statuses),
     )
 }

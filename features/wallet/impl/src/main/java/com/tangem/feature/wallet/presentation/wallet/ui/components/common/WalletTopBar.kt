@@ -12,7 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopB
 /**
  * Wallet screen top bar
  *
- * @param config top bar config
+ * @param config component config
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,11 +22,8 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
             Icon(painter = painterResource(id = R.drawable.img_tangem_logo_90_24), contentDescription = null)
         },
         actions = {
-            IconButton(onClick = config.onScanCardClick) {
-                Icon(painter = painterResource(id = R.drawable.ic_tap_card_24), contentDescription = "Scan card")
-            }
-            IconButton(onClick = config.onMoreClick) {
-                Icon(painter = painterResource(id = R.drawable.ic_more_vertical_24), contentDescription = "More")
+            IconButton(onClick = config.onDetailsClick) {
+                Icon(painter = painterResource(id = R.drawable.ic_more_vertical_24), contentDescription = null)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -42,7 +39,7 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
 @Composable
 private fun Preview_WalletTopBar_LightTheme() {
     TangemTheme(isDark = false) {
-        WalletTopBar(config = WalletPreviewData.walletTopBarConfig)
+        WalletTopBar(config = WalletPreviewData.topBarConfig)
     }
 }
 
@@ -50,6 +47,6 @@ private fun Preview_WalletTopBar_LightTheme() {
 @Composable
 private fun Preview_WalletTopBar_DarkTheme() {
     TangemTheme(isDark = true) {
-        WalletTopBar(config = WalletPreviewData.walletTopBarConfig)
+        WalletTopBar(config = WalletPreviewData.topBarConfig)
     }
 }
