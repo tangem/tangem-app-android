@@ -15,7 +15,10 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.addContext
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -34,8 +37,7 @@ internal object LegacyScanProcessor {
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
         return tangemSdkManager.scanProduct(
-            userTokensRepository,
-            cardId,
+            cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
         )
     }
@@ -56,10 +58,7 @@ internal object LegacyScanProcessor {
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
 
-        val result = tangemSdkManager.scanProduct(
-            userTokensRepository = userTokensRepository,
-            cardId = cardId,
-        )
+        val result = tangemSdkManager.scanProduct(cardId)
 
         store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
 
