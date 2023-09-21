@@ -22,6 +22,7 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
@@ -50,7 +51,9 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
 import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
@@ -67,6 +70,7 @@ import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.runBlocking
@@ -82,7 +86,8 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-lateinit var userTokensRepository: UserTokensRepository
+internal lateinit var userTokensRepository: UserTokensRepository
+internal lateinit var derivationsFinder: DerivationsFinder
 
 private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
 private val walletManagersRepository by lazy {
@@ -123,8 +128,9 @@ val totalFiatBalanceCalculator by lazy {
 }
 
 @HiltAndroidApp
-class TapApplication : Application(), ImageLoaderFactory {
+internal class TapApplication : Application(), ImageLoaderFactory {
 
+    // region Injected
     @Inject
     lateinit var appStateHolder: AppStateHolder
 
@@ -188,6 +194,10 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
 
+    @Inject
+    lateinit var userTokensStore: UserTokensStore
+    // endregion Injected
+
     override fun onCreate() {
         super.onCreate()
 
@@ -247,10 +257,17 @@ class TapApplication : Application(), ImageLoaderFactory {
             )
         }
 
+        val userTokensStorageService = UserTokensStorageService.init(context = this)
         userTokensRepository = UserTokensRepository.init(
-            context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
             networkConnectionManager = networkConnectionManager,
+            storageService = userTokensStorageService,
+        )
+        derivationsFinder = DerivationsFinder(
+            legacyTokensStore = userTokensStorageService,
+            newTokensStore = userTokensStore,
+            walletFeatureToggles = walletFeatureToggles,
+            dispatchers = AppCoroutineDispatcherProvider(),
         )
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
