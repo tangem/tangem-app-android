@@ -6,7 +6,7 @@ data class TxHistoryItem(
     val txHash: String,
     val timestampInMillis: Long,
     val direction: TransactionDirection,
-    val status: TxStatus,
+    val status: TransactionStatus,
     val type: TransactionType,
     val amount: BigDecimal,
 ) {
@@ -20,9 +20,21 @@ data class TxHistoryItem(
 
     sealed interface TransactionType {
         object Transfer : TransactionType
+        object Submit : TransactionType
+        object Approve : TransactionType
+        object Supply : TransactionType
+        object Withdraw : TransactionType
+        object Deposit : TransactionType
+        object Swap : TransactionType
+        object Unoswap : TransactionType
+        data class Custom(val id: String) : TransactionType
     }
 
-    enum class TxStatus { Confirmed, Unconfirmed }
+    sealed class TransactionStatus {
+        object Failed : TransactionStatus()
+        object Unconfirmed : TransactionStatus()
+        object Confirmed : TransactionStatus()
+    }
 
     sealed class Address {
         data class Single(val rawAddress: String) : Address()
