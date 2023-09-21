@@ -1,18 +1,60 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
-import org.rekotlin.Store
+import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import dagger.hilt.android.lifecycle.HiltViewModel
+import org.rekotlin.StoreSubscriber
+import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
+import timber.log.Timber
+import javax.inject.Inject
 
-internal class CardSettingsViewModel(private val store: Store<AppState>) {
+@HiltViewModel
+internal class CardSettingsViewModel @Inject constructor() :
+    ViewModel(), DefaultLifecycleObserver, StoreSubscriber<DetailsState> {
 
-    fun updateState(state: CardSettingsState?): CardSettingsScreenState {
+    var screenState: MutableState<CardSettingsScreenState> =
+        mutableStateOf(updateState(store.state.detailsState.cardSettingsState))
+
+    override fun onStart(owner: LifecycleOwner) {
+        val selectedWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to load/refresh wallets data, no user wallet selected")
+            return
+        }
+
+        store.dispatchOnMain(WalletAction.UpdateUserWalletArtwork(selectedWallet.walletId))
+
+        store.subscribe(this) { state ->
+            state.skipRepeats { oldState, newState ->
+                oldState.detailsState == newState.detailsState &&
+                    oldState.walletState == newState.walletState
+            }.select { it.detailsState }
+        }
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        store.unsubscribe(this)
+    }
+
+    override fun newState(state: DetailsState) {
+        screenState.value = updateState(state.cardSettingsState)
+    }
+
+    private fun updateState(state: CardSettingsState?): CardSettingsScreenState {
         return if (state?.manageSecurityState == null) {
             CardSettingsScreenState(
                 cardDetails = null,
@@ -21,6 +63,7 @@ internal class CardSettingsViewModel(private val store: Store<AppState>) {
                 onScanCardClick = {
                     store.dispatch(DetailsAction.ScanCard)
                 },
+                cardImage = store.state.walletState.cardImage,
             )
         } else {
             val cardId = if (state.card.isTangemTwins) {
@@ -58,6 +101,7 @@ internal class CardSettingsViewModel(private val store: Store<AppState>) {
                 onElementClick = {
                     handleClickingItem(it)
                 },
+                cardImage = store.state.walletState.cardImage,
             )
         }
     }

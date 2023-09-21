@@ -1,22 +1,20 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.userwallets.Artwork
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -33,7 +31,7 @@ internal fun CardSettingsScreen(
         modifier = modifier,
         content = {
             if (needReadCard) {
-                CardSettingsReadCard(state.onScanCardClick)
+                CardSettingsReadCard(state.onScanCardClick, state.cardImage)
             } else {
                 CardSettings(state = state)
             }
@@ -45,32 +43,31 @@ internal fun CardSettingsScreen(
 
 @Suppress("MagicNumber")
 @Composable
-private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
+private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwork?) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 40.dp),
+                .padding(bottom = TangemTheme.dimens.size40),
         ) {
-            Image(
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(context = LocalContext.current)
+                    .data(cardArtwork?.artworkId)
+                    .crossfade(enable = true)
+                    .build(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 80.dp, end = 80.dp, top = 70.dp)
-                    .rotate(-15f),
-                painter = painterResource(id = R.drawable.card_placeholder_secondary),
+                    .padding(
+                        start = TangemTheme.dimens.size16,
+                        end = TangemTheme.dimens.size16,
+                        top = TangemTheme.dimens.size70,
+                    )
+                    .fillMaxWidth(),
+                loading = { },
+                error = { },
                 contentDescription = "",
-                contentScale = ContentScale.FillWidth,
-            )
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 60.dp, end = 60.dp)
-                    .rotate(-1f),
-                painter = painterResource(id = R.drawable.card_placeholder_black),
-                contentDescription = "",
-                contentScale = ContentScale.FillWidth,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -166,7 +163,7 @@ private fun CardSettings(state: CardSettingsScreenState) {
 // region Preview
 @Composable
 private fun CardSettingsScreenStateSample() {
-    CardSettingsScreen(state = CardSettingsScreenState(onScanCardClick = {}) {}, {})
+    CardSettingsScreen(state = CardSettingsScreenState(onScanCardClick = {}, onElementClick = {}), {})
 }
 
 @Preview(showBackground = true, widthDp = 360)
