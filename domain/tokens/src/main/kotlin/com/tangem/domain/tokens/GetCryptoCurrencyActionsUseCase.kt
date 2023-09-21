@@ -75,6 +75,8 @@ class GetCryptoCurrencyActionsUseCase(
             } else {
                 add(TokenActionsState.ActionState.Buy(false))
             }
+
+            addFirst(TokenActionsState.ActionState.CopyAddress(true))
         }
     }
 
