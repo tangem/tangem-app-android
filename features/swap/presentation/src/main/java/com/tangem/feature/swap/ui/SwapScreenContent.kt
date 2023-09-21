@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.states.Item
@@ -143,7 +144,11 @@ private fun MainInfo(state: SwapStateHolder) {
         val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
         TransactionCard(
             type = state.sendCardData.type,
-            balance = state.sendCardData.balance,
+            balance = if (state.sendCardData.isBalanceHidden) {
+                STARS
+            } else {
+                state.sendCardData.balance
+            },
             textFieldValue = state.sendCardData.amountTextFieldValue,
             amountEquivalent = state.sendCardData.amountEquivalent,
             tokenIconUrl = state.sendCardData.tokenIconUrl,
@@ -161,7 +166,7 @@ private fun MainInfo(state: SwapStateHolder) {
         val marginCard = TangemTheme.dimens.spacing16
         TransactionCard(
             type = state.receiveCardData.type,
-            balance = state.receiveCardData.balance,
+            balance = if (state.receiveCardData.isBalanceHidden) STARS else state.receiveCardData.balance,
             textFieldValue = state.receiveCardData.amountTextFieldValue,
             amountEquivalent = state.receiveCardData.amountEquivalent,
             tokenIconUrl = state.receiveCardData.tokenIconUrl,
@@ -326,16 +331,8 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
 
 @Composable
 private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
+    // order is important
     when {
-        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_give_permission),
-                enabled = true,
-                showProgress = state.swapButton.loading,
-                onClick = onPermissionWarningClick,
-            )
-        }
         state.warnings.any { it is SwapWarning.InsufficientFunds } -> {
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -343,6 +340,15 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 enabled = false,
                 showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
+            )
+        }
+        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.swapping_give_permission),
+                enabled = true,
+                showProgress = state.swapButton.loading,
+                onClick = onPermissionWarningClick,
             )
         }
         else -> {
@@ -370,6 +376,7 @@ private val sendCard = SwapCardData(
     canSelectAnotherToken = false,
     balance = "123",
     coinId = "",
+    isBalanceHidden = false,
 )
 
 private val receiveCard = SwapCardData(
@@ -382,6 +389,7 @@ private val receiveCard = SwapCardData(
     canSelectAnotherToken = true,
     balance = "33333",
     coinId = "",
+    isBalanceHidden = false,
 )
 
 val stateSelectable = SelectableItemsState(
