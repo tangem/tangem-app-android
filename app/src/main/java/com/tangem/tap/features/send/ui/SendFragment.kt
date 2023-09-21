@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -45,6 +46,7 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -56,7 +58,10 @@ private const val EDIT_TEXT_INPUT_DEBOUNCE = 400L
 [REDACTED_AUTHOR]
  */
 @OptIn(FlowPreview::class)
+@AndroidEntryPoint
 class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
+
+    private val viewModel by viewModels<SendViewModel>()
 
     lateinit var sendBtn: ViewStateWidget
 
@@ -70,6 +75,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
         Analytics.send(Token.Send.ScreenOpened())
     }
 
@@ -348,6 +354,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onDestroy() {
         store.dispatch(ReleaseSendState)
+        lifecycle.removeObserver(viewModel)
         super.onDestroy()
     }
 }
