@@ -19,7 +19,7 @@ internal class TokenListErrorConverter(
                 state.copy(
                     tokensListState = WalletTokensListState.Content(
                         items = persistentListOf(),
-                        onOrganizeTokensClick = null,
+                        organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Hidden,
                     ),
                 )
             }
