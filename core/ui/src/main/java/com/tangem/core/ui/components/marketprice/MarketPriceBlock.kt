@@ -2,10 +2,10 @@ package com.tangem.core.ui.components.marketprice
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -136,13 +136,17 @@ private fun PriceChangeInPercent(config: PriceChangeConfig) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
         ) {
-            Image(
+            Icon(
                 painter = painterResource(
                     id = when (type) {
-                        PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                        PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                        PriceChangeConfig.Type.UP -> R.drawable.ic_arrow_up_8
+                        PriceChangeConfig.Type.DOWN -> R.drawable.ic_arrow_down_8
                     },
                 ),
+                tint = when (type) {
+                    PriceChangeConfig.Type.UP -> TangemTheme.colors.icon.accent
+                    PriceChangeConfig.Type.DOWN -> TangemTheme.colors.icon.warning
+                },
                 contentDescription = null,
             )
 
