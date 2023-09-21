@@ -137,6 +137,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         super.onCreate(savedInstanceState)
 
+        cardSdkLifecycleObserver.onCreate(context = this)
+
         bootstrapMainStateUpdates(application)
 
         splashScreen.setKeepOnScreenCondition { isInitializing }
@@ -145,8 +147,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         systemActions()
 
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
-
-        cardSdkLifecycleObserver.onCreate(context = this)
 
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager

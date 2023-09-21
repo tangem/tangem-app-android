@@ -82,9 +82,6 @@ data class WalletState(
         get() = primaryWalletStore?.walletsData
             ?.firstOrNull { it.currency !is Currency.Blockchain }
 
-    val shouldShowDetails: Boolean =
-        primaryWalletData?.status !is WalletDataModel.Unreachable
-
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
         return getWalletStore(currency)?.walletManager
