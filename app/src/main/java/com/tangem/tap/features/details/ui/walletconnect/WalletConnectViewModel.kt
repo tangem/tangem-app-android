@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.Store
 import timber.log.Timber
 
-class WalletConnectViewModel(private val store: Store<AppState>) {
+internal class WalletConnectViewModel(private val store: Store<AppState>) {
     fun updateState(state: WalletConnectState): WalletConnectScreenState {
         Timber.d("WC2 Sessions: ${state.wc2Sessions}")
         val sessions = state.sessions.map { wcSession -> WcSessionForScreen.fromSession(wcSession) } + state.wc2Sessions
