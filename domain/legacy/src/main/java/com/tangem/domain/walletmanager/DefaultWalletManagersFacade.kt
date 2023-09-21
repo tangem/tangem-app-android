@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
@@ -89,16 +90,16 @@ class DefaultWalletManagersFacade(
 
     override suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        network: Network,
+        currency: CryptoCurrency,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWallet = userWallet,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            derivationPath = currency.network.derivationPath.value,
         )
 
         requireNotNull(walletManager) {
@@ -106,9 +107,14 @@ class DefaultWalletManagersFacade(
         }
 
         val itemsResult = walletManager.getTransactionsHistory(
-            address = walletManager.wallet.address,
-            page = page,
-            pageSize = pageSize,
+            request = TransactionHistoryRequest(
+                address = walletManager.wallet.address,
+                page = TransactionHistoryRequest.Page(number = page, size = pageSize),
+                filterType = when (currency) {
+                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                },
+            ),
         )
 
         return when (itemsResult) {
