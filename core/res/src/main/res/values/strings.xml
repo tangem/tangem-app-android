@@ -28,11 +28,16 @@
     <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card.</string>
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
     <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
+    <string name="app_settings_theme_mode_dark">Dark</string>
+    <string name="app_settings_theme_mode_light">Light</string>
+    <string name="app_settings_theme_mode_system">System default</string>
+    <string name="app_settings_theme_selector_title">Theme</string>
     <string name="app_settings_title">App Settings</string>
     <string name="biometric_lockout_permanent_warning_description">Please scan the card</string>
     <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card</string>
     <string name="biometric_lockout_warning_title">Too many attempts</string>
     <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
+    <string name="button_start_backup_process">Start backup process</string>
     <plurals name="card_label_card_count">
         <item quantity="one">%d card</item>
         <item quantity="other">%d cards</item>
@@ -41,6 +46,7 @@
     <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
     <string name="card_settings_access_code_recovery_title">Access code recovery</string>
+    <string name="card_settings_action_sheet_reset">Reset</string>
     <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
     <string name="card_settings_change_access_code">Change Access Code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
@@ -63,6 +69,7 @@
     <string name="common_biometric_authentication">biometric authentication</string>
     <string name="common_biometrics">biometrics</string>
     <string name="common_buy">Buy</string>
+    <string name="common_buy_currency">Buy %1$s</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
@@ -95,7 +102,6 @@
     <string name="common_reject">Reject</string>
     <string name="common_reload">Reload</string>
     <string name="common_rename">Rename</string>
-    <string name="common_reset">Reset</string>
     <string name="common_save_changes">Save changes</string>
     <string name="common_search">Search</string>
     <string name="common_search_tokens">Search tokens</string>
@@ -129,7 +135,10 @@
     <string name="custom_token_creation_error_required_field">Required field</string>
     <string name="custom_token_creation_error_wrong_decimals">Decimal number must be a valid integer, no higher than %d</string>
     <string name="custom_token_custom_derivation">Custom derivation</string>
+    <string name="custom_token_custom_derivation_placeholder">E. g. m/00\'/0000\'/0\'/0/0</string>
+    <string name="custom_token_custom_derivation_title">Enter custom derivation</string>
     <string name="custom_token_decimals_input_title">Decimals</string>
+    <string name="custom_token_derivation_path">Derivation Path</string>
     <string name="custom_token_derivation_path_default">Default</string>
     <string name="custom_token_derivation_path_input_title">BIP44 coin type</string>
     <string name="custom_token_invalid_derivation_path">The derivation path you\'ve entered is not valid</string>
@@ -137,6 +146,8 @@
     <string name="custom_token_name_input_title">Name</string>
     <string name="custom_token_network_input_not_selected">Not selected</string>
     <string name="custom_token_network_input_title">Network</string>
+    <string name="custom_token_network_selector_title">Token network</string>
+    <string name="custom_token_subtitle">You can manually add a token that is not natively supported by Tangem</string>
     <string name="custom_token_token_symbol_input_placeholder">E.g. USDC</string>
     <string name="custom_token_token_symbol_input_title">Token symbol</string>
     <string name="custom_token_validation_error_already_added">This token/network has already been added to your list</string>
@@ -154,6 +165,8 @@
     <string name="details_row_title_cid">Card ID</string>
     <string name="details_row_title_create_backup">Link More Cards</string>
     <string name="details_row_title_currency">App Currency</string>
+    <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
+    <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
     <string name="details_row_title_issuer">Issuer</string>
     <string name="details_row_title_send_feedback">Send Feedback</string>
     <string name="details_row_title_signed_hashes">Signed</string>
@@ -186,7 +199,7 @@
     <string name="initial_message_tap_header">Tap the card</string>
     <string name="internal_error_wallet_manager_not_found">Internal error: wallet manager not found</string>
     <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
-    <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens.</string>
+    <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
     <string name="main_get_bonus_subtitle">You have completed all of the lessons, and are now eligible to receive your 1INCH tokens</string>
     <plurals name="main_learn_subtitle">
         <item quantity="one">Complete three lessons and receive %d 1INCH token to your wallet</item>
@@ -194,7 +207,7 @@
     </plurals>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
-    <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
+    <string name="main_no_backup_warning_title">Your wallet hasn\'t been backed up</string>
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 48 hours</string>
@@ -206,6 +219,30 @@
         <item quantity="other">You need to generate addresses for %d new networks using your card</item>
     </plurals>
     <string name="main_warning_missing_derivation_title">Some addresses are missing</string>
+    <string name="manage_tokens_add">Add</string>
+    <string name="manage_tokens_custom">Custom</string>
+    <string name="manage_tokens_edit">Edit</string>
+    <string name="manage_tokens_network_selector_native_subtitle">Blockchain the cryptocurrency was initially created</string>
+    <string name="manage_tokens_network_selector_native_title">Native network</string>
+    <string name="manage_tokens_network_selector_non_native_info">Using non-native networks for tokens enables cross-blockchain interoperability, allowing assets to be utilized in diverse decentralized applications and smart contracts across platforms. However, this often involves a custodian or smart contract to hold the original asset securely, introducing centralization and counterparty risk.</string>
+    <string name="manage_tokens_network_selector_non_native_subtitle">Not original or primary blockchain the token is hosted</string>
+    <string name="manage_tokens_network_selector_non_native_title">Non-native networks</string>
+    <string name="manage_tokens_network_selector_other_subtitle">Blockchain the cryptocurrency was initially created</string>
+    <string name="manage_tokens_network_selector_other_title">Networks</string>
+    <string name="manage_tokens_network_selector_title">Choose networks</string>
+    <string name="manage_tokens_network_selector_wallet">Wallet</string>
+    <string name="manage_tokens_nothing_found">Couldn’t find this token, you can add it manually</string>
+    <string name="manage_tokens_number_of_wallets">%d of %#@total_wallets@</string>
+    <plurals name="manage_tokens_number_of_walletstotal_wallets">
+        <item quantity="one">%d wallet</item>
+        <item quantity="other">%d wallets</item>
+    </plurals>
+    <string name="manage_tokens_search_placeholder">e.g. BTC I trust, hodl I must</string>
+    <string name="manage_tokens_title">Coin market cap</string>
+    <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
+    <string name="manage_tokens_unavailable_vote">Upvote</string>
+    <string name="manage_tokens_wallet_selector_title">Choose wallet</string>
+    <string name="notification_title_not_enough_funds">Unable to cover %1$s fee</string>
     <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
     <string name="onboarding_access_code_feature_2_description">You can set up an individual access code on each card later</string>
@@ -233,7 +270,7 @@
     <string name="onboarding_button_skip_backup">Skip for later</string>
     <string name="onboarding_button_what_does_it_mean">How does it work?</string>
     <string name="onboarding_create_wallet_body">Let\'s generate all the keys on your card and create a secure wallet</string>
-    <string name="onboarding_create_wallet_button_create_wallet">Create a wallet</string>
+    <string name="onboarding_create_wallet_button_create_wallet">Create wallet</string>
     <string name="onboarding_create_wallet_header">Create a wallet</string>
     <string name="onboarding_create_wallet_options_button_options">Other options</string>
     <string name="onboarding_create_wallet_options_message">Your keys will be securely generated inside the card. There is no seed phrase, which means nobody can export or steal it.</string>
@@ -400,7 +437,7 @@
     <string name="story_meet_pay">Pay</string>
     <string name="story_meet_send">Send</string>
     <string name="story_meet_store">Store</string>
-    <string name="story_meet_title">Meet\nTangem</string>
+    <string name="story_meet_title">Meet Tangem</string>
     <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
     <string name="story_web3_title">DeFi Compatible</string>
     <string name="swapping_approve_information_text">Approvals are considered an industry standard across all decentralized exchanges and protect your wallet from being accessed by a smart contract without your permission. By design, smart contracts can\'t access your tokens unless you approve access from your end. By \"unlocking\" your tokens, you are give permission to the 1inch smart contract to spend your assets. The miners of the network are compensated with a gas fee (paid by you) to record this action on the blockchain. Once permission has been granted you will be able to swap your token.</string>
@@ -478,7 +515,8 @@
     <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
     <string name="user_wallet_list_single_header">Single-currency</string>
     <string name="user_wallet_list_title">My Wallets</string>
-    <string name="user_wallet_list_unlock_all">Unlock all with %s</string>
+    <string name="user_wallet_list_unlock_all">Unlock all</string>
+    <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
     <string name="wallet_address_button_explore">Transaction history</string>
     <string name="wallet_balance_blockchain_unreachable">Network is unreachable</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
@@ -543,6 +581,7 @@
     <string name="wallet_title">Tangem</string>
     <string name="warning_button_can_be_better">Can be better</string>
     <string name="warning_button_learn_more">Learn more</string>
+    <string name="warning_button_love_it">Love it!</string>
     <string name="warning_button_ok">Ok, Got it!</string>
     <string name="warning_button_really_cool">Really cool!</string>
     <string name="warning_existential_deposit_message">%1$s network has a concept of Existential Deposit. If your account drops below %2$s it will be deactivated and any remaining funds will be destroyed.</string>
@@ -553,7 +592,11 @@
     <string name="warning_rate_app_message">How do you like Tangem?</string>
     <string name="warning_rate_app_title">One question</string>
     <string name="warning_signed_tx_previously">This card has signed transactions in the past</string>
+    <string name="warning_subtitle_network_unreachable">Network currently is unreachable. Please try again later.</string>
+    <string name="warning_subtitle_some_networks_unreachable">Some networks currently are unreachable. Please try again later.</string>
     <string name="warning_testnet_card_message">This is a Testnet card. Don\'t accept it as a payment. This card must only be used for testing and development purposes.</string>
+    <string name="warning_title_note_top_up">Note top up</string>
+    <string name="warning_title_some_networks_unreachable">Some networks are unreachable</string>
     <string name="welcome_interrupted_backup_alert_discard">Discard</string>
     <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
     <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
