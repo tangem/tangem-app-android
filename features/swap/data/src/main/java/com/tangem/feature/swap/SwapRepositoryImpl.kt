@@ -10,8 +10,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
