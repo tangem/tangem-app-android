@@ -3,7 +3,7 @@ package com.tangem.data.tokens.repository
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.wallets.models.UserWalletId
 

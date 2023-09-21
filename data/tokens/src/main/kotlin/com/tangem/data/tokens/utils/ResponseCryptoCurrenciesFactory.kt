@@ -9,7 +9,7 @@ import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
