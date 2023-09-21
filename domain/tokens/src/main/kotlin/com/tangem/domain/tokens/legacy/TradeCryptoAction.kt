@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.legacy
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import org.rekotlin.Action
 import java.math.BigDecimal

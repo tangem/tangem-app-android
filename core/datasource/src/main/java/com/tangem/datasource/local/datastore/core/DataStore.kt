@@ -10,11 +10,11 @@ internal interface DataStore<Key : Any, Value : Any> {
 
     suspend fun getSyncOrNull(key: Key): Value?
 
-    suspend fun getAllSyncOrNull(): List<Value>
+    suspend fun getAllSyncOrNull(): List<Value>?
 
-    suspend fun store(key: Key, item: Value)
+    suspend fun store(key: Key, value: Value)
 
-    suspend fun store(items: Map<Key, Value>)
+    suspend fun store(values: Map<Key, Value>)
 
     suspend fun remove(key: Key)
 

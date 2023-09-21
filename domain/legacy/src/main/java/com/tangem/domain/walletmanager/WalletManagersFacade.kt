@@ -1,12 +1,12 @@
 package com.tangem.domain.walletmanager
 
+import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
