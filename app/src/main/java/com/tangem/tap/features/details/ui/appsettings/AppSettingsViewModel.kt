@@ -105,10 +105,6 @@ internal class AppSettingsViewModel(
                 onCheckedChange = ::onFlipToHideBalanceToggled,
             ).let(::add)
 
-            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
-                showThemeModeSelector(state.selectedThemeMode)
-            }.let(::add)
-
             if (state.darkThemeSwitchEnabled) {
                 itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
                     showThemeModeSelector(state.selectedThemeMode)
