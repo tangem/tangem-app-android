@@ -4,21 +4,27 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
 import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
+import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
+import timber.log.Timber
 
 internal class DefaultNetworksRepository(
+    private val networksStatusesStore: NetworksStatusesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsStore: UserWalletsStore,
     private val userTokensStore: UserTokensStore,
@@ -31,20 +37,19 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory(demoConfig) }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
-    private val networksStatuses: MutableStateFlow<Set<NetworkStatus>> = MutableStateFlow(hashSetOf())
-
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> = channelFlow {
         launch(dispatchers.io) {
-            networksStatuses.collect(::send)
+            networksStatusesStore.get(userWalletId)
+                .collectLatest(::send)
         }
 
-        launch(dispatchers.io) {
+        withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
         }
-    }
+    }.cancellable()
 
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
@@ -52,7 +57,7 @@ internal class DefaultNetworksRepository(
         refresh: Boolean,
     ): Set<NetworkStatus> = withContext(dispatchers.io) {
         fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
-        networksStatuses.first().toSet()
+        networksStatusesStore.getSyncOrNull(userWalletId).orEmpty()
     }
 
     private suspend fun fetchNetworksStatusesIfCacheExpired(
@@ -92,17 +97,15 @@ internal class DefaultNetworksRepository(
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
 
+        invalidateCacheKeyIfNeeded(userWalletId, network, result)
+
         val networkStatus = networkStatusFactory.createNetworkStatus(
             network = network,
             result = result,
             currencies = currencies.toSet(),
         )
 
-        networksStatuses.update { statuses ->
-            statuses.addOrReplace(networkStatus) { it.network == networkStatus.network }
-        }
-
-        invalidateCacheKeyIfNeeded(userWalletId, networkStatus)
+        networksStatusesStore.store(userWalletId, networkStatus)
     }
 
     private suspend fun getCurrencies(userWalletId: UserWalletId, network: Network): Sequence<CryptoCurrency> {
@@ -125,18 +128,32 @@ internal class DefaultNetworksRepository(
         return currencies.filter { it.network == network }
     }
 
-    private suspend fun invalidateCacheKeyIfNeeded(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
-        when (networkStatus.value) {
-            is NetworkStatus.Verified,
-            is NetworkStatus.NoAccount,
+    private suspend fun invalidateCacheKeyIfNeeded(
+        userWalletId: UserWalletId,
+        network: Network,
+        result: UpdateWalletManagerResult,
+    ) {
+        when (result) {
+            is UpdateWalletManagerResult.Verified,
+            is UpdateWalletManagerResult.NoAccount,
             -> Unit
-            is NetworkStatus.Unreachable,
-            is NetworkStatus.MissedDerivation,
-            -> cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, networkStatus.network))
+            is UpdateWalletManagerResult.Unreachable,
+            is UpdateWalletManagerResult.MissedDerivation,
+            -> {
+                Timber.w(
+                    """
+                        Invalidate network cache key
+                        |- User wallet ID: $userWalletId
+                        |- Network: ${network.id}
+                    """.trimIndent(),
+                )
+
+                cacheRegistry.invalidate(getNetworksStatusesCacheKey(userWalletId, network))
+            }
         }
     }
 
     private fun getNetworksStatusesCacheKey(userWalletId: UserWalletId, network: Network): String {
-        return "network_status_${userWalletId}_${network.id}_${network.derivationPath.value}"
+        return "network_status_${userWalletId}_${network.id.value}_${network.derivationPath.value}"
     }
 }

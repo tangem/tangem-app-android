@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
