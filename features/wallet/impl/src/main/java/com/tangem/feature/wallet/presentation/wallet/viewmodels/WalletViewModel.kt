@@ -523,7 +523,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // todo implement onSwapClick [REDACTED_JIRA]
+        reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrencyStatus.currency))
     }
 
     override fun onSingleCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
@@ -698,8 +698,7 @@ internal class WalletViewModel @Inject constructor(
         val state = uiState as? WalletState.ContentState ?: return
         val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
         viewModelScope.launch(dispatchers.io) {
-            getCryptoCurrencyActionsUseCase
-                .invoke(userWallet.walletId, cryptoCurrencyStatus)
+            getCryptoCurrencyActionsUseCase(userWallet.walletId, cryptoCurrencyStatus)
                 .take(count = 1)
                 .collectLatest {
                     uiState = stateFactory.getStateWithTokenActionBottomSheet(it)
