@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
@@ -71,12 +72,22 @@ class DefaultCustomTokenInteractor(
         onSuccess: suspend (ScanResponse) -> Unit,
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivationDataList = currencyList.mapNotNull {
-            val curve = config.primaryCurve(it.blockchain)
-            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            val curve = config.primaryCurve(currency.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currency) }
         }
 
-        val derivations = derivationDataList.associate(TokensMiddleware.DerivationData::derivations)
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -110,24 +121,22 @@ class DefaultCustomTokenInteractor(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<Currency>,
+        currency: Currency,
     ): TokensMiddleware.DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
-            it.getSupportedCurves().contains(curve)
-        }.mapNotNull {
-            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-        }
+        val supportedCurves = currency.blockchain.getSupportedCurves()
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList.filter {
-            it.blockchain.getSupportedCurves().contains(curve)
-        }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
+        val customPath = currency.derivationPath?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano }?.let { currency ->
+        if (currency is Currency.Blockchain && currency.blockchain == Blockchain.Cardano) {
             currency.derivationPath?.let {
                 bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
