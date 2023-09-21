@@ -5,6 +5,7 @@ import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.doOnFailure
@@ -16,6 +17,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -45,6 +47,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
@@ -592,6 +595,32 @@ internal class WalletViewModel @Inject constructor(
                     },
                 ),
             )
+        }
+    }
+
+    override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val state = uiState as? WalletState.ContentState ?: return
+
+        viewModelScope.launch(dispatchers.main) {
+            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+
+            val defaultAddress = walletManagersFacade.getAddress(
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrencyStatus.currency.network,
+            ).find { it.type == AddressType.Default }
+
+            defaultAddress?.value?.let { address ->
+                uiState = stateFactory.getStateAndTriggerEvent(
+                    state = uiState,
+                    event = WalletEvent.CopyAddress(address),
+                    setUiState = { uiState = it },
+                )
+                uiState = stateFactory.getStateAndTriggerEvent(
+                    state = uiState,
+                    event = WalletEvent.ShowToast(resourceReference(R.string.wallet_notification_address_copied)),
+                    setUiState = { uiState = it },
+                )
+            }
         }
     }
 
