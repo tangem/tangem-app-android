@@ -155,7 +155,7 @@ class TradeCryptoMiddleware {
                 val walletManager = store.state.daggerGraphState
                     .get(DaggerGraphState::walletManagersFacade)
                     .getOrCreateWalletManager(
-                        userWallet = action.userWallet,
+                        userWalletId = action.userWallet.walletId,
                         blockchain = blockchain,
                         derivationPath = currency.network.derivationPath.value,
                     )
@@ -338,7 +338,7 @@ class TradeCryptoMiddleware {
             val walletManager = store.state.daggerGraphState
                 .get(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
-                    userWallet = action.userWallet,
+                    userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
                     derivationPath = currency.network.derivationPath.value,
                 )
@@ -379,7 +379,7 @@ class TradeCryptoMiddleware {
             val walletManager = store.state.daggerGraphState
                 .get(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
-                    userWallet = action.userWallet,
+                    userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
                     derivationPath = currency.network.derivationPath.value,
                 )
