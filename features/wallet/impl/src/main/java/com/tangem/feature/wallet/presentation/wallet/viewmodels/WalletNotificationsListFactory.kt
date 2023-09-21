@@ -1,23 +1,24 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-import com.tangem.domain.card.GetCardWasScannedUseCase
+import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 
 /**
  * Wallet notifications list factory
  *
  * @property isDemoCardUseCase           use case that check if card is demo
  * @property isUserAlreadyRateAppUseCase use case that check if card is user already rate app
- * @property getCardWasScannedUseCase    use case that check if card was scanned
+ * @property wasCardScannedUseCase       use case that check if card was scanned
  * @property clickIntents                screen click intents
  *
  * @author Andrew Khokhlov on 16/07/2023
@@ -25,27 +26,34 @@ import kotlinx.coroutines.flow.flow
 internal class WalletNotificationsListFactory(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
-    private val getCardWasScannedUseCase: GetCardWasScannedUseCase,
+    private val wasCardScannedUseCase: WasCardScannedUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
+
+    private val wasCardScannedJobHolder = JobHolder()
 
     fun create(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
-        return flow {
-            emit(
-                buildList {
-                    addCriticalNotifications(cardTypesResolver)
+        return channelFlow {
+            wasCardScannedUseCase.invoke(cardTypesResolver.getCardId())
+                .distinctUntilChanged()
+                .onEach {
+                    send(
+                        buildList {
+                            addCriticalNotifications(cardTypesResolver)
 
-                    addMissingAddressesNotification(cryptoCurrencyList)
+                            addMissingAddressesNotification(cryptoCurrencyList)
 
-                    addRateTheAppNotification()
+                            addRateTheAppNotification()
 
-                    addWarningNotifications(cardTypesResolver, cryptoCurrencyList)
+                            addWarningNotifications(cardTypesResolver, cryptoCurrencyList, it)
+                        }.toImmutableList(),
+                    )
                 }
-                    .toImmutableList(),
-            )
+                .launchIn(this)
+                .saveIn(wasCardScannedJobHolder)
         }
     }
 
@@ -112,9 +120,10 @@ internal class WalletNotificationsListFactory(
         )
     }
 
-    private suspend fun MutableList<WalletNotification>.addWarningNotifications(
+    private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
+        wasCardScanned: Boolean,
     ) {
         addIf(
             element = WalletNotification.Warning.MissingBackup(
@@ -133,14 +142,22 @@ internal class WalletNotificationsListFactory(
             if (cardTypesResolver.isBackupForbidden()) {
                 addIf(
                     element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                    condition = checkSignedHashes(cardTypesResolver = cardTypesResolver, isDemo = isDemo),
+                    condition = checkSignedHashes(
+                        cardTypesResolver = cardTypesResolver,
+                        isDemo = isDemo,
+                        wasCardScanned,
+                    ),
                 )
             } else {
                 addIf(
                     element = WalletNotification.Warning.MultiWalletSignedHashesIncorrect(
                         onClick = clickIntents::onMultiWalletSignedHashesNotificationClick,
                     ),
-                    condition = checkSignedHashes(cardTypesResolver = cardTypesResolver, isDemo = isDemo),
+                    condition = checkSignedHashes(
+                        cardTypesResolver = cardTypesResolver,
+                        isDemo = isDemo,
+                        wasCardScanned,
+                    ),
                 )
             }
         } else {
@@ -149,7 +166,7 @@ internal class WalletNotificationsListFactory(
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
 
-            // TODO: https://tangem.atlassian.net/browse/AND-4627
+            // TODO: https://tangem.atlassian.net/browse/AND-4580
             addIf(
                 element = WalletNotification.Warning.TopUpNote(
                     errorMessage = "To activate card top up it with at least 1 XLM",
@@ -159,7 +176,7 @@ internal class WalletNotificationsListFactory(
 
             addIf(
                 element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                condition = checkSignedHashes(cardTypesResolver, isDemo),
+                condition = checkSignedHashes(cardTypesResolver, isDemo, wasCardScanned),
             )
         }
     }
@@ -176,9 +193,13 @@ internal class WalletNotificationsListFactory(
         return any { it.value is CryptoCurrencyStatus.NoAccount }
     }
 
-    private suspend fun checkSignedHashes(cardTypesResolver: CardTypesResolver, isDemo: Boolean): Boolean {
-        return cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.hasWalletSignedHashes() &&
-            !isDemo && !getCardWasScannedUseCase(cardId = cardTypesResolver.getCardId())
+    private fun checkSignedHashes(
+        cardTypesResolver: CardTypesResolver,
+        isDemo: Boolean,
+        wasCardScanned: Boolean,
+    ): Boolean {
+        return cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.hasWalletSignedHashes() && !isDemo &&
+            !wasCardScanned
     }
 
     private companion object {

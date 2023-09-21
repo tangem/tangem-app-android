@@ -10,6 +10,7 @@ import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 
 @Composable
@@ -18,6 +19,7 @@ internal fun WalletEventEffect(
     snackbarHostState: SnackbarHostState,
     event: StateEvent<WalletEvent>,
     onAutoScrollSet: () -> Unit,
+    onAlertConfigSet: (WalletAlertState) -> Unit,
 ) {
     val context = LocalContext.current
     val resources = LocalContext.current.resources
@@ -38,6 +40,11 @@ internal fun WalletEventEffect(
                 }
                 is WalletEvent.CopyAddress -> {
                     clipboardManager.setText(AnnotatedString(value.address))
+                }
+                is WalletEvent.ShowWalletAlreadySignedHashesMessage -> {
+                    onAlertConfigSet(
+                        WalletAlertState.WalletAlreadySignedHashes(onUnderstandClick = value.onUnderstandClick),
+                    )
                 }
             }
         },
