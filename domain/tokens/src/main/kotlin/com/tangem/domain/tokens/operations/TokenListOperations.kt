@@ -1,7 +1,9 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.*
-import arrow.core.raise.*
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.withError
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
@@ -125,6 +127,7 @@ internal class TokenListOperations(
             .map<Boolean, Either<Error, Boolean>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(value = false.right()) }
+            .cancellable()
     }
 
     private fun getIsSortedByBalance(): Flow<Either<Error, Boolean>> {
@@ -132,6 +135,7 @@ internal class TokenListOperations(
             .map<Boolean, Either<Error, Boolean>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(value = false.right()) }
+            .cancellable()
     }
 
     sealed class Error {
