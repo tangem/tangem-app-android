@@ -130,8 +130,8 @@ internal class UpdateWalletManagerResultFactory {
             timestampInMillis = TimeUnit.SECONDS.toMillis(millis),
             direction = direction,
             status = when (data.status) {
-                TransactionStatus.Confirmed -> TxHistoryItem.TxStatus.Confirmed
-                TransactionStatus.Unconfirmed -> TxHistoryItem.TxStatus.Unconfirmed
+                TransactionStatus.Confirmed -> TxHistoryItem.TransactionStatus.Confirmed
+                TransactionStatus.Unconfirmed -> TxHistoryItem.TransactionStatus.Unconfirmed
             },
             type = TxHistoryItem.TransactionType.Transfer,
             amount = amount,
