@@ -1,6 +1,6 @@
 package com.tangem.domain.exchange
 
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 /**
  * Manager that holds info about available actions as Sell and Buy

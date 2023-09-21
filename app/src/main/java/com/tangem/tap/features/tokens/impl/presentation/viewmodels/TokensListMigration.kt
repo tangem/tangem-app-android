@@ -9,7 +9,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
