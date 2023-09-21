@@ -10,7 +10,7 @@ import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import org.rekotlin.Store
 
-class CardSettingsViewModel(private val store: Store<AppState>) {
+internal class CardSettingsViewModel(private val store: Store<AppState>) {
 
     fun updateState(state: CardSettingsState?): CardSettingsScreenState {
         return if (state?.manageSecurityState == null) {
