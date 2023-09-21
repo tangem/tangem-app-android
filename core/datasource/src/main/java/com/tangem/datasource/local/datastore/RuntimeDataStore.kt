@@ -5,37 +5,45 @@ import kotlinx.coroutines.flow.*
 
 internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
 
-    private val store = MutableStateFlow<HashMap<String, Data>>(hashMapOf())
+    private val store: MutableSharedFlow<HashMap<String, Data>?> = MutableSharedFlow(replay = 1)
+
+    init {
+        store.tryEmit(value = null)
+    }
 
     override fun get(key: String): Flow<Data> {
         return store
-            .map { value -> value[key] }
+            .map { value ->
+                value?.get(key)
+            }
             .filterNotNull()
     }
 
     override fun getAll(): Flow<List<Data>> {
-        return store.map { value -> value.values.toList() }
-    }
-
-    override suspend fun getSyncOrNull(key: String): Data? {
-        return store.value[key]
-    }
-
-    override suspend fun getAllSyncOrNull(): List<Data> {
-        return store.value.values.toList()
-    }
-
-    override suspend fun store(key: String, item: Data) {
-        store.update { value ->
-            value[key] = item
-
-            value
+        return store.map { value ->
+            value?.values?.toList().orEmpty()
         }
     }
 
-    override suspend fun store(items: Map<String, Data>) {
-        store.update { value ->
-            items.forEach { (key, item) ->
+    override suspend fun getSyncOrNull(key: String): Data? {
+        return store.firstOrNull()?.get(key)
+    }
+
+    override suspend fun getAllSyncOrNull(): List<Data>? {
+        return store.firstOrNull()?.values?.toList()
+    }
+
+    override suspend fun store(key: String, value: Data) {
+        updateValue { storedValue ->
+            storedValue[key] = value
+
+            storedValue
+        }
+    }
+
+    override suspend fun store(values: Map<String, Data>) {
+        updateValue { value ->
+            values.forEach { (key, item) ->
                 value[key] = item
             }
 
@@ -44,7 +52,7 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
     }
 
     override suspend fun remove(key: String) {
-        store.update { value ->
+        updateValue { value ->
             value.remove(key)
 
             value
@@ -52,6 +60,13 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
     }
 
     override suspend fun clear() {
-        store.update { hashMapOf() }
+        store.emit(value = null)
+    }
+
+    private suspend inline fun updateValue(update: (HashMap<String, Data>) -> HashMap<String, Data>) {
+        val storedData = store.firstOrNull() ?: hashMapOf()
+        val updatedData = update(storedData)
+
+        store.emit(updatedData)
     }
 }
