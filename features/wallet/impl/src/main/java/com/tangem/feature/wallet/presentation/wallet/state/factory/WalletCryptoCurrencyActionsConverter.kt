@@ -53,7 +53,9 @@ internal class WalletCryptoCurrencyActionsConverter(
                             onClick = { clickIntents.onSingleCurrencySendClick(cryptoCurrencyStatus) },
                         )
                     }
-                    is TokenActionsState.ActionState.Swap -> null
+                    else -> {
+                        null
+                    }
                 }
             }
             .toPersistentList()
