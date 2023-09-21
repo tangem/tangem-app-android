@@ -7,17 +7,13 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
-import com.tangem.utils.toBriefAddressFormat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -27,7 +23,6 @@ import kotlinx.coroutines.flow.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormatterBuilder
-import java.math.BigDecimal
 import java.util.Locale
 
 /**
@@ -44,6 +39,10 @@ internal class WalletTxHistoryItemFlowConverter(
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState?> {
+
+    private val txHistoryItemConverter by lazy {
+        WalletTxHistoryTransactionStateConverter(symbol = blockchain.currency, decimals = blockchain.decimals())
+    }
 
     /** Example, 2 Aug, 2023 */
     private val dateFormatter by lazy {
@@ -95,68 +94,7 @@ internal class WalletTxHistoryItemFlowConverter(
     }
 
     private fun createTransactionState(item: TxHistoryItem): TransactionState {
-        return when (item.type) {
-            TxHistoryItem.TransactionType.Transfer -> {
-                when (val direction = item.direction) {
-                    is TxHistoryItem.TransactionDirection.Incoming -> {
-                        createIncomingTransferTransaction(item, direction, blockchain)
-                    }
-                    is TxHistoryItem.TransactionDirection.Outgoing -> {
-                        createOutgoingTransferTransaction(item, direction, blockchain)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun createIncomingTransferTransaction(
-        item: TxHistoryItem,
-        direction: TxHistoryItem.TransactionDirection.Incoming,
-        blockchain: Blockchain,
-    ): TransactionState {
-        return when (item.status) {
-            TxHistoryItem.TxStatus.Confirmed -> TransactionState.Receive(
-                txHash = item.txHash,
-                address = direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
-                timestamp = item.getRawTimestamp(),
-            )
-            TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Receiving(
-                txHash = item.txHash,
-                address = direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
-                timestamp = item.getRawTimestamp(),
-            )
-        }
-    }
-
-    private fun createOutgoingTransferTransaction(
-        item: TxHistoryItem,
-        direction: TxHistoryItem.TransactionDirection.Outgoing,
-        blockchain: Blockchain,
-    ): TransactionState {
-        return when (item.status) {
-            TxHistoryItem.TxStatus.Confirmed -> TransactionState.Send(
-                txHash = item.txHash,
-                address = direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
-                timestamp = item.getRawTimestamp(),
-            )
-            TxHistoryItem.TxStatus.Unconfirmed -> TransactionState.Sending(
-                txHash = item.txHash,
-                address = direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(blockchain = blockchain),
-                timestamp = item.getRawTimestamp(),
-            )
-        }
-    }
-
-    private fun BigDecimal.toCryptoCurrencyFormat(blockchain: Blockchain): String {
-        return BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = this,
-            cryptoCurrency = blockchain.currency,
-            decimals = blockchain.decimals(),
-        )
+        return txHistoryItemConverter.convert(value = item)
     }
 
     private fun PagingData<TxHistoryItemState>.insertGroupTitle(): PagingData<TxHistoryItemState> {
@@ -202,14 +140,6 @@ internal class WalletTxHistoryItemFlowConverter(
         }
     }
 
-    /**
-     * Get timestamp without formatting.
-     * It's life hack that help us to add transaction's group title to flow.
-     *
-     * @see [convert]
-     */
-    private fun TxHistoryItem.getRawTimestamp() = this.timestampInMillis.toString()
-
     private fun TxHistoryItemState?.getTimestamp(): Long? {
         return if (this is TxHistoryItemState.Transaction && this.state is TransactionState.Content) {
             val txContent = this.state as TransactionState.Content
@@ -241,10 +171,5 @@ internal class WalletTxHistoryItemFlowConverter(
         return timeFormatter.print(
             DateTime(this.toLong(), DateTimeZone.getDefault()),
         )
-    }
-
-    private fun TxHistoryItem.TransactionDirection.extractAddress(): TextReference = when (val addr = address) {
-        TxHistoryItem.Address.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
-        is TxHistoryItem.Address.Single -> TextReference.Str(addr.rawAddress.toBriefAddressFormat())
     }
 }
