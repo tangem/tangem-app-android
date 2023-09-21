@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 
@@ -20,8 +21,20 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotification>, modifier: Modifier = Modifier) {
     items(
         items = configs,
-        key = { it.state.title.hashCode() },
-        contentType = { it.state::class.java },
-        itemContent = { Notification(state = it.state, modifier = modifier.animateItemPlacement()) },
+        key = { it::class.java },
+        contentType = { it.config::class.java },
+        itemContent = {
+            Notification(
+                config = it.config,
+                modifier = modifier.animateItemPlacement(),
+                iconTint = when (it) {
+                    is WalletNotification.Critical -> TangemTheme.colors.icon.warning
+                    is WalletNotification.MissingAddresses -> TangemTheme.colors.icon.accent
+                    is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
+                    is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
+                    is WalletNotification.Warning -> null
+                },
+            )
+        },
     )
 }

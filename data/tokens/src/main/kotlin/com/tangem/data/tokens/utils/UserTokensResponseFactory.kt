@@ -32,7 +32,7 @@ internal class UserTokensResponseFactory {
         return UserTokensResponse.Token(
             id = currency.id.rawCurrencyId,
             networkId = blockchain.toNetworkId(),
-            derivationPath = currency.derivationPath,
+            derivationPath = currency.network.derivationPath.value,
             name = currency.name,
             symbol = currency.symbol,
             decimals = currency.decimals,

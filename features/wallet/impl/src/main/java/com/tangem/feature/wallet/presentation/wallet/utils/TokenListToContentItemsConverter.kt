@@ -1,14 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.OrganizeTokensButtonState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
-import com.tangem.feature.wallet.presentation.wallet.utils.LoadingItemsProvider.getLoadingMultiCurrencyTokens
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -17,37 +17,26 @@ import kotlinx.collections.immutable.persistentListOf
 
 internal class TokenListToContentItemsConverter(
     appCurrencyProvider: Provider<AppCurrency>,
-    isWalletContentHidden: Boolean,
+    isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: WalletClickIntents,
 ) : Converter<TokenList, WalletTokensListState> {
 
     private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
-        isWalletContentHidden = isWalletContentHidden,
+        isBalanceHiddenProvider = isBalanceHiddenProvider,
         appCurrencyProvider = appCurrencyProvider,
         clickIntents = clickIntents,
     )
 
     override fun convert(value: TokenList): WalletTokensListState {
-        val isEmptyList = when (value) {
-            is TokenList.GroupedByNetwork -> value.groups.isEmpty()
-            is TokenList.NotInitialized -> false
-            is TokenList.Ungrouped -> value.currencies.isEmpty()
-        }
-
-        return if (isEmptyList) {
-            WalletTokensListState.Empty
-        } else {
-            WalletTokensListState.Content(
-                items = when (value) {
-                    is TokenList.GroupedByNetwork -> value.mapToMultiCurrencyItems()
-                    is TokenList.Ungrouped -> value.mapToMultiCurrencyItems()
-                    is TokenList.NotInitialized -> getLoadingMultiCurrencyTokens()
-                },
-                onOrganizeTokensClick = if (value.totalFiatBalance is TokenList.FiatBalance.Loaded) {
-                    clickIntents::onOrganizeTokensClick
-                } else {
-                    null
-                },
+        return when (value) {
+            is TokenList.NotInitialized -> WalletTokensListState.Loading()
+            is TokenList.GroupedByNetwork -> WalletTokensListState.Content(
+                items = value.mapToMultiCurrencyItems(),
+                organizeTokensButton = value.mapToOrganizeTokensButtonState(),
+            )
+            is TokenList.Ungrouped -> WalletTokensListState.Content(
+                items = value.mapToMultiCurrencyItems(),
+                organizeTokensButton = value.mapToOrganizeTokensButtonState(),
             )
         }
     }
@@ -64,8 +53,27 @@ internal class TokenListToContentItemsConverter(
         }
     }
 
+    private fun TokenList.GroupedByNetwork.mapToOrganizeTokensButtonState(): OrganizeTokensButtonState {
+        return getOrganizeTokensButtonState(
+            isLoading = totalFiatBalance is TokenList.FiatBalance.Loading,
+            currenciesSize = groups.flatMap(NetworkGroup::currencies).size,
+        )
+    }
+
+    private fun TokenList.Ungrouped.mapToOrganizeTokensButtonState(): OrganizeTokensButtonState {
+        return getOrganizeTokensButtonState(
+            isLoading = totalFiatBalance is TokenList.FiatBalance.Loading,
+            currenciesSize = currencies.size,
+        )
+    }
+
     private fun MutableList<TokensListItemState>.addGroup(group: NetworkGroup): List<TokensListItemState> {
-        this.add(TokensListItemState.NetworkGroupTitle(TextReference.Str(group.network.name)))
+        val groupTitle = TokensListItemState.NetworkGroupTitle(
+            id = group.network.hashCode(),
+            name = stringReference(group.network.name),
+        )
+
+        this.add(groupTitle)
 
         group.currencies.forEach { token ->
             this.addToken(token)
@@ -80,5 +88,16 @@ internal class TokenListToContentItemsConverter(
         this.add(TokensListItemState.Token(tokenItemState))
 
         return this
+    }
+
+    private fun getOrganizeTokensButtonState(isLoading: Boolean, currenciesSize: Int): OrganizeTokensButtonState {
+        return if (currenciesSize > 1) {
+            OrganizeTokensButtonState.Visible(
+                isEnabled = !isLoading,
+                onClick = clickIntents::onOrganizeTokensClick,
+            )
+        } else {
+            OrganizeTokensButtonState.Hidden
+        }
     }
 }

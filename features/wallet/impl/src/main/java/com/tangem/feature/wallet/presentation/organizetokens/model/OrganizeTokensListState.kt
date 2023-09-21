@@ -13,7 +13,7 @@ internal sealed class OrganizeTokensListState {
     ) : OrganizeTokensListState()
 
     data class Ungrouped(
-        override val items: PersistentList<DraggableItem.Token>,
+        override val items: PersistentList<DraggableItem>,
     ) : OrganizeTokensListState()
 
     object Empty : OrganizeTokensListState() {
