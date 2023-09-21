@@ -77,11 +77,15 @@ object TokensMiddleware {
 
             if (scanResponse.supportsHdWallet()) {
                 deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
-                    submitNewAdd(userWalletId = action.userWallet.walletId, currencyList = currencyList)
+                    submitNewAdd(
+                        userWalletId = action.userWallet.walletId,
+                        updatedScanResponse = it,
+                        currencyList = currencyList,
+                    )
                     store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
-                submitNewAdd(userWalletId = action.userWallet.walletId, currencyList = currencyList)
+                submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
@@ -242,9 +246,8 @@ object TokensMiddleware {
                         val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
                         ExtendedPublicKeysMap(oldDerivations + newDerivations)
                     }
-                    val updatedScanResponse = scanResponse.copy(
-                        derivedKeys = updatedDerivedKeys,
-                    )
+                    val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
+
                     store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
 
@@ -351,10 +354,19 @@ object TokensMiddleware {
         }
     }
 
-    private fun submitNewAdd(userWalletId: UserWalletId, currencyList: List<CryptoCurrency>) {
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
 
         scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            )
+
             currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
         }
     }

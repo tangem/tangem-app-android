@@ -22,14 +22,14 @@ class UpdateWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         update: suspend (UserWallet) -> UserWallet,
-    ): Either<UpdateWalletError, Unit> {
+    ): Either<UpdateWalletError, UserWallet> {
         val userWalletsListManager = walletsStateHolder.userWalletsListManager
             ?: return UpdateWalletError.DataError.left()
 
         userWalletsListManager.update(userWalletId, update)
-            .doOnSuccess { return Unit.right() }
+            .doOnSuccess { return it.right() }
             .doOnFailure { return UpdateWalletError.DataError.left() }
 
-        return Unit.right()
+        return UpdateWalletError.DataError.left()
     }
 }
