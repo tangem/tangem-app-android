@@ -4,6 +4,7 @@ import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.SwapRepositoryImpl
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,6 +26,7 @@ class SwapDataModule {
         oneInchErrorsHandler: OneInchErrorsHandler,
         coroutineDispatcher: CoroutineDispatcherProvider,
         configManager: ConfigManager,
+        walletManagerFacade: WalletManagersFacade,
     ): SwapRepository {
         return SwapRepositoryImpl(
             tangemTechApi = tangemTechApi,
@@ -32,6 +34,7 @@ class SwapDataModule {
             oneInchErrorsHandler = oneInchErrorsHandler,
             coroutineDispatcher = coroutineDispatcher,
             configManager = configManager,
+            walletManagersFacade = walletManagerFacade,
         )
     }
 }
