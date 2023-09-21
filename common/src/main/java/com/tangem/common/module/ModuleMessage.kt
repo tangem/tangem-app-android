@@ -17,11 +17,6 @@ abstract class ModuleError : Throwable(), ModuleMessage {
     abstract val data: Any?
 }
 
-/**
- * An exception marked as FbConsumeException should be submitted to Firebase.Crashlytics as a non-fatal issue.
- */
-interface FbConsumeException
-
 interface ModuleMessageConverter<ModuleMessage, R> {
     fun convert(message: ModuleMessage): R
 }
