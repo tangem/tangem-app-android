@@ -22,6 +22,7 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -158,6 +159,7 @@ class OnboardingWalletFragment :
                 oldState.onboardingWalletState == newState.onboardingWalletState
             }.select { it.onboardingWalletState }
         }
+        setStatusBarColor(R.color.background_primary)
     }
 
     override fun onStop() {

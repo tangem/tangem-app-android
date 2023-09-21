@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.event.consumed
-import com.tangem.core.ui.event.triggered
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
@@ -66,7 +66,7 @@ internal class OrganizeTokensStateHolder(
     fun updateStateAfterTokenListSorting(tokenList: TokenList) {
         updateState {
             tokenListConverter.convert(tokenList).copy(
-                scrollListToTop = triggered(::consumeScrollListToTopEvent),
+                scrollListToTop = triggeredEvent(Unit, ::consumeScrollListToTopEvent),
             )
         }
     }
@@ -110,19 +110,19 @@ internal class OrganizeTokensStateHolder(
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = dragAndDropIntents::onItemDragged,
-                onDragStart = dragAndDropIntents::onItemDraggingStart,
+                onItemDragStart = dragAndDropIntents::onItemDraggingStart,
                 onItemDragEnd = dragAndDropIntents::onItemDraggingEnd,
                 canDragItemOver = dragAndDropIntents::canDragItemOver,
             ),
-            scrollListToTop = consumed,
+            scrollListToTop = consumedEvent(),
         )
     }
 
-    private fun updateState(block: OrganizeTokensState.() -> OrganizeTokensState) {
+    private inline fun updateState(block: OrganizeTokensState.() -> OrganizeTokensState) {
         stateFlowInternal.update(block)
     }
 
     private fun consumeScrollListToTopEvent() {
-        updateState { copy(scrollListToTop = consumed) }
+        updateState { copy(scrollListToTop = consumedEvent()) }
     }
 }

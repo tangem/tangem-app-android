@@ -56,7 +56,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
     override fun onStart() {
         super.onStart()
-        setStatusBarColor(R.color.backgroundLightGray)
+        setStatusBarColor(R.color.background_secondary)
 
         webViewClient.onProgressStateChanged = { store.dispatch(DisclaimerAction.OnProgressStateChanged(it)) }
         store.subscribe(subscriber = this) { state ->
@@ -122,6 +122,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 webView.loadLocalTermsOfServices()
             }
             else -> {
+                webView.setBackgroundColor(resources.getColor(R.color.transparent, null))
                 webView.loadUrl(disclaimer.getUri().toString())
             }
         }

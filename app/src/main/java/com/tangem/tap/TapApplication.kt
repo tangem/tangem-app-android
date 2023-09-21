@@ -22,10 +22,12 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.DomainLayer
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
@@ -61,6 +63,8 @@ import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementa
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.BuildConfig
@@ -169,6 +173,21 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletManagersFacade: WalletManagersFacade
 
+    @Inject
+    lateinit var currenciesRepository: CurrenciesRepository
+
+    @Inject
+    lateinit var appThemeModeRepository: AppThemeModeRepository
+
+    @Inject
+    lateinit var balanceHidingRepository: BalanceHidingRepository
+
+    @Inject
+    lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    @Inject
+    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
+
     override fun onCreate() {
         super.onCreate()
 
@@ -189,6 +208,11 @@ class TapApplication : Application(), ImageLoaderFactory {
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
+                    appStateHolder = appStateHolder,
+                    currenciesRepository = currenciesRepository,
+                    appThemeModeRepository = appThemeModeRepository,
+                    balanceHidingRepository = balanceHidingRepository,
+                    detailsFeatureToggles = detailsFeatureToggles,
                 ),
             ),
         )
@@ -208,7 +232,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        DomainLayer.init()
         preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
