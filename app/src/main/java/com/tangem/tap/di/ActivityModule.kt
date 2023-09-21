@@ -8,7 +8,6 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.userTokensRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +37,6 @@ internal object ActivityModule {
         return ScanCardUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             scanCardRepository = DefaultScanCardRepository(
-                userTokensRepository = userTokensRepository,
                 tangemSdkManager = tangemSdkManager,
             ),
         )
