@@ -1,10 +1,6 @@
 package com.tangem.tap.features.details.ui.securitymode
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -20,8 +16,13 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun SecurityModeScreen(state: SecurityModeScreenState, onBackClick: () -> Unit) {
+internal fun SecurityModeScreen(
+    state: SecurityModeScreenState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     SettingsScreensScaffold(
+        modifier = modifier,
         content = { SecurityModeOptions(state = state) },
         // titleRes = R.string.card_settings_security_mode,
         onBackClick = onBackClick,
@@ -29,7 +30,7 @@ fun SecurityModeScreen(state: SecurityModeScreenState, onBackClick: () -> Unit) 
 }
 
 @Composable
-fun SecurityModeOptions(state: SecurityModeScreenState) {
+private fun SecurityModeOptions(state: SecurityModeScreenState) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +56,7 @@ fun SecurityModeOptions(state: SecurityModeScreenState) {
 }
 
 @Composable
-fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
+private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
     val selected = option == state.selectedSecurityMode
 
     val title = option.toTitleRes()
