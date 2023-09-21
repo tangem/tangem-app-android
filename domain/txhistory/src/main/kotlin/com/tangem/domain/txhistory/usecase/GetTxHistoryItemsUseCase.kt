@@ -3,7 +3,7 @@ package com.tangem.domain.txhistory.usecase
 import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
