@@ -1,180 +1,155 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.notifications.NotificationState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.WrappedList
-import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.*
 import com.tangem.feature.wallet.impl.R
 
 /**
  * Wallet notification component state
  *
- * @property state state
+ * @property config state
  *
 [REDACTED_AUTHOR]
  */
-// TODO: Finalize notification strings [REDACTED_JIRA]
 @Immutable
-sealed class WalletNotification(open val state: NotificationState) {
+sealed class WalletNotification(val config: NotificationConfig) {
 
-    /** Clickable notification */
-    sealed interface Clickable {
+    sealed class Critical(title: TextReference, subtitle: TextReference) : WalletNotification(
+        config = NotificationConfig(
+            title = title,
+            subtitle = subtitle,
+            iconResId = R.drawable.ic_alert_circle_24,
+        ),
+    ) {
 
-        /** Lambda be invoked when notification is clicked */
-        val onClick: () -> Unit
+        object DevCard : Critical(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(id = R.string.alert_developer_card),
+        )
+
+        object DemoCard : Critical(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(id = R.string.alert_demo_message),
+        )
+
+        object TestNetCard : Critical(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(id = R.string.warning_testnet_card_message),
+        )
+
+        object FailedCardValidation : Critical(
+            title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
+            subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
+        )
+
+        data class LowSignatures(val count: Int) : Critical(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(
+                id = R.string.warning_low_signatures_format,
+                formatArgs = wrappedList(count),
+            ),
+        )
     }
 
-    /** "Development card" notification */
-    object DevCard : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Res(id = R.string.common_warning),
-            subtitle = TextReference.Res(id = R.string.alert_developer_card),
-            iconResId = R.drawable.ic_alert_circle_24,
-            tint = TangemColorPalette.Amaranth,
+    sealed class Warning(
+        title: TextReference,
+        subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+        onClick: (() -> Unit)? = null,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = title,
+            subtitle = subtitle,
+            iconResId = R.drawable.img_attention_20,
+            buttonsState = buttonsState,
+            onClick = onClick,
         ),
-    )
+    ) {
 
-    /** "Test card" notification */
-    object TestCard : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Res(id = R.string.common_warning),
-            subtitle = TextReference.Res(id = R.string.warning_testnet_card_message),
-            iconResId = R.drawable.ic_alert_circle_24,
-            tint = TangemColorPalette.Amaranth,
-        ),
-    )
+        data class MissingBackup(val onStartBackupClick: () -> Unit) : Warning(
+            title = resourceReference(id = R.string.main_no_backup_warning_title),
+            subtitle = resourceReference(id = R.string.main_no_backup_warning_subtitle),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(id = R.string.button_start_backup_process),
+                onClick = onStartBackupClick,
+            ),
+        )
 
-    /** "Demo card" notification */
-    object DemoCard : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Res(id = R.string.common_warning),
-            subtitle = TextReference.Res(id = R.string.alert_demo_message),
-            iconResId = R.drawable.ic_alert_circle_24,
-            tint = TangemColorPalette.Amaranth,
-        ),
-    )
+        object NetworksUnreachable : Warning(
+            title = resourceReference(id = R.string.wallet_balance_blockchain_unreachable),
+            subtitle = resourceReference(id = R.string.warning_subtitle_network_unreachable),
+        )
 
-    /** "Card verification failed" notification */
-    object CardVerificationFailed : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Res(id = R.string.warning_failed_to_verify_card_title),
-            subtitle = TextReference.Res(id = R.string.warning_failed_to_verify_card_message),
-            iconResId = R.drawable.ic_alert_circle_24,
-            tint = TangemColorPalette.Amaranth,
-        ),
-    )
+        object SomeNetworksUnreachable : Warning(
+            title = resourceReference(id = R.string.warning_title_some_networks_unreachable),
+            subtitle = resourceReference(id = R.string.warning_subtitle_some_networks_unreachable),
+        )
 
-    /**
-     * "Remaining signatures left" notification
-     *
-     * @param count number of remaining signatures
-     */
-    class RemainingSignaturesLeft(count: Int) : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Res(id = R.string.common_warning),
-            subtitle = TextReference.Res(
-                id = R.string.warning_low_signatures_format,
-                formatArgs = WrappedList(data = listOf(count)),
+        data class TopUpNote(val errorMessage: String) : Warning(
+            title = resourceReference(id = R.string.warning_title_note_top_up),
+            subtitle = stringReference(value = errorMessage),
+        )
+
+        object NumberOfSignedHashesIncorrect : Warning(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(id = R.string.alert_card_signed_transactions),
+        )
+
+        data class MultiWalletSignedHashesIncorrect(val onClick: () -> Unit) : Warning(
+            title = resourceReference(id = R.string.common_warning),
+            subtitle = resourceReference(id = R.string.warning_signed_tx_previously),
+            onClick = onClick,
+        )
+    }
+
+    data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.main_warning_missing_derivation_title),
+            subtitle = pluralReference(
+                id = R.plurals.main_warning_missing_derivation_description,
+                count = missingAddressesCount,
+                formatArgs = wrappedList(missingAddressesCount),
             ),
             iconResId = R.drawable.ic_alert_circle_24,
-            tint = TangemColorPalette.Amaranth,
-        ),
-    )
-
-    /**
-     * "Already topped up and signed hashes" warning notification
-     *
-     * @property onClick lambda be invoked when notification's close button is clicked
-     */
-    data class WarningAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Closable(
-            title = TextReference.Res(id = R.string.common_warning),
-            subtitle = TextReference.Res(id = R.string.alert_card_signed_transactions),
-            iconResId = R.drawable.img_attention_20,
-            tint = null,
-            onCloseClick = onClick,
-        ),
-    )
-
-    /**
-     * "Already signed hashes" critical warning notification
-     *
-     * @property onClick lambda be invoked when notification is clicked
-     */
-    data class CriticalWarningAlreadySignedHashes(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
-            title = TextReference.Res(
-                id = R.string.warning_important_security_info,
-                formatArgs = WrappedList(listOf("\u26A0")),
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(id = R.string.common_generate_addresses),
+                iconResId = R.drawable.ic_tangem_24,
+                onClick = onGenerateClick,
             ),
-            subtitle = TextReference.Res(id = R.string.warning_signed_tx_previously),
-            iconResId = R.drawable.img_attention_20,
-            onClick = onClick,
-            tint = null,
         ),
     )
 
-    /**
-     * "Backup the card" notification
-     *
-     * @property onClick lambda be invoked when notification is clicked
-     */
-    data class BackupCard(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
-            title = TextReference.Str(value = "Backup your card"),
-            iconResId = R.drawable.img_attention_20,
-            onClick = onClick,
-            tint = null,
-        ),
-    )
-
-    /** "Unreachable networks" notification */
-    object UnreachableNetworks : WalletNotification(
-        state = NotificationState.Simple(
-            title = TextReference.Str(value = "Some networks are unreachable"),
-            iconResId = R.drawable.img_attention_20,
-            tint = null,
-        ),
-    )
-
-    /**
-     * "Like Tangem App" notification
-     *
-     * @property onClick lambda be invoked when notification is clicked
-     */
-    data class LikeTangemApp(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
-            title = TextReference.Str(value = "Like Tangem App?"),
-            iconResId = R.drawable.ic_star_24,
-            onClick = onClick,
-            tint = TangemColorPalette.Tangerine,
-        ),
-    )
-
-    /**
-     * "Scan the card" notification
-     *
-     * @property onClick lambda be invoked when notification is clicked
-     */
-    data class ScanCard(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
-            title = TextReference.Str(value = "Scan your card to continue"),
-            iconResId = R.drawable.ic_tangem_24,
-            onClick = onClick,
-        ),
-    )
-
-    /**
-     * "Unlock wallets" notification
-     *
-     * @property onClick lambda be invoked when notification is clicked
-     */
-    data class UnlockWallets(override val onClick: () -> Unit) : Clickable, WalletNotification(
-        state = NotificationState.Clickable(
-            title = TextReference.Str(value = "Unlock needed"),
+    data class UnlockWallets(val onClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.common_unlock_needed),
+            subtitle = resourceReference(
+                id = R.string.unlock_wallet_description_short,
+                formatArgs = wrappedList(
+                    resourceReference(R.string.common_biometrics),
+                ),
+            ),
             iconResId = R.drawable.ic_locked_24,
             onClick = onClick,
+        ),
+    )
+
+    data class RateApp(
+        val onPositiveClick: () -> Unit,
+        val onNegativeClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.warning_rate_app_title),
+            subtitle = resourceReference(id = R.string.warning_rate_app_message),
+            iconResId = R.drawable.ic_star_24,
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(id = R.string.warning_button_love_it),
+                onPrimaryClick = onPositiveClick,
+                secondaryText = resourceReference(id = R.string.warning_button_can_be_better),
+                onSecondaryClick = onNegativeClick,
+            ),
+            onCloseClick = onCloseClick,
         ),
     )
 }

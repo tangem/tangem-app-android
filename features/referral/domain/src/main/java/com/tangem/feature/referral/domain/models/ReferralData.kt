@@ -18,6 +18,7 @@ sealed interface ReferralData {
         override val tosLink: String,
         override val tokens: List<TokenData>,
         val referral: ReferralInfo,
+        val expectedAwards: ExpectedAwards?,
     ) : ReferralData
 
     /** Data class that used if user is not participant of program */
@@ -45,6 +46,16 @@ data class ReferralInfo(
     val promocode: String,
     val walletsPurchased: Int,
     val termsAcceptedAt: DateTime?,
+)
+
+data class ExpectedAwards(
+    val numberOfWallets: Int,
+    val expectedAwards: List<ExpectedAward>,
+)
+
+data class ExpectedAward(
+    val paymentDate: String,
+    val amount: String,
 )
 
 enum class DiscountType {
