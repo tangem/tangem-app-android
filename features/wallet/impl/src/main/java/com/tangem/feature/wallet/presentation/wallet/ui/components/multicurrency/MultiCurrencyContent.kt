@@ -44,12 +44,7 @@ private fun LazyListScope.contentItems(
 ) {
     itemsIndexed(
         items = items,
-        key = { _, item ->
-            when (item) {
-                is WalletTokensListState.TokensListItemState.NetworkGroupTitle -> item.value.hashCode()
-                is WalletTokensListState.TokensListItemState.Token -> item.state.id
-            }
-        },
+        key = { _, item -> item.id },
         contentType = { _, item -> item::class.java },
         itemContent = { index, item ->
             MultiCurrencyContentItem(
