@@ -43,7 +43,7 @@ internal class WalletTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
-) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
+) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState?> {
 
     /** Example, 2 Aug, 2023 */
     private val dateFormatter by lazy {
@@ -67,9 +67,9 @@ internal class WalletTxHistoryItemFlowConverter(
             .withLocale(Locale.getDefault())
     }
 
-    override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        val state = currentStateProvider() as WalletSingleCurrencyState
-        val txHistoryContent = state.txHistoryState as TxHistoryState.Content
+    override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState? {
+        val state = currentStateProvider() as? WalletSingleCurrencyState ?: return null
+        val txHistoryContent = state.txHistoryState as? TxHistoryState.Content ?: return state.txHistoryState
 
         // FIXME: TxHistoryRepository should send loading transactions
         // [REDACTED_JIRA]
