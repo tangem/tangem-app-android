@@ -102,6 +102,7 @@ sealed class AmountAction : SendScreenAction {
     data class SetAmount(val amountCrypto: BigDecimal, val isUserInput: Boolean) : AmountAction()
     data class SetAmountError(val error: TapError?) : AmountAction()
     data class SetDecimalSeparator(val separator: String) : AmountAction()
+    data class HideBalance(val hide: Boolean) : AmountAction()
 }
 
 // Fee

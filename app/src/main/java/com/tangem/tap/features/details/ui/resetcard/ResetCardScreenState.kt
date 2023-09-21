@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui.resetcard
 
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 
-data class ResetCardScreenState(
+internal data class ResetCardScreenState(
     val accepted: Boolean = false,
     val descriptionText: TextReference,
     val onAcceptWarningToggleClick: (Boolean) -> Unit,
