@@ -57,13 +57,13 @@ interface WalletManagersFacade {
      * Returns transaction history items wrapped to pagination
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param network The network.
+     * @param currency currency.
      * @param page Pagination page.
      * @param pageSize Pagination size.
      */
     suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        network: Network,
+        currency: CryptoCurrency,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
