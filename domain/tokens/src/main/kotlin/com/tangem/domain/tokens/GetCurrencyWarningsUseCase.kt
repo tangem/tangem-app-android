@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens
 
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -81,6 +81,6 @@ class GetCurrencyWarningsUseCase(
     }
 
     private fun BigDecimal?.isZero(): Boolean {
-        return this?.compareTo(BigDecimal.ZERO) == 0
+        return this?.signum() == 0
     }
 }
