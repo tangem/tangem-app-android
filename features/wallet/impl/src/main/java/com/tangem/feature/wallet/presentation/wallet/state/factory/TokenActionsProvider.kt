@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -22,14 +23,21 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
 
     fun provideActions(tokenActions: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
         return tokenActions.states
-            .map { mapTokenActionState(it, tokenActions.cryptoCurrencyStatus) }
+            .mapNotNull {
+                mapTokenActionState(it, tokenActions.cryptoCurrencyStatus)
+            }
             .toImmutableList()
     }
 
     private fun mapTokenActionState(
         actionsState: TokenActionsState.ActionState,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): TokenActionButtonConfig {
+    ): TokenActionButtonConfig? {
+        if (actionsState is TokenActionsState.ActionState.Send &&
+            cryptoCurrencyStatus.value.amount?.isZero() == true
+        ) {
+            return null
+        }
         val title: TextReference
         val icon: Int
         val action: () -> Unit
@@ -58,6 +66,11 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
                 title = resourceReference(R.string.common_swap)
                 icon = R.drawable.ic_exchange_horizontal_24
                 action = { clickIntents.onSwapClick(cryptoCurrencyStatus) }
+            }
+            is TokenActionsState.ActionState.CopyAddress -> {
+                title = resourceReference(R.string.common_copy_address)
+                icon = R.drawable.ic_copy_24
+                action = { clickIntents.onCopyAddressClick(cryptoCurrencyStatus) }
             }
         }
         return TokenActionButtonConfig(
