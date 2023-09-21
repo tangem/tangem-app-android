@@ -1,7 +1,5 @@
 package com.tangem.domain.tokens.model
 
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
