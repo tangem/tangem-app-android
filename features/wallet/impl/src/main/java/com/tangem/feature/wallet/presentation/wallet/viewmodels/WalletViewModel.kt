@@ -38,7 +38,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -757,9 +756,9 @@ internal class WalletViewModel @Inject constructor(
         updateNotifications(index)
     }
 
-    private fun updateTxHistory(network: Network) {
+    private fun updateTxHistory(currency: CryptoCurrency) {
         viewModelScope.launch(dispatchers.io) {
-            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(network)
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(currency.network)
 
             uiState = stateFactory.getLoadingTxHistoryState(
                 itemsCountEither = txHistoryItemsCountEither,
@@ -767,9 +766,7 @@ internal class WalletViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        network,
-                    ).map {
+                    txHistoryEither = txHistoryItemsUseCase(currency = currency).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
@@ -786,7 +783,7 @@ internal class WalletViewModel @Inject constructor(
                 maybeCryptoCurrencyStatus.onRight { status ->
                     singleWalletCryptoCurrencyStatus = status
                     updateButtons(userWalletId = userWalletId, currencyStatus = status)
-                    updateTxHistory(status.currency.network)
+                    updateTxHistory(status.currency)
                 }
             }
             .flowOn(dispatchers.io)
