@@ -1,5 +1,8 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
@@ -63,4 +66,6 @@ interface SwapRepository {
      * Example: 0.35%
      */
     fun getTangemFee(): Double
+
+    suspend fun getCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network): CryptoCurrency?
 }
