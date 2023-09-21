@@ -34,6 +34,14 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
         AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.fade)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.checkBiometricsStatus(lifecycleScope)
+    }
+
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         AppSettingsScreen(
@@ -44,12 +52,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
                 store.dispatch(NavigationAction.PopBackTo())
             },
         )
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        viewModel.checkBiometricsStatus(lifecycleScope)
     }
 
     override fun TransitionInflater.inflateTransitions(): Boolean {
