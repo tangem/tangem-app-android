@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.models
+package com.tangem.domain.tokens.model
 
 import java.math.BigDecimal
 

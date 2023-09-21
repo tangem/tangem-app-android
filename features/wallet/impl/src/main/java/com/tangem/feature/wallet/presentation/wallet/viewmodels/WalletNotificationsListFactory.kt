@@ -4,8 +4,8 @@ import com.tangem.domain.card.GetCardWasScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

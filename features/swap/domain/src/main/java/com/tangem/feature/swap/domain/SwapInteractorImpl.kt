@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
