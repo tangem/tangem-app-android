@@ -106,7 +106,8 @@ internal class WalletViewModel @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    getCardWasScannedUseCase: GetCardWasScannedUseCase,
+    private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
+    wasCardScannedUseCase: WasCardScannedUseCase,
     isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
     isDemoCardUseCase: IsDemoCardUseCase,
     // endregion Parameters
@@ -119,7 +120,7 @@ internal class WalletViewModel @Inject constructor(
     private var isBalanceHidden = true
 
     private val notificationsListFactory = WalletNotificationsListFactory(
-        getCardWasScannedUseCase = getCardWasScannedUseCase,
+        wasCardScannedUseCase = wasCardScannedUseCase,
         isUserAlreadyRateAppUseCase = isUserAlreadyRateAppUseCase,
         isDemoCardUseCase = isDemoCardUseCase,
         clickIntents = this,
@@ -412,7 +413,21 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onMultiWalletSignedHashesNotificationClick() {
-// [REDACTED_TODO_COMMENT]
+        val state = uiState as? WalletState.ContentState ?: return
+
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ShowWalletAlreadySignedHashesMessage(
+                onUnderstandClick = {
+                    viewModelScope.launch(dispatchers.main) {
+                        setCardWasScannedUseCase(
+                            cardId = getWallet(index = state.walletsListConfig.selectedWalletIndex).cardId,
+                        )
+                    }
+                },
+            ),
+            setUiState = { uiState = it },
+        )
     }
 
     override fun onLikeTangemAppClick() {
