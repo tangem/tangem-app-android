@@ -14,8 +14,8 @@ import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -53,6 +53,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
@@ -100,6 +101,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
         updateTxHistory()
+        updateWarnings(selectedWallet = selectedWallet)
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -124,6 +126,18 @@ internal class TokenDetailsViewModel @Inject constructor(
             .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+    }
+
+    private fun updateWarnings(selectedWallet: UserWallet) {
+        viewModelScope.launch(dispatchers.io) {
+            getCurrencyWarningsUseCase.invoke(
+                userWalletId = selectedWallet.walletId,
+                currency = cryptoCurrency,
+            )
+                .distinctUntilChanged()
+                .onEach { uiState = stateFactory.getStateWithNotifications(it) }
+                .launchIn(viewModelScope)
+        }
     }
 
     private fun updateMarketPrice(selectedWallet: UserWallet) {
@@ -156,9 +170,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        network = cryptoCurrency.network,
-                    ).map {
+                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
@@ -314,5 +326,13 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
+    }
+
+    override fun onCloseExistentialDepositNotification() {
+        uiState = stateFactory.getStateWithRemovedExistentialNotification()
+    }
+
+    override fun onCloseRentInfoNotification() {
+        uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 }

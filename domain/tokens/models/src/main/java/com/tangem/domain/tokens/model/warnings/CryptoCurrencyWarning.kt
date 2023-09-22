@@ -1,6 +1,6 @@
-package com.tangem.domain.tokens.models.warnings
+package com.tangem.domain.tokens.model.warnings
 
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import java.math.BigDecimal
 
 sealed class CryptoCurrencyWarning {

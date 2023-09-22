@@ -9,4 +9,8 @@ internal sealed class WalletEvent {
     data class ChangeWallet(val index: Int) : WalletEvent()
 
     data class ShowError(val text: TextReference) : WalletEvent()
+
+    data class ShowToast(val text: TextReference) : WalletEvent()
+
+    data class CopyAddress(val address: String) : WalletEvent()
 }

@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -75,6 +75,8 @@ class GetCryptoCurrencyActionsUseCase(
             } else {
                 add(TokenActionsState.ActionState.Buy(false))
             }
+
+            addFirst(TokenActionsState.ActionState.CopyAddress(true))
         }
     }
 

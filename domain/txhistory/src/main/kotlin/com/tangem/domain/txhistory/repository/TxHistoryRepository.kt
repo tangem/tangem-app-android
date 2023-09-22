@@ -1,7 +1,8 @@
 package com.tangem.domain.txhistory.repository
 
 import androidx.paging.PagingData
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -13,5 +14,5 @@ interface TxHistoryRepository {
     suspend fun getTxHistoryItemsCount(network: Network): Int
 
     @Throws(TxHistoryListError::class)
-    fun getTxHistoryItems(network: Network, pageSize: Int): Flow<PagingData<TxHistoryItem>>
+    fun getTxHistoryItems(currency: CryptoCurrency, pageSize: Int): Flow<PagingData<TxHistoryItem>>
 }
