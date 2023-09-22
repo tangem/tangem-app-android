@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import com.tangem.core.ui.R
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -40,7 +42,7 @@ private fun ChooseAddressBottomSheetContent(content: ChooseAddressBottomSheetCon
         verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing24),
     ) {
         Text(
-            text = "Choose address",
+            text = stringResource(id = R.string.token_details_choose_address),
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.body2,
