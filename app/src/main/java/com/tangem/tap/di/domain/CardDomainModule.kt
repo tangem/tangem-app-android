@@ -43,8 +43,14 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetCardWasScannedUseCase(cardRepository: CardRepository): GetCardWasScannedUseCase {
-        return GetCardWasScannedUseCase(cardRepository = cardRepository)
+    fun provideWasWalletAlreadySignedHashesConfirmedUseCase(cardRepository: CardRepository): WasCardScannedUseCase {
+        return WasCardScannedUseCase(cardRepository = cardRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideSetCardWasScannedUseCase(cardRepository: CardRepository): SetCardWasScannedUseCase {
+        return SetCardWasScannedUseCase(cardRepository = cardRepository)
     }
 
     @Provides
