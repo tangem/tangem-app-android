@@ -61,6 +61,9 @@ class TangemSdkManager(
     val biometricManager: BiometricManager
         get() = tangemSdk.biometricManager
 
+    val userCodeRequestPolicy: UserCodeRequestPolicy
+        get() = tangemSdk.config.userCodeRequestPolicy
+
     suspend fun scanProduct(
         cardId: String? = null,
         messageRes: Int? = null,
@@ -138,7 +141,9 @@ class TangemSdkManager(
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetToFactorySettingsTask(allowsRequestAccessCodeFromRepository),
+            runnable = ResetToFactorySettingsTask(
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            ),
             cardId = cardId,
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
@@ -243,17 +248,8 @@ class TangemSdkManager(
         return resources.getString(stringResId, *formatArgs)
     }
 
-    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
-        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
-    }
-
-    fun useBiometricsForAccessCode(): Boolean {
-        val policy = tangemSdk.config.userCodeRequestPolicy
-        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
+    fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
+        tangemSdk.config.userCodeRequestPolicy = policy
     }
 
     companion object {
