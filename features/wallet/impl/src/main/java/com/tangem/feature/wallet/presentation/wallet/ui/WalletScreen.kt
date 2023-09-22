@@ -12,10 +12,7 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,6 +27,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -72,12 +70,19 @@ internal fun WalletScreen(state: WalletState) {
                 onAutoScrollReset = { isAutoScroll.value = false },
             )
 
+            var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
+
             WalletEventEffect(
                 walletsListState = walletsListState,
                 snackbarHostState = snackbarHostState,
                 event = state.event,
                 onAutoScrollSet = { isAutoScroll.value = true },
+                onAlertConfigSet = { alertConfig = it },
             )
+
+            alertConfig?.let {
+                WalletAlert(config = it, onDismiss = { alertConfig = null })
+            }
         }
         is WalletState.Initial -> Unit
     }
