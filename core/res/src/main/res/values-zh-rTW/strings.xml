@@ -277,7 +277,6 @@
     </plurals>
     <string name="registration_task_alert_message">請持有卡片直至操作完成</string>
     <string name="reset_card_to_factory_button_title">重置卡片</string>
-    <string name="reset_card_to_factory_warning_message">我了解執行此操作後，我將無法再訪問當前錢包</string>
     <string name="reset_card_with_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包。您將無法恢復當前錢包或使用卡恢復訪問密碼</string>
     <string name="reset_card_without_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包並將其從應用程序中刪除。您將無法恢復當前錢包</string>
     <string name="russian_bank_card_warning_title">目前不接受俄羅斯銀行卡</string>

@@ -21,7 +21,8 @@ sealed class DetailsAction : Action {
     sealed class ResetToFactory : DetailsAction() {
         object Start : ResetToFactory()
         object Proceed : ResetToFactory()
-        data class Confirm(val confirmed: Boolean) : ResetToFactory()
+        data class AcceptCondition1(val accepted: Boolean) : ResetToFactory()
+        data class AcceptCondition2(val accepted: Boolean) : ResetToFactory()
         object Failure : ResetToFactory()
         object Success : ResetToFactory()
     }
