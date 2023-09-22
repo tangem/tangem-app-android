@@ -371,7 +371,8 @@
     </plurals>
     <string name="registration_task_alert_message">Please hold the card until the operation complete</string>
     <string name="reset_card_to_factory_button_title">Reset the Card</string>
-    <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
+    <string name="reset_card_to_factory_condition_1">I realize that I\'ll lose access to my funds on this card after this action.</string>
+    <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards.</string>
     <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
     <string name="russian_bank_card_warning_subtitle">Do you have a bank card from another country and a residence permit or registration outside the Russian Federation?</string>
