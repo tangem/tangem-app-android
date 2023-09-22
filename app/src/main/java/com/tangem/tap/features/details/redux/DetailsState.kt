@@ -41,7 +41,9 @@ data class CardSettingsState(
     val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
-    val resetConfirmed: Boolean = false,
+    val resetButtonEnabled: Boolean,
+    val condition1Checked: Boolean,
+    val condition2Checked: Boolean,
     val accessCodeRecovery: AccessCodeRecoveryState? = null,
 )
 
