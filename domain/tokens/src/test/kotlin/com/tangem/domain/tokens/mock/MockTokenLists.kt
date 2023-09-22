@@ -15,7 +15,7 @@ internal object MockTokenLists {
     const val isGrouped = false
     const val isSortedByBalance = false
 
-    val notInitializedTokenList = TokenList.Empty
+    val emptyTokenList = TokenList.Empty
 
     val emptyGroupedTokenList = TokenList.GroupedByNetwork(
         groups = emptyList(),
