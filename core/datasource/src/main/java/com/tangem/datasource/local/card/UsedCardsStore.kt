@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.card
 
 import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
-import com.tangem.datasource.local.datastore.core.SingleStringKeyDataStoreDecorator
+import com.tangem.datasource.local.datastore.core.KeylessDataStoreDecorator
 import kotlinx.coroutines.flow.Flow
 
 interface UsedCardsStore {
@@ -15,7 +15,7 @@ interface UsedCardsStore {
 
 internal class DefaultUsedCardsStore(
     store: SharedPreferencesDataStore<List<UsedCardInfo>>,
-) : UsedCardsStore, SingleStringKeyDataStoreDecorator<List<UsedCardInfo>>(
+) : UsedCardsStore, KeylessDataStoreDecorator<List<UsedCardInfo>>(
     wrappedDataStore = store,
     key = "usedCardsInfo_v2",
 )

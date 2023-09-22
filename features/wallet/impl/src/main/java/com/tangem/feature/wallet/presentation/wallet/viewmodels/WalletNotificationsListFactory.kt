@@ -7,11 +7,12 @@ import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlin.collections.count
 
 /**
  * Wallet notifications list factory
@@ -30,31 +31,23 @@ internal class WalletNotificationsListFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
-    private val wasCardScannedJobHolder = JobHolder()
-
     fun create(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
-        return channelFlow {
-            wasCardScannedUseCase.invoke(cardTypesResolver.getCardId())
-                .distinctUntilChanged()
-                .onEach {
-                    send(
-                        buildList {
-                            addCriticalNotifications(cardTypesResolver)
+        return wasCardScannedUseCase.invoke(cardTypesResolver.getCardId())
+            .distinctUntilChanged()
+            .map {
+                buildList {
+                    addCriticalNotifications(cardTypesResolver)
 
-                            addMissingAddressesNotification(cryptoCurrencyList)
+                    addMissingAddressesNotification(cryptoCurrencyList)
 
-                            addRateTheAppNotification()
+                    addRateTheAppNotification()
 
-                            addWarningNotifications(cardTypesResolver, cryptoCurrencyList, it)
-                        }.toImmutableList(),
-                    )
-                }
-                .launchIn(this)
-                .saveIn(wasCardScannedJobHolder)
-        }
+                    addWarningNotifications(cardTypesResolver, cryptoCurrencyList, it)
+                }.toImmutableList()
+            }
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {

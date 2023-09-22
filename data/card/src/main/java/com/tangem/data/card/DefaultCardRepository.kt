@@ -23,7 +23,7 @@ internal class DefaultCardRepository(
                     }
             }
 
-            launch(dispatchers.io) {
+            withContext(dispatchers.io) {
                 if (usedCardsStore.getSyncOrNull() == null) {
                     send(element = false)
                 }
