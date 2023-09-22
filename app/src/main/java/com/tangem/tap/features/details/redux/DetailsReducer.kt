@@ -93,6 +93,9 @@ private fun handlePrepareCardSettingsScreen(
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
         card = card,
         resetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver),
+        resetButtonEnabled = false,
+        condition1Checked = false,
+        condition2Checked = false,
         accessCodeRecovery = if (cardTypesResolver.isWallet2()) {
             val enabled = card.userSettings?.isUserCodeRecoveryAllowed ?: false
             AccessCodeRecoveryState(
@@ -145,8 +148,25 @@ private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: Card
 
 private fun handleEraseWallet(action: DetailsAction.ResetToFactory, state: DetailsState): DetailsState {
     return when (action) {
-        is DetailsAction.ResetToFactory.Confirm ->
-            state.copy(cardSettingsState = state.cardSettingsState?.copy(resetConfirmed = action.confirmed))
+        is DetailsAction.ResetToFactory.AcceptCondition1 -> {
+            val warning1Checked = action.accepted
+            state.copy(
+                cardSettingsState = state.cardSettingsState?.copy(
+                    condition1Checked = action.accepted,
+                    resetButtonEnabled = warning1Checked && state.cardSettingsState.condition2Checked,
+                ),
+            )
+        }
+        is DetailsAction.ResetToFactory.AcceptCondition2 -> {
+            val warning2Checked = action.accepted
+            state.copy(
+                cardSettingsState = state.cardSettingsState?.copy(
+                    condition2Checked = action.accepted,
+                    resetButtonEnabled = warning2Checked && state.cardSettingsState.condition1Checked,
+                ),
+            )
+        }
+
         else -> state
     }
 }
