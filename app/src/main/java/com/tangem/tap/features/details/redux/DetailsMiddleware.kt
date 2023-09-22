@@ -1,13 +1,11 @@
 package com.tangem.tap.features.details.redux
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.tangem.common.CompletionResult
+import com.tangem.common.*
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
+import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.guard
-import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -103,6 +101,27 @@ class DetailsMiddleware {
                     scope.launch {
                         val userWalletId = UserWalletIdBuilder.card(card).build()
 
+                        // we must require a password regardless of biometric settings
+                        val policy = tangemSdkManager.userCodeRequestPolicy
+                        val doBeforeErase = {
+                            val type = if (card.isAccessCodeSet) {
+                                UserCodeType.AccessCode
+                            } else if (card.isPasscodeSet == true) {
+                                UserCodeType.Passcode
+                            } else {
+                                null
+                            }
+
+                            type?.let {
+                                tangemSdkManager.setUserCodeRequestPolicy(UserCodeRequestPolicy.Always(type))
+                            }
+                        }
+
+                        val doAfterErase = {
+                            tangemSdkManager.setUserCodeRequestPolicy(policy)
+                        }
+
+                        doBeforeErase()
                         tangemSdkManager.resetToFactorySettings(card.cardId, true)
                             .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
                             .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
@@ -125,6 +144,9 @@ class DetailsMiddleware {
                                 if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
                                     Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
                                 }
+                            }
+                            .doOnResult {
+                                doAfterErase()
                             }
                     }
                 }
