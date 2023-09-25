@@ -4,7 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
 import com.tangem.datasource.local.appcurrency.implementation.BalanceStateHidingSettingsStore
-import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
+import com.tangem.datasource.local.datastore.JsonSharedPreferencesDataStore
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import dagger.Module
 import dagger.Provides
@@ -22,7 +22,7 @@ internal object HiddenBalanceDataModule {
         @NetworkMoshi moshi: Moshi,
     ): BalanceHidingSettingsStore {
         return BalanceStateHidingSettingsStore(
-            dataStore = SharedPreferencesDataStore(
+            dataStore = JsonSharedPreferencesDataStore(
                 preferencesName = "balance_hiding_settings",
                 context = context,
                 adapter = moshi.adapter(BalanceHidingSettings::class.java),
