@@ -182,6 +182,17 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             icon = tokenIconState,
             name = "Polygon",
+            onItemClick = {},
+            onItemLongClick = {},
+        )
+    }
+
+    val tokenItemNoAddressState by lazy {
+        TokenItemState.NoAddress(
+            id = UUID.randomUUID().toString(),
+            icon = tokenIconState,
+            name = "Polygon",
+            onItemLongClick = {},
         )
     }
 
