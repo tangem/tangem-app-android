@@ -41,7 +41,9 @@ private fun ContentBlock(state: TokenItemState.ContentState, modifier: Modifier 
             amount = when (state) {
                 is TokenItemState.Content -> if (state.tokenOptions.isBalanceHidden) STARS else state.amount
                 is TokenItemState.Draggable -> state.info.resolveReference()
-                is TokenItemState.Unreachable -> null
+                is TokenItemState.Unreachable,
+                is TokenItemState.NoAddress,
+                -> null
             },
         )
     }
