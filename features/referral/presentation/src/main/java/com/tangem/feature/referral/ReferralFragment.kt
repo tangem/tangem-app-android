@@ -1,5 +1,6 @@
 package com.tangem.feature.referral
 
+import android.os.Bundle
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,9 +24,13 @@ class ReferralFragment : ComposeFragment() {
 
     private val viewModel by viewModels<ReferralViewModel>()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
+    }
+
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
         viewModel.onScreenOpened()
 
         val backgroundColor = TangemTheme.colors.background.secondary
