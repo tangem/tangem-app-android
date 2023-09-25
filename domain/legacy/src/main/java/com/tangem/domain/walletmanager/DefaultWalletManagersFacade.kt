@@ -180,7 +180,7 @@ class DefaultWalletManagersFacade(
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
-            resultFactory.getNoAccountResult(walletManager)
+            resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
