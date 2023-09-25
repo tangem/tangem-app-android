@@ -71,11 +71,30 @@ internal sealed interface TokenItemState {
      * @property id                    token id
      * @property icon                  token icon state
      * @property name                  token name
+     * @property onItemClick           callback which will be called when an item is clicked
+     * @property onItemLongClick       callback which will be called when an item is long clicked
      */
     data class Unreachable(
         override val id: String,
         override val icon: IconState,
         override val name: String,
+        val onItemClick: () -> Unit,
+        val onItemLongClick: () -> Unit,
+    ) : ContentState()
+
+    /**
+     * No derivation address state
+     *
+     * @property id                     token id
+     * @property icon                   token icon state
+     * @property name                   token name
+     * @property onItemLongClick        callback which will be called when an item is long clicked
+     */
+    data class NoAddress(
+        override val id: String,
+        override val icon: IconState,
+        override val name: String,
+        val onItemLongClick: () -> Unit,
     ) : ContentState()
 
     /**

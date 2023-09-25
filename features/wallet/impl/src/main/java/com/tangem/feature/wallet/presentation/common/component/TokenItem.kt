@@ -9,11 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -21,6 +18,7 @@ import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
+import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.token.TokenCryptoInfoBlock
@@ -102,21 +100,36 @@ private fun Modifier.constrainAsOptionsItem(scope: ConstraintLayoutScope, ref: C
 private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed {
     when (state) {
         is TokenItemState.Content -> {
-            val hapticFeedback = LocalHapticFeedback.current
-            val onLongClick = remember(state) {
-                {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    state.onItemLongClick()
-                }
-            }
-
+            val onLongClick = rememberHapticFeedback(
+                state = state,
+                onAction = state.onItemLongClick,
+            )
             this.combinedClickable(
                 onClick = state.onItemClick,
                 onLongClick = onLongClick,
             )
         }
+        is TokenItemState.Unreachable -> {
+            val onLongClick = rememberHapticFeedback(
+                state = state,
+                onAction = state.onItemLongClick,
+            )
+            this.combinedClickable(
+                onClick = state.onItemClick,
+                onLongClick = onLongClick,
+            )
+        }
+        is TokenItemState.NoAddress -> {
+            val onLongClick = rememberHapticFeedback(
+                state = state,
+                onAction = state.onItemLongClick,
+            )
+            this.combinedClickable(
+                onClick = {},
+                onLongClick = onLongClick,
+            )
+        }
         is TokenItemState.Draggable,
-        is TokenItemState.Unreachable,
         is TokenItemState.Loading,
         is TokenItemState.Locked,
         -> this
@@ -144,6 +157,7 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
     collection = listOf(
         WalletPreviewData.tokenItemVisibleState,
         WalletPreviewData.tokenItemUnreachableState,
+        WalletPreviewData.tokenItemNoAddressState,
         WalletPreviewData.tokenItemDragState,
         WalletPreviewData.tokenItemHiddenState,
         WalletPreviewData.loadingTokenItemState,
