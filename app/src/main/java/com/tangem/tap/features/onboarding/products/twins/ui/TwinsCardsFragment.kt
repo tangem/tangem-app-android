@@ -5,7 +5,6 @@ import android.util.TypedValue
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
@@ -194,11 +193,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             )
 
             btnMainAction.setText(R.string.common_continue)
-            btnMainAction.icon = when (state.currentStep) {
-                is TwinCardsStep.WelcomeOnly -> null
-                is TwinCardsStep.Welcome -> AppCompatResources.getDrawable(requireContext(), R.drawable.ic_tangem_24)
-                else -> null
-            }
+            btnMainAction.icon = null
             btnMainAction.setOnClickListener { onMainButtonClick() }
         }
 
@@ -346,7 +341,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.TopUp)
             }
-
             btnAlternativeAction.isVisible = true
             btnAlternativeAction.setText(R.string.onboarding_top_up_button_show_wallet_address)
             btnAlternativeAction.setOnClickListener {
@@ -354,7 +348,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             }
         } else {
             btnMainAction.setText(R.string.onboarding_button_receive_crypto)
-            btnMainAction.icon = null
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
             }
@@ -364,6 +357,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         tvHeader.setText(R.string.onboarding_topup_title)
         tvBody.setText(R.string.onboarding_top_up_body)
+        btnMainAction.icon = null
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
