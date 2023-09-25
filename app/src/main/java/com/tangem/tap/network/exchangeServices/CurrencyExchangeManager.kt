@@ -50,6 +50,7 @@ class CurrencyExchangeManager(
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String? {
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
@@ -60,6 +61,7 @@ class CurrencyExchangeManager(
             cryptoCurrencyName,
             fiatCurrencyName,
             walletAddress,
+            isDarkTheme,
         )
     }
 

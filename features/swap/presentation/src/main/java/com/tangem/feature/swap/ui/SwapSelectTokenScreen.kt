@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
@@ -34,7 +34,6 @@ import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelect
 import com.tangem.feature.swap.presentation.R
-import com.valentinilk.shimmer.shimmer
 
 @Composable
 fun SwapSelectTokenScreen(
@@ -42,28 +41,26 @@ fun SwapSelectTokenScreen(
     onSearchFocusChange: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
-    TangemTheme {
-        Scaffold(
-            modifier = Modifier
-                .systemBarsPadding()
-                .background(color = TangemTheme.colors.background.secondary),
-            content = { padding ->
-                ListOfTokens(state = state, Modifier.padding(padding))
-            },
-            topBar = {
-                ExpandableSearchView(
-                    title = stringResource(R.string.swapping_token_list_title),
-                    onBackClick = onBack,
-                    placeholderSearchText = stringResource(id = R.string.common_search_tokens),
-                    onSearchChange = state.onSearchEntered,
-                    onSearchDisplayClose = { state.onSearchEntered("") },
-                    onFocusChange = onSearchFocusChange,
-                    subtitle = state.network.name,
-                    icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
-                )
-            },
-        )
-    }
+    Scaffold(
+        modifier = Modifier
+            .systemBarsPadding()
+            .background(color = TangemTheme.colors.background.secondary),
+        content = { padding ->
+            ListOfTokens(state = state, Modifier.padding(padding))
+        },
+        topBar = {
+            ExpandableSearchView(
+                title = stringResource(R.string.swapping_token_list_title),
+                onBackClick = onBack,
+                placeholderSearchText = stringResource(id = R.string.common_search_tokens),
+                onSearchChange = state.onSearchEntered,
+                onSearchDisplayClose = { state.onSearchEntered("") },
+                onFocusChange = onSearchFocusChange,
+                subtitle = state.network.name,
+                icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
+            )
+        },
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -213,24 +210,10 @@ private fun TokenIcon(token: TokenToSelect, @DrawableRes iconPlaceholder: Int?) 
                 .crossfade(true)
                 .build(),
             contentDescription = token.id,
-            loading = { TokenImageShimmer(modifier = iconModifier) },
+            loading = { CircleShimmer(modifier = iconModifier) },
             error = { CurrencyPlaceholderIcon(modifier = iconModifier, id = token.id) },
             alpha = if (!token.available) 0.7f else 1f,
             colorFilter = colorFilter,
-        )
-    }
-}
-
-@Composable
-private fun TokenImageShimmer(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.shimmer()) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.button.secondary,
-                    shape = CircleShape,
-                ),
         )
     }
 }
