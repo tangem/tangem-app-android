@@ -59,11 +59,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun configureTransitions() {
         when (store.state.twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> super.configureTransitions()
+            CreateTwinWalletMode.CreateWallet -> {
+                super.configureTransitions()
+            }
             CreateTwinWalletMode.RecreateWallet -> {
-                val inflater = TransitionInflater.from(requireContext())
-                enterTransition = inflater.inflateTransition(R.transition.fade)
-                exitTransition = inflater.inflateTransition(R.transition.fade)
+                configureDefaultTransactions()
             }
         }
     }

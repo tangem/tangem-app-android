@@ -26,13 +26,6 @@ class ReferralFragment : ComposeFragment() {
 
     private val viewModel by viewModels<ReferralViewModel>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))

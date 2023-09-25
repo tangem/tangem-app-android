@@ -36,9 +36,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
         viewModel.checkBiometricsStatus(lifecycleScope)
     }
 

@@ -72,12 +72,6 @@ class OnboardingWalletFragment :
 
     private lateinit var animator: BackupAnimator
 
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

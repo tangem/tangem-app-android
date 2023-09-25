@@ -72,7 +72,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     private var walletView: WalletView = MultiWalletView()
 
-    // private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
     private val viewModel by viewModels<WalletViewModel>()
 
     private val totalBalanceWatcher = modelWatcher {

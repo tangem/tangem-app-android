@@ -152,9 +152,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 }
             },
         )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
