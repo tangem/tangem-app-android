@@ -27,12 +27,6 @@ internal class AddCustomTokenFragment : ComposeFragment() {
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
-    override fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(R.transition.fade)
-        exitTransition = inflateTransition(R.transition.fade)
-        return true
-    }
-
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         val viewModel = hiltViewModel<AddCustomTokenViewModel>().apply {

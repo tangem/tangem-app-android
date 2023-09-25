@@ -62,7 +62,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             CreateTwinWalletMode.CreateWallet -> super.configureTransitions()
             CreateTwinWalletMode.RecreateWallet -> {
                 val inflater = TransitionInflater.from(requireContext())
-                enterTransition = inflater.inflateTransition(R.transition.slide_right)
+                enterTransition = inflater.inflateTransition(R.transition.fade)
                 exitTransition = inflater.inflateTransition(R.transition.fade)
             }
         }

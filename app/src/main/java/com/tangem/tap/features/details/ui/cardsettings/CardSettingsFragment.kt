@@ -39,13 +39,6 @@ internal class CardSettingsFragment : ComposeFragment(), StoreSubscriber<Details
         )
     }
 
-    override fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(R.transition.fade)
-        exitTransition = inflateTransition(R.transition.fade)
-
-        return true
-    }
-
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->

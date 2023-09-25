@@ -100,9 +100,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             },
         )
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        // learn2earnViewModel.onMainScreenCreated()
     }
 
     override fun onStart() {

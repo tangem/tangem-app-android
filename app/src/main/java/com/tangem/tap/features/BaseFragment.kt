@@ -32,7 +32,7 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
 
     protected open fun configureTransitions() {
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
