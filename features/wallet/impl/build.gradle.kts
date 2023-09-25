@@ -29,11 +29,13 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.googlePlay.core)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
+    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)
