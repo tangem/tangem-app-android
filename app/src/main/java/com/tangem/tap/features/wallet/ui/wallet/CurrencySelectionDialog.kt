@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.wallet
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
@@ -15,7 +16,7 @@ object CurrencySelectionDialog {
         val currentSelection = dialog.currenciesList
             .indexOfFirst { it.code == dialog.currentAppCurrency.code }
 
-        return AlertDialog.Builder(context)
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog)
             .setTitle(context.getString(R.string.details_row_title_currency))
             .setNegativeButton(context.getString(R.string.common_cancel)) { _, _ -> /* no-op */ }
             .setOnDismissListener {
