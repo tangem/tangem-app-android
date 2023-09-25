@@ -43,7 +43,7 @@ internal fun TokenItem(model: TokenItemState) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors.background.primary)
             .padding(top = TangemTheme.dimens.spacing16),
     ) {
         val (icon, title, availableNetworksText) = createRefs()
@@ -128,7 +128,7 @@ internal fun TokenItem(model: TokenItemState) {
 @Composable
 private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> Unit, modifier: Modifier = Modifier) {
     val iconModifier = modifier.size(size = TangemTheme.dimens.size46)
-    val screenBackgroundColor = TangemTheme.colors.background.secondary.toArgb()
+    val screenBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
 
     SubcomposeAsyncImage(
