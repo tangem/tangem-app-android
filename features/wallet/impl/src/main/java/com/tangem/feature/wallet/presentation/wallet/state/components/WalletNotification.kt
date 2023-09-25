@@ -135,8 +135,8 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class RateApp(
-        val onPositiveClick: () -> Unit,
-        val onNegativeClick: () -> Unit,
+        val onLikeClick: () -> Unit,
+        val onDislikeClick: () -> Unit,
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
@@ -145,9 +145,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconResId = R.drawable.ic_star_24,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
                 primaryText = resourceReference(id = R.string.warning_button_love_it),
-                onPrimaryClick = onPositiveClick,
+                onPrimaryClick = onLikeClick,
                 secondaryText = resourceReference(id = R.string.warning_button_can_be_better),
-                onSecondaryClick = onNegativeClick,
+                onSecondaryClick = onDislikeClick,
             ),
             onCloseClick = onCloseClick,
         ),
