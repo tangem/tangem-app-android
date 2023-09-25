@@ -39,22 +39,22 @@ internal object MockTokensStates {
 
     val tokenState7 = CryptoCurrencyStatus(
         currency = MockTokens.token7,
-        value = CryptoCurrencyStatus.NoAccount,
+        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
     )
 
     val tokenState8 = CryptoCurrencyStatus(
         currency = MockTokens.token8,
-        value = CryptoCurrencyStatus.NoAccount,
+        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
     )
 
     val tokenState9 = CryptoCurrencyStatus(
         currency = MockTokens.token9,
-        value = CryptoCurrencyStatus.NoAccount,
+        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
     )
 
     val tokenState10 = CryptoCurrencyStatus(
         currency = MockTokens.token10,
-        value = CryptoCurrencyStatus.NoAccount,
+        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
     )
 
     val failedTokenStates = nonEmptyListOf(

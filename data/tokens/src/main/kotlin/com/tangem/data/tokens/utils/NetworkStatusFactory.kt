@@ -26,6 +26,7 @@ internal class NetworkStatusFactory {
                 is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
                     address = getNetworkAddress(result.defaultAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
+                    errorMessage = result.errorMessage,
                 )
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
                     address = getNetworkAddress(result.defaultAddress, result.addresses),
