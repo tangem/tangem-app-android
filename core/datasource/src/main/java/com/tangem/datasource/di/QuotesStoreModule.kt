@@ -2,7 +2,7 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
+import com.tangem.datasource.local.datastore.JsonSharedPreferencesDataStore
 import com.tangem.datasource.local.quote.DefaultQuotesStore
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.quote.model.StoredQuote
@@ -21,7 +21,7 @@ internal object QuotesStoreModule {
     @Singleton
     fun provideQuotesStore(@ApplicationContext context: Context, @NetworkMoshi moshi: Moshi): QuotesStore {
         return DefaultQuotesStore(
-            dataStore = SharedPreferencesDataStore(
+            dataStore = JsonSharedPreferencesDataStore(
                 preferencesName = "quotes",
                 context = context,
                 adapter = moshi.adapter(StoredQuote::class.java),

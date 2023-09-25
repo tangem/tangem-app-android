@@ -4,7 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.apptheme.AppThemeModeStore
 import com.tangem.datasource.local.apptheme.DefaultAppThemeModeStore
-import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
+import com.tangem.datasource.local.datastore.JsonSharedPreferencesDataStore
 import com.tangem.domain.apptheme.model.AppThemeMode
 import dagger.Module
 import dagger.Provides
@@ -19,7 +19,7 @@ internal object AppThemeModeDataModule {
     @Provides
     fun provideAppThemeModeStore(@ApplicationContext context: Context, @NetworkMoshi moshi: Moshi): AppThemeModeStore {
         return DefaultAppThemeModeStore(
-            dataStore = SharedPreferencesDataStore(
+            dataStore = JsonSharedPreferencesDataStore(
                 preferencesName = "app_theme",
                 context = context,
                 adapter = moshi.adapter(AppThemeMode::class.java),
