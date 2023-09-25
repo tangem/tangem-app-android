@@ -51,10 +51,14 @@ internal class WalletsUpdateActionResolver(
         wallets: List<UserWallet>,
         selectedWallet: UserWallet,
     ): Action {
-        return if (isWalletsCountChanged(state, wallets)) {
-            getActionToChangeWallets(state = state, wallets = wallets, selectedWallet = selectedWallet)
-        } else {
-            getActionToUpdateCurrentWallet(state = state, wallets = wallets, selectedWallet = selectedWallet)
+        return when {
+            isWalletsCountChanged(state, wallets) -> {
+                getActionToChangeWallets(state = state, wallets = wallets, selectedWallet = selectedWallet)
+            }
+            isSelectedWalletChanged(state, selectedWallet) -> {
+                Action.Initialize(wallets.indexOfWallet(selectedWallet.walletId))
+            }
+            else -> getActionToUpdateCurrentWallet(state = state, wallets = wallets, selectedWallet = selectedWallet)
         }
     }
 
@@ -96,6 +100,10 @@ internal class WalletsUpdateActionResolver(
             ?: error("Deleted wallet id is not found. Wallets contains all previous wallets ids")
     }
 
+    private fun isSelectedWalletChanged(state: WalletState.ContentState, selectedWallet: UserWallet): Boolean {
+        return state.getPrevSelectedWallet().id != selectedWallet.walletId
+    }
+
     private fun getActionToUpdateCurrentWallet(
         state: WalletState.ContentState,
         wallets: List<UserWallet>,
@@ -103,7 +111,7 @@ internal class WalletsUpdateActionResolver(
     ): Action {
         val selectedWalletName = selectedWallet.name
 
-        if (state.getPrevSelectedWalletName() != selectedWalletName) {
+        if (state.getPrevSelectedWallet().title != selectedWalletName) {
             return Action.UpdateWalletName(selectedWalletName)
         }
 
@@ -118,12 +126,11 @@ internal class WalletsUpdateActionResolver(
         return Action.Unknown
     }
 
-    private fun WalletState.ContentState.getPrevSelectedWalletName(): String {
+    private fun WalletState.ContentState.getPrevSelectedWallet(): WalletCardState {
         val prevSelectedWalletIndex = walletsListConfig.selectedWalletIndex
-        val prevSelectedWallet = walletsListConfig.wallets.getOrNull(prevSelectedWalletIndex)
-            ?: error("Previous selected wallet is not found")
 
-        return prevSelectedWallet.title
+        return walletsListConfig.wallets.getOrNull(prevSelectedWalletIndex)
+            ?: error("Previous selected wallet is not found")
     }
 
     private fun List<UserWallet>.indexOfWallet(id: UserWalletId): Int {
