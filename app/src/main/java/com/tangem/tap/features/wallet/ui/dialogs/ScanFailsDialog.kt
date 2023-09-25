@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.extensions.dispatchDialogHide
@@ -15,7 +16,7 @@ import com.tangem.wallet.R
  */
 object ScanFailsDialog {
     fun create(context: Context): AlertDialog {
-        return AlertDialog.Builder(context).apply {
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(context.getString(R.string.common_warning))
             setMessage(R.string.alert_troubleshooting_scan_card_title)
             setPositiveButton(R.string.alert_button_request_support) { _, _ ->
