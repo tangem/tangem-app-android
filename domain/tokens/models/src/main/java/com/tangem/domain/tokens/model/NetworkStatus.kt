@@ -51,9 +51,11 @@ data class NetworkStatus(
      *
      * @property address Network addresses.
      * @property amountToCreateAccount The amount required to create an account within the network.
+     * @property errorMessage error message
      */
     data class NoAccount(
         val address: NetworkAddress,
         val amountToCreateAccount: BigDecimal,
+        val errorMessage: String,
     ) : Status()
 }
