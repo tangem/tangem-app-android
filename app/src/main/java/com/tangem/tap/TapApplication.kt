@@ -28,6 +28,7 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
@@ -196,15 +197,16 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var userTokensStore: UserTokensStore
+
+    @Inject
+    lateinit var appRatingRepository: AppRatingRepository
     // endregion Injected
 
     override fun onCreate() {
         super.onCreate()
 
         store = Store(
-            reducer = { action, state ->
-                appReducer(action, state, appStateHolder)
-            },
+            reducer = { action, state -> appReducer(action, state, appStateHolder) },
             middleware = AppState.getMiddleware(),
             state = AppState(
                 daggerGraphState = DaggerGraphState(
@@ -277,6 +279,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
+            appRatingRepository.initialize()
             // learn2earnInteractor.init()
         }
 
