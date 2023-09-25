@@ -15,4 +15,6 @@ internal sealed class WalletEvent {
     data class CopyAddress(val address: String) : WalletEvent()
 
     data class ShowWalletAlreadySignedHashesMessage(val onUnderstandClick: () -> Unit) : WalletEvent()
+
+    data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
 }
