@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
@@ -86,22 +87,22 @@ internal class WalletSkeletonStateConverter(
     private fun createWalletsListConfig(value: SkeletonModel): WalletsListConfig {
         return WalletsListConfig(
             selectedWalletIndex = value.selectedWalletIndex,
-            wallets = value.wallets.mapIndexed(::createWalletCardState).toImmutableList(),
+            wallets = value.wallets.map(::createWalletCardState).toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
         )
     }
 
     /**
-     * Create wallet card state by [index] and [wallet].
+     * Create wallet card state by [wallet].
      * If current wallet card state is initialized, then method returns it.
      * Otherwise, returns loading wallet card state.
      */
-    private fun createWalletCardState(index: Int, wallet: UserWallet): WalletCardState {
-        return currentStateProvider().getInitializedWalletCardState(index) ?: wallet.mapToWalletCardState()
+    private fun createWalletCardState(wallet: UserWallet): WalletCardState {
+        return currentStateProvider().getInitializedWalletCardState(wallet.walletId) ?: wallet.mapToWalletCardState()
     }
 
-    private fun WalletState.getInitializedWalletCardState(index: Int): WalletCardState? {
-        return (this as? WalletState.ContentState)?.walletsListConfig?.wallets?.getOrNull(index)
+    private fun WalletState.getInitializedWalletCardState(walledId: UserWalletId): WalletCardState? {
+        return (this as? WalletState.ContentState)?.walletsListConfig?.wallets?.firstOrNull { it.id == walledId }
     }
 
     private fun UserWallet.mapToWalletCardState(): WalletCardState {
