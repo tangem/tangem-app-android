@@ -85,6 +85,9 @@ class GetCryptoCurrencyActionsUseCase(
             disabledList.add(TokenActionsState.ActionState.Sell(false))
         }
 
+        // hide
+        activeList.add(TokenActionsState.ActionState.HideToken(true))
+
         return activeList + disabledList
     }
 
