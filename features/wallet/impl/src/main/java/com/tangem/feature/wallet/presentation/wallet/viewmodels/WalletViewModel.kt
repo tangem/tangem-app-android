@@ -11,6 +11,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toMapKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.AppScreen
@@ -30,13 +31,15 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
-import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -107,8 +110,11 @@ internal class WalletViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
+    private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
+    private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
+    private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     wasCardScannedUseCase: WasCardScannedUseCase,
-    isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
+    isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isDemoCardUseCase: IsDemoCardUseCase,
     // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
@@ -121,7 +127,7 @@ internal class WalletViewModel @Inject constructor(
 
     private val notificationsListFactory = WalletNotificationsListFactory(
         wasCardScannedUseCase = wasCardScannedUseCase,
-        isUserAlreadyRateAppUseCase = isUserAlreadyRateAppUseCase,
+        isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         isDemoCardUseCase = isDemoCardUseCase,
         clickIntents = this,
     )
@@ -431,12 +437,32 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    override fun onLikeTangemAppClick() {
-        // TODO: [REDACTED_JIRA]
+    override fun onLikeAppClick() {
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.RateApp(
+                onDismissClick = {
+                    viewModelScope.launch(dispatchers.main) {
+                        neverToSuggestRateAppUseCase()
+                    }
+                },
+            ),
+            setUiState = { uiState = it },
+        )
     }
 
-    override fun onRateTheAppClick() {
-        // TODO: [REDACTED_JIRA]
+    override fun onDislikeAppClick() {
+        viewModelScope.launch(dispatchers.main) {
+            neverToSuggestRateAppUseCase()
+
+            reduxStateHolder.dispatch(LegacyAction.SendEmailRateCanBeBetter)
+        }
+    }
+
+    override fun onCloseRateAppNotificationClick() {
+        viewModelScope.launch(dispatchers.main) {
+            remindToRateAppLaterUseCase()
+        }
     }
 
     override fun onWalletChange(index: Int) {
@@ -780,6 +806,8 @@ internal class WalletViewModel @Inject constructor(
             .onEach { maybeTokenList ->
                 uiState = stateFactory.getStateByTokensList(maybeTokenList)
 
+                maybeTokenList.onRight { checkMultiWalletWithFunds(it) }
+
                 updateNotifications(
                     index = walletIndex,
                     tokenList = maybeTokenList.fold(ifLeft = { null }, ifRight = { it }),
@@ -788,6 +816,29 @@ internal class WalletViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(tokensJobHolder)
+    }
+
+    private suspend fun checkMultiWalletWithFunds(tokenList: TokenList) {
+        val hasNonZeroWallets = when (tokenList) {
+            is TokenList.GroupedByNetwork -> {
+                tokenList.groups
+                    .flatMap(NetworkGroup::currencies)
+                    .hasNonZeroWallets()
+            }
+            is TokenList.Ungrouped -> tokenList.currencies.hasNonZeroWallets()
+            TokenList.NotInitialized -> false
+        }
+
+        if (hasNonZeroWallets) {
+            setWalletWithFundsFoundUseCase()
+        }
+    }
+
+    private fun List<CryptoCurrencyStatus>.hasNonZeroWallets(): Boolean {
+        return any {
+            val amount = it.value.amount ?: return@any false
+            !amount.isZero()
+        }
     }
 
     private fun getSingleCurrencyContent(index: Int) {
@@ -822,6 +873,11 @@ internal class WalletViewModel @Inject constructor(
 
                 maybeCryptoCurrencyStatus.onRight { status ->
                     singleWalletCryptoCurrencyStatus = status
+
+                    if (status.value.amount?.isZero() == false) {
+                        setWalletWithFundsFoundUseCase()
+                    }
+
                     updateButtons(userWalletId = userWalletId, currencyStatus = status)
                     updateTxHistory(status.currency)
                 }
