@@ -51,40 +51,44 @@ class GetCryptoCurrencyActionsUseCase(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): List<TokenActionsState.ActionState> {
-        return buildList {
-            // todo add check available in swap 1inch etc if backend doen't handle it
-            if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id) &&
-                !isCustomToken(cryptoCurrency)
-            ) {
-                addFirst(TokenActionsState.ActionState.Swap(true))
-            } else {
-                add(TokenActionsState.ActionState.Swap(false))
-            }
+        val activeList = mutableListOf<TokenActionsState.ActionState>()
+        val disabledList = mutableListOf<TokenActionsState.ActionState>()
 
-            if (rampManager.availableForSell(cryptoCurrency)) {
-                addFirst(TokenActionsState.ActionState.Sell(true))
-            } else {
-                add(TokenActionsState.ActionState.Sell(false))
-            }
+        // copy address
+        activeList.add(TokenActionsState.ActionState.CopyAddress(true))
 
-            addFirst(TokenActionsState.ActionState.Receive(true))
-            addFirst(TokenActionsState.ActionState.Send(true))
-
-            if (rampManager.availableForBuy(cryptoCurrency)) {
-                addFirst(TokenActionsState.ActionState.Buy(true))
-            } else {
-                add(TokenActionsState.ActionState.Buy(false))
-            }
-
-            addFirst(TokenActionsState.ActionState.CopyAddress(true))
+        // buy
+        if (rampManager.availableForBuy(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Buy(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Buy(false))
         }
+
+        // send
+        activeList.add(TokenActionsState.ActionState.Send(true))
+        // receive
+        activeList.add(TokenActionsState.ActionState.Receive(true))
+
+        // swap
+        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id) &&
+            !isCustomToken(cryptoCurrency)
+        ) {
+            activeList.add(TokenActionsState.ActionState.Swap(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Swap(false))
+        }
+
+        // sell
+        if (rampManager.availableForSell(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Sell(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Sell(false))
+        }
+
+        return activeList + disabledList
     }
 
     private fun isCustomToken(currency: CryptoCurrency): Boolean {
         return currency is CryptoCurrency.Token && currency.isCustom
-    }
-
-    private fun <T> MutableList<T>.addFirst(item: T) {
-        this.add(0, item)
     }
 }
