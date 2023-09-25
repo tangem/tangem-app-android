@@ -32,6 +32,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
+    implementation(deps.compose.accompanist.systemUiController)
 
     /** Api */
     implementation(projects.features.swap.api)
