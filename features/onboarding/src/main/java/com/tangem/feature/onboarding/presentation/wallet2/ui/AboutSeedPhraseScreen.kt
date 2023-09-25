@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -135,13 +136,15 @@ private fun ReadMoreBlock(state: AboutState) {
                     vertical = TangemTheme.dimens.size8,
                 ),
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
                 contentDescription = null,
+                tint = TangemTheme.colors.icon.primary1,
             )
             SpacerW8()
             Text(
                 text = stringResource(id = R.string.onboarding_seed_button_read_more),
+                color = TangemTheme.colors.text.primary1,
             )
         }
     }
