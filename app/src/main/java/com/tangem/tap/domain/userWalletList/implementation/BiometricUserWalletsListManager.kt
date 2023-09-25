@@ -141,7 +141,7 @@ internal class BiometricUserWalletsListManager(
 
         return sensitiveInformationRepository.delete(idsToRemove)
             .flatMap { publicInformationRepository.delete(idsToRemove) }
-            .flatMap { keysRepository.delete(idsToRemove) }
+            .map { keysRepository.delete(idsToRemove) }
             .map {
                 state.update { prevState ->
                     val newUserWallets = prevState.userWallets.filter { it.walletId !in idsToRemove }
@@ -158,7 +158,7 @@ internal class BiometricUserWalletsListManager(
     override suspend fun clear(): CompletionResult<Unit> {
         return sensitiveInformationRepository.clear()
             .flatMap { publicInformationRepository.clear() }
-            .flatMap { keysRepository.clear() }
+            .map { keysRepository.clear() }
             .map {
                 selectedUserWalletRepository.set(null)
                 lock()
