@@ -51,6 +51,7 @@ internal object MockNetworks {
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
             address = NetworkAddress.Single(defaultAddress = "mock"),
+            errorMessage = "",
         ),
     )
 

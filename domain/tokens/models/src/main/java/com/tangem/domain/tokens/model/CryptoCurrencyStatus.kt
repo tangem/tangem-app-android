@@ -59,8 +59,18 @@ data class CryptoCurrencyStatus(
     /** Represents a state where the cryptocurrency's derivation is missed. */
     object MissedDerivation : Status(isError = true)
 
-    /** Represents a state where there is no account associated with the cryptocurrency. */
-    object NoAccount : Status(isError = false)
+    /**
+     * Represents a state where there is no account associated with the cryptocurrency
+     *
+     * @property errorMessage error message
+     */
+    data class NoAccount(val errorMessage: String) : Status(isError = false) {
+
+        override val amount: BigDecimal = BigDecimal.ZERO
+        override val fiatAmount: BigDecimal = BigDecimal.ZERO
+        override val fiatRate: BigDecimal = BigDecimal.ZERO
+        override val priceChange: BigDecimal = BigDecimal.ZERO
+    }
 
     /**
      * Represents a Loaded state of a cryptocurrency with complete information.
