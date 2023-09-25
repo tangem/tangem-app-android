@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.store
@@ -21,7 +22,7 @@ object SessionProposalDialog {
             networks,
             sessionProposal.url,
         )
-        return AlertDialog.Builder(context).apply {
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(context.getString(R.string.wallet_connect_title))
             setMessage(message)
             setPositiveButton(context.getText(R.string.common_start)) { _, _ ->

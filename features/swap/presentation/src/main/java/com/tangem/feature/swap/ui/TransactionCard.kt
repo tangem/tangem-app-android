@@ -5,18 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -43,16 +32,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.FontSizeRange
-import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerW16
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
-import com.valentinilk.shimmer.shimmer
 
 @Suppress("LongParameterList")
 @Composable
@@ -156,14 +139,11 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     .padding(top = TangemTheme.dimens.spacing2),
             )
         } else {
-            Box(
+            RectangleShimmer(
                 modifier = Modifier
-                    .size(width = TangemTheme.dimens.size80, height = TangemTheme.dimens.size12)
-                    .shimmer()
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = RoundedCornerShape(TangemTheme.dimens.radius3),
-                    ),
+                    .width(TangemTheme.dimens.size80)
+                    .height(TangemTheme.dimens.size12),
+                radius = TangemTheme.dimens.radius3,
             )
         }
     }
@@ -206,15 +186,11 @@ private fun Content(
                             modifier = sumTextModifier,
                         )
                     } else {
-                        Box(
+                        RectangleShimmer(
                             modifier = Modifier
                                 .padding(vertical = TangemTheme.dimens.spacing4)
-                                .size(width = TangemTheme.dimens.size102, height = TangemTheme.dimens.size24)
-                                .shimmer()
-                                .background(
-                                    color = TangemTheme.colors.button.secondary,
-                                    shape = RoundedCornerShape(TangemTheme.dimens.radius6),
-                                ),
+                                .width(TangemTheme.dimens.size102)
+                                .height(TangemTheme.dimens.size24),
                         )
                     }
                 }
@@ -260,15 +236,12 @@ private fun Content(
                     )
                 }
             } else {
-                Box(
+                RectangleShimmer(
                     modifier = Modifier
                         .padding(vertical = TangemTheme.dimens.spacing4)
-                        .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
-                        .shimmer()
-                        .background(
-                            color = TangemTheme.colors.button.secondary,
-                            shape = RoundedCornerShape(TangemTheme.dimens.radius3),
-                        ),
+                        .width(TangemTheme.dimens.size40)
+                        .height(TangemTheme.dimens.size12),
+                    radius = TangemTheme.dimens.radius3,
                 )
             }
         }
@@ -310,8 +283,7 @@ fun Token(
                     .data(data)
                     .crossfade(true)
                     .build(),
-                loading = { TokenImageShimmer(modifier = tokenImageModifier) },
-                // error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
+                loading = { CircleShimmer(modifier = tokenImageModifier) },
                 contentDescription = tokenCurrency,
             )
 
@@ -374,20 +346,6 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
             style = SpanStyle(color = TangemTheme.colors.text.attention),
             start = value.length,
             end = fullValue.length,
-        )
-    }
-}
-
-@Composable
-private fun TokenImageShimmer(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.shimmer()) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.button.secondary,
-                    shape = CircleShape,
-                ),
         )
     }
 }

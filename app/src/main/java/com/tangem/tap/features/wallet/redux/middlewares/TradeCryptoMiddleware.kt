@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
+import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -112,6 +113,7 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
+            isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
         )?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Topup.ScreenOpened())
@@ -131,6 +133,7 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.symbol,
             fiatCurrencyName = action.appCurrencyCode,
             walletAddress = networkAddress,
+            isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
         )
 
         if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
@@ -193,6 +196,7 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
+            isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
         )?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Withdraw.ScreenOpened())
@@ -209,6 +213,7 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.symbol,
             fiatCurrencyName = action.appCurrencyCode,
             walletAddress = networkAddress,
+            isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
         )?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Withdraw.ScreenOpened())
