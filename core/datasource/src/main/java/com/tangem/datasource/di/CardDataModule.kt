@@ -6,7 +6,7 @@ import com.squareup.moshi.Types
 import com.tangem.datasource.local.card.DefaultUsedCardsStore
 import com.tangem.datasource.local.card.UsedCardInfo
 import com.tangem.datasource.local.card.UsedCardsStore
-import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
+import com.tangem.datasource.local.datastore.JsonSharedPreferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +22,7 @@ internal object CardDataModule {
     @Singleton
     fun provideUsedCardsStore(@ApplicationContext context: Context, @NetworkMoshi moshi: Moshi): UsedCardsStore {
         return DefaultUsedCardsStore(
-            store = SharedPreferencesDataStore(
+            store = JsonSharedPreferencesDataStore(
                 preferencesName = "tapPrefs",
                 context = context,
                 adapter = moshi.adapter(
