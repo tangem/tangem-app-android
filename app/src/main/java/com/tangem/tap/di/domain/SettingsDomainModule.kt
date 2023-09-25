@@ -5,6 +5,7 @@ import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
+import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
@@ -20,8 +21,28 @@ internal object SettingsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesGetWalletsUseCase(settingsRepository: SettingsRepository): IsUserAlreadyRateAppUseCase {
-        return IsUserAlreadyRateAppUseCase(settingsRepository = settingsRepository)
+    fun providesIsReadyToShowRatingUseCase(appRatingRepository: AppRatingRepository): IsReadyToShowRateAppUseCase {
+        return IsReadyToShowRateAppUseCase(appRatingRepository = appRatingRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesRemindToRateAppLaterUseCase(appRatingRepository: AppRatingRepository): RemindToRateAppLaterUseCase {
+        return RemindToRateAppLaterUseCase(appRatingRepository = appRatingRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesNeverToSuggestRateAppUseCase(appRatingRepository: AppRatingRepository): NeverToSuggestRateAppUseCase {
+        return NeverToSuggestRateAppUseCase(appRatingRepository = appRatingRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesSetWalletWithFundsFoundUseCase(
+        appRatingRepository: AppRatingRepository,
+    ): SetWalletWithFundsFoundUseCase {
+        return SetWalletWithFundsFoundUseCase(appRatingRepository = appRatingRepository)
     }
 
     @Provides

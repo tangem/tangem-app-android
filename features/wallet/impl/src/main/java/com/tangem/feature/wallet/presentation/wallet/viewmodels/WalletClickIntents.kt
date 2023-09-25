@@ -19,9 +19,11 @@ internal interface WalletClickIntents {
 
     fun onMultiWalletSignedHashesNotificationClick()
 
-    fun onLikeTangemAppClick()
+    fun onLikeAppClick()
 
-    fun onRateTheAppClick()
+    fun onDislikeAppClick()
+
+    fun onCloseRateAppNotificationClick()
 
     fun onWalletChange(index: Int)
 
