@@ -25,10 +25,10 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.NoAccount,
             -> value.mapToTokenItemState()
 // [REDACTED_TODO_COMMENT]
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> value.mapToUnreachableTokenItemState()

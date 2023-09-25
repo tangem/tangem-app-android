@@ -157,13 +157,11 @@ internal class WalletNotificationsListFactory(
                 element = WalletNotification.Warning.NetworksUnreachable,
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
-// [REDACTED_TODO_COMMENT]
-            addIf(
-                element = WalletNotification.Warning.TopUpNote(
-                    errorMessage = "To activate card top up it with at least 1 XLM",
-                ),
-                condition = cryptoCurrencyList.hasNoAccountStatus(),
-            )
+
+            val errorMessage = cryptoCurrencyList.geNoAccountStatusMessage()
+            if (errorMessage != null) {
+                add(element = WalletNotification.Warning.TopUpNote(errorMessage = errorMessage))
+            }
 
             addIf(
                 element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
@@ -180,8 +178,12 @@ internal class WalletNotificationsListFactory(
         return any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun List<CryptoCurrencyStatus>.hasNoAccountStatus(): Boolean {
-        return any { it.value is CryptoCurrencyStatus.NoAccount }
+    private fun List<CryptoCurrencyStatus>.geNoAccountStatusMessage(): String? {
+        return this
+            .map(CryptoCurrencyStatus::value)
+            .filterIsInstance<CryptoCurrencyStatus.NoAccount>()
+            .firstOrNull()
+            ?.errorMessage
     }
 
     private fun checkSignedHashes(
