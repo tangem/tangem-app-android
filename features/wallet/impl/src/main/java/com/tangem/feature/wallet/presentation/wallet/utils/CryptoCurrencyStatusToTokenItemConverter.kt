@@ -27,8 +27,8 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.NoAccount,
             -> value.mapToTokenItemState()
+            is CryptoCurrencyStatus.MissedDerivation -> value.mapToNoAddressTokenItemState()
             // TODO: Add other token item states, currently not designed
-            is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> value.mapToUnreachableTokenItemState()
@@ -69,6 +69,15 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         id = currency.id.value,
         name = currency.name,
         icon = iconStateConverter.convert(value = this),
+        onItemClick = { clickIntents.onTokenItemClick(currency) },
+        onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
+    )
+
+    private fun CryptoCurrencyStatus.mapToNoAddressTokenItemState() = TokenItemState.NoAddress(
+        id = currency.id.value,
+        name = currency.name,
+        icon = iconStateConverter.convert(this),
+        onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
     private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeConfig {
