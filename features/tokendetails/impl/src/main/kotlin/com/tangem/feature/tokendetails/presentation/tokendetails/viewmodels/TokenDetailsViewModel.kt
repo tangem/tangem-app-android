@@ -115,7 +115,10 @@ internal class TokenDetailsViewModel @Inject constructor(
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
                 isBalanceHidden = hidden
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden, cachedTxHistory = cachedTxHistory)
+                uiState = stateFactory.getStateWithUpdatedHidden(
+                    isBalanceHidden = hidden,
+                    cachedTxHistory = cachedTxHistory,
+                )
             }
             .launchIn(viewModelScope)
 

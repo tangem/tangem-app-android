@@ -103,7 +103,7 @@ internal class TokenDetailsStateFactory(
         txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
     ): TokenDetailsState {
         return currentStateProvider().copy(
-            txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither)
+            txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither),
         )
     }
 
@@ -215,7 +215,7 @@ internal class TokenDetailsStateFactory(
 
         return currentState.copy(
             tokenBalanceBlockState = updatedTokenBalanceBlockState,
-            txHistoryState = updatedHistoryState
+            txHistoryState = updatedHistoryState,
         )
     }
 

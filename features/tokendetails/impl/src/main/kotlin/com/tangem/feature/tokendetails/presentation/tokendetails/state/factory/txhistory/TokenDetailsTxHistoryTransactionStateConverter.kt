@@ -22,6 +22,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     // TODO: Finalize transaction types https://tangem.atlassian.net/browse/AND-4636
+    @Suppress("CyclomaticComplexMethod")
     private fun createTransactionStateItem(item: TxHistoryItem): TransactionState {
         return when (val type = item.type) {
             TxHistoryItem.TransactionType.Transfer -> mapTransfer(item)
