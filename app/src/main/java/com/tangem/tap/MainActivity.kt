@@ -3,6 +3,7 @@ package com.tangem.tap
 import android.app.Application
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
@@ -236,6 +237,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                     is GlobalSettingsState.Content -> {
                         if (isDarkThemeFeatureEnabled(application)) {
                             MutableAppThemeModeHolder.value = state.appThemeMode
+                            MutableAppThemeModeHolder.isDarkThemeActive = isDarkTheme()
 
                             val mode = when (state.appThemeMode) {
                                 AppThemeMode.FORCE_DARK -> AppCompatDelegate.MODE_NIGHT_YES
@@ -251,6 +253,18 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 }
             }
             .launchIn(lifecycleScope)
+    }
+
+    private fun isDarkTheme(): Boolean {
+        return when (
+            resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK
+        ) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            Configuration.UI_MODE_NIGHT_NO -> false
+            Configuration.UI_MODE_NIGHT_UNDEFINED -> false
+            else -> false
+        }
     }
 
     private fun systemActions() {
