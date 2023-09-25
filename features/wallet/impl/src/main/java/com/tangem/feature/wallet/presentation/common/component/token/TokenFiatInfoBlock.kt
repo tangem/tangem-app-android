@@ -38,6 +38,7 @@ internal fun TokenFiatInfoBlock(
             )
         }
         is TokenItemState.Unreachable -> UnreachableBlock(modifier = modifier)
+        is TokenItemState.NoAddress -> NoAddressBlock(modifier = modifier)
         is TokenItemState.Loading -> LoadingBlock(modifier = modifier)
         is TokenItemState.Locked -> LockedBlock(modifier = modifier)
     }
@@ -149,6 +150,16 @@ private fun UnreachableBlock(modifier: Modifier = Modifier) {
     Text(
         modifier = modifier,
         text = stringResource(id = R.string.common_unreachable),
+        style = TangemTypography.body2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
+@Composable
+private fun NoAddressBlock(modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = stringResource(id = R.string.common_no_address),
         style = TangemTypography.body2,
         color = TangemTheme.colors.text.tertiary,
     )
