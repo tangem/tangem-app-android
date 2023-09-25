@@ -3,6 +3,7 @@ package com.tangem.tap.domain.userWalletList.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.common.authentication.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -11,6 +12,7 @@ import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.implementation.RuntimeUserWalletsListManager
+import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecorator
 import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricUserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
@@ -43,10 +45,19 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
         ),
     )
 
+    val authenticatedStorage = AuthenticatedStorage(
+        secureStorage = UserWalletsKeysStoreDecorator(
+            featureStorage = secureStorage,
+            cardSdkStorage = tangemSdkManager.secureStorage,
+        ),
+        keystoreManager = tangemSdkManager.keystoreManager,
+    )
+
     val keysRepository = BiometricUserWalletsKeysRepository(
         moshi = moshi,
         secureStorage = secureStorage,
-        biometricManager = tangemSdkManager.biometricManager,
+        authenticatedStorage = authenticatedStorage,
+
     )
     val publicInformationRepository = DefaultUserWalletsPublicInformationRepository(
         moshi = moshi,
