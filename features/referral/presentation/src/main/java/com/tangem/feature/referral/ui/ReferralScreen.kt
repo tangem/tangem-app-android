@@ -12,8 +12,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -26,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
@@ -38,7 +37,6 @@ import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.feature.referral.presentation.R
-import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.launch
 
 /**
@@ -338,24 +336,18 @@ private fun ShimmerInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing4)
-            .shimmer(),
+            .padding(top = TangemTheme.dimens.spacing4),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing10),
     ) {
-        Box(
+        RectangleShimmer(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
                 .width(TangemTheme.dimens.size102)
-                .height(TangemTheme.dimens.size16)
-                .background(TangemColorPalette.White),
-            // .background(Color(0xFFF8F8F8)),
+                .height(TangemTheme.dimens.size16),
         )
-        Box(
+        RectangleShimmer(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
                 .width(TangemTheme.dimens.size40)
-                .height(TangemTheme.dimens.size12)
-                .background(TangemColorPalette.White),
+                .height(TangemTheme.dimens.size12),
         )
     }
 }
@@ -422,10 +414,9 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
                 Box(
                     modifier = Modifier
                         .onSizeChanged { snackbarSize = it.width }
-                        .background(TangemColorPalette.Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
-                        .shadow(
-                            TangemTheme.dimens.elevation3,
-                            RoundedCornerShape(size = TangemTheme.dimens.radius8),
+                        .background(
+                            color = TangemTheme.colors.icon.primary1,
+                            shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
                         )
                         .padding(
                             horizontal = TangemTheme.dimens.spacing16,
