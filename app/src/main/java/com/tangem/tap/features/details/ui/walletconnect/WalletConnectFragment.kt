@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.transition.TransitionInflater
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
@@ -14,7 +13,6 @@ import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 import javax.inject.Inject

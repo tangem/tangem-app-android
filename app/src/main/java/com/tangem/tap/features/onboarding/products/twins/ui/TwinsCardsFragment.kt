@@ -8,7 +8,6 @@ import androidx.annotation.LayoutRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.Message

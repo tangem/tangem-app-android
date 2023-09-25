@@ -5,14 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.transition.TransitionInflater
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.tokens.impl.presentation.ui.TokensListScreen
 import com.tangem.tap.features.tokens.impl.presentation.viewmodels.TokensListViewModel
-import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
