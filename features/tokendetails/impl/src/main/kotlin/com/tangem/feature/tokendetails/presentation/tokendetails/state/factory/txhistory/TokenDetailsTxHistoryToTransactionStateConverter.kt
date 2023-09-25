@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory
 
+import com.tangem.common.Provider
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -16,6 +18,7 @@ import java.util.Locale
 internal class TokenDetailsTxHistoryToTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<TxHistoryItem, TransactionState> {
 
     /** Example, 13:35 */
@@ -41,7 +44,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Deposit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Deposit"),
@@ -51,7 +54,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Submit"),
@@ -61,7 +64,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Supply"),
@@ -71,7 +74,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Unoswap"),
@@ -81,7 +84,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Withdraw"),
@@ -91,7 +94,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str(type.id),
@@ -106,14 +109,14 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             is TxHistoryItem.TransactionDirection.Incoming -> TransactionState.Receive(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
             )
             is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Send(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
                 status = item.status.tiUiStatus(),
             )
@@ -124,7 +127,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         return TransactionState.Approve(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
             timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
             status = item.status.tiUiStatus(),
         )
@@ -133,7 +136,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         return TransactionState.Swap(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
             timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
             status = item.status.tiUiStatus(),
         )

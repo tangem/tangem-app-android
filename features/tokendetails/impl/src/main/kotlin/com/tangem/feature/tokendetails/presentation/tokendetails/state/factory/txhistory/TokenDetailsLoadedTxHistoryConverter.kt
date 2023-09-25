@@ -14,36 +14,34 @@ import kotlinx.coroutines.flow.Flow
 internal class TokenDetailsLoadedTxHistoryConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val clickIntents: TokenDetailsClickIntents,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     symbol: String,
     decimals: Int,
-) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TokenDetailsState> {
+) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TxHistoryState> {
 
     private val txHistoryItemFlowConverter by lazy {
         TokenDetailsTxHistoryItemFlowConverter(
             currentStateProvider = currentStateProvider,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
         )
     }
 
-    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TokenDetailsState {
+    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TxHistoryState {
         return value.fold(ifLeft = ::convertError, ifRight = ::convert)
     }
 
-    private fun convertError(error: TxHistoryListError): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = when (error) {
-                is TxHistoryListError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
-                }
-            },
-        )
+    private fun convertError(error: TxHistoryListError): TxHistoryState {
+        return when (error) {
+            is TxHistoryListError.DataError -> {
+                TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+            }
+        }
     }
 
-    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = txHistoryItemFlowConverter.convert(value = items),
-        )
+    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
+        return txHistoryItemFlowConverter.convert(value = items)
     }
 }

@@ -26,7 +26,7 @@ internal class TokenDetailsLoadedBalanceConverter(
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals)
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals, isBalanceHiddenProvider)
     }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {

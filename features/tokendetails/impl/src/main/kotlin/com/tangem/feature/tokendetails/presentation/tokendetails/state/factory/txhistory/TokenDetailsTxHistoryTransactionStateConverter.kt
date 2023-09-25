@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory
 
+import com.tangem.common.Provider
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -12,6 +14,7 @@ import java.math.BigDecimal
 internal class TokenDetailsTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<TxHistoryItem, TransactionState> {
 
     override fun convert(value: TxHistoryItem): TransactionState {
@@ -27,7 +30,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Deposit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Deposit"),
@@ -37,7 +40,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Submit"),
@@ -47,7 +50,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Supply"),
@@ -57,7 +60,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Unoswap"),
@@ -67,7 +70,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Withdraw"),
@@ -77,7 +80,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str(type.id),
@@ -92,14 +95,14 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             is TxHistoryItem.TransactionDirection.Incoming -> TransactionState.Receive(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
             )
             is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Send(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
             )
@@ -110,7 +113,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         return TransactionState.Approve(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
         )
@@ -119,7 +122,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
         return TransactionState.Swap(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
         )

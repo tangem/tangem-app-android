@@ -67,6 +67,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
             symbol = symbol,
             decimals = decimals,
         )
@@ -101,7 +102,9 @@ internal class TokenDetailsStateFactory(
     fun getLoadedTxHistoryState(
         txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
     ): TokenDetailsState {
-        return loadedTxHistoryConverter.convert(txHistoryEither)
+        return currentStateProvider().copy(
+            txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither)
+        )
     }
 
     fun getStateWithClosedDialog(): TokenDetailsState {
@@ -193,16 +196,27 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithUpdatedHidden(isBalanceHidden: Boolean): TokenDetailsState {
+    fun getStateWithUpdatedHidden(
+        isBalanceHidden: Boolean,
+        cachedTxHistory: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>?,
+    ): TokenDetailsState {
         val currentState = currentStateProvider()
         val possibleTokenBalanceBlockState = currentState.tokenBalanceBlockState as?
             TokenDetailsBalanceBlockState.Content
 
-        possibleTokenBalanceBlockState?.let {
-            return currentState.copy(
-                tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden),
-            )
-        } ?: return currentState
+        val updatedHistoryState = if (cachedTxHistory != null) {
+            loadedTxHistoryConverter.convert(cachedTxHistory)
+        } else {
+            currentState.txHistoryState
+        }
+
+        val updatedTokenBalanceBlockState = possibleTokenBalanceBlockState?.copy(isBalanceHidden = isBalanceHidden)
+            ?: currentState.tokenBalanceBlockState
+
+        return currentState.copy(
+            tokenBalanceBlockState = updatedTokenBalanceBlockState,
+            txHistoryState = updatedHistoryState
+        )
     }
 
     fun getStateWithNotifications(warnings: Set<CryptoCurrencyWarning>): TokenDetailsState {

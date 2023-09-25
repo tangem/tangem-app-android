@@ -25,13 +25,18 @@ import java.util.Locale
 
 internal class TokenDetailsTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsTxHistoryTransactionStateConverter(symbol = symbol, decimals = decimals)
+        TokenDetailsTxHistoryTransactionStateConverter(
+            symbol = symbol,
+            decimals = decimals,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
+        )
     }
 
     /** Example, 2 Aug, 2023 */

@@ -36,12 +36,17 @@ import java.util.Locale
  */
 internal class WalletTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState?> {
 
     private val txHistoryItemConverter by lazy {
-        WalletTxHistoryTransactionStateConverter(symbol = blockchain.currency, decimals = blockchain.decimals())
+        WalletTxHistoryTransactionStateConverter(
+            symbol = blockchain.currency,
+            decimals = blockchain.decimals(),
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
+        )
     }
 
     /** Example, 2 Aug, 2023 */
