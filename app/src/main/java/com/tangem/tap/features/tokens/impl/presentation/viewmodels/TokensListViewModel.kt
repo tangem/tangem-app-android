@@ -86,8 +86,8 @@ internal class TokensListViewModel @Inject constructor(
     private var currentTokensList: List<TokenWithBlockchain> by Delegates.notNull()
     private var currentBlockchainList: List<Blockchain> by Delegates.notNull()
 
-    private var changedTokensList: MutableList<TokenWithBlockchain> by Delegates.notNull()
-    private var changedBlockchainList: MutableList<Blockchain> by Delegates.notNull()
+    private var changedTokensList: MutableList<TokenWithBlockchain> = mutableListOf()
+    private var changedBlockchainList: MutableList<Blockchain> = mutableListOf()
 
     private val tokensListMigration = TokensListMigration(
         walletFeatureToggles = walletFeatureToggles,
