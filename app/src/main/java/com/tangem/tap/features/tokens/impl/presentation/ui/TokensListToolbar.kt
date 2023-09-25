@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -7,10 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -38,9 +36,14 @@ import kotlinx.coroutines.delay
  */
 @Composable
 internal fun TokensListToolbar(state: TokensListToolbarState) {
+    val toolbarElevation = if (isSystemInDarkTheme()) {
+        TangemTheme.dimens.elevation0
+    } else {
+        AppBarDefaults.TopAppBarElevation
+    }
     TopAppBar(
         backgroundColor = TangemTheme.colors.background.secondary,
-        elevation = TangemTheme.dimens.elevation0,
+        elevation = toolbarElevation,
     ) {
         IconButton(onClick = state.onBackButtonClick) {
             Icon(
