@@ -172,6 +172,29 @@
     <style name="TransparentBottomSheetDialog" parent="Widget.MaterialComponents.BottomSheet">
         <item name="backgroundTint">@android:color/transparent</item>
     </style>
+
+    <style name="CustomMaterialDialog" parent="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:background">@color/background_primary</item>
+        <!-- Text Color for title and message -->
+        <item name="colorOnSurface">@color/text_primary_1</item>
+        <!-- Text Color for buttons -->
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
+    <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
+    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accent</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accent</item>
+    </style>
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->

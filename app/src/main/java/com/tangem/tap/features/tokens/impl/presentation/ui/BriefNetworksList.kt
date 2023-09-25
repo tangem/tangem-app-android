@@ -82,7 +82,7 @@ internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modi
                     .align(Alignment.TopEnd)
                     .size(TangemTheme.dimens.size7)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors.background.secondary),
+                    .background(TangemTheme.colors.background.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
