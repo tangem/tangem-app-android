@@ -5,10 +5,11 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.common.*
-import com.tangem.common.biometric.BiometricManager
+import com.tangem.common.authentication.KeystoreManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
@@ -47,19 +48,22 @@ class TangemSdkManager(
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
-            biometricManager = tangemSdk.biometricManager,
+            keystoreManager = tangemSdk.keystoreManager,
             secureStorage = tangemSdk.secureStorage,
         )
     }
 
     val canUseBiometry: Boolean
-        get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
+        get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
 
     val needEnrollBiometrics: Boolean
-        get() = tangemSdk.biometricManager.canEnrollBiometrics
+        get() = tangemSdk.authenticationManager.canEnrollBiometrics
 
-    val biometricManager: BiometricManager
-        get() = tangemSdk.biometricManager
+    val keystoreManager: KeystoreManager
+        get() = tangemSdk.keystoreManager
+
+    val secureStorage: SecureStorage
+        get() = tangemSdk.secureStorage
 
     val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = tangemSdk.config.userCodeRequestPolicy
