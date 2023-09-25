@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,51 +34,49 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
         },
     )
 
-    TangemTheme {
-        ModalBottomSheetLayout(
-            modifier = Modifier.systemBarsPadding(),
-            sheetContent = {
-                if (stateHolder.permissionState is SwapPermissionState.ReadyForRequest) {
-                    SwapPermissionBottomSheetContent(
-                        data = stateHolder.permissionState,
-                        onCancel = {
-                            hideBottomSheet(coroutineScope, stateHolder, bottomSheetState)
-                        },
-                    )
-                } else {
-                    // Required "else" block to prevent compose crash
-                    // always close BS if its empty, cause user should not see this
-                    LaunchedEffect(Unit) {
-                        coroutineScope.launch { bottomSheetState.hide() }
-                    }
-                    Box(modifier = Modifier.fillMaxSize())
-                }
-            },
-            sheetState = bottomSheetState,
-            sheetShape = RoundedCornerShape(
-                topStart = TangemTheme.dimens.radius16,
-                topEnd = TangemTheme.dimens.radius16,
-            ),
-            sheetElevation = TangemTheme.dimens.elevation24,
-            content = {
-                SwapScreenContent(
-                    state = stateHolder,
-                    onPermissionWarningClick = {
-                        val isBottomSheetReady = !bottomSheetState.isVisible &&
-                            stateHolder.permissionState is SwapPermissionState.ReadyForRequest
-                        coroutineScope.launch {
-                            if (isBottomSheetReady) {
-                                bottomSheetState.show()
-                                stateHolder.onShowPermissionBottomSheet.invoke()
-                            } else {
-                                bottomSheetState.hide()
-                            }
-                        }
+    ModalBottomSheetLayout(
+        modifier = Modifier.systemBarsPadding(),
+        sheetContent = {
+            if (stateHolder.permissionState is SwapPermissionState.ReadyForRequest) {
+                SwapPermissionBottomSheetContent(
+                    data = stateHolder.permissionState,
+                    onCancel = {
+                        hideBottomSheet(coroutineScope, stateHolder, bottomSheetState)
                     },
                 )
-            },
-        )
-    }
+            } else {
+                // Required "else" block to prevent compose crash
+                // always close BS if its empty, cause user should not see this
+                LaunchedEffect(Unit) {
+                    coroutineScope.launch { bottomSheetState.hide() }
+                }
+                Box(modifier = Modifier.fillMaxSize())
+            }
+        },
+        sheetState = bottomSheetState,
+        sheetShape = RoundedCornerShape(
+            topStart = TangemTheme.dimens.radius16,
+            topEnd = TangemTheme.dimens.radius16,
+        ),
+        sheetElevation = TangemTheme.dimens.elevation24,
+        content = {
+            SwapScreenContent(
+                state = stateHolder,
+                onPermissionWarningClick = {
+                    val isBottomSheetReady = !bottomSheetState.isVisible &&
+                        stateHolder.permissionState is SwapPermissionState.ReadyForRequest
+                    coroutineScope.launch {
+                        if (isBottomSheetReady) {
+                            bottomSheetState.show()
+                            stateHolder.onShowPermissionBottomSheet.invoke()
+                        } else {
+                            bottomSheetState.hide()
+                        }
+                    }
+                },
+            )
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
