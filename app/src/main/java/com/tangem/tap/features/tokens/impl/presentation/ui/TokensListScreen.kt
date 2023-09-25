@@ -72,7 +72,7 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
-        backgroundColor = TangemTheme.colors.background.secondary,
+        backgroundColor = TangemTheme.colors.background.primary,
     ) { scaffoldPadding ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
@@ -100,7 +100,7 @@ private fun LoadingContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = TangemTheme.colors.background.secondary),
+            .background(color = TangemTheme.colors.background.primary),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(color = TangemTheme.colors.icon.accent)

@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.tap.common.TestActions
+import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
@@ -71,6 +72,7 @@ fun WalletManager.getTopUpUrl(): String? {
         cryptoCurrencyName = wallet.blockchain.currency,
         fiatCurrencyName = globalState.appCurrency.code,
         walletAddress = defaultAddress,
+        isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
     )
 }
 
