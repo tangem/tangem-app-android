@@ -45,7 +45,7 @@ interface WalletManagersFacade {
      *
      * @return The network explorer URL, maybe empty if the wallet manager was not found.
      * */
-    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network, addressType: AddressType,): String
+    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network, addressType: AddressType): String
 
     /**
      * Returns transactions count

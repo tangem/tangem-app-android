@@ -57,7 +57,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
