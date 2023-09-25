@@ -777,7 +777,9 @@ internal class WalletViewModel @Inject constructor(
                     ifLeft = {
                         showSnackbar(resourceReference(R.string.common_error))
                     },
-                    ifRight = {},
+                    ifRight = {
+                        onDismissActionsBottomSheet()
+                    },
                 )
         }
     }
