@@ -20,7 +20,7 @@ internal class CurrencyStatusOperations(
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> CryptoCurrencyStatus.MissedDerivation
             is NetworkStatus.Unreachable -> CryptoCurrencyStatus.Unreachable
-            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount
+            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount(errorMessage = status.errorMessage)
             is NetworkStatus.Verified -> createStatus(status)
         }
     }
