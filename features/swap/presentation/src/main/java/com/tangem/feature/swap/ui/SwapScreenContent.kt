@@ -293,10 +293,11 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                             warning.tokenCurrency,
                         ),
                         icon = {
-                            Image(
+                            Icon(
                                 painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_locked_24),
                                 contentDescription = null,
                                 modifier = Modifier.size(TangemTheme.dimens.size20),
+                                tint = TangemTheme.colors.icon.primary1,
                             )
                         },
                     )
