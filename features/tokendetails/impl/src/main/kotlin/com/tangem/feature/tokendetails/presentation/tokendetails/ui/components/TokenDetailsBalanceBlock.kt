@@ -36,7 +36,7 @@ internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modi
                     ),
                 text = stringResource(id = R.string.onboarding_balance_title),
                 color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography.subtitle2,
                 maxLines = 1,
             )
             FiatBalance(
@@ -98,13 +98,13 @@ private fun CryptoBalance(state: TokenDetailsBalanceBlockState, modifier: Modifi
             modifier = modifier,
             text = if (state.isBalanceHidden) DOTS else state.cryptoBalance,
             style = TangemTheme.typography.caption,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors.text.tertiary,
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
             text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.caption,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors.text.tertiary,
         )
     }
 }
