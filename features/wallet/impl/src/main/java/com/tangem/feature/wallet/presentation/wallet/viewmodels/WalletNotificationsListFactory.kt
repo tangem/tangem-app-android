@@ -3,22 +3,21 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.settings.IsUserAlreadyRateAppUseCase
+import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlin.collections.count
 
 /**
  * Wallet notifications list factory
  *
  * @property isDemoCardUseCase           use case that check if card is demo
- * @property isUserAlreadyRateAppUseCase use case that check if card is user already rate app
+ * @property isReadyToShowRateAppUseCase use case that check if card is user already rate app
  * @property wasCardScannedUseCase       use case that check if card was scanned
  * @property clickIntents                screen click intents
  *
@@ -26,7 +25,7 @@ import kotlin.collections.count
  */
 internal class WalletNotificationsListFactory(
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val isUserAlreadyRateAppUseCase: IsUserAlreadyRateAppUseCase,
+    private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val wasCardScannedUseCase: WasCardScannedUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
@@ -35,19 +34,20 @@ internal class WalletNotificationsListFactory(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
-        return wasCardScannedUseCase.invoke(cardTypesResolver.getCardId())
-            .distinctUntilChanged()
-            .map {
-                buildList {
-                    addCriticalNotifications(cardTypesResolver)
+        return combine(
+            flow = wasCardScannedUseCase(cardTypesResolver.getCardId()),
+            flow2 = isReadyToShowRateAppUseCase(),
+        ) { wasCardScanned, isReadyToShowRating ->
+            buildList {
+                addCriticalNotifications(cardTypesResolver)
 
-                    addMissingAddressesNotification(cryptoCurrencyList)
+                addMissingAddressesNotification(cryptoCurrencyList)
 
-                    addRateTheAppNotification()
+                addRateTheAppNotification(isReadyToShowRating)
 
-                    addWarningNotifications(cardTypesResolver, cryptoCurrencyList, it)
-                }.toImmutableList()
-            }
+                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, wasCardScanned)
+            }.toImmutableList()
+        }
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
@@ -101,15 +101,14 @@ internal class WalletNotificationsListFactory(
             .map(CryptoCurrencyStatus::currency)
     }
 
-    // TODO: https://tangem.atlassian.net/browse/AND-4626
-    private suspend fun MutableList<WalletNotification>.addRateTheAppNotification() {
+    private fun MutableList<WalletNotification>.addRateTheAppNotification(isReadyToShowRating: Boolean) {
         addIf(
             element = WalletNotification.RateApp(
-                onPositiveClick = {},
-                onNegativeClick = {},
-                onCloseClick = {},
+                onLikeClick = clickIntents::onLikeAppClick,
+                onDislikeClick = clickIntents::onDislikeAppClick,
+                onCloseClick = clickIntents::onCloseRateAppNotificationClick,
             ),
-            condition = isUserAlreadyRateAppUseCase(),
+            condition = isReadyToShowRating,
         )
     }
 
@@ -159,13 +158,10 @@ internal class WalletNotificationsListFactory(
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
 
-            // TODO: https://tangem.atlassian.net/browse/AND-4580
-            addIf(
-                element = WalletNotification.Warning.TopUpNote(
-                    errorMessage = "To activate card top up it with at least 1 XLM",
-                ),
-                condition = cryptoCurrencyList.hasNoAccountStatus(),
-            )
+            val errorMessage = cryptoCurrencyList.geNoAccountStatusMessage()
+            if (errorMessage != null) {
+                add(element = WalletNotification.Warning.TopUpNote(errorMessage = errorMessage))
+            }
 
             addIf(
                 element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
@@ -182,8 +178,12 @@ internal class WalletNotificationsListFactory(
         return any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun List<CryptoCurrencyStatus>.hasNoAccountStatus(): Boolean {
-        return any { it.value is CryptoCurrencyStatus.NoAccount }
+    private fun List<CryptoCurrencyStatus>.geNoAccountStatusMessage(): String? {
+        return this
+            .map(CryptoCurrencyStatus::value)
+            .filterIsInstance<CryptoCurrencyStatus.NoAccount>()
+            .firstOrNull()
+            ?.errorMessage
     }
 
     private fun checkSignedHashes(

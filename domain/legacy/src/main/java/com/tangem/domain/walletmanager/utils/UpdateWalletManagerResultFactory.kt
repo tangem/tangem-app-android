@@ -37,7 +37,7 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getNoAccountResult(walletManager: WalletManager): UpdateWalletManagerResult {
+    fun getNoAccountResult(walletManager: WalletManager, customMessage: String): UpdateWalletManagerResult {
         val wallet = walletManager.wallet
         val blockchain = wallet.blockchain
         val firstWalletToken = wallet.getTokens().firstOrNull()
@@ -51,6 +51,7 @@ internal class UpdateWalletManagerResultFactory {
                 defaultAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
                 amountToCreateAccount = amountToCreateAccount,
+                errorMessage = customMessage,
             )
         }
     }
