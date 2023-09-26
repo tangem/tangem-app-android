@@ -18,7 +18,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -42,7 +42,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -281,11 +281,11 @@ internal class TokenDetailsViewModel @Inject constructor(
                 currency = cryptoCurrency,
                 addresses = addresses,
                 sendCopyAnalyticsEvent = {
-                    analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
                 },
                 sendShareAnalyticsEvent = {
-                    analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
-                }
+                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+                },
             )
         }
     }

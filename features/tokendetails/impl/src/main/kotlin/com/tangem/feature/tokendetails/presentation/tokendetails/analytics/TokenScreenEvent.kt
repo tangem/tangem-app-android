@@ -13,7 +13,7 @@ sealed class TokenScreenEvent(
 
     class Refreshed(token: String) : TokenScreenEvent(
         event = "Refreshed",
-        params = mapOf("Token" to token)
+        params = mapOf("Token" to token),
     )
 
     class ButtonRemoveToken(token: String) : TokenScreenEvent(
@@ -23,7 +23,7 @@ sealed class TokenScreenEvent(
 
     class ButtonExplore(token: String) : TokenScreenEvent(
         event = "Button - Explore",
-        params = mapOf("Token" to token)
+        params = mapOf("Token" to token),
     )
 
     class ButtonReload(token: String) : TokenScreenEvent(
@@ -67,5 +67,4 @@ sealed class TokenScreenEvent(
         event = "Token Bought",
         params = mapOf("Token" to token),
     )
-
 }

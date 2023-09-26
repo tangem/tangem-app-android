@@ -148,7 +148,7 @@ internal class TokenDetailsStateFactory(
         currency: CryptoCurrency,
         addresses: List<Address>,
         sendCopyAnalyticsEvent: () -> Unit,
-        sendShareAnalyticsEvent: () -> Unit
+        sendShareAnalyticsEvent: () -> Unit,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
