@@ -15,7 +15,7 @@ sealed class WalletScreenAnalyticsEvent(
         event = "Enable Biometric",
         params = mapOf("State" to state.value),
     )
-// [REDACTED_TODO_COMMENT]
+
     class NoticeRateAppButton(result: AnalyticsParam.RateApp) : WalletScreenAnalyticsEvent(
         event = "Notice - Rate The App Button Tapped",
         params = mapOf("Result" to result.value),
