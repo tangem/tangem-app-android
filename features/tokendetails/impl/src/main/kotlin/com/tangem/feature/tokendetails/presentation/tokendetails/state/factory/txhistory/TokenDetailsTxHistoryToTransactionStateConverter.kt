@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
@@ -9,24 +10,12 @@ import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.joda.time.format.DateTimeFormatterBuilder
 import java.math.BigDecimal
-import java.util.Locale
 
 internal class TokenDetailsTxHistoryToTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
 ) : Converter<TxHistoryItem, TransactionState> {
-
-    /** Example, 13:35 */
-    private val timeFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendHourOfDay(1)
-            .appendLiteral(':')
-            .appendMinuteOfHour(2)
-            .toFormatter()
-            .withLocale(Locale.getDefault())
-    }
 
     override fun convert(value: TxHistoryItem): TransactionState {
         return createTransactionStateItem(item = value)
@@ -41,7 +30,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Deposit"),
                 subtitle = item.direction.extractAddress(),
@@ -51,7 +40,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Submit"),
                 subtitle = item.direction.extractAddress(),
@@ -61,7 +50,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Supply"),
                 subtitle = item.direction.extractAddress(),
@@ -71,7 +60,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Unoswap"),
                 subtitle = item.direction.extractAddress(),
@@ -81,7 +70,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Withdraw"),
                 subtitle = item.direction.extractAddress(),
@@ -91,7 +80,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str(type.id),
                 subtitle = item.direction.extractAddress(),
@@ -106,14 +95,14 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
             )
             is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Send(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
                 amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+                timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
             )
         }
@@ -124,7 +113,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
             amount = item.amount.toCryptoCurrencyFormat(),
-            timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+            timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
         )
     }
@@ -133,7 +122,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
             amount = item.amount.toCryptoCurrencyFormat(),
-            timestamp = timeFormatter.print(DateTime(item.timestampInMillis, DateTimeZone.getDefault())),
+            timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
         )
     }
@@ -151,5 +140,9 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
         TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
         TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
+    }
+
+    private fun Long.toTimeFormat(): String {
+        return DateTimeFormatters.formatTime(time = DateTime(this, DateTimeZone.getDefault()))
     }
 }
