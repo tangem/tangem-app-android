@@ -904,7 +904,7 @@ internal class WalletViewModel @Inject constructor(
                     .hasNonZeroWallets()
             }
             is TokenList.Ungrouped -> tokenList.currencies.hasNonZeroWallets()
-            TokenList.NotInitialized -> false
+            is TokenList.Empty -> false
         }
 
         if (hasNonZeroWallets) {
