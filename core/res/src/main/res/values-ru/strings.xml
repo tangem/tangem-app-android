@@ -584,4 +584,5 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="token_details_choose_address">Выберите адрес</string>
 </resources>
