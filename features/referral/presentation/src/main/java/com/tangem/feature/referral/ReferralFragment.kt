@@ -1,16 +1,13 @@
 package com.tangem.feature.referral
 
-import android.os.Bundle
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
-import androidx.transition.TransitionInflater
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.feature.referral.presentation.R
 import com.tangem.feature.referral.router.ReferralRouter
 import com.tangem.feature.referral.ui.ReferralScreen
 import com.tangem.feature.referral.viewmodels.ReferralViewModel
@@ -25,13 +22,6 @@ class ReferralFragment : ComposeFragment() {
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     private val viewModel by viewModels<ReferralViewModel>()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.ModelWatcher
@@ -152,9 +151,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 }
             },
         )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
