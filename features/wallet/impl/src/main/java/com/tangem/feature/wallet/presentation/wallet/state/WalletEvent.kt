@@ -12,6 +12,12 @@ internal sealed class WalletEvent {
 
     data class ShowToast(val text: TextReference) : WalletEvent()
 
+    data class ShowAlert(
+        val title: TextReference,
+        val message: TextReference,
+        val onActionClick: (() -> Unit)?,
+    ) : WalletEvent()
+
     data class CopyAddress(val address: String) : WalletEvent()
 
     data class ShowWalletAlreadySignedHashesMessage(val onUnderstandClick: () -> Unit) : WalletEvent()

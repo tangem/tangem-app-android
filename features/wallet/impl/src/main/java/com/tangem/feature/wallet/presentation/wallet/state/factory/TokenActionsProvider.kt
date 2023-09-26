@@ -72,6 +72,11 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
                 icon = R.drawable.ic_copy_24
                 action = { clickIntents.onCopyAddressClick(cryptoCurrencyStatus) }
             }
+            is TokenActionsState.ActionState.HideToken -> {
+                title = resourceReference(R.string.token_details_hide_token)
+                icon = R.drawable.ic_trash_24
+                action = { clickIntents.onHideTokensClick(cryptoCurrencyStatus) }
+            }
         }
         return TokenActionButtonConfig(
             text = title,
