@@ -10,12 +10,17 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
@@ -28,6 +33,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.scope
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
@@ -35,21 +41,14 @@ import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
 
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
+    private val currenciesRepository: CurrenciesRepository,
 ) : DerivationManager {
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
         val card = appStateHolder.getActualCard()
         if (blockchain != null && card != null) {
-            val appToken = if (currency is NonNativeToken) {
-                Token(
-                    symbol = currency.symbol,
-                    contractAddress = currency.contractAddress,
-                    decimals = currency.decimalCount,
-                )
-            } else {
-                null
-            }
+            val appToken = getAppToken(currency)
             val scanResponse = appStateHolder.scanResponse
             if (scanResponse != null) {
                 val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
@@ -67,6 +66,64 @@ class DerivationManagerImpl(
             }
         } else {
             continuation.resumeWith(Result.failure(IllegalStateException("no blockchain or card found")))
+        }
+    }
+
+    override suspend fun deriveAndAddTokens(currency: Currency) = suspendCoroutine { continuation ->
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "selectedUserWallet shouldn't be null" }
+        val scanResponse = selectedUserWallet.scanResponse
+        val blockchain = requireNotNull(
+            Blockchain.fromNetworkId(currency.networkId),
+        ) { "unsupported blockchain" }
+        val derivationStyleProvider = scanResponse.derivationStyleProvider
+        val derivationPath = requireNotNull(
+            blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath,
+        ) { "derivationPath shouldn't be null" }
+        val hasDerivation = scanResponse.hasDerivation(
+            blockchain,
+            derivationPath,
+        )
+        if (hasDerivation) {
+            scope.launch {
+                addToken(
+                    userWalletId = selectedUserWallet.walletId,
+                    blockchain = blockchain,
+                    currency = currency,
+                    derivationPath = derivationPath,
+                    derivationStyleProvider = derivationStyleProvider,
+                )
+            }
+        } else {
+            val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
+            val appCurrency = WalletModelCurrency.fromBlockchainNetwork(
+                blockchainNetwork,
+                getAppToken(currency),
+            )
+            deriveMissingBlockchains(
+                scanResponse = scanResponse,
+                currencyList = listOf(appCurrency),
+                onSuccess = { updatedScanResponse ->
+                    scope.launch {
+                        userWalletsListManager.update(
+                            userWalletId = selectedUserWallet.walletId,
+                            update = { it.copy(scanResponse = updatedScanResponse) },
+                        )
+                        addToken(
+                            userWalletId = selectedUserWallet.walletId,
+                            blockchain = blockchain,
+                            currency = currency,
+                            derivationPath = derivationPath,
+                            derivationStyleProvider = derivationStyleProvider,
+                        )
+                        continuation.resumeWith(Result.success(derivationPath))
+                    }
+                },
+                onFailure = {
+                    continuation.resumeWith(Result.failure(it))
+                },
+            )
         }
     }
 
@@ -89,6 +146,57 @@ class DerivationManagerImpl(
             )
         }
         return false
+    }
+
+    private suspend fun addToken(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        currency: Currency,
+        derivationPath: String,
+        derivationStyleProvider: DerivationStyleProvider,
+    ) {
+        currenciesRepository.addCurrencies(
+            userWalletId,
+            listOf(
+                convertCurrency(
+                    blockchain = blockchain,
+                    currency = currency,
+                    derivationPath = derivationPath,
+                    derivationStyleProvider = derivationStyleProvider,
+                ),
+            ),
+        )
+    }
+
+    private fun convertCurrency(
+        blockchain: Blockchain,
+        currency: Currency,
+        derivationPath: String,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): CryptoCurrency {
+        val cryptoCurrencyFactory = CryptoCurrencyFactory()
+        return when (currency) {
+            is Currency.NativeToken -> {
+                cryptoCurrencyFactory.createCoin(
+                    blockchain = blockchain,
+                    extraDerivationPath = derivationPath,
+                    derivationStyleProvider = derivationStyleProvider,
+                )
+            }
+            is NonNativeToken -> {
+                val sdkToken = Token(
+                    symbol = currency.symbol,
+                    contractAddress = currency.contractAddress,
+                    decimals = currency.decimalCount,
+                )
+                cryptoCurrencyFactory.createToken(
+                    sdkToken = sdkToken,
+                    blockchain = blockchain,
+                    extraDerivationPath = derivationPath,
+                    derivationStyleProvider = derivationStyleProvider,
+                )
+            }
+        } as CryptoCurrency
     }
 
     private fun deriveMissingBlockchains(
@@ -204,6 +312,17 @@ class DerivationManagerImpl(
         return TokensMiddleware.DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
     }
 
+    private fun getAppToken(currency: Currency): Token? {
+        return if (currency is NonNativeToken) {
+            Token(
+                symbol = currency.symbol,
+                contractAddress = currency.contractAddress,
+                decimals = currency.decimalCount,
+            )
+        } else {
+            null
+        }
+    }
     /**
      * Simple error handler
      * for now specifically handle only UserCancelled
