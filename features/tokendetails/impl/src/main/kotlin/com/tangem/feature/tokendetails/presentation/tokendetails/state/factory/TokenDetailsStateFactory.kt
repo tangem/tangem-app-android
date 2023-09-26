@@ -23,6 +23,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import kotlinx.coroutines.flow.Flow
 
 internal class TokenDetailsStateFactory(
@@ -30,8 +31,8 @@ internal class TokenDetailsStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: TokenDetailsClickIntents,
-    symbol: String,
-    decimals: Int,
+    currencySymbolProvider: Provider<String>,
+    currencyDecimalsProvider: Provider<Int>,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -47,8 +48,8 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             isBalanceHiddenProvider = isBalanceHiddenProvider,
-            symbol = symbol,
-            decimals = decimals,
+            symbol = currencySymbolProvider(),
+            decimals = currencyDecimalsProvider(),
         )
     }
 
@@ -68,8 +69,8 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
             isBalanceHiddenProvider = isBalanceHiddenProvider,
-            symbol = symbol,
-            decimals = decimals,
+            symbol = currencySymbolProvider(),
+            decimals = currencyDecimalsProvider(),
         )
     }
 
@@ -79,10 +80,8 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getInitialState(cryptoCurrency: CryptoCurrency): TokenDetailsState {
-        return skeletonStateConverter.convert(
-            TokenDetailsSkeletonStateConverter.SkeletonModel(cryptoCurrency = cryptoCurrency),
-        )
+    fun getInitialState(screenArgument: TokenDetailsArguments): TokenDetailsState {
+        return skeletonStateConverter.convert(value = screenArgument)
     }
 
     fun getCurrencyLoadedBalanceState(
