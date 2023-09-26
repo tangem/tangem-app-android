@@ -7,6 +7,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -22,8 +23,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.joda.time.format.DateTimeFormatterBuilder
-import java.util.Locale
 
 /**
  * Convert from [Flow] of [TxHistoryItem] to [TxHistoryState]
@@ -42,28 +41,6 @@ internal class WalletTxHistoryItemFlowConverter(
 
     private val txHistoryItemConverter by lazy {
         WalletTxHistoryTransactionStateConverter(symbol = blockchain.currency, decimals = blockchain.decimals())
-    }
-
-    /** Example, 2 Aug, 2023 */
-    private val dateFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendDayOfMonth(1)
-            .appendLiteral(' ')
-            .appendMonthOfYearShortText()
-            .appendLiteral(", ")
-            .appendYear(4, 4)
-            .toFormatter()
-            .withLocale(Locale.getDefault())
-    }
-
-    /** Example, 13:35 */
-    private val timeFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendHourOfDay(1)
-            .appendLiteral(':')
-            .appendMinuteOfHour(2)
-            .toFormatter()
-            .withLocale(Locale.getDefault())
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState? {
@@ -151,7 +128,7 @@ internal class WalletTxHistoryItemFlowConverter(
 
     /**
      * If [this] timestamp is today or yesterday, returns relative date,
-     * otherwise returns formatting date by [dateFormatter]
+     * otherwise returns formatting date.
      */
     private fun Long.toDateFormat(): String {
         val localDate = DateTime(this, DateTimeZone.getDefault())
@@ -163,13 +140,11 @@ internal class WalletTxHistoryItemFlowConverter(
                 DateUtils.FORMAT_ABBREV_RELATIVE,
             ).toString()
         } else {
-            dateFormatter.print(localDate)
+            DateTimeFormatters.formatDate(date = localDate)
         }
     }
 
     private fun String.toTimeFormat(): String {
-        return timeFormatter.print(
-            DateTime(this.toLong(), DateTimeZone.getDefault()),
-        )
+        return DateTimeFormatters.formatTime(time = DateTime(this.toLong(), DateTimeZone.getDefault()))
     }
 }
