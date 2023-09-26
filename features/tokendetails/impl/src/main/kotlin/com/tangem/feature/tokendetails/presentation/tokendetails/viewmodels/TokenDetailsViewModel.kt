@@ -27,6 +27,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
+import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -55,13 +56,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
+    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.SELECTED_CURRENCY_KEY]
-        ?: error("no expected parameter CryptoCurrency found")
+    private val screenArgument: TokenDetailsArguments = savedStateHandle[TokenDetailsRouter.TOKEN_DETAILS_ARGS]
+        ?: error("This screen can't open without TokenDetailsArgument")
 
     var router by Delegates.notNull<InnerTokenDetailsRouter>()
 
@@ -69,6 +71,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var wallet by Delegates.notNull<UserWallet>()
+    private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
     private var isBalanceHidden = true
@@ -78,25 +81,34 @@ internal class TokenDetailsViewModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
-        symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
+        currencySymbolProvider = Provider { cryptoCurrency.symbol },
+        currencyDecimalsProvider = Provider { cryptoCurrency.decimals },
     )
 
-    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
+    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(screenArgument))
         private set
 
     override fun onCreate(owner: LifecycleOwner) {
-        getWallet()
-        updateContent(selectedWallet = wallet)
+        initRequiredFields()
         handleBalanceHiding(owner)
     }
 
-    private fun getWallet() {
-        return getSelectedWalletUseCase()
+    private fun initRequiredFields() {
+        getSelectedWalletUseCase()
             .fold(
                 ifLeft = { error("Can not get selected wallet $it") },
                 ifRight = { wallet = it },
             )
+        viewModelScope.launch {
+            getCryptoCurrencyUseCase.invoke(userWalletId = wallet.walletId, id = screenArgument.currencyId)
+                .fold(
+                    ifLeft = { error("Can not get cryptoCurrency with given ID: screenArgument.currencyId. $it") },
+                    ifRight = {
+                        cryptoCurrency = it
+                        updateContent(selectedWallet = wallet)
+                    },
+                )
+        }
     }
 
     private fun updateContent(selectedWallet: UserWallet) {
