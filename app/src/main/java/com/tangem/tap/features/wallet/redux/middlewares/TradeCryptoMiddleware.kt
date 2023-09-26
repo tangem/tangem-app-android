@@ -12,7 +12,8 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
@@ -30,6 +31,7 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -53,11 +55,18 @@ class TradeCryptoMiddleware {
             is TradeCryptoAction.SendCrypto -> preconfigureAndOpenSendScreen(action)
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
             is TradeCryptoAction.Swap -> {
-                openSwap(currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency())
+                openSwap(
+                    currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency(),
+                    derivationPath = store.state.walletState.selectedWalletData?.currency?.derivationPath,
+                )
             }
             is TradeCryptoAction.New.Buy -> proceedNewBuyAction(state, action)
             is TradeCryptoAction.New.Sell -> proceedNewSellAction(action)
-            is TradeCryptoAction.New.Swap -> openSwap(currency = action.cryptoCurrency.toSwapCurrency())
+            is TradeCryptoAction.New.Swap -> openSwap(
+                currency = action.cryptoCurrency.toSwapCurrency(),
+                derivationPath = action.cryptoCurrency.network.derivationPath.value,
+                network = action.cryptoCurrency.network,
+            )
             is TradeCryptoAction.New.SendToken -> handleNewSendToken(action = action)
             is TradeCryptoAction.New.SendCoin -> handleNewSendCoin(action = action)
         }
@@ -112,14 +121,32 @@ class TradeCryptoMiddleware {
     private fun proceedNewBuyAction(state: () -> AppState?, action: TradeCryptoAction.New.Buy) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress?.defaultAddress ?: return
 
-        if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
-            store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog())
-            return
-        }
-
         val status = action.cryptoCurrencyStatus
         val currency = status.currency
         val blockchain = Blockchain.fromId(currency.network.id.value)
+        val exchangeManager = store.state.globalState.exchangeManager
+        val topUrl = exchangeManager.getUrl(
+            action = CurrencyExchangeManager.Action.Buy,
+            blockchain = blockchain,
+            cryptoCurrencyName = currency.symbol,
+            fiatCurrencyName = action.appCurrencyCode,
+            walletAddress = networkAddress,
+        )
+
+        if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
+            val dialogData = topUrl?.let {
+                WalletDialog.RussianCardholdersWarningDialog.Data(
+                    topUpUrl = it,
+                )
+            }
+            store.dispatchOnMain(
+                WalletAction.DialogAction.RussianCardholdersWarningDialog(
+                    dialogData = dialogData,
+                ),
+            )
+            return
+        }
+
         if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
             scope.launch {
                 val walletManager = store.state.daggerGraphState
@@ -144,14 +171,7 @@ class TradeCryptoMiddleware {
             return
         }
 
-        val exchangeManager = store.state.globalState.exchangeManager
-        exchangeManager.getUrl(
-            action = CurrencyExchangeManager.Action.Buy,
-            blockchain = blockchain,
-            cryptoCurrencyName = currency.symbol,
-            fiatCurrencyName = action.appCurrencyCode,
-            walletAddress = networkAddress,
-        )?.let {
+        topUrl?.let {
             store.dispatchOpenUrl(it)
             Analytics.send(Token.Topup.ScreenOpened())
         }
@@ -240,10 +260,11 @@ class TradeCryptoMiddleware {
         )?.let { store.dispatchOpenUrl(it) }
     }
 
-    private fun openSwap(currency: SwapCurrency?) {
+    private fun openSwap(currency: SwapCurrency?, derivationPath: String?, network: Network? = null) {
         val bundle = bundleOf(
             SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
-            SwapFragment.DERIVATION_PATH to store.state.walletState.selectedWalletData?.currency?.derivationPath,
+            SwapFragment.DERIVATION_PATH to derivationPath,
+            SwapFragment.NETWORK to network,
         )
 
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
@@ -266,11 +287,11 @@ class TradeCryptoMiddleware {
             }
             is CryptoCurrency.Token -> {
                 SwapCurrency.NonNativeToken(
-                    id = id.value,
+                    id = id.rawCurrencyId ?: "",
                     name = name,
                     symbol = symbol,
                     networkId = blockchain.toNetworkId(),
-                    logoUrl = getIconUrl(id.value),
+                    logoUrl = getIconUrl(id.rawCurrencyId ?: ""),
                     contractAddress = contractAddress,
                     decimalCount = decimals,
                 )

@@ -9,6 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -28,14 +29,16 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -56,6 +59,7 @@ internal class SwapViewModel @Inject constructor(
             ?: error("no expected parameter Currency found"),
     )
     private val derivationPath = savedStateHandle.get<String>(SwapFragment.DERIVATION_PATH)
+    private val network = savedStateHandle.get<Network>(SwapFragment.NETWORK)
 
     private var isBalanceHidden = true
 
@@ -87,7 +91,7 @@ internal class SwapViewModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     init {
-        swapInteractor.initDerivationPath(derivationPath)
+        swapInteractor.initDerivationPathAndNetwork(derivationPath, network)
         initTokens(currency)
     }
 

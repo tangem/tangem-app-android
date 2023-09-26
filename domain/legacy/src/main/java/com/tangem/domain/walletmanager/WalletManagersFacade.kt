@@ -1,12 +1,13 @@
 package com.tangem.domain.walletmanager
 
+import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -40,10 +41,11 @@ interface WalletManagersFacade {
      *
      * @param userWalletId The ID of the user's wallet.
      * @param network The network.
+     * @param addressType Address type.
      *
      * @return The network explorer URL, maybe empty if the wallet manager was not found.
      * */
-    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network): String
+    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network, addressType: AddressType): String
 
     /**
      * Returns transactions count
@@ -57,13 +59,13 @@ interface WalletManagersFacade {
      * Returns transaction history items wrapped to pagination
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param network The network.
+     * @param currency currency.
      * @param page Pagination page.
      * @param pageSize Pagination size.
      */
     suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        network: Network,
+        currency: CryptoCurrency,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>

@@ -5,14 +5,15 @@ import arrow.core.Either
 import com.tangem.blockchain.common.address.Address
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -159,6 +160,27 @@ internal class TokenDetailsStateFactory(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithChooseAddressBottomSheet(
+        addresses: List<Address>,
+        onAddressTypeClick: (AddressModel) -> Unit,
+    ): TokenDetailsState {
+        return currentStateProvider().copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissBottomSheet,
+                content = ChooseAddressBottomSheetConfig(
+                    addressModels = addresses.map {
+                        AddressModel(
+                            value = it.value,
+                            type = AddressModel.Type.valueOf(it.type.name),
+                        )
+                    },
+                    onClick = onAddressTypeClick,
                 ),
             ),
         )

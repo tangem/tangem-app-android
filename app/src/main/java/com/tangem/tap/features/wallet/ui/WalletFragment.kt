@@ -72,7 +72,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     private var walletView: WalletView = MultiWalletView()
 
-    // private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
     private val viewModel by viewModels<WalletViewModel>()
 
     private val totalBalanceWatcher = modelWatcher {
@@ -100,9 +99,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             },
         )
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        // learn2earnViewModel.onMainScreenCreated()
     }
 
     override fun onStart() {
@@ -189,9 +187,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
         walletView.onNewState(state)
 
-        if (!state.shouldShowDetails) {
-            binding.toolbar.menu.removeItem(R.id.details_menu)
-        } else if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
+        if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
             binding.toolbar.inflateMenu(R.menu.menu_wallet)
         }
 
@@ -327,6 +323,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         ),
     )
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
+        inflater.inflate(R.menu.menu_wallet, menu)
     }
 }

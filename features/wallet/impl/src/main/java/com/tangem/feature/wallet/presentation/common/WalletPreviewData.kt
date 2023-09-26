@@ -182,6 +182,17 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             icon = tokenIconState,
             name = "Polygon",
+            onItemClick = {},
+            onItemLongClick = {},
+        )
+    }
+
+    val tokenItemNoAddressState by lazy {
+        TokenItemState.NoAddress(
+            id = UUID.randomUUID().toString(),
+            icon = tokenIconState,
+            name = "Polygon",
+            onItemLongClick = {},
         )
     }
 
@@ -418,20 +429,22 @@ internal object WalletPreviewData {
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Sending(
+                                TransactionState.Send(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
+                                    status = TransactionState.Content.Status.Unconfirmed,
                                 ),
                             ),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Sending(
+                                TransactionState.Send(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
+                                    status = TransactionState.Content.Status.Confirmed,
                                 ),
                             ),
                         ),

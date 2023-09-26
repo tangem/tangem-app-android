@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens.operations
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Quote
+import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
@@ -20,7 +20,7 @@ internal class CurrencyStatusOperations(
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> CryptoCurrencyStatus.MissedDerivation
             is NetworkStatus.Unreachable -> CryptoCurrencyStatus.Unreachable
-            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount
+            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount(errorMessage = status.errorMessage)
             is NetworkStatus.Verified -> createStatus(status)
         }
     }

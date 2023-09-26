@@ -31,7 +31,6 @@ class GetPrimaryCurrencyStatusUpdatesUseCase(
      * Invokes the use case.
      *
      * @param userWalletId The unique identifier of the user's wallet.
-     * @param refresh A boolean flag indicating whether the data should be refreshed.
      * @return A [Flow] emitting either a [CurrencyStatusError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
     operator fun invoke(userWalletId: UserWalletId): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {

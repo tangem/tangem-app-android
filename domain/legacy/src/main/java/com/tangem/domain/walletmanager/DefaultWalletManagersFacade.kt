@@ -2,8 +2,13 @@ package com.tangem.domain.walletmanager
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
@@ -11,15 +16,14 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.models.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
-import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
@@ -52,7 +56,11 @@ class DefaultWalletManagersFacade(
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
     }
 
-    override suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network): String {
+    override suspend fun getExploreUrl(
+        userWalletId: UserWalletId,
+        network: Network,
+        addressType: AddressType,
+    ): String {
         val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
 
@@ -66,7 +74,8 @@ class DefaultWalletManagersFacade(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        return walletManager.wallet.getExploreUrl()
+        val address = walletManager.wallet.addresses.find { it.type == addressType }?.value
+        return walletManager.wallet.getExploreUrl(address)
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
@@ -89,16 +98,16 @@ class DefaultWalletManagersFacade(
 
     override suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
-        network: Network,
+        currency: CryptoCurrency,
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
         val userWallet = getUserWallet(userWalletId)
-        val blockchain = Blockchain.fromId(network.id.value)
+        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWallet = userWallet,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            derivationPath = currency.network.derivationPath.value,
         )
 
         requireNotNull(walletManager) {
@@ -106,9 +115,14 @@ class DefaultWalletManagersFacade(
         }
 
         val itemsResult = walletManager.getTransactionsHistory(
-            address = walletManager.wallet.address,
-            page = page,
-            pageSize = pageSize,
+            request = TransactionHistoryRequest(
+                address = walletManager.wallet.address,
+                page = TransactionHistoryRequest.Page(number = page, size = pageSize),
+                filterType = when (currency) {
+                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                },
+            ),
         )
 
         return when (itemsResult) {
@@ -136,13 +150,13 @@ class DefaultWalletManagersFacade(
         val scanResponse = userWallet.scanResponse
 
         if (derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)) {
-            Timber.e("Derivation missed for: $blockchain")
+            Timber.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
         val walletManager = getOrCreateWalletManager(userWallet, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable
         }
 
@@ -172,9 +186,9 @@ class DefaultWalletManagersFacade(
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
-            resultFactory.getNoAccountResult(walletManager)
+            resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
             UpdateWalletManagerResult.Unreachable
         }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -14,8 +15,8 @@ import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -170,9 +171,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        network = cryptoCurrency.network,
-                    ).map {
+                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
@@ -301,11 +300,33 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
+        viewModelScope.launch(dispatchers.io) {
+            val addresses = walletManagersFacade.getAddress(
+                userWalletId = wallet.walletId,
+                network = cryptoCurrency.network,
+            )
+
+            if (addresses.size == 1) {
+                openUrl(AddressType.Default)
+            } else {
+                uiState = stateFactory.getStateWithChooseAddressBottomSheet(
+                    addresses = addresses,
+                    onAddressTypeClick = {
+                        openUrl(AddressType.valueOf(it.type.name))
+                        uiState = stateFactory.getStateWithClosedBottomSheet()
+                    },
+                )
+            }
+        }
+    }
+
+    private fun openUrl(addressType: AddressType) {
         viewModelScope.launch {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = wallet.walletId,
                     network = cryptoCurrency.network,
+                    addressType = addressType,
                 ),
             )
         }
