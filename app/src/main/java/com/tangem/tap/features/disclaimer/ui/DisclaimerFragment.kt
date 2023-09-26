@@ -80,10 +80,11 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
             }
             AppScreen.Details -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.fade)
-                exitTransition = inflater.inflateTransition(android.R.transition.fade)
+                super.configureTransitions()
             }
-            else -> {}
+            else -> {
+                /* no-op */
+            }
         }
     }
 
