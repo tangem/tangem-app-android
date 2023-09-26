@@ -162,5 +162,4 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
     private fun TxHistoryItem.getAmount(): String {
         return if (isBalanceHiddenProvider()) STARS else this.amount.toCryptoCurrencyFormat()
     }
-
 }
