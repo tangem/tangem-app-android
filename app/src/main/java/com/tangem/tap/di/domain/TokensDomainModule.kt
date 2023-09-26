@@ -157,4 +157,14 @@ internal object TokensDomainModule {
     fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsCryptoCurrencyCoinCouldHideUseCase(
+        currenciesRepository: CurrenciesRepository,
+    ): IsCryptoCurrencyCoinCouldHideUseCase {
+        return IsCryptoCurrencyCoinCouldHideUseCase(
+            currenciesRepository = currenciesRepository,
+        )
+    }
 }

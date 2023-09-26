@@ -55,6 +55,10 @@ internal interface WalletClickIntents {
 
     fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
+    fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
     fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onManageTokensClick()
