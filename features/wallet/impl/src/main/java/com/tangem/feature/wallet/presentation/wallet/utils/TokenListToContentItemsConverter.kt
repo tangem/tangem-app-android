@@ -29,7 +29,7 @@ internal class TokenListToContentItemsConverter(
 
     override fun convert(value: TokenList): WalletTokensListState {
         return when (value) {
-            is TokenList.NotInitialized -> WalletTokensListState.Loading()
+            is TokenList.Empty -> WalletTokensListState.Empty
             is TokenList.GroupedByNetwork -> WalletTokensListState.Content(
                 items = value.mapToMultiCurrencyItems(),
                 organizeTokensButton = value.mapToOrganizeTokensButtonState(),
