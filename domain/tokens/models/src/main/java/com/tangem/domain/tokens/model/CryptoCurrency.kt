@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 /**
  * Represents a generic cryptocurrency.
@@ -13,8 +14,7 @@ import java.io.Serializable
  * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
  * @property isCustom Indicates whether the currency is a custom user-added currency or not.
  */
-// FIXME: Remove serialization [REDACTED_JIRA]
-sealed class CryptoCurrency : Serializable {
+sealed class CryptoCurrency {
 
     abstract val id: ID
     abstract val network: Network
@@ -74,29 +74,31 @@ sealed class CryptoCurrency : Serializable {
      * @property rawCurrencyId Represents not unique currency ID from the blockchain network. `null` if
      * its ID of the custom token.
      */
-    // FIXME: Remove serialization [REDACTED_JIRA]
+    @Parcelize
     data class ID(
         private val prefix: Prefix,
         private val body: Body,
         private val suffix: Suffix,
-    ) : Serializable {
+    ) : Parcelable {
 
-        val value: String = buildString {
-            append(prefix.value)
-            append(PREFIX_DELIMITER)
-            append(body.value)
-            append(SUFFIX_DELIMITER)
-            append(suffix.value)
-        }
+        val value: String
+            get() = buildString {
+                append(prefix.value)
+                append(PREFIX_DELIMITER)
+                append(body.value)
+                append(SUFFIX_DELIMITER)
+                append(suffix.value)
+            }
 
         /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null`. */
-        val rawCurrencyId: String? = (suffix as? Suffix.RawID)?.rawId
+        val rawCurrencyId: String? get() = (suffix as? Suffix.RawID)?.rawId
 
         /** Represents a raw cryptocurrency's network ID. */
-        val rawNetworkId: String = when (body) {
-            is Body.NetworkId -> body.rawId
-            is Body.NetworkIdWithDerivationPath -> body.rawId
-        }
+        val rawNetworkId: String
+            get() = when (body) {
+                is Body.NetworkId -> body.rawId
+                is Body.NetworkIdWithDerivationPath -> body.rawId
+            }
 
         /**
          * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
@@ -116,14 +118,15 @@ sealed class CryptoCurrency : Serializable {
          *
          * The body can be either a raw network ID or a raw network ID with a network derivation path.
          */
-        sealed class Body : Serializable {
+        @Parcelize
+        sealed class Body : Parcelable {
 
             /** The value of the body. */
             abstract val value: String
 
             /** Represents a raw network ID. */
             data class NetworkId(val rawId: String) : Body() {
-                override val value: String = rawId
+                override val value: String get() = rawId
             }
 
             /**
@@ -135,11 +138,12 @@ sealed class CryptoCurrency : Serializable {
                 val rawId: String,
                 val derivationPath: String,
             ) : Body() {
-                override val value: String = buildString {
-                    append(rawId)
-                    append(DERIVATION_PATH_DELIMITER)
-                    append(derivationPath.hashCode())
-                }
+                override val value: String
+                    get() = buildString {
+                        append(rawId)
+                        append(DERIVATION_PATH_DELIMITER)
+                        append(derivationPath.hashCode())
+                    }
             }
         }
 
@@ -148,20 +152,20 @@ sealed class CryptoCurrency : Serializable {
          *
          * The suffix can either be a raw ID or a contract address.
          */
-        // FIXME: Remove serialization [REDACTED_JIRA]
-        sealed class Suffix : Serializable {
+        @Parcelize
+        sealed class Suffix : Parcelable {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
             abstract val value: String
 
             /** Represents a raw ID suffix. */
             data class RawID(val rawId: String) : Suffix() {
-                override val value: String = rawId
+                override val value: String get() = rawId
             }
 
             /** Represents a contract address suffix. */
             data class ContractAddress(val contractAddress: String) : Suffix() {
-                override val value: String = contractAddress
+                override val value: String get() = contractAddress
             }
         }
 
