@@ -56,13 +56,12 @@ sealed class TokenScreenEvent(
         params = mapOf("Token" to token),
     )
 
-    // todo later, feature is not implemented yet
+    // todo later, feature is under the question now
     class ButtonUnderstand(token: String) : TokenScreenEvent(
-        event = "Button - Receive",
+        event = "Button - Understand",
         params = mapOf("Token" to token),
     )
 
-    // todo later, feature is not implemented yet
     class Bought(token: String) : TokenScreenEvent(
         event = "Token Bought",
         params = mapOf("Token" to token),
