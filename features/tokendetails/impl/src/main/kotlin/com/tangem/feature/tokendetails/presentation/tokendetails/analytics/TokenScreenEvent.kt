@@ -56,12 +56,6 @@ sealed class TokenScreenEvent(
         params = mapOf("Token" to token),
     )
 
-    // todo later, feature is under the question now
-    class ButtonUnderstand(token: String) : TokenScreenEvent(
-        event = "Button - Understand",
-        params = mapOf("Token" to token),
-    )
-
     class Bought(token: String) : TokenScreenEvent(
         event = "Token Bought",
         params = mapOf("Token" to token),
