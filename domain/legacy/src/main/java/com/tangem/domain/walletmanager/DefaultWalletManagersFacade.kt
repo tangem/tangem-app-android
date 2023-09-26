@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
@@ -55,7 +56,11 @@ class DefaultWalletManagersFacade(
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
     }
 
-    override suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network): String {
+    override suspend fun getExploreUrl(
+        userWalletId: UserWalletId,
+        network: Network,
+        addressType: AddressType,
+    ): String {
         val userWallet = getUserWallet(userWalletId)
         val blockchain = Blockchain.fromId(network.id.value)
 
@@ -69,7 +74,8 @@ class DefaultWalletManagersFacade(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        return walletManager.wallet.getExploreUrl()
+        val address = walletManager.wallet.addresses.find { it.type == addressType }?.value
+        return walletManager.wallet.getExploreUrl(address)
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
