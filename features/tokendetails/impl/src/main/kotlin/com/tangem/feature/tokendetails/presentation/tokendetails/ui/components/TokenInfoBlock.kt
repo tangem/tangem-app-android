@@ -95,8 +95,8 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
     val splitString = stringResource(
         id = R.string.token_details_token_type_subtitle,
         formatArgs = arrayOf(
+            tokenCurrency.standardName,
             tokenCurrency.networkName,
-            tokenCurrency.blockchainName,
         ),
     ).split(SEPARATOR)
 
