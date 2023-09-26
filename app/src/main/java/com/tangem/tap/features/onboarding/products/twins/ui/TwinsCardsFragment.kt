@@ -8,7 +8,6 @@ import androidx.annotation.LayoutRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.Message
@@ -59,11 +58,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun configureTransitions() {
         when (store.state.twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> super.configureTransitions()
+            CreateTwinWalletMode.CreateWallet -> {
+                super.configureTransitions()
+            }
             CreateTwinWalletMode.RecreateWallet -> {
-                val inflater = TransitionInflater.from(requireContext())
-                enterTransition = inflater.inflateTransition(R.transition.slide_right)
-                exitTransition = inflater.inflateTransition(R.transition.fade)
+                configureDefaultTransactions()
             }
         }
     }
