@@ -19,6 +19,8 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -106,6 +108,8 @@ internal class WalletViewModel @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -764,6 +768,34 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
+    override fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val state = uiState as? WalletState.ContentState ?: return
+        val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
+        viewModelScope.launch(dispatchers.io) {
+            removeCurrencyUseCase(userWallet.walletId, cryptoCurrencyStatus.currency)
+                .fold(
+                    ifLeft = {
+                        showSnackbar(resourceReference(R.string.common_error))
+                    },
+                    ifRight = {
+                        onDismissActionsBottomSheet()
+                    },
+                )
+        }
+    }
+
+    override fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch(dispatchers.main) {
+            val state = uiState as? WalletState.ContentState ?: return@launch
+            val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
+            uiState = stateFactory.getStateAndTriggerEvent(
+                state = uiState,
+                event = getHideTokeAlert(userWallet.walletId, cryptoCurrencyStatus),
+                setUiState = { uiState = it },
+            )
+        }
+    }
+
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
     }
@@ -776,6 +808,48 @@ internal class WalletViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private suspend fun getHideTokeAlert(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): WalletEvent.ShowAlert {
+        val currency = cryptoCurrencyStatus.currency
+        return if (currency is CryptoCurrency.Coin && !isCryptoCurrencyCoinCouldHide(userWalletId, currency)) {
+            WalletEvent.ShowAlert(
+                title = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_title,
+                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                ),
+                message = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_message,
+                    formatArgs = WrappedList(
+                        listOf(
+                            cryptoCurrencyStatus.currency.name,
+                            cryptoCurrencyStatus.currency.network.name,
+                        ),
+                    ),
+                ),
+                onActionClick = null,
+            )
+        } else {
+            WalletEvent.ShowAlert(
+                title = resourceReference(
+                    id = R.string.token_details_hide_alert_title,
+                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                ),
+                message = resourceReference(R.string.token_details_hide_alert_message),
+                onActionClick = { onPerformHideToken(cryptoCurrencyStatus) },
+            )
+        }
+    }
+
+    private fun showSnackbar(message: TextReference) {
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ShowToast(message),
+            setUiState = { uiState = it },
+        )
     }
 
     private fun getContentItemsUpdates(index: Int) {
