@@ -16,7 +16,7 @@ internal class CryptoCurrenciesIdsResolver {
         val currenciesStatuses = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
             is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.NotInitialized,
+            is TokenList.Empty,
             null,
             -> return emptyList()
         }
