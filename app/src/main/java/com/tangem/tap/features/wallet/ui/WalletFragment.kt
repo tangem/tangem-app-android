@@ -72,7 +72,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     private var walletView: WalletView = MultiWalletView()
 
-    // private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
     private val viewModel by viewModels<WalletViewModel>()
 
     private val totalBalanceWatcher = modelWatcher {
@@ -100,9 +99,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             },
         )
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        // learn2earnViewModel.onMainScreenCreated()
     }
 
     override fun onStart() {
