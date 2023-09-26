@@ -52,6 +52,15 @@ internal fun WalletEventEffect(
                         WalletAlertState.WalletAlreadySignedHashes(onUnderstandClick = value.onUnderstandClick),
                     )
                 }
+                is WalletEvent.ShowAlert -> {
+                    onAlertConfigSet(
+                        WalletAlertState.DefaultAlert(
+                            title = value.title,
+                            message = value.message,
+                            onActionClick = value.onActionClick,
+                        ),
+                    )
+                }
                 is WalletEvent.RateApp -> {
                     val reviewManager = ReviewManagerFactory.create(context)
                     val requestTask = reviewManager.requestReviewFlow()
