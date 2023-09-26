@@ -5,13 +5,15 @@ import arrow.core.Either
 import com.tangem.blockchain.common.address.Address
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -21,6 +23,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import kotlinx.coroutines.flow.Flow
 
 internal class TokenDetailsStateFactory(
@@ -28,12 +31,16 @@ internal class TokenDetailsStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: TokenDetailsClickIntents,
-    symbol: String,
-    decimals: Int,
+    currencySymbolProvider: Provider<String>,
+    currencyDecimalsProvider: Provider<Int>,
 ) {
 
     private val skeletonStateConverter by lazy {
         TokenDetailsSkeletonStateConverter(clickIntents = clickIntents)
+    }
+
+    private val notificationConverter by lazy {
+        TokenDetailsNotificationConverter(clickIntents = clickIntents)
     }
 
     private val tokenDetailsLoadedBalanceConverter by lazy {
@@ -41,8 +48,8 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             isBalanceHiddenProvider = isBalanceHiddenProvider,
-            symbol = symbol,
-            decimals = decimals,
+            symbol = currencySymbolProvider(),
+            decimals = currencyDecimalsProvider(),
         )
     }
 
@@ -61,8 +68,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
-            symbol = symbol,
-            decimals = decimals,
+            symbol = currencySymbolProvider(),
+            decimals = currencyDecimalsProvider(),
         )
     }
 
@@ -72,10 +79,8 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getInitialState(cryptoCurrency: CryptoCurrency): TokenDetailsState {
-        return skeletonStateConverter.convert(
-            TokenDetailsSkeletonStateConverter.SkeletonModel(cryptoCurrency = cryptoCurrency),
-        )
+    fun getInitialState(screenArgument: TokenDetailsArguments): TokenDetailsState {
+        return skeletonStateConverter.convert(value = screenArgument)
     }
 
     fun getCurrencyLoadedBalanceState(
@@ -139,7 +144,12 @@ internal class TokenDetailsStateFactory(
         return refreshStateConverter.convert(false)
     }
 
-    fun getStateWithReceiveBottomSheet(currency: CryptoCurrency, addresses: List<Address>): TokenDetailsState {
+    fun getStateWithReceiveBottomSheet(
+        currency: CryptoCurrency,
+        addresses: List<Address>,
+        sendCopyAnalyticsEvent: () -> Unit,
+        sendShareAnalyticsEvent: () -> Unit
+    ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = true,
@@ -154,8 +164,35 @@ internal class TokenDetailsStateFactory(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
-                    onCopyClick = clickIntents::onCopyClick,
-                    onShareClick = clickIntents::onShareAddressClick,
+                    onCopyClick = sendCopyAnalyticsEvent,
+                    onShareClick = sendShareAnalyticsEvent,
+                    // onCopyClick = {
+                    //     analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                    // },
+                    // onShareClick = {
+                    //     analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                    // }
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithChooseAddressBottomSheet(
+        addresses: List<Address>,
+        onAddressTypeClick: (AddressModel) -> Unit,
+    ): TokenDetailsState {
+        return currentStateProvider().copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissBottomSheet,
+                content = ChooseAddressBottomSheetConfig(
+                    addressModels = addresses.map {
+                        AddressModel(
+                            value = it.value,
+                            type = AddressModel.Type.valueOf(it.type.name),
+                        )
+                    },
+                    onClick = onAddressTypeClick,
                 ),
             ),
         )
@@ -178,5 +215,20 @@ internal class TokenDetailsStateFactory(
                 tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden),
             )
         } ?: return currentState
+    }
+
+    fun getStateWithNotifications(warnings: Set<CryptoCurrencyWarning>): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.convert(warnings))
+    }
+
+    fun getStateWithRemovedExistentialNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeExistentialDeposit(state))
+    }
+
+    fun getStateWithRemovedRentNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeRentInfo(state))
     }
 }

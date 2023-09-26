@@ -1,138 +1,198 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.combine
+import kotlin.collections.count
 
 /**
  * Wallet notifications list factory
  *
- * @property wasCardScannedCallback         callback that check if card was scanned
- * @property isUserAlreadyRateAppCallback   callback that check if card is user already rate app
- * @property isDemoCardCallback             callback that check if card is demo
- * @property clickIntents                   screen click intents
+ * @property isDemoCardUseCase           use case that check if card is demo
+ * @property isReadyToShowRateAppUseCase use case that check if card is user already rate app
+ * @property wasCardScannedUseCase       use case that check if card was scanned
+ * @property clickIntents                screen click intents
  *
  * @author Andrew Khokhlov on 16/07/2023
  */
 internal class WalletNotificationsListFactory(
-    private val wasCardScannedCallback: suspend (String) -> Boolean,
-    private val isUserAlreadyRateAppCallback: suspend () -> Boolean,
-    private val isDemoCardCallback: (String) -> Boolean,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
+    private val wasCardScannedUseCase: WasCardScannedUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
 
-    fun create(cardTypesResolver: CardTypesResolver, tokenList: TokenList?): Flow<ImmutableList<WalletNotification>> {
-        // TODO: https://tangem.atlassian.net/browse/AND-4107 order
-        return flow {
-            emit(
-                buildList {
-                    if (cardTypesResolver.isTestCard()) {
-                        add(element = WalletNotification.TestCard)
-                        return@buildList
-                    }
+    fun create(
+        cardTypesResolver: CardTypesResolver,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
+    ): Flow<ImmutableList<WalletNotification>> {
+        return combine(
+            flow = wasCardScannedUseCase(cardTypesResolver.getCardId()),
+            flow2 = isReadyToShowRateAppUseCase(),
+        ) { wasCardScanned, isReadyToShowRating ->
+            buildList {
+                addCriticalNotifications(cardTypesResolver)
 
-                    addRemainingSignaturesLeftNotifications(cardTypesResolver)
+                addMissingAddressesNotification(cryptoCurrencyList)
 
-                    val isDemo = isDemoCardCallback(cardTypesResolver.getCardId())
-                    if (!cardTypesResolver.isReleaseFirmwareType()) {
-                        add(element = WalletNotification.DevCard)
-                    } else {
-                        addReleaseSpecialNotifications(cardTypesResolver = cardTypesResolver, isDemo = isDemo)
-                    }
+                addRateTheAppNotification(isReadyToShowRating)
 
-                    if (isDemo) {
-                        add(element = WalletNotification.DemoCard)
-                    }
+                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, wasCardScanned)
+            }.toImmutableList()
+        }
+    }
 
-                    if (hasUnreachableNetworks(tokenList)) {
-                        add(element = WalletNotification.UnreachableNetworks)
-                    }
+    private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
+        addIf(
+            element = WalletNotification.Critical.DevCard,
+            condition = !cardTypesResolver.isReleaseFirmwareType(),
+        )
 
-                    if (!cardTypesResolver.isBackupForbidden() && !cardTypesResolver.hasBackup()) {
-                        add(element = WalletNotification.BackupCard(onClick = clickIntents::onBackupCardClick))
-                    }
+        addIf(
+            element = WalletNotification.Critical.DemoCard,
+            condition = isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
+        )
 
-                    if (tokenList != null && tokenList.hasMissedDerivations()) {
-                        add(element = WalletNotification.ScanCard(onClick = clickIntents::onScanCardNotificationClick))
-                    }
+        addIf(
+            element = WalletNotification.Critical.TestNetCard,
+            condition = cardTypesResolver.isTestCard(),
+        )
 
-                    if (isUserAlreadyRateAppCallback()) {
-                        add(element = WalletNotification.LikeTangemApp(onClick = clickIntents::onLikeTangemAppClick))
-                    }
-                }.toImmutableList(),
+        addIf(
+            element = WalletNotification.Critical.FailedCardValidation,
+            condition = cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.isAttestationFailed(),
+        )
+
+        cardTypesResolver.getRemainingSignatures()?.let { remainingSignatures ->
+            addIf(
+                element = WalletNotification.Critical.LowSignatures(count = remainingSignatures),
+                condition = remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT,
             )
         }
     }
 
-    private fun MutableList<WalletNotification>.addRemainingSignaturesLeftNotifications(
-        cardTypesResolver: CardTypesResolver,
+    private fun MutableList<WalletNotification>.addMissingAddressesNotification(
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ) {
-        val remainingSignatures = cardTypesResolver.getRemainingSignatures()
-        if (remainingSignatures != null && remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT) {
-            add(element = WalletNotification.RemainingSignaturesLeft(remainingSignatures))
+        val missedAddressCurrencies = cryptoCurrencyList.getMissedAddressCurrencies()
+
+        addIf(
+            element = WalletNotification.MissingAddresses(
+                missingAddressesCount = missedAddressCurrencies.count(),
+                onGenerateClick = {
+                    clickIntents.onGenerateMissedAddressesClick(missedAddressCurrencies = missedAddressCurrencies)
+                },
+            ),
+            condition = missedAddressCurrencies.isNotEmpty(),
+        )
+    }
+
+    private fun List<CryptoCurrencyStatus>.getMissedAddressCurrencies(): List<CryptoCurrency> {
+        return this
+            .filter { it.value is CryptoCurrencyStatus.MissedDerivation }
+            .map(CryptoCurrencyStatus::currency)
+    }
+
+    private fun MutableList<WalletNotification>.addRateTheAppNotification(isReadyToShowRating: Boolean) {
+        addIf(
+            element = WalletNotification.RateApp(
+                onLikeClick = clickIntents::onLikeAppClick,
+                onDislikeClick = clickIntents::onDislikeAppClick,
+                onCloseClick = clickIntents::onCloseRateAppNotificationClick,
+            ),
+            condition = isReadyToShowRating,
+        )
+    }
+
+    private fun MutableList<WalletNotification>.addWarningNotifications(
+        cardTypesResolver: CardTypesResolver,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
+        wasCardScanned: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.Warning.MissingBackup(
+                onStartBackupClick = clickIntents::onBackupCardClick,
+            ),
+            condition = !cardTypesResolver.isBackupForbidden() && !cardTypesResolver.hasBackup(),
+        )
+
+        val isDemo = isDemoCardUseCase(cardId = cardTypesResolver.getCardId())
+        if (cardTypesResolver.isMultiwalletAllowed()) {
+            addIf(
+                element = WalletNotification.Warning.SomeNetworksUnreachable,
+                condition = cryptoCurrencyList.hasUnreachableNetworks(),
+            )
+
+            if (cardTypesResolver.isBackupForbidden()) {
+                addIf(
+                    element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
+                    condition = checkSignedHashes(
+                        cardTypesResolver = cardTypesResolver,
+                        isDemo = isDemo,
+                        wasCardScanned,
+                    ),
+                )
+            } else {
+                addIf(
+                    element = WalletNotification.Warning.MultiWalletSignedHashesIncorrect(
+                        onClick = clickIntents::onMultiWalletSignedHashesNotificationClick,
+                    ),
+                    condition = checkSignedHashes(
+                        cardTypesResolver = cardTypesResolver,
+                        isDemo = isDemo,
+                        wasCardScanned,
+                    ),
+                )
+            }
+        } else {
+            addIf(
+                element = WalletNotification.Warning.NetworksUnreachable,
+                condition = cryptoCurrencyList.hasUnreachableNetworks(),
+            )
+
+            val errorMessage = cryptoCurrencyList.geNoAccountStatusMessage()
+            if (errorMessage != null) {
+                add(element = WalletNotification.Warning.TopUpNote(errorMessage = errorMessage))
+            }
+
+            addIf(
+                element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
+                condition = checkSignedHashes(cardTypesResolver, isDemo, wasCardScanned),
+            )
         }
     }
 
-    private suspend fun MutableList<WalletNotification>.addReleaseSpecialNotifications(
+    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
+        if (condition) add(element = element)
+    }
+
+    private fun List<CryptoCurrencyStatus>.hasUnreachableNetworks(): Boolean {
+        return any { it.value is CryptoCurrencyStatus.Unreachable }
+    }
+
+    private fun List<CryptoCurrencyStatus>.geNoAccountStatusMessage(): String? {
+        return this
+            .map(CryptoCurrencyStatus::value)
+            .filterIsInstance<CryptoCurrencyStatus.NoAccount>()
+            .firstOrNull()
+            ?.errorMessage
+    }
+
+    private fun checkSignedHashes(
         cardTypesResolver: CardTypesResolver,
         isDemo: Boolean,
-    ) {
-        if (!wasCardScannedCallback(cardTypesResolver.getCardId()) && cardTypesResolver.isMultiwalletAllowed() &&
-            !isDemo
-        ) {
-            if (cardTypesResolver.isBackupForbidden() && cardTypesResolver.hasWalletSignedHashes()) {
-                add(
-                    element = WalletNotification.CriticalWarningAlreadySignedHashes(
-                        onClick = clickIntents::onCriticalWarningAlreadySignedHashesClick,
-                    ),
-                )
-            } else if (cardTypesResolver.hasWalletSignedHashes()) {
-                add(
-                    element = WalletNotification.WarningAlreadySignedHashes(
-                        onClick = clickIntents::onCloseWarningAlreadySignedHashesClick,
-                    ),
-                )
-            }
-        }
-
-        if (cardTypesResolver.isAttestationFailed()) {
-            add(element = WalletNotification.CardVerificationFailed)
-        }
-    }
-
-    private fun hasUnreachableNetworks(tokenList: TokenList?): Boolean {
-        return when (tokenList) {
-            is TokenList.GroupedByNetwork -> {
-                tokenList.groups
-                    .flatMap(NetworkGroup::currencies)
-                    .map(CryptoCurrencyStatus::value)
-                    .any { it is CryptoCurrencyStatus.Unreachable }
-            }
-            is TokenList.Ungrouped -> {
-                tokenList.currencies
-                    .map(CryptoCurrencyStatus::value)
-                    .any { it is CryptoCurrencyStatus.Unreachable }
-            }
-            is TokenList.NotInitialized,
-            null,
-            -> false
-        }
-    }
-
-    private fun TokenList.hasMissedDerivations(): Boolean {
-        val statuses = when (this) {
-            is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::currencies).map(CryptoCurrencyStatus::value)
-            is TokenList.Ungrouped -> currencies.map(CryptoCurrencyStatus::value)
-            TokenList.NotInitialized -> emptyList()
-        }
-
-        return statuses.any { it is CryptoCurrencyStatus.MissedDerivation }
+        wasCardScanned: Boolean,
+    ): Boolean {
+        return cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.hasWalletSignedHashes() && !isDemo &&
+            !wasCardScanned
     }
 
     private companion object {

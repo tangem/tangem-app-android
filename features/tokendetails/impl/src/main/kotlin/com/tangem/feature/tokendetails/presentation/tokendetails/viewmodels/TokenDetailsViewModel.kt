@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -15,8 +16,8 @@ import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -29,6 +30,7 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenScreenEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
+import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -56,14 +58,16 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
+    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.SELECTED_CURRENCY_KEY]
-        ?: error("no expected parameter CryptoCurrency found")
+    private val screenArgument: TokenDetailsArguments = savedStateHandle[TokenDetailsRouter.TOKEN_DETAILS_ARGS]
+        ?: error("This screen can't open without TokenDetailsArgument")
 
     var router by Delegates.notNull<InnerTokenDetailsRouter>()
 
@@ -71,6 +75,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var wallet by Delegates.notNull<UserWallet>()
+    private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
     private var isBalanceHidden = true
@@ -80,30 +85,40 @@ internal class TokenDetailsViewModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
-        symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
+        currencySymbolProvider = Provider { cryptoCurrency.symbol },
+        currencyDecimalsProvider = Provider { cryptoCurrency.decimals },
     )
 
-    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
+    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(screenArgument))
         private set
 
     override fun onCreate(owner: LifecycleOwner) {
-        getWallet()
-        updateContent(selectedWallet = wallet)
+        initRequiredFields()
         handleBalanceHiding(owner)
     }
 
-    private fun getWallet() {
-        return getSelectedWalletUseCase()
+    private fun initRequiredFields() {
+        getSelectedWalletUseCase()
             .fold(
                 ifLeft = { error("Can not get selected wallet $it") },
                 ifRight = { wallet = it },
             )
+        viewModelScope.launch {
+            getCryptoCurrencyUseCase.invoke(userWalletId = wallet.walletId, id = screenArgument.currencyId)
+                .fold(
+                    ifLeft = { error("Can not get cryptoCurrency with given ID: screenArgument.currencyId. $it") },
+                    ifRight = {
+                        cryptoCurrency = it
+                        updateContent(selectedWallet = wallet)
+                    },
+                )
+        }
     }
 
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
         updateTxHistory()
+        updateWarnings(selectedWallet = selectedWallet)
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -128,6 +143,18 @@ internal class TokenDetailsViewModel @Inject constructor(
             .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
+    }
+
+    private fun updateWarnings(selectedWallet: UserWallet) {
+        viewModelScope.launch(dispatchers.io) {
+            getCurrencyWarningsUseCase.invoke(
+                userWalletId = selectedWallet.walletId,
+                currency = cryptoCurrency,
+            )
+                .distinctUntilChanged()
+                .onEach { uiState = stateFactory.getStateWithNotifications(it) }
+                .launchIn(viewModelScope)
+        }
     }
 
     private fun updateMarketPrice(selectedWallet: UserWallet) {
@@ -160,9 +187,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(
-                        network = cryptoCurrency.network,
-                    ).map {
+                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
@@ -255,6 +280,12 @@ internal class TokenDetailsViewModel @Inject constructor(
             uiState = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
                 addresses = addresses,
+                sendCopyAnalyticsEvent = {
+                    analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                },
+                sendShareAnalyticsEvent = {
+                    analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+                }
             )
         }
     }
@@ -304,12 +335,33 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onExploreClick() {
         analyticsEventsHandler.send(TokenScreenEvent.ButtonExplore(cryptoCurrency.symbol))
+        viewModelScope.launch(dispatchers.io) {
+            val addresses = walletManagersFacade.getAddress(
+                userWalletId = wallet.walletId,
+                network = cryptoCurrency.network,
+            )
 
+            if (addresses.size == 1) {
+                openUrl(AddressType.Default)
+            } else {
+                uiState = stateFactory.getStateWithChooseAddressBottomSheet(
+                    addresses = addresses,
+                    onAddressTypeClick = {
+                        openUrl(AddressType.valueOf(it.type.name))
+                        uiState = stateFactory.getStateWithClosedBottomSheet()
+                    },
+                )
+            }
+        }
+    }
+
+    private fun openUrl(addressType: AddressType) {
         viewModelScope.launch {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = wallet.walletId,
                     network = cryptoCurrency.network,
+                    addressType = addressType,
                 ),
             )
         }
@@ -336,11 +388,11 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getStateWithClosedBottomSheet()
     }
 
-    override fun onCopyClick() {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+    override fun onCloseExistentialDepositNotification() {
+        uiState = stateFactory.getStateWithRemovedExistentialNotification()
     }
 
-    override fun onShareAddressClick() {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+    override fun onCloseRentInfoNotification() {
+        uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 }

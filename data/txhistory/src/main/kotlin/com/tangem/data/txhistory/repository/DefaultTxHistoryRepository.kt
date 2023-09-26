@@ -5,7 +5,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -33,7 +34,7 @@ class DefaultTxHistoryRepository(
         }
     }
 
-    override fun getTxHistoryItems(network: Network, pageSize: Int): Flow<PagingData<TxHistoryItem>> {
+    override fun getTxHistoryItems(currency: CryptoCurrency, pageSize: Int): Flow<PagingData<TxHistoryItem>> {
         val userWallet = getUserWallet()
         return Pager(
             config = PagingConfig(
@@ -44,7 +45,7 @@ class DefaultTxHistoryRepository(
                     loadPage = { page: Int, pageSize: Int ->
                         walletManagersFacade.getTxHistoryItems(
                             userWalletId = userWallet.walletId,
-                            network = network,
+                            currency = currency,
                             page = page,
                             pageSize = pageSize,
                         )

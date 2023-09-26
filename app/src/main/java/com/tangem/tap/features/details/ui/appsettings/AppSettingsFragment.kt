@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -13,7 +12,6 @@ import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
@@ -34,6 +32,11 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
         AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.checkBiometricsStatus(lifecycleScope)
+    }
+
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         AppSettingsScreen(
@@ -44,19 +47,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
                 store.dispatch(NavigationAction.PopBackTo())
             },
         )
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        viewModel.checkBiometricsStatus(lifecycleScope)
-    }
-
-    override fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(R.transition.fade)
-        exitTransition = inflateTransition(R.transition.fade)
-
-        return true
     }
 
     override fun onStart() {

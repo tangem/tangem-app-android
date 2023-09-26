@@ -28,8 +28,7 @@ interface TokenDetailsClickIntents {
 
     fun onDismissBottomSheet()
 
-    fun onCopyClick()
+    fun onCloseRentInfoNotification()
 
-    fun onShareAddressClick()
-
+    fun onCloseExistentialDepositNotification()
 }

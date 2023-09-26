@@ -7,8 +7,8 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -91,11 +91,11 @@ class FetchTokenListUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListError>.fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
+    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
         catch(
             block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
         ) {
-            raise(TokenListError.DataError(it))
+            /* Ignore error */
         }
     }
 }

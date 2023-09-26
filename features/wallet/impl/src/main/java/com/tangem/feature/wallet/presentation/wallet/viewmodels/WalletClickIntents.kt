@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 @Suppress("TooManyFunctions")
@@ -9,9 +9,7 @@ internal interface WalletClickIntents {
 
     fun onBackClick()
 
-    fun onScanCardClick()
-
-    fun onScanCardNotificationClick()
+    fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
 
     fun onScanToUnlockWalletClick()
 
@@ -19,15 +17,13 @@ internal interface WalletClickIntents {
 
     fun onBackupCardClick()
 
-    fun onCriticalWarningAlreadySignedHashesClick()
+    fun onMultiWalletSignedHashesNotificationClick()
 
-    fun onCloseWarningAlreadySignedHashesClick()
+    fun onLikeAppClick()
 
-    fun onLikeTangemAppClick()
+    fun onDislikeAppClick()
 
-    fun onRateTheAppClick()
-
-    fun onShareClick()
+    fun onCloseRateAppNotificationClick()
 
     fun onWalletChange(index: Int)
 
@@ -56,6 +52,12 @@ internal interface WalletClickIntents {
     fun onMultiCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 

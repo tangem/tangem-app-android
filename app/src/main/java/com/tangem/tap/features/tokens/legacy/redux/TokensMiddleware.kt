@@ -17,7 +17,7 @@ import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
@@ -77,11 +77,15 @@ object TokensMiddleware {
 
             if (scanResponse.supportsHdWallet()) {
                 deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
-                    submitNewAdd(userWalletId = action.userWallet.walletId, currencyList = currencyList)
+                    submitNewAdd(
+                        userWalletId = action.userWallet.walletId,
+                        updatedScanResponse = it,
+                        currencyList = currencyList,
+                    )
                     store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
-                submitNewAdd(userWalletId = action.userWallet.walletId, currencyList = currencyList)
+                submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
@@ -156,11 +160,22 @@ object TokensMiddleware {
         onSuccess: (ScanResponse) -> Unit,
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivationDataList = currencyList.mapNotNull {
-            val curve = config.primaryCurve(it.blockchain)
-            curve?.let { getLegacyDerivations(curve, scanResponse, currencyList) }
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            val curve = config.primaryCurve(currency.blockchain)
+            curve?.let { getLegacyDerivations(curve, scanResponse, currency) }
         }
-        val derivations = derivationDataList.associate { it.derivations }
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
+
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -204,9 +219,9 @@ object TokensMiddleware {
         onSuccess: (ScanResponse) -> Unit,
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivationDataList = currencyList.mapNotNull {
-            config.primaryCurve(blockchain = Blockchain.fromId(it.network.id.value))
-                ?.let { curve -> getNewDerivations(curve, scanResponse, currencyList) }
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
+                ?.let { curve -> getNewDerivations(curve, scanResponse, currency) }
         }
         val derivations = derivationDataList.associate(DerivationData::derivations)
         if (derivations.isEmpty()) {
@@ -231,9 +246,8 @@ object TokensMiddleware {
                         val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
                         ExtendedPublicKeysMap(oldDerivations + newDerivations)
                     }
-                    val updatedScanResponse = scanResponse.copy(
-                        derivedKeys = updatedDerivedKeys,
-                    )
+                    val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
+
                     store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
 
@@ -249,24 +263,22 @@ object TokensMiddleware {
     private fun getLegacyDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<Currency>,
+        currency: Currency,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
-            it.getSupportedCurves().contains(curve)
-        }.mapNotNull {
-            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-        }
+        val supportedCurves = currency.blockchain.getSupportedCurves()
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList.filter {
-            it.blockchain.getSupportedCurves().contains(curve)
-        }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
+        val customPath = currency.derivationPath?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is Currency.Blockchain && it.blockchain == Blockchain.Cardano }?.let { currency ->
+        if (currency is Currency.Blockchain && currency.blockchain == Blockchain.Cardano) {
             currency.derivationPath?.let {
                 bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
@@ -286,30 +298,27 @@ object TokensMiddleware {
     private fun getNewDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<CryptoCurrency>,
+        currency: CryptoCurrency,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList
-            .map { Blockchain.fromId(it.network.id.value) }
-            .distinct()
-            .filter { it.getSupportedCurves().contains(curve) }
-            .mapNotNull { it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle()) }
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        val supportedCurves = blockchain.getSupportedCurves()
+        val path = blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList
-            .filter { Blockchain.fromId(it.network.id.value).getSupportedCurves().contains(curve) }
-            .mapNotNull { it.network.derivationPath.value }
-            .map(::DerivationPath)
+        val customPath = currency.network.derivationPath.value?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is CryptoCurrency.Coin && Blockchain.fromId(it.network.id.value) == Blockchain.Cardano }
-            ?.let { currency ->
-                currency.network.derivationPath.value?.let {
-                    bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
-                }
+        if (currency is CryptoCurrency.Coin && blockchain == Blockchain.Cardano) {
+            currency.network.derivationPath.value?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
+        }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys: ExtendedPublicKeysMap =
@@ -345,10 +354,19 @@ object TokensMiddleware {
         }
     }
 
-    private fun submitNewAdd(userWalletId: UserWalletId, currencyList: List<CryptoCurrency>) {
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
 
         scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            )
+
             currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
         }
     }

@@ -105,6 +105,12 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetCryptoCurrencyUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrencyUseCase {
+        return GetCryptoCurrencyUseCase(currenciesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideToggleTokenListGroupingUseCase(
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCase {
@@ -156,5 +162,15 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsCryptoCurrencyCoinCouldHideUseCase(
+        currenciesRepository: CurrenciesRepository,
+    ): IsCryptoCurrencyCoinCouldHideUseCase {
+        return IsCryptoCurrencyCoinCouldHideUseCase(
+            currenciesRepository = currenciesRepository,
+        )
     }
 }
