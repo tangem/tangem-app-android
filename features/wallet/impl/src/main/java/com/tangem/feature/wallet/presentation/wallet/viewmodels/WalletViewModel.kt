@@ -14,6 +14,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toMapKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
@@ -438,6 +439,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onLikeAppClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
         uiState = stateFactory.getStateAndTriggerEvent(
             state = uiState,
             event = WalletEvent.RateApp(
@@ -452,6 +454,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onDislikeAppClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
         viewModelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
@@ -460,6 +463,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onCloseRateAppNotificationClick() {
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
         viewModelScope.launch(dispatchers.main) {
             remindToRateAppLaterUseCase()
         }
