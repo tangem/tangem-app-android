@@ -46,16 +46,14 @@ internal fun CardSettingsScreen(
 @Composable
 private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwork?) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = TangemTheme.dimens.size70),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = TangemTheme.dimens.size16,
-                    end = TangemTheme.dimens.size16,
-                    top = TangemTheme.dimens.size70,
-                ),
+                .padding(start = TangemTheme.dimens.size16, end = TangemTheme.dimens.size16),
         ) {
             val circleColor = TangemTheme.colors.stroke.primary
             Canvas(
