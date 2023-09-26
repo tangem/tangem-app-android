@@ -4,7 +4,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -57,36 +56,29 @@ private fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>,
     modifier: Modifier = Modifier,
 ) {
-    txHistoryItems.itemKey { item ->
-        when (item) {
-            is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
-            is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
-            is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
-        }
-    }
-
-    txHistoryItems.itemContentType { it::class.java }
-
-    itemsIndexed(
-        items = txHistoryItems.itemSnapshotList.items,
-        key = { _, item ->
+    items(
+        count = txHistoryItems.itemCount,
+        key = txHistoryItems.itemKey { item ->
             when (item) {
                 is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
                 is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
                 is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
             }
         },
-    ) { index, item ->
-        TxHistoryListItem(
-            state = item,
-            modifier = modifier
-                .animateItemPlacement()
-                .roundedShapeItemDecoration(
-                    currentIndex = index,
-                    lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
-                ),
-        )
-    }
+        contentType = txHistoryItems.itemContentType { it::class.java },
+        itemContent = { index ->
+            val item = txHistoryItems[index]!!
+            TxHistoryListItem(
+                state = item,
+                modifier = modifier
+                    .animateItemPlacement()
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
+                    ),
+            )
+        },
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
