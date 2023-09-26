@@ -94,8 +94,7 @@ class UserWalletManagerImpl(
             UserWalletIdBuilder.card(it)
                 .build()
                 ?.stringValue
-        }
-            ?: ""
+        } ?: ""
     }
 
     override suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean {
