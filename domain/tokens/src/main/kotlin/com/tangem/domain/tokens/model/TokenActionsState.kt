@@ -23,5 +23,7 @@ data class TokenActionsState(
         data class Swap(override val enabled: Boolean) : ActionState()
 
         data class Send(override val enabled: Boolean) : ActionState()
+
+        data class HideToken(override val enabled: Boolean) : ActionState()
     }
 }
