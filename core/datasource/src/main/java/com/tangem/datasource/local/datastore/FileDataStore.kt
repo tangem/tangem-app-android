@@ -17,6 +17,14 @@ internal class FileDataStore<Value : Any>(
 ) : StringKeyDataStore<Value> {
 
     private val writeTrigger = Trigger()
+    override suspend fun isEmpty(): Boolean {
+        val e = NotImplementedError("`isEmpty()` function not implemented for `FileDataStore`")
+        Timber.e(e)
+
+        throw e
+    }
+
+    override suspend fun contains(key: String): Boolean = getSyncOrNull(key) != null
 
     override fun get(key: String): Flow<Value> {
         return writeTrigger
