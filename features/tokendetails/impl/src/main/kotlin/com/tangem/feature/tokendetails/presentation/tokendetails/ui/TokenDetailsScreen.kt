@@ -17,7 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
@@ -109,9 +112,16 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         TokenDetailsDialogs(state = state)
 
         state.bottomSheetConfig?.let { config ->
-            TokenReceiveBottomSheet(
-                config = config,
-            )
+            if (config.isShow) {
+                when (config.content) {
+                    is TokenReceiveBottomSheetConfig -> {
+                        TokenReceiveBottomSheet(config = config)
+                    }
+                    is ChooseAddressBottomSheetConfig -> {
+                        ChooseAddressBottomSheet(config = config)
+                    }
+                }
+            }
         }
     }
 }
