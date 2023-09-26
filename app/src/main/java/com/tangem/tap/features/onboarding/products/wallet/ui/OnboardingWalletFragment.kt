@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
@@ -71,12 +70,6 @@ class OnboardingWalletFragment :
     private var accessCodeDialog: AccessCodeDialog? = null
 
     private lateinit var animator: BackupAnimator
-
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
