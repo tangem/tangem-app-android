@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.datasource.utils.RequestHeader.AuthenticationHeader
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader
@@ -29,6 +30,7 @@ object TangemTechService {
         val headers = mutableListOf<RequestHeader>(CacheControlHeader).apply { header?.let(::add) }
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverter.networkMoshiConverter)
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
             .baseUrl(TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
