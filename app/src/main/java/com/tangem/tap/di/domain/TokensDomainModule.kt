@@ -105,6 +105,12 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetCryptoCurrencyUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrencyUseCase {
+        return GetCryptoCurrencyUseCase(currenciesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideToggleTokenListGroupingUseCase(
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCase {
