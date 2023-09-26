@@ -1,6 +1,12 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    id("kotlin-parcelize")
     id("configuration")
+}
+
+android {
+    namespace = "com.tangem.domain.tokens.model"
 }
 
 dependencies {
