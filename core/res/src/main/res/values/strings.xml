@@ -609,4 +609,5 @@
     <string name="welcome_unlock_card">Scan card</string>
     <string name="welcome_unlock_description">Use %s or scan a card to access the app</string>
     <string name="welcome_unlock_title">Welcome back!</string>
+    <string name="token_details_choose_address">Choose address</string>
 </resources>
