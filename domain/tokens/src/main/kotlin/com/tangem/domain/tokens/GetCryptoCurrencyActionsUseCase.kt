@@ -39,7 +39,7 @@ class GetCryptoCurrencyActionsUseCase(
         return TokenActionsState(
             walletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            states = createListOfActions(userWalletId, cryptoCurrencyStatus.currency),
+            states = createListOfActions(userWalletId, cryptoCurrencyStatus),
         )
     }
 
@@ -49,8 +49,13 @@ class GetCryptoCurrencyActionsUseCase(
      */
     private suspend fun createListOfActions(
         userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): List<TokenActionsState.ActionState> {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
+            return listOf(TokenActionsState.ActionState.HideToken(true))
+        }
+
         val activeList = mutableListOf<TokenActionsState.ActionState>()
         val disabledList = mutableListOf<TokenActionsState.ActionState>()
 
@@ -84,6 +89,9 @@ class GetCryptoCurrencyActionsUseCase(
         } else {
             disabledList.add(TokenActionsState.ActionState.Sell(false))
         }
+
+        // hide
+        activeList.add(TokenActionsState.ActionState.HideToken(true))
 
         return activeList + disabledList
     }
