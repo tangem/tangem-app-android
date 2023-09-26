@@ -7,6 +7,6 @@ interface TokenDetailsRouter {
     fun getEntryFragment(): Fragment
 
     companion object {
-        const val SELECTED_CURRENCY_KEY = "selected_currency"
+        const val TOKEN_DETAILS_ARGS = "token_details_args"
     }
 }
