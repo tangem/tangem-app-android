@@ -1,7 +1,5 @@
 package com.tangem.domain.tokens.model
 
-import java.io.Serializable
-
 /**
  * Represents a blockchain network, identified by a unique ID, a human-readable name, and its standard type.
  *
@@ -15,14 +13,13 @@ import java.io.Serializable
  * @property isTestnet Indicates whether the network is a test network or a main network.
  * @property standardType The type of blockchain standard the network adheres to.
  */
-// FIXME: Remove serialization [REDACTED_JIRA]
 data class Network(
     val id: ID,
     val name: String,
     val derivationPath: DerivationPath,
     val isTestnet: Boolean,
     val standardType: StandardType,
-) : Serializable {
+) {
 
     init {
         require(name.isNotBlank()) { "Network name must not be blank" }
@@ -47,7 +44,7 @@ data class Network(
      * This class represents such paths in a generic manner, allowing for predefined card-based paths,
      * custom paths, or even no derivation path at all.
      */
-    sealed class DerivationPath : Serializable {
+    sealed class DerivationPath {
 
         /** The actual derivation path value, if any. */
         abstract val value: String?
@@ -83,8 +80,7 @@ data class Network(
      *
      * @property name The human-readable name of the standard type.
      */
-    // FIXME: Remove serialization [REDACTED_JIRA]
-    sealed class StandardType : Serializable {
+    sealed class StandardType {
         abstract val name: String
 
         /** Represents the ERC20 token standard, common on the Ethereum network. */
