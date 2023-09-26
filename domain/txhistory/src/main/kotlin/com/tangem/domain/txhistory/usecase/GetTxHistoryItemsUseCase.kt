@@ -10,7 +10,7 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
-private const val DEFAULT_PAGE_SIZE = 20
+private const val DEFAULT_PAGE_SIZE = 50
 
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
 
