@@ -31,7 +31,7 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Deposit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Deposit"),
@@ -41,7 +41,7 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Submit"),
@@ -51,7 +51,7 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Supply"),
@@ -61,7 +61,7 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Unoswap"),
@@ -71,7 +71,7 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str("Withdraw"),
@@ -81,7 +81,7 @@ class WalletTxHistoryTransactionStateConverter(
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
                 title = TextReference.Str(type.id),
@@ -96,14 +96,14 @@ class WalletTxHistoryTransactionStateConverter(
             is TxHistoryItem.TransactionDirection.Incoming -> TransactionState.Receive(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
             )
             is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Send(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+                amount = item.getAmount(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
             )
@@ -114,7 +114,7 @@ class WalletTxHistoryTransactionStateConverter(
         return TransactionState.Approve(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+            amount = item.getAmount(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
         )
@@ -123,7 +123,7 @@ class WalletTxHistoryTransactionStateConverter(
         return TransactionState.Swap(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = if (isBalanceHiddenProvider()) STARS else item.amount.toCryptoCurrencyFormat(),
+            amount = item.getAmount(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
         )
@@ -150,5 +150,9 @@ class WalletTxHistoryTransactionStateConverter(
         TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
         TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
         TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
+    }
+
+    private fun TxHistoryItem.getAmount(): String {
+        return if (isBalanceHiddenProvider()) STARS else this.amount.toCryptoCurrencyFormat()
     }
 }
