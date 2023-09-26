@@ -39,6 +39,7 @@ class DefaultTxHistoryRepository(
         return Pager(
             config = PagingConfig(
                 pageSize = pageSize,
+                initialLoadSize = pageSize,
             ),
             pagingSourceFactory = {
                 TxHistoryPagingSource(
