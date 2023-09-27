@@ -11,6 +11,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.constraintlayout.compose.*
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -203,16 +205,18 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
         WalletPreviewData.tokenItemVisibleState.copy(amount = "5,41221467146712416241274127841274174213421 MATIC"),
         WalletPreviewData.tokenItemVisibleState.copy(
             tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
-                config = WalletPreviewData.tokenItemVisibleState.tokenOptions.config.copy(
+                priceChangeState = PriceChangeState.Content(
                     valueInPercent = "31231231231231231231223123123123212312312312.00%",
+                    type = PriceChangeType.UP,
                 ),
             ),
         ),
         WalletPreviewData.tokenItemVisibleState.copy(
             amount = "5,41221467146712416241274127841274174213421 MATIC",
             tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
-                config = WalletPreviewData.tokenItemVisibleState.tokenOptions.config.copy(
+                priceChangeState = PriceChangeState.Content(
                     valueInPercent = "31231231231231231231223123123123212312312312.00%",
+                    type = PriceChangeType.UP,
                 ),
             ),
         ),
