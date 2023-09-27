@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -12,7 +13,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 internal class DefaultQuotesRepository(
     private val tangemTechApi: TangemTechApi,
@@ -72,15 +72,20 @@ internal class DefaultQuotesRepository(
     }
 
     private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
-        val response = try {
-            val coinIds = rawCurrenciesIds.joinToString(separator = ",")
-            tangemTechApi.getQuotes(appCurrencyId, coinIds)
-        } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch quotes for: $rawCurrenciesIds")
-            throw e
-        }
+        val response = safeApiCall(
+            call = {
+                val coinIds = rawCurrenciesIds.joinToString(separator = ",")
+                tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
+            },
+            onError = {
+                cacheRegistry.invalidate(rawCurrenciesIds.map(::getQuoteCacheKey))
+                null
+            },
+        )
 
-        quotesStore.store(response)
+        if (response != null) {
+            quotesStore.store(response)
+        }
     }
 
     private suspend fun filterExpiredCurrenciesIds(
