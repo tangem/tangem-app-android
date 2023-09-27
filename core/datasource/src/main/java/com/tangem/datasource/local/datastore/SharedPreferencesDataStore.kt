@@ -62,6 +62,16 @@ internal abstract class SharedPreferencesDataStore<Value : Any>(
         writeTrigger.trigger()
     }
 
+    override suspend fun remove(keys: Collection<String>) {
+        sharedPreferences.edit {
+            keys.forEach { key ->
+                remove(key)
+            }
+        }
+
+        writeTrigger.trigger()
+    }
+
     override suspend fun clear() {
         sharedPreferences.edit { clear() }
         writeTrigger.trigger()
