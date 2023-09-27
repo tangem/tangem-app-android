@@ -7,7 +7,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
-import java.math.BigDecimal
 
 class WalletTxHistoryTransactionStateConverter(
     private val symbol: String,
@@ -27,101 +26,95 @@ class WalletTxHistoryTransactionStateConverter(
             TxHistoryItem.TransactionType.Deposit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Deposit"),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Submit"),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Supply"),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Unoswap"),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Withdraw"),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
+                amount = item.extractFormattedCryptoBalance(),
                 timestamp = item.getRawTimestamp(),
                 status = item.status.tiUiStatus(),
+                direction = item.direction.toUiDirection(),
                 title = TextReference.Str(type.id),
                 subtitle = item.direction.extractAddress(),
-                isIncoming = item.direction is TxHistoryItem.TransactionDirection.Incoming,
             )
         }
     }
 
     private fun mapTransfer(item: TxHistoryItem): TransactionState {
-        return when (item.direction) {
-            is TxHistoryItem.TransactionDirection.Incoming -> TransactionState.Receive(
-                txHash = item.txHash,
-                address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = item.getRawTimestamp(),
-                status = item.status.tiUiStatus(),
-            )
-            is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Send(
-                txHash = item.txHash,
-                address = item.direction.extractAddress(),
-                amount = item.amount.toCryptoCurrencyFormat(),
-                timestamp = item.getRawTimestamp(),
-                status = item.status.tiUiStatus(),
-            )
-        }
+        return TransactionState.Transfer(
+            txHash = item.txHash,
+            address = item.direction.extractAddress(),
+            amount = item.extractFormattedCryptoBalance(),
+            timestamp = item.getRawTimestamp(),
+            status = item.status.tiUiStatus(),
+            direction = item.direction.toUiDirection(),
+        )
     }
 
     private fun mapApprove(item: TxHistoryItem): TransactionState {
         return TransactionState.Approve(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = item.extractFormattedCryptoBalance(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
+            direction = item.direction.toUiDirection(),
         )
     }
     private fun mapSwap(item: TxHistoryItem): TransactionState {
         return TransactionState.Swap(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.amount.toCryptoCurrencyFormat(),
+            amount = item.extractFormattedCryptoBalance(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
+            direction = item.direction.toUiDirection(),
         )
     }
 
@@ -133,10 +126,6 @@ class WalletTxHistoryTransactionStateConverter(
      */
     private fun TxHistoryItem.getRawTimestamp() = this.timestampInMillis.toString()
 
-    private fun BigDecimal.toCryptoCurrencyFormat(): String {
-        return toFormattedCurrencyString(currency = symbol, decimals = decimals)
-    }
-
     private fun TxHistoryItem.TransactionDirection.extractAddress(): TextReference = when (val addr = address) {
         TxHistoryItem.Address.Multiple -> TextReference.Res(R.string.transaction_history_multiple_addresses)
         is TxHistoryItem.Address.Single -> TextReference.Str(addr.rawAddress.toBriefAddressFormat())
@@ -146,5 +135,18 @@ class WalletTxHistoryTransactionStateConverter(
         TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
         TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
         TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
+    }
+
+    private fun TxHistoryItem.TransactionDirection.toUiDirection() = when (this) {
+        is TxHistoryItem.TransactionDirection.Incoming -> TransactionState.Content.Direction.INCOMING
+        is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Content.Direction.OUTGOING
+    }
+
+    private fun TxHistoryItem.extractFormattedCryptoBalance(): String {
+        val prefix = when (direction) {
+            is TxHistoryItem.TransactionDirection.Incoming -> "+"
+            is TxHistoryItem.TransactionDirection.Outgoing -> "-"
+        }
+        return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
     }
 }
