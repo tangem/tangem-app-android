@@ -99,15 +99,17 @@ internal class CurrenciesStatusesOperations(
 
         val quoteFlow = getQuotes(currenciesIds)
             .map { maybeQuotes ->
-                maybeQuotes.map { quotes ->
-                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+                maybeQuotes.flatMap { quotes ->
+                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }?.right()
+                        ?: Error.EmptyQuotes.left()
                 }
             }
 
         val statusFlow = getNetworksStatuses(networks)
             .map { maybeStatuses ->
-                maybeStatuses.map { statuses ->
-                    statuses.singleOrNull { it.network == currency.network }
+                maybeStatuses.flatMap { statuses ->
+                    statuses.singleOrNull { it.network == currency.network }?.right()
+                        ?: Error.EmptyNetworksStatuses.left()
                 }
             }
 
