@@ -16,26 +16,29 @@ import com.tangem.utils.converter.Converter
 
 internal class CryptoCurrencyToDraggableItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<CryptoCurrencyStatus, DraggableItem.Token> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     override fun convert(value: CryptoCurrencyStatus): DraggableItem.Token {
-        return createDraggableToken(value, appCurrencyProvider())
+        return createDraggableToken(value, appCurrencyProvider(), isBalanceHiddenProvider())
     }
 
     override fun convertList(input: Collection<CryptoCurrencyStatus>): List<DraggableItem.Token> {
         val appCurrency = appCurrencyProvider()
+        val isBalanceHidden = isBalanceHiddenProvider()
 
-        return input.map { createDraggableToken(it, appCurrency) }
+        return input.map { createDraggableToken(it, appCurrency, isBalanceHidden) }
     }
 
     private fun createDraggableToken(
         currencyStatus: CryptoCurrencyStatus,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
     ): DraggableItem.Token {
         return DraggableItem.Token(
-            tokenItemState = createTokenItemState(currencyStatus, appCurrency),
+            tokenItemState = createTokenItemState(currencyStatus, appCurrency, isBalanceHidden),
             groupId = getGroupHeaderId(currencyStatus.currency.network),
         )
     }
@@ -43,6 +46,7 @@ internal class CryptoCurrencyToDraggableItemConverter(
     private fun createTokenItemState(
         currencyStatus: CryptoCurrencyStatus,
         appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
     ): TokenItemState.Draggable {
         val currency = currencyStatus.currency
 
@@ -51,10 +55,16 @@ internal class CryptoCurrencyToDraggableItemConverter(
             icon = iconStateConverter.convert(currencyStatus),
             name = currency.name,
             info = if (currencyStatus.value.isError) {
-                resourceReference(id = R.string.common_unreachable)
+                TokenItemState.DraggableItemInfo.Status(
+                    info = resourceReference(id = R.string.common_unreachable),
+                )
             } else {
-                stringReference(getFormattedFiatAmount(currencyStatus, appCurrency))
+                TokenItemState.DraggableItemInfo.Balance(
+                    balance = stringReference(getFormattedFiatAmount(currencyStatus, appCurrency)),
+                    isBalanceHidden = isBalanceHidden,
+                )
             },
+
         )
     }
 

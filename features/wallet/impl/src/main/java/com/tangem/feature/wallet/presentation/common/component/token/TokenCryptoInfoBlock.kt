@@ -11,7 +11,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
@@ -40,7 +39,7 @@ private fun ContentBlock(state: TokenItemState.ContentState, modifier: Modifier 
         AmountText(
             amount = when (state) {
                 is TokenItemState.Content -> if (state.tokenOptions.isBalanceHidden) STARS else state.amount
-                is TokenItemState.Draggable -> state.info.resolveReference()
+                is TokenItemState.Draggable -> state.info.resolve()
                 is TokenItemState.Unreachable,
                 is TokenItemState.NoAddress,
                 -> null

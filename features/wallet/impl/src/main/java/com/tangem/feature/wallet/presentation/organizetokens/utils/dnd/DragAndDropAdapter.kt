@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.dnd
 
 import com.tangem.common.Provider
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.DragAndDropIntents
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
@@ -92,6 +93,31 @@ internal class DragAndDropAdapter(
         items.mutate {
             it.add(to.index, it.removeAt(from.index))
         }
+    }
+
+    fun updateHiddenState(isBalanceHidden: Boolean) {
+        val currentState = currentListState
+
+        val updatedState = currentState.items.map { draggableItem ->
+            if (draggableItem is DraggableItem.Token) {
+                if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
+                    draggableItem.copy(
+                        tokenItemState = draggableItem.tokenItemState.copy(
+                            info = draggableItem.tokenItemState.info.copy(
+                                balance = draggableItem.tokenItemState.info.balance,
+                                isBalanceHidden = isBalanceHidden,
+                            ),
+                        ),
+                    )
+                } else {
+                    draggableItem
+                }
+            } else {
+                draggableItem
+            }
+        }
+
+        updateListState { updatedState }
     }
 
     private fun updateListState(block: OrganizeTokensListState.() -> List<DraggableItem>) {

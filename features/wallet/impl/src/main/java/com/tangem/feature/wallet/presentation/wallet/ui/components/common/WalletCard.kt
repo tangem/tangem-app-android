@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
+import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
@@ -272,7 +273,7 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.h2,
                 )
             }
-            is WalletCardState.HiddenContent -> NonContentBalanceText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> NonContentBalanceText(TextReference.Str(Strings.STARS))
             is WalletCardState.Error -> NonContentBalanceText(text = WalletCardState.EMPTY_BALANCE_TEXT)
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
@@ -311,7 +312,7 @@ private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier
             is WalletCardState.Content -> AdditionalInfoText(text = animatedState.additionalInfo)
             is WalletCardState.LockedContent -> AdditionalInfoText(text = animatedState.additionalInfo)
             is WalletCardState.Error -> AdditionalInfoText(text = WalletCardState.EMPTY_BALANCE_TEXT)
-            is WalletCardState.HiddenContent -> AdditionalInfoText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> AdditionalInfoText(TextReference.Str(Strings.STARS))
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
             }

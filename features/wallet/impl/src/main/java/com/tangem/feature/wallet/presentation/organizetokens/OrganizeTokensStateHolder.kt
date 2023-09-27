@@ -23,6 +23,7 @@ internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val onSubscription: () -> Unit,
     stateFlowScope: CoroutineScope,
 ) {
@@ -30,7 +31,7 @@ internal class OrganizeTokensStateHolder(
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
 
     private val tokenListConverter by lazy {
-        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider)
+        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider, isBalanceHiddenProvider)
         val itemsConverter = TokenListToListStateConverter(
             tokensConverter = tokensConverter,
             groupsConverter = NetworkGroupToDraggableItemsConverter(tokensConverter),

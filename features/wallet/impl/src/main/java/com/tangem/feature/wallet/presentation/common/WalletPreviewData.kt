@@ -173,7 +173,10 @@ internal object WalletPreviewData {
             id = UUID.randomUUID().toString(),
             icon = tokenIconState,
             name = "Polygon",
-            info = stringReference(value = "3 172,14 $"),
+            info = TokenItemState.DraggableItemInfo.Balance(
+                balance = stringReference("3 172,14 $"),
+                isBalanceHidden = true,
+            ),
         )
     }
 

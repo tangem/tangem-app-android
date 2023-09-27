@@ -1,10 +1,13 @@
 package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 
 /** Token item state */
 @Immutable
@@ -62,7 +65,7 @@ internal sealed interface TokenItemState {
         override val id: String,
         override val icon: IconState,
         override val name: String,
-        val info: TextReference,
+        val info: DraggableItemInfo,
     ) : ContentState()
 
     /**
@@ -170,4 +173,31 @@ internal sealed interface TokenItemState {
         val fiatAmount: String,
         val isBalanceHidden: Boolean,
     )
+
+    /** Draggable item info */
+    @Immutable
+    sealed class DraggableItemInfo {
+
+        data class Balance(
+            val balance: TextReference,
+            val isBalanceHidden: Boolean,
+        ) : DraggableItemInfo()
+
+        data class Status(
+            val info: TextReference,
+        ) : DraggableItemInfo()
+
+        @Suppress("TopLevelComposableFunctions")
+        @Composable
+        fun resolve(): String {
+            return when (this) {
+                is Balance -> {
+                    if (isBalanceHidden) STARS else balance.resolveReference()
+                }
+                is Status -> {
+                    info.resolveReference()
+                }
+            }
+        }
+    }
 }

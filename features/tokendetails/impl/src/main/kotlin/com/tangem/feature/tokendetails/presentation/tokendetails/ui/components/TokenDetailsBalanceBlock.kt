@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.res.TangemTheme
@@ -72,7 +73,7 @@ private fun FiatBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (state.isBalanceHidden) DOTS else state.fiatBalance,
+            text = if (state.isBalanceHidden) STARS else state.fiatBalance,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -96,7 +97,7 @@ private fun CryptoBalance(state: TokenDetailsBalanceBlockState, modifier: Modifi
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (state.isBalanceHidden) DOTS else state.cryptoBalance,
+            text = if (state.isBalanceHidden) STARS else state.cryptoBalance,
             style = TangemTheme.typography.caption,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -136,5 +137,3 @@ private class TokenDetailsBalanceBlockStateProvider : CollectionPreviewParameter
         TokenDetailsPreviewData.balanceError,
     ),
 )
-
-const val DOTS = "***"
