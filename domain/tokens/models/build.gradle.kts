@@ -11,4 +11,5 @@ android {
 
 dependencies {
     implementation(projects.domain.txhistory.models)
+    implementation(projects.core.analytics.models)
 }
