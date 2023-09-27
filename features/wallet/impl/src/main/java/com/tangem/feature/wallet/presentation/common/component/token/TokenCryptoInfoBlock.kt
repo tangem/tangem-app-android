@@ -15,6 +15,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.common.state.resolve
 
 @Composable
 internal fun TokenCryptoInfoBlock(state: TokenItemState, modifier: Modifier = Modifier) {

@@ -186,18 +186,5 @@ internal sealed interface TokenItemState {
         data class Status(
             val info: TextReference,
         ) : DraggableItemInfo()
-
-        @Suppress("TopLevelComposableFunctions")
-        @Composable
-        fun resolve(): String {
-            return when (this) {
-                is Balance -> {
-                    if (isBalanceHidden) STARS else balance.resolveReference()
-                }
-                is Status -> {
-                    info.resolveReference()
-                }
-            }
-        }
     }
 }
