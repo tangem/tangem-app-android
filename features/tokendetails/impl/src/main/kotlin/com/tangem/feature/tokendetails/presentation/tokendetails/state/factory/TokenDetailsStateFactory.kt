@@ -166,12 +166,6 @@ internal class TokenDetailsStateFactory(
                     },
                     onCopyClick = sendCopyAnalyticsEvent,
                     onShareClick = sendShareAnalyticsEvent,
-                    // onCopyClick = {
-                    //     analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonCopyAddress(currency.symbol))
-                    // },
-                    // onShareClick = {
-                    //     analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonShareAddress(currency.symbol))
-                    // }
                 ),
             ),
         )
