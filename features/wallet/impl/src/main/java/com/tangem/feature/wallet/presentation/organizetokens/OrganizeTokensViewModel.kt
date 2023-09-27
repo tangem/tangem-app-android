@@ -28,6 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -84,7 +85,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
                 isBalanceHidden = hidden
-                dragAndDropAdapter.updateHiddenState(isBalanceHidden)
+                stateHolder.updateHiddenState(uiState.value.itemsState, isBalanceHidden)
             }
             .launchIn(viewModelScope)
 

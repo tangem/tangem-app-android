@@ -95,31 +95,6 @@ internal class DragAndDropAdapter(
         }
     }
 
-    fun updateHiddenState(isBalanceHidden: Boolean) {
-        val currentState = currentListState
-
-        val updatedState = currentState.items.map { draggableItem ->
-            if (draggableItem is DraggableItem.Token) {
-                if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
-                    draggableItem.copy(
-                        tokenItemState = draggableItem.tokenItemState.copy(
-                            info = draggableItem.tokenItemState.info.copy(
-                                balance = draggableItem.tokenItemState.info.balance,
-                                isBalanceHidden = isBalanceHidden,
-                            ),
-                        ),
-                    )
-                } else {
-                    draggableItem
-                }
-            } else {
-                draggableItem
-            }
-        }
-
-        updateListState { updatedState }
-    }
-
     private fun updateListState(block: OrganizeTokensListState.() -> List<DraggableItem>) {
         val updatedState = currentListState.updateItems { block(currentListState) }
 

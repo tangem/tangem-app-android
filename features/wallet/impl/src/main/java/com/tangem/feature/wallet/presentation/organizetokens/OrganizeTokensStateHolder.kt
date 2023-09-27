@@ -7,6 +7,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
@@ -16,6 +18,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.err
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
@@ -87,6 +90,31 @@ internal class OrganizeTokensStateHolder(
                 itemsState = itemsState,
             )
         }
+    }
+
+    fun updateHiddenState(itemsState: OrganizeTokensListState, isBalanceHidden: Boolean) {
+        val currentState = itemsState
+
+        val updatedState = currentState.copySealed(currentState.items.map { draggableItem ->
+            if (draggableItem is DraggableItem.Token) {
+                if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
+                    draggableItem.copy(
+                        tokenItemState = draggableItem.tokenItemState.copy(
+                            info = draggableItem.tokenItemState.info.copy(
+                                balance = draggableItem.tokenItemState.info.balance,
+                                isBalanceHidden = isBalanceHidden,
+                            ),
+                        ),
+                    )
+                } else {
+                    draggableItem
+                }
+            } else {
+                draggableItem
+            }
+        }.toPersistentList())
+
+        updateState { copy(itemsState = updatedState) }
     }
 
     fun updateStateWithError(error: TokenListError) {
