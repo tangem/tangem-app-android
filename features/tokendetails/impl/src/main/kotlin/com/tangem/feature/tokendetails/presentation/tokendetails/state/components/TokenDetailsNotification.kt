@@ -10,11 +10,15 @@ import com.tangem.features.tokendetails.impl.R
 
 // TODO: Finalize notification strings [REDACTED_JIRA]
 @Immutable
-sealed class TokenDetailsNotification(open val config: NotificationConfig) {
+sealed class TokenDetailsNotification(
+    open val isVisible: Boolean = true,
+    open val config: NotificationConfig,
+) {
 
     data class RentInfo(
         private val rentInfo: CryptoCurrencyWarning.Rent,
         private val onCloseClick: () -> Unit,
+        override val isVisible: Boolean = true,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
             title = TextReference.Res(R.string.send_network_fee_title),

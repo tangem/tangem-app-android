@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.common.extensions.cast
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -23,9 +24,15 @@ internal class TokenDetailsNotificationConverter(
         return newNotifications.toImmutableList()
     }
 
-    fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
+    fun getStateRentInfoVisibility(
+        currentState: TokenDetailsState,
+        isVisible: Boolean,
+    ): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
+        val oldNotification = newNotifications.find { it is TokenDetailsNotification.RentInfo }
+        oldNotification?.let {
+            newNotifications.add(it.cast<TokenDetailsNotification.RentInfo>().copy(isVisible = isVisible))
+        }
         return newNotifications.toImmutableList()
     }
 

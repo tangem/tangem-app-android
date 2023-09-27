@@ -81,7 +81,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 }
                 item { TokenDetailsBalanceBlock(modifier = itemModifier, state = state.tokenBalanceBlockState) }
                 items(
-                    items = state.notifications,
+                    items = state.notifications.filter { it.isVisible },
                     key = { it.config::class.java },
                     contentType = { it.config::class.java },
                     itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
