@@ -154,5 +154,4 @@ class WalletTxHistoryTransactionStateConverter(
         }
         return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
     }
-
 }

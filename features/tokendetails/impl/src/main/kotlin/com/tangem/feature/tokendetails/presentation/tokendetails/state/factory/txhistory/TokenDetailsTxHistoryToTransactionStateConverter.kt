@@ -146,7 +146,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
 
     private fun TxHistoryItem.getAmount(): String {
         if (isBalanceHiddenProvider()) return STARS
-        
+
         val prefix = when (direction) {
             is TxHistoryItem.TransactionDirection.Incoming -> "+"
             is TxHistoryItem.TransactionDirection.Outgoing -> "-"
