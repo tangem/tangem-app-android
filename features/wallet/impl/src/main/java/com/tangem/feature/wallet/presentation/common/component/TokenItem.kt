@@ -1,40 +1,40 @@
 package com.tangem.feature.wallet.presentation.common.component
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.constraintlayout.compose.ConstrainedLayoutReference
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutScope
-import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.*
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.common.component.token.TokenCryptoInfoBlock
-import com.tangem.feature.wallet.presentation.common.component.token.TokenFiatInfoBlock
+import com.tangem.feature.wallet.presentation.common.component.token.*
 import com.tangem.feature.wallet.presentation.common.component.token.icon.TokenIcon
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 
+@Suppress("LongMethod")
 @Composable
 internal fun TokenItem(
     state: TokenItemState,
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
 ) {
-    BaseContainer(modifier = modifier.tokenClickable(state)) {
-        val (iconRef, cryptoInfoRef, fiatInfoRef) = createRefs()
+    var rootWidth by remember { mutableStateOf(Int.MIN_VALUE) }
+
+    @Suppress("DestructuringDeclarationWithTooManyEntries")
+    BaseContainer(
+        modifier = modifier
+            .tokenClickable(state)
+            .onSizeChanged { rootWidth = it.width },
+    ) {
+        val (iconRef, titleRef, cryptoAmountRef, fiatAmountRef, priceChangeRef, nonFiatContentRef) = createRefs()
 
         TokenIcon(
             state = state,
@@ -44,22 +44,98 @@ internal fun TokenItem(
             },
         )
 
-        TokenCryptoInfoBlock(
+        val density = LocalDensity.current
+        val titleRequiredMinWidth by remember(rootWidth) {
+            derivedStateOf { with(density) { rootWidth.toDp().times(other = 0.22f) } }
+        }
+
+        TokenTitle(
             state = state,
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing8)
-                .constrainAs(cryptoInfoRef) {
-                    centerVerticallyTo(parent)
+                .constrainAs(titleRef) {
                     start.linkTo(iconRef.end)
-                    end.linkTo(fiatInfoRef.start)
-                    width = Dimension.fillToConstraints
+                    top.linkTo(parent.top)
+
+                    width = Dimension.fillToConstraints.atLeast(dp = titleRequiredMinWidth)
+
+                    when (state) {
+                        is TokenItemState.Content -> end.linkTo(fiatAmountRef.start)
+                        is TokenItemState.Draggable -> end.linkTo(nonFiatContentRef.start)
+                        is TokenItemState.Unreachable,
+                        is TokenItemState.NoAddress,
+                        -> {
+                            end.linkTo(nonFiatContentRef.start)
+                            bottom.linkTo(parent.bottom)
+                        }
+                        else -> Unit
+                    }
                 },
         )
 
-        TokenFiatInfoBlock(
+        TokenFiatAmount(
             state = state,
-            modifier = Modifier.constrainAsOptionsItem(scope = this, ref = fiatInfoRef),
+            modifier = Modifier.constrainAs(fiatAmountRef) {
+                top.linkTo(parent.top)
+                end.linkTo(parent.end)
+
+                width = Dimension.fillToConstraints.atMostWrapContent
+
+                if (state is TokenItemState.Content) {
+                    start.linkTo(titleRef.end)
+                }
+            },
+        )
+
+        val marginBetweenRows = TangemTheme.dimens.spacing2
+        TokenCryptoAmount(
+            state = state,
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing8)
+                .constrainAs(cryptoAmountRef) {
+                    start.linkTo(iconRef.end)
+                    top.linkTo(titleRef.bottom, marginBetweenRows)
+                    bottom.linkTo(parent.bottom)
+
+                    when (state) {
+                        is TokenItemState.Content -> {
+                            end.linkTo(priceChangeRef.start)
+                            width = Dimension.fillToConstraints.atMostWrapContent
+                        }
+                        is TokenItemState.Draggable -> {
+                            end.linkTo(nonFiatContentRef.start)
+                            width = Dimension.fillToConstraints
+                        }
+                        else -> Unit
+                    }
+                },
+        )
+
+        val priceChangeRequiredMinWidth by remember(rootWidth) {
+            derivedStateOf { with(density) { rootWidth.toDp().times(other = 0.16f) } }
+        }
+        TokenPriceChange(
+            state = state,
+            modifier = Modifier.constrainAs(priceChangeRef) {
+                top.linkTo(fiatAmountRef.bottom, marginBetweenRows)
+                end.linkTo(anchor = parent.end)
+                bottom.linkTo(parent.bottom)
+
+                if (state is TokenItemState.ContentState) {
+                    start.linkTo(cryptoAmountRef.end)
+                    width = Dimension.fillToConstraints
+                        .atLeast(priceChangeRequiredMinWidth)
+                }
+            },
+        )
+
+        NonFiatContentBlock(
+            state = state,
             reorderableTokenListState = reorderableTokenListState,
+            modifier = Modifier.constrainAs(nonFiatContentRef) {
+                centerVerticallyTo(parent)
+                end.linkTo(parent.end)
+            },
         )
     }
 }
@@ -77,22 +153,9 @@ private inline fun BaseContainer(
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = TangemTheme.dimens.spacing14,
-                    vertical = TangemTheme.dimens.spacing14,
-                ),
+                .padding(all = TangemTheme.dimens.spacing14),
             content = content,
         )
-    }
-}
-
-@Stable
-private fun Modifier.constrainAsOptionsItem(scope: ConstraintLayoutScope, ref: ConstrainedLayoutReference): Modifier {
-    return with(scope) {
-        this@constrainAsOptionsItem.constrainAs(ref) {
-            centerVerticallyTo(parent)
-            end.linkTo(parent.end)
-        }
     }
 }
 
@@ -100,34 +163,16 @@ private fun Modifier.constrainAsOptionsItem(scope: ConstraintLayoutScope, ref: C
 private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed {
     when (state) {
         is TokenItemState.Content -> {
-            val onLongClick = rememberHapticFeedback(
-                state = state,
-                onAction = state.onItemLongClick,
-            )
-            this.combinedClickable(
-                onClick = state.onItemClick,
-                onLongClick = onLongClick,
-            )
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
         }
         is TokenItemState.Unreachable -> {
-            val onLongClick = rememberHapticFeedback(
-                state = state,
-                onAction = state.onItemLongClick,
-            )
-            this.combinedClickable(
-                onClick = state.onItemClick,
-                onLongClick = onLongClick,
-            )
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
         }
         is TokenItemState.NoAddress -> {
-            val onLongClick = rememberHapticFeedback(
-                state = state,
-                onAction = state.onItemLongClick,
-            )
-            this.combinedClickable(
-                onClick = {},
-                onLongClick = onLongClick,
-            )
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = {}, onLongClick = onLongClick)
         }
         is TokenItemState.Draggable,
         is TokenItemState.Loading,
@@ -155,6 +200,22 @@ private fun Preview_Tokens_DarkTheme(@PreviewParameter(TokenConfigProvider::clas
 
 private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
+        WalletPreviewData.tokenItemVisibleState.copy(amount = "5,41221467146712416241274127841274174213421 MATIC"),
+        WalletPreviewData.tokenItemVisibleState.copy(
+            tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
+                config = WalletPreviewData.tokenItemVisibleState.tokenOptions.config.copy(
+                    valueInPercent = "31231231231231231231223123123123212312312312.00%",
+                ),
+            ),
+        ),
+        WalletPreviewData.tokenItemVisibleState.copy(
+            amount = "5,41221467146712416241274127841274174213421 MATIC",
+            tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
+                config = WalletPreviewData.tokenItemVisibleState.tokenOptions.config.copy(
+                    valueInPercent = "31231231231231231231223123123123212312312312.00%",
+                ),
+            ),
+        ),
         WalletPreviewData.tokenItemVisibleState,
         WalletPreviewData.tokenItemUnreachableState,
         WalletPreviewData.tokenItemNoAddressState,
