@@ -23,6 +23,11 @@ internal class DefaultCacheRegistry(
         cacheKeysStore.remove(key)
     }
 
+    override suspend fun invalidate(keys: Collection<String>) {
+        Timber.d("Invalidate cache keys: $keys")
+        cacheKeysStore.remove(keys)
+    }
+
     override suspend fun invalidateAll() {
         Timber.d("Invalidate all cache keys")
         cacheKeysStore.clear()
@@ -32,14 +37,14 @@ internal class DefaultCacheRegistry(
         key: String,
         skipCache: Boolean,
         expireIn: Duration,
-        action: suspend () -> Unit,
+        block: suspend () -> Unit,
     ) {
         val isExpired = isExpired(key) || skipCache
         if (!isExpired) return
 
         try {
             Timber.d("Invoke the action associated with the cache key: $key")
-            action()
+            block()
         } catch (e: Throwable) {
             Timber.w(e, "The action related to the cache key has failed: $key")
             throw e

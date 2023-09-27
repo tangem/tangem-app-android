@@ -38,6 +38,10 @@ internal abstract class StringKeyDataStoreDecorator<Key : Any, Value : Any>(
         wrappedDataStore.remove(provideStringKey(key))
     }
 
+    override suspend fun remove(keys: Collection<Key>) {
+        wrappedDataStore.remove(keys.map(::provideStringKey))
+    }
+
     override suspend fun clear() {
         wrappedDataStore.clear()
     }
