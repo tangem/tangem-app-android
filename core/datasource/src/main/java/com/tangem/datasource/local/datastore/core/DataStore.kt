@@ -18,5 +18,7 @@ internal interface DataStore<Key : Any, Value : Any> {
 
     suspend fun remove(key: Key)
 
+    suspend fun remove(keys: Collection<Key>)
+
     suspend fun clear()
 }
