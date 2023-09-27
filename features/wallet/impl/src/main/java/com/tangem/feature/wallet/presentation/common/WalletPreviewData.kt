@@ -153,7 +153,7 @@ internal object WalletPreviewData {
             icon = tokenIconState,
             name = "Polygon",
             amount = "5,412 MATIC",
-            hasPending = true,
+            hasPending = false,
             tokenOptions = TokenOptionsState(
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
@@ -161,7 +161,6 @@ internal object WalletPreviewData {
                 ),
                 fiatAmount = "321 $",
                 isBalanceHidden = false,
-
             ),
             onItemClick = {},
             onItemLongClick = {},
