@@ -25,12 +25,14 @@ import com.tangem.core.ui.res.TangemTheme
 fun LazyListScope.txHistoryItems(
     state: TxHistoryState,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
         is TxHistoryState.Content -> {
             contentItems(
                 txHistoryItems = requireNotNull(txHistoryItems),
+                isBalanceHidden = isBalanceHidden,
                 modifier = modifier,
             )
         }
@@ -55,6 +57,7 @@ fun LazyListScope.txHistoryItems(
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     txHistoryItems.itemKey { item ->
@@ -79,6 +82,7 @@ private fun LazyListScope.contentItems(
     ) { index, item ->
         TxHistoryListItem(
             state = item,
+            isBalanceHidden = isBalanceHidden,
             modifier = modifier
                 .animateItemPlacement()
                 .roundedShapeItemDecoration(

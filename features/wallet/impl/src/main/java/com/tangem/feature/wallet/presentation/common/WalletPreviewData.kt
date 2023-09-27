@@ -400,6 +400,7 @@ internal object WalletPreviewData {
             tokenActionsBottomSheet = actionsBottomSheet,
             onManageTokensClick = {},
             event = consumedEvent(),
+            isBalanceHidden = false,
         )
     }
 
@@ -454,6 +455,7 @@ internal object WalletPreviewData {
                 ),
             ),
             event = consumedEvent(),
+            isBalanceHidden = false
         )
     }
 }

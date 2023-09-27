@@ -4,9 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
@@ -20,8 +18,6 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -82,13 +78,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private var cachedTxHistory: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>? = null
     private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
         currencySymbolProvider = Provider { cryptoCurrency.symbol },
         currencyDecimalsProvider = Provider { cryptoCurrency.decimals },
@@ -133,7 +127,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 isBalanceHidden = hidden
                 uiState = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = hidden,
-                    cachedTxHistory = cachedTxHistory,
                 )
             }
             .launchIn(viewModelScope)
@@ -197,7 +190,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 val either = txHistoryItemsUseCase(currency = cryptoCurrency)
                     .map { it.cachedIn(viewModelScope) }
                 uiState = stateFactory.getLoadedTxHistoryState(txHistoryEither = either)
-                cachedTxHistory = either
             }
         }
     }

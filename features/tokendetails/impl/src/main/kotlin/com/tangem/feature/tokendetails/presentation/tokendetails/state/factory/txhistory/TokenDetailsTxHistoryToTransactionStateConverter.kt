@@ -16,7 +16,6 @@ import org.joda.time.DateTimeZone
 internal class TokenDetailsTxHistoryToTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<TxHistoryItem, TransactionState> {
 
     override fun convert(value: TxHistoryItem): TransactionState {
@@ -145,8 +144,6 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (isBalanceHiddenProvider()) return STARS
-
         val prefix = when (direction) {
             is TxHistoryItem.TransactionDirection.Incoming -> "+"
             is TxHistoryItem.TransactionDirection.Outgoing -> "-"

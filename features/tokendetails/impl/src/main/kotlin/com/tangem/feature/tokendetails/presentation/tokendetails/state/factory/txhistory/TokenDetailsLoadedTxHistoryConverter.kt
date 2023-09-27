@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 internal class TokenDetailsLoadedTxHistoryConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val clickIntents: TokenDetailsClickIntents,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     symbol: String,
     decimals: Int,
 ) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TxHistoryState> {
@@ -22,7 +21,6 @@ internal class TokenDetailsLoadedTxHistoryConverter(
     private val txHistoryItemFlowConverter by lazy {
         TokenDetailsTxHistoryItemFlowConverter(
             currentStateProvider = currentStateProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,

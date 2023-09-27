@@ -20,13 +20,12 @@ import java.math.BigDecimal
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val symbol: String,
     private val decimals: Int,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals, isBalanceHiddenProvider)
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals)
     }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
@@ -64,7 +63,6 @@ internal class TokenDetailsLoadedBalanceConverter(
                     actionButtons = currentState.actionButtons,
                     fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                     cryptoBalance = formatCryptoAmount(status),
-                    isBalanceHidden = isBalanceHiddenProvider(),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {

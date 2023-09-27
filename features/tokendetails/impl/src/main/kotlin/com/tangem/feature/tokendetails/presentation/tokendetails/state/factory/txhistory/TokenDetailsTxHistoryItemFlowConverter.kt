@@ -24,7 +24,6 @@ import org.joda.time.DateTimeZone
 
 internal class TokenDetailsTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
@@ -34,7 +33,6 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         TokenDetailsTxHistoryTransactionStateConverter(
             symbol = symbol,
             decimals = decimals,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
         )
     }
 

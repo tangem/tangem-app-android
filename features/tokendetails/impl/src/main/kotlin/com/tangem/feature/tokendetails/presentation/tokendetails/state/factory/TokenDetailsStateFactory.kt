@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
@@ -29,7 +28,6 @@ import kotlinx.coroutines.flow.Flow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: TokenDetailsClickIntents,
     currencySymbolProvider: Provider<String>,
     currencyDecimalsProvider: Provider<Int>,
@@ -47,7 +45,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             symbol = currencySymbolProvider(),
             decimals = currencyDecimalsProvider(),
         )
@@ -68,7 +65,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             symbol = currencySymbolProvider(),
             decimals = currencyDecimalsProvider(),
         )
@@ -204,25 +200,10 @@ internal class TokenDetailsStateFactory(
 
     fun getStateWithUpdatedHidden(
         isBalanceHidden: Boolean,
-        cachedTxHistory: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>?,
     ): TokenDetailsState {
         val currentState = currentStateProvider()
-        val possibleTokenBalanceBlockState = currentState.tokenBalanceBlockState as?
-            TokenDetailsBalanceBlockState.Content
 
-        val updatedHistoryState = if (cachedTxHistory != null) {
-            loadedTxHistoryConverter.convert(cachedTxHistory)
-        } else {
-            currentState.txHistoryState
-        }
-
-        val updatedTokenBalanceBlockState = possibleTokenBalanceBlockState?.copy(isBalanceHidden = isBalanceHidden)
-            ?: currentState.tokenBalanceBlockState
-
-        return currentState.copy(
-            tokenBalanceBlockState = updatedTokenBalanceBlockState,
-            txHistoryState = updatedHistoryState,
-        )
+        return currentState.copy(isBalanceHidden = isBalanceHidden)
     }
 
     fun getStateWithNotifications(warnings: Set<CryptoCurrencyWarning>): TokenDetailsState {
