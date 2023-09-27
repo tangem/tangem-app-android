@@ -1,7 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -44,7 +45,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
             hasPending = value.hasCurrentNetworkTransactions,
             tokenOptions = TokenItemState.TokenOptionsState(
                 fiatAmount = getFormattedFiatAmount(),
-                config = getPriceChangeConfig(),
+                priceChangeState = getPriceChangeConfig(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
@@ -53,13 +54,13 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     }
 
     private fun CryptoCurrencyStatus.getFormattedAmount(): String {
-        val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
+        val amount = value.amount ?: return TokenItemState.UNKNOWN_AMOUNT_SIGN
 
         return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
     }
 
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
-        val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val fiatAmount = value.fiatAmount ?: return TokenItemState.UNKNOWN_AMOUNT_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
@@ -80,25 +81,20 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
-    private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeConfig {
+    private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeState {
         val priceChange = value.priceChange
-            ?: return PriceChangeConfig(UNKNOWN_AMOUNT_SIGN, PriceChangeConfig.Type.DOWN)
 
-        return PriceChangeConfig(
-            valueInPercent = BigDecimalFormatter.formatPercent(priceChange, useAbsoluteValue = true),
-            type = priceChange.getPriceChangeType(),
-        )
-    }
-
-    private fun BigDecimal?.getPriceChangeType(): PriceChangeConfig.Type {
-        return when {
-            this == null -> PriceChangeConfig.Type.DOWN
-            this < BigDecimal.ZERO -> PriceChangeConfig.Type.DOWN
-            else -> PriceChangeConfig.Type.UP
+        return if (priceChange != null) {
+            PriceChangeState.Content(
+                valueInPercent = BigDecimalFormatter.formatPercent(percent = priceChange, useAbsoluteValue = true),
+                type = priceChange.getPriceChangeType(),
+            )
+        } else {
+            PriceChangeState.Unknown
         }
     }
 
-    private companion object {
-        const val UNKNOWN_AMOUNT_SIGN = "—"
+    private fun BigDecimal.getPriceChangeType(): PriceChangeType {
+        return if (this > BigDecimal.ZERO) PriceChangeType.UP else PriceChangeType.DOWN
     }
 }
