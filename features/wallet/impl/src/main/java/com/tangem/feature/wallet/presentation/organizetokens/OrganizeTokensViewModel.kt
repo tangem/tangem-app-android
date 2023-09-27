@@ -50,14 +50,9 @@ internal class OrganizeTokensViewModel @Inject constructor(
     )
 
     private val stateHolder = OrganizeTokensStateHolder(
-        stateFlowScope = viewModelScope,
         intents = this,
         dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        onSubscription = {
-            bootstrapTokenList()
-            bootstrapDragAndDropUpdates()
-        },
     )
 
     private val userWalletId: UserWalletId by lazy {
@@ -72,6 +67,9 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
+
+        bootstrapTokenList()
+        bootstrapDragAndDropUpdates()
     }
 
     override fun onBackClick() {
@@ -166,7 +164,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     private fun bootstrapDragAndDropUpdates() {
-        dragAndDropAdapter.stateFlow
+        dragAndDropAdapter.dragAndDropUpdates
             .distinctUntilChanged()
             .onEach {
                 stateHolder.updateStateWithManualSorting(it)
