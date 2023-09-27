@@ -429,22 +429,24 @@ internal object WalletPreviewData {
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Send(
+                                TransactionState.Transfer(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Unconfirmed,
+                                    direction = TransactionState.Content.Direction.OUTGOING,
                                 ),
                             ),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Send(
+                                TransactionState.Transfer(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Confirmed,
+                                    direction = TransactionState.Content.Direction.OUTGOING,
                                 ),
                             ),
                         ),
