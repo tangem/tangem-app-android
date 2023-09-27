@@ -8,6 +8,10 @@ internal abstract class StringKeyDataStoreDecorator<Key : Any, Value : Any>(
 
     abstract fun provideStringKey(key: Key): String
 
+    override suspend fun isEmpty(): Boolean = wrappedDataStore.isEmpty()
+
+    override suspend fun contains(key: Key): Boolean = wrappedDataStore.contains(provideStringKey(key))
+
     override fun get(key: Key): Flow<Value> {
         return wrappedDataStore.get(provideStringKey(key))
     }
