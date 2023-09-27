@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.data
 
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.tap.features.wallet.domain.WalletRepository
@@ -18,6 +19,6 @@ class WalletRepositoryImpl(
 ) : WalletRepository {
 
     override suspend fun getCurrencyList(): CurrenciesResponse = withContext(dispatchers.io) {
-        tangemTechApi.getCurrencyList()
+        tangemTechApi.getCurrencyList().getOrThrow()
     }
 }
