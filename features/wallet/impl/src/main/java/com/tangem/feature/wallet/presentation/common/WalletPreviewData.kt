@@ -153,7 +153,7 @@ internal object WalletPreviewData {
             icon = tokenIconState,
             name = "Polygon",
             amount = "5,412 MATIC",
-            hasPending = true,
+            hasPending = false,
             tokenOptions = TokenOptionsState(
                 config = PriceChangeConfig(
                     valueInPercent = "2%",
@@ -161,7 +161,6 @@ internal object WalletPreviewData {
                 ),
                 fiatAmount = "321 $",
                 isBalanceHidden = false,
-
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -432,22 +431,24 @@ internal object WalletPreviewData {
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Send(
+                                TransactionState.Transfer(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Unconfirmed,
+                                    direction = TransactionState.Content.Direction.OUTGOING,
                                 ),
                             ),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Send(
+                                TransactionState.Transfer(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Confirmed,
+                                    direction = TransactionState.Content.Direction.OUTGOING,
                                 ),
                             ),
                         ),

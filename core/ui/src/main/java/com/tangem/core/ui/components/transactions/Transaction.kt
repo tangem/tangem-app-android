@@ -23,7 +23,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TransactionState.Content.*
+import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Status
+import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Direction
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -131,8 +132,12 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(
                         id = when (state) {
-                            is TransactionState.Send -> R.drawable.ic_arrow_up_24
-                            is TransactionState.Receive -> R.drawable.ic_arrow_down_24
+                            is TransactionState.Transfer -> {
+                                when (state.direction) {
+                                    Direction.OUTGOING -> R.drawable.ic_arrow_up_24
+                                    Direction.INCOMING -> R.drawable.ic_arrow_down_24
+                                }
+                            }
                             is TransactionState.Approve -> R.drawable.ic_doc_24
                             is TransactionState.Swap -> R.drawable.ic_exchange_vertical_24
                             is TransactionState.Custom -> R.drawable.ic_exchange_vertical_24
@@ -175,8 +180,7 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
                 Text(
                     text = when (state) {
                         is TransactionState.Approve -> stringResource(R.string.common_approval)
-                        is TransactionState.Receive -> stringResource(R.string.common_transfer)
-                        is TransactionState.Send -> stringResource(R.string.common_transfer)
+                        is TransactionState.Transfer -> stringResource(R.string.common_transfer)
                         is TransactionState.Swap -> stringResource(R.string.common_swap)
                         is TransactionState.Custom -> state.title.resolveReference()
                     },
@@ -212,11 +216,18 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Content -> {
             Text(
                 text = when (state) {
-                    is TransactionState.Send -> stringResource(
-                        id = R.string.transaction_history_transaction_to_address,
-                        state.address.resolveReference(),
-                    )
-                    is TransactionState.Receive,
+                    is TransactionState.Transfer -> {
+                        when (state.direction) {
+                            Direction.OUTGOING -> stringResource(
+                                id = R.string.transaction_history_transaction_to_address,
+                                state.address.resolveReference(),
+                            )
+                            Direction.INCOMING -> stringResource(
+                                id = R.string.transaction_history_transaction_from_address,
+                                state.address.resolveReference(),
+                            )
+                        }
+                    }
                     is TransactionState.Approve,
                     -> stringResource(
                         id = R.string.transaction_history_transaction_from_address,
@@ -227,10 +238,9 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                         state.address.resolveReference(),
                     )
                     is TransactionState.Custom -> stringResource(
-                        id = if (state.isIncoming) {
-                            R.string.transaction_history_transaction_from_address
-                        } else {
-                            R.string.transaction_history_transaction_to_address
+                        id = when (state.direction) {
+                            Direction.OUTGOING -> R.string.transaction_history_transaction_to_address
+                            Direction.INCOMING -> R.string.transaction_history_transaction_from_address
                         },
                         state.subtitle.resolveReference(),
                     )
@@ -262,7 +272,10 @@ private fun Amount(state: TransactionState, modifier: Modifier = Modifier) {
                 text = state.amount,
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = TangemTheme.colors.text.primary1,
+                color = when (state.direction) {
+                    Direction.INCOMING -> TangemTheme.colors.text.accent
+                    Direction.OUTGOING -> TangemTheme.colors.text.primary1
+                },
                 style = TangemTheme.typography.body2,
             )
         }
@@ -336,19 +349,21 @@ private fun Preview_TransactionItem_DarkTheme(
 
 private class TransactionItemStateProvider : CollectionPreviewParameterProvider<TransactionState>(
     collection = listOf(
-        TransactionState.Send(
+        TransactionState.Transfer(
             txHash = UUID.randomUUID().toString(),
             address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
+            direction = Direction.OUTGOING,
         ),
-        TransactionState.Receive(
+        TransactionState.Transfer(
             txHash = UUID.randomUUID().toString(),
             address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Unconfirmed,
+            direction = Direction.INCOMING,
         ),
         TransactionState.Approve(
             txHash = UUID.randomUUID().toString(),
@@ -356,6 +371,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Failed,
+            direction = Direction.OUTGOING,
         ),
         TransactionState.Swap(
             txHash = UUID.randomUUID().toString(),
@@ -363,6 +379,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Unconfirmed,
+            direction = Direction.INCOMING,
         ),
         TransactionState.Custom(
             txHash = UUID.randomUUID().toString(),
@@ -370,9 +387,9 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
+            direction = Direction.INCOMING,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
-            isIncoming = true,
         ),
         TransactionState.Custom(
             txHash = UUID.randomUUID().toString(),
@@ -380,9 +397,9 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
+            direction = Direction.OUTGOING,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
-            isIncoming = false,
         ),
         TransactionState.Loading(txHash = UUID.randomUUID().toString()),
     ),
