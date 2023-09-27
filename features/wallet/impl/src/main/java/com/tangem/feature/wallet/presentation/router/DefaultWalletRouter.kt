@@ -58,10 +58,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
                 WalletRoute.OrganizeTokens.route,
                 arguments = listOf(navArgument(WalletRoute.userWalletIdKey) { type = NavType.StringType }),
             ) {
-                val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
-                    .apply {
-                        router = this@DefaultWalletRouter
-                    }
+                val viewModel = hiltViewModel<OrganizeTokensViewModel>().apply {
+                    router = this@DefaultWalletRouter
+                }
+                LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
 
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
