@@ -242,7 +242,7 @@ internal class WalletViewModel @Inject constructor(
         if (cacheState != null) {
             uiState = stateFactory.getStateWithoutDeletedWallet(cacheState, action)
 
-            if (cacheState.isLoadingState()) {
+            if (cacheState.isLoadingOrEmptyState()) {
                 uiState = stateFactory.getStateAndTriggerEvent(
                     state = uiState,
                     event = WalletEvent.ChangeWallet(action.selectedWalletIndex),
@@ -510,7 +510,7 @@ internal class WalletViewModel @Inject constructor(
                     pullToRefreshConfig = cacheState.pullToRefreshConfig.copy(isRefreshing = false),
                 )
 
-                if (cacheState.isLoadingState()) {
+                if (cacheState.isLoadingOrEmptyState()) {
                     getContentItemsUpdates(index)
                 }
             } else {
@@ -911,7 +911,7 @@ internal class WalletViewModel @Inject constructor(
                     .hasNonZeroWallets()
             }
             is TokenList.Ungrouped -> tokenList.currencies.hasNonZeroWallets()
-            TokenList.NotInitialized -> false
+            is TokenList.Empty -> false
         }
 
         if (hasNonZeroWallets) {
@@ -991,7 +991,7 @@ internal class WalletViewModel @Inject constructor(
                             .flatMap(NetworkGroup::currencies)
                     }
                     is TokenList.Ungrouped -> tokenList.currencies
-                    is TokenList.NotInitialized -> emptyList()
+                    is TokenList.Empty -> emptyList()
                 }
             } else {
                 listOfNotNull(singleWalletCryptoCurrencyStatus)
@@ -1040,7 +1040,7 @@ internal class WalletViewModel @Inject constructor(
             )
     }
 
-    private fun WalletState.isLoadingState(): Boolean {
+    private fun WalletState.isLoadingOrEmptyState(): Boolean {
         // Check the base components
         if (this is WalletState.ContentState &&
             walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading
@@ -1051,12 +1051,13 @@ internal class WalletViewModel @Inject constructor(
         // Check the special components
         return when (this) {
             is WalletMultiCurrencyState -> {
+                val isTokensEmpty = tokensListState is WalletTokensListState.Empty
                 val hasLoadingTokens = tokensListState is WalletTokensListState.ContentState &&
                     (tokensListState as WalletTokensListState.ContentState).items
                         .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
                         .any { it.state is TokenItemState.Loading }
 
-                tokensListState is WalletTokensListState.Loading || hasLoadingTokens
+                isTokensEmpty || tokensListState is WalletTokensListState.Loading || hasLoadingTokens
             }
             is WalletSingleCurrencyState -> {
                 this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading

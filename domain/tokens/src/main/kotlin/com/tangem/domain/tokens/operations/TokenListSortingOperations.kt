@@ -27,7 +27,7 @@ internal class TokenListSortingOperations(
         currencies = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
             is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.NotInitialized -> emptyList()
+            is TokenList.Empty -> emptyList()
         },
         isAnyTokenLoading = isAnyTokenLoading,
         sortByBalance = sortByBalance,
