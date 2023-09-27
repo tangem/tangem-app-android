@@ -21,6 +21,9 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.ite
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
@@ -56,12 +59,6 @@ internal class OrganizeTokensStateHolder(
     }
 
     val stateFlow: StateFlow<OrganizeTokensState> = stateFlowInternal
-        .onSubscription { onSubscription() }
-        .stateIn(
-            scope = stateFlowScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = getInitialState(),
-        )
 
     fun updateStateWithTokenList(tokenList: TokenList) {
         updateState { tokenListConverter.convert(tokenList) }

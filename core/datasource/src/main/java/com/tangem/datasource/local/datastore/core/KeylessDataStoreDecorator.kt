@@ -13,7 +13,7 @@ internal abstract class KeylessDataStoreDecorator<Value : Any>(
 
     open suspend fun store(item: Value) = store(key, item)
 
-    open suspend fun isEmpty() = getSyncOrNull() == null
+    override suspend fun isEmpty(): Boolean = getSyncOrNull() == null
 
     private companion object {
         const val DEFAULT_STRING_KEY = "key"

@@ -70,7 +70,12 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // send
-        activeList.add(TokenActionsState.ActionState.Send(true))
+        if (cryptoCurrencyStatus.value.amount?.signum() == 0) {
+            disabledList.add(TokenActionsState.ActionState.Send(false))
+        } else {
+            activeList.add(TokenActionsState.ActionState.Send(true))
+        }
+
         // receive
         activeList.add(TokenActionsState.ActionState.Receive(true))
 

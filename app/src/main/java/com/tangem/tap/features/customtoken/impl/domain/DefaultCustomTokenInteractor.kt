@@ -9,12 +9,17 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -25,7 +30,9 @@ import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -38,6 +45,7 @@ import timber.log.Timber
  */
 class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val reduxStateHolder: AppStateHolder,
 ) : CustomTokenInteractor {
 
@@ -154,6 +162,40 @@ class DefaultCustomTokenInteractor(
     }
 
     private suspend fun submitAdd(scanResponse: ScanResponse, currency: Currency) {
+        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            val cryptoCurrencyFactory = CryptoCurrencyFactory()
+
+            submitNewAdd(
+                userWalletId = getSelectedWalletUseCase().fold(ifLeft = { return }, ifRight = UserWallet::walletId),
+                updatedScanResponse = scanResponse,
+                currencyList = listOfNotNull(
+                    when (currency) {
+                        is Currency.Blockchain -> {
+                            cryptoCurrencyFactory.createCoin(
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = null,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                        is Currency.Token -> {
+                            cryptoCurrencyFactory.createToken(
+                                sdkToken = currency.token,
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = null,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                    },
+                ),
+            )
+        } else {
+            submitLegacyAdd(scanResponse = scanResponse, currency = currency)
+        }
+    }
+
+    private suspend fun submitLegacyAdd(scanResponse: ScanResponse, currency: Currency) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to add currencies, no user wallet selected")
             return
@@ -169,5 +211,22 @@ class DefaultCustomTokenInteractor(
                     currenciesToAdd = listOf(currency),
                 )
             }
+    }
+
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            )
+
+            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
+        }
     }
 }
