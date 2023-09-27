@@ -26,6 +26,14 @@ internal abstract class SharedPreferencesDataStore<Value : Any>(
 
     abstract fun storeByKey(key: String, value: Value)
 
+    override suspend fun isEmpty(): Boolean {
+        return sharedPreferences.all.isEmpty()
+    }
+
+    override suspend fun contains(key: String): Boolean {
+        return sharedPreferences.contains(key)
+    }
+
     override fun get(key: String): Flow<Value> {
         return writeTrigger
             .mapNotNull { getInternal(key) }
