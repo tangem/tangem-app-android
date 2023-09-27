@@ -11,6 +11,10 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
         store.tryEmit(value = null)
     }
 
+    override suspend fun isEmpty(): Boolean = store.firstOrNull().isNullOrEmpty()
+
+    override suspend fun contains(key: String): Boolean = getSyncOrNull(key) != null
+
     override fun get(key: String): Flow<Data> {
         return store.mapNotNull { value ->
             value?.get(key)
