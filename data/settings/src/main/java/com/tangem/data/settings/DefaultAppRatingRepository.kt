@@ -67,8 +67,9 @@ internal class DefaultAppRatingRepository(
             if (!isInteracting) {
                 val diff = Calendar.getInstance().timeInMillis - fundsFoundDate
                 val diffInDays = diff / DAY_IN_MILLIS
+                val isFundsFound = fundsFoundDate != FUNDS_FOUND_DATE_UNDEFINED
 
-                appLaunchCount >= ratingShowingCount && diffInDays >= FIRST_SHOWING_COUNT
+                appLaunchCount >= ratingShowingCount && diffInDays >= FIRST_SHOWING_COUNT && isFundsFound
             } else {
                 appLaunchCount >= ratingShowingCount
             }
