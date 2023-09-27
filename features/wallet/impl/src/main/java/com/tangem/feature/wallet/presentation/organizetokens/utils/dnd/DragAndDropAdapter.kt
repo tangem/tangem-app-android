@@ -9,8 +9,8 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteI
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.updateItems
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import org.burnoutcrew.reorderable.ItemPosition
 
 internal class DragAndDropAdapter(
@@ -22,15 +22,15 @@ internal class DragAndDropAdapter(
     private val currentListState: OrganizeTokensListState
         get() = listStateProvider.invoke()
 
-    private val listStateFlowInternal: MutableSharedFlow<OrganizeTokensListState> = MutableSharedFlow(
+    private val dragAndDropUpdatesInternal: MutableSharedFlow<OrganizeTokensListState> = MutableSharedFlow(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     private var currentDraggingItem: DraggableItem? = null
 
-    val stateFlow: Flow<OrganizeTokensListState>
-        get() = listStateFlowInternal
+    val dragAndDropUpdates: SharedFlow<OrganizeTokensListState>
+        get() = dragAndDropUpdatesInternal
 
     override fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean {
         val items = when (val listState = currentListState) {
@@ -97,7 +97,7 @@ internal class DragAndDropAdapter(
     private fun updateListState(block: OrganizeTokensListState.() -> List<DraggableItem>) {
         val updatedState = currentListState.updateItems { block(currentListState) }
 
-        listStateFlowInternal.tryEmit(updatedState)
+        dragAndDropUpdatesInternal.tryEmit(updatedState)
     }
 
     private fun findItemsToMove(
