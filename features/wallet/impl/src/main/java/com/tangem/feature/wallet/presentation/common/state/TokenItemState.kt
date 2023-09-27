@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.common.state
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.extensions.TextReference
 
 /** Token item state */
@@ -166,8 +166,12 @@ internal sealed interface TokenItemState {
     /** Token options state */
     @Immutable
     data class TokenOptionsState(
-        val config: PriceChangeConfig,
+        val priceChangeState: PriceChangeState,
         val fiatAmount: String,
         val isBalanceHidden: Boolean,
     )
+
+    companion object {
+        const val UNKNOWN_AMOUNT_SIGN = "—"
+    }
 }

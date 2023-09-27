@@ -14,6 +14,6 @@ sealed interface MarketPriceBlockState {
     data class Content(
         override val currencyName: String,
         val price: String,
-        val priceChangeConfig: PriceChangeConfig,
+        val priceChangeConfig: PriceChangeState.Content,
     ) : MarketPriceBlockState
 }
