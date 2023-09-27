@@ -7,4 +7,6 @@ class TokenReceiveBottomSheetConfig(
     val symbol: String,
     val network: String,
     val addresses: List<AddressModel>,
+    val onCopyClick: () -> Unit,
+    val onShareClick: () -> Unit,
 ) : TangemBottomSheetConfigContent
