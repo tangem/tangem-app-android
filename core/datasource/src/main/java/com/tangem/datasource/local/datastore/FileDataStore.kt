@@ -65,6 +65,13 @@ internal class FileDataStore<Value : Any>(
         writeTrigger.trigger()
     }
 
+    override suspend fun remove(keys: Collection<String>) {
+        val e = NotImplementedError("`remove(keys)` function not implemented for `FileDataStore`")
+        Timber.e(e)
+
+        throw e
+    }
+
     override suspend fun clear() {
         val e = NotImplementedError("`clear()` function not implemented for `FileDataStore`")
         Timber.e(e)
