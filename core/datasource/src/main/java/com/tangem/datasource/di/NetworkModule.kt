@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.paymentology.PaymentologyApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -27,6 +28,7 @@ class NetworkModule {
     fun provideTangemTechApi(@NetworkMoshi moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
             .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
