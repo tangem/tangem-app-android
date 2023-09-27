@@ -78,7 +78,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
@@ -124,7 +123,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                isBalanceHidden = hidden
                 uiState = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = hidden,
                 )

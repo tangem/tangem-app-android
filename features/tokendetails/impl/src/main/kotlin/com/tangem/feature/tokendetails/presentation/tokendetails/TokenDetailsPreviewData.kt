@@ -92,6 +92,6 @@ internal object TokenDetailsPreviewData {
         pendingTxs = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
         bottomSheetConfig = null,
-        isBalanceHidden = false
+        isBalanceHidden = false,
     )
 }

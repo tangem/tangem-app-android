@@ -146,7 +146,7 @@ private fun WalletContent(
                     state = state,
                     txHistoryItems = txHistoryItems,
                     isBalanceHidden = state.isBalanceHidden,
-                    modifier = movableItemModifier
+                    modifier = movableItemModifier,
                 )
 
                 if (state is WalletMultiCurrencyState) {

@@ -198,9 +198,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithUpdatedHidden(
-        isBalanceHidden: Boolean,
-    ): TokenDetailsState {
+    fun getStateWithUpdatedHidden(isBalanceHidden: Boolean): TokenDetailsState {
         val currentState = currentStateProvider()
 
         return currentState.copy(isBalanceHidden = isBalanceHidden)

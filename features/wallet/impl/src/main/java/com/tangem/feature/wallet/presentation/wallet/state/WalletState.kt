@@ -61,7 +61,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
-                        isBalanceHidden = isBalanceHidden
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletMultiCurrencyState.Locked -> {
@@ -69,7 +69,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
-                        isBalanceHidden = isBalanceHidden
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletSingleCurrencyState.Content -> {
@@ -77,7 +77,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
-                        isBalanceHidden = isBalanceHidden
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletSingleCurrencyState.Locked -> {
@@ -85,7 +85,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
-                        isBalanceHidden = isBalanceHidden
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
             }

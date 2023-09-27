@@ -21,7 +21,7 @@ internal fun TxHistoryListItem(
             Transaction(
                 state = state.state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = modifier
+                modifier = modifier,
             )
         }
     }

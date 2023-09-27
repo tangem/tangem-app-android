@@ -83,7 +83,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     TokenDetailsBalanceBlock(
                         modifier = itemModifier,
                         isBalanceHidden = state.isBalanceHidden,
-                        state = state.tokenBalanceBlockState
+                        state = state.tokenBalanceBlockState,
                     )
                 }
                 items(
@@ -109,7 +109,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 txHistoryItems(
                     state = state.txHistoryState,
                     isBalanceHidden = state.isBalanceHidden,
-                    txHistoryItems = txHistoryItems
+                    txHistoryItems = txHistoryItems,
                 )
             }
 

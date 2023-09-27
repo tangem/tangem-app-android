@@ -55,7 +55,7 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
-            isBalanceHidden = true
+            isBalanceHidden = true,
         )
     }
 
@@ -74,7 +74,7 @@ internal class WalletSkeletonStateConverter(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
-            isBalanceHidden = true
+            isBalanceHidden = true,
         )
     }
 

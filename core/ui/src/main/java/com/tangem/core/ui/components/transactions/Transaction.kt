@@ -44,11 +44,7 @@ import java.util.UUID
  * @author Andrew Khokhlov on 16/06/2023
  */
 @Composable
-fun Transaction(
-    state: TransactionState,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
+fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -95,13 +91,13 @@ fun Transaction(
 
             Amount(
                 state = state,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.constrainAs(amountItem) {
                     start.linkTo(titleItem.end)
                     top.linkTo(titleItem.top)
                     end.linkTo(parent.end)
                     width = Dimension.fillToConstraints
                 },
-                isBalanceHidden = isBalanceHidden
             )
 
             Timestamp(
@@ -272,7 +268,7 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Amount(state: TransactionState, modifier: Modifier = Modifier, isBalanceHidden: Boolean) {
+private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
         is TransactionState.Content -> {
             Text(

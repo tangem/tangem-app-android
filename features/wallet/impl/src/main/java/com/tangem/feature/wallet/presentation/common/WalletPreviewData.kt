@@ -455,7 +455,7 @@ internal object WalletPreviewData {
                 ),
             ),
             event = consumedEvent(),
-            isBalanceHidden = false
+            isBalanceHidden = false,
         )
     }
 }
