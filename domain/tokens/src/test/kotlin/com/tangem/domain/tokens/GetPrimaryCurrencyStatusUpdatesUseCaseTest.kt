@@ -9,10 +9,7 @@ import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.mock.MockTokensStates
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
@@ -24,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.math.BigDecimal
 
 internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
 
@@ -113,9 +111,17 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
     }
 
     @Test
-    fun `when quotes are empty and statuses are verified then loading token should be received`() = runTest {
-        val expectedResult = MockTokensStates.tokenState1
-            .copy(value = CryptoCurrencyStatus.Loading)
+    fun `when quotes are empty and statuses are verified then token without quote should be received`() = runTest {
+        val expectedResult = with(MockTokensStates.tokenState1) {
+            copy(
+                value = CryptoCurrencyStatus.NoQuote(
+                    amount = BigDecimal.TEN,
+                    hasCurrentNetworkTransactions = false,
+                    pendingTransactions = emptySet(),
+                    networkAddress = NetworkAddress.Single(defaultAddress = "mock"),
+                ),
+            )
+        }
             .right()
 
         val useCase = getUseCase(
@@ -131,10 +137,8 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
     }
 
     @Test
-    fun `when quotes are loaded and statuses are empty then loading token should be received`() = runTest {
-        val expectedResult = MockTokensStates.tokenState1
-            .copy(value = CryptoCurrencyStatus.Loading)
-            .right()
+    fun `when quotes are loaded and statuses are empty then error be received`() = runTest {
+        val expectedResult = CurrencyStatusError.UnableToCreateCurrency.left()
 
         val useCase = getUseCase(
             statuses = flowOf(emptySet<NetworkStatus>().right()),
