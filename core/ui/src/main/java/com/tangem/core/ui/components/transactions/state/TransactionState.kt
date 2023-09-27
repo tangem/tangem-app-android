@@ -19,6 +19,7 @@ sealed interface TransactionState {
      * @property amount    amount
      * @property timestamp timestamp
      * @property status    transaction status
+     * @property direction transaction direction
      */
     sealed class Content : TransactionState {
 
@@ -26,6 +27,7 @@ sealed interface TransactionState {
         abstract val amount: String
         abstract val timestamp: String
         abstract val status: Status
+        abstract val direction: Direction
 
         fun copySealed(
             txHash: String = this.txHash,
@@ -33,13 +35,13 @@ sealed interface TransactionState {
             amount: String = this.amount,
             timestamp: String = this.timestamp,
             status: Status = this.status,
+            direction: Direction = this.direction,
         ): Content {
             return when (this) {
-                is Approve -> copy(txHash, address, amount, timestamp, status)
-                is Receive -> copy(txHash, address, amount, timestamp, status)
-                is Send -> copy(txHash, address, amount, timestamp, status)
-                is Swap -> copy(txHash, address, amount, timestamp, status)
-                is Custom -> copy(txHash, address, amount, timestamp, status)
+                is Approve -> copy(txHash, address, amount, timestamp, status, direction)
+                is Transfer -> copy(txHash, address, amount, timestamp, status, direction)
+                is Swap -> copy(txHash, address, amount, timestamp, status, direction)
+                is Custom -> copy(txHash, address, amount, timestamp, status, direction)
             }
         }
 
@@ -47,6 +49,11 @@ sealed interface TransactionState {
             object Failed : Status()
             object Confirmed : Status()
             object Unconfirmed : Status()
+        }
+
+        enum class Direction {
+            INCOMING,
+            OUTGOING,
         }
     }
 
@@ -57,29 +64,15 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
-    data class Send(
+    data class Transfer(
         override val txHash: String,
         override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
         override val status: Status,
-    ) : Content()
-
-    /**
-     * Completed receiving transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Receive(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-        override val status: Status,
+        override val direction: Direction,
     ) : Content()
 
     /**
@@ -89,6 +82,7 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
     data class Approve(
         override val txHash: String,
@@ -96,6 +90,7 @@ sealed interface TransactionState {
         override val amount: String,
         override val timestamp: String,
         override val status: Status,
+        override val direction: Direction,
     ) : Content()
 
     /**
@@ -105,6 +100,7 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
     data class Swap(
         override val txHash: String,
@@ -112,6 +108,7 @@ sealed interface TransactionState {
         override val amount: String,
         override val timestamp: String,
         override val status: Status,
+        override val direction: Direction,
     ) : Content()
 
     data class Custom(
@@ -120,9 +117,9 @@ sealed interface TransactionState {
         override val amount: String,
         override val timestamp: String,
         override val status: Status,
+        override val direction: Direction,
         val title: TextReference,
         val subtitle: TextReference,
-        val isIncoming: Boolean,
     ) : Content()
 
     /**
