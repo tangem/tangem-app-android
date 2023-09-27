@@ -130,7 +130,7 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun PriceChangeInPercent(config: PriceChangeConfig) {
+private fun PriceChangeInPercent(config: PriceChangeState.Content) {
     AnimatedContent(targetState = config.type, label = "Update price change") { type ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -139,13 +139,13 @@ private fun PriceChangeInPercent(config: PriceChangeConfig) {
             Icon(
                 painter = painterResource(
                     id = when (type) {
-                        PriceChangeConfig.Type.UP -> R.drawable.ic_arrow_up_8
-                        PriceChangeConfig.Type.DOWN -> R.drawable.ic_arrow_down_8
+                        PriceChangeType.UP -> R.drawable.ic_arrow_up_8
+                        PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
                     },
                 ),
                 tint = when (type) {
-                    PriceChangeConfig.Type.UP -> TangemTheme.colors.icon.accent
-                    PriceChangeConfig.Type.DOWN -> TangemTheme.colors.icon.warning
+                    PriceChangeType.UP -> TangemTheme.colors.icon.accent
+                    PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
                 },
                 contentDescription = null,
             )
@@ -153,8 +153,8 @@ private fun PriceChangeInPercent(config: PriceChangeConfig) {
             Text(
                 text = config.valueInPercent,
                 color = when (type) {
-                    PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
-                    PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
+                    PriceChangeType.UP -> TangemTheme.colors.text.accent
+                    PriceChangeType.DOWN -> TangemTheme.colors.text.warning
                 },
                 style = TangemTheme.typography.body2,
             )
@@ -215,17 +215,17 @@ private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterPr
         MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900 $",
-            priceChangeConfig = PriceChangeConfig(
+            priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "5.16%",
-                type = PriceChangeConfig.Type.DOWN,
+                type = PriceChangeType.DOWN,
             ),
         ),
         MarketPriceBlockState.Content(
             currencyName = "BTC",
             price = "98900 $",
-            priceChangeConfig = PriceChangeConfig(
+            priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "10.89%",
-                type = PriceChangeConfig.Type.UP,
+                type = PriceChangeType.UP,
             ),
         ),
         MarketPriceBlockState.Loading(currencyName = "BTC"),
