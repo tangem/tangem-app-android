@@ -1,13 +1,10 @@
 package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.annotation.DrawableRes
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.marketprice.PriceChangeConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
 
 /** Token item state */
 @Immutable

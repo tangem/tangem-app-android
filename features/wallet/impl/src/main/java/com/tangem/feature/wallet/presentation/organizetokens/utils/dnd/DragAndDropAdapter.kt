@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.dnd
 
 import com.tangem.common.Provider
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.DragAndDropIntents
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState

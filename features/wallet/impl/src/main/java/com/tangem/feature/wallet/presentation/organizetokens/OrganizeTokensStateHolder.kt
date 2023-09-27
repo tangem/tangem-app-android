@@ -95,24 +95,26 @@ internal class OrganizeTokensStateHolder(
     fun updateHiddenState(itemsState: OrganizeTokensListState, isBalanceHidden: Boolean) {
         val currentState = itemsState
 
-        val updatedState = currentState.copySealed(currentState.items.map { draggableItem ->
-            if (draggableItem is DraggableItem.Token) {
-                if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
-                    draggableItem.copy(
-                        tokenItemState = draggableItem.tokenItemState.copy(
-                            info = draggableItem.tokenItemState.info.copy(
-                                balance = draggableItem.tokenItemState.info.balance,
-                                isBalanceHidden = isBalanceHidden,
+        val updatedState = currentState.copySealed(
+            currentState.items.map { draggableItem ->
+                if (draggableItem is DraggableItem.Token) {
+                    if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
+                        draggableItem.copy(
+                            tokenItemState = draggableItem.tokenItemState.copy(
+                                info = draggableItem.tokenItemState.info.copy(
+                                    balance = draggableItem.tokenItemState.info.balance,
+                                    isBalanceHidden = isBalanceHidden,
+                                ),
                             ),
-                        ),
-                    )
+                        )
+                    } else {
+                        draggableItem
+                    }
                 } else {
                     draggableItem
                 }
-            } else {
-                draggableItem
-            }
-        }.toPersistentList())
+            }.toPersistentList(),
+        )
 
         updateState { copy(itemsState = updatedState) }
     }

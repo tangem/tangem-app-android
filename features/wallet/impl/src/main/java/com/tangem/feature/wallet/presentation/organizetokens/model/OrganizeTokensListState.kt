@@ -20,8 +20,8 @@ internal sealed class OrganizeTokensListState {
         override val items: PersistentList<DraggableItem> = persistentListOf()
     }
 
-    fun copySealed(items: PersistentList<DraggableItem> = this.items) : OrganizeTokensListState {
-        return when(this) {
+    fun copySealed(items: PersistentList<DraggableItem> = this.items): OrganizeTokensListState {
+        return when (this) {
             is GroupedByNetwork -> copy(items = items)
             is Ungrouped -> copy(items = items)
             is Empty -> Empty

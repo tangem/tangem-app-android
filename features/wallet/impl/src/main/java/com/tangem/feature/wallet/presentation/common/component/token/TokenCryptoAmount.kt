@@ -11,7 +11,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.common.Strings
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
