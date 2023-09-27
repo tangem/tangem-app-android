@@ -1,8 +1,10 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.*
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
@@ -21,10 +23,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import timber.log.Timber
-import java.net.ConnectException
-import java.net.UnknownHostException
 
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
@@ -259,14 +258,14 @@ internal class DefaultCurrenciesRepository(
     private suspend fun fetchTokens(userWallet: UserWallet) {
         val userWalletId = userWallet.walletId
 
-        val response = try {
-            with(tangemTechApi.getUserTokens(userWalletId.stringValue)) {
-                // The response may contain repeated tokens
-                copy(tokens = tokens.distinct())
-            }
-        } catch (e: Throwable) {
-            handleFetchTokensError(userWallet, e)
-        }
+        val response = safeApiCall(
+            call = {
+                tangemTechApi.getUserTokens(userWalletId.stringValue).bind().let {
+                    it.copy(tokens = it.tokens.distinct())
+                }
+            },
+            onError = { handleFetchTokensError(userWallet, it) },
+        )
 
         userTokensStore.store(userWallet.walletId, response)
         fetchUserMarketCoinsByIds(userWalletId, response)
@@ -288,7 +287,7 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    private suspend fun handleFetchTokensError(userWallet: UserWallet, throwable: Throwable): UserTokensResponse {
+    private suspend fun handleFetchTokensError(userWallet: UserWallet, e: ApiResponseError): UserTokensResponse {
         val userWalletId = userWallet.walletId
         val response = userTokensStore.getSyncOrNull(userWalletId)
             ?: userTokensResponseFactory.createUserTokensResponse(
@@ -297,27 +296,12 @@ internal class DefaultCurrenciesRepository(
                 isSortedByBalance = false,
             )
 
-        when (throwable) {
-            is ConnectException,
-            is UnknownHostException,
-            -> {
-                Timber.e("Unable to fetch currencies due to lack of internet connection")
-            }
-            is HttpException -> {
-                if (throwable.code() == NOT_FOUND_HTTP_CODE) {
-                    Timber.w(
-                        throwable,
-                        "Requested currencies could not be found in the remote store for: $userWalletId",
-                    )
+        if (e is ApiResponseError.HttpException && e.code == ApiResponseError.HttpException.Code.NOT_FOUND) {
+            Timber.w(e, "Requested currencies could not be found in the remote store for: $userWalletId")
 
-                    tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
-                } else {
-                    Timber.e(throwable, "Unable to fetch currencies for: $userWalletId")
-                }
-            }
-            else -> {
-                throw throwable
-            }
+            tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+        } else {
+            cacheRegistry.invalidate(getTokensCacheKey(userWalletId))
         }
 
         return response
