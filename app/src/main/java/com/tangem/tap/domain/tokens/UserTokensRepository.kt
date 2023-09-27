@@ -2,6 +2,7 @@ package com.tangem.tap.domain.tokens
 
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.core.TangemSdkError
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -106,7 +107,8 @@ class UserTokensRepository(
         return runCatching { tangemTechApi.getUserTokens(userWalletId) }
             .fold(
                 onSuccess = { response ->
-                    response.tokens
+                    response.getOrThrow()
+                        .tokens
                         .mapNotNull(Currency.Companion::fromTokenResponse)
                         .also { storageService.saveUserTokens(userWalletId, it.toUserTokensResponse()) }
                         .distinct()
