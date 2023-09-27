@@ -15,6 +15,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.arrow.core)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
