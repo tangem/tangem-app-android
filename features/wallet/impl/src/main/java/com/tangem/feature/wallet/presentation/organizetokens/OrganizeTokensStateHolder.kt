@@ -16,15 +16,14 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.err
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val onSubscription: () -> Unit,
-    stateFlowScope: CoroutineScope,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
@@ -52,12 +51,6 @@ internal class OrganizeTokensStateHolder(
     }
 
     val stateFlow: StateFlow<OrganizeTokensState> = stateFlowInternal
-        .onSubscription { onSubscription() }
-        .stateIn(
-            scope = stateFlowScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = getInitialState(),
-        )
 
     fun updateStateWithTokenList(tokenList: TokenList) {
         updateState { tokenListConverter.convert(tokenList) }
