@@ -8,6 +8,7 @@ import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
@@ -17,6 +18,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -25,6 +27,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
+import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenScreenEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
@@ -39,7 +42,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -59,6 +62,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
@@ -208,6 +212,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onBuyClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonBuy(cryptoCurrency.symbol))
         val status = cryptoCurrencyStatus ?: return
 
         reduxStateHolder.dispatch(
@@ -220,10 +225,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onReloadClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonReload(cryptoCurrency.symbol))
         updateTxHistory()
     }
 
     override fun onSendClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonSend(cryptoCurrency.symbol))
+
         val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
 
         when (cryptoCurrencyStatus.currency) {
@@ -261,6 +269,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onReceiveClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonReceive(cryptoCurrency.symbol))
+
         viewModelScope.launch(dispatchers.io) {
             val addresses = walletManagersFacade.getAddress(
                 userWalletId = wallet.walletId,
@@ -270,11 +280,19 @@ internal class TokenDetailsViewModel @Inject constructor(
             uiState = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
                 addresses = addresses,
+                sendCopyAnalyticsEvent = {
+                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                },
+                sendShareAnalyticsEvent = {
+                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+                },
             )
         }
     }
 
     override fun onSellClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonSell(cryptoCurrency.symbol))
+
         val status = cryptoCurrencyStatus ?: return
         reduxStateHolder.dispatch(
             TradeCryptoAction.New.Sell(
@@ -285,6 +303,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onSwapClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonExchange(cryptoCurrency.symbol))
+
         reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrency))
     }
 
@@ -293,6 +313,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onHideClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonRemoveToken(cryptoCurrency.symbol))
+
         viewModelScope.launch {
             val hasLinkedTokens = removeCurrencyUseCase.hasLinkedTokens(wallet.walletId, cryptoCurrency)
             uiState = if (hasLinkedTokens) {
@@ -312,6 +334,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
+        analyticsEventsHandler.send(TokenScreenEvent.ButtonExplore(cryptoCurrency.symbol))
         viewModelScope.launch(dispatchers.io) {
             val addresses = walletManagersFacade.getAddress(
                 userWalletId = wallet.walletId,
@@ -345,6 +368,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRefreshSwipe() {
+        analyticsEventsHandler.send(TokenScreenEvent.Refreshed(cryptoCurrency.symbol))
+
         uiState = stateFactory.getRefreshingState()
 
         viewModelScope.launch(dispatchers.io) {
