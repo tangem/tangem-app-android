@@ -76,6 +76,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
                 text = stringResource(id = R.string.common_copy),
                 iconResId = R.drawable.ic_copy_24,
                 onClick = {
+                    content.onCopyClick.invoke()
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     clipboardManager.setText(AnnotatedString(selectedAddress.value))
                 },
@@ -85,6 +86,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
                 text = stringResource(id = R.string.common_share),
                 iconResId = R.drawable.ic_share_24,
                 onClick = {
+                    content.onShareClick.invoke()
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     context.shareText(selectedAddress.value)
                 },

@@ -144,7 +144,12 @@ internal class TokenDetailsStateFactory(
         return refreshStateConverter.convert(false)
     }
 
-    fun getStateWithReceiveBottomSheet(currency: CryptoCurrency, addresses: List<Address>): TokenDetailsState {
+    fun getStateWithReceiveBottomSheet(
+        currency: CryptoCurrency,
+        addresses: List<Address>,
+        sendCopyAnalyticsEvent: () -> Unit,
+        sendShareAnalyticsEvent: () -> Unit,
+    ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = true,
@@ -159,6 +164,8 @@ internal class TokenDetailsStateFactory(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
+                    onCopyClick = sendCopyAnalyticsEvent,
+                    onShareClick = sendShareAnalyticsEvent,
                 ),
             ),
         )
