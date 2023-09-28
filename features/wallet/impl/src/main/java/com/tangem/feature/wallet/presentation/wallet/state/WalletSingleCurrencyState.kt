@@ -38,6 +38,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val buttons: PersistentList<WalletManageButton>,
         override val txHistoryState: TxHistoryState,
         override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
         val marketPriceBlockState: MarketPriceBlockState,
     ) : WalletSingleCurrencyState()
 
@@ -53,6 +54,7 @@ internal sealed class WalletSingleCurrencyState : WalletState.ContentState() {
         override val isBottomSheetShow: Boolean = false,
         override val onBottomSheetDismiss: () -> Unit = {},
         override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
         val onExploreClick: () -> Unit,
     ) : WalletSingleCurrencyState(), WalletLockedState {
 
