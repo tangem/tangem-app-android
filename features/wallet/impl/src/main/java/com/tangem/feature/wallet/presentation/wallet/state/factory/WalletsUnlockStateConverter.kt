@@ -54,6 +54,7 @@ internal class WalletsUnlockStateConverter(
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
@@ -74,6 +75,7 @@ internal class WalletsUnlockStateConverter(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
