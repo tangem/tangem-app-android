@@ -28,7 +28,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Deposit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -38,7 +38,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -48,7 +48,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -58,7 +58,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -68,7 +68,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -78,7 +78,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
                 address = item.direction.extractAddress(),
-                amount = item.extractFormattedCryptoBalance(),
+                amount = item.getAmount(),
                 timestamp = item.timestampInMillis.toTimeFormat(),
                 status = item.status.tiUiStatus(),
                 direction = item.direction.toUiDirection(),
@@ -92,7 +92,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         return TransactionState.Transfer(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.extractFormattedCryptoBalance(),
+            amount = item.getAmount(),
             timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
@@ -103,7 +103,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         return TransactionState.Approve(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.extractFormattedCryptoBalance(),
+            amount = item.getAmount(),
             timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
@@ -113,7 +113,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         return TransactionState.Swap(
             txHash = item.txHash,
             address = item.direction.extractAddress(),
-            amount = item.extractFormattedCryptoBalance(),
+            amount = item.getAmount(),
             timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
@@ -140,7 +140,7 @@ internal class TokenDetailsTxHistoryToTransactionStateConverter(
         is TxHistoryItem.TransactionDirection.Outgoing -> TransactionState.Content.Direction.OUTGOING
     }
 
-    private fun TxHistoryItem.extractFormattedCryptoBalance(): String {
+    private fun TxHistoryItem.getAmount(): String {
         val prefix = when (direction) {
             is TxHistoryItem.TransactionDirection.Incoming -> "+"
             is TxHistoryItem.TransactionDirection.Outgoing -> "-"
