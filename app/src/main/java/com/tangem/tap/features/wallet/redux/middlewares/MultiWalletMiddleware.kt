@@ -144,6 +144,7 @@ class MultiWalletMiddleware {
             coinType = when (cryptoCurrency) {
                 is CryptoCurrency.Coin -> TokenDetailsArguments.CoinType.Native
                 is CryptoCurrency.Token -> TokenDetailsArguments.CoinType.Token(
+                    isCustom = cryptoCurrency.isCustom,
                     standardName = cryptoCurrency.network.standardType.name,
                     networkName = cryptoCurrency.network.name,
                     networkIcon = cryptoCurrency.networkIconResId,
