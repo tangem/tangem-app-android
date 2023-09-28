@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.tangem.common.Strings
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
@@ -33,8 +34,9 @@ import java.util.UUID
 /**
  * Transaction component
  *
- * @param state    state
- * @param modifier modifier
+ * @param state            state
+ * @param isBalanceHidden  is balance hidden
+ * @param modifier         modifier
  *
  * @see <a href = "https://www.figma.com/file/RU7AIgwHtGdMfy83T5UOoR/iOS?type=design&node-id=446-438&t=71jPDxMMk4e0
  * a025-4">Figma Component</a>
@@ -42,7 +44,7 @@ import java.util.UUID
 [REDACTED_AUTHOR]
  */
 @Composable
-fun Transaction(state: TransactionState, modifier: Modifier = Modifier) {
+fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -89,6 +91,7 @@ fun Transaction(state: TransactionState, modifier: Modifier = Modifier) {
 
             Amount(
                 state = state,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.constrainAs(amountItem) {
                     start.linkTo(titleItem.end)
                     top.linkTo(titleItem.top)
@@ -265,11 +268,11 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Amount(state: TransactionState, modifier: Modifier = Modifier) {
+private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
         is TransactionState.Content -> {
             Text(
-                text = state.amount,
+                text = if (isBalanceHidden) Strings.STARS else state.amount,
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = when (state.direction) {
@@ -333,7 +336,7 @@ private fun Preview_TransactionItem_LightTheme(
     @PreviewParameter(TransactionItemStateProvider::class) state: TransactionState,
 ) {
     TangemTheme(isDark = false) {
-        Transaction(state)
+        Transaction(state = state, isBalanceHidden = false)
     }
 }
 
@@ -343,7 +346,7 @@ private fun Preview_TransactionItem_DarkTheme(
     @PreviewParameter(TransactionItemStateProvider::class) state: TransactionState,
 ) {
     TangemTheme(isDark = true) {
-        Transaction(state)
+        Transaction(state = state, isBalanceHidden = false)
     }
 }
 

@@ -142,7 +142,12 @@ private fun WalletContent(
                     marketPriceBlock(state = state.marketPriceBlockState, modifier = itemModifier)
                 }
 
-                contentItems(state = state, txHistoryItems = txHistoryItems, modifier = movableItemModifier)
+                contentItems(
+                    state = state,
+                    txHistoryItems = txHistoryItems,
+                    isBalanceHidden = state.isBalanceHidden,
+                    modifier = movableItemModifier,
+                )
 
                 if (state is WalletMultiCurrencyState) {
                     val contentTokenListState = state.tokensListState as? WalletTokensListState.ContentState
