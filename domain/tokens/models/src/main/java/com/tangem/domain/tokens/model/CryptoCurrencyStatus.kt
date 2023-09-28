@@ -51,25 +51,36 @@ data class CryptoCurrencyStatus(
     object Loading : Status(isError = false)
 
     /** Represents a state where the cryptocurrency is not reachable. */
-    object Unreachable : Status(isError = true)
+    data class Unreachable(
+        override val priceChange: BigDecimal?,
+        override val fiatRate: BigDecimal?,
+    ) : Status(isError = true)
 
     /** Represents a state where the cryptocurrency's network amount not found. */
-    object NoAmount : Status(isError = true)
+    data class NoAmount(
+        override val priceChange: BigDecimal?,
+        override val fiatRate: BigDecimal?,
+    ) : Status(isError = true)
 
     /** Represents a state where the cryptocurrency's derivation is missed. */
-    object MissedDerivation : Status(isError = true)
+    data class MissedDerivation(
+        override val priceChange: BigDecimal?,
+        override val fiatRate: BigDecimal?,
+    ) : Status(isError = true)
 
     /**
      * Represents a state where there is no account associated with the cryptocurrency
      *
      * @property errorMessage error message
      */
-    data class NoAccount(val errorMessage: String) : Status(isError = false) {
+    data class NoAccount(
+        val errorMessage: String,
+        override val priceChange: BigDecimal?,
+        override val fiatRate: BigDecimal?,
+    ) : Status(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
         override val fiatAmount: BigDecimal = BigDecimal.ZERO
-        override val fiatRate: BigDecimal = BigDecimal.ZERO
-        override val priceChange: BigDecimal = BigDecimal.ZERO
     }
 
     /**
