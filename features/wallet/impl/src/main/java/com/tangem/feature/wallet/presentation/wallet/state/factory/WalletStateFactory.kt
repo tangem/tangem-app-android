@@ -88,6 +88,7 @@ internal class WalletStateFactory(
     private val loadedTxHistoryConverter by lazy {
         WalletLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
             clickIntents = clickIntents,
         )

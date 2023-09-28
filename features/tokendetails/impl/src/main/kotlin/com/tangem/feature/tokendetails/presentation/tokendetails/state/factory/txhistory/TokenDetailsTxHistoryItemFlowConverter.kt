@@ -30,7 +30,10 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsTxHistoryTransactionStateConverter(symbol = symbol, decimals = decimals)
+        TokenDetailsTxHistoryTransactionStateConverter(
+            symbol = symbol,
+            decimals = decimals,
+        )
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
