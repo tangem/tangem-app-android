@@ -49,6 +49,7 @@ internal class TokenDetailsSkeletonStateConverter(
             dialogConfig = null,
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
+            isBalanceHidden = true,
         )
     }
 
