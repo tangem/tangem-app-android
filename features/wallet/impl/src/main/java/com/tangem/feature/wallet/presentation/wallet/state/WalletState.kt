@@ -39,6 +39,9 @@ internal sealed class WalletState {
         /** State event */
         abstract val event: StateEvent<WalletEvent>
 
+        /** Whether balance should be hidden */
+        abstract val isBalanceHidden: Boolean
+
         /**
          * Util function that allow to make a copy
          *
@@ -50,6 +53,7 @@ internal sealed class WalletState {
             walletsListConfig: WalletsListConfig = this.walletsListConfig,
             pullToRefreshConfig: WalletPullToRefreshConfig = this.pullToRefreshConfig,
             event: StateEvent<WalletEvent> = this.event,
+            isBalanceHidden: Boolean = this.isBalanceHidden,
         ): ContentState {
             return when (this) {
                 is WalletMultiCurrencyState.Content -> {
@@ -57,6 +61,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletMultiCurrencyState.Locked -> {
@@ -64,6 +69,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletSingleCurrencyState.Content -> {
@@ -71,6 +77,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
                 is WalletSingleCurrencyState.Locked -> {
@@ -78,6 +85,7 @@ internal sealed class WalletState {
                         walletsListConfig = walletsListConfig,
                         pullToRefreshConfig = pullToRefreshConfig,
                         event = event,
+                        isBalanceHidden = isBalanceHidden,
                     )
                 }
             }

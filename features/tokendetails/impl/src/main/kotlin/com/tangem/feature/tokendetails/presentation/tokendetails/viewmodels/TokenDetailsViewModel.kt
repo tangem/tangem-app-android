@@ -78,12 +78,10 @@ internal class TokenDetailsViewModel @Inject constructor(
     private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
         currencySymbolProvider = Provider { cryptoCurrency.symbol },
         currencyDecimalsProvider = Provider { cryptoCurrency.decimals },
@@ -125,8 +123,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                isBalanceHidden = hidden
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
+                uiState = stateFactory.getStateWithUpdatedHidden(
+                    isBalanceHidden = hidden,
+                )
             }
             .launchIn(viewModelScope)
 
@@ -186,11 +185,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             }
 
             txHistoryItemsCountEither.onRight {
-                uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
-                        it.cachedIn(viewModelScope)
-                    },
-                )
+                val either = txHistoryItemsUseCase(currency = cryptoCurrency)
+                    .map { it.cachedIn(viewModelScope) }
+                uiState = stateFactory.getLoadedTxHistoryState(txHistoryEither = either)
             }
         }
     }
