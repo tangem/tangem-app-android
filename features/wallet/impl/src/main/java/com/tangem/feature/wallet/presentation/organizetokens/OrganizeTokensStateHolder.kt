@@ -19,8 +19,6 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.ite
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -30,8 +28,6 @@ internal class OrganizeTokensStateHolder(
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isBalanceHiddenProvider: Provider<Boolean>,
-    private val onSubscription: () -> Unit,
-    stateFlowScope: CoroutineScope,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())

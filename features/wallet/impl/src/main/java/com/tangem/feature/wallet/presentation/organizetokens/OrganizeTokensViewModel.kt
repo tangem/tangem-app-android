@@ -60,11 +60,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
         dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
-        onSubscription = {
-            bootstrapTokenList()
-            bootstrapDragAndDropUpdates()
-        },
-        stateFlowScope = viewModelScope,
     )
 
     private val userWalletId: UserWalletId by lazy {
@@ -96,7 +91,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
         bootstrapTokenList()
         bootstrapDragAndDropUpdates()
-
     }
 
     override fun onBackClick() {
