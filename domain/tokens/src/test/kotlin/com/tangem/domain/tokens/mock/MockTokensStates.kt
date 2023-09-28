@@ -9,52 +9,86 @@ internal object MockTokensStates {
 
     val tokenState1 = CryptoCurrencyStatus(
         currency = MockTokens.token1,
-        value = CryptoCurrencyStatus.Unreachable,
+        value = CryptoCurrencyStatus.Unreachable(
+            priceChange = MockQuotes.quote1.priceChange,
+            fiatRate = MockQuotes.quote1.fiatRate,
+        ),
     )
 
     val tokenState2 = CryptoCurrencyStatus(
         currency = MockTokens.token2,
-        value = CryptoCurrencyStatus.Unreachable,
+        value = CryptoCurrencyStatus.Unreachable(
+            priceChange = MockQuotes.quote2.priceChange,
+            fiatRate = MockQuotes.quote2.fiatRate,
+        ),
     )
 
     val tokenState3 = CryptoCurrencyStatus(
         currency = MockTokens.token3,
-        value = CryptoCurrencyStatus.Unreachable,
+        value = CryptoCurrencyStatus.Unreachable(
+            priceChange = MockQuotes.quote3.priceChange,
+            fiatRate = MockQuotes.quote3.fiatRate,
+        ),
     )
 
     val tokenState4 = CryptoCurrencyStatus(
         currency = MockTokens.token4,
-        value = CryptoCurrencyStatus.MissedDerivation,
+        value = CryptoCurrencyStatus.MissedDerivation(
+            priceChange = MockQuotes.quote4.priceChange,
+            fiatRate = MockQuotes.quote4.fiatRate,
+        ),
     )
 
     val tokenState5 = CryptoCurrencyStatus(
         currency = MockTokens.token5,
-        value = CryptoCurrencyStatus.MissedDerivation,
+        value = CryptoCurrencyStatus.MissedDerivation(
+            priceChange = MockQuotes.quote5.priceChange,
+            fiatRate = MockQuotes.quote5.fiatRate,
+        ),
     )
 
     val tokenState6 = CryptoCurrencyStatus(
         currency = MockTokens.token6,
-        value = CryptoCurrencyStatus.MissedDerivation,
+        value = CryptoCurrencyStatus.MissedDerivation(
+            priceChange = MockQuotes.quote6.priceChange,
+            fiatRate = MockQuotes.quote6.fiatRate,
+        ),
     )
 
     val tokenState7 = CryptoCurrencyStatus(
         currency = MockTokens.token7,
-        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
+        value = CryptoCurrencyStatus.NoAccount(
+            priceChange = MockQuotes.quote7.priceChange,
+            fiatRate = MockQuotes.quote7.fiatRate,
+            errorMessage = "",
+        ),
     )
 
     val tokenState8 = CryptoCurrencyStatus(
         currency = MockTokens.token8,
-        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
+        value = CryptoCurrencyStatus.NoAccount(
+            priceChange = MockQuotes.quote8.priceChange,
+            fiatRate = MockQuotes.quote8.fiatRate,
+            errorMessage = "",
+        ),
     )
 
     val tokenState9 = CryptoCurrencyStatus(
         currency = MockTokens.token9,
-        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
+        value = CryptoCurrencyStatus.NoAccount(
+            priceChange = MockQuotes.quote9.priceChange,
+            fiatRate = MockQuotes.quote9.fiatRate,
+            errorMessage = "",
+        ),
     )
 
     val tokenState10 = CryptoCurrencyStatus(
         currency = MockTokens.token10,
-        value = CryptoCurrencyStatus.NoAccount(errorMessage = ""),
+        value = CryptoCurrencyStatus.NoAccount(
+            priceChange = MockQuotes.quote10.priceChange,
+            fiatRate = MockQuotes.quote10.fiatRate,
+            errorMessage = "",
+        ),
     )
 
     val failedTokenStates = nonEmptyListOf(
