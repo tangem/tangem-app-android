@@ -37,6 +37,7 @@ internal class WalletLockedConverter(
             onUnlockWalletsNotificationClick = clickIntents::onUnlockWalletNotificationClick,
             onUnlockClick = clickIntents::onUnlockWalletClick,
             onScanClick = clickIntents::onScanToUnlockWalletClick,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
@@ -51,6 +52,7 @@ internal class WalletLockedConverter(
             onUnlockClick = clickIntents::onUnlockWalletClick,
             onScanClick = clickIntents::onScanToUnlockWalletClick,
             onExploreClick = clickIntents::onExploreClick,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
