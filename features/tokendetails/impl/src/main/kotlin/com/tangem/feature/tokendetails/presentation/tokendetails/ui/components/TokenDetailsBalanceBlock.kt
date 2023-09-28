@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.res.TangemTheme
@@ -20,7 +21,11 @@ import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modifier: Modifier = Modifier) {
+internal fun TokenDetailsBalanceBlock(
+    state: TokenDetailsBalanceBlockState,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -41,12 +46,14 @@ internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modi
             )
             FiatBalance(
                 state = state,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing4)
                     .padding(horizontal = TangemTheme.dimens.spacing12),
             )
             CryptoBalance(
                 state = state,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing4)
                     .padding(horizontal = TangemTheme.dimens.spacing12),
@@ -62,7 +69,11 @@ internal fun TokenDetailsBalanceBlock(state: TokenDetailsBalanceBlockState, modi
 }
 
 @Composable
-private fun FiatBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier = Modifier) {
+private fun FiatBalance(
+    state: TokenDetailsBalanceBlockState,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     when (state) {
         is TokenDetailsBalanceBlockState.Loading -> RectangleShimmer(
             modifier = modifier.size(
@@ -72,7 +83,7 @@ private fun FiatBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (state.isBalanceHidden) DOTS else state.fiatBalance,
+            text = if (isBalanceHidden) STARS else state.fiatBalance,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -86,7 +97,11 @@ private fun FiatBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier
 }
 
 @Composable
-private fun CryptoBalance(state: TokenDetailsBalanceBlockState, modifier: Modifier = Modifier) {
+private fun CryptoBalance(
+    state: TokenDetailsBalanceBlockState,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     when (state) {
         is TokenDetailsBalanceBlockState.Loading -> RectangleShimmer(
             modifier = modifier.size(
@@ -96,7 +111,7 @@ private fun CryptoBalance(state: TokenDetailsBalanceBlockState, modifier: Modifi
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
-            text = if (state.isBalanceHidden) DOTS else state.cryptoBalance,
+            text = if (isBalanceHidden) STARS else state.cryptoBalance,
             style = TangemTheme.typography.caption,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -115,7 +130,7 @@ private fun Preview_TokenDetailsBalanceBlock_LightTheme(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
 ) {
     TangemTheme(isDark = false) {
-        TokenDetailsBalanceBlock(state)
+        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
     }
 }
 
@@ -125,7 +140,7 @@ private fun Preview_TokenDetailsBalanceBlock_DarkTheme(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
 ) {
     TangemTheme(isDark = true) {
-        TokenDetailsBalanceBlock(state)
+        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
     }
 }
 
@@ -136,5 +151,3 @@ private class TokenDetailsBalanceBlockStateProvider : CollectionPreviewParameter
         TokenDetailsPreviewData.balanceError,
     ),
 )
-
-const val DOTS = "***"
