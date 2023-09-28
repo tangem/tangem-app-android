@@ -79,7 +79,13 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         state = state.tokenInfoBlockState,
                     )
                 }
-                item { TokenDetailsBalanceBlock(modifier = itemModifier, state = state.tokenBalanceBlockState) }
+                item {
+                    TokenDetailsBalanceBlock(
+                        modifier = itemModifier,
+                        isBalanceHidden = state.isBalanceHidden,
+                        state = state.tokenBalanceBlockState,
+                    )
+                }
                 items(
                     items = state.notifications.filter { it.isVisible },
                     key = { it.config::class.java },
@@ -95,11 +101,16 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     item {
                         PendingTxsBlock(
                             pendingTxs = state.pendingTxs,
+                            isBalanceHidden = state.isBalanceHidden,
                             modifier = itemModifier,
                         )
                     }
                 }
-                txHistoryItems(state = state.txHistoryState, txHistoryItems = txHistoryItems)
+                txHistoryItems(
+                    state = state.txHistoryState,
+                    isBalanceHidden = state.isBalanceHidden,
+                    txHistoryItems = txHistoryItems,
+                )
             }
 
             PullRefreshIndicator(
@@ -127,7 +138,11 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
 }
 
 @Composable
-private fun PendingTxsBlock(pendingTxs: PersistentList<TransactionState>, modifier: Modifier = Modifier) {
+private fun PendingTxsBlock(
+    pendingTxs: PersistentList<TransactionState>,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
@@ -135,7 +150,7 @@ private fun PendingTxsBlock(pendingTxs: PersistentList<TransactionState>, modifi
         verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
         horizontalAlignment = Alignment.Start,
     ) {
-        pendingTxs.fastForEach { Transaction(state = it) }
+        pendingTxs.fastForEach { Transaction(state = it, isBalanceHidden = isBalanceHidden) }
     }
 }
 

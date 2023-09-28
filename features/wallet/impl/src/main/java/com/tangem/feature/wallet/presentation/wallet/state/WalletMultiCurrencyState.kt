@@ -26,6 +26,7 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val tokensListState: WalletTokensListState,
         override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
         val tokenActionsBottomSheet: ActionsBottomSheetConfig?,
         val onManageTokensClick: () -> Unit,
     ) : WalletMultiCurrencyState()
@@ -41,6 +42,7 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val isBottomSheetShow: Boolean = false,
         override val onBottomSheetDismiss: () -> Unit = {},
         override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
     ) : WalletMultiCurrencyState(), WalletLockedState {
 
         override val notifications = persistentListOf(
