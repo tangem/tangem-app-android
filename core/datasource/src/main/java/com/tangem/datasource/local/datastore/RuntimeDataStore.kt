@@ -11,12 +11,14 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
         store.tryEmit(value = null)
     }
 
+    override suspend fun isEmpty(): Boolean = store.firstOrNull().isNullOrEmpty()
+
+    override suspend fun contains(key: String): Boolean = getSyncOrNull(key) != null
+
     override fun get(key: String): Flow<Data> {
-        return store
-            .map { value ->
-                value?.get(key)
-            }
-            .filterNotNull()
+        return store.mapNotNull { value ->
+            value?.get(key)
+        }
     }
 
     override fun getAll(): Flow<List<Data>> {
@@ -42,20 +44,24 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
     }
 
     override suspend fun store(values: Map<String, Data>) {
-        updateValue { value ->
-            values.forEach { (key, item) ->
-                value[key] = item
-            }
+        updateValue { storedValue ->
+            storedValue.putAll(values)
 
-            value
+            storedValue
         }
     }
 
     override suspend fun remove(key: String) {
-        updateValue { value ->
-            value.remove(key)
+        updateValue { storedValue ->
+            storedValue.remove(key)
 
-            value
+            storedValue
+        }
+    }
+
+    override suspend fun remove(keys: Collection<String>) {
+        updateValue { value ->
+            HashMap(value.filterKeys { it !in keys })
         }
     }
 

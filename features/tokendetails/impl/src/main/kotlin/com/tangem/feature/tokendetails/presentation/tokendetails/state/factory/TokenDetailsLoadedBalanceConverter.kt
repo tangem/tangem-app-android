@@ -3,7 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -81,34 +82,29 @@ internal class TokenDetailsLoadedBalanceConverter(
 
     private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.NoQuote,
-            is CryptoCurrencyStatus.Loaded,
-            -> MarketPriceBlockState.Content(
-                currencyName = currencyName,
-                price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeConfig(
-                    valueInPercent = formatPriceChange(status),
-                    type = getPriceChangeType(status),
-                ),
-            )
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
+            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencyName)
+            is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
-            -> MarketPriceBlockState.Error(currencyName)
+            -> MarketPriceBlockState.Content(
+                currencyName = currencyName,
+                price = formatPrice(status, appCurrencyProvider()),
+                priceChangeConfig = PriceChangeState.Content(
+                    valueInPercent = formatPriceChange(status),
+                    type = getPriceChangeType(status),
+                ),
+            )
         }
     }
 
-    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeConfig.Type {
-        val priceChange = status.priceChange ?: return PriceChangeConfig.Type.DOWN
+    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
+        val priceChange = status.priceChange ?: return PriceChangeType.DOWN
 
-        return if (priceChange > BigDecimal.ZERO) {
-            PriceChangeConfig.Type.UP
-        } else {
-            PriceChangeConfig.Type.DOWN
-        }
+        return if (priceChange > BigDecimal.ZERO) PriceChangeType.UP else PriceChangeType.DOWN
     }
 
     private fun formatPriceChange(status: CryptoCurrencyStatus.Status): String {

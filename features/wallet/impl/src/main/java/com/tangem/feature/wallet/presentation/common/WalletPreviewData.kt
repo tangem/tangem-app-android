@@ -4,7 +4,8 @@ import androidx.paging.PagingData
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
@@ -129,10 +130,7 @@ internal object WalletPreviewData {
             hasPending = true,
             tokenOptions = TokenOptionsState(
                 fiatAmount = "321 $",
-                config = PriceChangeConfig(
-                    valueInPercent = "2%",
-                    type = PriceChangeConfig.Type.UP,
-                ),
+                priceChangeState = PriceChangeState.Unknown,
                 isBalanceHidden = false,
             ),
             onItemClick = {},
@@ -153,15 +151,14 @@ internal object WalletPreviewData {
             icon = tokenIconState,
             name = "Polygon",
             amount = "5,412 MATIC",
-            hasPending = true,
+            hasPending = false,
             tokenOptions = TokenOptionsState(
-                config = PriceChangeConfig(
+                priceChangeState = PriceChangeState.Content(
                     valueInPercent = "2%",
-                    type = PriceChangeConfig.Type.UP,
+                    type = PriceChangeType.UP,
                 ),
                 fiatAmount = "321 $",
                 isBalanceHidden = false,
-
             ),
             onItemClick = {},
             onItemLongClick = {},
@@ -419,9 +416,9 @@ internal object WalletPreviewData {
             marketPriceBlockState = MarketPriceBlockState.Content(
                 currencyName = "BTC",
                 price = "98900.12$",
-                priceChangeConfig = PriceChangeConfig(
+                priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = "5.16%",
-                    type = PriceChangeConfig.Type.UP,
+                    type = PriceChangeType.UP,
                 ),
             ),
             txHistoryState = TxHistoryState.Content(
