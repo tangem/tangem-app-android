@@ -414,7 +414,7 @@ internal object WalletPreviewData {
             buttons = manageButtons,
             bottomSheetConfig = bottomSheet,
             marketPriceBlockState = MarketPriceBlockState.Content(
-                currencyName = "BTC",
+                currencySymbol = "BTC",
                 price = "98900.12$",
                 priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = "5.16%",

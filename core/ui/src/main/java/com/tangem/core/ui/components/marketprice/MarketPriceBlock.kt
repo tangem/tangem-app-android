@@ -51,7 +51,7 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
         horizontalAlignment = Alignment.Start,
     ) {
-        Title(currencyName = state.currencyName)
+        Title(currencyName = state.currencySymbol)
 
         Content(state = state, rootWidth = rootWidth)
     }
@@ -213,7 +213,7 @@ private fun Preview_MarketPriceBlock_Dark(
 private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterProvider<MarketPriceBlockState>(
     collection = listOf(
         MarketPriceBlockState.Content(
-            currencyName = "BTC",
+            currencySymbol = "BTC",
             price = "98900 $",
             priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "5.16%",
@@ -221,14 +221,14 @@ private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterPr
             ),
         ),
         MarketPriceBlockState.Content(
-            currencyName = "BTC",
+            currencySymbol = "BTC",
             price = "98900 $",
             priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "10.89%",
                 type = PriceChangeType.UP,
             ),
         ),
-        MarketPriceBlockState.Loading(currencyName = "BTC"),
-        MarketPriceBlockState.Error(currencyName = "BTC"),
+        MarketPriceBlockState.Loading(currencySymbol = "BTC"),
+        MarketPriceBlockState.Error(currencySymbol = "BTC"),
     ),
 )

@@ -70,7 +70,7 @@ internal object TokenDetailsPreviewData {
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(actionButtons = actionButtons)
 
-    private val marketPriceLoading = MarketPriceBlockState.Loading(currencyName = "USDT")
+    private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
         isRefreshing = false,

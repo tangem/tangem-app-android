@@ -38,7 +38,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 },
             ),
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
-            marketPriceBlockState = MarketPriceBlockState.Loading(value.currencyName),
+            marketPriceBlockState = MarketPriceBlockState.Loading(value.currencySymbol),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
