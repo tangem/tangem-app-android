@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    /** Project - Common */
+    implementation(projects.common)
+
     /** Project - Domain */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.appTheme.models)
