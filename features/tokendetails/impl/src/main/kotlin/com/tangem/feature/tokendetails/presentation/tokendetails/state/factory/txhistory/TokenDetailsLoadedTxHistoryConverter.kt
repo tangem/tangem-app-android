@@ -16,7 +16,7 @@ internal class TokenDetailsLoadedTxHistoryConverter(
     private val clickIntents: TokenDetailsClickIntents,
     symbol: String,
     decimals: Int,
-) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TokenDetailsState> {
+) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TxHistoryState> {
 
     private val txHistoryItemFlowConverter by lazy {
         TokenDetailsTxHistoryItemFlowConverter(
@@ -27,23 +27,19 @@ internal class TokenDetailsLoadedTxHistoryConverter(
         )
     }
 
-    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TokenDetailsState {
+    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TxHistoryState {
         return value.fold(ifLeft = ::convertError, ifRight = ::convert)
     }
 
-    private fun convertError(error: TxHistoryListError): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = when (error) {
-                is TxHistoryListError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
-                }
-            },
-        )
+    private fun convertError(error: TxHistoryListError): TxHistoryState {
+        return when (error) {
+            is TxHistoryListError.DataError -> {
+                TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+            }
+        }
     }
 
-    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = txHistoryItemFlowConverter.convert(value = items),
-        )
+    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
+        return txHistoryItemFlowConverter.convert(value = items)
     }
 }
