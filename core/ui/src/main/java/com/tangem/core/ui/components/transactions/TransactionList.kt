@@ -67,16 +67,17 @@ private fun LazyListScope.contentItems(
         },
         contentType = txHistoryItems.itemContentType { it::class.java },
         itemContent = { index ->
-            val item = txHistoryItems[index]!!
-            TxHistoryListItem(
-                state = item,
-                modifier = modifier
-                    .animateItemPlacement()
-                    .roundedShapeItemDecoration(
-                        currentIndex = index,
-                        lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
-                    ),
-            )
+            txHistoryItems[index]?.let { item ->
+                TxHistoryListItem(
+                    state = item,
+                    modifier = modifier
+                        .animateItemPlacement()
+                        .roundedShapeItemDecoration(
+                            currentIndex = index,
+                            lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
+                        ),
+                )
+            }
         },
     )
 }
