@@ -84,8 +84,14 @@ internal class TokenDetailsLoadedBalanceConverter(
 
     private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
+            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencyName)
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.MissedDerivation,
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.NoAmount,
+            is CryptoCurrencyStatus.Unreachable,
             -> MarketPriceBlockState.Content(
                 currencyName = currencyName,
                 price = formatPrice(status, appCurrencyProvider()),
@@ -94,13 +100,6 @@ internal class TokenDetailsLoadedBalanceConverter(
                     type = getPriceChangeType(status),
                 ),
             )
-            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
-            is CryptoCurrencyStatus.Custom,
-            is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
-            is CryptoCurrencyStatus.NoAmount,
-            is CryptoCurrencyStatus.Unreachable,
-            -> MarketPriceBlockState.Error(currencyName)
         }
     }
 
