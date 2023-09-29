@@ -148,6 +148,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         getCurrencyStatusUpdatesUseCase(
             userWalletId = selectedWallet.walletId,
             currencyId = cryptoCurrency.id,
+            refresh = true,
         )
             .distinctUntilChanged()
             .onEach { either ->
@@ -371,10 +372,6 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
-    }
-
-    override fun onCloseExistentialDepositNotification() {
-        uiState = stateFactory.getStateWithRemovedExistentialNotification()
     }
 
     override fun onCloseRentInfoNotification() {
