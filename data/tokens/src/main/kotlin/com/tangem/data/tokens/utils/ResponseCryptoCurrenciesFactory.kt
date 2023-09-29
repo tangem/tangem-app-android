@@ -6,6 +6,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
@@ -21,10 +22,17 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
         scanResponse: ScanResponse,
     ): CryptoCurrency {
         val responseTokenId = currencyId.rawCurrencyId
+        val blockchain = Blockchain.fromId(currencyId.rawNetworkId)
+        val networkId = blockchain.toNetworkId()
+        val derivationPath = blockchain
+            .derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            ?.rawPath
 
-        val token = requireNotNull(response.tokens.firstOrNull { it.id == responseTokenId }) {
-            "Unable find a token with provided ID: $responseTokenId"
-        }
+        val token = requireNotNull(
+            value = response.tokens
+                .find { it.id == responseTokenId && it.networkId == networkId && it.derivationPath == derivationPath },
+            lazyMessage = { "Unable find a token with provided TokenID($responseTokenId) and NetworkID($networkId)" },
+        )
 
         return requireNotNull(createCurrency(token, scanResponse)) {
             "Unable to create a currency with provided ID: $currencyId"
