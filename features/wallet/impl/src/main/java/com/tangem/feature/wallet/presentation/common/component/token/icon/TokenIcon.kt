@@ -14,26 +14,28 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState.IconState as TokenIconState
 
 private const val GRAY_SCALE_SATURATION = 0f
 private const val GRAY_SCALE_ALPHA = 0.4f
 private const val NORMAL_ALPHA = 1f
 
 @Composable
-internal fun TokenIcon(state: TokenItemState, modifier: Modifier = Modifier) {
+internal fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier) {
     BaseContainer(modifier = modifier) {
         val iconModifier = Modifier
             .align(Alignment.Center)
             .size(TangemTheme.dimens.size36)
 
         when (state) {
-            is TokenItemState.Loading -> LoadingIcon(modifier = iconModifier)
-            is TokenItemState.Locked -> LockedIcon(modifier = iconModifier)
-            is TokenItemState.ContentState -> ContentIconContainer(
-                modifier = iconModifier,
-                icon = state.icon,
-            )
+            is TokenIconState.Loading -> LoadingIcon(modifier = iconModifier)
+            is TokenIconState.Locked -> LockedIcon(modifier = iconModifier)
+            is TokenIconState.CoinIcon,
+            is TokenIconState.CustomTokenIcon,
+            is TokenIconState.TokenIcon,
+            -> {
+                ContentIconContainer(modifier = iconModifier, icon = state)
+            }
         }
     }
 }
@@ -58,7 +60,7 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BoxScope.ContentIconContainer(icon: TokenItemState.IconState, modifier: Modifier = Modifier) {
+private fun BoxScope.ContentIconContainer(icon: TokenIconState, modifier: Modifier = Modifier) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
         if (icon.isGrayscale) {
