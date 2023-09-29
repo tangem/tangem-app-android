@@ -13,55 +13,49 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
-import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState.PriceChangeState as TokenPriceChangeState
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-internal fun TokenPriceChange(state: TokenItemState, modifier: Modifier = Modifier) {
-    AnimatedContent(targetState = state, label = "Update the price change", modifier = modifier) { animatedState ->
-        when (animatedState) {
-            is TokenItemState.Content -> {
-                PriceChangeBlock(state = animatedState.tokenOptions.priceChangeState)
-            }
-            is TokenItemState.Loading -> {
-                RectangleShimmer(modifier = Modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
-            }
-            is TokenItemState.Locked -> {
-                LockedRectangle(modifier = Modifier.placeholderSize())
-            }
-            is TokenItemState.Unreachable,
-            is TokenItemState.Draggable,
-            is TokenItemState.NoAddress,
-            -> Unit
+internal fun TokenPriceChange(state: TokenPriceChangeState?, modifier: Modifier = Modifier) {
+    when (state) {
+        is TokenPriceChangeState.Content -> {
+            PriceChangeBlock(modifier = modifier, type = state.type, text = state.valueInPercent)
         }
+        is TokenPriceChangeState.Unknown -> {
+            PriceChangeBlock(modifier = modifier)
+        }
+        is TokenPriceChangeState.Loading -> {
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+        }
+        is TokenPriceChangeState.Locked -> {
+            LockedRectangle(modifier = modifier.placeholderSize())
+        }
+        null -> Unit
     }
 }
 
 @Composable
-private fun PriceChangeBlock(state: PriceChangeState) {
-    Row(horizontalArrangement = Arrangement.End) {
-        PriceChangeIcon(
-            type = (state as? PriceChangeState.Content)?.type,
-            modifier = Modifier.align(Alignment.CenterVertically),
-        )
+private fun PriceChangeBlock(modifier: Modifier = Modifier, type: PriceChangeType? = null, text: String? = null) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PriceChangeIcon(type = type)
         SpacerW4()
-        PriceChangeText(state = state, modifier = Modifier.align(Alignment.CenterVertically))
+        PriceChangeText(type = type, text = text)
     }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun PriceChangeIcon(type: PriceChangeType?, modifier: Modifier = Modifier) {
-    AnimatedContent(
-        targetState = type,
-        label = "Update the price change's arrow",
-        modifier = modifier,
-    ) { animatedType ->
+private fun PriceChangeIcon(type: PriceChangeType?) {
+    AnimatedContent(targetState = type, label = "Update the price change's arrow") { animatedType ->
         animatedType ?: return@AnimatedContent
 
         Icon(
@@ -82,25 +76,14 @@ private fun PriceChangeIcon(type: PriceChangeType?, modifier: Modifier = Modifie
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun PriceChangeText(state: PriceChangeState, modifier: Modifier = Modifier) {
-    AnimatedContent(
-        targetState = state,
-        label = "Update the price change's text",
-        modifier = modifier,
-    ) { animatedState ->
+private fun PriceChangeText(type: PriceChangeType?, text: String?) {
+    AnimatedContent(targetState = text, label = "Update the price change's text") { animatedText ->
         Text(
-            text = when (animatedState) {
-                is PriceChangeState.Content -> animatedState.valueInPercent
-                is PriceChangeState.Unknown -> TokenItemState.UNKNOWN_AMOUNT_SIGN
-            },
-            color = when (animatedState) {
-                is PriceChangeState.Content -> {
-                    when (animatedState.type) {
-                        PriceChangeType.UP -> TangemTheme.colors.text.accent
-                        PriceChangeType.DOWN -> TangemTheme.colors.text.warning
-                    }
-                }
-                PriceChangeState.Unknown -> TangemTheme.colors.text.primary1
+            text = animatedText ?: TokenItemState.UNKNOWN_AMOUNT_SIGN,
+            color = when (type) {
+                PriceChangeType.UP -> TangemTheme.colors.text.accent
+                PriceChangeType.DOWN -> TangemTheme.colors.text.warning
+                null -> TangemTheme.colors.text.primary1
             },
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
@@ -111,6 +94,6 @@ private fun PriceChangeText(state: PriceChangeState, modifier: Modifier = Modifi
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing4)
+        .padding(vertical = TangemTheme.dimens.spacing3)
         .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
 }

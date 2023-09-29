@@ -1,12 +1,9 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.utils.CryptoCurrencyToIconStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
@@ -48,12 +45,12 @@ internal class CryptoCurrencyToDraggableItemConverter(
 
         return TokenItemState.Draggable(
             id = getTokenItemId(currency.id),
-            icon = iconStateConverter.convert(currencyStatus),
-            name = currency.name,
-            info = if (currencyStatus.value.isError) {
-                resourceReference(id = R.string.common_unreachable)
+            iconState = iconStateConverter.convert(currencyStatus),
+            titleState = TokenItemState.TitleState.Content(text = currency.name),
+            cryptoAmountState = if (currencyStatus.value.isError) {
+                TokenItemState.CryptoAmountState.Unreachable
             } else {
-                stringReference(getFormattedFiatAmount(currencyStatus, appCurrency))
+                TokenItemState.CryptoAmountState.Content(text = getFormattedFiatAmount(currencyStatus, appCurrency))
             },
         )
     }
