@@ -67,13 +67,16 @@ internal class CurrenciesStatusesOperations(
         }
     }
 
-    suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
+    suspend fun getCurrencyStatusFlow(
+        currencyId: CryptoCurrency.ID,
+        refresh: Boolean = false,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getMultiCurrencyWalletCurrency(currencyId) },
             recover = { return flowOf(it.left()) },
         )
 
-        return getCurrencyStatusFlow(currency)
+        return getCurrencyStatusFlow(currency, refresh)
     }
 
     suspend fun getNetworkCoinFlow(networkId: Network.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
@@ -94,7 +97,10 @@ internal class CurrenciesStatusesOperations(
         return getCurrencyStatusFlow(currency)
     }
 
-    private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
+    private fun getCurrencyStatusFlow(
+        currency: CryptoCurrency,
+        refresh: Boolean = false,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
         val quoteFlow = getQuotes(currenciesIds)
@@ -105,7 +111,7 @@ internal class CurrenciesStatusesOperations(
                 }
             }
 
-        val statusFlow = getNetworksStatuses(networks)
+        val statusFlow = getNetworksStatuses(networks, refresh)
             .map { maybeStatuses ->
                 maybeStatuses.flatMap { statuses ->
                     statuses.singleOrNull { it.network == currency.network }?.right()
@@ -204,8 +210,11 @@ internal class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyQuotes.left()) }
     }
 
-    private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
-        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
+    private fun getNetworksStatuses(
+        networks: NonEmptySet<Network>,
+        refresh: Boolean = false,
+    ): Flow<Either<Error, Set<NetworkStatus>>> {
+        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks, refresh)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
