@@ -3,99 +3,119 @@ package com.tangem.feature.wallet.presentation.common.state
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-import com.tangem.core.ui.components.marketprice.PriceChangeState
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 /** Token item state */
 @Immutable
-internal sealed interface TokenItemState {
+internal sealed class TokenItemState {
 
-    /** Unique id */
-    val id: String
+    abstract val id: String
+
+    abstract val iconState: IconState
+
+    abstract val titleState: TitleState
+
+    abstract val fiatAmountState: FiatAmountState?
+
+    abstract val cryptoAmountState: CryptoAmountState?
+
+    abstract val priceChangeState: PriceChangeState?
 
     /** Loading token state */
-    data class Loading(override val id: String) : TokenItemState
+    data class Loading(override val id: String) : TokenItemState() {
+        override val iconState: IconState = IconState.Loading
+        override val titleState: TitleState = TitleState.Loading
+        override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
+        override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
+        override val priceChangeState: PriceChangeState = PriceChangeState.Loading
+    }
 
     /** Locked token state */
-    data class Locked(override val id: String) : TokenItemState
-
-    /** Content state */
-    @Immutable
-    sealed class ContentState : TokenItemState {
-
-        abstract val icon: IconState
-        abstract val name: String
+    data class Locked(override val id: String) : TokenItemState() {
+        override val iconState: IconState = IconState.Locked
+        override val titleState: TitleState = TitleState.Locked
+        override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
+        override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
+        override val priceChangeState: PriceChangeState = PriceChangeState.Locked
     }
 
     /**
      * Content token state
      *
      * @property id                    unique id
-     * @property icon                  token icon state
-     * @property name                  token name
-     * @property amount                amount of token
-     * @property hasPending            pending tx in blockchain
-     * @property tokenOptions          state for token options
+     * @property iconState             token icon state
+     * @property titleState            token name
      * @property onItemClick           callback which will be called when an item is clicked
      * @property onItemLongClick       callback which will be called when an item is long clicked
      */
     data class Content(
         override val id: String,
-        override val icon: IconState,
-        override val name: String,
-        val amount: String,
-        val hasPending: Boolean,
-        val tokenOptions: TokenOptionsState,
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        override val fiatAmountState: FiatAmountState?,
+        override val cryptoAmountState: CryptoAmountState.Content,
+        override val priceChangeState: PriceChangeState?,
+        val isBalanceHidden: Boolean,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
-    ) : ContentState()
+    ) : TokenItemState()
 
     /**
      * Draggable token state
      *
      * @property id                    unique id
-     * @property icon                  token icon state
-     * @property name                  token name
-     * @property info                  token info (e.g. fiat balance or status)
+     * @property iconState             token icon state
+     * @property titleState            token name
      */
     data class Draggable(
         override val id: String,
-        override val icon: IconState,
-        override val name: String,
-        val info: TextReference,
-    ) : ContentState()
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        override val cryptoAmountState: CryptoAmountState,
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
 
     /**
      * Unreachable token state
      *
      * @property id                    token id
-     * @property icon                  token icon state
-     * @property name                  token name
+     * @property iconState             token icon state
+     * @property titleState            token name
      * @property onItemClick           callback which will be called when an item is clicked
      * @property onItemLongClick       callback which will be called when an item is long clicked
      */
     data class Unreachable(
         override val id: String,
-        override val icon: IconState,
-        override val name: String,
+        override val iconState: IconState,
+        override val titleState: TitleState,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
-    ) : ContentState()
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val cryptoAmountState: CryptoAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
 
     /**
      * No derivation address state
      *
      * @property id                     token id
-     * @property icon                   token icon state
-     * @property name                   token name
+     * @property iconState              token icon state
+     * @property titleState             token name
      * @property onItemLongClick        callback which will be called when an item is long clicked
      */
     data class NoAddress(
         override val id: String,
-        override val icon: IconState,
-        override val name: String,
+        override val iconState: IconState,
+        override val titleState: TitleState,
         val onItemLongClick: () -> Unit,
-    ) : ContentState()
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val cryptoAmountState: CryptoAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
 
     /**
      * Represents the various states an icon can be in.
@@ -161,15 +181,60 @@ internal sealed interface TokenItemState {
 
             override val isCustom: Boolean = false
         }
+
+        object Loading : IconState() {
+            override val isGrayscale: Boolean = false
+            override val isCustom: Boolean = false
+            override val networkBadgeIconResId: Int? = null
+        }
+
+        object Locked : IconState() {
+            override val isGrayscale: Boolean = false
+            override val isCustom: Boolean = false
+            override val networkBadgeIconResId: Int? = null
+        }
     }
 
-    /** Token options state */
     @Immutable
-    data class TokenOptionsState(
-        val priceChangeState: PriceChangeState,
-        val fiatAmount: String,
-        val isBalanceHidden: Boolean,
-    )
+    sealed class TitleState {
+
+        data class Content(val text: String, val hasPending: Boolean = false) : TitleState()
+
+        object Loading : TitleState()
+
+        object Locked : TitleState()
+    }
+
+    @Immutable
+    sealed class FiatAmountState {
+        data class Content(val text: String) : FiatAmountState()
+
+        object Loading : FiatAmountState()
+
+        object Locked : FiatAmountState()
+    }
+
+    @Immutable
+    sealed class CryptoAmountState {
+        data class Content(val text: String) : CryptoAmountState()
+
+        object Unreachable : CryptoAmountState()
+
+        object Loading : CryptoAmountState()
+
+        object Locked : CryptoAmountState()
+    }
+
+    sealed class PriceChangeState {
+
+        data class Content(val valueInPercent: String, val type: PriceChangeType) : PriceChangeState()
+
+        object Unknown : PriceChangeState()
+
+        object Loading : PriceChangeState()
+
+        object Locked : PriceChangeState()
+    }
 
     companion object {
         const val UNKNOWN_AMOUNT_SIGN = "—"
