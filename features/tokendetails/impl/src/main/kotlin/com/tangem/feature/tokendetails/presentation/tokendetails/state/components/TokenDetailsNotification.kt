@@ -33,7 +33,6 @@ sealed class TokenDetailsNotification(
 
     data class ExistentialDeposit(
         private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
-        private val onCloseClick: () -> Unit,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
             title = TextReference.Str("Existential Deposit"),
@@ -42,7 +41,6 @@ sealed class TokenDetailsNotification(
                 formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
             ),
             iconResId = R.drawable.img_attention_20,
-            onCloseClick = onCloseClick,
         ),
     )
 
