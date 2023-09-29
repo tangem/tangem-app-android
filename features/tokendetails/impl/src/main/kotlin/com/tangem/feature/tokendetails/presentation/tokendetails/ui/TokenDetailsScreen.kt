@@ -92,11 +92,13 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     contentType = { it.config::class.java },
                     itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
                 )
-                item(
-                    key = MarketPriceBlockState::class.java,
-                    contentType = MarketPriceBlockState::class.java,
-                    content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
-                )
+                if (!state.isCustomToken) {
+                    item(
+                        key = MarketPriceBlockState::class.java,
+                        contentType = MarketPriceBlockState::class.java,
+                        content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
+                    )
+                }
                 if (state.txHistoryState is TxHistoryState.NotSupported && state.pendingTxs.isNotEmpty()) {
                     item {
                         PendingTxsBlock(
