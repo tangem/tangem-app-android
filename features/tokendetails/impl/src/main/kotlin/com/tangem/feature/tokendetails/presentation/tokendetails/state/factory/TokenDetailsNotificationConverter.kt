@@ -6,7 +6,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.removeBy
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -16,12 +15,6 @@ internal class TokenDetailsNotificationConverter(
 
     override fun convert(value: Set<CryptoCurrencyWarning>): ImmutableList<TokenDetailsNotification> {
         return value.map(::mapToNotification).toImmutableList()
-    }
-
-    fun removeExistentialDeposit(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
-        val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.ExistentialDeposit }
-        return newNotifications.toImmutableList()
     }
 
     fun getStateRentInfoVisibility(
@@ -44,7 +37,6 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
-                onCloseClick = clickIntents::onCloseExistentialDepositNotification,
             )
             is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
                 rentInfo = warning,
