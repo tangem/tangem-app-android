@@ -11,7 +11,7 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun LockedRectangle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
+            color = TangemTheme.colors.field.primary,
             shape = RoundedCornerShape(TangemTheme.dimens.radius4),
         ),
     )
