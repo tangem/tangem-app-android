@@ -102,7 +102,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ifRight = { wallet = it },
             )
         viewModelScope.launch {
-            getCryptoCurrencyUseCase.invoke(userWalletId = wallet.walletId, id = screenArgument.currencyId)
+            getCryptoCurrencyUseCase(userWalletId = wallet.walletId, id = screenArgument.currencyId)
                 .fold(
                     ifLeft = { error("Can not get cryptoCurrency with given ID: screenArgument.currencyId. $it") },
                     ifRight = {
