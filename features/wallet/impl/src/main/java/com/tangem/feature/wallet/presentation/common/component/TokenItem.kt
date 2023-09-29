@@ -11,7 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.constraintlayout.compose.*
-import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
@@ -38,8 +37,10 @@ internal fun TokenItem(
     ) {
         val (iconRef, titleRef, cryptoAmountRef, fiatAmountRef, priceChangeRef, nonFiatContentRef) = createRefs()
 
+        val isBalanceHidden = (state as? TokenItemState.Content)?.isBalanceHidden ?: false
+
         TokenIcon(
-            state = state,
+            state = state.iconState,
             modifier = Modifier.constrainAs(iconRef) {
                 centerVerticallyTo(parent)
                 start.linkTo(parent.start)
@@ -52,7 +53,7 @@ internal fun TokenItem(
         }
 
         TokenTitle(
-            state = state,
+            state = state.titleState,
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing8)
                 .constrainAs(titleRef) {
@@ -76,7 +77,8 @@ internal fun TokenItem(
         )
 
         TokenFiatAmount(
-            state = state,
+            state = state.fiatAmountState,
+            isBalanceHidden = isBalanceHidden,
             modifier = Modifier.constrainAs(fiatAmountRef) {
                 top.linkTo(parent.top)
                 end.linkTo(parent.end)
@@ -91,7 +93,8 @@ internal fun TokenItem(
 
         val marginBetweenRows = TangemTheme.dimens.spacing2
         TokenCryptoAmount(
-            state = state,
+            state = state.cryptoAmountState,
+            isBalanceHidden = isBalanceHidden,
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing8)
                 .constrainAs(cryptoAmountRef) {
@@ -117,16 +120,21 @@ internal fun TokenItem(
             derivedStateOf { with(density) { rootWidth.toDp().times(other = 0.16f) } }
         }
         TokenPriceChange(
-            state = state,
+            state = state.priceChangeState,
             modifier = Modifier.constrainAs(priceChangeRef) {
                 top.linkTo(fiatAmountRef.bottom, marginBetweenRows)
                 end.linkTo(anchor = parent.end)
                 bottom.linkTo(parent.bottom)
 
-                if (state is TokenItemState.ContentState) {
-                    start.linkTo(cryptoAmountRef.end)
-                    width = Dimension.fillToConstraints
-                        .atLeast(priceChangeRequiredMinWidth)
+                when (state.priceChangeState) {
+                    is TokenItemState.PriceChangeState.Content,
+                    is TokenItemState.PriceChangeState.Unknown,
+                    -> {
+                        start.linkTo(cryptoAmountRef.end)
+                        width = Dimension.fillToConstraints
+                            .atLeast(priceChangeRequiredMinWidth)
+                    }
+                    else -> Unit
                 }
             },
         )
@@ -202,22 +210,24 @@ private fun Preview_Tokens_DarkTheme(@PreviewParameter(TokenConfigProvider::clas
 
 private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
-        WalletPreviewData.tokenItemVisibleState.copy(amount = "5,41221467146712416241274127841274174213421 MATIC"),
         WalletPreviewData.tokenItemVisibleState.copy(
-            tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
-                priceChangeState = PriceChangeState.Content(
-                    valueInPercent = "31231231231231231231223123123123212312312312.00%",
-                    type = PriceChangeType.UP,
-                ),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(
+                text = "5,41221467146712416241274127841274174213421 MATIC",
             ),
         ),
         WalletPreviewData.tokenItemVisibleState.copy(
-            amount = "5,41221467146712416241274127841274174213421 MATIC",
-            tokenOptions = WalletPreviewData.tokenItemVisibleState.tokenOptions.copy(
-                priceChangeState = PriceChangeState.Content(
-                    valueInPercent = "31231231231231231231223123123123212312312312.00%",
-                    type = PriceChangeType.UP,
-                ),
+            priceChangeState = TokenItemState.PriceChangeState.Content(
+                valueInPercent = "31231231231231231231223123123123212312312312.0%",
+                type = PriceChangeType.UP,
+            ),
+        ),
+        WalletPreviewData.tokenItemVisibleState.copy(
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(
+                text = "5,41221467146712416241274127841274174213421 MATIC",
+            ),
+            priceChangeState = TokenItemState.PriceChangeState.Content(
+                valueInPercent = "31231231231231231231223123123123212312312312.0%",
+                type = PriceChangeType.UP,
             ),
         ),
         WalletPreviewData.tokenItemVisibleState,
