@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -47,21 +46,14 @@ private fun BottomSheetContent(config: WalletBottomSheetConfig) {
         verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing40),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val iconTint = config.tint
-        if (iconTint != null) {
-            Icon(
-                painter = painterResource(id = config.iconResId),
-                contentDescription = null,
-                modifier = Modifier.size(size = TangemTheme.dimens.size48),
-                tint = iconTint,
-            )
-        } else {
-            Image(
-                painter = painterResource(id = config.iconResId),
-                contentDescription = null,
-                modifier = Modifier.size(size = TangemTheme.dimens.size48),
-            )
-        }
+        Icon(
+            painter = painterResource(id = config.iconResId),
+            contentDescription = null,
+            modifier = Modifier.size(size = TangemTheme.dimens.size48),
+            tint = when (config) {
+                is WalletBottomSheetConfig.UnlockWallets -> TangemTheme.colors.icon.primary1
+            },
+        )
 
         Text(
             text = config.title.resolveReference(),
