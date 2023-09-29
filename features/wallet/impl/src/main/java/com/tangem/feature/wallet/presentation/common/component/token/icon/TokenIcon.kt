@@ -52,7 +52,7 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .matchParentSize()
                 .background(
-                    color = TangemTheme.colors.background.secondary,
+                    color = TangemTheme.colors.field.primary,
                     shape = CircleShape,
                 ),
         )
