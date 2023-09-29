@@ -5,14 +5,14 @@ import androidx.compose.runtime.Immutable
 @Immutable
 sealed interface MarketPriceBlockState {
 
-    val currencyName: String
+    val currencySymbol: String
 
-    data class Error(override val currencyName: String) : MarketPriceBlockState
+    data class Error(override val currencySymbol: String) : MarketPriceBlockState
 
-    data class Loading(override val currencyName: String) : MarketPriceBlockState
+    data class Loading(override val currencySymbol: String) : MarketPriceBlockState
 
     data class Content(
-        override val currencyName: String,
+        override val currencySymbol: String,
         val price: String,
         val priceChangeConfig: PriceChangeState.Content,
     ) : MarketPriceBlockState

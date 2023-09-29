@@ -139,6 +139,7 @@ class MultiWalletMiddleware {
         return TokenDetailsArguments(
             currencyId = cryptoCurrency.id,
             currencyName = cryptoCurrency.name,
+            currencySymbol = cryptoCurrency.symbol,
             iconUrl = cryptoCurrency.iconUrl,
             coinType = when (cryptoCurrency) {
                 is CryptoCurrency.Coin -> TokenDetailsArguments.CoinType.Native

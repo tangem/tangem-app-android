@@ -37,17 +37,17 @@ internal class TokenDetailsLoadedBalanceConverter(
         val state = currentStateProvider()
         return state.copy(
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
-            marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencyName),
+            marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencySymbol),
             notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
         )
     }
 
     private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
         val state = currentStateProvider()
-        val currencyName = state.marketPriceBlockState.currencyName
+        val currencyName = state.marketPriceBlockState.currencySymbol
         return state.copy(
             tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
-            marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+            marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
             pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList(),
         )
     }
@@ -80,10 +80,13 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
+    private fun getMarketPriceState(
+        status: CryptoCurrencyStatus.Status,
+        currencySymbol: String,
+    ): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
-            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencyName)
+            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencySymbol)
+            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencySymbol)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
@@ -91,7 +94,7 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
             -> MarketPriceBlockState.Content(
-                currencyName = currencyName,
+                currencySymbol = currencySymbol,
                 price = formatPrice(status, appCurrencyProvider()),
                 priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = formatPriceChange(status),
