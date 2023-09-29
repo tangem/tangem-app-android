@@ -40,6 +40,7 @@ internal class DefaultNetworksRepository(
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
+        refresh: Boolean,
     ): Flow<Set<NetworkStatus>> = channelFlow {
         launch(dispatchers.io) {
             networksStatusesStore.get(userWalletId)
@@ -47,7 +48,7 @@ internal class DefaultNetworksRepository(
         }
 
         withContext(dispatchers.io) {
-            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
+            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
         }
     }.cancellable()
 
