@@ -53,6 +53,9 @@ internal fun ContentIcon(
             background = icon.background,
             alpha = alpha,
         )
+        TokenItemState.IconState.Loading,
+        TokenItemState.IconState.Locked,
+        -> Unit
     }
 }
 
