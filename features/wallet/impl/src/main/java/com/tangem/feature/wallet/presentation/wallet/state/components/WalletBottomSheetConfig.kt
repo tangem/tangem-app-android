@@ -1,12 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -18,7 +16,6 @@ sealed class WalletBottomSheetConfig(
     open val title: TextReference,
     open val subtitle: TextReference,
     @DrawableRes open val iconResId: Int,
-    open val tint: Color? = null,
     val primaryButtonConfig: ButtonConfig,
     val secondaryButtonConfig: ButtonConfig,
 ) : TangemBottomSheetConfigContent {
@@ -38,7 +35,6 @@ sealed class WalletBottomSheetConfig(
             ),
         ),
         iconResId = R.drawable.ic_locked_24,
-        tint = TangemColorPalette.Black,
         primaryButtonConfig = ButtonConfig(
             text = resourceReference(id = R.string.user_wallet_list_unlock_all),
             onClick = onUnlockClick,
