@@ -210,11 +210,6 @@ internal class TokenDetailsStateFactory(
         return state.copy(notifications = notificationConverter.convert(warnings))
     }
 
-    fun getStateWithRemovedExistentialNotification(): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(notifications = notificationConverter.removeExistentialDeposit(state))
-    }
-
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.getStateRentInfoVisibility(state, false))
