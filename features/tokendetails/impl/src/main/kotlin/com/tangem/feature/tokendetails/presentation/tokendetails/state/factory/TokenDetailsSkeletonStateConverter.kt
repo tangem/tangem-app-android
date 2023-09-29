@@ -20,6 +20,7 @@ internal class TokenDetailsSkeletonStateConverter(
 ) : Converter<TokenDetailsArguments, TokenDetailsState> {
 
     override fun convert(value: TokenDetailsArguments): TokenDetailsState {
+        val coinType = value.coinType
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
@@ -28,7 +29,7 @@ internal class TokenDetailsSkeletonStateConverter(
             tokenInfoBlockState = TokenInfoBlockState(
                 name = value.currencyName,
                 iconUrl = value.iconUrl,
-                currency = when (val coinType = value.coinType) {
+                currency = when (coinType) {
                     TokenDetailsArguments.CoinType.Native -> TokenInfoBlockState.Currency.Native
                     is TokenDetailsArguments.CoinType.Token -> TokenInfoBlockState.Currency.Token(
                         standardName = coinType.networkName,
@@ -50,6 +51,7 @@ internal class TokenDetailsSkeletonStateConverter(
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
             isBalanceHidden = true,
+            isCustomToken = coinType is TokenDetailsArguments.CoinType.Token && coinType.isCustom,
         )
     }
 
