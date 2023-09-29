@@ -37,7 +37,6 @@ internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifie
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
     items: ImmutableList<WalletTokensListState.TokensListItemState>,
     modifier: Modifier = Modifier,
@@ -49,12 +48,10 @@ private fun LazyListScope.contentItems(
         itemContent = { index, item ->
             MultiCurrencyContentItem(
                 state = item,
-                modifier = modifier
-                    .animateItemPlacement()
-                    .roundedShapeItemDecoration(
-                        currentIndex = index,
-                        lastIndex = items.lastIndex,
-                    ),
+                modifier = modifier.roundedShapeItemDecoration(
+                    currentIndex = index,
+                    lastIndex = items.lastIndex,
+                ),
             )
         },
     )
