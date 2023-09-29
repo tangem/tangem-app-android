@@ -38,7 +38,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     private fun convertContent(status: CryptoCurrencyStatus): WalletState {
         return when (val state = currentStateProvider()) {
             is WalletSingleCurrencyState.Content -> {
-                val currencyName = state.marketPriceBlockState.currencyName
+                val currencyName = state.marketPriceBlockState.currencySymbol
 
                 state.copy(
                     walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
@@ -58,7 +58,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
             -> MarketPriceBlockState.Content(
-                currencyName = currencyName,
+                currencySymbol = currencyName,
                 price = formatPrice(status, appCurrencyProvider()),
                 priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = formatPriceChange(status),
