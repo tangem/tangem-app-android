@@ -9,6 +9,7 @@ import kotlinx.parcelize.Parcelize
 data class TokenDetailsArguments(
     val currencyId: CryptoCurrency.ID,
     val currencyName: String,
+    val currencySymbol: String,
     val iconUrl: String?,
     val coinType: CoinType,
 ) : Parcelable {
