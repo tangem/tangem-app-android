@@ -1,12 +1,13 @@
 package com.tangem.feature.wallet.presentation.common.component.token
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -16,32 +17,34 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
+import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TitleState as TokenTitleState
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-internal fun TokenTitle(state: TokenItemState, modifier: Modifier = Modifier) {
-    AnimatedContent(targetState = state, label = "Update title", modifier = modifier) { animatedState ->
-        when (animatedState) {
-            is TokenItemState.ContentState -> {
-                ContentTitle(
-                    name = animatedState.name,
-                    hasPending = (animatedState as? TokenItemState.Content)?.hasPending == true,
-                )
-            }
-            is TokenItemState.Loading -> {
-                RectangleShimmer(modifier = Modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
-            }
-            is TokenItemState.Locked -> {
-                LockedRectangle(modifier = Modifier.placeholderSize())
-            }
+internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
+    when (state) {
+        is TokenTitleState.Content -> {
+            ContentTitle(name = state.text, hasPending = state.hasPending, modifier = modifier)
         }
+        is TokenTitleState.Loading -> {
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+        }
+        is TokenTitleState.Locked -> {
+            LockedRectangle(modifier = modifier.placeholderSize())
+        }
+        null -> Unit
     }
 }
 
 @Composable
-private fun ContentTitle(name: String, hasPending: Boolean) {
-    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6)) {
+private fun ContentTitle(name: String, hasPending: Boolean, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
+    ) {
+        /*
+         * If currency name has a long width, then it will completely displace the image.
+         * So we need to use [weight] to avoid displacement.
+         */
         CurrencyNameText(name = name, modifier = Modifier.weight(weight = 1f, fill = false))
 
         PendingTransactionImage(

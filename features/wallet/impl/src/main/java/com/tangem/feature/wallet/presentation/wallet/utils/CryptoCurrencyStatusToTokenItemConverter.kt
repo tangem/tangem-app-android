@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -39,15 +38,17 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private fun CryptoCurrencyStatus.mapToTokenItemState(): TokenItemState.Content {
         return TokenItemState.Content(
             id = currency.id.value,
-            name = currency.name,
-            icon = iconStateConverter.convert(value = this),
-            amount = getFormattedAmount(),
-            hasPending = value.hasCurrentNetworkTransactions,
-            tokenOptions = TokenItemState.TokenOptionsState(
-                fiatAmount = getFormattedFiatAmount(),
-                priceChangeState = getPriceChangeConfig(),
-                isBalanceHidden = isBalanceHiddenProvider(),
+            iconState = iconStateConverter.convert(value = this),
+            titleState = TokenItemState.TitleState.Content(
+                text = currency.name,
+                hasPending = value.hasCurrentNetworkTransactions,
             ),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(
+                text = getFormattedFiatAmount(),
+            ),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
+            priceChangeState = getPriceChangeConfig(),
+            isBalanceHidden = isBalanceHiddenProvider(),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )
@@ -68,29 +69,34 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
 
     private fun CryptoCurrencyStatus.mapToUnreachableTokenItemState() = TokenItemState.Unreachable(
         id = currency.id.value,
-        name = currency.name,
-        icon = iconStateConverter.convert(value = this),
+        iconState = iconStateConverter.convert(value = this),
+        titleState = TokenItemState.TitleState.Content(text = currency.name),
         onItemClick = { clickIntents.onTokenItemClick(currency) },
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
     private fun CryptoCurrencyStatus.mapToNoAddressTokenItemState() = TokenItemState.NoAddress(
         id = currency.id.value,
-        name = currency.name,
-        icon = iconStateConverter.convert(this),
+        iconState = iconStateConverter.convert(this),
+        titleState = TokenItemState.TitleState.Content(text = currency.name),
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
-    private fun CryptoCurrencyStatus.getPriceChangeConfig(): PriceChangeState {
+    private fun CryptoCurrencyStatus.getPriceChangeConfig(): TokenItemState.PriceChangeState {
         val priceChange = value.priceChange
 
         return if (priceChange != null) {
-            PriceChangeState.Content(
-                valueInPercent = BigDecimalFormatter.formatPercent(percent = priceChange, useAbsoluteValue = true),
+            TokenItemState.PriceChangeState.Content(
+                valueInPercent = BigDecimalFormatter.formatPercent(
+                    percent = priceChange,
+                    useAbsoluteValue = true,
+                    maxFractionDigits = 1,
+                    minFractionDigits = 1,
+                ),
                 type = priceChange.getPriceChangeType(),
             )
         } else {
-            PriceChangeState.Unknown
+            TokenItemState.PriceChangeState.Unknown
         }
     }
 
