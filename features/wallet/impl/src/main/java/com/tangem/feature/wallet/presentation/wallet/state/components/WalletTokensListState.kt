@@ -33,10 +33,7 @@ internal sealed class WalletTokensListState {
      * @property items content items
      */
     data class Loading(
-        override val items: ImmutableList<TokensListItemState.Token> = persistentListOf(
-            TokensListItemState.Token(state = TokenItemState.Loading(id = FIRST_LOADING_TOKEN_ID)),
-            TokensListItemState.Token(state = TokenItemState.Loading(id = SECOND_LOADING_TOKEN_ID)),
-        ),
+        override val items: ImmutableList<TokensListItemState.Token> = persistentListOf(),
     ) : ContentState(items = items, organizeTokensButton = OrganizeTokensButtonState.Hidden)
 
     /**
@@ -107,8 +104,6 @@ internal sealed class WalletTokensListState {
     }
 
     private companion object {
-        const val FIRST_LOADING_TOKEN_ID = "Loading#1"
-        const val SECOND_LOADING_TOKEN_ID = "Loading#2"
         const val LOCKED_TOKEN_ID = "Locked#1"
     }
 }
