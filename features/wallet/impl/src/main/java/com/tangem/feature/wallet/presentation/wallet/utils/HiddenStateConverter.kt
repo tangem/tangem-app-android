@@ -28,8 +28,8 @@ internal class HiddenStateConverter(
                                 if (tokenListItemState.state is TokenItemState.Content) {
                                     tokenListItemState.copy(
                                         state = tokenListItemState.state.copy(
-                                            tokenOptions = tokenItemHiddenStateConverter.updateHiddenState(
-                                                optionsState = tokenListItemState.state.tokenOptions,
+                                            isBalanceHidden = tokenItemHiddenStateConverter.updateHiddenState(
+                                                wasBalanceHidden = tokenListItemState.state.isBalanceHidden,
                                                 isBalanceHidden = value,
                                             ),
                                         ),
