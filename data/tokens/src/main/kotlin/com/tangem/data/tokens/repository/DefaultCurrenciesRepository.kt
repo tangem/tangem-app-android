@@ -10,6 +10,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.core.error.DataError
@@ -205,9 +206,17 @@ internal class DefaultCurrenciesRepository(
         val storedTokens = requireNotNull(userTokensStore.getSyncOrNull(userWallet.walletId)) {
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
+        val blockchain = Blockchain.fromId(networkId.value)
+        val derivationPath = blockchain
+            .derivationPath(userWallet.scanResponse.derivationStyleProvider.getDerivationStyle())
+            ?.rawPath
 
-        val storedCoin = storedTokens.tokens.find { it.networkId == Blockchain.fromId(networkId.value).toNetworkId() }
-            ?: error("Coin in this network $networkId not found")
+        val storedCoin = storedTokens.tokens
+            .find {
+                it.networkId == blockchain.toNetworkId() &&
+                    it.id == blockchain.toCoinId() &&
+                    it.derivationPath == derivationPath
+            } ?: error("Coin in this network $networkId not found")
 
         val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
 
@@ -341,8 +350,4 @@ internal class DefaultCurrenciesRepository(
     }
 
     private fun getTokensCacheKey(userWalletId: UserWalletId): String = "tokens_cache_key_${userWalletId.stringValue}"
-
-    private companion object {
-        const val NOT_FOUND_HTTP_CODE = 404
-    }
 }
