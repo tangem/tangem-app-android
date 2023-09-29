@@ -122,6 +122,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
                         coinType = when (currency) {
                             is CryptoCurrency.Coin -> TokenDetailsArguments.CoinType.Native
                             is CryptoCurrency.Token -> TokenDetailsArguments.CoinType.Token(
+                                isCustom = currency.isCustom,
                                 standardName = currency.network.standardType.name,
                                 networkName = currency.network.name,
                                 networkIcon = currency.networkIconResId,

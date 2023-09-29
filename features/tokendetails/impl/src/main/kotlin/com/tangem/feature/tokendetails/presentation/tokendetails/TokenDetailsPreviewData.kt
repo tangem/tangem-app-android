@@ -93,5 +93,6 @@ internal object TokenDetailsPreviewData {
         pullToRefreshConfig = pullToRefreshConfig,
         bottomSheetConfig = null,
         isBalanceHidden = false,
+        isCustomToken = false,
     )
 }
