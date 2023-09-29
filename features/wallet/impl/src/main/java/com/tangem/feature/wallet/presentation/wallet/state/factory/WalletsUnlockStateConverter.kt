@@ -68,7 +68,7 @@ internal class WalletsUnlockStateConverter(
             bottomSheetConfig = null,
             buttons = buttons,
             marketPriceBlockState = MarketPriceBlockState.Loading(
-                currencyName = action.selectedWallet.getPrimaryCurrencyName(),
+                currencySymbol = action.selectedWallet.getPrimaryCurrencyName(),
             ),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
