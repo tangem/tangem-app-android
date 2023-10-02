@@ -34,6 +34,7 @@ internal sealed interface WalletCardState {
      * @property onRenameClick  lambda be invoked when Rename button is clicked
      * @property onDeleteClick  lambda be invoked when Delete button is clicked
      * @property additionalInfo wallet additional info
+     * @property cardCount      number of cards in the wallet
      * @property balance        wallet balance
      */
     data class Content(
@@ -43,6 +44,7 @@ internal sealed interface WalletCardState {
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
         val additionalInfo: TextReference,
+        val cardCount: Int?,
         val balance: String,
     ) : WalletCardState
 
@@ -55,6 +57,7 @@ internal sealed interface WalletCardState {
      * @property onRenameClick  lambda be invoked when Rename button is clicked
      * @property onDeleteClick  lambda be invoked when Delete button is clicked
      * @property additionalInfo wallet additional info
+     * @property cardCount      number of cards in the wallet
      * @property balance        wallet balance
      */
     data class HiddenContent(
@@ -65,6 +68,7 @@ internal sealed interface WalletCardState {
         override val onDeleteClick: (UserWalletId) -> Unit,
         val additionalInfo: TextReference,
         val balance: String,
+        val cardCount: Int?,
     ) : WalletCardState
 
     /**
