@@ -102,7 +102,7 @@ internal object WalletPreviewData {
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
-            isCustom = false,
+            showCustomBadge = false,
         )
 
     private val tokenIconState
@@ -112,6 +112,7 @@ internal object WalletPreviewData {
             fallbackTint = TangemColorPalette.Black,
             fallbackBackground = TangemColorPalette.Meadow,
             isGrayscale = false,
+            showCustomBadge = false,
         )
 
     private val customTokenIconState
