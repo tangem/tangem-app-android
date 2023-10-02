@@ -61,6 +61,13 @@ internal class WalletStateFactory(
 
     private val hiddenStateConverter by lazy { HiddenStateConverter(currentStateProvider) }
 
+    private val walletUpdateCardCountConverter by lazy {
+        WalletUpdateCardCountConverter(
+            currentStateProvider,
+            currentWalletProvider,
+        )
+    }
+
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(currentStateProvider)
     }
@@ -133,6 +140,8 @@ internal class WalletStateFactory(
     }
 
     fun getStateWithUpdatedWalletName(name: String): WalletState = walletRenameStateConverter.convert(value = name)
+
+    fun getStateWithUpdatedWalletCardCount(): WalletState = walletUpdateCardCountConverter.convert(Unit)
 
     fun getUnlockedState(action: WalletsUpdateActionResolver.Action.UnlockWallet): WalletState {
         return walletsUnlockStateConverter.convert(value = action)
