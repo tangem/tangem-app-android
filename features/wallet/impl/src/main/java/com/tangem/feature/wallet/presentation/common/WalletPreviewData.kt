@@ -97,7 +97,7 @@ internal object WalletPreviewData {
         )
     }
 
-    private val coinIconState
+    val coinIconState
         get() = TokenItemState.IconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
