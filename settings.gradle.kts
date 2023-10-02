@@ -91,6 +91,8 @@ include(":features:tokendetails:impl")
 
 include(":features:learn2earn:api")
 include(":features:learn2earn:impl")
+
+include(":features:send:api")
 // endregion Feature modules
 
 // region Domain modules
