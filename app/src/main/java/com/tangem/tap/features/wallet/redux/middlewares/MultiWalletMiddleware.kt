@@ -7,10 +7,7 @@ import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
@@ -20,7 +17,6 @@ import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.converters.CryptoCurrencyConverter
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -44,7 +40,7 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.currency != null) {
                     val bundle = bundleOf(
-                        TokenDetailsRouter.TOKEN_DETAILS_ARGS to createTokenDetailsArgument(action.currency),
+                        TokenDetailsRouter.CRYPTO_CURRENCY_KEY to cryptoCurrencyConverter.convert(action.currency),
                     )
                     store.dispatch(NavigationAction.NavigateTo(screen = AppScreen.WalletDetails, bundle = bundle))
                 }
@@ -132,24 +128,5 @@ class MultiWalletMiddleware {
                 store.dispatchWithMain(GlobalAction.SaveScanResponse(updatedUserWallet.scanResponse))
                 store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
             }
-    }
-
-    private fun createTokenDetailsArgument(currency: Currency): TokenDetailsArguments {
-        val cryptoCurrency = cryptoCurrencyConverter.convert(currency)
-        return TokenDetailsArguments(
-            currencyId = cryptoCurrency.id,
-            currencyName = cryptoCurrency.name,
-            currencySymbol = cryptoCurrency.symbol,
-            iconUrl = cryptoCurrency.iconUrl,
-            coinType = when (cryptoCurrency) {
-                is CryptoCurrency.Coin -> TokenDetailsArguments.CoinType.Native
-                is CryptoCurrency.Token -> TokenDetailsArguments.CoinType.Token(
-                    isCustom = cryptoCurrency.isCustom,
-                    standardName = cryptoCurrency.network.standardType.name,
-                    networkName = cryptoCurrency.network.name,
-                    networkIcon = cryptoCurrency.networkIconResId,
-                )
-            },
-        )
     }
 }
