@@ -323,7 +323,7 @@ internal class WalletViewModel @Inject constructor(
             .ifEmpty { return }
 
         viewModelScope.launch(dispatchers.io) {
-            derivePublicKeysUseCase(cardId = null, derivations = derivations)
+            derivePublicKeysUseCase(cardId = scanResponse.card.cardId, derivations = derivations)
                 .onRight {
                     val newDerivedKeys = it.entries
                     val oldDerivedKeys = scanResponse.derivedKeys
@@ -488,12 +488,23 @@ internal class WalletViewModel @Inject constructor(
         // Reset the job to avoid a redundant state updating
         onWalletChangeJobHolder.update(null)
 
+        /*
+         * When wallet is changed it's necessary to stop the last jobs.
+         * If jobs aren't stopped and wallet is changed then it will update state for the prev wallet.
+         */
+        tokensJobHolder.update(job = null)
+        marketPriceJobHolder.update(job = null)
+        buttonsJobHolder.update(job = null)
+        notificationsJobHolder.update(job = null)
+        refreshContentJobHolder.update(job = null)
+
         viewModelScope.launch(dispatchers.main) {
+            val userWalletId = state.walletsListConfig.wallets[index].id
             withContext(dispatchers.io) {
-                selectWalletUseCase(userWalletId = state.walletsListConfig.wallets[index].id)
+                selectWalletUseCase(userWalletId = userWalletId)
             }
 
-            val cacheState = WalletStateCache.getState(userWalletId = state.walletsListConfig.wallets[index].id)
+            val cacheState = WalletStateCache.getState(userWalletId = userWalletId)
             if (cacheState != null && cacheState !is WalletLockedState) {
                 uiState = cacheState.copySealed(
                     walletsListConfig = state.walletsListConfig.copy(
