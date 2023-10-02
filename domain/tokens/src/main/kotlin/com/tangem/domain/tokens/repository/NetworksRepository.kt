@@ -16,14 +16,9 @@ interface NetworksRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param networks A set of network which statuses are to be retrieved.
-     * @param refresh A boolean flag indicating whether the data should be refreshed from remote.
      * @return A [Flow] emitting a set of [NetworkStatus] objects corresponding to the specified networks.
      */
-    fun getNetworkStatusesUpdates(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-        refresh: Boolean = false,
-    ): Flow<Set<NetworkStatus>>
+    fun getNetworkStatusesUpdates(userWalletId: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>>
 
     /**
      * Retrieves network statuses of specified blockchain networks for a specific user wallet.
