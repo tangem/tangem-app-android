@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
  * Use case that checks if wallet need backup cards
  */
 class IsNeedToBackupUseCase(private val walletsStateHolder: WalletsStateHolder) {
-
+// [REDACTED_TODO_COMMENT]
     operator fun invoke(id: UserWalletId): Flow<Boolean> {
         val userWalletsListManager = requireNotNull(walletsStateHolder.userWalletsListManager)
 
