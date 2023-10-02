@@ -236,7 +236,7 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
             ),
         ),
         WalletPreviewData.tokenItemVisibleState.copy(
-            iconState = WalletPreviewData.coinIconState.copy(isCustom = true),
+            iconState = WalletPreviewData.coinIconState.copy(showCustomBadge = true),
         ),
         WalletPreviewData.tokenItemUnreachableState,
         WalletPreviewData.tokenItemNoAddressState,
