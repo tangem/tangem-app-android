@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.features.wallet.impl)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.tokendetails.impl)
+    implementation(projects.features.send.api)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
