@@ -35,6 +35,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -71,6 +72,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
+    private val networkStatusAutoUpdateStateJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var wallet by Delegates.notNull<UserWallet>()
 
@@ -148,7 +150,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         getCurrencyStatusUpdatesUseCase(
             userWalletId = selectedWallet.walletId,
             currencyId = cryptoCurrency.id,
-            refresh = true,
         )
             .distinctUntilChanged()
             .onEach { either ->
@@ -161,6 +162,17 @@ internal class TokenDetailsViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
+
+        viewModelScope.launch(dispatchers.io) {
+            // Wait for blockchain updates pending transactions.
+            // Immediate update doesn't receive any changes.
+            delay(NETWORK_STATUS_AUTO_UPDATE_DELAY)
+            fetchCurrencyStatusUseCase.invoke(
+                userWalletId = wallet.walletId,
+                id = cryptoCurrency.id,
+                refresh = true,
+            )
+        }.saveIn(networkStatusAutoUpdateStateJobHolder)
     }
 
     private fun updateTxHistory(refresh: Boolean = false) {
@@ -376,5 +388,9 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onCloseRentInfoNotification() {
         uiState = stateFactory.getStateWithRemovedRentNotification()
+    }
+
+    companion object {
+        private const val NETWORK_STATUS_AUTO_UPDATE_DELAY = 1000L
     }
 }
