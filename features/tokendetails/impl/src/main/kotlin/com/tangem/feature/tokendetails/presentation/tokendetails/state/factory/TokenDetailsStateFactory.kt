@@ -139,9 +139,7 @@ internal class TokenDetailsStateFactory(
     }
 
     fun getRefreshedState(): TokenDetailsState {
-        val state = currentStateProvider()
         return refreshStateConverter.convert(false)
-            .copy(notifications = notificationConverter.getStateRentInfoVisibility(state, true))
     }
 
     fun getStateWithReceiveBottomSheet(
@@ -212,6 +210,6 @@ internal class TokenDetailsStateFactory(
 
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
-        return state.copy(notifications = notificationConverter.getStateRentInfoVisibility(state, false))
+        return state.copy(notifications = notificationConverter.removeRentInfo(state))
     }
 }
