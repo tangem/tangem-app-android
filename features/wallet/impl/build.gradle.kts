@@ -69,4 +69,5 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.send.api)
 }

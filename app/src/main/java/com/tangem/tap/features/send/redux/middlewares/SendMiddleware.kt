@@ -270,9 +270,7 @@ private fun sendTransaction(
                         dispatch(NavigationAction.PopBackTo())
                     }
                     scope.launch(Dispatchers.IO) {
-                        updateWallet(walletManager)
-                        delay(timeMillis = 11000) // more than 10000 to avoid throttling
-                        updateWallet(walletManager)
+                        updateAfterTransaction(walletManager)
                     }
                 }
                 is SimpleResult.Failure -> {
@@ -412,6 +410,19 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
 
     val warnings = warningsManager.getWarnings(WarningMessage.Location.SendScreen, listOf(blockchain))
     dispatch(SendAction.Warnings.Set(warnings))
+}
+
+private suspend fun updateAfterTransaction(walletManager: WalletManager) {
+    val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+    if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+        updateWalletsLegacy(walletManager)
+    }
+}
+
+private suspend fun updateWalletsLegacy(walletManager: WalletManager) {
+    updateWallet(walletManager)
+    delay(timeMillis = 11000) // more than 10000 to avoid throttling
+    updateWallet(walletManager)
 }
 
 private suspend fun updateWallet(walletManager: WalletManager) {
