@@ -76,6 +76,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
+        sendSubscriber.initViewModel(viewModel)
         Analytics.send(Token.Send.ScreenOpened())
     }
 
