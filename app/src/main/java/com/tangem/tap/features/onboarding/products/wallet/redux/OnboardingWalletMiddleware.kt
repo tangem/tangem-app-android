@@ -450,6 +450,23 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
             }
 
+            userWalletsListManager.selectedUserWalletSync?.walletId?.let {
+                scope.launch {
+                    userWalletsListManager.update(
+                        userWalletId = it,
+                        update = { wallet ->
+                            wallet.copy(
+                                scanResponse = updateScanResponseAfterBackup(
+                                    scanResponse = wallet.scanResponse,
+                                    backupState = backupState,
+                                ),
+                            )
+                        },
+                    )
+                    store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(userWalletsListManager))
+                }
+            }
+
             val notActivatedCardIds = gatherCardIds(backupState, card)
                 .mapNotNull { if (cardActivationIsFinished(it)) null else it }
 
