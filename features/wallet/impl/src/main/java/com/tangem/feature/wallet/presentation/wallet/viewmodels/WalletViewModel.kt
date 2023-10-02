@@ -122,6 +122,7 @@ internal class WalletViewModel @Inject constructor(
     wasCardScannedUseCase: WasCardScannedUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isDemoCardUseCase: IsDemoCardUseCase,
+    isNeedToBackupUseCase: IsNeedToBackupUseCase,
     // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -135,6 +136,7 @@ internal class WalletViewModel @Inject constructor(
         wasCardScannedUseCase = wasCardScannedUseCase,
         isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         isDemoCardUseCase = isDemoCardUseCase,
+        isNeedToBackupUseCase = isNeedToBackupUseCase,
         clickIntents = this,
     )
 
@@ -226,6 +228,9 @@ internal class WalletViewModel @Inject constructor(
             }
             is WalletsUpdateActionResolver.Action.AddWallet -> {
                 scrollAndUpdateState(action.selectedWalletIndex)
+            }
+            is WalletsUpdateActionResolver.Action.UpdateWalletCardCount -> {
+                uiState = stateFactory.getStateWithUpdatedWalletCardCount()
             }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
@@ -983,6 +988,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
         notificationsListFactory.create(
+            selectedWalletId = getWallet(index).walletId,
             cardTypesResolver = getCardTypeResolver(index = index),
             cryptoCurrencyList = if (tokenList != null) {
                 when (tokenList) {
