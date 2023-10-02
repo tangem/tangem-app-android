@@ -20,6 +20,8 @@ fun ResizableText(
     fontSizeRange: FontSizeRange,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    maxLines: Int = Int.MAX_VALUE,
     style: TextStyle = LocalTextStyle.current,
 ) {
     val fontSizeValue = remember { mutableStateOf(fontSizeRange.max.value) }
@@ -33,12 +35,13 @@ fun ResizableText(
     }
 
     Text(
-        modifier = modifier.drawWithContent { if (readyToDraw.value) drawContent() },
         text = text,
+        modifier = modifier.drawWithContent { if (readyToDraw.value) drawContent() },
         color = color,
-        softWrap = false,
-        style = style,
         fontSize = fontSizeValue.value.sp,
+        overflow = overflow,
+        softWrap = false,
+        maxLines = maxLines,
         onTextLayout = {
             if (it.hasVisualOverflow) {
                 val nextFontSizeValue = fontSizeValue.value - fontSizeRange.step.value
@@ -52,6 +55,7 @@ fun ResizableText(
                 readyToDraw.value = true
             }
         },
+        style = style,
     )
 }
 
