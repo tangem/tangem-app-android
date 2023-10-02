@@ -22,15 +22,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import kotlinx.coroutines.flow.Flow
 
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: TokenDetailsClickIntents,
-    currencySymbolProvider: Provider<String>,
-    currencyDecimalsProvider: Provider<Int>,
+    symbol: String,
+    decimals: Int,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -45,8 +44,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            symbol = currencySymbolProvider(),
-            decimals = currencyDecimalsProvider(),
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 
@@ -65,8 +64,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
-            symbol = currencySymbolProvider(),
-            decimals = currencyDecimalsProvider(),
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 
@@ -76,7 +75,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getInitialState(screenArgument: TokenDetailsArguments): TokenDetailsState {
+    fun getInitialState(screenArgument: CryptoCurrency): TokenDetailsState {
         return skeletonStateConverter.convert(value = screenArgument)
     }
 
