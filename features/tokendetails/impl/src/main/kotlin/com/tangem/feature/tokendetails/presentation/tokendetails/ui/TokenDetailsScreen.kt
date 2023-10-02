@@ -87,7 +87,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     )
                 }
                 items(
-                    items = state.notifications.filter { it.isVisible },
+                    items = state.notifications,
                     key = { it.config::class.java },
                     contentType = { it.config::class.java },
                     itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
