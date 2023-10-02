@@ -1,7 +1,12 @@
 package com.tangem.feature.wallet.presentation.common.component
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -230,7 +235,9 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
                 type = PriceChangeType.UP,
             ),
         ),
-        WalletPreviewData.tokenItemVisibleState,
+        WalletPreviewData.tokenItemVisibleState.copy(
+            iconState = WalletPreviewData.coinIconState.copy(isCustom = true),
+        ),
         WalletPreviewData.tokenItemUnreachableState,
         WalletPreviewData.tokenItemNoAddressState,
         WalletPreviewData.tokenItemDragState,
