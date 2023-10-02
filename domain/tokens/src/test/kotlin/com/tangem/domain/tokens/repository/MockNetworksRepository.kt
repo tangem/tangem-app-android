@@ -17,7 +17,6 @@ internal class MockNetworksRepository(
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
-        refresh: Boolean,
     ): Flow<Set<NetworkStatus>> {
         return statuses.map { it.getOrElse { e -> throw e } }
     }
