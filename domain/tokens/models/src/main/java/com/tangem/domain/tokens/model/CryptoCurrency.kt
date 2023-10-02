@@ -14,7 +14,8 @@ import kotlinx.parcelize.Parcelize
  * @property iconUrl Optional URL of the cryptocurrency icon. `null` if not found.
  * @property isCustom Indicates whether the currency is a custom user-added currency or not.
  */
-sealed class CryptoCurrency {
+@Parcelize
+sealed class CryptoCurrency : Parcelable {
 
     abstract val id: ID
     abstract val network: Network
