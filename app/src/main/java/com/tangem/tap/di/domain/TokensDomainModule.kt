@@ -173,4 +173,14 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
         )
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideUpdateDelayedCurrencyStatusUseCase(
+        networksRepository: NetworksRepository,
+    ): UpdateDelayedNetworkStatusUseCase {
+        return UpdateDelayedNetworkStatusUseCase(
+            networksRepository = networksRepository,
+        )
+    }
 }
