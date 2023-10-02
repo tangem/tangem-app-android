@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -96,6 +97,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     onRenameClick = selectedWallet.onRenameClick,
                     onDeleteClick = selectedWallet.onDeleteClick,
                     balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
+                    cardCount = currentWalletProvider().getCardsCount(),
                 )
             }
             is CryptoCurrencyStatus.Loading -> {

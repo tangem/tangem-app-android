@@ -43,6 +43,7 @@ internal object WalletPreviewData {
             imageResId = R.drawable.ill_businessman_3d,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
+            cardCount = 1,
         )
     }
 
@@ -65,6 +66,7 @@ internal object WalletPreviewData {
             onDeleteClick = {},
             balance = "8923,05 $",
             additionalInfo = TextReference.Str("3 cards • Seed phrase"),
+            cardCount = 1,
         )
     }
 
