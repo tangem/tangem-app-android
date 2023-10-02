@@ -179,7 +179,7 @@ internal sealed class TokenItemState {
             override val isGrayscale: Boolean,
         ) : IconState() {
 
-            override val isCustom: Boolean = false
+            override val isCustom: Boolean = true
         }
 
         object Loading : IconState() {
