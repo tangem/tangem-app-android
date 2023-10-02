@@ -19,7 +19,6 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
-import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.WalletFragment
@@ -27,7 +26,6 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
 
@@ -113,23 +111,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
         reduxNavController.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,
-                bundle = bundleOf(
-                    TokenDetailsRouter.TOKEN_DETAILS_ARGS to TokenDetailsArguments(
-                        currencyId = currency.id,
-                        currencyName = currency.name,
-                        currencySymbol = currency.symbol,
-                        iconUrl = currency.iconUrl,
-                        coinType = when (currency) {
-                            is CryptoCurrency.Coin -> TokenDetailsArguments.CoinType.Native
-                            is CryptoCurrency.Token -> TokenDetailsArguments.CoinType.Token(
-                                isCustom = currency.isCustom,
-                                standardName = currency.network.standardType.name,
-                                networkName = currency.network.name,
-                                networkIcon = currency.networkIconResId,
-                            )
-                        },
-                    ),
-                ),
+                bundle = bundleOf(TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency),
             ),
         )
     }
