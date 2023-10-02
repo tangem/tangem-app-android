@@ -53,6 +53,7 @@ private class SendReducer : SendInternalReducer {
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
             is SendAction.Warnings.Set -> sendState.copy(sendWarningsList = action.warningList)
             is SendAction.SendSpecificTransaction -> handleSendSpecificTransactionAction(action, sendState)
+            is SendAction.SendSuccess -> sendState.copy(isSuccessSend = true)
             else -> return sendState
         }
 

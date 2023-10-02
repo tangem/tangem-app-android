@@ -13,6 +13,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -46,5 +49,12 @@ internal object ActivityModule {
     @Singleton
     fun provideDefaultRampManager(appStateHolder: AppStateHolder): RampStateManager {
         return DefaultRampManager(appStateHolder.exchangeService)
+    }
+
+    @Provides
+    @Singleton
+    @DelayedWork
+    fun provideActivityDelayedWorkCoroutineScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 }
