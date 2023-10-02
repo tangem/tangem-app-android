@@ -6,6 +6,8 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -16,9 +18,10 @@ import kotlin.collections.count
 /**
  * Wallet notifications list factory
  *
- * @property isDemoCardUseCase           use case that check if card is demo
- * @property isReadyToShowRateAppUseCase use case that check if card is user already rate app
- * @property wasCardScannedUseCase       use case that check if card was scanned
+ * @property isDemoCardUseCase           use case that checks if card is demo
+ * @property isReadyToShowRateAppUseCase use case that checks if card is user already rate app
+ * @property wasCardScannedUseCase       use case that checks if card was scanned
+ * @property isNeedToBackupUseCase       use case that checks if wallet need backup cards
  * @property clickIntents                screen click intents
  *
 [REDACTED_AUTHOR]
@@ -27,17 +30,20 @@ internal class WalletNotificationsListFactory(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val wasCardScannedUseCase: WasCardScannedUseCase,
+    private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
 
     fun create(
+        selectedWalletId: UserWalletId,
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
         return combine(
             flow = wasCardScannedUseCase(cardTypesResolver.getCardId()),
             flow2 = isReadyToShowRateAppUseCase(),
-        ) { wasCardScanned, isReadyToShowRating ->
+            flow3 = isNeedToBackupUseCase(selectedWalletId),
+        ) { wasCardScanned, isReadyToShowRating, isNeedToBackup ->
             buildList {
                 addCriticalNotifications(cardTypesResolver)
 
@@ -45,7 +51,7 @@ internal class WalletNotificationsListFactory(
 
                 addRateTheAppNotification(isReadyToShowRating)
 
-                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, wasCardScanned)
+                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, wasCardScanned, isNeedToBackup)
             }.toImmutableList()
         }
     }
@@ -116,12 +122,13 @@ internal class WalletNotificationsListFactory(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
         wasCardScanned: Boolean,
+        isNeedToBackup: Boolean,
     ) {
         addIf(
             element = WalletNotification.Warning.MissingBackup(
                 onStartBackupClick = clickIntents::onBackupCardClick,
             ),
-            condition = !cardTypesResolver.isBackupForbidden() && !cardTypesResolver.hasBackup(),
+            condition = isNeedToBackup,
         )
 
         val isDemo = isDemoCardUseCase(cardId = cardTypesResolver.getCardId())
