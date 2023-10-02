@@ -365,7 +365,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 refresh = true,
             )
             updateTxHistory(refresh = true)
-
+            updateWarnings(wallet)
             uiState = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }
