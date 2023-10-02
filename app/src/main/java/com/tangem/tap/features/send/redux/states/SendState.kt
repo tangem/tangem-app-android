@@ -43,6 +43,7 @@ data class SendState(
     val sendButtonState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.DISABLED),
     val dialog: StateDialog? = null,
     val externalTransactionData: ExternalTransactionData? = null,
+    val isSuccessSend: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
