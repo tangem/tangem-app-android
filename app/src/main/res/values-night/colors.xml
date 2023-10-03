@@ -50,4 +50,5 @@
     <color name="text_tertiary">#919191</color>
     <!--<color name="text_warning">#DE1010</color>-->
 
+    <color name="card_background">#333333</color>
 </resources>
