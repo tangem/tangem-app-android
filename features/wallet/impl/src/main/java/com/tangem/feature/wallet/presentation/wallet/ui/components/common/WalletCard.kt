@@ -44,7 +44,6 @@ import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.wallets.RenameWalletDialogContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -66,6 +65,7 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
         name = state.title,
         onDeleteClick = { state.onDeleteClick(state.id) },
         onRenameClick = { state.onRenameClick(state.id, it) },
+        isLockedState = state is WalletCardState.LockedContent,
         modifier = modifier,
     ) {
         val (title, balance, additionalText, image) = createRefs()
@@ -118,6 +118,7 @@ private fun CardContainer(
     name: String,
     onDeleteClick: () -> Unit,
     onRenameClick: (String) -> Unit,
+    isLockedState: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable (ConstraintLayoutScope.() -> Unit),
 ) {
@@ -132,24 +133,31 @@ private fun CardContainer(
     Surface(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size108)
-            .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
-            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .indication(interactionSource = interactionSource, indication = LocalIndication.current)
-            .pointerInput(true) {
-                detectTapGestures(
-                    onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isMenuVisible = true
-                        pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp())
-                    },
-                    onPress = {
-                        val press = PressInteraction.Press(it)
-                        interactionSource.emit(press)
-                        tryAwaitRelease()
-                        interactionSource.emit(PressInteraction.Release(press))
-                    },
-                )
-            },
+            .then(
+                if (isLockedState) {
+                    Modifier
+                } else {
+                    Modifier
+                        .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
+                        .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+                        .indication(interactionSource = interactionSource, indication = LocalIndication.current)
+                        .pointerInput(true) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isMenuVisible = true
+                                    pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp())
+                                },
+                                onPress = {
+                                    val press = PressInteraction.Press(it)
+                                    interactionSource.emit(press)
+                                    tryAwaitRelease()
+                                    interactionSource.emit(PressInteraction.Release(press))
+                                },
+                            )
+                        }
+                },
+            ),
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = TangemTheme.colors.background.primary,
     ) {
@@ -229,7 +237,7 @@ private fun MenuItem(@StringRes textResId: Int, imageVector: ImageVector, onClic
         onClick = onClick,
         colors = MenuDefaults.itemColors(
             textColor = TangemTheme.colors.text.primary1,
-            trailingIconColor = TangemColorPalette.Dark6,
+            trailingIconColor = TangemTheme.colors.icon.primary1,
         ),
     )
 }
