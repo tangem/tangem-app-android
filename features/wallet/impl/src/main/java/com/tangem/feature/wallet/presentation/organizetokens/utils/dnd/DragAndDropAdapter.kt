@@ -8,9 +8,9 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.divide
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteItems
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.updateItems
 import kotlinx.collections.immutable.mutate
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import org.burnoutcrew.reorderable.ItemPosition
 
 internal class DragAndDropAdapter(
@@ -19,21 +19,19 @@ internal class DragAndDropAdapter(
 
     private val draggableGroupsOperations = DraggableGroupsOperations()
 
-    private val currentListState: OrganizeTokensListState
+    private val externalListState: OrganizeTokensListState
         get() = listStateProvider.invoke()
 
-    private val dragAndDropUpdatesInternal: MutableSharedFlow<OrganizeTokensListState> = MutableSharedFlow(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
+    private val dragAndDropUpdatesInternal: MutableStateFlow<DragOperation?> = MutableStateFlow(value = null)
 
-    private var currentDraggingItem: DraggableItem? = null
+    private var draggingItem: DraggableItem? = null
+    private var draggingListState: OrganizeTokensListState? = null
 
-    val dragAndDropUpdates: SharedFlow<OrganizeTokensListState>
-        get() = dragAndDropUpdatesInternal
+    val dragAndDropUpdates: Flow<DragOperation>
+        get() = dragAndDropUpdatesInternal.filterNotNull()
 
     override fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean {
-        val items = when (val listState = currentListState) {
+        val items = when (val listState = externalListState) {
             is OrganizeTokensListState.GroupedByNetwork -> listState.items
             is OrganizeTokensListState.Empty,
             is OrganizeTokensListState.Ungrouped,
@@ -58,10 +56,10 @@ internal class DragAndDropAdapter(
     }
 
     override fun onItemDraggingStart(item: DraggableItem) {
-        if (currentDraggingItem != null) return
-        currentDraggingItem = item
+        if (draggingItem != null) return
+        draggingItem = item
 
-        updateListState {
+        updateListState(DragOperation.Type.Start) {
             when (item) {
                 is DraggableItem.Placeholder -> items
                 is DraggableItem.GroupHeader -> draggableGroupsOperations.collapseGroup(items, item)
@@ -72,12 +70,14 @@ internal class DragAndDropAdapter(
                 }
             }
         }
+
+        draggingListState = externalListState
     }
 
     override fun onItemDraggingEnd() {
-        val draggingItem = currentDraggingItem ?: return
+        val draggingItem = draggingItem ?: return
 
-        updateListState {
+        updateListState(DragOperation.Type.End(isItemsOrderChanged = checkIsItemsOrderChanged())) {
             when (draggingItem) {
                 is DraggableItem.GroupHeader -> draggableGroupsOperations.expandGroups(items)
                 is DraggableItem.Token -> items.uniteItems()
@@ -85,19 +85,21 @@ internal class DragAndDropAdapter(
             }
         }
 
-        currentDraggingItem = null
+        this.draggingItem = null
     }
 
-    override fun onItemDragged(from: ItemPosition, to: ItemPosition) = updateListState {
-        items.mutate {
-            it.add(to.index, it.removeAt(from.index))
+    override fun onItemDragged(from: ItemPosition, to: ItemPosition) {
+        updateListState(DragOperation.Type.Dragged) {
+            items.mutate {
+                it.add(to.index, it.removeAt(from.index))
+            }
         }
     }
 
-    private fun updateListState(block: OrganizeTokensListState.() -> List<DraggableItem>) {
-        val updatedState = currentListState.updateItems { block(currentListState) }
+    private fun updateListState(type: DragOperation.Type, block: OrganizeTokensListState.() -> List<DraggableItem>) {
+        val updatedState = externalListState.updateItems { block(externalListState) }
 
-        dragAndDropUpdatesInternal.tryEmit(updatedState)
+        dragAndDropUpdatesInternal.value = DragOperation(type, updatedState)
     }
 
     private fun findItemsToMove(
@@ -143,6 +145,33 @@ internal class DragAndDropAdapter(
             is DraggableItem.GroupHeader -> false // Token item can not be moved to group item
             is DraggableItem.Token -> item.groupId == moveOverItem.groupId // Token item can not be moved over its group
             is DraggableItem.Placeholder -> false
+        }
+    }
+
+    private fun checkIsItemsOrderChanged(): Boolean {
+        fun OrganizeTokensListState?.getItemsIds(): List<Any>? = this?.items?.mapNotNull { item ->
+            if (item is DraggableItem.Placeholder) {
+                null
+            } else {
+                item.id
+            }
+        }
+
+        return externalListState.getItemsIds() != draggingListState.getItemsIds()
+    }
+
+    data class DragOperation(
+        val type: Type,
+        val listState: OrganizeTokensListState,
+    ) {
+
+        sealed class Type {
+
+            object Start : Type()
+
+            object Dragged : Type()
+
+            data class End(val isItemsOrderChanged: Boolean) : Type()
         }
     }
 }
