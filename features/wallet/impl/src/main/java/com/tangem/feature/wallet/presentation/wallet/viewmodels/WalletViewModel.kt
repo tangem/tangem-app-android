@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.isZero
@@ -27,7 +26,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
-import com.tangem.domain.card.*
+import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
@@ -88,9 +90,6 @@ internal class WalletViewModel @Inject constructor(
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
-    private val getBiometricsStatusUseCase: GetBiometricsStatusUseCase,
-    private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
-    private val getAccessCodeSavingStatusUseCase: GetAccessCodeSavingStatusUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
@@ -384,41 +383,18 @@ internal class WalletViewModel @Inject constructor(
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onScanToUnlockWalletClick() {
-        scanToUpdateSelectedWallet()
-    }
-
-    private fun scanToUpdateSelectedWallet(onSuccessSave: suspend (UserWallet) -> Unit = {}) {
         val state = uiState as? WalletState.ContentState ?: return
-
-        val prevRequestPolicyStatus = getBiometricsStatusUseCase()
-
-        // Update access the code policy according access code saving status
-        setAccessCodeRequestPolicyUseCase(isBiometricsRequestPolicy = getAccessCodeSavingStatusUseCase())
+        val lockedWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
         viewModelScope.launch(dispatchers.io) {
-            scanCardProcessor.scan(
-                cardId = getWallet(state.walletsListConfig.selectedWalletIndex).cardId,
-                allowsRequestAccessCodeFromRepository = true,
-            )
+            scanCardProcessor.scan()
                 .doOnSuccess {
                     // If card's public key is null then user wallet will be null
-                    val userWallet = UserWalletBuilder(scanResponse = it).build()
+                    val unlockedWallet = UserWalletBuilder(scanResponse = it).build()
 
-                    if (userWallet != null) {
-                        saveWalletUseCase(userWallet = userWallet, canOverride = true)
-                            .onLeft {
-                                // Rollback policy if card saving was failed
-                                setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
-                            }
-                            .onRight { onSuccessSave(userWallet) }
-                    } else {
-                        // Rollback policy if card saving was failed
-                        setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
+                    if (lockedWallet.walletId == unlockedWallet?.walletId) {
+                        saveWalletUseCase(userWallet = unlockedWallet, canOverride = true)
                     }
-                }
-                .doOnFailure {
-                    // Rollback policy if card scanning was failed
-                    setAccessCodeRequestPolicyUseCase(prevRequestPolicyStatus)
                 }
         }
     }
@@ -499,12 +475,14 @@ internal class WalletViewModel @Inject constructor(
         refreshContentJobHolder.update(job = null)
 
         viewModelScope.launch(dispatchers.main) {
-            val userWalletId = state.walletsListConfig.wallets[index].id
+            val userWallet = state.walletsListConfig.wallets[index]
             withContext(dispatchers.io) {
-                selectWalletUseCase(userWalletId = userWalletId)
+                if (userWallet !is WalletCardState.LockedContent) {
+                    selectWalletUseCase(userWalletId = userWallet.id)
+                }
             }
 
-            val cacheState = WalletStateCache.getState(userWalletId = userWalletId)
+            val cacheState = WalletStateCache.getState(userWalletId = userWallet.id)
             if (cacheState != null && cacheState !is WalletLockedState) {
                 uiState = cacheState.copySealed(
                     walletsListConfig = state.walletsListConfig.copy(
@@ -783,11 +761,20 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onDeleteClick(userWalletId: UserWalletId) {
         val state = uiState as? WalletState.ContentState ?: return
-
         viewModelScope.launch(dispatchers.io) {
-            val either = deleteWalletUseCase(userWalletId)
+            deleteWalletUseCase(userWalletId)
 
-            if (state.walletsListConfig.wallets.size <= 1 && either.isRight()) onBackClick()
+            popBackIfAllWalletsIsLocked(wallets = state.walletsListConfig.wallets)
+        }
+    }
+
+    private fun popBackIfAllWalletsIsLocked(wallets: List<WalletCardState>) {
+        val unlockedWallet = wallets.count { it !is WalletCardState.LockedContent }
+
+        if (unlockedWallet == 1) {
+            router.popBackStack(
+                screen = if (wallets.size > 1) AppScreen.Welcome else AppScreen.Home,
+            )
         }
     }
 
