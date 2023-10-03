@@ -244,7 +244,7 @@ private fun TopBar(
                     iconResId = R.drawable.ic_sort_24,
                     enabled = config.isEnabled,
                     onClick = config.onSortClick,
-                    dimContent = !config.isSortedByBalance,
+                    dimContent = config.isSortedByBalance,
                 ),
                 modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
