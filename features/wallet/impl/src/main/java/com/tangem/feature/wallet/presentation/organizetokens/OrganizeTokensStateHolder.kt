@@ -73,12 +73,11 @@ internal class OrganizeTokensStateHolder(
     }
 
     fun updateStateWithManualSorting(itemsState: OrganizeTokensListState) {
-        updateState {
-            copy(
-                header = header.copy(isSortedByBalance = false),
-                itemsState = itemsState,
-            )
-        }
+        updateState { copy(itemsState = itemsState) }
+    }
+
+    fun disableSortingByBalance() {
+        updateState { copy(header = header.copy(isSortedByBalance = false)) }
     }
 
     fun updateStateWithError(error: TokenListError) {
