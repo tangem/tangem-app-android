@@ -75,6 +75,8 @@ interface WalletManagersFacade {
         derivationPath: String?,
     ): WalletManager?
 
+    suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
+
     /**
      * Returns ordered list of addresses for selected wallet for given currency
      *
