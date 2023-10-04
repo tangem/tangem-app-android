@@ -137,28 +137,6 @@ internal class WalletNotificationsListFactory(
                 element = WalletNotification.Warning.SomeNetworksUnreachable,
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
-
-            if (cardTypesResolver.isBackupForbidden()) {
-                addIf(
-                    element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                    condition = checkSignedHashes(
-                        cardTypesResolver = cardTypesResolver,
-                        isDemo = isDemo,
-                        wasCardScanned,
-                    ),
-                )
-            } else {
-                addIf(
-                    element = WalletNotification.Warning.MultiWalletSignedHashesIncorrect(
-                        onClick = clickIntents::onMultiWalletSignedHashesNotificationClick,
-                    ),
-                    condition = checkSignedHashes(
-                        cardTypesResolver = cardTypesResolver,
-                        isDemo = isDemo,
-                        wasCardScanned,
-                    ),
-                )
-            }
         } else {
             addIf(
                 element = WalletNotification.Warning.NetworksUnreachable,
@@ -171,8 +149,14 @@ internal class WalletNotificationsListFactory(
             }
 
             addIf(
-                element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                condition = checkSignedHashes(cardTypesResolver, isDemo, wasCardScanned),
+                element = WalletNotification.Warning.NumberOfSignedHashesIncorrect(
+                    onCloseClick = clickIntents::onSignedHashesNotificationCloseClick,
+                ),
+                condition = checkSignedHashes(
+                    cardTypesResolver = cardTypesResolver,
+                    isDemo = isDemo,
+                    wasCardScanned = wasCardScanned,
+                ),
             )
         }
     }
@@ -193,13 +177,16 @@ internal class WalletNotificationsListFactory(
             ?.errorMessage
     }
 
+    /**
+     * Warning is being shown for single wallet cards only
+     */
     private fun checkSignedHashes(
         cardTypesResolver: CardTypesResolver,
         isDemo: Boolean,
         wasCardScanned: Boolean,
     ): Boolean {
-        return cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.hasWalletSignedHashes() && !isDemo &&
-            !wasCardScanned
+        return cardTypesResolver.isReleaseFirmwareType() && !cardTypesResolver.isTangemTwins() &&
+            cardTypesResolver.hasWalletSignedHashes() && !isDemo && !wasCardScanned
     }
 
     private companion object {
