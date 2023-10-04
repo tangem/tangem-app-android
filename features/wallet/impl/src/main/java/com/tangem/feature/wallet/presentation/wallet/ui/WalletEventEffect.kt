@@ -47,11 +47,6 @@ internal fun WalletEventEffect(
                 is WalletEvent.CopyAddress -> {
                     clipboardManager.setText(AnnotatedString(value.address))
                 }
-                is WalletEvent.ShowWalletAlreadySignedHashesMessage -> {
-                    onAlertConfigSet(
-                        WalletAlertState.WalletAlreadySignedHashes(onUnderstandClick = value.onUnderstandClick),
-                    )
-                }
                 is WalletEvent.ShowAlert -> {
                     onAlertConfigSet(
                         WalletAlertState.DefaultAlert(

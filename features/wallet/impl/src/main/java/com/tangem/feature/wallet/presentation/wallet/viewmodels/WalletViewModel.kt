@@ -406,24 +406,6 @@ internal class WalletViewModel @Inject constructor(
         router.openOnboardingScreen()
     }
 
-    override fun onMultiWalletSignedHashesNotificationClick() {
-        val state = uiState as? WalletState.ContentState ?: return
-
-        uiState = stateFactory.getStateAndTriggerEvent(
-            state = uiState,
-            event = WalletEvent.ShowWalletAlreadySignedHashesMessage(
-                onUnderstandClick = {
-                    viewModelScope.launch(dispatchers.main) {
-                        setCardWasScannedUseCase(
-                            cardId = getWallet(index = state.walletsListConfig.selectedWalletIndex).cardId,
-                        )
-                    }
-                },
-            ),
-            setUiState = { uiState = it },
-        )
-    }
-
     override fun onLikeAppClick() {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
         uiState = stateFactory.getStateAndTriggerEvent(
