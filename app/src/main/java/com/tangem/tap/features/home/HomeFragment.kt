@@ -95,7 +95,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
                 lifecycleScope.launch {
                     store.dispatch(
-                        HomeAction.ReadCard(lifecycleCoroutineScope = lifecycleScope),
+                        HomeAction.ReadCard(scope = this),
                     )
                 }
             },

@@ -6,5 +6,6 @@ import android.content.Intent
  * @author Anton Zhilenkov on 04.06.2023.
  */
 interface IntentHandler {
-    suspend fun handleIntent(intent: Intent?): Boolean
+
+    fun handleIntent(intent: Intent?): Boolean
 }

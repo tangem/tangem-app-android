@@ -365,25 +365,21 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
         if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
-            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
-            store.dispatchOnMain(WelcomeAction.SetInitialIntent(intentWhichStartedActivity))
-            lifecycleScope.launch {
-                val handler = BackgroundScanIntentHandler(
-                    hasSavedUserWalletsProvider = { true },
-                    lifecycleCoroutineScope = lifecycleScope,
-                )
-                val isBackgroundScanHandled = handler.handleIntent(intentWhichStartedActivity)
-                val hasNotIncompletedBackup = !backupService.hasIncompletedBackup
-                if (!isBackgroundScanHandled && hasNotIncompletedBackup) {
-                    store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
-                }
-            }
+            store.dispatch(
+                NavigationAction.NavigateTo(
+                    screen = AppScreen.Welcome,
+                    bundle = intentWhichStartedActivity?.let {
+                        bundleOf(WelcomeFragment.INITIAL_INTENT_KEY to it)
+                    },
+                ),
+            )
         } else {
-            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
             lifecycleScope.launch {
                 intentProcessor.handleIntent(intentWhichStartedActivity)
             }
         }
+
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 }
