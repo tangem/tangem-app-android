@@ -17,7 +17,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
@@ -54,13 +53,11 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -246,14 +243,12 @@ internal class WalletViewModel @Inject constructor(
         if (cacheState != null) {
             uiState = stateFactory.getStateWithoutDeletedWallet(cacheState, action)
 
-            if (cacheState.isLoadingOrEmptyState()) {
-                uiState = stateFactory.getStateAndTriggerEvent(
-                    state = uiState,
-                    event = WalletEvent.ChangeWallet(action.selectedWalletIndex),
-                    setUiState = { uiState = it },
-                )
-                getContentItemsUpdates(action.selectedWalletIndex)
-            }
+            uiState = stateFactory.getStateAndTriggerEvent(
+                state = uiState,
+                event = WalletEvent.ChangeWallet(action.selectedWalletIndex),
+                setUiState = { uiState = it },
+            )
+            getContentItemsUpdates(action.selectedWalletIndex)
         } else {
             /* It's impossible case because user can delete only visible state, but we support this case */
             scrollAndUpdateState(selectedWalletIndex = action.selectedWalletIndex)
@@ -495,9 +490,7 @@ internal class WalletViewModel @Inject constructor(
                     pullToRefreshConfig = cacheState.pullToRefreshConfig.copy(isRefreshing = false),
                 )
 
-                if (cacheState.isLoadingOrEmptyState()) {
-                    getContentItemsUpdates(index)
-                }
+                getContentItemsUpdates(index)
             } else {
                 initializeAndLoadState(selectedWalletIndex = index)
             }
@@ -1033,32 +1026,6 @@ internal class WalletViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
-    }
-
-    private fun WalletState.isLoadingOrEmptyState(): Boolean {
-        // Check the base components
-        if (this is WalletState.ContentState &&
-            walletsListConfig.wallets[walletsListConfig.selectedWalletIndex] is WalletCardState.Loading
-        ) {
-            return true
-        }
-
-        // Check the special components
-        return when (this) {
-            is WalletMultiCurrencyState -> {
-                val isTokensEmpty = tokensListState is WalletTokensListState.Empty
-                val hasLoadingTokens = tokensListState is WalletTokensListState.ContentState &&
-                    (tokensListState as WalletTokensListState.ContentState).items
-                        .filterIsInstance<WalletTokensListState.TokensListItemState.Token>()
-                        .any { it.state is TokenItemState.Loading }
-
-                isTokensEmpty || tokensListState is WalletTokensListState.Loading || hasLoadingTokens
-            }
-            is WalletSingleCurrencyState -> {
-                this is WalletSingleCurrencyState.Content && marketPriceBlockState is MarketPriceBlockState.Loading
-            }
-            is WalletState.Initial -> false
-        }
     }
 
     private fun getWallet(index: Int): UserWallet {
