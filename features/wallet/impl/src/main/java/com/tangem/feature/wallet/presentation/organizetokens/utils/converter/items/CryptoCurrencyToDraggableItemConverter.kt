@@ -56,7 +56,7 @@ internal class CryptoCurrencyToDraggableItemConverter(
             } else {
                 TokenItemState.CryptoAmountState.Content(text = getFormattedFiatAmount(currencyStatus, appCurrency))
             },
-            isBalanceHidden = isBalanceHidden
+            isBalanceHidden = isBalanceHidden,
 
         )
     }

@@ -25,7 +25,7 @@ import com.tangem.feature.wallet.presentation.common.component.token.icon.TokenI
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun TokenItem(
     state: TokenItemState,

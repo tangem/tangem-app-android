@@ -17,7 +17,7 @@ internal class TokenListHiddenStateConverter :
                 if (draggableItem is DraggableItem.Token) {
                     draggableItem.copy(
                         tokenItemState = draggableItem.tokenItemState.copy(
-                            isBalanceHidden = isBalanceHidden
+                            isBalanceHidden = isBalanceHidden,
                         ),
                     )
                 } else {
