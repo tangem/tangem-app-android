@@ -7,18 +7,16 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenListToStateConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListHiddenStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListSortingErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -42,9 +40,8 @@ internal class OrganizeTokensStateHolder(
         TokenListToStateConverter(Provider(stateFlowInternal::value), itemsConverter)
     }
 
-    private val inProgressStateConverter by lazy {
-        InProgressStateConverter()
-    }
+    private val inProgressStateConverter by lazy { InProgressStateConverter() }
+    private val tokenListHiddenStateConverter by lazy { TokenListHiddenStateConverter() }
 
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
@@ -86,30 +83,7 @@ internal class OrganizeTokensStateHolder(
     }
 
     fun updateHiddenState(itemsState: OrganizeTokensListState, isBalanceHidden: Boolean) {
-        val currentState = itemsState
-
-        val updatedState = currentState.copySealed(
-            currentState.items.map { draggableItem ->
-                if (draggableItem is DraggableItem.Token) {
-                    if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
-                        draggableItem.copy(
-                            tokenItemState = draggableItem.tokenItemState.copy(
-                                info = draggableItem.tokenItemState.info.copy(
-                                    balance = draggableItem.tokenItemState.info.balance,
-                                    isBalanceHidden = isBalanceHidden,
-                                ),
-                            ),
-                        )
-                    } else {
-                        draggableItem
-                    }
-                } else {
-                    draggableItem
-                }
-            }.toPersistentList(),
-        )
-
-        updateState { copy(itemsState = updatedState) }
+        updateState { copy(itemsState = tokenListHiddenStateConverter.convert(itemsState to isBalanceHidden)) }
     }
 
     fun updateStateWithError(error: TokenListError) {
