@@ -5,6 +5,8 @@ import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.send.navigation.SendRouter
 import com.tangem.tap.di.DelayedWork
@@ -60,7 +62,10 @@ internal class SendViewModel @Inject constructor(
                     .fold(
                         ifLeft = { Timber.e(it.toString()) },
                         ifRight = { wallet ->
-                            updateDelayedCurrencyStatusUseCase(wallet.walletId, cryptoCurrency.network, true)
+                            // we should update network to find pending tx after 1 sec
+                            updateForPendingTx(wallet, cryptoCurrency.network)
+                            // we should update network for new balance
+                            updateForBalance(wallet, cryptoCurrency.network)
                         },
                     )
             }
@@ -69,7 +74,27 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
+    private suspend fun updateForPendingTx(userWallet: UserWallet, network: Network) {
+        updateDelayedCurrencyStatusUseCase(
+            userWalletId = userWallet.walletId,
+            network = network,
+            delayMillis = UPDATE_PENDING_TX_DELAY_MILLIS,
+            refresh = true,
+        )
+    }
+
+    private suspend fun updateForBalance(userWallet: UserWallet, network: Network) {
+        updateDelayedCurrencyStatusUseCase(
+            userWalletId = userWallet.walletId,
+            network = network,
+            delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
+            refresh = true,
+        )
+    }
+
     companion object {
+        private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+        private const val UPDATE_PENDING_TX_DELAY_MILLIS = 1000L
         private const val TAG = "SendViewModel"
     }
 }
