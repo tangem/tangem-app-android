@@ -97,7 +97,9 @@ internal class DefaultNetworksRepository(
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
 
-        invalidateCacheKeyIfNeeded(userWalletId, network, result)
+        withContext(NonCancellable) {
+            invalidateCacheKeyIfNeeded(userWalletId, network, result)
+        }
 
         val networkStatus = networkStatusFactory.createNetworkStatus(
             network = network,
