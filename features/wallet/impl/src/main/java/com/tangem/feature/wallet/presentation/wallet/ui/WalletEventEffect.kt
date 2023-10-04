@@ -46,6 +46,7 @@ internal fun WalletEventEffect(
                 }
                 is WalletEvent.CopyAddress -> {
                     clipboardManager.setText(AnnotatedString(value.address))
+                    Toast.makeText(context, value.toast.resolveReference(resources), Toast.LENGTH_SHORT).show()
                 }
                 is WalletEvent.ShowAlert -> {
                     onAlertConfigSet(
