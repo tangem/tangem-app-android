@@ -17,7 +17,7 @@ internal interface WalletClickIntents {
 
     fun onBackupCardClick()
 
-    fun onMultiWalletSignedHashesNotificationClick()
+    fun onSignedHashesNotificationCloseClick()
 
     fun onLikeAppClick()
 
