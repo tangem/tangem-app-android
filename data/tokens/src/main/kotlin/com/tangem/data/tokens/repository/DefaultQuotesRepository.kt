@@ -35,9 +35,11 @@ internal class DefaultQuotesRepository(
         }
 
         withContext(dispatchers.io) {
-            selectedAppCurrencyStore.get().collectLatest { appCurrency ->
-                fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
-            }
+            selectedAppCurrencyStore.get()
+                .distinctUntilChanged()
+                .collectLatest { appCurrency ->
+                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
+                }
         }
     }.cancellable()
 
