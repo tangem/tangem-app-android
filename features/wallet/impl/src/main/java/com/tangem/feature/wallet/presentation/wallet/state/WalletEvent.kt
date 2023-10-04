@@ -18,7 +18,7 @@ internal sealed class WalletEvent {
         val onActionClick: (() -> Unit)?,
     ) : WalletEvent()
 
-    data class CopyAddress(val address: String) : WalletEvent()
+    data class CopyAddress(val address: String, val toast: TextReference) : WalletEvent()
 
     data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
 }
