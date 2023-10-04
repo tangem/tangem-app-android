@@ -33,9 +33,10 @@ class UpdateDelayedNetworkStatusUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         network: Network,
+        delayMillis: Long,
         refresh: Boolean = false,
     ): Either<CurrencyStatusError, Unit> {
-        delay(DELAY_MILLIS)
+        delay(delayMillis)
         return either {
             fetchNetworkStatus(userWalletId, network, refresh)
         }
@@ -51,9 +52,5 @@ class UpdateDelayedNetworkStatusUseCase(
         ) {
             raise(CurrencyStatusError.DataError(it))
         }
-    }
-
-    companion object {
-        private const val DELAY_MILLIS = 11000L
     }
 }
