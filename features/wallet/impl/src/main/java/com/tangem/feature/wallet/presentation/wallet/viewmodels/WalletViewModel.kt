@@ -643,12 +643,10 @@ internal class WalletViewModel @Inject constructor(
             defaultAddress?.value?.let { address ->
                 uiState = stateFactory.getStateAndTriggerEvent(
                     state = uiState,
-                    event = WalletEvent.CopyAddress(address),
-                    setUiState = { uiState = it },
-                )
-                uiState = stateFactory.getStateAndTriggerEvent(
-                    state = uiState,
-                    event = WalletEvent.ShowToast(resourceReference(R.string.wallet_notification_address_copied)),
+                    event = WalletEvent.CopyAddress(
+                        address = address,
+                        toast = resourceReference(R.string.wallet_notification_address_copied),
+                    ),
                     setUiState = { uiState = it },
                 )
             }
