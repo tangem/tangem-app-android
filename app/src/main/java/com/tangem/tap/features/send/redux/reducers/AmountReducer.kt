@@ -82,7 +82,11 @@ class AmountReducer : SendInternalReducer {
             is AmountAction.SetAmountError -> state.copy(error = action.error)
             is AmountAction.SetDecimalSeparator -> state.copy(decimalSeparator = action.separator)
             is AmountAction.HideBalance -> {
-                val rescaledBalance = sendState.convertExtractCryptoToFiat(state.balanceCrypto, true)
+                val rescaledBalance = if (state.mainCurrency.type == MainCurrencyType.CRYPTO) {
+                    state.balanceCrypto
+                } else {
+                    sendState.convertExtractCryptoToFiat(state.balanceCrypto, true)
+                }
 
                 state.copy(
                     hideBalance = action.hide,
