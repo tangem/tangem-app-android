@@ -57,6 +57,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
         subtitle: TextReference,
         buttonsState: NotificationConfig.ButtonsState? = null,
         onClick: (() -> Unit)? = null,
+        onCloseClick: (() -> Unit)? = null,
     ) : WalletNotification(
         config = NotificationConfig(
             title = title,
@@ -64,6 +65,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconResId = R.drawable.img_attention_20,
             buttonsState = buttonsState,
             onClick = onClick,
+            onCloseClick = onCloseClick,
         ),
     ) {
 
@@ -91,15 +93,10 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = stringReference(value = errorMessage),
         )
 
-        object NumberOfSignedHashesIncorrect : Warning(
+        data class NumberOfSignedHashesIncorrect(val onCloseClick: () -> Unit) : Warning(
             title = resourceReference(id = R.string.common_warning),
             subtitle = resourceReference(id = R.string.alert_card_signed_transactions),
-        )
-
-        data class MultiWalletSignedHashesIncorrect(val onClick: () -> Unit) : Warning(
-            title = resourceReference(id = R.string.common_warning),
-            subtitle = resourceReference(id = R.string.warning_signed_tx_previously),
-            onClick = onClick,
+            onCloseClick = onCloseClick,
         )
     }
 
