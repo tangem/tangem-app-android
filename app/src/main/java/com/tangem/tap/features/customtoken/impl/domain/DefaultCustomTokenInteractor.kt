@@ -175,7 +175,7 @@ class DefaultCustomTokenInteractor(
                         is Currency.Blockchain -> {
                             cryptoCurrencyFactory.createCoin(
                                 blockchain = currency.blockchain,
-                                extraDerivationPath = null,
+                                extraDerivationPath = currency.derivationPath,
                                 derivationStyleProvider = scanResponse.derivationStyleProvider,
                             )
                         }
@@ -183,7 +183,7 @@ class DefaultCustomTokenInteractor(
                             cryptoCurrencyFactory.createToken(
                                 sdkToken = currency.token,
                                 blockchain = currency.blockchain,
-                                extraDerivationPath = null,
+                                extraDerivationPath = currency.derivationPath,
                                 derivationStyleProvider = scanResponse.derivationStyleProvider,
                             )
                         }
