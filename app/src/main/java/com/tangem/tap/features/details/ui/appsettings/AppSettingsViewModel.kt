@@ -196,6 +196,8 @@ internal class AppSettingsViewModel(
         appCurrencyRepository
             .getSelectedAppCurrency()
             .onEach {
+                if (it.code == store.state.globalState.appCurrency.code) return@onEach
+
                 val fiatCurrency = with(it) { FiatCurrency(code, name, symbol) }
                 store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(fiatCurrency))
             }
