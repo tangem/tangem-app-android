@@ -98,11 +98,12 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onSortClick() {
+        val list = tokenList ?: return
+        if (list.sortedBy == TokenList.SortType.BALANCE) return
+
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
         viewModelScope.launch(dispatchers.default) {
-            val list = tokenList ?: return@launch
-
             toggleTokenListSortingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -114,11 +115,11 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onGroupClick() {
+        val list = tokenList ?: return
+
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
         viewModelScope.launch(dispatchers.default) {
-            val list = tokenList ?: return@launch
-
             toggleTokenListGroupingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -187,11 +188,21 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private fun bootstrapDragAndDropUpdates() {
         dragAndDropAdapter.dragAndDropUpdates
             .distinctUntilChanged()
-            .onEach {
-                stateHolder.updateStateWithManualSorting(it)
-                tokenList = tokenList?.disableSortingByBalance()
+            .onEach { (type, updatedListState) ->
+                disableSortingByBalanceIfListChanged(type)
+
+                stateHolder.updateStateWithManualSorting(updatedListState)
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun disableSortingByBalanceIfListChanged(dragOperationType: DragAndDropAdapter.DragOperation.Type) {
+        if (dragOperationType !is DragAndDropAdapter.DragOperation.Type.End) return
+
+        if (uiState.value.header.isSortedByBalance && dragOperationType.isItemsOrderChanged) {
+            tokenList = tokenList?.disableSortingByBalance()
+            stateHolder.disableSortingByBalance()
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {

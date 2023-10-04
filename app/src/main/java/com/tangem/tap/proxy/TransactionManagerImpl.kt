@@ -419,7 +419,7 @@ class TransactionManagerImpl(
                 appStateHolder.userWalletsListManager?.selectedUserWalletSync,
             ) { "userWallet or userWalletsListManager is null" }
             walletManagersFacade.getOrCreateWalletManager(
-                selectedUserWallet,
+                selectedUserWallet.walletId,
                 blockchain,
                 derivationPath,
             )

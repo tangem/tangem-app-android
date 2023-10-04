@@ -17,22 +17,19 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import kotlinx.coroutines.flow.Flow
 
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: TokenDetailsClickIntents,
-    currencySymbolProvider: Provider<String>,
-    currencyDecimalsProvider: Provider<Int>,
+    symbol: String,
+    decimals: Int,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -47,9 +44,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
-            symbol = currencySymbolProvider(),
-            decimals = currencyDecimalsProvider(),
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 
@@ -68,8 +64,8 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
-            symbol = currencySymbolProvider(),
-            decimals = currencyDecimalsProvider(),
+            symbol = symbol,
+            decimals = decimals,
         )
     }
 
@@ -79,7 +75,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getInitialState(screenArgument: TokenDetailsArguments): TokenDetailsState {
+    fun getInitialState(screenArgument: CryptoCurrency): TokenDetailsState {
         return skeletonStateConverter.convert(value = screenArgument)
     }
 
@@ -100,7 +96,9 @@ internal class TokenDetailsStateFactory(
     fun getLoadedTxHistoryState(
         txHistoryEither: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>,
     ): TokenDetailsState {
-        return loadedTxHistoryConverter.convert(txHistoryEither)
+        return currentStateProvider().copy(
+            txHistoryState = loadedTxHistoryConverter.convert(txHistoryEither),
+        )
     }
 
     fun getStateWithClosedDialog(): TokenDetailsState {
@@ -141,9 +139,7 @@ internal class TokenDetailsStateFactory(
     }
 
     fun getRefreshedState(): TokenDetailsState {
-        val state = currentStateProvider()
         return refreshStateConverter.convert(false)
-            .copy(notifications = notificationConverter.getStateRentInfoVisibility(state, true))
     }
 
     fun getStateWithReceiveBottomSheet(
@@ -203,14 +199,8 @@ internal class TokenDetailsStateFactory(
 
     fun getStateWithUpdatedHidden(isBalanceHidden: Boolean): TokenDetailsState {
         val currentState = currentStateProvider()
-        val possibleTokenBalanceBlockState = currentState.tokenBalanceBlockState as?
-            TokenDetailsBalanceBlockState.Content
 
-        possibleTokenBalanceBlockState?.let {
-            return currentState.copy(
-                tokenBalanceBlockState = possibleTokenBalanceBlockState.copy(isBalanceHidden = isBalanceHidden),
-            )
-        } ?: return currentState
+        return currentState.copy(isBalanceHidden = isBalanceHidden)
     }
 
     fun getStateWithNotifications(warnings: Set<CryptoCurrencyWarning>): TokenDetailsState {
@@ -218,13 +208,8 @@ internal class TokenDetailsStateFactory(
         return state.copy(notifications = notificationConverter.convert(warnings))
     }
 
-    fun getStateWithRemovedExistentialNotification(): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(notifications = notificationConverter.removeExistentialDeposit(state))
-    }
-
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
-        return state.copy(notifications = notificationConverter.getStateRentInfoVisibility(state, false))
+        return state.copy(notifications = notificationConverter.removeRentInfo(state))
     }
 }

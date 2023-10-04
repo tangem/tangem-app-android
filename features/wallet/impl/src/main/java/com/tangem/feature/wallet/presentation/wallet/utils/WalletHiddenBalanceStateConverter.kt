@@ -25,6 +25,7 @@ internal class WalletHiddenBalanceStateConverter {
             onRenameClick = content.onRenameClick,
             onDeleteClick = content.onDeleteClick,
             balance = content.balance,
+            cardCount = content.cardCount,
         )
     }
 
@@ -37,6 +38,7 @@ internal class WalletHiddenBalanceStateConverter {
             onRenameClick = hiddenContent.onRenameClick,
             onDeleteClick = hiddenContent.onDeleteClick,
             balance = hiddenContent.balance,
+            cardCount = hiddenContent.cardCount,
         )
     }
 }

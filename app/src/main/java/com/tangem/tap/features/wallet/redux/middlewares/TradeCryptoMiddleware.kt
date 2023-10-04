@@ -15,6 +15,7 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.presentation.SwapFragment
+import com.tangem.features.send.navigation.SendRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
@@ -155,7 +156,7 @@ class TradeCryptoMiddleware {
                 val walletManager = store.state.daggerGraphState
                     .get(DaggerGraphState::walletManagersFacade)
                     .getOrCreateWalletManager(
-                        userWallet = action.userWallet,
+                        userWalletId = action.userWallet.walletId,
                         blockchain = blockchain,
                         derivationPath = currency.network.derivationPath.value,
                     )
@@ -338,7 +339,7 @@ class TradeCryptoMiddleware {
             val walletManager = store.state.daggerGraphState
                 .get(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
-                    userWallet = action.userWallet,
+                    userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
                     derivationPath = currency.network.derivationPath.value,
                 )
@@ -365,8 +366,8 @@ class TradeCryptoMiddleware {
                     )
                 }
             }
-
-            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
+            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
 
@@ -379,7 +380,7 @@ class TradeCryptoMiddleware {
             val walletManager = store.state.daggerGraphState
                 .get(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
-                    userWallet = action.userWallet,
+                    userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
                     derivationPath = currency.network.derivationPath.value,
                 )
@@ -415,7 +416,8 @@ class TradeCryptoMiddleware {
                 is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
             }
 
-            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
+            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
 }

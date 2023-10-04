@@ -1,21 +1,12 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter
 
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-
 internal class TokenItemHiddenStateConverter {
 
-    fun updateHiddenState(
-        optionsState: TokenItemState.TokenOptionsState,
-        isBalanceHidden: Boolean,
-    ): TokenItemState.TokenOptionsState {
+    fun updateHiddenState(wasBalanceHidden: Boolean, isBalanceHidden: Boolean): Boolean {
         return when {
-            !optionsState.isBalanceHidden && isBalanceHidden -> {
-                optionsState.copy(isBalanceHidden = true)
-            }
-            optionsState.isBalanceHidden && !isBalanceHidden -> {
-                optionsState.copy(isBalanceHidden = false)
-            }
-            else -> optionsState
+            !wasBalanceHidden && isBalanceHidden -> true
+            wasBalanceHidden && !isBalanceHidden -> false
+            else -> wasBalanceHidden
         }
     }
 }

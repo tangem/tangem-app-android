@@ -4,6 +4,7 @@ import com.tangem.common.Provider
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -110,20 +111,29 @@ internal class WalletsUpdateActionResolver(
         selectedWallet: UserWallet,
     ): Action {
         val selectedWalletName = selectedWallet.name
+        val previousWalletState = state.getPrevSelectedWallet()
+        return when {
+            previousWalletState.title != selectedWalletName -> {
+                Action.UpdateWalletName(selectedWalletName)
+            }
 
-        if (state.getPrevSelectedWallet().title != selectedWalletName) {
-            return Action.UpdateWalletName(selectedWalletName)
+            state is WalletLockedState && !selectedWallet.isLocked -> {
+                Action.UnlockWallet(
+                    selectedWalletIndex = wallets.indexOfWallet(id = selectedWallet.walletId),
+                    selectedWallet = selectedWallet,
+                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
+                )
+            }
+
+            previousWalletState is WalletCardState.Content &&
+                previousWalletState.cardCount != selectedWallet.getCardsCount() ||
+                previousWalletState is WalletCardState.HiddenContent &&
+                previousWalletState.cardCount != selectedWallet.getCardsCount() -> {
+                Action.UpdateWalletCardCount
+            }
+
+            else -> Action.Unknown
         }
-
-        if (state is WalletLockedState && !selectedWallet.isLocked) {
-            return Action.UnlockWallet(
-                selectedWalletIndex = wallets.indexOfWallet(id = selectedWallet.walletId),
-                selectedWallet = selectedWallet,
-                unlockedWallets = wallets.filterNot(UserWallet::isLocked),
-            )
-        }
-
-        return Action.Unknown
     }
 
     private fun WalletState.ContentState.getPrevSelectedWallet(): WalletCardState {
@@ -162,6 +172,8 @@ internal class WalletsUpdateActionResolver(
         ) : Action()
 
         data class AddWallet(val selectedWalletIndex: Int) : Action()
+
+        object UpdateWalletCardCount : Action()
 
         object Unknown : Action()
     }

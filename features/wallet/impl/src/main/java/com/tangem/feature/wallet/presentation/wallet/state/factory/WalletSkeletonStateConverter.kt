@@ -55,6 +55,7 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
+            isBalanceHidden = true,
         )
     }
 
@@ -67,12 +68,13 @@ internal class WalletSkeletonStateConverter(
             notifications = persistentListOf(),
             bottomSheetConfig = null,
             buttons = createButtons(),
-            marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = currencyName),
+            marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = currencyName),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+            isBalanceHidden = true,
         )
     }
 

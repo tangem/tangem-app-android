@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error
 
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.utils.converter.Converter
@@ -16,18 +15,11 @@ internal class TokenListHiddenStateConverter :
         return currentState.copySealed(
             currentState.items.map { draggableItem ->
                 if (draggableItem is DraggableItem.Token) {
-                    if (draggableItem.tokenItemState.info is TokenItemState.DraggableItemInfo.Balance) {
-                        draggableItem.copy(
-                            tokenItemState = draggableItem.tokenItemState.copy(
-                                info = draggableItem.tokenItemState.info.copy(
-                                    balance = draggableItem.tokenItemState.info.balance,
-                                    isBalanceHidden = isBalanceHidden,
-                                ),
-                            ),
-                        )
-                    } else {
-                        draggableItem
-                    }
+                    draggableItem.copy(
+                        tokenItemState = draggableItem.tokenItemState.copy(
+                            isBalanceHidden = isBalanceHidden
+                        ),
+                    )
                 } else {
                     draggableItem
                 }

@@ -11,14 +11,12 @@ import com.tangem.features.tokendetails.impl.R
 // TODO: Finalize notification strings https://tangem.atlassian.net/browse/AND-4586
 @Immutable
 sealed class TokenDetailsNotification(
-    open val isVisible: Boolean = true,
     open val config: NotificationConfig,
 ) {
 
     data class RentInfo(
         private val rentInfo: CryptoCurrencyWarning.Rent,
         private val onCloseClick: () -> Unit,
-        override val isVisible: Boolean = true,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
             title = TextReference.Res(R.string.send_network_fee_title),
@@ -33,7 +31,6 @@ sealed class TokenDetailsNotification(
 
     data class ExistentialDeposit(
         private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
-        private val onCloseClick: () -> Unit,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
             title = TextReference.Str("Existential Deposit"),
@@ -42,7 +39,6 @@ sealed class TokenDetailsNotification(
                 formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
             ),
             iconResId = R.drawable.img_attention_20,
-            onCloseClick = onCloseClick,
         ),
     )
 

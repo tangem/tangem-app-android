@@ -21,4 +21,6 @@ internal data class TokenDetailsState(
     val dialogConfig: TokenDetailsDialogConfig?,
     val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
     val bottomSheetConfig: TangemBottomSheetConfig?,
+    val isBalanceHidden: Boolean,
+    val isCustomToken: Boolean,
 )

@@ -30,12 +30,12 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenScreenEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.features.tokendetails.navigation.TokenDetailsArguments
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -59,60 +59,48 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
-    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
-    private val screenArgument: TokenDetailsArguments = savedStateHandle[TokenDetailsRouter.TOKEN_DETAILS_ARGS]
-        ?: error("This screen can't open without TokenDetailsArgument")
+    private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.CRYPTO_CURRENCY_KEY]
+        ?: error("This screen can't open without CryptoCurrency")
 
     var router by Delegates.notNull<InnerTokenDetailsRouter>()
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
+    private val networkStatusAutoUpdateStateJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var wallet by Delegates.notNull<UserWallet>()
-    private var cryptoCurrency by Delegates.notNull<CryptoCurrency>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private var isBalanceHidden = true
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
-        currencySymbolProvider = Provider { cryptoCurrency.symbol },
-        currencyDecimalsProvider = Provider { cryptoCurrency.decimals },
+        symbol = cryptoCurrency.symbol,
+        decimals = cryptoCurrency.decimals,
     )
 
-    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(screenArgument))
+    var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
         private set
 
     override fun onCreate(owner: LifecycleOwner) {
-        initRequiredFields()
+        getWallet()
+        updateContent(selectedWallet = wallet)
         handleBalanceHiding(owner)
     }
 
-    private fun initRequiredFields() {
+    private fun getWallet() {
         getSelectedWalletUseCase()
             .fold(
                 ifLeft = { error("Can not get selected wallet $it") },
                 ifRight = { wallet = it },
             )
-        viewModelScope.launch {
-            getCryptoCurrencyUseCase.invoke(userWalletId = wallet.walletId, id = screenArgument.currencyId)
-                .fold(
-                    ifLeft = { error("Can not get cryptoCurrency with given ID: screenArgument.currencyId. $it") },
-                    ifRight = {
-                        cryptoCurrency = it
-                        updateContent(selectedWallet = wallet)
-                    },
-                )
-        }
     }
 
     private fun updateContent(selectedWallet: UserWallet) {
@@ -125,8 +113,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                isBalanceHidden = hidden
-                uiState = stateFactory.getStateWithUpdatedHidden(isBalanceHidden = hidden)
+                uiState = stateFactory.getStateWithUpdatedHidden(
+                    isBalanceHidden = hidden,
+                )
             }
             .launchIn(viewModelScope)
 
@@ -173,6 +162,17 @@ internal class TokenDetailsViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(marketPriceJobHolder)
+
+        viewModelScope.launch(dispatchers.io) {
+            // Wait for blockchain updates pending transactions.
+            // Immediate update doesn't receive any changes.
+            delay(NETWORK_STATUS_AUTO_UPDATE_DELAY)
+            fetchCurrencyStatusUseCase.invoke(
+                userWalletId = wallet.walletId,
+                id = cryptoCurrency.id,
+                refresh = true,
+            )
+        }.saveIn(networkStatusAutoUpdateStateJobHolder)
     }
 
     private fun updateTxHistory(refresh: Boolean = false) {
@@ -186,11 +186,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             }
 
             txHistoryItemsCountEither.onRight {
-                uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(currency = cryptoCurrency).map {
-                        it.cachedIn(viewModelScope)
-                    },
-                )
+                val either = txHistoryItemsUseCase(currency = cryptoCurrency)
+                    .map { it.cachedIn(viewModelScope) }
+                uiState = stateFactory.getLoadedTxHistoryState(txHistoryEither = either)
             }
         }
     }
@@ -379,7 +377,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 refresh = true,
             )
             updateTxHistory(refresh = true)
-
+            updateWarnings(wallet)
             uiState = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }
@@ -388,11 +386,11 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getStateWithClosedBottomSheet()
     }
 
-    override fun onCloseExistentialDepositNotification() {
-        uiState = stateFactory.getStateWithRemovedExistentialNotification()
-    }
-
     override fun onCloseRentInfoNotification() {
         uiState = stateFactory.getStateWithRemovedRentNotification()
+    }
+
+    companion object {
+        private const val NETWORK_STATUS_AUTO_UPDATE_DELAY = 1000L
     }
 }

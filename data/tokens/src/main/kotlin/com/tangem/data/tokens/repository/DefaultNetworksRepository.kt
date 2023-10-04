@@ -47,7 +47,7 @@ internal class DefaultNetworksRepository(
         }
 
         withContext(dispatchers.io) {
-            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
+            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, false)
         }
     }.cancellable()
 

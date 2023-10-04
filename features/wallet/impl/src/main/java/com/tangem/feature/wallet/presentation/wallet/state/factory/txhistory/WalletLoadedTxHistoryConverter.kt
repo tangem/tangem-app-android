@@ -27,6 +27,7 @@ internal class WalletLoadedTxHistoryConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val clickIntents: WalletClickIntents,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, WalletState> {
 
     private val walletTxHistoryItemFlowConverter by lazy {
@@ -34,6 +35,7 @@ internal class WalletLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
             blockchain = currentCardTypeResolverProvider().getBlockchain(),
             clickIntents = clickIntents,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
         )
     }
 

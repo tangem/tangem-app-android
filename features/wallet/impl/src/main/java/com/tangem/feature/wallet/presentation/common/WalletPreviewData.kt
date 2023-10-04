@@ -14,7 +14,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
@@ -44,6 +43,7 @@ internal object WalletPreviewData {
             imageResId = R.drawable.ill_businessman_3d,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
+            cardCount = 1,
         )
     }
 
@@ -66,6 +66,7 @@ internal object WalletPreviewData {
             onDeleteClick = {},
             balance = "8923,05 $",
             additionalInfo = TextReference.Str("3 cards • Seed phrase"),
+            cardCount = 1,
         )
     }
 
@@ -96,12 +97,12 @@ internal object WalletPreviewData {
         )
     }
 
-    private val coinIconState
+    val coinIconState
         get() = TokenItemState.IconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
-            isCustom = false,
+            showCustomBadge = false,
         )
 
     private val tokenIconState
@@ -111,6 +112,7 @@ internal object WalletPreviewData {
             fallbackTint = TangemColorPalette.Black,
             fallbackBackground = TangemColorPalette.Meadow,
             isGrayscale = false,
+            showCustomBadge = false,
         )
 
     private val customTokenIconState
@@ -124,15 +126,12 @@ internal object WalletPreviewData {
     val tokenItemVisibleState by lazy {
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
-            icon = coinIconState,
-            name = "Polygon",
-            amount = "5,412 MATIC",
-            hasPending = true,
-            tokenOptions = TokenOptionsState(
-                fiatAmount = "321 $",
-                priceChangeState = PriceChangeState.Unknown,
-                isBalanceHidden = false,
-            ),
+            iconState = coinIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+            priceChangeState = TokenItemState.PriceChangeState.Unknown,
+            isBalanceHidden = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -140,26 +139,23 @@ internal object WalletPreviewData {
 
     val testnetTokenItemVisibleState by lazy {
         tokenItemVisibleState.copy(
-            name = "Polygon testnet",
-            icon = tokenIconState.copy(isGrayscale = true),
+            titleState = TokenItemState.TitleState.Content(text = "Polygon testnet"),
+            iconState = tokenIconState.copy(isGrayscale = true),
         )
     }
 
     val tokenItemHiddenState by lazy {
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
-            icon = tokenIconState,
-            name = "Polygon",
-            amount = "5,412 MATIC",
-            hasPending = false,
-            tokenOptions = TokenOptionsState(
-                priceChangeState = PriceChangeState.Content(
-                    valueInPercent = "2%",
-                    type = PriceChangeType.UP,
-                ),
-                fiatAmount = "321 $",
-                isBalanceHidden = false,
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
+            priceChangeState = TokenItemState.PriceChangeState.Content(
+                valueInPercent = "2.0%",
+                type = PriceChangeType.UP,
             ),
+            isBalanceHidden = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -168,20 +164,18 @@ internal object WalletPreviewData {
     val tokenItemDragState by lazy {
         TokenItemState.Draggable(
             id = UUID.randomUUID().toString(),
-            icon = tokenIconState,
-            name = "Polygon",
-            info = TokenItemState.DraggableItemInfo.Balance(
-                balance = stringReference("3 172,14 $"),
-                isBalanceHidden = true,
-            ),
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+            isBalanceHidden = false,
         )
     }
 
     val tokenItemUnreachableState by lazy {
         TokenItemState.Unreachable(
             id = UUID.randomUUID().toString(),
-            icon = tokenIconState,
-            name = "Polygon",
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -190,16 +184,16 @@ internal object WalletPreviewData {
     val tokenItemNoAddressState by lazy {
         TokenItemState.NoAddress(
             id = UUID.randomUUID().toString(),
-            icon = tokenIconState,
-            name = "Polygon",
+            iconState = tokenIconState,
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             onItemLongClick = {},
         )
     }
 
     val customTokenItemVisibleState by lazy {
         tokenItemVisibleState.copy(
-            name = "Polygon custom",
-            icon = customTokenIconState.copy(
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            iconState = customTokenIconState.copy(
                 tint = TangemColorPalette.White,
                 background = TangemColorPalette.Black,
             ),
@@ -208,8 +202,8 @@ internal object WalletPreviewData {
 
     val customTestnetTokenItemVisibleState by lazy {
         tokenItemVisibleState.copy(
-            name = "Polygon custom testnet",
-            icon = customTokenIconState.copy(isGrayscale = true),
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            iconState = customTokenIconState.copy(isGrayscale = true),
         )
     }
 
@@ -241,7 +235,9 @@ internal object WalletPreviewData {
                         DraggableItem.Token(
                             tokenItemState = tokenItemDragState.copy(
                                 id = "${group.id}_token_$tokenNumber",
-                                name = "Token $tokenNumber from $networkNumber network",
+                                titleState = TokenItemState.TitleState.Content(
+                                    text = "Token $tokenNumber from $networkNumber network",
+                                ),
                             ),
                             groupId = group.id,
                             roundingMode = when {
@@ -351,37 +347,37 @@ internal object WalletPreviewData {
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_1",
-                            name = "Ethereum",
-                            amount = "1,89340821 ETH",
+                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
                         ),
                     ),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_2",
-                            name = "Ethereum",
-                            amount = "1,89340821 ETH",
+                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
                         ),
                     ),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_3",
-                            name = "Ethereum",
-                            amount = "1,89340821 ETH",
+                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
                         ),
                     ),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_4",
-                            name = "Ethereum",
-                            amount = "1,89340821 ETH",
+                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
                         ),
                     ),
                     TokensListItemState.NetworkGroupTitle(id = 1, stringReference("Ethereum")),
                     TokensListItemState.Token(
                         tokenItemVisibleState.copy(
                             id = "token_5",
-                            name = "Ethereum",
-                            amount = "1,89340821 ETH",
+                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
                         ),
                     ),
                 ),
@@ -400,6 +396,7 @@ internal object WalletPreviewData {
             tokenActionsBottomSheet = actionsBottomSheet,
             onManageTokensClick = {},
             event = consumedEvent(),
+            isBalanceHidden = false,
         )
     }
 
@@ -416,7 +413,7 @@ internal object WalletPreviewData {
             buttons = manageButtons,
             bottomSheetConfig = bottomSheet,
             marketPriceBlockState = MarketPriceBlockState.Content(
-                currencyName = "BTC",
+                currencySymbol = "BTC",
                 price = "98900.12$",
                 priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = "5.16%",
@@ -454,6 +451,7 @@ internal object WalletPreviewData {
                 ),
             ),
             event = consumedEvent(),
+            isBalanceHidden = false,
         )
     }
 }

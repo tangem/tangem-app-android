@@ -54,6 +54,7 @@ internal class WalletsUnlockStateConverter(
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
@@ -67,13 +68,14 @@ internal class WalletsUnlockStateConverter(
             bottomSheetConfig = null,
             buttons = buttons,
             marketPriceBlockState = MarketPriceBlockState.Loading(
-                currencyName = action.selectedWallet.getPrimaryCurrencyName(),
+                currencySymbol = action.selectedWallet.getPrimaryCurrencyName(),
             ),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+            isBalanceHidden = isBalanceHidden,
         )
     }
 
