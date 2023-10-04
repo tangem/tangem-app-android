@@ -298,7 +298,7 @@ internal class WalletViewModel @Inject constructor(
                     update = { it.copy(scanResponse = scannedCardResponse) },
                 )
                     .onRight {
-                        fetchTokenListUseCase(userWalletId = it.walletId, refresh = true)
+                        fetchTokenListUseCase(userWalletId = it.walletId)
                     }
             }
         }
