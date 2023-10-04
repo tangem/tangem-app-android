@@ -149,8 +149,14 @@ internal class WalletNotificationsListFactory(
             }
 
             addIf(
-                element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                condition = checkSignedHashes(cardTypesResolver, isDemo, wasCardScanned),
+                element = WalletNotification.Warning.NumberOfSignedHashesIncorrect(
+                    onCloseClick = clickIntents::onSignedHashesNotificationCloseClick,
+                ),
+                condition = checkSignedHashes(
+                    cardTypesResolver = cardTypesResolver,
+                    isDemo = isDemo,
+                    wasCardScanned = wasCardScanned,
+                ),
             )
         }
     }
@@ -171,13 +177,16 @@ internal class WalletNotificationsListFactory(
             ?.errorMessage
     }
 
+    /**
+     * Warning is being shown for single wallet cards only
+     */
     private fun checkSignedHashes(
         cardTypesResolver: CardTypesResolver,
         isDemo: Boolean,
         wasCardScanned: Boolean,
     ): Boolean {
-        return cardTypesResolver.isReleaseFirmwareType() && cardTypesResolver.hasWalletSignedHashes() && !isDemo &&
-            !wasCardScanned
+        return cardTypesResolver.isReleaseFirmwareType() && !cardTypesResolver.isTangemTwins() &&
+            cardTypesResolver.hasWalletSignedHashes() && !isDemo && !wasCardScanned
     }
 
     private companion object {
