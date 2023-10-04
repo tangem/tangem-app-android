@@ -137,28 +137,6 @@ internal class WalletNotificationsListFactory(
                 element = WalletNotification.Warning.SomeNetworksUnreachable,
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
-
-            if (cardTypesResolver.isBackupForbidden()) {
-                addIf(
-                    element = WalletNotification.Warning.NumberOfSignedHashesIncorrect,
-                    condition = checkSignedHashes(
-                        cardTypesResolver = cardTypesResolver,
-                        isDemo = isDemo,
-                        wasCardScanned,
-                    ),
-                )
-            } else {
-                addIf(
-                    element = WalletNotification.Warning.MultiWalletSignedHashesIncorrect(
-                        onClick = clickIntents::onMultiWalletSignedHashesNotificationClick,
-                    ),
-                    condition = checkSignedHashes(
-                        cardTypesResolver = cardTypesResolver,
-                        isDemo = isDemo,
-                        wasCardScanned,
-                    ),
-                )
-            }
         } else {
             addIf(
                 element = WalletNotification.Warning.NetworksUnreachable,
