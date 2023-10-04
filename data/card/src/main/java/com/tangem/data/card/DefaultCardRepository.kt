@@ -4,6 +4,7 @@ import com.tangem.datasource.local.card.UsedCardInfo
 import com.tangem.datasource.local.card.UsedCardsStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
@@ -42,12 +43,7 @@ internal class DefaultCardRepository(
     }
 
     private fun List<UsedCardInfo>.updateCard(cardId: String): List<UsedCardInfo> {
-        return map { cardInfo ->
-            if (cardInfo.cardId == cardId) {
-                cardInfo.copy(isScanned = true)
-            } else {
-                cardInfo
-            }
-        }
+        val card = find { it.cardId == cardId } ?: UsedCardInfo(cardId = cardId, isScanned = true)
+        return addOrReplace(item = card.copy(isScanned = true), predicate = { it.cardId == cardId })
     }
 }
