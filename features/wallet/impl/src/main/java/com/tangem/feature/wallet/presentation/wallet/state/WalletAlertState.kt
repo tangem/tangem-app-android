@@ -5,9 +5,6 @@ import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
 internal sealed class WalletAlertState {
-
-    data class WalletAlreadySignedHashes(val onUnderstandClick: () -> Unit) : WalletAlertState()
-
     data class DefaultAlert(
         val title: TextReference,
         val message: TextReference,
