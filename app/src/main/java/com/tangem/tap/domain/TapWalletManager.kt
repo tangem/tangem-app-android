@@ -91,8 +91,12 @@ class TapWalletManager(
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatchWalletAction(action = WalletAction.Warnings.CheckIfNeeded)
         }
-        setupWalletConnectV2(userWallet)
-        loadData(userWallet = userWallet, refresh = refresh)
+
+        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+        if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+            setupWalletConnectV2(userWallet)
+            loadData(userWallet = userWallet, refresh = refresh)
+        }
     }
 
     private fun Store<AppState>.dispatchWalletAction(action: WalletAction) {
