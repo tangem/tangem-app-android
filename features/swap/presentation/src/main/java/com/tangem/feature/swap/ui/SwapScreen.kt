@@ -59,6 +59,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
             topEnd = TangemTheme.dimens.radius16,
         ),
         sheetElevation = TangemTheme.dimens.elevation24,
+        scrimColor = TangemTheme.colors.background.secondary.copy(alpha = 0.4f),
         content = {
             SwapScreenContent(
                 state = stateHolder,
