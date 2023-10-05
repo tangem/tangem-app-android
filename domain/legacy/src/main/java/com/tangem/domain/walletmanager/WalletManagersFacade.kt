@@ -77,6 +77,7 @@ interface WalletManagersFacade {
         derivationPath: String?,
     ): WalletManager?
 
+    @Deprecated("Will be removed in future")
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
 
     /**
