@@ -35,7 +35,6 @@ import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -57,7 +56,7 @@ import com.tangem.blockchain.common.Token as BlockchainToken
  * @property interactor         feature interactor
  * @property router             feature router
  * @property dispatchers        coroutine dispatchers provider
- * @property reduxStateHolder   redux state holder
+ * @property getSelectedWalletUseCase use case that returns selected wallet
  * @param analyticsEventHandler analytics event handler
  *
 [REDACTED_AUTHOR]
@@ -68,10 +67,9 @@ internal class TokensListViewModel @Inject constructor(
     private val interactor: TokensListInteractor,
     private val router: TokensListRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    getSelectedWalletUseCase: GetSelectedWalletUseCase,
     walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
@@ -150,7 +148,10 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isDifferentAddressesBlockVisible(): Boolean {
-        return reduxStateHolder.scanResponse?.card?.useOldStyleDerivation == true
+        return getSelectedWalletUseCase().fold(
+            ifLeft = { false },
+            ifRight = { it.scanResponse.card.useOldStyleDerivation },
+        )
     }
 
     private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {
@@ -406,32 +407,39 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isUnsupportedToken(blockchain: Blockchain): SupportTokensState? {
-        val scanResponse = reduxStateHolder.scanResponse
-        val cardTypesResolver = scanResponse?.cardTypesResolver ?: return null
-        val supportedTokens = scanResponse.card.supportedTokens(cardTypesResolver)
+        return getSelectedWalletUseCase().fold(
+            ifLeft = { null },
+            ifRight = {
+                val cardTypesResolver = it.scanResponse.cardTypesResolver
+                val supportedTokens = it.scanResponse.card.supportedTokens(cardTypesResolver)
 
-        // refactor this later by moving all this logic in card config
-        if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
-            return SupportTokensState.SolanaNetworkUnsupported
-        }
-        val canHandleToken = scanResponse.card.canHandleToken(
-            supportedTokens = supportedTokens,
-            blockchain = blockchain,
-            cardTypesResolver = cardTypesResolver,
+                // refactor this later by moving all this logic in card config
+                if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
+                    return SupportTokensState.SolanaNetworkUnsupported
+                }
+                val canHandleToken = it.scanResponse.card.canHandleToken(
+                    supportedTokens = supportedTokens,
+                    blockchain = blockchain,
+                    cardTypesResolver = cardTypesResolver,
+                )
+                if (!canHandleToken) {
+                    return SupportTokensState.UnsupportedCurve
+                }
+                return SupportTokensState.SupportedToken
+            },
         )
-        if (!canHandleToken) {
-            return SupportTokensState.UnsupportedCurve
-        }
-        return SupportTokensState.SupportedToken
     }
 
     private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
-        val scanResponse = reduxStateHolder.scanResponse
-        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
-            blockchain = blockchain,
-            cardTypesResolver = scanResponse.cardTypesResolver,
-        ) ?: false
-        return !canHandleToken
+        return getSelectedWalletUseCase().fold(
+            ifLeft = { false },
+            ifRight = {
+                !it.scanResponse.card.canHandleBlockchain(
+                    blockchain = blockchain,
+                    cardTypesResolver = it.scanResponse.cardTypesResolver,
+                )
+            },
+        )
     }
 
     private companion object {
