@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
 import androidx.paging.compose.*
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
@@ -147,7 +146,7 @@ private fun DifferentAddressesWarning() {
         modifier = Modifier
             .padding(TangemTheme.dimens.spacing16)
             .background(
-                color = TangemColorPalette.Light1,
+                color = TangemTheme.colors.button.disabled,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius10),
             ),
         contentAlignment = Alignment.Center,
@@ -159,7 +158,7 @@ private fun DifferentAddressesWarning() {
                 horizontal = TangemTheme.dimens.spacing16,
                 vertical = TangemTheme.dimens.spacing8,
             ),
-            color = TangemColorPalette.Dark1,
+            color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Start,
             style = TangemTheme.typography.body2.copy(
                 letterSpacing = TextUnit(value = 0.5f, type = TextUnitType.Sp),
