@@ -40,7 +40,6 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
@@ -448,10 +447,7 @@ class DetailsMiddleware {
                 return null
             }
 
-            return UserWalletsListManager.provideBiometricImplementation(
-                context = context,
-                tangemSdkManager = tangemSdkManager,
-            )
+            return UserWalletsListManager.provideBiometricImplementation(context)
         }
     }
 

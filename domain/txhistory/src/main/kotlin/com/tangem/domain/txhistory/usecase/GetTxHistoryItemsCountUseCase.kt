@@ -9,6 +9,7 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepository
 
 class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
 
+    // FIXME: Provide UserWalletId
     suspend operator fun invoke(network: Network): Either<TxHistoryStateError, Int> {
         return either {
             catch(
