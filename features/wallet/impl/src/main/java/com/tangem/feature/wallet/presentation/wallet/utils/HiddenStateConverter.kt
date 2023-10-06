@@ -51,6 +51,7 @@ internal class HiddenStateConverter(
                         }.toImmutableList(),
                     ),
                     tokensListState = updatedTokensList,
+                    isBalanceHidden = value
                 )
             }
 
@@ -61,6 +62,7 @@ internal class HiddenStateConverter(
                             walletHiddenBalanceStateConverter.updateHiddenState(it, value)
                         }.toImmutableList(),
                     ),
+                    isBalanceHidden = value
                 )
             }
 

@@ -106,6 +106,7 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
             currencyStatusErrorConverter = currencyStatusErrorConverter,
         )
     }
