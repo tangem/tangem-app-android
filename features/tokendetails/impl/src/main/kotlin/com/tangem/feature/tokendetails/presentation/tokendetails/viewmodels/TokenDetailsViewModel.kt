@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
@@ -168,8 +169,16 @@ internal class TokenDetailsViewModel @Inject constructor(
                 network = cryptoCurrency.network,
             )
 
-            if (!refresh) {
-                uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+            when {
+                refresh && txHistoryItemsCountEither.isLeft() -> {
+                    uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+                }
+                refresh && uiState.txHistoryState !is TxHistoryState.Content -> {
+                    uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+                }
+                !refresh -> {
+                    uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+                }
             }
 
             txHistoryItemsCountEither.onRight {

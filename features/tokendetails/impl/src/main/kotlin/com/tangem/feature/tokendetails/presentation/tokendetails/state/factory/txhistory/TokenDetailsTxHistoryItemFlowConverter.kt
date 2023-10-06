@@ -15,10 +15,7 @@ import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
@@ -37,29 +34,51 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        val txHistoryContent = currentStateProvider().txHistoryState as TxHistoryState.Content
-
         // FIXME: TxHistoryRepository should send loading transactions
         // https://tangem.atlassian.net/browse/AND-4334
-        value
-            .onEach { txHistoryStatePagingData ->
-                txHistoryContent.contentItems.update {
-                    txHistoryStatePagingData
-                        .map<TxHistoryItem, TxHistoryItemState> { item ->
-                            // [createTransactionState] returns timestamp without formatting
-                            TxHistoryItemState.Transaction(state = createTransactionState(item))
-                        }
-                        .insertHeaderItem(
-                            terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                            item = TxHistoryItemState.Title(clickIntents::onExploreClick),
-                        )
-                        .insertGroupTitle() // method uses the raw timestamp
-                        .formatTransactionsTimestamp() // method formats the timestamp
+        val state = currentStateProvider()
+        return if (state.txHistoryState is TxHistoryState.Content) {
+            value
+                .onEach { txHistoryStatePagingData ->
+                    state.txHistoryState.contentItems.update {
+                        txHistoryStatePagingData
+                            .map<TxHistoryItem, TxHistoryItemState> { item ->
+                                // [createTransactionState] returns timestamp without formatting
+                                TxHistoryItemState.Transaction(state = createTransactionState(item))
+                            }
+                            .insertHeaderItem(
+                                terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
+                                item = TxHistoryItemState.Title(clickIntents::onExploreClick),
+                            )
+                            .insertGroupTitle() // method uses the raw timestamp
+                            .formatTransactionsTimestamp() // method formats the timestamp
+                    }
                 }
-            }
-            .launchIn(CoroutineScope(Dispatchers.IO))
-
-        return txHistoryContent
+                .launchIn(CoroutineScope(Dispatchers.IO))
+            state.txHistoryState
+        } else {
+            val txHistoryState: TxHistoryState.Content = TxHistoryState.Content(
+                contentItems = MutableStateFlow(PagingData.empty()),
+            )
+            value
+                .onEach { txHistoryStatePagingData ->
+                    txHistoryState.contentItems.update {
+                        txHistoryStatePagingData
+                            .map<TxHistoryItem, TxHistoryItemState> { item ->
+                                // [createTransactionState] returns timestamp without formatting
+                                TxHistoryItemState.Transaction(state = createTransactionState(item))
+                            }
+                            .insertHeaderItem(
+                                terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
+                                item = TxHistoryItemState.Title(clickIntents::onExploreClick),
+                            )
+                            .insertGroupTitle() // method uses the raw timestamp
+                            .formatTransactionsTimestamp() // method formats the timestamp
+                    }
+                }
+                .launchIn(CoroutineScope(Dispatchers.IO))
+            txHistoryState
+        }
     }
 
     private fun createTransactionState(item: TxHistoryItem): TransactionState {
