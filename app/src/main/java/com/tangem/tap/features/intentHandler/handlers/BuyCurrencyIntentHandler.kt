@@ -14,7 +14,7 @@ import com.tangem.tap.store
  */
 class BuyCurrencyIntentHandler : IntentHandler {
 
-    override suspend fun handleIntent(intent: Intent?): Boolean {
+    override fun handleIntent(intent: Intent?): Boolean {
         val data = intent?.data ?: return false
         val currency = store.state.walletState.selectedCurrency ?: return false
 
