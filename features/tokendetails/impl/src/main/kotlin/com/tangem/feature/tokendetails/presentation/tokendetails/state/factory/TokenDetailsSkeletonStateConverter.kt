@@ -53,7 +53,7 @@ internal class TokenDetailsSkeletonStateConverter(
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
             isBalanceHidden = true,
-            isCustomToken = value.isCustom,
+            isCustomToken = value is CryptoCurrency.Token && value.isCustom,
         )
     }
 
