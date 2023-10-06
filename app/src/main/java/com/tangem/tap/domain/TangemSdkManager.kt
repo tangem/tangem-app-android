@@ -57,7 +57,7 @@ class TangemSdkManager(
         get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
 
     val needEnrollBiometrics: Boolean
-        get() = tangemSdk.authenticationManager.canEnrollBiometrics
+        get() = tangemSdk.authenticationManager.needEnrollBiometrics
 
     val keystoreManager: KeystoreManager
         get() = tangemSdk.keystoreManager
