@@ -1,10 +1,10 @@
 package com.tangem.tap.features.home.redux
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
@@ -23,7 +23,7 @@ sealed class HomeAction : Action {
      */
     data class ReadCard(
         val analyticsEvent: AnalyticsEvent? = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Introduction),
-        val lifecycleCoroutineScope: LifecycleCoroutineScope,
+        val scope: CoroutineScope,
     ) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
