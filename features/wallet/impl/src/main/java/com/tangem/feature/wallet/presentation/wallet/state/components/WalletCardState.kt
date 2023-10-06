@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import com.tangem.common.Strings
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -135,7 +136,7 @@ internal sealed interface WalletCardState {
     }
 
     companion object {
-        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = "•••") }
+        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = Strings.STARS) }
         val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = "—") }
     }
 }

@@ -317,9 +317,9 @@ private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier
     ) { animatedState ->
         when (animatedState) {
             is WalletCardState.Content -> AdditionalInfoText(text = animatedState.additionalInfo)
+            is WalletCardState.HiddenContent -> AdditionalInfoText(text = animatedState.additionalInfo)
             is WalletCardState.LockedContent -> AdditionalInfoText(text = animatedState.additionalInfo)
             is WalletCardState.Error -> AdditionalInfoText(text = WalletCardState.EMPTY_BALANCE_TEXT)
-            is WalletCardState.HiddenContent -> AdditionalInfoText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
             }
