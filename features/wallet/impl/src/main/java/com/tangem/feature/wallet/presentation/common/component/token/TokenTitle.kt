@@ -40,6 +40,7 @@ private fun ContentTitle(name: String, hasPending: Boolean, modifier: Modifier =
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         /*
          * If currency name has a long width, then it will completely displace the image.
