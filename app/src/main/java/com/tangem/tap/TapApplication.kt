@@ -24,6 +24,7 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
@@ -200,6 +201,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var appRatingRepository: AppRatingRepository
+
+    @Inject
+    lateinit var getAppThemeModeUseCase: GetAppThemeModeUseCase
     // endregion Injected
 
     override fun onCreate() {
