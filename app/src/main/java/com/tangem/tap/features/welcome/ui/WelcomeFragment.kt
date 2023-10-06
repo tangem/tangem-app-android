@@ -11,9 +11,9 @@ import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.fragment.app.viewModels
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
@@ -33,8 +33,6 @@ internal class WelcomeFragment : ComposeFragment() {
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
-    private val viewModel by viewModels<WelcomeViewModel>()
-
     override fun onStart() {
         super.onStart()
         Analytics.eraseContext()
@@ -43,6 +41,9 @@ internal class WelcomeFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
+        val viewModel = hiltViewModel<WelcomeViewModel>()
+        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
@@ -66,7 +67,7 @@ internal class WelcomeFragment : ComposeFragment() {
                 showUnlockProgress = state.showUnlockWithBiometricsProgress,
                 showScanCardProgress = state.showUnlockWithCardProgress,
                 onUnlockClick = viewModel::unlockWallets,
-                onScanCardClick = { viewModel.scanCard(lifecycleCoroutineScope = lifecycleScope) },
+                onScanCardClick = viewModel::scanCard,
             )
 
             SnackbarHost(
@@ -86,5 +87,9 @@ internal class WelcomeFragment : ComposeFragment() {
                 viewModel.closeError()
             }
         }
+    }
+
+    internal companion object {
+        const val INITIAL_INTENT_KEY = "intent"
     }
 }
