@@ -32,6 +32,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -58,6 +59,8 @@ import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
 import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
@@ -254,6 +257,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
+        initUserWalletsListManager()
 
         loadNativeLibraries()
 
@@ -390,5 +394,15 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWarningMessagesManager() {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
+    }
+
+    private fun initUserWalletsListManager() {
+        val manager = if (preferencesStorage.shouldSaveUserWallets) {
+            UserWalletsListManager.provideBiometricImplementation(applicationContext)
+        } else {
+            UserWalletsListManager.provideRuntimeImplementation()
+        }
+
+        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
