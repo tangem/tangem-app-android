@@ -55,21 +55,7 @@ internal class AppSettingsViewModel(
     }
 
     fun checkBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
-        store.dispatch(
-            DetailsAction.AppSettings.CheckBiometricsStatus(
-                awaitStatusChange = false,
-                lifecycleCoroutineScope = lifecycleScope,
-            ),
-        )
-    }
-
-    fun refreshBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
-        store.dispatch(
-            DetailsAction.AppSettings.CheckBiometricsStatus(
-                awaitStatusChange = true,
-                lifecycleCoroutineScope = lifecycleScope,
-            ),
-        )
+        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(lifecycleScope))
     }
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
