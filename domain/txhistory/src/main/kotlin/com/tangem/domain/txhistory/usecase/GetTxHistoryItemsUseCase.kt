@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 private const val DEFAULT_PAGE_SIZE = 50
 
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
-
+// [REDACTED_TODO_COMMENT]
     operator fun invoke(
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
