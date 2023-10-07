@@ -40,7 +40,8 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.tangemSdkManager
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -209,6 +210,9 @@ class DetailsMiddleware {
     }
 
     class AppSettingsMiddleware {
+
+        private val checkBiometricsStatusJobHolder = JobHolder()
+
         fun handle(state: DetailsState, action: DetailsAction.AppSettings) {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
@@ -218,11 +222,7 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
-                    checkBiometricsStatus(
-                        awaitStatusChange = action.awaitStatusChange,
-                        state = state,
-                        lifecycleScope = action.lifecycleCoroutineScope,
-                    )
+                    observeBiometricsStatusChanges(state, action.lifecycleScope)
                 }
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
@@ -245,27 +245,20 @@ class DetailsMiddleware {
             }
         }
 
-        /**
-         * @param awaitStatusChange If true then start a new coroutine and check the biometric status every 100
-         * milliseconds until it changes
-         * */
-        private fun checkBiometricsStatus(
-            awaitStatusChange: Boolean,
-            state: DetailsState,
-            lifecycleScope: LifecycleCoroutineScope,
-        ) {
-            lifecycleScope.launch {
-                if (awaitStatusChange) {
-                    while (state.appSettingsState.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
-                        delay(timeMillis = 100)
+        private fun observeBiometricsStatusChanges(state: DetailsState, lifecycleScope: LifecycleCoroutineScope) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                do {
+                    val needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
+
+                    if (needEnrollBiometrics != null &&
+                        needEnrollBiometrics != state.appSettingsState.needEnrollBiometrics
+                    ) {
+                        store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
                     }
-                }
-                store.dispatchWithMain(
-                    DetailsAction.AppSettings.BiometricsStatusChanged(
-                        needEnrollBiometrics = tangemSdkManager.needEnrollBiometrics,
-                    ),
-                )
-            }
+
+                    delay(timeMillis = 500)
+                } while (true)
+            }.saveIn(checkBiometricsStatusJobHolder)
         }
 
         private fun enrollBiometrics() {
@@ -454,10 +447,7 @@ class DetailsMiddleware {
                 return null
             }
 
-            return UserWalletsListManager.provideBiometricImplementation(
-                context = context,
-                tangemSdkManager = tangemSdkManager,
-            )
+            return UserWalletsListManager.provideBiometricImplementation(context)
         }
     }
 
