@@ -14,6 +14,7 @@ private const val DEFAULT_PAGE_SIZE = 50
 
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
 
+    // FIXME: Provide UserWalletId
     operator fun invoke(
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
