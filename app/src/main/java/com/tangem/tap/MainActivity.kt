@@ -35,13 +35,10 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.googlepay.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -149,7 +146,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
         lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
-        initUserWalletsListManager()
         initIntentHandlers()
 
         store.dispatch(
@@ -249,18 +245,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
         intentProcessor.addHandler(BuyCurrencyIntentHandler())
         intentProcessor.addHandler(SellCurrencyIntentHandler())
-    }
-
-    private fun initUserWalletsListManager() {
-        val manager = if (preferencesStorage.shouldSaveUserWallets) {
-            UserWalletsListManager.provideBiometricImplementation(
-                context = applicationContext,
-                tangemSdkManager = tangemSdkManager,
-            )
-        } else {
-            UserWalletsListManager.provideRuntimeImplementation()
-        }
-        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
