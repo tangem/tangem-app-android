@@ -25,6 +25,7 @@ class GetCurrencyWarningsUseCase(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Set<CryptoCurrencyWarning>> {
         return combine(
             getFeeWarningFlow(
@@ -32,6 +33,7 @@ class GetCurrencyWarningsUseCase(
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
@@ -54,6 +56,7 @@ class GetCurrencyWarningsUseCase(
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<CryptoCurrencyWarning?> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -62,9 +65,19 @@ class GetCurrencyWarningsUseCase(
             userWalletId = userWalletId,
         )
 
+        val currencyFlow = if (isSingleWalletWithTokens) {
+            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+        } else {
+            operations.getCurrencyStatusFlow(currencyId, derivationPath)
+        }
+        val networkFlow = if (isSingleWalletWithTokens) {
+            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+        } else {
+            operations.getNetworkCoinFlow(networkId, derivationPath)
+        }
         return combine(
-            operations.getCurrencyStatusFlow(currencyId, derivationPath).map { it.getOrNull() },
-            operations.getNetworkCoinFlow(networkId, derivationPath).map { it.getOrNull() },
+            currencyFlow.map { it.getOrNull() },
+            networkFlow.map { it.getOrNull() },
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {
