@@ -38,7 +38,9 @@ internal class WalletSkeletonStateConverter(
     override fun convert(value: SkeletonModel): WalletState.ContentState {
         val selectedWallet = value.wallets[value.selectedWalletIndex]
 
-        return if (selectedWallet.isMultiCurrency) {
+        val isSingleWalletWithToken = !selectedWallet.isMultiCurrency &&
+            selectedWallet.scanResponse.walletData?.token != null
+        return if (selectedWallet.isMultiCurrency || isSingleWalletWithToken) {
             createMultiCurrencyState(value = value)
         } else {
             createSingleCurrencyState(value = value, currencyName = selectedWallet.getPrimaryCurrencyName())
