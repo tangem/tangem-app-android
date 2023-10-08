@@ -58,4 +58,28 @@ internal class CardCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
 
         return primaryToken ?: coin
     }
+
+    fun createCurrenciesForSingleCurrencyCardWithToken(scanResponse: ScanResponse): List<CryptoCurrency> {
+        val cardDerivationStyleProvider = scanResponse.derivationStyleProvider
+        val resolver = scanResponse.cardTypesResolver
+        val blockchain = resolver.getBlockchain()
+
+        val coin = cryptoCurrencyFactory.createCoin(
+            blockchain = blockchain,
+            extraDerivationPath = null,
+            derivationStyleProvider = cardDerivationStyleProvider,
+        )
+        requireNotNull(coin) { "Coin for the single currency card cannot be null" }
+
+        val primaryToken = resolver.getPrimaryToken()?.let { token ->
+            cryptoCurrencyFactory.createToken(
+                sdkToken = token,
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                derivationStyleProvider = cardDerivationStyleProvider,
+            )
+        }
+
+        return listOfNotNull(coin, primaryToken)
+    }
 }
