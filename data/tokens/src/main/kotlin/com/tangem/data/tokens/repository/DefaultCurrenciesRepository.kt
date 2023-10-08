@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+@Suppress("LargeClass")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
     private val userTokensStore: UserTokensStore,
@@ -149,6 +150,29 @@ internal class DefaultCurrenciesRepository(
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
             cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+        }
+    }
+
+    override suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+        return withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
+
+            cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+        }
+    }
+
+    override suspend fun getSingleCurrencyWalletWithCardCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency {
+        return withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
+
+            val currency = cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+                .find { it.id == id }
+            requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
         }
     }
 
