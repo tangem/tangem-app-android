@@ -8,6 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencySt
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
+import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
@@ -18,19 +19,23 @@ internal class TokenListToWalletStateConverter(
     private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     clickIntents: WalletClickIntents,
-) : Converter<TokenList, WalletState> {
+) : Converter<TokenListWithWallet, WalletState> {
 
     private val tokenListToContentConverter = TokenListToContentItemsConverter(
         appCurrencyProvider = appCurrencyProvider,
         clickIntents = clickIntents,
     )
 
-    override fun convert(value: TokenList): WalletState {
+    override fun convert(value: TokenListWithWallet): WalletState {
+        val tokenList = value.tokenList
+        val isSingleCurrencyWalletWithToken = !value.wallet.isMultiCurrency &&
+            value.wallet.scanResponse.walletData?.token != null
         return when (val state = currentStateProvider()) {
             is WalletMultiCurrencyState.Content -> {
                 state.copy(
-                    walletsListConfig = state.updateSelectedWallet(fiatBalance = value.totalFiatBalance),
+                    walletsListConfig = state.updateSelectedWallet(fiatBalance = tokenList.totalFiatBalance),
                     tokensListState = tokenListToContentConverter.convert(value = value),
+                    isManageTokensAvailable = !isSingleCurrencyWalletWithToken,
                 )
             }
             is WalletMultiCurrencyState.Locked,
