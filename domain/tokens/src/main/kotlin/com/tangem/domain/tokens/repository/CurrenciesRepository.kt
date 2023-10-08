@@ -69,6 +69,31 @@ interface CurrenciesRepository {
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
+     * Retrieves the cryptocurrencies for a specific single-currency user wallet with tokens on the card.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return The primary cryptocurrency associated with the user wallet.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * ID provided.
+     */
+    suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
+
+    /**
+     * Retrieves the cryptocurrency for a specific single-currency user old wallet
+     * that stores token on card
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @return The cryptocurrency associated with the user wallet and ID.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getSingleCurrencyWalletWithCardCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency
+
+    /**
      * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
      *
      * Loads remote cryptocurrencies if they have expired.
