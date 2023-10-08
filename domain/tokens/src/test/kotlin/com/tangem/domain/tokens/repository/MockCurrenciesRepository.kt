@@ -60,6 +60,17 @@ internal class MockCurrenciesRepository(
         return token.getOrElse { e -> throw e }
     }
 
+    override suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+        return tokens.first().getOrElse { e -> throw e }
+    }
+
+    override suspend fun getSingleCurrencyWalletWithCardCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency {
+        return token.getOrElse { e -> throw e }
+    }
+
     override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
     }
