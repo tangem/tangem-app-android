@@ -49,6 +49,17 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetCardTokensListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCardTokensListUseCase {
+        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideRemoveCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
