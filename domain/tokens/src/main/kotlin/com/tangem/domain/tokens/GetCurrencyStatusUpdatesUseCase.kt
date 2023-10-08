@@ -34,15 +34,24 @@ class GetCurrencyStatusUpdatesUseCase(
      * @param userWalletId The unique identifier of the user's wallet.
      * @param currencyId The unique identifier of the cryptocurrency.
      * @param derivationPath currency derivation path.
+     * @param isSingleWalletWithTokens Indicates whether the user wallet contains only one token on card (old cards)
      * @return A [Flow] emitting either a [CurrencyStatusError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
     operator fun invoke(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
-            emitAll(getCurrency(userWalletId, currencyId, derivationPath))
+            emitAll(
+                getCurrency(
+                    userWalletId,
+                    currencyId,
+                    derivationPath,
+                    isSingleWalletWithTokens,
+                ),
+            )
         }.flowOn(dispatchers.io)
     }
 
@@ -50,6 +59,7 @@ class GetCurrencyStatusUpdatesUseCase(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -58,7 +68,12 @@ class GetCurrencyStatusUpdatesUseCase(
             userWalletId = userWalletId,
         )
 
-        return operations.getCurrencyStatusFlow(currencyId, derivationPath).map { maybeCurrency ->
+        val currencyFlow = if (isSingleWalletWithTokens) {
+            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+        } else {
+            operations.getCurrencyStatusFlow(currencyId, derivationPath)
+        }
+        return currencyFlow.map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
         }
     }

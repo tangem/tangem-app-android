@@ -24,6 +24,7 @@ class GetNetworkCoinStatusUseCase(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
             emitAll(
@@ -31,6 +32,7 @@ class GetNetworkCoinStatusUseCase(
                     userWalletId = userWalletId,
                     networkId = networkId,
                     derivationPath = derivationPath,
+                    isSingleWalletWithTokens = isSingleWalletWithTokens,
                 ),
             )
         }
@@ -41,6 +43,7 @@ class GetNetworkCoinStatusUseCase(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -48,8 +51,12 @@ class GetNetworkCoinStatusUseCase(
             networksRepository = networksRepository,
             userWalletId = userWalletId,
         )
-
-        return operations.getNetworkCoinFlow(networkId, derivationPath).map { maybeCurrency ->
+        val networkFlow = if (isSingleWalletWithTokens) {
+            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+        } else {
+            operations.getNetworkCoinFlow(networkId, derivationPath)
+        }
+        return networkFlow.map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
         }
     }

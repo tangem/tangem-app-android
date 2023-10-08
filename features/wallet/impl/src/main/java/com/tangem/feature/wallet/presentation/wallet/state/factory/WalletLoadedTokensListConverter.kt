@@ -31,7 +31,7 @@ internal class WalletLoadedTokensListConverter(
     appCurrencyProvider: Provider<AppCurrency>,
     currentWalletProvider: Provider<UserWallet>,
     clickIntents: WalletClickIntents,
-) : Converter<Either<TokenListError, TokenList>, WalletState> {
+) : Converter<Either<TokenListError, TokenListWithWallet>, WalletState> {
 
     private val tokenListStateConverter = TokenListToWalletStateConverter(
         currentStateProvider = currentStateProvider,
@@ -40,7 +40,7 @@ internal class WalletLoadedTokensListConverter(
         clickIntents = clickIntents,
     )
 
-    override fun convert(value: Either<TokenListError, TokenList>): WalletState {
+    override fun convert(value: Either<TokenListError, TokenListWithWallet>): WalletState {
         return value.fold(
             ifLeft = tokenListErrorConverter::convert,
             ifRight = tokenListStateConverter::convert,
