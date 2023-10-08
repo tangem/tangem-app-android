@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -133,10 +134,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateWarnings() {
         viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
                 derivationPath = cryptoCurrency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
             )
                 .distinctUntilChanged()
                 .onEach { uiState = stateFactory.getStateWithNotifications(it) }
@@ -145,22 +148,30 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateMarketPrice() {
-        getCurrencyStatusUpdatesUseCase(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrency.id,
-            derivationPath = cryptoCurrency.network.derivationPath,
-        )
-            .distinctUntilChanged()
-            .onEach { either ->
-                uiState = stateFactory.getCurrencyLoadedBalanceState(either)
-                either.onRight { status ->
-                    cryptoCurrencyStatus = status
-                    updateButtons(userWalletId = userWalletId, currencyStatus = status)
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
+            getCurrencyStatusUpdatesUseCase(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                derivationPath = cryptoCurrency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
+            )
+                .distinctUntilChanged()
+                .onEach { either ->
+                    uiState = stateFactory.getCurrencyLoadedBalanceState(either)
+                    either.onRight { status ->
+                        cryptoCurrencyStatus = status
+                        updateButtons(userWalletId = userWalletId, currencyStatus = status)
+                    }
                 }
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(marketPriceJobHolder)
+                .flowOn(dispatchers.io)
+                .launchIn(viewModelScope)
+                .saveIn(marketPriceJobHolder)
+        }
+    }
+
+    private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
+        return userWallet.scanResponse.walletData?.token != null && !userWallet.isMultiCurrency
     }
 
     /**
@@ -251,10 +262,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun sendToken(status: CryptoCurrencyStatus) {
         viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
                 userWalletId = userWalletId,
                 networkId = status.currency.network.id,
                 derivationPath = status.currency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
             ).firstOrNull()
 
             maybeCoinStatus?.onRight { coinStatus ->
