@@ -13,7 +13,6 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -160,8 +159,8 @@ internal class WalletStateFactory(
         )
     }
 
-    fun getStateByTokensList(maybeTokenList: Either<TokenListError, TokenList>): WalletState {
-        return loadedTokensListConverter.convert(maybeTokenList)
+    fun getStateByTokensList(maybeTokenListWithWallet: Either<TokenListError, TokenListWithWallet>): WalletState {
+        return loadedTokensListConverter.convert(maybeTokenListWithWallet)
     }
 
     fun getStateByTokenListError(error: TokenListError): WalletState {
