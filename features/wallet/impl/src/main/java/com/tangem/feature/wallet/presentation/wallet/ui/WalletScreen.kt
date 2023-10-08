@@ -217,7 +217,7 @@ private fun BaseScaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            if (state is WalletMultiCurrencyState.Content) {
+            if (state is WalletMultiCurrencyState.Content && state.isManageTokensAvailable) {
                 ManageTokensButton(onManageTokensClick = state.onManageTokensClick)
             }
         },
