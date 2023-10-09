@@ -34,7 +34,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
         ) {
             Text(
                 text = state.name,
-                style = TangemTheme.typography.h1,
+                style = TangemTheme.typography.h1.copy(fontWeight = FontWeight.SemiBold),
                 color = TangemTheme.colors.text.primary1,
             )
             NetworkInfoText(state.currency)
