@@ -19,4 +19,10 @@ internal object WalletStateCache {
     fun update(userWalletId: UserWalletId, state: WalletState.ContentState) {
         states[userWalletId] = state
     }
+
+    fun updateAll(func: (WalletState.ContentState.() -> WalletState.ContentState)) {
+        states.keys.forEach {
+            states[it] = func(states[it]!!)
+        }
+    }
 }
