@@ -255,9 +255,18 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         walletConnectRepository = WalletConnectRepository(this)
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
+        initUserWalletsListManager()
+
+        // TODO: Try to performance and user experience.
+        //  [REDACTED_JIRA]
+        runBlocking {
+            featureTogglesManager.init()
+            appRatingRepository.initialize()
+            // learn2earnInteractor.init()
+        }
+
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
-        initUserWalletsListManager()
 
         loadNativeLibraries()
 
@@ -282,14 +291,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
-
-        // TODO: Try to performance and user experience.
-        //  [REDACTED_JIRA]
-        runBlocking {
-            featureTogglesManager.init()
-            appRatingRepository.initialize()
-            // learn2earnInteractor.init()
-        }
 
         initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
@@ -354,14 +355,20 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
-        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
-            appVersion = try {
-                // TODO don't use deprecated method
-                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                pInfo.versionName
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-                "x.y.z"
+        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
+            return AdditionalFeedbackInfo(
+                userWalletsListManager = userWalletsListManager,
+                walletManagersFacade = walletManagersFacade,
+                walletFeatureToggles = walletFeatureToggles,
+            ).apply {
+                appVersion = try {
+                    // TODO don't use deprecated method
+                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                    pInfo.versionName
+                } catch (e: PackageManager.NameNotFoundException) {
+                    e.printStackTrace()
+                    "x.y.z"
+                }
             }
         }
 
