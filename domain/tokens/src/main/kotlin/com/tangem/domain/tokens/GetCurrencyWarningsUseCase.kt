@@ -64,7 +64,7 @@ class GetCurrencyWarningsUseCase(
 
         return combine(
             operations.getCurrencyStatusFlow(currencyId, derivationPath).map { it.getOrNull() },
-            operations.getNetworkCoinFlow(networkId).map { it.getOrNull() },
+            operations.getNetworkCoinFlow(networkId, derivationPath).map { it.getOrNull() },
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {

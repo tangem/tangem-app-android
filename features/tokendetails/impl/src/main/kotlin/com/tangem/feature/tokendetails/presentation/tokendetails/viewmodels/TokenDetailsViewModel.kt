@@ -249,6 +249,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             getNetworkCoinStatusUseCase(
                 userWalletId = wallet.walletId,
                 networkId = status.currency.network.id,
+                derivationPath = status.currency.network.derivationPath,
             )
                 .take(count = 1)
                 .collectLatest {

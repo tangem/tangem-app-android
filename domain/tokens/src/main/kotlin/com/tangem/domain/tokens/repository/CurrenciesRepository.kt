@@ -114,8 +114,13 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param networkId    The unique identifier of the network.
+     * @param derivationPath currency derivation path.
      */
-    suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin
+    suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin
 
     /**
      * Determines whether the tokens within a specific multi-currency user wallet are grouped.

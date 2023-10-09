@@ -76,7 +76,11 @@ internal class MockCurrenciesRepository(
         return token
     }
 
-    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+    override suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin {
         TODO("Not yet implemented")
     }
 
