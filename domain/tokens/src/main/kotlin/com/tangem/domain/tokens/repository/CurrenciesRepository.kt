@@ -98,11 +98,16 @@ interface CurrenciesRepository {
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @param derivationPath currency derivation path.
      * @return The cryptocurrency associated with the user wallet and ID.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
+    suspend fun getMultiCurrencyWalletCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency
 
     /**
      * Get the coin for a specific network.

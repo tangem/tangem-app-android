@@ -67,6 +67,7 @@ internal class MockCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         val token = token.getOrElse { e -> throw e }
 
