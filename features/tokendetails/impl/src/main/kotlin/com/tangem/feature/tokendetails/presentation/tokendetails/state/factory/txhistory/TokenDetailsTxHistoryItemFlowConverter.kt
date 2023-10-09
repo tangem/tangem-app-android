@@ -15,10 +15,7 @@ import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
@@ -37,8 +34,12 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        val txHistoryContent = currentStateProvider().txHistoryState as TxHistoryState.Content
-
+        val state = currentStateProvider()
+        val txHistoryContent = if (state.txHistoryState is TxHistoryState.Content) {
+            state.txHistoryState
+        } else {
+            TxHistoryState.Content(contentItems = MutableStateFlow(PagingData.empty()))
+        }
         // FIXME: TxHistoryRepository should send loading transactions
         // [REDACTED_JIRA]
         value
