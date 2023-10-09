@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.*
 import androidx.constraintlayout.compose.*
+import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
@@ -296,7 +297,7 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.h2,
                 )
             }
-            is WalletCardState.HiddenContent -> NonContentBalanceText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> NonContentBalanceText(TextReference.Str(Strings.STARS))
             is WalletCardState.Error -> NonContentBalanceText(text = WalletCardState.EMPTY_BALANCE_TEXT)
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
