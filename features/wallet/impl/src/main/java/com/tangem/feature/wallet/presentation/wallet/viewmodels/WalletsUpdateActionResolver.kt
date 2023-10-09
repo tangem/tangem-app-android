@@ -126,8 +126,6 @@ internal class WalletsUpdateActionResolver(
             }
 
             previousWalletState is WalletCardState.Content &&
-                previousWalletState.cardCount != selectedWallet.getCardsCount() ||
-                previousWalletState is WalletCardState.HiddenContent &&
                 previousWalletState.cardCount != selectedWallet.getCardsCount() -> {
                 Action.UpdateWalletCardCount
             }
