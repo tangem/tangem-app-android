@@ -26,7 +26,6 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
     private val currentStateProvider: Provider<WalletState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val currencyStatusErrorConverter: CurrencyStatusErrorConverter,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, WalletState> {
 
@@ -87,35 +86,19 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
             -> {
-                if (isBalanceHiddenProvider()) {
-                    WalletCardState.HiddenContent(
-                        id = selectedWallet.id,
-                        title = selectedWallet.title,
-                        additionalInfo = WalletAdditionalInfoFactory.resolve(
-                            wallet = currentWalletProvider(),
-                            currencyAmount = status.amount,
-                        ),
-                        imageResId = selectedWallet.imageResId,
-                        onRenameClick = selectedWallet.onRenameClick,
-                        onDeleteClick = selectedWallet.onDeleteClick,
-                        balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
-                        cardCount = currentWalletProvider().getCardsCount(),
-                    )
-                } else {
-                    WalletCardState.Content(
-                        id = selectedWallet.id,
-                        title = selectedWallet.title,
-                        additionalInfo = WalletAdditionalInfoFactory.resolve(
-                            wallet = currentWalletProvider(),
-                            currencyAmount = status.amount,
-                        ),
-                        imageResId = selectedWallet.imageResId,
-                        onRenameClick = selectedWallet.onRenameClick,
-                        onDeleteClick = selectedWallet.onDeleteClick,
-                        balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
-                        cardCount = currentWalletProvider().getCardsCount(),
-                    )
-                }
+                WalletCardState.Content(
+                    id = selectedWallet.id,
+                    title = selectedWallet.title,
+                    additionalInfo = WalletAdditionalInfoFactory.resolve(
+                        wallet = currentWalletProvider(),
+                        currencyAmount = status.amount,
+                    ),
+                    imageResId = selectedWallet.imageResId,
+                    onRenameClick = selectedWallet.onRenameClick,
+                    onDeleteClick = selectedWallet.onDeleteClick,
+                    balance = formatFiatAmount(status = status, appCurrency = appCurrencyProvider()),
+                    cardCount = currentWalletProvider().getCardsCount(),
+                )
             }
             is CryptoCurrencyStatus.Loading -> {
                 WalletCardState.Loading(

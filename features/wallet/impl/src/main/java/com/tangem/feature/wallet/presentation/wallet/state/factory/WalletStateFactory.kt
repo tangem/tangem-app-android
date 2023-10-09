@@ -80,7 +80,6 @@ internal class WalletStateFactory(
             tokenListErrorConverter = tokenListErrorConverter,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             clickIntents = clickIntents,
         )
     }
@@ -106,7 +105,6 @@ internal class WalletStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             currencyStatusErrorConverter = currencyStatusErrorConverter,
         )
     }
