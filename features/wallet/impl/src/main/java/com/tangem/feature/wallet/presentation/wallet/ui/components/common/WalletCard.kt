@@ -57,7 +57,7 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
+internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier, isBalanceHidden: Boolean) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     CardContainer(
         name = state.title,
@@ -90,6 +90,7 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
                     top.linkTo(anchor = titleRef.bottom)
                     bottom.linkTo(anchor = additionalTextRef.top)
                 },
+            isBalanceHidden = isBalanceHidden
         )
 
         AdditionalInfo(
@@ -102,7 +103,6 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
                 when (state) {
                     is WalletCardState.Content,
                     is WalletCardState.Error,
-                    is WalletCardState.HiddenContent,
                     -> {
                         end.linkTo(imageRef.start)
                         width = Dimension.fillToConstraints
@@ -275,7 +275,7 @@ private fun TitleText(text: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
+private fun Balance(state: WalletCardState, modifier: Modifier = Modifier, isBalanceHidden: Boolean) {
     AnimatedContent(
         targetState = state,
         label = "Update the balance",
@@ -288,7 +288,7 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    text = walletCardState.balance,
+                    text = if (isBalanceHidden) Strings.STARS else walletCardState.balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
@@ -297,8 +297,9 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
                     style = TangemTheme.typography.h2,
                 )
             }
-            is WalletCardState.HiddenContent -> NonContentBalanceText(TextReference.Str(Strings.STARS))
-            is WalletCardState.Error -> NonContentBalanceText(text = WalletCardState.EMPTY_BALANCE_TEXT)
+            is WalletCardState.Error -> NonContentBalanceText(
+                text = if (isBalanceHidden) WalletCardState.HIDDEN_BALANCE_TEXT else WalletCardState.EMPTY_BALANCE_TEXT
+            )
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
             }
@@ -349,7 +350,6 @@ private fun resolveAdditionalTextByState(state: WalletCardState): TextReference?
         is WalletCardState.Content -> state.additionalInfo
         is WalletCardState.LockedContent -> state.additionalInfo
         is WalletCardState.Error -> WalletCardState.EMPTY_BALANCE_TEXT
-        is WalletCardState.HiddenContent -> WalletCardState.HIDDEN_BALANCE_TEXT
         is WalletCardState.Loading -> null
     }
 }
@@ -402,7 +402,7 @@ private fun Preview_WalletCard_LightTheme(
     state: WalletCardState,
 ) {
     TangemTheme(isDark = false) {
-        WalletCard(state = state)
+        WalletCard(state = state, isBalanceHidden = false)
     }
 }
 
@@ -410,7 +410,7 @@ private fun Preview_WalletCard_LightTheme(
 @Composable
 private fun Preview_WalletCard_DarkTheme(@PreviewParameter(WalletCardStateProvider::class) state: WalletCardState) {
     TangemTheme(isDark = true) {
-        WalletCard(state)
+        WalletCard(state = state, isBalanceHidden = false)
     }
 }
 
@@ -418,7 +418,6 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
     collection = listOf(
         WalletPreviewData.walletCardContentState,
         WalletPreviewData.walletCardLoadingState,
-        WalletPreviewData.walletCardHiddenContentState,
         WalletPreviewData.walletCardErrorState,
     ),
 )
