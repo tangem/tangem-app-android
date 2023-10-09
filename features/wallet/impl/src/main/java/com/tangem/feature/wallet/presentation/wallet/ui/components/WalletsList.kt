@@ -57,10 +57,10 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
         ) { state ->
             WalletCard(
                 state = state,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
                     .animateItemPlacement()
                     .width(itemWidth),
-                isBalanceHidden = isBalanceHidden
             )
         }
     }
@@ -102,7 +102,7 @@ private fun Preview_WalletsList_LightTheme() {
         WalletsList(
             config = WalletPreviewData.walletListConfig,
             lazyListState = rememberLazyListState(),
-            isBalanceHidden = false
+            isBalanceHidden = false,
         )
     }
 }
@@ -114,7 +114,7 @@ private fun Preview_WalletsList_DarkTheme() {
         WalletsList(
             config = WalletPreviewData.walletListConfig,
             lazyListState = rememberLazyListState(),
-            isBalanceHidden = false
+            isBalanceHidden = false,
         )
     }
 }
