@@ -74,8 +74,7 @@ sealed class DetailsAction : Action {
         }
 
         data class CheckBiometricsStatus(
-            val awaitStatusChange: Boolean,
-            val lifecycleCoroutineScope: LifecycleCoroutineScope,
+            val lifecycleScope: LifecycleCoroutineScope,
         ) : AppSettings()
 
         object EnrollBiometrics : AppSettings()
