@@ -21,6 +21,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
@@ -100,7 +101,12 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
     }
 
     override fun openOnboardingScreen() {
-        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+        reduxNavController.navigate(
+            action = NavigationAction.NavigateTo(
+                screen = AppScreen.OnboardingWallet,
+                bundle = bundleOf(OnboardingRouter.CAN_SKIP_BACKUP to false),
+            ),
+        )
     }
 
     override fun openTxHistoryWebsite(url: String) {
