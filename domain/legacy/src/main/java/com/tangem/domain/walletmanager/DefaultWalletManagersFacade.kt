@@ -221,6 +221,10 @@ class DefaultWalletManagersFacade(
         return walletManager
     }
 
+    override suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager> {
+        return walletManagersStore.getAllSync(userWalletId)
+    }
+
     override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
         val blockchain = Blockchain.fromId(network.id.value)
 
