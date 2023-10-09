@@ -38,8 +38,8 @@ internal fun LazyListScope.tokensListItems(
     when (state) {
         is WalletTokensListState.ContentState -> contentItems(
             items = state.items,
+            isBalanceHidden = isBalanceHidden,
             modifier = modifier,
-            isBalanceHidden = isBalanceHidden
         )
         WalletTokensListState.Empty -> nonContentItem(modifier = modifier)
     }
@@ -57,11 +57,11 @@ private fun LazyListScope.contentItems(
         itemContent = { index, item ->
             MultiCurrencyContentItem(
                 state = item,
+                isBalanceHidden = isBalanceHidden,
                 modifier = modifier.roundedShapeItemDecoration(
                     currentIndex = index,
                     lastIndex = items.lastIndex,
                 ),
-                isBalanceHidden = isBalanceHidden
             )
         },
     )
