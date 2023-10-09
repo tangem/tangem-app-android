@@ -91,10 +91,10 @@ class TapWalletManager(
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatchWalletAction(action = WalletAction.Warnings.CheckIfNeeded)
         }
-        setupWalletConnectV2(userWallet)
 
         val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
         if (!walletFeatureToggles.isRedesignedScreenEnabled) {
+            setupWalletConnectV2(userWallet)
             loadData(userWallet = userWallet, refresh = refresh)
         }
     }
@@ -161,21 +161,31 @@ class TapWalletManager(
             }
     }
 
-    private fun getAccountsForWc(wcInteractor: WalletConnectInteractor): List<Account> {
-        return store.state.walletState.walletManagers
-            .mapNotNull {
-                val wallet = it.wallet
-                val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
-                    wallet.blockchain.toNetworkId(),
+    private suspend fun getAccountsForWc(wcInteractor: WalletConnectInteractor): List<Account> {
+        val walletManagerToggles = store.state.daggerGraphState
+            .get(DaggerGraphState::walletFeatureToggles)
+        val walletManagers = if (walletManagerToggles.isRedesignedScreenEnabled) {
+            val walletManagerFacade = store.state.daggerGraphState
+                .get(DaggerGraphState::walletManagersFacade)
+            val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
+            walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
+        } else {
+            store.state.walletState.walletManagers
+        }
+
+        return walletManagers.mapNotNull {
+            val wallet = it.wallet
+            val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                wallet.blockchain.toNetworkId(),
+            )
+            chainId?.let {
+                Account(
+                    chainId,
+                    wallet.address,
+                    wallet.publicKey.derivationPath?.rawPath,
                 )
-                chainId?.let {
-                    Account(
-                        chainId,
-                        wallet.address,
-                        wallet.publicKey.derivationPath?.rawPath,
-                    )
-                }
             }
+        }
     }
 
     fun updateConfigManager(data: ScanResponse) {
