@@ -66,6 +66,9 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
 
+    //TODO: Create api/impl modules for onboarding https://tangem.atlassian.net/browse/AND-4841
+    implementation(projects.features.onboarding)
+
     /** Feature Apis */
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokendetails.api)
