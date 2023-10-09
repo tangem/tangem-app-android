@@ -109,7 +109,7 @@ internal class OrganizeTokensStateHolder(
                 canDragItemOver = dragAndDropIntents::canDragItemOver,
             ),
             scrollListToTop = consumedEvent(),
-            isBalanceHidden = true
+            isBalanceHidden = true,
         )
     }
 

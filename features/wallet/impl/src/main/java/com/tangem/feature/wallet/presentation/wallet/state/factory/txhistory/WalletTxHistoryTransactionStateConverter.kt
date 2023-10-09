@@ -1,7 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
-import com.tangem.common.Provider
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
