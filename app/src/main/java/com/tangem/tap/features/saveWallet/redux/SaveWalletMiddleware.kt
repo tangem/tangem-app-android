@@ -140,10 +140,7 @@ internal class SaveWalletMiddleware {
             store.dispatchWithMain(SaveWalletAction.Save.Error(TangemSdkError.ExceptionError(error)))
             return
         }
-        val manager = UserWalletsListManager.provideBiometricImplementation(
-            context = context,
-            tangemSdkManager = tangemSdkManager,
-        )
+        val manager = UserWalletsListManager.provideBiometricImplementation(context)
 
         store.dispatchWithMain(GlobalAction.UpdateUserWalletsListManager(manager))
     }
