@@ -72,6 +72,7 @@ internal sealed class TokenItemState {
         override val iconState: IconState,
         override val titleState: TitleState,
         override val cryptoAmountState: CryptoAmountState,
+        val isBalanceHidden: Boolean,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val priceChangeState: PriceChangeState? = null
