@@ -4,15 +4,16 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
-import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
 // TODO: Move to its own module
@@ -97,4 +98,6 @@ interface WalletManagersFacade {
      * deactivated and any remaining funds will be destroyed.
      */
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
+
+    fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
 }
