@@ -579,6 +579,7 @@ internal class WalletViewModel @Inject constructor(
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
+                derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
             )
                 .take(count = 1)
                 .collectLatest {
@@ -913,8 +914,26 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getSingleCurrencyContent(index: Int) {
         val wallet = getWallet(index)
-        updatePrimaryCurrencyStatus(userWalletId = wallet.walletId)
-        updateNotifications(index)
+        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = wallet.walletId)
+            .distinctUntilChanged()
+            .onEach { maybeCryptoCurrencyStatus ->
+                uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
+
+                maybeCryptoCurrencyStatus.onRight { status ->
+                    singleWalletCryptoCurrencyStatus = status
+
+                    if (status.value.amount?.isZero() == false) {
+                        setWalletWithFundsFoundUseCase()
+                    }
+
+                    updateNotifications(index)
+                    updateButtons(userWalletId = wallet.walletId, currencyStatus = status)
+                    updateTxHistory(status.currency)
+                }
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(marketPriceJobHolder)
     }
 
     private fun updateTxHistory(currency: CryptoCurrency) {
@@ -933,28 +952,6 @@ internal class WalletViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun updatePrimaryCurrencyStatus(userWalletId: UserWalletId) {
-        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
-            .distinctUntilChanged()
-            .onEach { maybeCryptoCurrencyStatus ->
-                uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
-
-                maybeCryptoCurrencyStatus.onRight { status ->
-                    singleWalletCryptoCurrencyStatus = status
-
-                    if (status.value.amount?.isZero() == false) {
-                        setWalletWithFundsFoundUseCase()
-                    }
-
-                    updateButtons(userWalletId = userWalletId, currencyStatus = status)
-                    updateTxHistory(status.currency)
-                }
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(marketPriceJobHolder)
     }
 
     private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
