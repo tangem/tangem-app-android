@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.common
 
 import androidx.paging.PagingData
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
@@ -13,6 +12,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
@@ -37,10 +37,10 @@ internal object WalletPreviewData {
     val walletCardContentState by lazy {
         WalletCardState.Content(
             id = UserWalletId(stringValue = "123"),
-            title = "Wallet 1",
-            balance = "8923,05 $",
-            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
-            imageResId = R.drawable.ill_businessman_3d,
+            title = "Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1",
+            balance = "8923,05312312312312312312331231231233432423423424234 $",
+            additionalInfo = TextReference.Str("3 cards • Seed phrase3 cards • Seed phraseцфвцфвфцвцфввцфвцф"),
+            imageResId = R.drawable.ill_wallet2_cards3_120_106,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
             cardCount = 1,
@@ -51,7 +51,7 @@ internal object WalletPreviewData {
         WalletCardState.Loading(
             id = UserWalletId("321"),
             title = "Wallet 1",
-            imageResId = R.drawable.ill_businessman_3d,
+            imageResId = R.drawable.ill_wallet2_cards3_120_106,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
         )
@@ -61,7 +61,7 @@ internal object WalletPreviewData {
         WalletCardState.HiddenContent(
             id = UserWalletId("42"),
             title = "Wallet 1",
-            imageResId = R.drawable.ill_businessman_3d,
+            imageResId = R.drawable.ill_wallet2_cards3_120_106,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
             balance = "8923,05 $",
@@ -74,7 +74,7 @@ internal object WalletPreviewData {
         WalletCardState.Error(
             id = UserWalletId("24"),
             title = "Wallet 1",
-            imageResId = R.drawable.ill_businessman_3d,
+            imageResId = R.drawable.ill_wallet2_cards3_120_106,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
         )
@@ -167,6 +167,7 @@ internal object WalletPreviewData {
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+            isBalanceHidden = false,
         )
     }
 
