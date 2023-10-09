@@ -89,7 +89,7 @@ private fun FiatBalance(
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+            text = if (isBalanceHidden) STARS else BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -117,7 +117,7 @@ private fun CryptoBalance(
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
-            text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+            text = if (isBalanceHidden) STARS else BigDecimalFormatter.EMPTY_BALANCE_SIGN,
             style = TangemTheme.typography.caption,
             color = TangemTheme.colors.text.tertiary,
         )
