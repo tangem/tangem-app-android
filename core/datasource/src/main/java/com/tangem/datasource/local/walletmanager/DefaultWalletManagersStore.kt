@@ -6,6 +6,7 @@ import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
+import kotlinx.coroutines.flow.Flow
 
 internal class DefaultWalletManagersStore(
     dataStore: StringKeyDataStore<List<WalletManager>>,
@@ -13,6 +14,10 @@ internal class DefaultWalletManagersStore(
 
     override fun provideStringKey(key: UserWalletId): String {
         return key.stringValue
+    }
+
+    override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
+        return get(key = userWalletId)
     }
 
     override suspend fun getSyncOrNull(
