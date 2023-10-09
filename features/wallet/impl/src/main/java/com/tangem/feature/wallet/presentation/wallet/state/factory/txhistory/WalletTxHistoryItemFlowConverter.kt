@@ -35,7 +35,6 @@ import org.joda.time.DateTimeZone
  */
 internal class WalletTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val blockchain: Blockchain,
     private val clickIntents: WalletClickIntents,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState?> {
@@ -44,7 +43,6 @@ internal class WalletTxHistoryItemFlowConverter(
         WalletTxHistoryTransactionStateConverter(
             symbol = blockchain.currency,
             decimals = blockchain.decimals(),
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
         )
     }
 
