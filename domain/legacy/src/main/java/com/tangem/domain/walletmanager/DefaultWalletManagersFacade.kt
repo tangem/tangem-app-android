@@ -7,8 +7,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
@@ -26,6 +26,7 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -273,6 +274,10 @@ class DefaultWalletManagersFacade(
         )
 
         return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
+    }
+
+    override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
+        return walletManagersStore.getAll(userWalletId)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
