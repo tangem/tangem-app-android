@@ -126,7 +126,6 @@ internal class WalletViewModel @Inject constructor(
     var router: InnerWalletRouter by Delegates.notNull()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private var isBalanceHidden = true
 
     private val notificationsListFactory = WalletNotificationsListFactory(
         wasCardScannedUseCase = wasCardScannedUseCase,
@@ -147,7 +146,6 @@ internal class WalletViewModel @Inject constructor(
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
     )
 
@@ -190,7 +188,6 @@ internal class WalletViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
-                isBalanceHidden = hidden
                 WalletStateCache.updateAll { copySealed(isBalanceHidden = hidden) }
                 uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = hidden)
             }
