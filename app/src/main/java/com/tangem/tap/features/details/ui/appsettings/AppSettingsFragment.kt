@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
@@ -32,11 +31,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
         AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.checkBiometricsStatus(lifecycleScope)
-    }
-
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         AppSettingsScreen(
@@ -49,6 +43,11 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.checkBiometricsStatus(lifecycleScope)
+    }
+
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
@@ -56,11 +55,6 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
                 oldState.detailsState == newState.detailsState
             }.select { it.detailsState }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshBiometricsStatus(lifecycleScope)
     }
 
     override fun onStop() {
