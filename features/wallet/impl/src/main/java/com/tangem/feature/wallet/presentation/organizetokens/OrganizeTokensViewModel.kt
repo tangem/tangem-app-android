@@ -60,6 +60,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
         dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
+        listStateProvider = Provider { uiState.value.itemsState },
     )
 
     private val userWalletId: UserWalletId by lazy {
@@ -79,7 +80,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
                 isBalanceHidden = hidden
-                stateHolder.updateHiddenState(uiState.value.itemsState, isBalanceHidden)
+                stateHolder.updateHiddenState(isBalanceHidden)
             }
             .launchIn(viewModelScope)
 

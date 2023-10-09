@@ -26,6 +26,7 @@ internal class OrganizeTokensStateHolder(
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isBalanceHiddenProvider: Provider<Boolean>,
+    private val listStateProvider: Provider<OrganizeTokensListState>,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
@@ -41,7 +42,7 @@ internal class OrganizeTokensStateHolder(
     }
 
     private val inProgressStateConverter by lazy { InProgressStateConverter() }
-    private val tokenListHiddenStateConverter by lazy { TokenListHiddenStateConverter() }
+    private val tokenListHiddenStateConverter by lazy { TokenListHiddenStateConverter(listStateProvider) }
 
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
@@ -81,8 +82,8 @@ internal class OrganizeTokensStateHolder(
         updateState { copy(header = header.copy(isSortedByBalance = false)) }
     }
 
-    fun updateHiddenState(itemsState: OrganizeTokensListState, isBalanceHidden: Boolean) {
-        updateState { copy(itemsState = tokenListHiddenStateConverter.convert(itemsState to isBalanceHidden)) }
+    fun updateHiddenState(isBalanceHidden: Boolean) {
+        updateState { copy(itemsState = tokenListHiddenStateConverter.convert(isBalanceHidden)) }
     }
 
     fun updateStateWithError(error: TokenListError) {
