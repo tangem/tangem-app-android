@@ -18,15 +18,15 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletToke
 @Composable
 internal fun MultiCurrencyContentItem(
     state: WalletTokensListState.TokensListItemState,
-    modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     when (state) {
         is WalletTokensListState.TokensListItemState.NetworkGroupTitle -> {
             NetworkGroupItem(networkName = state.name.resolveReference(), modifier = modifier)
         }
         is WalletTokensListState.TokensListItemState.Token -> {
-            TokenItem(state = state.state, modifier = modifier, isBalanceHidden = isBalanceHidden)
+            TokenItem(state = state.state, isBalanceHidden = isBalanceHidden, modifier = modifier)
         }
     }
 }
