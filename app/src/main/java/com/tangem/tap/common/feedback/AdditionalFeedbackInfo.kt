@@ -6,9 +6,36 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.scope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
-class AdditionalFeedbackInfo {
+class AdditionalFeedbackInfo(
+    userWalletsListManager: UserWalletsListManager,
+    walletManagersFacade: WalletManagersFacade,
+    walletFeatureToggles: WalletFeatureToggles,
+) {
+
+    init {
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            userWalletsListManager.selectedUserWallet
+                .distinctUntilChanged()
+                .onEach { userWallet ->
+                    setCardInfo(data = userWallet.scanResponse)
+
+                    walletManagersFacade.getAll(userWalletId = userWallet.walletId)
+                        .onEach(::setWalletsInfo)
+                        .launchIn(scope)
+                }
+                .launchIn(scope)
+        }
+    }
+
     class EmailWalletInfo(
         var blockchain: Blockchain = Blockchain.Unknown,
         var derivationPath: String = "",
@@ -46,6 +73,7 @@ class AdditionalFeedbackInfo {
     private val Address.name: String
         get() = type.javaClass.simpleName
 
+    @Deprecated("Don't use it directly")
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
         cardBlockchain = data.walletData?.blockchain ?: ""
@@ -55,6 +83,7 @@ class AdditionalFeedbackInfo {
         userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
     }
 
+    @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
         tokens.clear()
