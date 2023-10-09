@@ -78,7 +78,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
          * next element is wallet screen entry.
          * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
          */
-        if (navController.backQueue.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
+        if (navController.currentBackStack.value.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
             if (screen != null) {
                 reduxNavController.navigate(action = NavigationAction.PopBackTo(screen))
             } else {
