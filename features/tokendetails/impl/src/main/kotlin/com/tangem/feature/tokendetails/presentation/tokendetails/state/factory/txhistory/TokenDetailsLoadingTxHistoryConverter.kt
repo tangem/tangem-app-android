@@ -9,6 +9,7 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class TokenDetailsLoadingTxHistoryConverter(
@@ -34,22 +35,28 @@ internal class TokenDetailsLoadingTxHistoryConverter(
 
     private fun convert(value: Int): TokenDetailsState {
         val state = currentStateProvider()
-        val txHistoryContent = state.txHistoryState as TxHistoryState.Content
 
-        txHistoryContent.contentItems.update {
-            PagingData.from(
-                data = listOf(TxHistoryState.TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick)) +
-                    MutableList(
-                        size = value,
-                        init = {
-                            TxHistoryState.TxHistoryItemState.Transaction(
-                                state = TransactionState.Loading(it.toString()),
-                            )
-                        },
-                    ),
+        return if (state.txHistoryState is TxHistoryState.Content) {
+            state.txHistoryState.contentItems.update {
+                PagingData.from(data = createLoadingItems(value))
+            }
+            state
+        } else {
+            val txHistoryContent = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = PagingData.from(data = createLoadingItems(value)),
+                ),
             )
+            state.copy(txHistoryState = txHistoryContent)
         }
+    }
 
-        return state
+    private fun createLoadingItems(size: Int): List<TxHistoryState.TxHistoryItemState> {
+        return buildList {
+            add(TxHistoryState.TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick))
+            (1..size).forEach {
+                add(TxHistoryState.TxHistoryItemState.Transaction(state = TransactionState.Loading(it.toString())))
+            }
+        }
     }
 }
