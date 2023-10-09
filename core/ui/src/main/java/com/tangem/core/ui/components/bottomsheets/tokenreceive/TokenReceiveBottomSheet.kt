@@ -100,15 +100,18 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
 @Composable
 private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChange: (AddressModel) -> Unit) {
     val qrCodes = rememberQrPainters(content.addresses.map(AddressModel::value))
-    val pagerState = rememberPagerState()
-    val pageCount = content.addresses.count()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f,
+    ) {
+        content.addresses.count()
+    }
 
     LaunchedEffect(key1 = pagerState.currentPage) {
         onAddressChange.invoke(content.addresses[pagerState.currentPage])
     }
 
     HorizontalPager(
-        pageCount = pageCount,
         state = pagerState,
     ) { currentPage ->
         Column(
@@ -142,7 +145,7 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
         }
     }
 
-    if (pageCount > 1) {
+    if (pagerState.pageCount > 1) {
         val indicatorState = rememberLazyListState()
         val selectedColor = TangemTheme.colors.icon.primary1
         val unselectedColor = TangemTheme.colors.icon.informative
@@ -153,7 +156,7 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            repeat(pageCount) { iteration ->
+            repeat(pagerState.pageCount) { iteration ->
                 item(key = iteration) {
                     val color = if (pagerState.currentPage == iteration) {
                         selectedColor
