@@ -126,7 +126,11 @@ private fun WalletContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item {
-                    WalletsList(config = state.walletsListConfig, lazyListState = walletsListState)
+                    WalletsList(
+                        config = state.walletsListConfig,
+                        lazyListState = walletsListState,
+                        isBalanceHidden = state.isBalanceHidden,
+                    )
                 }
 
                 if (state is WalletSingleCurrencyState) {
