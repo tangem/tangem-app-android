@@ -57,7 +57,7 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier, isBalanceHidden: Boolean) {
+internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     CardContainer(
         name = state.title,
@@ -82,6 +82,7 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier, i
         var balanceWidth by remember { mutableStateOf(value = Int.MIN_VALUE) }
         Balance(
             state = state,
+            isBalanceHidden = isBalanceHidden,
             modifier = Modifier
                 .onSizeChanged { balanceWidth = it.width }
                 .padding(vertical = TangemTheme.dimens.spacing8)
@@ -90,7 +91,6 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier, i
                     top.linkTo(anchor = titleRef.bottom)
                     bottom.linkTo(anchor = additionalTextRef.top)
                 },
-            isBalanceHidden = isBalanceHidden
         )
 
         AdditionalInfo(
@@ -275,7 +275,7 @@ private fun TitleText(text: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Balance(state: WalletCardState, modifier: Modifier = Modifier, isBalanceHidden: Boolean) {
+private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = state,
         label = "Update the balance",
@@ -298,7 +298,7 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier, isBal
                 )
             }
             is WalletCardState.Error -> NonContentBalanceText(
-                text = if (isBalanceHidden) WalletCardState.HIDDEN_BALANCE_TEXT else WalletCardState.EMPTY_BALANCE_TEXT
+                text = if (isBalanceHidden) WalletCardState.HIDDEN_BALANCE_TEXT else WalletCardState.EMPTY_BALANCE_TEXT,
             )
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
