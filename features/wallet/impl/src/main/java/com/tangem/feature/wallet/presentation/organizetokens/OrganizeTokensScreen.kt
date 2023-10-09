@@ -83,8 +83,8 @@ private fun TokenList(
     listState: LazyListState,
     state: OrganizeTokensListState,
     dndConfig: OrganizeTokensState.DragAndDropConfig,
-    modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         val onDragEnd: (Int, Int) -> Unit = remember {
@@ -167,7 +167,7 @@ private fun LazyItemScope.DraggableItem(
                 modifier = itemModifier,
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
-                isBalanceHidden = isBalanceHidden
+                isBalanceHidden = isBalanceHidden,
             )
             // Should be presented in the list but remain invisible
             is DraggableItem.Placeholder -> Box(modifier = Modifier.fillMaxWidth())
