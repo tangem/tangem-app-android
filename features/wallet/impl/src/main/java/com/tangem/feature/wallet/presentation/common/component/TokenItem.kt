@@ -33,9 +33,9 @@ private enum class LayoutId {
 @Composable
 internal fun TokenItem(
     state: TokenItemState,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
-    isBalanceHidden: Boolean
 ) {
     CustomContainer(
         state = state,
