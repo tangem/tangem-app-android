@@ -169,6 +169,7 @@ internal class TokenDetailsViewModel @Inject constructor(
      * @param refresh - invalidate cache and get data from remote
      * @param showItemsLoading - show loading items placeholder.
      */
+    @Suppress("UnusedPrivateMember") // will be removed after implement caching
     private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean) {
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
@@ -378,7 +379,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 async {
                     updateTxHistory(
                         refresh = true,
-                        showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content
+                        showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
                     )
                 },
                 async { updateWarnings(wallet) },
