@@ -26,7 +26,7 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWhiteWallet(): Boolean {
-        return walletData == null && card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
+        return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
 
     override fun isWallet2(): Boolean {
