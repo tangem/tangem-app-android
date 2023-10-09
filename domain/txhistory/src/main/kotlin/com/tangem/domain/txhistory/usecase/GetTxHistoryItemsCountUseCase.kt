@@ -8,7 +8,7 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 
 class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
-
+// [REDACTED_TODO_COMMENT]
     suspend operator fun invoke(network: Network): Either<TxHistoryStateError, Int> {
         return either {
             catch(

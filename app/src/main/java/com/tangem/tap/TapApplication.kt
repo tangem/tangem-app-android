@@ -32,6 +32,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -58,6 +59,8 @@ import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
 import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
@@ -252,6 +255,15 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         walletConnectRepository = WalletConnectRepository(this)
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
+        initUserWalletsListManager()
+// [REDACTED_TODO_COMMENT]
+// [REDACTED_JIRA]
+        runBlocking {
+            featureTogglesManager.init()
+            appRatingRepository.initialize()
+            // learn2earnInteractor.init()
+        }
+
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -278,13 +290,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
-// [REDACTED_TODO_COMMENT]
-// [REDACTED_JIRA]
-        runBlocking {
-            featureTogglesManager.init()
-            appRatingRepository.initialize()
-            // learn2earnInteractor.init()
-        }
 
         initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
@@ -349,14 +354,20 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
-        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
-            appVersion = try {
+        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
+            return AdditionalFeedbackInfo(
+                userWalletsListManager = userWalletsListManager,
+                walletManagersFacade = walletManagersFacade,
+                walletFeatureToggles = walletFeatureToggles,
+            ).apply {
+                appVersion = try {
 // [REDACTED_TODO_COMMENT]
-                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                pInfo.versionName
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-                "x.y.z"
+                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                    pInfo.versionName
+                } catch (e: PackageManager.NameNotFoundException) {
+                    e.printStackTrace()
+                    "x.y.z"
+                }
             }
         }
 
@@ -389,5 +400,15 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWarningMessagesManager() {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
+    }
+
+    private fun initUserWalletsListManager() {
+        val manager = if (preferencesStorage.shouldSaveUserWallets) {
+            UserWalletsListManager.provideBiometricImplementation(applicationContext)
+        } else {
+            UserWalletsListManager.provideRuntimeImplementation()
+        }
+
+        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }

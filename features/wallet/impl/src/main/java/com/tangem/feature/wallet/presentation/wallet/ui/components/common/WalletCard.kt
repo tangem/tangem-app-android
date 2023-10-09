@@ -2,9 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,16 +27,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutScope
-import androidx.constraintlayout.compose.Dimension
+import androidx.compose.ui.unit.*
+import androidx.constraintlayout.compose.*
+import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
@@ -49,6 +45,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+
+private const val HALF_OF_ITEM_WIDTH = 0.5
 
 /**
  * Wallet card
@@ -67,47 +65,65 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
         onRenameClick = { state.onRenameClick(state.id, it) },
         isLockedState = state is WalletCardState.LockedContent,
         modifier = modifier,
-    ) {
-        val (title, balance, additionalText, image) = createRefs()
+    ) { itemSize ->
+        val (titleRef, balanceRef, additionalTextRef, imageRef) = createRefs()
 
         val contentVerticalMargin = TangemTheme.dimens.spacing12
-        Title(
-            state = state,
-            modifier = Modifier.constrainAs(title) {
+        TitleText(
+            text = state.title,
+            modifier = Modifier.constrainAs(titleRef) {
                 start.linkTo(parent.start)
                 top.linkTo(anchor = parent.top, margin = contentVerticalMargin)
-                end.linkTo(image.start)
+                end.linkTo(imageRef.start)
                 width = Dimension.fillToConstraints
             },
         )
 
-        val betweenContentMargin = TangemTheme.dimens.spacing8
+        var balanceWidth by remember { mutableStateOf(value = Int.MIN_VALUE) }
         Balance(
             state = state,
-            modifier = Modifier.constrainAs(balance) {
-                start.linkTo(parent.start)
-                top.linkTo(anchor = title.bottom, margin = betweenContentMargin)
-                bottom.linkTo(anchor = additionalText.top, margin = betweenContentMargin)
-            },
+            modifier = Modifier
+                .onSizeChanged { balanceWidth = it.width }
+                .padding(vertical = TangemTheme.dimens.spacing8)
+                .constrainAs(balanceRef) {
+                    start.linkTo(parent.start)
+                    top.linkTo(anchor = titleRef.bottom)
+                    bottom.linkTo(anchor = additionalTextRef.top)
+                },
         )
 
         AdditionalInfo(
-            state = state,
-            modifier = Modifier.constrainAs(additionalText) {
+            text = resolveAdditionalTextByState(state),
+            modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
+                top.linkTo(balanceRef.bottom)
                 bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
+
+                when (state) {
+                    is WalletCardState.Content,
+                    is WalletCardState.Error,
+                    is WalletCardState.HiddenContent,
+                    -> {
+                        end.linkTo(imageRef.start)
+                        width = Dimension.fillToConstraints
+                    }
+                    else -> Unit
+                }
             },
         )
 
-        val imageWidth = TangemTheme.dimens.size120
+        // If balance has a large width then image must be hidden
+        val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
+            mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
+        }
+
         Image(
             id = state.imageResId,
-            modifier = Modifier.constrainAs(image) {
-                centerVerticallyTo(parent)
-                top.linkTo(parent.top)
+            isVisible = hasSpaceForImage,
+            modifier = Modifier.constrainAs(imageRef) {
                 end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom)
                 height = Dimension.fillToConstraints
-                width = Dimension.value(imageWidth)
             },
         )
     }
@@ -120,11 +136,11 @@ private fun CardContainer(
     onRenameClick: (String) -> Unit,
     isLockedState: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable (ConstraintLayoutScope.() -> Unit),
+    content: @Composable (ConstraintLayoutScope.(IntSize) -> Unit),
 ) {
     var isMenuVisible by rememberSaveable { mutableStateOf(value = false) }
     var pressOffset by remember { mutableStateOf(value = DpOffset.Zero) }
-    var itemHeight by remember { mutableStateOf(value = 0.dp) }
+    var itemSize by remember { mutableStateOf(value = IntSize.Zero) }
 
     val density = LocalDensity.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -138,7 +154,7 @@ private fun CardContainer(
                     Modifier
                 } else {
                     Modifier
-                        .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
+                        .onSizeChanged { itemSize = it }
                         .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
                         .indication(interactionSource = interactionSource, indication = LocalIndication.current)
                         .pointerInput(true) {
@@ -166,12 +182,15 @@ private fun CardContainer(
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing14),
         ) {
-            content()
+            content(itemSize)
         }
     }
 
     var isRenameWalletDialogVisible by rememberSaveable { mutableStateOf(value = false) }
 
+    val itemHeight by remember(itemSize.height) {
+        mutableStateOf(value = with(density) { itemSize.height.toDp() })
+    }
     ManageWalletContextMenu(
         isMenuVisible = isMenuVisible,
         pressOffset = pressOffset,
@@ -243,22 +262,14 @@ private fun MenuItem(@StringRes textResId: Int, imageVector: ImageVector, onClic
 }
 
 @Composable
-private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
-    ) {
-        TitleText(title = state.title)
-    }
-}
-
-@Composable
-private fun TitleText(title: String) {
+private fun TitleText(text: String, modifier: Modifier = Modifier) {
     Text(
-        text = title,
+        text = text,
+        modifier = modifier,
         color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.button,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = TangemTheme.typography.button,
     )
 }
 
@@ -269,6 +280,10 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
         targetState = state,
         label = "Update the balance",
         modifier = modifier,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) with
+                fadeOut(animationSpec = tween(durationMillis = 90))
+        },
     ) { walletCardState ->
         when (walletCardState) {
             is WalletCardState.Content -> {
@@ -277,10 +292,12 @@ private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                     style = TangemTheme.typography.h2,
                 )
             }
-            is WalletCardState.HiddenContent -> NonContentBalanceText(text = WalletCardState.HIDDEN_BALANCE_TEXT)
+            is WalletCardState.HiddenContent -> NonContentBalanceText(TextReference.Str(Strings.STARS))
             is WalletCardState.Error -> NonContentBalanceText(text = WalletCardState.EMPTY_BALANCE_TEXT)
             is WalletCardState.Loading -> {
                 RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
@@ -309,21 +326,31 @@ private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
+private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state,
+        targetState = text,
         label = "Update the additional text",
         modifier = modifier,
-    ) { animatedState ->
-        when (animatedState) {
-            is WalletCardState.Content -> AdditionalInfoText(text = animatedState.additionalInfo)
-            is WalletCardState.HiddenContent -> AdditionalInfoText(text = animatedState.additionalInfo)
-            is WalletCardState.LockedContent -> AdditionalInfoText(text = animatedState.additionalInfo)
-            is WalletCardState.Error -> AdditionalInfoText(text = WalletCardState.EMPTY_BALANCE_TEXT)
-            is WalletCardState.Loading -> {
-                RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
-            }
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) with
+                fadeOut(animationSpec = tween(durationMillis = 90))
+        },
+    ) { animatedText ->
+        if (animatedText != null) {
+            AdditionalInfoText(text = animatedText)
+        } else {
+            RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
         }
+    }
+}
+
+private fun resolveAdditionalTextByState(state: WalletCardState): TextReference? {
+    return when (state) {
+        is WalletCardState.Content -> state.additionalInfo
+        is WalletCardState.LockedContent -> state.additionalInfo
+        is WalletCardState.Error -> WalletCardState.EMPTY_BALANCE_TEXT
+        is WalletCardState.HiddenContent -> WalletCardState.HIDDEN_BALANCE_TEXT
+        is WalletCardState.Loading -> null
     }
 }
 
@@ -332,6 +359,8 @@ private fun AdditionalInfoText(text: TextReference) {
     Text(
         text = text.resolveReference(),
         color = TangemTheme.colors.text.tertiary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.caption,
     )
 }
@@ -351,11 +380,14 @@ private fun LockedContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
-    AnimatedVisibility(visible = id != null, modifier = modifier) {
+private fun Image(@DrawableRes id: Int?, isVisible: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(visible = id != null && isVisible, modifier = modifier) {
+        val imageRes = id ?: return@AnimatedVisibility
+
         Image(
-            painter = painterResource(id = requireNotNull(id)),
+            painter = painterResource(id = imageRes),
             contentDescription = null,
+            modifier = Modifier.width(width = TangemTheme.dimens.size120),
             contentScale = ContentScale.FillWidth,
         )
     }
