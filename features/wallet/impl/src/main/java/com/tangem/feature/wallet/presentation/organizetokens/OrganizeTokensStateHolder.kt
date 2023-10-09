@@ -11,7 +11,6 @@ import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeToken
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenListToStateConverter
-import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListHiddenStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListSortingErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
@@ -25,14 +24,12 @@ internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
-    private val listStateProvider: Provider<OrganizeTokensListState>,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
 
     private val tokenListConverter by lazy {
-        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider, isBalanceHiddenProvider)
+        val tokensConverter = CryptoCurrencyToDraggableItemConverter(appCurrencyProvider)
         val itemsConverter = TokenListToListStateConverter(
             tokensConverter = tokensConverter,
             groupsConverter = NetworkGroupToDraggableItemsConverter(tokensConverter),
@@ -42,7 +39,6 @@ internal class OrganizeTokensStateHolder(
     }
 
     private val inProgressStateConverter by lazy { InProgressStateConverter() }
-    private val tokenListHiddenStateConverter by lazy { TokenListHiddenStateConverter(listStateProvider) }
 
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
@@ -83,7 +79,7 @@ internal class OrganizeTokensStateHolder(
     }
 
     fun updateHiddenState(isBalanceHidden: Boolean) {
-        updateState { copy(itemsState = tokenListHiddenStateConverter.convert(isBalanceHidden)) }
+        updateState { copy(isBalanceHidden = isBalanceHidden) }
     }
 
     fun updateStateWithError(error: TokenListError) {
@@ -113,6 +109,7 @@ internal class OrganizeTokensStateHolder(
                 canDragItemOver = dragAndDropIntents::canDragItemOver,
             ),
             scrollListToTop = consumedEvent(),
+            isBalanceHidden = true
         )
     }
 

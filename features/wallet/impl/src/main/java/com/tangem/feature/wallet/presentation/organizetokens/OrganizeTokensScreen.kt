@@ -63,6 +63,7 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
                 listState = tokensListState,
                 state = state.itemsState,
                 dndConfig = state.dndConfig,
+                isBalanceHidden = state.isBalanceHidden,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -83,6 +84,7 @@ private fun TokenList(
     state: OrganizeTokensListState,
     dndConfig: OrganizeTokensState.DragAndDropConfig,
     modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean,
 ) {
     Box(modifier = modifier) {
         val onDragEnd: (Int, Int) -> Unit = remember {
@@ -125,6 +127,7 @@ private fun TokenList(
                     item = item,
                     reorderableState = reorderableListState,
                     onDragStart = onDragStart,
+                    isBalanceHidden = isBalanceHidden,
                 )
             }
         }
@@ -139,6 +142,7 @@ private fun LazyItemScope.DraggableItem(
     item: DraggableItem,
     reorderableState: ReorderableLazyListState,
     onDragStart: () -> Unit,
+    isBalanceHidden: Boolean,
 ) {
     var isDragging by remember {
         mutableStateOf(value = false)
@@ -163,6 +167,7 @@ private fun LazyItemScope.DraggableItem(
                 modifier = itemModifier,
                 state = item.tokenItemState,
                 reorderableTokenListState = reorderableState,
+                isBalanceHidden = isBalanceHidden
             )
             // Should be presented in the list but remain invisible
             is DraggableItem.Placeholder -> Box(modifier = Modifier.fillMaxWidth())

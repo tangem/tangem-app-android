@@ -38,7 +38,7 @@ private const val SHORT_SNAP_ELEMENT_COUNT = 50
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState) {
+internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState, isBalanceHidden: Boolean) {
     val horizontalCardPadding = TangemTheme.dimens.spacing16
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val itemWidth by remember(screenWidth) { derivedStateOf { screenWidth - horizontalCardPadding * 2 } }
@@ -60,6 +60,7 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
                 modifier = Modifier
                     .animateItemPlacement()
                     .width(itemWidth),
+                isBalanceHidden = isBalanceHidden
             )
         }
     }
@@ -98,7 +99,11 @@ private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState, itemWidt
 @Composable
 private fun Preview_WalletsList_LightTheme() {
     TangemTheme(isDark = false) {
-        WalletsList(config = WalletPreviewData.walletListConfig, lazyListState = rememberLazyListState())
+        WalletsList(
+            config = WalletPreviewData.walletListConfig,
+            lazyListState = rememberLazyListState(),
+            isBalanceHidden = false
+        )
     }
 }
 
@@ -106,6 +111,10 @@ private fun Preview_WalletsList_LightTheme() {
 @Composable
 private fun Preview_WalletsList_DarkTheme() {
     TangemTheme(isDark = true) {
-        WalletsList(config = WalletPreviewData.walletListConfig, lazyListState = rememberLazyListState())
+        WalletsList(
+            config = WalletPreviewData.walletListConfig,
+            lazyListState = rememberLazyListState(),
+            isBalanceHidden = false
+        )
     }
 }
