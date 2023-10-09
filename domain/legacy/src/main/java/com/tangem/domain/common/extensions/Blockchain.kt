@@ -212,6 +212,4 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
-    Blockchain.Telos, // disable in 4.9
-    Blockchain.TelosTestnet, // disable in 4.9
 )
