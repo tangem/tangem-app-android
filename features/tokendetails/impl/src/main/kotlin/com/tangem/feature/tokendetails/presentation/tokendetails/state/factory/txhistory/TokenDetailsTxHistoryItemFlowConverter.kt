@@ -34,51 +34,33 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        // FIXME: TxHistoryRepository should send loading transactions
-        // https://tangem.atlassian.net/browse/AND-4334
         val state = currentStateProvider()
-        return if (state.txHistoryState is TxHistoryState.Content) {
-            value
-                .onEach { txHistoryStatePagingData ->
-                    state.txHistoryState.contentItems.update {
-                        txHistoryStatePagingData
-                            .map<TxHistoryItem, TxHistoryItemState> { item ->
-                                // [createTransactionState] returns timestamp without formatting
-                                TxHistoryItemState.Transaction(state = createTransactionState(item))
-                            }
-                            .insertHeaderItem(
-                                terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                                item = TxHistoryItemState.Title(clickIntents::onExploreClick),
-                            )
-                            .insertGroupTitle() // method uses the raw timestamp
-                            .formatTransactionsTimestamp() // method formats the timestamp
-                    }
-                }
-                .launchIn(CoroutineScope(Dispatchers.IO))
+        val txHistoryContent = if (state.txHistoryState is TxHistoryState.Content) {
             state.txHistoryState
         } else {
-            val txHistoryState: TxHistoryState.Content = TxHistoryState.Content(
-                contentItems = MutableStateFlow(PagingData.empty()),
-            )
-            value
-                .onEach { txHistoryStatePagingData ->
-                    txHistoryState.contentItems.update {
-                        txHistoryStatePagingData
-                            .map<TxHistoryItem, TxHistoryItemState> { item ->
-                                // [createTransactionState] returns timestamp without formatting
-                                TxHistoryItemState.Transaction(state = createTransactionState(item))
-                            }
-                            .insertHeaderItem(
-                                terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
-                                item = TxHistoryItemState.Title(clickIntents::onExploreClick),
-                            )
-                            .insertGroupTitle() // method uses the raw timestamp
-                            .formatTransactionsTimestamp() // method formats the timestamp
-                    }
-                }
-                .launchIn(CoroutineScope(Dispatchers.IO))
-            txHistoryState
+            TxHistoryState.Content(contentItems = MutableStateFlow(PagingData.empty()))
         }
+        // FIXME: TxHistoryRepository should send loading transactions
+        // https://tangem.atlassian.net/browse/AND-4334
+        value
+            .onEach { txHistoryStatePagingData ->
+                txHistoryContent.contentItems.update {
+                    txHistoryStatePagingData
+                        .map<TxHistoryItem, TxHistoryItemState> { item ->
+                            // [createTransactionState] returns timestamp without formatting
+                            TxHistoryItemState.Transaction(state = createTransactionState(item))
+                        }
+                        .insertHeaderItem(
+                            terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
+                            item = TxHistoryItemState.Title(clickIntents::onExploreClick),
+                        )
+                        .insertGroupTitle() // method uses the raw timestamp
+                        .formatTransactionsTimestamp() // method formats the timestamp
+                }
+            }
+            .launchIn(CoroutineScope(Dispatchers.IO))
+
+        return txHistoryContent
     }
 
     private fun createTransactionState(item: TxHistoryItem): TransactionState {

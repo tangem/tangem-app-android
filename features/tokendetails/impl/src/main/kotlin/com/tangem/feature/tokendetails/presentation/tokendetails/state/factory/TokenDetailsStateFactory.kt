@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -23,6 +24,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
@@ -87,6 +89,16 @@ internal class TokenDetailsStateFactory(
 
     fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
         return tokenDetailsButtonsConverter.convert(actions)
+    }
+
+    fun getLoadingTxHistoryState(): TokenDetailsState {
+        return currentStateProvider().copy(
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
+        )
     }
 
     fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): TokenDetailsState {
