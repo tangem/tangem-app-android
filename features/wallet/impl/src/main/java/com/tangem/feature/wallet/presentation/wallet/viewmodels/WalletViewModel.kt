@@ -579,6 +579,7 @@ internal class WalletViewModel @Inject constructor(
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
+                derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
             )
                 .take(count = 1)
                 .collectLatest {
