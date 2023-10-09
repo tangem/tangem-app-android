@@ -35,6 +35,7 @@ internal fun TokenItem(
     state: TokenItemState,
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
+    isBalanceHidden: Boolean
 ) {
     CustomContainer(
         state = state,
@@ -42,10 +43,6 @@ internal fun TokenItem(
             .tokenClickable(state = state)
             .background(color = TangemTheme.colors.background.primary),
     ) {
-        val isBalanceHidden = (state as? TokenItemState.Content)?.isBalanceHidden
-            ?: (state as? TokenItemState.Draggable)?.isBalanceHidden
-            ?: false
-
         TokenIcon(state = state.iconState, modifier = Modifier.layoutId(layoutId = LayoutId.ICON))
 
         TokenTitle(
@@ -382,7 +379,7 @@ private fun calculateLayoutHeight(
 @Composable
 private fun Preview_CustomTokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
     TangemTheme(isDark = false) {
-        TokenItem(state = state)
+        TokenItem(state = state, isBalanceHidden = false)
     }
 }
 
