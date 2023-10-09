@@ -93,7 +93,7 @@ internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
         )
 
         AdditionalInfo(
-            text = resolveAdditionalTextByState(state),
+            text = state.additionalInfo,
             modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
                 top.linkTo(balanceRef.bottom)
@@ -341,16 +341,6 @@ private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) 
         } else {
             RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
         }
-    }
-}
-
-private fun resolveAdditionalTextByState(state: WalletCardState): TextReference? {
-    return when (state) {
-        is WalletCardState.Content -> state.additionalInfo
-        is WalletCardState.LockedContent -> state.additionalInfo
-        is WalletCardState.Error -> WalletCardState.EMPTY_BALANCE_TEXT
-        is WalletCardState.HiddenContent -> WalletCardState.HIDDEN_BALANCE_TEXT
-        is WalletCardState.Loading -> null
     }
 }
 
