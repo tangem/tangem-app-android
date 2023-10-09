@@ -107,6 +107,7 @@ internal class DefaultCurrenciesRepository(
                     derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
                 )
             }
+            .distinct()
     }
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
