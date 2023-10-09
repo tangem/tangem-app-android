@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -34,13 +33,13 @@ import kotlin.properties.Delegates
 internal class DefaultWalletRouter(private val reduxNavController: ReduxNavController) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
-    private var fragmentManager: FragmentManager by Delegates.notNull()
+    private var onFinish: () -> Unit = {}
 
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(fragmentManager: FragmentManager) {
-        this.fragmentManager = fragmentManager
+    override fun Initialize(onFinish: () -> Unit) {
+        this.onFinish = onFinish
 
         NavHost(
             navController = rememberNavController().apply { navController = this },
@@ -80,10 +79,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
          * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
          */
         if (navController.currentBackStack.value.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
-            if (screen != null) {
+            if (screen == AppScreen.Home) {
                 reduxNavController.navigate(action = NavigationAction.PopBackTo(screen))
             } else {
-                fragmentManager.popBackStack()
+                onFinish.invoke()
             }
         } else {
             navController.popBackStack()
