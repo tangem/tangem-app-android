@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -84,6 +86,7 @@ private fun TokenList(
     dndConfig: OrganizeTokensState.DragAndDropConfig,
     modifier: Modifier = Modifier,
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
     Box(modifier = modifier) {
         val onDragEnd: (Int, Int) -> Unit = remember {
             { _, _ ->
@@ -117,7 +120,10 @@ private fun TokenList(
             ) { index, item ->
 
                 val onDragStart = remember(item) {
-                    { dndConfig.onItemDragStart(item) }
+                    {
+                        dndConfig.onItemDragStart(item)
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                 }
 
                 DraggableItem(
