@@ -280,7 +280,7 @@ internal class DefaultCurrenciesRepository(
         )
 
         userTokensStore.store(userWallet.walletId, response)
-        fetchUserMarketCoinsByIds(userWalletId, response)
+        fetchExchangeableUserMarketCoinsByIds(userWalletId, response)
     }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
@@ -288,10 +288,15 @@ internal class DefaultCurrenciesRepository(
         tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
     }
 
-    private suspend fun fetchUserMarketCoinsByIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
+    private suspend fun fetchExchangeableUserMarketCoinsByIds(
+        userWalletId: UserWalletId,
+        userTokens: UserTokensResponse,
+    ) {
         try {
-            val networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId }
-            val response = tangemTechApi.getCoins(networkIds = networkIds)
+            val networkIds = userTokens.tokens
+                .distinctBy { it.networkId }
+                .joinToString(separator = ",") { it.networkId }
+            val response = tangemTechApi.getCoins(networkIds = networkIds, exchangeable = true)
 
             userMarketCoinsStore.store(userWalletId, response)
         } catch (e: Throwable) {
