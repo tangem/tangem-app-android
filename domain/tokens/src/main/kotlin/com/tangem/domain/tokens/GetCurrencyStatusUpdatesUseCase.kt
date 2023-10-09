@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -32,20 +33,23 @@ class GetCurrencyStatusUpdatesUseCase(
      *
      * @param userWalletId The unique identifier of the user's wallet.
      * @param currencyId The unique identifier of the cryptocurrency.
+     * @param derivationPath currency derivation path.
      * @return A [Flow] emitting either a [CurrencyStatusError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
     operator fun invoke(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
-            emitAll(getCurrency(userWalletId, currencyId))
+            emitAll(getCurrency(userWalletId, currencyId, derivationPath))
         }.flowOn(dispatchers.io)
     }
 
     private suspend fun getCurrency(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -54,7 +58,7 @@ class GetCurrencyStatusUpdatesUseCase(
             userWalletId = userWalletId,
         )
 
-        return operations.getCurrencyStatusFlow(currencyId).map { maybeCurrency ->
+        return operations.getCurrencyStatusFlow(currencyId, derivationPath).map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
         }
     }
