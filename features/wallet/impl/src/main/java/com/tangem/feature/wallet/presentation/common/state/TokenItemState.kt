@@ -52,7 +52,7 @@ internal sealed class TokenItemState {
         override val id: String,
         override val iconState: IconState,
         override val titleState: TitleState,
-        override val fiatAmountState: FiatAmountState?,
+        override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
         override val priceChangeState: PriceChangeState?,
         val isBalanceHidden: Boolean,
@@ -72,6 +72,7 @@ internal sealed class TokenItemState {
         override val iconState: IconState,
         override val titleState: TitleState,
         override val cryptoAmountState: CryptoAmountState,
+        val isBalanceHidden: Boolean,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val priceChangeState: PriceChangeState? = null
