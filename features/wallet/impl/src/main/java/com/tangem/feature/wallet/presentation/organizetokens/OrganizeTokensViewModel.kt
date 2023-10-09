@@ -7,6 +7,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
@@ -36,6 +38,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     savedStateHandle: SavedStateHandle,
@@ -45,6 +49,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
 
+    private var isBalanceHidden = true
+
     private val dragAndDropAdapter = DragAndDropAdapter(
         listStateProvider = Provider { uiState.value.itemsState },
     )
@@ -53,6 +59,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
         intents = this,
         dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
+        listStateProvider = Provider { uiState.value.itemsState },
     )
 
     private val userWalletId: UserWalletId by lazy {
@@ -67,6 +75,20 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
+
+        isBalanceHiddenUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .onEach { hidden ->
+                isBalanceHidden = hidden
+                stateHolder.updateHiddenState(isBalanceHidden)
+            }
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .collect()
+        }
 
         bootstrapTokenList()
         bootstrapDragAndDropUpdates()
