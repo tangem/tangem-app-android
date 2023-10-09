@@ -23,12 +23,14 @@ class GetNetworkCoinStatusUseCase(
     operator fun invoke(
         userWalletId: UserWalletId,
         networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
             emitAll(
                 flow = getCurrency(
                     userWalletId = userWalletId,
                     networkId = networkId,
+                    derivationPath = derivationPath,
                 ),
             )
         }
@@ -38,6 +40,7 @@ class GetNetworkCoinStatusUseCase(
     private suspend fun getCurrency(
         userWalletId: UserWalletId,
         networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -46,7 +49,7 @@ class GetNetworkCoinStatusUseCase(
             userWalletId = userWalletId,
         )
 
-        return operations.getNetworkCoinFlow(networkId).map { maybeCurrency ->
+        return operations.getNetworkCoinFlow(networkId, derivationPath).map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
         }
     }
