@@ -275,7 +275,7 @@ internal object WalletPreviewData {
                 onCancelClick = {},
             ),
             scrollListToTop = consumedEvent(),
-            isBalanceHidden = true
+            isBalanceHidden = true,
         )
     }
 
