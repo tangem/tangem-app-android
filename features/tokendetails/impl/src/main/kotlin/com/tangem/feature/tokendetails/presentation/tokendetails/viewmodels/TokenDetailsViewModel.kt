@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
@@ -35,6 +36,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -103,7 +106,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateContent(selectedWallet: UserWallet) {
         updateMarketPrice(selectedWallet = selectedWallet)
-        updateTxHistory()
+        updateTxHistory(refresh = false, showItemsLoading = true)
         updateWarnings(selectedWallet = selectedWallet)
     }
 
@@ -137,6 +140,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = selectedWallet.walletId,
                 currency = cryptoCurrency,
+                derivationPath = cryptoCurrency.network.derivationPath,
             )
                 .distinctUntilChanged()
                 .onEach { uiState = stateFactory.getStateWithNotifications(it) }
@@ -148,6 +152,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         getCurrencyStatusUpdatesUseCase(
             userWalletId = selectedWallet.walletId,
             currencyId = cryptoCurrency.id,
+            derivationPath = cryptoCurrency.network.derivationPath,
         )
             .distinctUntilChanged()
             .onEach { either ->
@@ -162,13 +167,19 @@ internal class TokenDetailsViewModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun updateTxHistory(refresh: Boolean = false) {
+    /**
+     * @param refresh - invalidate cache and get data from remote
+     * @param showItemsLoading - show loading items placeholder.
+     */
+    @Suppress("UnusedPrivateMember") // will be removed after implement caching
+    private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean) {
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 network = cryptoCurrency.network,
             )
 
-            if (!refresh) {
+            // if countEither is left, handling error state run inside getLoadingTxHistoryState
+            if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
                 uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
             }
 
@@ -211,7 +222,8 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onReloadClick() {
         analyticsEventsHandler.send(TokenScreenEvent.ButtonReload(cryptoCurrency.symbol))
-        updateTxHistory()
+        uiState = stateFactory.getLoadingTxHistoryState()
+        updateTxHistory(refresh = true, showItemsLoading = true)
     }
 
     override fun onSendClick() {
@@ -237,6 +249,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             getNetworkCoinStatusUseCase(
                 userWalletId = wallet.walletId,
                 networkId = status.currency.network.id,
+                derivationPath = status.currency.network.derivationPath,
             )
                 .take(count = 1)
                 .collectLatest {
@@ -358,13 +371,23 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getRefreshingState()
 
         viewModelScope.launch(dispatchers.io) {
-            fetchCurrencyStatusUseCase.invoke(
-                userWalletId = wallet.walletId,
-                id = cryptoCurrency.id,
-                refresh = true,
-            )
-            updateTxHistory(refresh = true)
-            updateWarnings(wallet)
+            listOf(
+                async {
+                    fetchCurrencyStatusUseCase.invoke(
+                        userWalletId = wallet.walletId,
+                        id = cryptoCurrency.id,
+                        derivationPath = cryptoCurrency.network.derivationPath,
+                        refresh = true,
+                    )
+                },
+                async {
+                    updateTxHistory(
+                        refresh = true,
+                        showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
+                    )
+                },
+                async { updateWarnings(wallet) },
+            ).awaitAll()
             uiState = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }

@@ -24,12 +24,14 @@ class GetCurrencyWarningsUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
+        derivationPath: Network.DerivationPath,
     ): Flow<Set<CryptoCurrencyWarning>> {
         return combine(
             getFeeWarningFlow(
                 userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
+                derivationPath = derivationPath,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
@@ -51,6 +53,7 @@ class GetCurrencyWarningsUseCase(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): Flow<CryptoCurrencyWarning?> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -60,8 +63,8 @@ class GetCurrencyWarningsUseCase(
         )
 
         return combine(
-            operations.getCurrencyStatusFlow(currencyId).map { it.getOrNull() },
-            operations.getNetworkCoinFlow(networkId).map { it.getOrNull() },
+            operations.getCurrencyStatusFlow(currencyId, derivationPath).map { it.getOrNull() },
+            operations.getNetworkCoinFlow(networkId, derivationPath).map { it.getOrNull() },
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {
