@@ -36,16 +36,18 @@ class FetchCurrencyStatusUseCase(
      *
      * @param userWalletId The ID of the user's wallet.
      * @param id The ID of the cryptocurrency.
+     * @param derivationPath currency derivation path.
      * @param refresh Indicates whether to force a refresh of the status data.
      * @return An [Either] representing success (Right) or an error (Left) in fetching the status.
      */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
         refresh: Boolean = false,
     ): Either<CurrencyStatusError, Unit> {
         return either {
-            val currency = getCurrency(userWalletId, id)
+            val currency = getCurrency(userWalletId, id, derivationPath)
 
             fetchCurrencyStatus(userWalletId, currency, refresh)
         }
@@ -87,8 +89,9 @@ class FetchCurrencyStatusUseCase(
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
-        return catch({ currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id) }) {
+        return catch({ currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id, derivationPath) }) {
             raise(CurrencyStatusError.DataError(it))
         }
     }
