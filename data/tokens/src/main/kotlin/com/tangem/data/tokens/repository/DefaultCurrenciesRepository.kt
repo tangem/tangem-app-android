@@ -186,6 +186,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): CryptoCurrency = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
@@ -194,10 +195,14 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse, derivationPath.value)
     }
 
-    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+    override suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -207,15 +212,12 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
         val blockchain = Blockchain.fromId(networkId.value)
-        val derivationPath = blockchain
-            .derivationPath(userWallet.scanResponse.derivationStyleProvider.getDerivationStyle())
-            ?.rawPath
+        val blockchainNetworkId = blockchain.toNetworkId()
+        val coinId = blockchain.toCoinId()
 
         val storedCoin = storedTokens.tokens
             .find {
-                it.networkId == blockchain.toNetworkId() &&
-                    it.id == blockchain.toCoinId() &&
-                    it.derivationPath == derivationPath
+                it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
             } ?: error("Coin in this network $networkId not found")
 
         val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
