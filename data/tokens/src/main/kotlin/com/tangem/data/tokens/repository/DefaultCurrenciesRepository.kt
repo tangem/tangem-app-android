@@ -107,6 +107,7 @@ internal class DefaultCurrenciesRepository(
                     derivationStyleProvider = getUserWallet(userWalletId).scanResponse.derivationStyleProvider,
                 )
             }
+            .distinct()
     }
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
@@ -186,6 +187,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): CryptoCurrency = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
@@ -194,10 +196,14 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse)
+        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse, derivationPath.value)
     }
 
-    override suspend fun getNetworkCoin(userWalletId: UserWalletId, networkId: Network.ID): CryptoCurrency.Coin {
+    override suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
 
@@ -207,15 +213,12 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
         val blockchain = Blockchain.fromId(networkId.value)
-        val derivationPath = blockchain
-            .derivationPath(userWallet.scanResponse.derivationStyleProvider.getDerivationStyle())
-            ?.rawPath
+        val blockchainNetworkId = blockchain.toNetworkId()
+        val coinId = blockchain.toCoinId()
 
         val storedCoin = storedTokens.tokens
             .find {
-                it.networkId == blockchain.toNetworkId() &&
-                    it.id == blockchain.toCoinId() &&
-                    it.derivationPath == derivationPath
+                it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
             } ?: error("Coin in this network $networkId not found")
 
         val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
@@ -277,7 +280,7 @@ internal class DefaultCurrenciesRepository(
         )
 
         userTokensStore.store(userWallet.walletId, response)
-        fetchUserMarketCoinsByIds(userWalletId, response)
+        fetchExchangeableUserMarketCoinsByIds(userWalletId, response)
     }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
@@ -285,10 +288,15 @@ internal class DefaultCurrenciesRepository(
         tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
     }
 
-    private suspend fun fetchUserMarketCoinsByIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
+    private suspend fun fetchExchangeableUserMarketCoinsByIds(
+        userWalletId: UserWalletId,
+        userTokens: UserTokensResponse,
+    ) {
         try {
-            val networkIds = userTokens.tokens.joinToString(separator = ",") { it.networkId }
-            val response = tangemTechApi.getCoins(networkIds = networkIds)
+            val networkIds = userTokens.tokens
+                .distinctBy { it.networkId }
+                .joinToString(separator = ",") { it.networkId }
+            val response = tangemTechApi.getCoins(networkIds = networkIds, exchangeable = true)
 
             userMarketCoinsStore.store(userWalletId, response)
         } catch (e: Throwable) {
