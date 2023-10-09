@@ -167,6 +167,7 @@ internal object WalletPreviewData {
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
+            isBalanceHidden = false,
         )
     }
 
