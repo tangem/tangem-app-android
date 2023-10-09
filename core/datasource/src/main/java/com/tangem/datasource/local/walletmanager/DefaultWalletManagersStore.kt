@@ -33,6 +33,10 @@ internal class DefaultWalletManagersStore(
         }
     }
 
+    override suspend fun getAllSync(userWalletId: UserWalletId): List<WalletManager> {
+        return getSyncOrNull(userWalletId) ?: emptyList()
+    }
+
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {
         val walletManagers = getSyncOrNull(userWalletId)
 
