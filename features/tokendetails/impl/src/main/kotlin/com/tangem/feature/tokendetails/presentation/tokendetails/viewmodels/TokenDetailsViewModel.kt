@@ -140,6 +140,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = selectedWallet.walletId,
                 currency = cryptoCurrency,
+                derivationPath = cryptoCurrency.network.derivationPath,
             )
                 .distinctUntilChanged()
                 .onEach { uiState = stateFactory.getStateWithNotifications(it) }
@@ -151,6 +152,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         getCurrencyStatusUpdatesUseCase(
             userWalletId = selectedWallet.walletId,
             currencyId = cryptoCurrency.id,
+            derivationPath = cryptoCurrency.network.derivationPath,
         )
             .distinctUntilChanged()
             .onEach { either ->
@@ -247,6 +249,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             getNetworkCoinStatusUseCase(
                 userWalletId = wallet.walletId,
                 networkId = status.currency.network.id,
+                derivationPath = status.currency.network.derivationPath,
             )
                 .take(count = 1)
                 .collectLatest {
@@ -373,6 +376,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     fetchCurrencyStatusUseCase.invoke(
                         userWalletId = wallet.walletId,
                         id = cryptoCurrency.id,
+                        derivationPath = cryptoCurrency.network.derivationPath,
                         refresh = true,
                     )
                 },
