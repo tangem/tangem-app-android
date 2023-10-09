@@ -20,13 +20,10 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
         currencyId: CryptoCurrency.ID,
         response: UserTokensResponse,
         scanResponse: ScanResponse,
+        derivationPath: String?,
     ): CryptoCurrency {
         val responseTokenId = currencyId.rawCurrencyId
-        val blockchain = Blockchain.fromId(currencyId.rawNetworkId)
-        val networkId = blockchain.toNetworkId()
-        val derivationPath = blockchain
-            .derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-            ?.rawPath
+        val networkId = Blockchain.fromId(currencyId.rawNetworkId).toNetworkId()
 
         val token = requireNotNull(
             value = response.tokens
