@@ -38,12 +38,6 @@ internal class WalletUpdateCardCountConverter(
                                 ),
                                 cardCount = currentWalletProvider().getCardsCount(),
                             )
-                            is WalletCardState.HiddenContent -> walletCard.copy(
-                                additionalInfo = WalletAdditionalInfoFactory.resolve(
-                                    wallet = currentWalletProvider(),
-                                ),
-                                cardCount = currentWalletProvider().getCardsCount(),
-                            )
                             else -> walletCard
                         }
                     } else {

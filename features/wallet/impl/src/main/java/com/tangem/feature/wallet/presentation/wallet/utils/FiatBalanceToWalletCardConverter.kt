@@ -14,7 +14,6 @@ internal class FiatBalanceToWalletCardConverter(
     private val currentState: WalletCardState,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val currentWalletProvider: Provider<UserWallet>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<FiatBalance, WalletCardState> {
 
     override fun convert(value: FiatBalance): WalletCardState {
@@ -42,36 +41,19 @@ internal class FiatBalanceToWalletCardConverter(
     private fun FiatBalance.Loaded.convertToWalletCardState(): WalletCardState {
         val appCurrency = appCurrencyProvider()
 
-        return if (isBalanceHiddenProvider()) {
-            WalletCardState.HiddenContent(
-                id = currentState.id,
-                title = currentState.title,
-                imageResId = currentState.imageResId,
-                onRenameClick = currentState.onRenameClick,
-                onDeleteClick = currentState.onDeleteClick,
-                balance = formatFiatAmount(
-                    fiatAmount = this.amount,
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                ),
-                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
-                cardCount = currentWalletProvider().getCardsCount(),
-            )
-        } else {
-            WalletCardState.Content(
-                id = currentState.id,
-                title = currentState.title,
-                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
-                imageResId = currentState.imageResId,
-                onRenameClick = currentState.onRenameClick,
-                onDeleteClick = currentState.onDeleteClick,
-                balance = formatFiatAmount(
-                    fiatAmount = this.amount,
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                ),
-                cardCount = currentWalletProvider().getCardsCount(),
-            )
-        }
+        return WalletCardState.Content(
+            id = currentState.id,
+            title = currentState.title,
+            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
+            imageResId = currentState.imageResId,
+            onRenameClick = currentState.onRenameClick,
+            onDeleteClick = currentState.onDeleteClick,
+            balance = formatFiatAmount(
+                fiatAmount = this.amount,
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            ),
+            cardCount = currentWalletProvider().getCardsCount(),
+        )
     }
 }
