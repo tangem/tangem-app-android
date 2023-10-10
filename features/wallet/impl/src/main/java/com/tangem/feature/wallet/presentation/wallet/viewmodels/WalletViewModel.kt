@@ -726,7 +726,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onTokenItemClick(currency: CryptoCurrency) {
         analyticsEventsHandler.send(PortfolioEvent.TokenTapped)
-        router.openTokenDetails(currency = currency)
+        router.openTokenDetails(getSelectedWallet().walletId, currency)
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -963,7 +963,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getSingleCurrencyContent(index: Int) {
         val wallet = getWallet(index)
-        getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = wallet.walletId)
+        getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
             .distinctUntilChanged()
             .onEach { maybeCryptoCurrencyStatus ->
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
@@ -976,8 +976,8 @@ internal class WalletViewModel @Inject constructor(
                     }
 
                     updateNotifications(index)
-                    updateButtons(userWalletId = wallet.walletId, currencyStatus = status)
-                    updateTxHistory(status.currency)
+                    updateButtons(wallet.walletId, status)
+                    updateTxHistory(wallet.walletId, status.currency, refresh = false)
                 }
             }
             .flowOn(dispatchers.io)
@@ -985,9 +985,12 @@ internal class WalletViewModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun updateTxHistory(currency: CryptoCurrency) {
+    private fun updateTxHistory(userWalletId: UserWalletId, currency: CryptoCurrency, refresh: Boolean) {
         viewModelScope.launch(dispatchers.io) {
-            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(currency.network)
+            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
+                userWalletId = userWalletId,
+                network = currency.network,
+            )
 
             uiState = stateFactory.getLoadingTxHistoryState(
                 itemsCountEither = txHistoryItemsCountEither,
@@ -995,7 +998,11 @@ internal class WalletViewModel @Inject constructor(
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
-                    txHistoryEither = txHistoryItemsUseCase(currency = currency).map {
+                    txHistoryEither = txHistoryItemsUseCase(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        refresh = refresh,
+                    ).map {
                         it.cachedIn(viewModelScope)
                     },
                 )
@@ -1057,6 +1064,10 @@ internal class WalletViewModel @Inject constructor(
 
             uiState = stateFactory.getRefreshedState()
             uiState = result.fold(stateFactory::getStateByCurrencyStatusError) { uiState }
+
+            singleWalletCryptoCurrencyStatus?.let {
+                updateTxHistory(wallet.walletId, it.currency, refresh = true)
+            }
         }.saveIn(refreshContentJobHolder)
     }
 
@@ -1089,6 +1100,13 @@ internal class WalletViewModel @Inject constructor(
             value = wallets.getOrNull(index),
             lazyMessage = { "WalletsList doesn't contain element with index = $index" },
         )
+    }
+
+    private fun getSelectedWallet(): UserWallet {
+        val state = uiState as? WalletState.ContentState
+            ?: error("Unable to get selected user wallet")
+
+        return getWallet(state.walletsListConfig.selectedWalletIndex)
     }
 
     private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
