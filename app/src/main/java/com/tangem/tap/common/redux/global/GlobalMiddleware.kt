@@ -29,7 +29,8 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.walletCurrenciesManager
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -173,6 +174,26 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.SetTopUpController -> {
             walletCurrenciesManager.addListener(action.topUpController)
+        }
+        is GlobalAction.UpdateUserWalletsListManager -> {
+            /*
+             * If UserWalletsListManager's implementation is changed,
+             * then all selectedUserWallet's observers is became irrelevant
+             */
+            action.manager.selectedUserWallet
+                .distinctUntilChanged()
+                .onEach { userWallet ->
+                    store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
+                        infoHolder.setCardInfo(data = userWallet.scanResponse)
+
+                        store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+                            .getAll(userWalletId = userWallet.walletId)
+                            .onEach(infoHolder::setWalletsInfo)
+                            .launchIn(scope)
+                    }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(scope)
         }
     }
 }
