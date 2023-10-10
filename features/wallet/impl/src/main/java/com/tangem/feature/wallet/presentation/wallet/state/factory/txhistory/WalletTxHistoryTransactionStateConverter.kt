@@ -1,7 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
-import com.tangem.common.Provider
-import com.tangem.common.Strings
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -13,7 +11,6 @@ import com.tangem.utils.toFormattedCurrencyString
 class WalletTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) : Converter<TxHistoryItem, TransactionState> {
 
     override fun convert(value: TxHistoryItem): TransactionState {
@@ -146,8 +143,6 @@ class WalletTxHistoryTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (isBalanceHiddenProvider()) return Strings.STARS
-
         val prefix = when (direction) {
             is TxHistoryItem.TransactionDirection.Incoming -> "+"
             is TxHistoryItem.TransactionDirection.Outgoing -> "-"
