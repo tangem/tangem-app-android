@@ -3,7 +3,6 @@ package com.tangem.core.ui.res
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -16,7 +15,7 @@ internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
 @Composable
 fun TangemTheme(
     isDark: Boolean = false,
-    typography: Typography = TangemTheme.typography,
+    typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     content: @Composable () -> Unit,
 ) {
@@ -25,10 +24,8 @@ fun TangemTheme(
         .also { it.update(themeColors) }
 
     val shapes = remember { TangemShapes(dimens) }
-
     MaterialTheme(
         colors = materialThemeColors(colors = themeColors, isDark = isDark),
-        typography = typography,
     ) {
         CompositionLocalProvider(
             LocalTangemColors provides rememberedColors,
@@ -51,7 +48,7 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemColors.current
 
-    val typography: Typography
+    val typography: TangemTypography
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemTypography.current
@@ -196,7 +193,7 @@ private val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
 }
 
 private val LocalTangemTypography = staticCompositionLocalOf {
-    TangemTypography
+    TangemTypography()
 }
 
 private val LocalTangemDimens = staticCompositionLocalOf {

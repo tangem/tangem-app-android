@@ -6,13 +6,14 @@ import arrow.core.raise.either
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
-
-class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
+import com.tangem.domain.wallets.models.UserWalletId
 // [REDACTED_TODO_COMMENT]
-    suspend operator fun invoke(network: Network): Either<TxHistoryStateError, Int> {
+class GetTxHistoryItemsCountUseCase(private val repository: TxHistoryRepository) {
+
+    suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<TxHistoryStateError, Int> {
         return either {
             catch(
-                block = { repository.getTxHistoryItemsCount(network) },
+                block = { repository.getTxHistoryItemsCount(userWalletId, network) },
                 catch = { throwable ->
                     raise(
                         when (throwable) {
