@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -9,6 +8,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -34,7 +34,7 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): TokenActionButtonConfig? {
         if (actionsState is TokenActionsState.ActionState.Send &&
-            cryptoCurrencyStatus.value.amount?.isZero() == true
+            cryptoCurrencyStatus.value.amount.isNullOrZero()
         ) {
             return null
         }
