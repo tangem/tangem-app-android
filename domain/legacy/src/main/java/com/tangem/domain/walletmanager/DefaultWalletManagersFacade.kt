@@ -57,6 +57,28 @@ class DefaultWalletManagersFacade(
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
     }
 
+    override suspend fun updatePendingTransactions(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): UpdateWalletManagerResult {
+        val userWallet = getUserWallet(userWalletId)
+        val blockchain = Blockchain.fromId(network.id.value)
+        val derivationPath = network.derivationPath.value
+
+        if (derivationPath != null && !userWallet.scanResponse.hasDerivation(blockchain, derivationPath)) {
+            Timber.w("Derivation missed for: $blockchain")
+            return UpdateWalletManagerResult.MissedDerivation
+        }
+
+        val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
+        if (walletManager == null || blockchain == Blockchain.Unknown) {
+            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
+            return UpdateWalletManagerResult.Unreachable
+        }
+
+        return getLastWalletManagerResult(walletManager)
+    }
+
     override suspend fun getExploreUrl(
         userWalletId: UserWalletId,
         network: Network,
@@ -186,6 +208,18 @@ class DefaultWalletManagersFacade(
         return try {
             walletManager.update()
 
+            resultFactory.getResult(walletManager)
+        } catch (e: BlockchainSdkError.AccountNotFound) {
+            resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
+        } catch (e: Throwable) {
+            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+
+            UpdateWalletManagerResult.Unreachable
+        }
+    }
+
+    private fun getLastWalletManagerResult(walletManager: WalletManager): UpdateWalletManagerResult {
+        return try {
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
             resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
