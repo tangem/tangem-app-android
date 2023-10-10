@@ -37,6 +37,15 @@ interface WalletManagersFacade {
     ): UpdateWalletManagerResult
 
     /**
+     * Returns [UpdateWalletManagerResult] with last pending transactions
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param network The network.
+     * @return The result of updating the wallet manager.
+     */
+    suspend fun updatePendingTransactions(userWalletId: UserWalletId, network: Network): UpdateWalletManagerResult
+
+    /**
      * Returns network explorer URL of the wallet manager associated with a user's wallet and network.
      *
      * @param userWalletId The ID of the user's wallet.
