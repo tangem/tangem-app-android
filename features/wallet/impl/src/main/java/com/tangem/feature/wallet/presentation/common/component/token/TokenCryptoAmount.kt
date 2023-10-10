@@ -11,7 +11,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.common.Strings
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.CryptoAmountState as TokenCryptoAmountState
 
@@ -49,7 +48,7 @@ private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier) {
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTypography.body2,
+        style = TangemTheme.typography.body2,
     )
 }
 
