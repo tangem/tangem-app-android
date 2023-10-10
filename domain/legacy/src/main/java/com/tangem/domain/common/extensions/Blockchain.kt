@@ -141,6 +141,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.NearTestnet -> TODO()
+        Blockchain.Near -> TODO()
     }
 }
 
@@ -187,6 +189,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.Near -> TODO()
+        Blockchain.NearTestnet -> TODO()
     }
 }
 
