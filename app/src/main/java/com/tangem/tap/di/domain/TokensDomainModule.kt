@@ -30,6 +30,14 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideFetchPendingTransactionsUseCase(
+        networksRepository: NetworksRepository,
+    ): FetchPendingTransactionsUseCase {
+        return FetchPendingTransactionsUseCase(networksRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
