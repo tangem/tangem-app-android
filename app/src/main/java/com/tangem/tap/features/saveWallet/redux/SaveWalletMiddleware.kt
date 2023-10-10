@@ -107,10 +107,11 @@ internal class SaveWalletMiddleware {
                     store.dispatchWithMain(SaveWalletAction.Save.Error(error))
                 }
                 .doOnSuccess {
-                    preferencesStorage.shouldSaveUserWallets = true
+                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        .saveShouldSaveUserWallets(item = true)
+
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
-                        preferencesStorage.shouldSaveAccessCodes = true
                         store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
                             .setAccessCodeRequestPolicy(
                                 isBiometricsRequestPolicy = userWallet.hasAccessCode,

@@ -81,7 +81,8 @@ class TapWalletManager(
             store.dispatchWalletAction(action = WalletAction.UserWalletChanged(userWallet))
             store.dispatchWalletAction(
                 action = WalletAction.UpdateCanSaveUserWallets(
-                    canSaveUserWallets = preferencesStorage.shouldSaveUserWallets,
+                    canSaveUserWallets = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        .shouldSaveUserWalletsSync(),
                 ),
             )
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
