@@ -82,7 +82,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
     }
