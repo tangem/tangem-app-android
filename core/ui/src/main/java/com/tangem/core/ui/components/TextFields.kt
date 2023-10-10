@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=213%3A218&t=TmfD6UBHPg9uYfev-4)
@@ -103,7 +102,7 @@ private fun TangemTextField(
                 if (!label.isNullOrEmpty()) {
                     Text(
                         text = label,
-                        style = TangemTheme.typography.caption,
+                        style = TangemTheme.typography.caption2,
                         color = colors.labelColor(
                             enabled = enabled,
                             error = isError,
@@ -161,7 +160,7 @@ private fun TangemTextField(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     text = caption,
-                    style = TangemTypography.body1,
+                    style = TangemTheme.typography.body1,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
             }
