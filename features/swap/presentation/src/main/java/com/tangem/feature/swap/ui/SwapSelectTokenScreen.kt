@@ -150,7 +150,7 @@ private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -
             SpacerW2()
             Text(
                 text = token.symbol,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
         }
@@ -160,7 +160,7 @@ private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -
         if (!token.available) {
             Text(
                 text = stringResource(id = R.string.swapping_token_not_available),
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
         } else if (token.addedTokenBalanceData != null) {
@@ -177,7 +177,7 @@ private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -
                 SpacerW2()
                 Text(
                     text = token.addedTokenBalanceData.amount.orEmpty(),
-                    style = TangemTheme.typography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
