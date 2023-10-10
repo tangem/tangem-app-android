@@ -30,7 +30,6 @@ internal class WalletLoadedTokensListConverter(
     private val tokenListErrorConverter: TokenListErrorConverter,
     appCurrencyProvider: Provider<AppCurrency>,
     currentWalletProvider: Provider<UserWallet>,
-    isBalanceHiddenProvider: Provider<Boolean>,
     clickIntents: WalletClickIntents,
 ) : Converter<Either<TokenListError, TokenList>, WalletState> {
 
@@ -38,7 +37,6 @@ internal class WalletLoadedTokensListConverter(
         currentStateProvider = currentStateProvider,
         currentWalletProvider = currentWalletProvider,
         appCurrencyProvider = appCurrencyProvider,
-        isBalanceHiddenProvider = isBalanceHiddenProvider,
         clickIntents = clickIntents,
     )
 
