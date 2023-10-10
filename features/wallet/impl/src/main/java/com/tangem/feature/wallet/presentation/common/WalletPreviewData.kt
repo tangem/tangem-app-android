@@ -57,19 +57,6 @@ internal object WalletPreviewData {
         )
     }
 
-    val walletCardHiddenContentState by lazy {
-        WalletCardState.HiddenContent(
-            id = UserWalletId("42"),
-            title = "Wallet 1",
-            imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _, _ -> },
-            onDeleteClick = {},
-            balance = "8923,05 $",
-            additionalInfo = TextReference.Str("3 cards • Seed phrase"),
-            cardCount = 1,
-        )
-    }
-
     val walletCardErrorState by lazy {
         WalletCardState.Error(
             id = UserWalletId("24"),
@@ -84,7 +71,6 @@ internal object WalletPreviewData {
         mapOf(
             UserWalletId(stringValue = "123") to walletCardContentState,
             UserWalletId(stringValue = "321") to walletCardLoadingState,
-            UserWalletId(stringValue = "42") to walletCardHiddenContentState,
             UserWalletId(stringValue = "24") to walletCardErrorState,
         )
     }
@@ -131,7 +117,6 @@ internal object WalletPreviewData {
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
             priceChangeState = TokenItemState.PriceChangeState.Unknown,
-            isBalanceHidden = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -155,7 +140,6 @@ internal object WalletPreviewData {
                 valueInPercent = "2.0%",
                 type = PriceChangeType.UP,
             ),
-            isBalanceHidden = false,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -167,7 +151,6 @@ internal object WalletPreviewData {
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "3 172,14 $"),
-            isBalanceHidden = false,
         )
     }
 
@@ -298,6 +281,7 @@ internal object WalletPreviewData {
                 onCancelClick = {},
             ),
             scrollListToTop = consumedEvent(),
+            isBalanceHidden = true,
         )
     }
 
