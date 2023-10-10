@@ -70,6 +70,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun providesShouldSaveUserWalletsSyncUseCase(
+        walletsRepository: WalletsRepository,
+    ): ShouldSaveUserWalletsSyncUseCase {
+        return ShouldSaveUserWalletsSyncUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun providesShouldSaveUserWalletsUseCase(walletsRepository: WalletsRepository): ShouldSaveUserWalletsUseCase {
         return ShouldSaveUserWalletsUseCase(walletsRepository = walletsRepository)
     }
