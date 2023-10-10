@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import java.math.BigDecimal
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "arbitrum-one" -> Blockchain.Arbitrum
@@ -70,6 +70,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
         "chia" -> Blockchain.Chia
         "chia/test" -> Blockchain.ChiaTestnet
+        "near" -> Blockchain.Near
+        "near/test" -> Blockchain.NearTestnet
         else -> null
     }
 }
@@ -141,8 +143,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
-        Blockchain.NearTestnet -> "TODO"
-        Blockchain.Near -> "TODO"
+        Blockchain.Near -> "near"
+        Blockchain.NearTestnet -> "near/test"
     }
 }
 
@@ -189,8 +191,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
-        Blockchain.Near -> "TODO"
-        Blockchain.NearTestnet -> "TODO"
+        Blockchain.Near -> "near"
+        Blockchain.NearTestnet -> "near/test"
     }
 }
 
