@@ -251,7 +251,7 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier,
                 textAlign = TextAlign.Start,
                 color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
         is TransactionState.Loading -> {
@@ -304,7 +304,7 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
         is TransactionState.Loading -> {

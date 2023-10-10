@@ -65,8 +65,8 @@ internal fun getCoinIconUrl(blockchain: Blockchain): String? {
 internal fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
     return any {
         val blockchain = getBlockchain(networkId = token.network.id)
-
-        it.id == blockchain.toCoinId()
+        val tokenDerivation = token.network.derivationPath.value
+        it.id == blockchain.toCoinId() && it.derivationPath == tokenDerivation
     }
 }
 

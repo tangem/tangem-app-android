@@ -15,7 +15,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TitleState as TokenTitleState
 
@@ -63,7 +62,7 @@ private fun CurrencyNameText(name: String, modifier: Modifier = Modifier) {
         color = TangemTheme.colors.text.primary1,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
-        style = TangemTypography.subtitle2,
+        style = TangemTheme.typography.subtitle2,
     )
 }
 
