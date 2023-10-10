@@ -169,7 +169,7 @@ private fun SubtitleView(subtitle: String, icon: Painter?) {
             text = subtitle,
             color = TangemTheme.colors.text.secondary,
             maxLines = 1,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
         )
     }
 }
