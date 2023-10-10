@@ -51,6 +51,12 @@ internal class DefaultNetworksRepository(
         }
     }.cancellable()
 
+    override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
+        withContext(dispatchers.io) {
+            fetchNetworksPendingTransactionsIfCacheExpired(userWalletId, networks, false)
+        }
+    }
+
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
         networks: Set<Network>,
@@ -76,6 +82,22 @@ internal class DefaultNetworksRepository(
         }
     }
 
+    private suspend fun fetchNetworksPendingTransactionsIfCacheExpired(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        refresh: Boolean,
+    ) {
+        coroutineScope {
+            networks
+                .map { network ->
+                    async {
+                        fetchNetworkPendingTransactionsIfCacheExpired(userWalletId, network, refresh)
+                    }
+                }
+                .awaitAll()
+        }
+    }
+
     private suspend fun fetchNetworkStatusIfCacheExpired(
         userWalletId: UserWalletId,
         network: Network,
@@ -88,6 +110,20 @@ internal class DefaultNetworksRepository(
         )
     }
 
+    private suspend fun fetchNetworkPendingTransactionsIfCacheExpired(
+        userWalletId: UserWalletId,
+        network: Network,
+        refresh: Boolean,
+    ) {
+        val key = getNetworksStatusesCacheKey(userWalletId, network)
+        cacheRegistry.invalidate(key)
+        cacheRegistry.invokeOnExpire(
+            key = key,
+            skipCache = refresh,
+            block = { fetchNetworkPendingTransactions(userWalletId, network) },
+        )
+    }
+
     private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, network: Network) {
         val currencies = getCurrencies(userWalletId, network)
 
@@ -95,6 +131,27 @@ internal class DefaultNetworksRepository(
             userWalletId = userWalletId,
             network = network,
             extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
+        )
+
+        withContext(NonCancellable) {
+            invalidateCacheKeyIfNeeded(userWalletId, network, result)
+        }
+
+        val networkStatus = networkStatusFactory.createNetworkStatus(
+            network = network,
+            result = result,
+            currencies = currencies.toSet(),
+        )
+
+        networksStatusesStore.store(userWalletId, networkStatus)
+    }
+
+    private suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, network: Network) {
+        val currencies = getCurrencies(userWalletId, network)
+
+        val result = walletManagersFacade.updatePendingTransactions(
+            userWalletId = userWalletId,
+            network = network,
         )
 
         withContext(NonCancellable) {
