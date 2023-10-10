@@ -48,15 +48,7 @@ internal fun WalletEventEffect(
                     clipboardManager.setText(AnnotatedString(value.address))
                     Toast.makeText(context, value.toast.resolveReference(resources), Toast.LENGTH_SHORT).show()
                 }
-                is WalletEvent.ShowAlert -> {
-                    onAlertConfigSet(
-                        WalletAlertState.DefaultAlert(
-                            title = value.title,
-                            message = value.message,
-                            onActionClick = value.onActionClick,
-                        ),
-                    )
-                }
+                is WalletEvent.ShowAlert -> onAlertConfigSet(value.state)
                 is WalletEvent.RateApp -> {
                     val reviewManager = ReviewManagerFactory.create(context)
                     val requestTask = reviewManager.requestReviewFlow()
