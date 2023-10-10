@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
@@ -126,7 +127,11 @@ private fun WalletContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item {
-                    WalletsList(config = state.walletsListConfig, lazyListState = walletsListState)
+                    WalletsList(
+                        config = state.walletsListConfig,
+                        lazyListState = walletsListState,
+                        isBalanceHidden = state.isBalanceHidden,
+                    )
                 }
 
                 if (state is WalletSingleCurrencyState) {
@@ -149,18 +154,7 @@ private fun WalletContent(
                     modifier = movableItemModifier,
                 )
 
-                if (state is WalletMultiCurrencyState) {
-                    val contentTokenListState = state.tokensListState as? WalletTokensListState.ContentState
-                    val organizeTokensButton = contentTokenListState?.organizeTokensButton
-
-                    if (organizeTokensButton is OrganizeTokensButtonState.Visible) {
-                        organizeTokensButton(
-                            modifier = itemModifier,
-                            isEnabled = organizeTokensButton.isEnabled,
-                            onClick = organizeTokensButton.onClick,
-                        )
-                    }
-                }
+                organizeTokens(state = state, itemModifier = itemModifier)
             }
         }
     }
@@ -173,6 +167,21 @@ private fun WalletContent(
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = onAutoScrollReset,
     )
+}
+
+internal fun LazyListScope.organizeTokens(state: WalletState.ContentState, itemModifier: Modifier) {
+    if (state is WalletMultiCurrencyState) {
+        val contentTokenListState = state.tokensListState as? WalletTokensListState.ContentState
+        val organizeTokensButton = contentTokenListState?.organizeTokensButton
+
+        if (organizeTokensButton is OrganizeTokensButtonState.Visible) {
+            organizeTokensButton(
+                modifier = itemModifier,
+                isEnabled = organizeTokensButton.isEnabled,
+                onClick = organizeTokensButton.onClick,
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
