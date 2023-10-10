@@ -7,7 +7,7 @@ import com.tangem.utils.converter.Converter
 internal class CurrencyConverter : Converter<AppCurrency, AppCurrencySelectorState.Currency> {
 
     override fun convert(value: AppCurrency): AppCurrencySelectorState.Currency {
-        val fullCurrencyName = with(value) { "$name ($code) - $symbol" }
+        val fullCurrencyName = with(value) { "$name ($code) — $symbol" }
 
         return AppCurrencySelectorState.Currency(value.code, fullCurrencyName)
     }
