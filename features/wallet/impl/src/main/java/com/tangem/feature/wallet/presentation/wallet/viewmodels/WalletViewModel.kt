@@ -47,6 +47,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -119,6 +120,7 @@ internal class WalletViewModel @Inject constructor(
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     wasCardScannedUseCase: WasCardScannedUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isDemoCardUseCase: IsDemoCardUseCase,
@@ -702,7 +704,7 @@ internal class WalletViewModel @Inject constructor(
                 ?.getOrNull()
 
             if (currencyStatus != null) {
-                router.openTxHistoryWebsite(
+                router.openUrl(
                     url = getExploreUrlUseCase(
                         userWalletId = wallet.walletId,
                         network = currencyStatus.currency.network,
@@ -826,6 +828,26 @@ internal class WalletViewModel @Inject constructor(
                     isShow = false,
                 ),
             )
+        }
+    }
+
+    override fun onTransactionClick(txHash: String) {
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getWallet(
+                index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
+            )
+            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
+                .firstOrNull()
+                ?.getOrNull()
+
+            if (currencyStatus != null) {
+                router.openUrl(
+                    url = getExplorerTransactionUrlUseCase(
+                        txHash = txHash,
+                        networkId = currencyStatus.currency.network.id,
+                    ),
+                )
+            }
         }
     }
 

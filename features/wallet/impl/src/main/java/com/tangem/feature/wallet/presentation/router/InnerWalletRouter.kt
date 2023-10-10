@@ -40,7 +40,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun openOnboardingScreen()
 
     /** Open transaction history website by [url] */
-    fun openTxHistoryWebsite(url: String)
+    fun openUrl(url: String)
 
     /** Open token details screen */
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)

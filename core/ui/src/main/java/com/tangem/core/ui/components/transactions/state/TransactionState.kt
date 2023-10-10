@@ -20,6 +20,7 @@ sealed interface TransactionState {
      * @property timestamp timestamp
      * @property status    transaction status
      * @property direction transaction direction
+     * @property onClick   Lambda be invoked when manage button is clicked
      */
     sealed class Content : TransactionState {
 
@@ -28,6 +29,7 @@ sealed interface TransactionState {
         abstract val timestamp: String
         abstract val status: Status
         abstract val direction: Direction
+        abstract val onClick: () -> Unit
 
         fun copySealed(
             txHash: String = this.txHash,
@@ -73,6 +75,7 @@ sealed interface TransactionState {
         override val timestamp: String,
         override val status: Status,
         override val direction: Direction,
+        override val onClick: () -> Unit,
     ) : Content()
 
     /**
@@ -91,6 +94,7 @@ sealed interface TransactionState {
         override val timestamp: String,
         override val status: Status,
         override val direction: Direction,
+        override val onClick: () -> Unit,
     ) : Content()
 
     /**
@@ -109,6 +113,7 @@ sealed interface TransactionState {
         override val timestamp: String,
         override val status: Status,
         override val direction: Direction,
+        override val onClick: () -> Unit,
     ) : Content()
 
     data class Custom(
@@ -118,6 +123,7 @@ sealed interface TransactionState {
         override val timestamp: String,
         override val status: Status,
         override val direction: Direction,
+        override val onClick: () -> Unit,
         val title: TextReference,
         val subtitle: TextReference,
     ) : Content()

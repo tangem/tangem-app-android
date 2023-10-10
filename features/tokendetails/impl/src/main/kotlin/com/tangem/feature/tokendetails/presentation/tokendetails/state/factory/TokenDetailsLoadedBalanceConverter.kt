@@ -13,6 +13,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryToTransactionStateConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -23,10 +24,11 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val symbol: String,
     private val decimals: Int,
+    private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals)
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals, clickIntents)
     }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
