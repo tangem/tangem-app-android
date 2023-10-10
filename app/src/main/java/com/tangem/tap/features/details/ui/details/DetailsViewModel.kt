@@ -10,6 +10,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -36,10 +37,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.Store
 
+// TODO: change to Android ViewModel [REDACTED_JIRA]
 internal class DetailsViewModel(
     private val store: Store<AppState>,
     private val darkThemeFeatureToggle: DarkThemeFeatureToggle,
-) { // TODO: change to Android ViewModel
+    private val walletsRepository: WalletsRepository,
+) {
 
     var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
         private set
@@ -186,8 +189,9 @@ internal class DetailsViewModel(
             .onEach { selectedUserWallet ->
                 store.dispatchWithMain(
                     DetailsAction.PrepareScreen(
-                        selectedUserWallet.scanResponse,
-                        darkThemeFeatureToggle.isDarkThemeEnabled,
+                        scanResponse = selectedUserWallet.scanResponse,
+                        darkThemeSwitchEnabled = darkThemeFeatureToggle.isDarkThemeEnabled,
+                        shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
                     ),
                 )
             }
