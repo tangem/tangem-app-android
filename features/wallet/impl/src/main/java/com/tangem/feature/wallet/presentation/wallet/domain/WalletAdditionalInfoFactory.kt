@@ -8,6 +8,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletAdditionalInfo
 import java.math.BigDecimal
 
 /**
@@ -25,7 +26,7 @@ internal object WalletAdditionalInfoFactory {
      * @param wallet            current wallet
      * @param currencyAmount    amount of currency
      */
-    fun resolve(wallet: UserWallet, currencyAmount: BigDecimal? = null): TextReference {
+    fun resolve(wallet: UserWallet, currencyAmount: BigDecimal? = null): WalletAdditionalInfo {
         return if (wallet.isMultiCurrency) {
             wallet.resolveMultiCurrencyInfo()
         } else {
@@ -33,9 +34,14 @@ internal object WalletAdditionalInfoFactory {
         }
     }
 
-    private fun UserWallet.resolveMultiCurrencyInfo(): TextReference {
+    private fun UserWallet.resolveMultiCurrencyInfo(): WalletAdditionalInfo {
         return if (isLocked) {
-            getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(R.string.common_locked)
+            WalletAdditionalInfo(
+                hideable = false,
+                content = getBackupInfoWithDivider(
+                    backupCardsCount = getCardsCount(),
+                ) + TextReference.Res(R.string.common_locked),
+            )
         } else {
             val cardTypeResolver = scanResponse.cardTypesResolver
             if (cardTypeResolver.isWallet2()) {
@@ -46,10 +52,14 @@ internal object WalletAdditionalInfoFactory {
         }
     }
 
-    private fun UserWallet.resolveWallet2Info(): TextReference {
+    private fun UserWallet.resolveWallet2Info(): WalletAdditionalInfo {
         return if (isImported) {
-            getBackupInfoWithDivider(backupCardsCount = getCardsCount()) +
-                TextReference.Res(id = R.string.common_seed_phrase)
+            WalletAdditionalInfo(
+                hideable = false,
+                content = getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(
+                    id = R.string.common_seed_phrase,
+                ),
+            )
         } else {
             getBackupInfo(backupCardsCount = getCardsCount())
         }
@@ -63,12 +73,14 @@ internal object WalletAdditionalInfoFactory {
         }
     }
 
-    private fun getBackupInfo(backupCardsCount: Int?): TextReference {
-        return if (backupCardsCount != null) {
+    private fun getBackupInfo(backupCardsCount: Int?): WalletAdditionalInfo {
+        val content = if (backupCardsCount != null) {
             getBackupInfoTextReference(count = backupCardsCount)
         } else {
             TextReference.EMPTY
         }
+
+        return WalletAdditionalInfo(hideable = false, content = content)
     }
 
     private fun getBackupInfoTextReference(count: Int): TextReference {
@@ -79,9 +91,9 @@ internal object WalletAdditionalInfoFactory {
         )
     }
 
-    private fun UserWallet.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): TextReference {
+    private fun UserWallet.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
         return if (isLocked) {
-            TextReference.Res(R.string.common_locked)
+            WalletAdditionalInfo(hideable = false, content = TextReference.Res(R.string.common_locked))
         } else {
             val blockchain = scanResponse.cardTypesResolver.getBlockchain()
             val amount = currencyAmount?.let {
@@ -92,7 +104,7 @@ internal object WalletAdditionalInfoFactory {
                 )
             }
 
-            TextReference.Str(value = amount.orEmpty())
+            WalletAdditionalInfo(hideable = true, content = TextReference.Str(value = amount.orEmpty()))
         }
     }
 }
