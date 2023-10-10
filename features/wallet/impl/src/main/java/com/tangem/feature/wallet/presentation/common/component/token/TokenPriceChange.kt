@@ -15,7 +15,6 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState.PriceChangeState as TokenPriceChangeState
@@ -87,7 +86,7 @@ private fun PriceChangeText(type: PriceChangeType?, text: String?) {
             },
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            style = TangemTypography.body2,
+            style = TangemTheme.typography.body2,
         )
     }
 }
