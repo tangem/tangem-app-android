@@ -291,7 +291,8 @@ class DetailsMiddleware {
 
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
-            if (preferencesStorage.shouldSaveUserWallets == enable) {
+            val walletsRepository = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+            if (walletsRepository.shouldSaveUserWalletsSync() == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
             }
@@ -379,7 +380,8 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
-                    preferencesStorage.shouldSaveUserWallets = true
+                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        .saveShouldSaveUserWallets(item = true)
 
                     store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                 }
@@ -395,7 +397,8 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
                     updateUserWalletsListManager(enableUserWalletsSaving = false)
-                    preferencesStorage.shouldSaveUserWallets = false
+                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        .saveShouldSaveUserWallets(item = false)
 
                     store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
