@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -70,7 +71,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // send
-        if (cryptoCurrencyStatus.value.amount?.signum() == 0) {
+        if (cryptoCurrencyStatus.value.amount.isNullOrZero()) {
             disabledList.add(TokenActionsState.ActionState.Send(false))
         } else {
             activeList.add(TokenActionsState.ActionState.Send(true))
