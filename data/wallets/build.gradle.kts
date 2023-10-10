@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.data.source.preferences)
     implementation(projects.domain.wallets)
