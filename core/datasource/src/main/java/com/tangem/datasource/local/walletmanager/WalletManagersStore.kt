@@ -15,6 +15,8 @@ interface WalletManagersStore {
         derivationPath: String?,
     ): WalletManager?
 
+    suspend fun getAllSync(userWalletId: UserWalletId): List<WalletManager>
+
     suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager)
 
     suspend fun clear()
