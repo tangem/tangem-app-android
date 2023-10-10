@@ -157,7 +157,7 @@ private fun TextsBlock(title: TextReference, subtitle: TextReference) {
         Text(
             text = subtitle.resolveReference(),
             color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
         )
     }
 }

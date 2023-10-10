@@ -34,7 +34,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
         ) {
             Text(
                 text = state.name,
-                style = TangemTheme.typography.h1,
+                style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.primary1,
             )
             NetworkInfoText(state.currency)
@@ -63,7 +63,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
             Text(
                 text = stringResource(id = R.string.common_main_network),
                 color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
         is TokenInfoBlockState.Currency.Token -> {
@@ -74,7 +74,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 val state = extractNetwork(tokenCurrency = currency)
                 Text(
                     text = state.normalText,
-                    style = TangemTheme.typography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
                 Icon(
@@ -85,7 +85,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 )
                 Text(
                     text = state.boldText,
-                    style = TangemTheme.typography.caption.copy(fontWeight = FontWeight.Medium),
+                    style = TangemTheme.typography.caption2.copy(fontWeight = FontWeight.Medium),
                     color = TangemTheme.colors.text.primary1,
                 )
             }
