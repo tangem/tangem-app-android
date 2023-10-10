@@ -24,6 +24,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
@@ -61,6 +62,8 @@ class OnboardingWalletFragment :
     internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
+
+    private val canSkipBackup by lazy { arguments?.getBoolean(OnboardingRouter.CAN_SKIP_BACKUP) ?: true }
 
     private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
@@ -255,7 +258,7 @@ class OnboardingWalletFragment :
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
             btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup)
+            btnWalletAlternativeAction.show(state.canSkipBackup && canSkipBackup)
         }
         animator.showBackupIntro(state)
     }
