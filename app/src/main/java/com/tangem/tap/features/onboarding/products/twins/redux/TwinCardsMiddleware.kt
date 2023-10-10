@@ -29,6 +29,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -292,10 +293,14 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
-                    if (preferencesStorage.shouldSaveUserWallets) {
-                        OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
-                    } else {
-                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                    scope.launch {
+                        val walletsRepository = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+
+                        if (walletsRepository.shouldSaveUserWalletsSync()) {
+                            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
+                        } else {
+                            store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                        }
                     }
                 }
             }
