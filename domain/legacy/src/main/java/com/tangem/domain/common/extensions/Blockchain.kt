@@ -74,7 +74,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
@@ -141,12 +141,12 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
-        Blockchain.NearTestnet -> TODO()
-        Blockchain.Near -> TODO()
+        Blockchain.NearTestnet -> "TODO"
+        Blockchain.Near -> "TODO"
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toCoinId(): String {
     return when (this) {
         Blockchain.Binance, Blockchain.BinanceTestnet, Blockchain.BSC, Blockchain.BSCTestnet -> "binancecoin"
@@ -189,8 +189,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
-        Blockchain.Near -> TODO()
-        Blockchain.NearTestnet -> TODO()
+        Blockchain.Near -> "TODO"
+        Blockchain.NearTestnet -> "TODO"
     }
 }
 
