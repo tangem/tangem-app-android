@@ -106,6 +106,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
+    private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
@@ -182,12 +183,18 @@ internal class WalletViewModel @Inject constructor(
             }
         }
 
-        getWalletsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
-            .distinctUntilChanged()
-            .onEach(::updateWallets)
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
+        viewModelScope.launch(dispatchers.io) {
+            shouldSaveUserWalletsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .collectLatest {
+                    getWalletsUseCase()
+                        .flowWithLifecycle(owner.lifecycle)
+                        .distinctUntilChanged()
+                        .onEach(::updateWallets)
+                        .flowOn(dispatchers.io)
+                        .launchIn(viewModelScope)
+                }
+        }
 
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
@@ -274,7 +281,7 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBackClick() {
         viewModelScope.launch(dispatchers.main) {
-            router.popBackStack(screen = if (shouldSaveUserWalletsUseCase()) AppScreen.Welcome else AppScreen.Home)
+            router.popBackStack(screen = if (shouldSaveUserWalletsSyncUseCase()) AppScreen.Welcome else AppScreen.Home)
         }
     }
 
