@@ -66,6 +66,9 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
 
+    //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
+    implementation(projects.features.onboarding)
+
     /** Feature Apis */
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokendetails.api)
