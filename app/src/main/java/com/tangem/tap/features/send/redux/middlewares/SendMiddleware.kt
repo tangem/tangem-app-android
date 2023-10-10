@@ -12,7 +12,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
-import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
@@ -174,33 +173,35 @@ private fun sendTransaction(
     transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
 
     scope.launch {
-        val updateWalletResult = walletManager.safeUpdate()
-        if (updateWalletResult is Result.Failure) {
-            withMainContext {
-                when (val error = updateWalletResult.error) {
-                    is TapError -> store.dispatchErrorNotification(error)
-                    is BlockchainSdkError -> {
-                        updateFeedbackManagerInfo(
-                            walletManager = walletManager,
-                            amountToSend = amountToSend,
-                            feeAmount = fee.amount,
-                            destinationAddress = destinationAddress,
-                        )
-                        dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error = error))
-                    }
-                    else -> {
-                        val tapError = if (error.message == null) {
-                            TapError.UnknownError
-                        } else {
-                            TapError.CustomError(error.message!!)
-                        }
-                        store.dispatchErrorNotification(tapError)
-                    }
-                }
-                dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
-            }
-            return@launch
-        }
+        // TODO: Risky commented this part, unknown logic, need to test if removed
+        // TODO: [REDACTED_JIRA]
+        // val updateWalletResult = walletManager.safeUpdate()
+        // if (updateWalletResult is Result.Failure) {
+        //     withMainContext {
+        //         when (val error = updateWalletResult.error) {
+        //             is TapError -> store.dispatchErrorNotification(error)
+        //             is BlockchainSdkError -> {
+        //                 updateFeedbackManagerInfo(
+        //                     walletManager = walletManager,
+        //                     amountToSend = amountToSend,
+        //                     feeAmount = fee.amount,
+        //                     destinationAddress = destinationAddress,
+        //                 )
+        //                 dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error = error))
+        //             }
+        //             else -> {
+        //                 val tapError = if (error.message == null) {
+        //                     TapError.UnknownError
+        //                 } else {
+        //                     TapError.CustomError(error.message!!)
+        //                 }
+        //                 store.dispatchErrorNotification(tapError)
+        //             }
+        //         }
+        //         dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
+        //     }
+        //     return@launch
+        // }
 
         val tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
         val linkedTerminalState = tangemSdk.config.linkedTerminal
