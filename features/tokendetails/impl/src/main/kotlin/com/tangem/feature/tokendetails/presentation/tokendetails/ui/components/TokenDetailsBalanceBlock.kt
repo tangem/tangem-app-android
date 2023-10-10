@@ -112,13 +112,13 @@ private fun CryptoBalance(
         is TokenDetailsBalanceBlockState.Content -> Text(
             modifier = modifier,
             text = if (isBalanceHidden) STARS else state.cryptoBalance,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
             text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
     }

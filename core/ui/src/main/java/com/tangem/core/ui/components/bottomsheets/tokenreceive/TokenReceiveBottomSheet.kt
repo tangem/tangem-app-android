@@ -63,7 +63,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
             text = stringResource(R.string.receive_bottom_sheet_warning_message_full, content.name),
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
