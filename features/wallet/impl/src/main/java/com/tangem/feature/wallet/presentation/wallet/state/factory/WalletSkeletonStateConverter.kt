@@ -126,6 +126,7 @@ internal class WalletSkeletonStateConverter(
         return WalletCardState.Loading(
             id = walletId,
             title = name,
+            additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
             imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
             onDeleteClick = clickIntents::onDeleteClick,
