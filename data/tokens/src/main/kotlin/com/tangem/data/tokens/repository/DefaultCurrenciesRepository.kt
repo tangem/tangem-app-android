@@ -285,7 +285,11 @@ internal class DefaultCurrenciesRepository(
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
         userTokensStore.store(userWalletId, response)
-        tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+        try {
+            tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
+        } catch (e: Throwable) {
+            Timber.e("Unable to save user tokens for: ${userWalletId.stringValue}")
+        }
     }
 
     private suspend fun fetchExchangeableUserMarketCoinsByIds(
