@@ -16,22 +16,29 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
     private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
-    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
+    private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
         return when (value.value) {
-            is CryptoCurrencyStatus.Loading -> TokenItemState.Loading(id = value.currency.id.value)
+            is CryptoCurrencyStatus.Loading -> value.mapToLoadingState()
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.NoAccount,
             -> value.mapToTokenItemState()
             is CryptoCurrencyStatus.MissedDerivation -> value.mapToNoAddressTokenItemState()
-            // TODO: Add other token item states, currently not designed
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> value.mapToUnreachableTokenItemState()
         }
+    }
+
+    private fun CryptoCurrencyStatus.mapToLoadingState(): TokenItemState.Loading {
+        return TokenItemState.Loading(
+            id = currency.id.value,
+            iconState = iconStateConverter.convert(value = this),
+            titleState = TokenItemState.TitleState.Content(text = currency.name),
+        )
     }
 
     private fun CryptoCurrencyStatus.mapToTokenItemState(): TokenItemState.Content {
