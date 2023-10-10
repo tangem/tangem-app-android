@@ -229,7 +229,7 @@ private fun TangemAppVersion(appNameRes: Int, version: String, modifier: Modifie
     Text(
         modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
         text = "${stringResource(id = appNameRes)} $version",
-        style = TangemTheme.typography.caption,
+        style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.text.tertiary,
     )
 }
