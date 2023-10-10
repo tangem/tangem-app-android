@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.ui
 import androidx.lifecycle.*
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -32,6 +33,7 @@ internal class SendViewModel @Inject constructor(
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
@@ -75,12 +77,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun updateForPendingTx(userWallet: UserWallet, network: Network) {
-        updateDelayedCurrencyStatusUseCase(
-            userWalletId = userWallet.walletId,
-            network = network,
-            delayMillis = UPDATE_PENDING_TX_DELAY_MILLIS,
-            refresh = true,
-        )
+        fetchPendingTransactionsUseCase(userWallet.walletId, setOf(network))
     }
 
     private suspend fun updateForBalance(userWallet: UserWallet, network: Network) {
@@ -94,7 +91,6 @@ internal class SendViewModel @Inject constructor(
 
     companion object {
         private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
-        private const val UPDATE_PENDING_TX_DELAY_MILLIS = 1000L
         private const val TAG = "SendViewModel"
     }
 }
