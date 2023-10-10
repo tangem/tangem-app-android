@@ -12,6 +12,7 @@ internal data class OrganizeTokensState(
     val actions: ActionsConfig,
     val dndConfig: DragAndDropConfig,
     val scrollListToTop: StateEvent<Unit>,
+    val isBalanceHidden: Boolean,
 ) {
 
     data class HeaderConfig(
