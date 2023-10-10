@@ -51,10 +51,12 @@ internal class WalletStateFactory(
 
     private val tokenActionsProvider by lazy { TokenActionsProvider(clickIntents) }
 
-    private val skeletonConverter by lazy { WalletSkeletonStateConverter(
-        currentStateProvider = currentStateProvider,
-        isBalanceHiddenProvider = isBalanceHiddenProvider,
-        clickIntents = clickIntents)
+    private val skeletonConverter by lazy {
+        WalletSkeletonStateConverter(
+            currentStateProvider = currentStateProvider,
+            isBalanceHiddenProvider = isBalanceHiddenProvider,
+            clickIntents = clickIntents,
+        )
     }
 
     private val walletsUnlockStateConverter by lazy { WalletsUnlockStateConverter(currentStateProvider, clickIntents) }
