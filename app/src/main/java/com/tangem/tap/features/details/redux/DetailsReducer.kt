@@ -72,7 +72,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
-            saveWallets = preferencesStorage.shouldSaveUserWallets,
+            saveWallets = action.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedFiatCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = runBlocking {
