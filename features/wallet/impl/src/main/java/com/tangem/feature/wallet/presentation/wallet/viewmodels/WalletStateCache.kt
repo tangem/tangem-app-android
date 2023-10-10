@@ -19,4 +19,11 @@ internal object WalletStateCache {
     fun update(userWalletId: UserWalletId, state: WalletState.ContentState) {
         states[userWalletId] = state
     }
+
+    /** Update all content states  */
+    fun updateAll(block: (WalletState.ContentState.() -> WalletState.ContentState)) {
+        states.keys.forEach {
+            states[it] = block(requireNotNull(states[it]))
+        }
+    }
 }

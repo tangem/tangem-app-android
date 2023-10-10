@@ -59,8 +59,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
         intents = this,
         dragAndDropIntents = dragAndDropAdapter,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        isBalanceHiddenProvider = Provider { isBalanceHidden },
-        listStateProvider = Provider { uiState.value.itemsState },
     )
 
     private val userWalletId: UserWalletId by lazy {
