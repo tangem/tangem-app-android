@@ -26,7 +26,7 @@ internal fun LazyListScope.contentItems(
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier)
+        is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier, isBalanceHidden)
         is WalletSingleCurrencyState -> txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
     }
 }
