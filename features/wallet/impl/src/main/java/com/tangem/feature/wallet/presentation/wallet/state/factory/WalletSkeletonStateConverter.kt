@@ -118,7 +118,7 @@ internal class WalletSkeletonStateConverter(
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
-            onDeleteClick = clickIntents::onDeleteClick,
+            onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
     }
 
@@ -129,7 +129,7 @@ internal class WalletSkeletonStateConverter(
             additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
             imageResId = createImageResId(),
             onRenameClick = clickIntents::onRenameClick,
-            onDeleteClick = clickIntents::onDeleteClick,
+            onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
     }
 
