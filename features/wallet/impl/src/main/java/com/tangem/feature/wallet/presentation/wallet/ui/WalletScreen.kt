@@ -82,7 +82,7 @@ internal fun WalletScreen(state: WalletState) {
             )
 
             alertConfig?.let {
-                WalletAlert(config = it, onDismiss = { alertConfig = null })
+                WalletAlert(state = it, onDismiss = { alertConfig = null })
             }
         }
         is WalletState.Initial -> Unit
