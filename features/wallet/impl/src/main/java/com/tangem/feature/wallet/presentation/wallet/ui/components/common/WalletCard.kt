@@ -94,7 +94,11 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
         )
 
         AdditionalInfo(
-            text = state.additionalInfo,
+            text = if (state.additionalInfo?.hideable == true && isBalanceHidden) {
+                WalletCardState.HIDDEN_BALANCE_TEXT
+            } else {
+                state.additionalInfo?.content
+            },
             modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
                 top.linkTo(balanceRef.bottom)
