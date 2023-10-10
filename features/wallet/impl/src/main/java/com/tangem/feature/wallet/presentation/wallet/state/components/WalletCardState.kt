@@ -16,6 +16,8 @@ internal sealed interface WalletCardState {
     /** Title */
     val title: String
 
+    val additionalInfo: TextReference?
+
     /** Wallet image resource id */
     @get:DrawableRes
     val imageResId: Int?
@@ -41,10 +43,10 @@ internal sealed interface WalletCardState {
     data class Content(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
-        val additionalInfo: TextReference,
         val cardCount: Int?,
         val balance: String,
     ) : WalletCardState
@@ -64,10 +66,10 @@ internal sealed interface WalletCardState {
     data class HiddenContent(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
-        val additionalInfo: TextReference,
         val balance: String,
         val cardCount: Int?,
     ) : WalletCardState
@@ -77,18 +79,18 @@ internal sealed interface WalletCardState {
      *
      * @property id             wallet id
      * @property title          wallet name
+     * @property additionalInfo wallet additional info
      * @property imageResId     wallet image resource id
      * @property onRenameClick  lambda be invoked when Rename button is clicked
      * @property onDeleteClick  lambda be invoked when Delete button is clicked
-     * @property additionalInfo wallet additional info
      */
     data class LockedContent(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
-        val additionalInfo: TextReference,
     ) : WalletCardState
 
     /**
@@ -106,7 +108,9 @@ internal sealed interface WalletCardState {
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
-    ) : WalletCardState
+    ) : WalletCardState {
+        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT
+    }
 
     /**
      * Wallet card loading state
@@ -120,6 +124,7 @@ internal sealed interface WalletCardState {
     data class Loading(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: TextReference? = null,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
