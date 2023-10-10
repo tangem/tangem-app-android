@@ -112,6 +112,7 @@ internal class SaveWalletMiddleware {
 
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
+                        preferencesStorage.shouldSaveAccessCodes = true
                         store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
                             .setAccessCodeRequestPolicy(
                                 isBiometricsRequestPolicy = userWallet.hasAccessCode,
