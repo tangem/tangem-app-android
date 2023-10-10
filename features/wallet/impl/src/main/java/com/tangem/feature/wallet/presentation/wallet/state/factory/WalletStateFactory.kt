@@ -45,7 +45,6 @@ internal class WalletStateFactory(
     private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val currentWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: WalletClickIntents,
 ) {
 
@@ -80,7 +79,6 @@ internal class WalletStateFactory(
             tokenListErrorConverter = tokenListErrorConverter,
             appCurrencyProvider = appCurrencyProvider,
             currentWalletProvider = currentWalletProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             clickIntents = clickIntents,
         )
     }
@@ -95,7 +93,6 @@ internal class WalletStateFactory(
     private val loadedTxHistoryConverter by lazy {
         WalletLoadedTxHistoryConverter(
             currentStateProvider = currentStateProvider,
-            isBalanceHiddenProvider = isBalanceHiddenProvider,
             currentCardTypeResolverProvider = currentCardTypeResolverProvider,
             clickIntents = clickIntents,
         )
