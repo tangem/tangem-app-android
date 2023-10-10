@@ -94,7 +94,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
         )
 
         AdditionalInfo(
-            text = resolveAdditionalTextByState(state),
+            text = state.additionalInfo,
             modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
                 top.linkTo(balanceRef.bottom)
@@ -345,15 +345,6 @@ private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) 
     }
 }
 
-private fun resolveAdditionalTextByState(state: WalletCardState): TextReference? {
-    return when (state) {
-        is WalletCardState.Content -> state.additionalInfo
-        is WalletCardState.LockedContent -> state.additionalInfo
-        is WalletCardState.Error -> WalletCardState.EMPTY_BALANCE_TEXT
-        is WalletCardState.Loading -> null
-    }
-}
-
 @Composable
 private fun AdditionalInfoText(text: TextReference) {
     Text(
@@ -361,7 +352,7 @@ private fun AdditionalInfoText(text: TextReference) {
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTheme.typography.caption,
+        style = TangemTheme.typography.caption2,
     )
 }
 
