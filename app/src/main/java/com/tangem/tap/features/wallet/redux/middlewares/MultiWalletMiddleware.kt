@@ -39,9 +39,13 @@ class MultiWalletMiddleware {
         when (action) {
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.currency != null) {
+                    val userWalletId = userWalletsListManager.selectedUserWalletSync?.walletId
+
                     val bundle = bundleOf(
+                        TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId?.stringValue,
                         TokenDetailsRouter.CRYPTO_CURRENCY_KEY to cryptoCurrencyConverter.convert(action.currency),
                     )
+
                     store.dispatch(NavigationAction.NavigateTo(screen = AppScreen.WalletDetails, bundle = bundle))
                 }
             }
