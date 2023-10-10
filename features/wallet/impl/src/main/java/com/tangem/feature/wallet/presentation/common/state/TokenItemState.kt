@@ -22,9 +22,11 @@ internal sealed class TokenItemState {
     abstract val priceChangeState: PriceChangeState?
 
     /** Loading token state */
-    data class Loading(override val id: String) : TokenItemState() {
-        override val iconState: IconState = IconState.Loading
-        override val titleState: TitleState = TitleState.Loading
+    data class Loading(
+        override val id: String,
+        override val iconState: IconState,
+        override val titleState: TitleState.Content,
+    ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
         override val priceChangeState: PriceChangeState = PriceChangeState.Loading
