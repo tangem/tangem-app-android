@@ -39,7 +39,10 @@ internal object WalletPreviewData {
             id = UserWalletId(stringValue = "123"),
             title = "Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1",
             balance = "8923,05312312312312312312331231231233432423423424234 $",
-            additionalInfo = TextReference.Str("3 cards • Seed phrase3 cards • Seed phraseцфвцфвфцвцфввцфвцф"),
+            additionalInfo = WalletAdditionalInfo(
+                hideable = false,
+                content = TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
+            ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             onRenameClick = { _, _ -> },
             onDeleteClick = {},
