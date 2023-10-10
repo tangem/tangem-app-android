@@ -207,7 +207,13 @@ internal object WalletPreviewData {
         )
     }
 
-    val loadingTokenItemState by lazy { TokenItemState.Loading(id = "Loading#1") }
+    val loadingTokenItemState by lazy {
+        TokenItemState.Loading(
+            id = "Loading#1",
+            iconState = customTokenIconState.copy(isGrayscale = true),
+            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+        )
+    }
 
     private const val networksSize = 10
     private const val tokensSize = 3
