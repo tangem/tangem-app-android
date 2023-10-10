@@ -34,7 +34,7 @@ internal class DefaultAppCurrencyRepository(
                 .collect(::send)
         }
 
-        launch(dispatchers.io) {
+        withContext(dispatchers.io) {
             if (selectedAppCurrencyStore.isEmpty()) {
                 fetchDefaultAppCurrency()
             }
@@ -47,6 +47,7 @@ internal class DefaultAppCurrencyRepository(
 
             val currencies = availableAppCurrenciesStore.getAllSyncOrNull()
                 ?.map(appCurrencyConverter::convert)
+                ?.sortedBy(AppCurrency::name)
 
             requireNotNull(currencies) {
                 "No available currencies stored"
