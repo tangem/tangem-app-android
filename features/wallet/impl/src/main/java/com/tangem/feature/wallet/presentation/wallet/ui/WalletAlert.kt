@@ -9,23 +9,22 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 
 @Composable
-internal fun WalletAlert(config: WalletAlertState, onDismiss: () -> Unit) {
-    when (config) {
-        is WalletAlertState.DefaultAlert -> {
-            DefaultAlert(config = config, onDismiss = onDismiss)
-        }
-    }
+internal fun WalletAlert(state: WalletAlertState, onDismiss: () -> Unit) {
+    DefaultAlert(state = state, onDismiss = onDismiss)
 }
 
 @Composable
-private fun DefaultAlert(config: WalletAlertState.DefaultAlert, onDismiss: () -> Unit) {
+private fun DefaultAlert(state: WalletAlertState, onDismiss: () -> Unit) {
     val confirmButton: DialogButton
     val dismissButton: DialogButton?
-    if (config.onActionClick != null) {
+
+    val onActionClick = state.onConfirmClick
+    if (onActionClick != null) {
         confirmButton = DialogButton(
-            title = stringResource(id = R.string.common_ok),
+            title = state.confirmButtonText.resolveReference(),
+            warning = state.isWarningConfirmButton,
             onClick = {
-                config.onActionClick.invoke()
+                onActionClick()
                 onDismiss()
             },
         )
@@ -35,16 +34,18 @@ private fun DefaultAlert(config: WalletAlertState.DefaultAlert, onDismiss: () ->
         )
     } else {
         confirmButton = DialogButton(
-            title = stringResource(id = R.string.common_ok),
+            title = state.confirmButtonText.resolveReference(),
+            warning = state.isWarningConfirmButton,
             onClick = onDismiss,
         )
         dismissButton = null
     }
+
     BasicDialog(
-        message = config.message.resolveReference(),
+        message = state.message.resolveReference(),
         confirmButton = confirmButton,
         onDismissDialog = onDismiss,
-        title = config.title.resolveReference(),
+        title = state.title?.resolveReference(),
         dismissButton = dismissButton,
     )
 }
