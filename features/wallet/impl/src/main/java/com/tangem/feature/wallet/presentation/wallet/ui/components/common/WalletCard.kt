@@ -361,7 +361,7 @@ private fun AdditionalInfoText(text: TextReference) {
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTheme.typography.caption,
+        style = TangemTheme.typography.caption2,
     )
 }
 

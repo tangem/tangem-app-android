@@ -22,7 +22,6 @@ import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.component.GradientCircle
 import com.tangem.feature.learn2earn.presentation.ui.state.MainScreenState
@@ -70,13 +69,13 @@ internal fun GetBonusView(state: MainScreenState, modifier: Modifier = Modifier)
             ) {
                 Text(
                     text = state.description.title.resolveReference(),
-                    style = TangemTypography.body1,
+                    style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.primary2,
                 )
                 SpacerH4()
                 Text(
                     text = state.description.subtitle.resolveReference(),
-                    style = TangemTypography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
