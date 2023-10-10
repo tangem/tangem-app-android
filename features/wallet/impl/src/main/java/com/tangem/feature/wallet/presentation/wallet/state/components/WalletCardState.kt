@@ -52,29 +52,6 @@ internal sealed interface WalletCardState {
     ) : WalletCardState
 
     /**
-     * Wallet card hidden content state
-     *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
-     * @property additionalInfo wallet additional info
-     * @property cardCount      number of cards in the wallet
-     * @property balance        wallet balance
-     */
-    data class HiddenContent(
-        override val id: UserWalletId,
-        override val title: String,
-        override val additionalInfo: TextReference,
-        override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
-        val balance: String,
-        val cardCount: Int?,
-    ) : WalletCardState
-
-    /**
      * Wallet card locked state
      *
      * @property id             wallet id
@@ -134,7 +111,6 @@ internal sealed interface WalletCardState {
         return when (this) {
             is Content -> copy(title = title)
             is Error -> copy(title = title)
-            is HiddenContent -> copy(title = title)
             is Loading -> copy(title = title)
             is LockedContent -> copy(title = title)
         }
