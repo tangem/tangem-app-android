@@ -107,11 +107,14 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
         reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
-    override fun openTokenDetails(currency: CryptoCurrency) {
+    override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
         reduxNavController.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,
-                bundle = bundleOf(TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency),
+                bundle = bundleOf(
+                    TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
+                    TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency,
+                ),
             ),
         )
     }
