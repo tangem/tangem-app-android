@@ -151,7 +151,7 @@ private fun RowScope.WalletInfo(wallet: UserWalletItem, isSelected: Boolean) {
             },
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
         )
     }
 }
@@ -255,7 +255,7 @@ private fun LoadedTokensInfo(
                     count = tokensCount,
                     tokensCount,
                 ),
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.End,
             )
