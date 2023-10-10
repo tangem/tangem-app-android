@@ -34,6 +34,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -44,6 +45,7 @@ import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.chat.ChatManager
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -207,34 +209,15 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var getAppThemeModeUseCase: GetAppThemeModeUseCase
+
+    @Inject
+    lateinit var walletsRepository: WalletsRepository
     // endregion Injected
 
     override fun onCreate() {
         super.onCreate()
 
-        store = Store(
-            reducer = { action, state -> appReducer(action, state, appStateHolder) },
-            middleware = AppState.getMiddleware(),
-            state = AppState(
-                daggerGraphState = DaggerGraphState(
-                    assetReader = assetReader,
-                    networkConnectionManager = networkConnectionManager,
-                    customTokenFeatureToggles = customTokenFeatureToggles,
-                    walletFeatureToggles = walletFeatureToggles,
-                    walletConnectRepository = walletConnect2Repository,
-                    walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
-                    scanCardProcessor = scanCardProcessor,
-                    appCurrencyRepository = appCurrencyRepository,
-                    walletManagersFacade = walletManagersFacade,
-                    appStateHolder = appStateHolder,
-                    currenciesRepository = currenciesRepository,
-                    appThemeModeRepository = appThemeModeRepository,
-                    balanceHidingRepository = balanceHidingRepository,
-                    detailsFeatureToggles = detailsFeatureToggles,
-                ),
-            ),
-        )
+        store = createReduxStore()
 
         if (BuildConfig.DEBUG) {
             Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
@@ -254,17 +237,17 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
-        initUserWalletsListManager()
-
         // TODO: Try to performance and user experience.
         //  [REDACTED_JIRA]
         runBlocking {
+            initUserWalletsListManager()
             featureTogglesManager.init()
             appRatingRepository.initialize()
+            walletsRepository.initialize()
             // learn2earnInteractor.init()
         }
 
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -294,6 +277,33 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
         initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
+    }
+
+    private fun createReduxStore(): Store<AppState> {
+        return Store(
+            reducer = { action, state -> appReducer(action, state, appStateHolder) },
+            middleware = AppState.getMiddleware(),
+            state = AppState(
+                daggerGraphState = DaggerGraphState(
+                    assetReader = assetReader,
+                    networkConnectionManager = networkConnectionManager,
+                    customTokenFeatureToggles = customTokenFeatureToggles,
+                    walletFeatureToggles = walletFeatureToggles,
+                    walletConnectRepository = walletConnect2Repository,
+                    walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
+                    scanCardProcessor = scanCardProcessor,
+                    appCurrencyRepository = appCurrencyRepository,
+                    walletManagersFacade = walletManagersFacade,
+                    appStateHolder = appStateHolder,
+                    currenciesRepository = currenciesRepository,
+                    appThemeModeRepository = appThemeModeRepository,
+                    balanceHidingRepository = balanceHidingRepository,
+                    detailsFeatureToggles = detailsFeatureToggles,
+                    walletsRepository = walletsRepository,
+                ),
+            ),
+        )
     }
 
     private fun initTopUpController() {
@@ -356,11 +366,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         store: Store<AppState>,
     ) {
         fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
-            return AdditionalFeedbackInfo(
-                userWalletsListManager = userWalletsListManager,
-                walletManagersFacade = walletManagersFacade,
-                walletFeatureToggles = walletFeatureToggles,
-            ).apply {
+            return AdditionalFeedbackInfo().apply {
                 appVersion = try {
                     // TODO don't use deprecated method
                     val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -403,13 +409,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
     }
 
-    private fun initUserWalletsListManager() {
-        val manager = if (preferencesStorage.shouldSaveUserWallets) {
+    private suspend fun initUserWalletsListManager() {
+        val manager = if (walletsRepository.shouldSaveUserWalletsSync()) {
             UserWalletsListManager.provideBiometricImplementation(applicationContext)
         } else {
             UserWalletsListManager.provideRuntimeImplementation()
         }
 
-        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
+        store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
