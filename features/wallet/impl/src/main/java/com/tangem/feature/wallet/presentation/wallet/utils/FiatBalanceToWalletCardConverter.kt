@@ -26,7 +26,7 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun WalletCardState.toLoadingWalletCardState(): WalletCardState {
-        return WalletCardState.Loading(id, title, imageResId, onRenameClick, onDeleteClick)
+        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onRenameClick, onDeleteClick)
     }
 
     private fun WalletCardState.toErrorWalletCardState(): WalletCardState {
