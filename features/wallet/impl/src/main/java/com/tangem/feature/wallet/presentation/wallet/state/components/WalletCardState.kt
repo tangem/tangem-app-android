@@ -16,7 +16,8 @@ internal sealed interface WalletCardState {
     /** Title */
     val title: String
 
-    val additionalInfo: TextReference?
+    /** Wallet additional info */
+    val additionalInfo: WalletAdditionalInfo?
 
     /** Wallet image resource id */
     @get:DrawableRes
@@ -43,7 +44,7 @@ internal sealed interface WalletCardState {
     data class Content(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
@@ -64,7 +65,7 @@ internal sealed interface WalletCardState {
     data class LockedContent(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
@@ -86,7 +87,10 @@ internal sealed interface WalletCardState {
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState {
-        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT
+        override val additionalInfo: WalletAdditionalInfo = WalletAdditionalInfo(
+            hideable = true,
+            content = EMPTY_BALANCE_TEXT,
+        )
     }
 
     /**
@@ -101,7 +105,7 @@ internal sealed interface WalletCardState {
     data class Loading(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference? = null,
+        override val additionalInfo: WalletAdditionalInfo? = null,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
