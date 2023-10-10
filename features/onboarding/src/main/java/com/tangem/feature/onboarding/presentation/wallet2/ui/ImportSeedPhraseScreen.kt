@@ -112,7 +112,7 @@ private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modif
                 Text(
                     modifier = Modifier.fillMaxSize(),
                     text = message,
-                    style = TangemTheme.typography.caption.copy(
+                    style = TangemTheme.typography.caption2.copy(
                         color = TangemTheme.colors.text.warning,
                     ),
                 )
