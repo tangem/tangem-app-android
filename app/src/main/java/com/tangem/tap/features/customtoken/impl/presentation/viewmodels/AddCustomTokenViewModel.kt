@@ -22,7 +22,10 @@ import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
@@ -59,14 +62,16 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     analyticsEventHandler: AnalyticsEventHandler,
     featureRouter: CustomTokenRouter,
+    getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val analyticsSender = AddCustomTokenAnalyticsSender(analyticsEventHandler)
@@ -74,11 +79,29 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
 
+    private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
+
     /** Screen state */
     var uiState by mutableStateOf(getInitialUiState())
         private set
 
     private var foundToken: FoundToken? = null
+
+    init {
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            viewModelScope.launch(dispatchers.main) {
+                currentCryptoCurrencies = getSelectedWalletUseCase().fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { selectedWallet ->
+                        getCurrenciesUseCase(selectedWallet.walletId).fold(
+                            ifLeft = { emptyList() },
+                            ifRight = { it },
+                        )
+                    },
+                )
+            }
+        }
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsSender.sendWhenScreenOpened()
@@ -564,6 +587,33 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isTokenAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isTokenAlreadyAddedNew()
+        } else {
+            isTokenAlreadyAddedOld()
+        }
+    }
+
+    private fun isTokenAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .any { token ->
+                val contractAddress = uiState.form.contractAddressInputField.value
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
+
+                val savedTokenId = if (token.isCustom) null else token.id.value
+
+                val sameId = foundToken?.id == savedTokenId
+                val sameAddress = contractAddress == token.contractAddress
+                val sameBlockchain = networkId == token.network.id.value
+                val isSameDerivationPath = getDerivationPath()?.rawPath == token.network.derivationPath.value
+
+                sameId && sameAddress && sameBlockchain && isSameDerivationPath
+            }
+    }
+
+    private fun isTokenAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
@@ -581,6 +631,23 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isBlockchainAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isBlockchainAlreadyAddedNew()
+        } else {
+            isBlockchainAlreadyAddedOld()
+        }
+    }
+
+    private fun isBlockchainAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .any { coin ->
+                coin.network.id.value == uiState.form.networkSelectorField.selectedItem.blockchain.id &&
+                    coin.network.derivationPath.value == getDerivationPath()?.rawPath
+            }
+    }
+
+    private fun isBlockchainAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
