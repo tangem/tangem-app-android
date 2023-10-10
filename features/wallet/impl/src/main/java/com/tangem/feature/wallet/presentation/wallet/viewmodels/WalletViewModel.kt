@@ -752,7 +752,19 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    override fun onDeleteClick(userWalletId: UserWalletId) {
+    override fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId) {
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.RemoveWalletAlert(
+                    onConfirmClick = { onDeleteAfterConfirmationClick(userWalletId) },
+                ),
+            ),
+            setUiState = { uiState = it },
+        )
+    }
+
+    override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
         val state = uiState as? WalletState.ContentState ?: return
         viewModelScope.launch(dispatchers.io) {
             deleteWalletUseCase(userWalletId)
@@ -820,29 +832,33 @@ internal class WalletViewModel @Inject constructor(
         val currency = cryptoCurrencyStatus.currency
         return if (currency is CryptoCurrency.Coin && !isCryptoCurrencyCoinCouldHide(userWalletId, currency)) {
             WalletEvent.ShowAlert(
-                title = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_title,
-                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
-                ),
-                message = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_message,
-                    formatArgs = WrappedList(
-                        listOf(
-                            cryptoCurrencyStatus.currency.name,
-                            cryptoCurrencyStatus.currency.network.name,
+                state = WalletAlertState.DefaultAlert(
+                    title = resourceReference(
+                        id = R.string.token_details_unable_hide_alert_title,
+                        formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                    ),
+                    message = resourceReference(
+                        id = R.string.token_details_unable_hide_alert_message,
+                        formatArgs = WrappedList(
+                            listOf(
+                                cryptoCurrencyStatus.currency.name,
+                                cryptoCurrencyStatus.currency.network.name,
+                            ),
                         ),
                     ),
+                    onConfirmClick = null,
                 ),
-                onActionClick = null,
             )
         } else {
             WalletEvent.ShowAlert(
-                title = resourceReference(
-                    id = R.string.token_details_hide_alert_title,
-                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                state = WalletAlertState.DefaultAlert(
+                    title = resourceReference(
+                        id = R.string.token_details_hide_alert_title,
+                        formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                    ),
+                    message = resourceReference(R.string.token_details_hide_alert_message),
+                    onConfirmClick = { onPerformHideToken(cryptoCurrencyStatus) },
                 ),
-                message = resourceReference(R.string.token_details_hide_alert_message),
-                onActionClick = { onPerformHideToken(cryptoCurrencyStatus) },
             )
         }
     }
