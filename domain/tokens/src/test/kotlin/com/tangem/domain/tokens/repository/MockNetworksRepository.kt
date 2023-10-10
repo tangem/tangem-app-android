@@ -21,6 +21,10 @@ internal class MockNetworksRepository(
         return statuses.map { it.getOrElse { e -> throw e } }
     }
 
+    override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
+        // no-op
+    }
+
     override suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
         networks: Set<Network>,
