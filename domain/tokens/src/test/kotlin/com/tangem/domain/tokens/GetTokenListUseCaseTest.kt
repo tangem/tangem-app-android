@@ -269,7 +269,7 @@ internal class GetTokenListUseCaseTest {
 
         val useCase = getUseCase(
             statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
-            quotes = flowOf(),
+            quotes = flowOf(emptySet<Quote>().right()),
         )
 
         // When
