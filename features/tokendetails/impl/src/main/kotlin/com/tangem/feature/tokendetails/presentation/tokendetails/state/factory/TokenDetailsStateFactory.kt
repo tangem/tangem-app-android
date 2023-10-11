@@ -48,6 +48,7 @@ internal class TokenDetailsStateFactory(
             appCurrencyProvider = appCurrencyProvider,
             symbol = symbol,
             decimals = decimals,
+            clickIntents = clickIntents,
         )
     }
 
@@ -181,10 +182,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithChooseAddressBottomSheet(
-        addresses: List<Address>,
-        onAddressTypeClick: (AddressModel) -> Unit,
-    ): TokenDetailsState {
+    fun getStateWithChooseAddressBottomSheet(addresses: List<Address>): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = true,
@@ -196,7 +194,7 @@ internal class TokenDetailsStateFactory(
                             type = AddressModel.Type.valueOf(it.type.name),
                         )
                     },
-                    onClick = onAddressTypeClick,
+                    onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
         )
