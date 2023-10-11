@@ -101,7 +101,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
     fun `when quotes flow is empty then no quote status should be received`() = runTest {
         val expectedResult = MockTokensStates.noQuotesTokensStatuses.first().right()
 
-        val useCase = getUseCase(quotes = flowOf())
+        val useCase = getUseCase(quotes = flowOf(emptySet<Quote>().right()))
 
         // When
         val result = useCase(userWalletId).first()

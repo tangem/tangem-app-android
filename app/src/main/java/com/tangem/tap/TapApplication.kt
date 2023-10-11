@@ -45,7 +45,6 @@ import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.chat.ChatManager
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -239,10 +238,10 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_JIRA]
         runBlocking {
+            walletsRepository.initialize()
             initUserWalletsListManager()
             featureTogglesManager.init()
             appRatingRepository.initialize()
-            walletsRepository.initialize()
             // learn2earnInteractor.init()
         }
 
@@ -415,6 +414,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             UserWalletsListManager.provideRuntimeImplementation()
         }
 
-        store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(manager))
+        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
