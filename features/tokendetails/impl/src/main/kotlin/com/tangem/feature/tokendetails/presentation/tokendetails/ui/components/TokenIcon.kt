@@ -3,21 +3,26 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun CurrencyIcon(
@@ -131,12 +136,34 @@ private inline fun DefaultCurrencyIcon(
     crossinline errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
+    var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    val isDarkTheme = isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
+
     SubcomposeAsyncImage(
-        modifier = modifier,
+        modifier = modifier
+            .background(
+                color = iconBackgroundColor,
+                shape = TangemTheme.shapes.roundedCorners8,
+            ),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(iconData)
             .crossfade(enable = true)
-            .build(),
+            .allowHardware(false)
+            .listener(
+                onSuccess = { _, result ->
+                    if (isDarkTheme) {
+                        coroutineScope.launch {
+                            val color = ImageBackgroundContrastChecker(
+                                drawable = result.drawable,
+                                backgroundColor = itemBackgroundColor,
+                            ).getContrastColorIfNeeded(isDarkTheme)
+                            iconBackgroundColor = color
+                        }
+                    }
+                },
+            ).build(),
         loading = { CircleShimmer() },
         error = { errorIcon() },
         alpha = alpha,
