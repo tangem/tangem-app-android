@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
@@ -33,7 +34,7 @@ sealed class TokenDetailsNotification(
         private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
-            title = TextReference.Str("Existential Deposit"),
+            title = resourceReference(R.string.warning_existential_deposit_title),
             subtitle = TextReference.Res(
                 id = R.string.warning_existential_deposit_message,
                 formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
@@ -71,8 +72,8 @@ sealed class TokenDetailsNotification(
 
     object NetworksUnreachable : TokenDetailsNotification(
         config = NotificationConfig(
-            title = TextReference.Str("Some networks are unreachable"),
-            subtitle = TextReference.Str("The problem is on the crypto-network side. It will be fixed soon."),
+            title = resourceReference(R.string.warning_network_unreachable_title),
+            subtitle = resourceReference(R.string.warning_network_unreachable_message),
             iconResId = R.drawable.img_attention_20,
         ),
     )
