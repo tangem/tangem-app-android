@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 internal class WalletSkeletonStateConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
     private val clickIntents: WalletClickIntents,
 ) : Converter<SkeletonModel, WalletState.ContentState> {
 
@@ -55,7 +56,7 @@ internal class WalletSkeletonStateConverter(
             bottomSheetConfig = null,
             tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
-            isBalanceHidden = true,
+            isBalanceHidden = isBalanceHiddenProvider(),
         )
     }
 
@@ -74,7 +75,7 @@ internal class WalletSkeletonStateConverter(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
-            isBalanceHidden = true,
+            isBalanceHidden = isBalanceHiddenProvider(),
         )
     }
 
