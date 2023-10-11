@@ -30,6 +30,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         TokenDetailsTxHistoryTransactionStateConverter(
             symbol = symbol,
             decimals = decimals,
+            clickIntents = clickIntents,
         )
     }
 
