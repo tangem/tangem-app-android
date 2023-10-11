@@ -9,6 +9,8 @@ interface CardTypesResolver {
 
     fun isTangemWallet(): Boolean
 
+    fun isShibaWallet(): Boolean
+
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
