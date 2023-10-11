@@ -18,6 +18,7 @@ dependencies {
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.palette)
 
     /** Compose */
     implementation(deps.compose.constraintLayout)
