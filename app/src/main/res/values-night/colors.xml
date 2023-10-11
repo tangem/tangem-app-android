@@ -51,4 +51,8 @@
     <!--<color name="text_warning">#DE1010</color>-->
 
     <color name="card_background">#333333</color>
+
+    <color name="gradient_start_color">#000000</color>
+    <color name="gradient_center_color">#0F0000</color>
+    <color name="gradient_end_color">#19000000</color>
 </resources>
