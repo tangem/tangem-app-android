@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+
 interface TokenDetailsClickIntents {
 
     fun onBackClick()
@@ -25,6 +27,10 @@ interface TokenDetailsClickIntents {
     fun onReloadClick()
 
     fun onExploreClick()
+
+    fun onTransactionClick(txHash: String)
+
+    fun onAddressTypeSelected(addressModel: AddressModel)
 
     fun onDismissBottomSheet()
 
