@@ -43,6 +43,7 @@ internal class WalletTxHistoryItemFlowConverter(
         WalletTxHistoryTransactionStateConverter(
             symbol = blockchain.currency,
             decimals = blockchain.decimals(),
+            clickIntents = clickIntents,
         )
     }
 
