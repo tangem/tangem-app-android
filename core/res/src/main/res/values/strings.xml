@@ -160,13 +160,13 @@
     <string name="details_manage_security_passcode">Passcode</string>
     <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
     <string name="details_referral_title">Referral program</string>
+    <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
     <string name="details_row_title_cid">Card ID</string>
     <string name="details_row_title_create_backup">Link More Cards</string>
     <string name="details_row_title_currency">App Currency</string>
     <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
-    <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
     <string name="details_row_title_issuer">Issuer</string>
     <string name="details_row_title_send_feedback">Send Feedback</string>
     <string name="details_row_title_signed_hashes">Signed</string>
@@ -242,6 +242,7 @@
     <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
     <string name="manage_tokens_unavailable_vote">Upvote</string>
     <string name="manage_tokens_wallet_selector_title">Choose wallet</string>
+    <string name="notification_subtitle_not_enough_funds">To make a %1$s transaction you need to deposit some %2$s (%3$s) to cover the network fee</string>
     <string name="notification_title_not_enough_funds">Unable to cover %1$s fee</string>
     <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
     <string name="onboarding_access_code_feature_1_title">Protect</string>
@@ -371,7 +372,7 @@
     </plurals>
     <string name="registration_task_alert_message">Please hold the card until the operation complete</string>
     <string name="reset_card_to_factory_button_title">Reset the Card</string>
-    <string name="reset_card_to_factory_condition_1">I realize that I\'ll lose access to my funds on this card after this action.</string>
+    <string name="reset_card_to_factory_condition_1">I understand that after performing this action, I will no longer have access to the current wallet</string>
     <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards.</string>
     <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
@@ -475,6 +476,7 @@
         <item quantity="one">%d token</item>
         <item quantity="other">%d tokens</item>
     </plurals>
+    <string name="token_details_choose_address">Choose address</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
@@ -550,6 +552,7 @@
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
     <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>
+    <string name="wallet_connect_pairing_error">Failed to pairing WalletConnect session: %1$s</string>
     <string name="wallet_connect_paste_from_clipboard">Paste from clipboard</string>
     <string name="wallet_connect_personal_sign_message">Message for %1$s:\n%2$s</string>
     <string name="wallet_connect_request_session_start">Request to start a session for\n%1$s\n\nNETWORK: %2$s\n\nURL: %3$s</string>
@@ -592,6 +595,7 @@
     <string name="warning_low_signatures_format">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
     <string name="warning_rate_app_message">How do you like Tangem?</string>
     <string name="warning_rate_app_title">One question</string>
+    <string name="warning_rate_app_title_new">Rate the app</string>
     <string name="warning_signed_tx_previously">This card has signed transactions in the past</string>
     <string name="warning_subtitle_network_unreachable">Network currently is unreachable. Please try again later.</string>
     <string name="warning_subtitle_some_networks_unreachable">Some networks currently are unreachable. Please try again later.</string>
@@ -609,5 +613,4 @@
     <string name="welcome_unlock_card">Scan card</string>
     <string name="welcome_unlock_description">Use %s or scan a card to access the app</string>
     <string name="welcome_unlock_title">Welcome back!</string>
-    <string name="token_details_choose_address">Choose address</string>
 </resources>
