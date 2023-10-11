@@ -10,6 +10,7 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
@@ -52,23 +53,29 @@ internal class WalletLoadingTxHistoryConverter(
 
     private fun convertRight(value: Int): WalletState {
         val state = currentStateProvider()
-        val txHistoryContent = (state as? WalletSingleCurrencyState.Content)?.txHistoryState as? Content
-
-        txHistoryContent?.contentItems?.update {
-            PagingData.from(
-                data = listOf(TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick)) +
-                    MutableList(
-                        size = value,
-                        init = {
-                            TxHistoryItemState.Transaction(
-                                state = TransactionState.Loading(it.toString()),
-                            )
-                        },
-                    ),
+        val singleCurrencyContentState = state as? WalletSingleCurrencyState.Content ?: return state
+        return if (singleCurrencyContentState.txHistoryState is Content) {
+            singleCurrencyContentState.txHistoryState.contentItems.update {
+                PagingData.from(data = createLoadingItems(value))
+            }
+            state
+        } else {
+            val txHistoryContent = Content(
+                contentItems = MutableStateFlow(
+                    value = PagingData.from(data = createLoadingItems(value)),
+                ),
             )
+            state.copy(txHistoryState = txHistoryContent)
         }
+    }
 
-        return state
+    private fun createLoadingItems(size: Int): List<TxHistoryItemState> {
+        return buildList {
+            add(TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick))
+            (1..size).forEach {
+                add(TxHistoryItemState.Transaction(state = TransactionState.Loading(it.toString())))
+            }
+        }
     }
 
     data class WalletLoadingTxHistoryModel(val historyLoadingState: Either<TxHistoryStateError, Int>)
