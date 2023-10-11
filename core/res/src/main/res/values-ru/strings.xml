@@ -219,6 +219,7 @@
     <string name="main_warning_missing_derivation_title">Некоторые адреса отсутствуют</string>
     <string name="manage_tokens_add">Добавить</string>
     <string name="manage_tokens_edit">Изменить</string>
+    <string name="notification_subtitle_not_enough_funds">Чтобы отправить транзакцию %1$s, необходимо пополнить баланс %2$s (%3$s) для оплаты комиссии сети</string>
     <string name="notification_title_not_enough_funds">Невозможно покрыть %1$s комиссию</string>
     <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
@@ -351,6 +352,8 @@
     </plurals>
     <string name="registration_task_alert_message">Пожалуйста, удерживайте карту до завершения операции</string>
     <string name="reset_card_to_factory_button_title">Сбросить карту</string>
+    <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
+    <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах, если я его забуду</string>
     <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать данную карту для восстановления кода доступа.</string>
     <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек.</string>
     <string name="russian_bank_card_warning_subtitle">У вас есть карта банка другой страны, а также вид на жительство или регистрация вне РФ?</string>
@@ -530,6 +533,7 @@
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
     <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
+    <string name="wallet_connect_pairing_error">Не удалось создать пару WalletConnect: %1$s</string>
     <string name="wallet_connect_paste_from_clipboard">Вставить из буфера обмена</string>
     <string name="wallet_connect_personal_sign_message">Сообщение для %1$s:\n%2$s</string>
     <string name="wallet_connect_request_session_start">Запрос на открытие сессии для\n%1$s\n\nСЕТЬ: %2$s\n\nURL: %3$s</string>
@@ -572,7 +576,10 @@
     <string name="warning_rate_app_message">Как вам Tangem?</string>
     <string name="warning_rate_app_title">Один вопрос</string>
     <string name="warning_signed_tx_previously">Эта карта подписывала транзакции в прошлом</string>
+    <string name="warning_subtitle_network_unreachable">В настоящее время сеть недоступна. Пожалуйста, повторите попытку позже.</string>
+    <string name="warning_subtitle_some_networks_unreachable">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
     <string name="warning_testnet_card_message">Это тестовая карта. Не принимайте её в качестве оплаты. Эта карта должна использоваться только в целях тестирования и разработки.</string>
+    <string name="warning_title_some_networks_unreachable">Некоторые сети недоступны</string>
     <string name="welcome_interrupted_backup_alert_discard">Отказаться</string>
     <string name="welcome_interrupted_backup_alert_message">Вы не закончили резервное копирование. Хотите продолжить?</string>
     <string name="welcome_interrupted_backup_alert_resume">Да, возобновить</string>
