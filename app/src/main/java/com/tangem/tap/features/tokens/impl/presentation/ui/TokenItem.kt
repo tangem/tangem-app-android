@@ -1,6 +1,5 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -20,16 +19,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.drawable.toBitmap
-import androidx.palette.graphics.Palette
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.tap.common.compose.extensions.toPx
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
 [REDACTED_AUTHOR]
@@ -130,6 +128,7 @@ private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> 
     val iconModifier = modifier.size(size = TangemTheme.dimens.size46)
     val screenBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
 
     SubcomposeAsyncImage(
         modifier = iconModifier,
@@ -141,11 +140,13 @@ private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> 
             .listener(
                 onSuccess = { _, result ->
                     if (isDarkTheme) {
-                        setContrastBackgroundIfNeeded(
-                            drawable = result.drawable,
-                            screenBackgroundColor = screenBackgroundColor,
-                            onContrastCalculate = onContrastCalculate,
-                        )
+                        coroutineScope.launch {
+                            val color = ImageBackgroundContrastChecker(
+                                drawable = result.drawable,
+                                backgroundColor = screenBackgroundColor,
+                            ).getContrastColorIfNeeded(isDarkTheme)
+                            onContrastCalculate(color)
+                        }
                     }
                 },
             )
@@ -155,26 +156,6 @@ private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> 
         error = { CurrencyPlaceholderIcon(id = name, modifier = iconModifier) },
     )
 }
-
-private fun setContrastBackgroundIfNeeded(
-    drawable: Drawable,
-    screenBackgroundColor: Int,
-    onContrastCalculate: (Color) -> Unit,
-) {
-    Palette.Builder(drawable.toBitmap()).generate { palette ->
-        val color = palette?.getDominantColor(screenBackgroundColor) ?: screenBackgroundColor
-        val contrast = ColorUtils.calculateContrast(color, screenBackgroundColor)
-        val colorToSet = if (contrast > LOW_CONTRAST_RATIO) {
-            Color.Transparent
-        } else {
-            Color.White
-        }
-        onContrastCalculate(colorToSet)
-    }
-}
-
-// https://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
-private const val LOW_CONTRAST_RATIO = 1.5f
 
 @Composable
 private fun Title(title: String, modifier: Modifier = Modifier) {
