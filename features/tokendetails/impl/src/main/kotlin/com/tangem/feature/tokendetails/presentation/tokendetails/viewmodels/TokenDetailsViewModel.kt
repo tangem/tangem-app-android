@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -25,6 +26,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenScreenEvent
@@ -60,6 +62,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -340,29 +343,39 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
 
             if (addresses.size == 1) {
-                openUrl(AddressType.Default)
-            } else {
-                uiState = stateFactory.getStateWithChooseAddressBottomSheet(
-                    addresses = addresses,
-                    onAddressTypeClick = {
-                        openUrl(AddressType.valueOf(it.type.name))
-                        uiState = stateFactory.getStateWithClosedBottomSheet()
-                    },
+                router.openUrl(
+                    url = getExploreUrlUseCase(
+                        userWalletId = userWalletId,
+                        network = cryptoCurrency.network,
+                        addressType = AddressType.Default,
+                    ),
                 )
+            } else {
+                uiState = stateFactory.getStateWithChooseAddressBottomSheet(addresses = addresses)
             }
         }
     }
 
-    private fun openUrl(addressType: AddressType) {
+    override fun onAddressTypeSelected(addressModel: AddressModel) {
         viewModelScope.launch {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
                     network = cryptoCurrency.network,
-                    addressType = addressType,
+                    addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
+            uiState = stateFactory.getStateWithClosedBottomSheet()
         }
+    }
+
+    override fun onTransactionClick(txHash: String) {
+        router.openUrl(
+            url = getExplorerTransactionUrlUseCase(
+                txHash = txHash,
+                networkId = cryptoCurrency.network.id,
+            ),
+        )
     }
 
     override fun onRefreshSwipe() {
