@@ -25,6 +25,10 @@ internal class TangemCardTypesResolver(
             card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
     }
 
+    override fun isShibaWallet(): Boolean {
+        return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
+    }
+
     override fun isWhiteWallet(): Boolean {
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
