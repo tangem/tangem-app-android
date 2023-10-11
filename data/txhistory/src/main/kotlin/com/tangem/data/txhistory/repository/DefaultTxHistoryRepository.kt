@@ -3,6 +3,7 @@ package com.tangem.data.txhistory.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
@@ -61,6 +62,11 @@ class DefaultTxHistoryRepository(
         )
 
         return pager.flow
+    }
+
+    override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
+        val blockchain = Blockchain.fromId(networkId.value)
+        return blockchain.getExploreTxUrl(txHash)
     }
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
