@@ -95,7 +95,6 @@ dependencies {
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
     implementation(deps.lifecycle.compose)
-    implementation(deps.androidx.palette)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
