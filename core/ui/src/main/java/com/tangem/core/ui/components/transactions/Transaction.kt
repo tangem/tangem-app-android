@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.transactions
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,8 +25,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Status
 import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Direction
+import com.tangem.core.ui.components.transactions.state.TransactionState.Content.Status
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -49,10 +50,15 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
             .defaultMinSize(minHeight = TangemTheme.dimens.size56)
+            .clickable(
+                enabled = state is TransactionState.Content,
+                onClick = (state as? TransactionState.Content)?.onClick ?: {},
+            )
             .padding(horizontal = TangemTheme.dimens.spacing12, vertical = TangemTheme.dimens.spacing10),
         color = TangemTheme.colors.background.primary,
     ) {
         @Suppress("DestructuringDeclarationWithTooManyEntries")
+        // FIXME: split this composable to small composables(loading/content/error) to properly handle onClick
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (iconItem, titleItem, subtitleItem, amountItem, timestampItem) = createRefs()
 
@@ -359,6 +365,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             timestamp = "8:41",
             status = Status.Confirmed,
             direction = Direction.OUTGOING,
+            onClick = {},
         ),
         TransactionState.Transfer(
             txHash = UUID.randomUUID().toString(),
@@ -367,6 +374,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             timestamp = "8:41",
             status = Status.Unconfirmed,
             direction = Direction.INCOMING,
+            onClick = {},
         ),
         TransactionState.Approve(
             txHash = UUID.randomUUID().toString(),
@@ -375,6 +383,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             timestamp = "8:41",
             status = Status.Failed,
             direction = Direction.OUTGOING,
+            onClick = {},
         ),
         TransactionState.Swap(
             txHash = UUID.randomUUID().toString(),
@@ -383,6 +392,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             timestamp = "8:41",
             status = Status.Unconfirmed,
             direction = Direction.INCOMING,
+            onClick = {},
         ),
         TransactionState.Custom(
             txHash = UUID.randomUUID().toString(),
@@ -393,6 +403,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             direction = Direction.INCOMING,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            onClick = {},
         ),
         TransactionState.Custom(
             txHash = UUID.randomUUID().toString(),
@@ -403,6 +414,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             direction = Direction.OUTGOING,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            onClick = {},
         ),
         TransactionState.Loading(txHash = UUID.randomUUID().toString()),
     ),
