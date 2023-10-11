@@ -13,8 +13,9 @@ import com.tangem.feature.wallet.impl.R
  */
 internal object WalletImageResolver {
 
-    private const val DOUBLE_WALLET_SET_BACKUP_COUNT = 2
-    private const val TRIPLE_WALLET_SET_BACKUP_COUNT = 3
+    private const val WALLET_WITHOUT_BACKUP_COUNT = 1
+    private const val WALLET_WITH_ONE_BACKUP_COUNT = 2
+    private const val WALLET_WITH_TWO_BACKUPS_COUNT = 3
 
     /** Get a specified wallet [userWallet] image */
     @DrawableRes
@@ -22,9 +23,10 @@ internal object WalletImageResolver {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         return when {
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
-            cardTypesResolver.isTangemWallet() -> R.drawable.ill_wallet_120_106
-            cardTypesResolver.isWhiteWallet() -> R.drawable.ill_old_wallet_120_106
-            cardTypesResolver.isTangemTwins() -> R.drawable.ill_twin_120_106
+            cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
+            cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
+            cardTypesResolver.isWhiteWallet() -> R.drawable.ill_wallet_old_white_120_106
+            cardTypesResolver.isTangemTwins() -> R.drawable.ill_twins_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> resolveNote(blockchain = cardTypesResolver.getBlockchain())
             cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
@@ -33,17 +35,40 @@ internal object WalletImageResolver {
     }
 
     private fun UserWallet.resolveWallet2(): Int? {
-        val count = getCardsCount()
-
-        return if (count != null) {
+        return resolveWalletWithBackups { count ->
             when (count) {
-                DOUBLE_WALLET_SET_BACKUP_COUNT -> R.drawable.ill_wallet2_cards2_120_106
-                TRIPLE_WALLET_SET_BACKUP_COUNT -> R.drawable.ill_wallet2_cards3_120_106
+                WALLET_WITH_ONE_BACKUP_COUNT -> R.drawable.ill_wallet2_cards2_120_106
+                WALLET_WITH_TWO_BACKUPS_COUNT -> R.drawable.ill_wallet2_cards3_120_106
                 else -> null
             }
-        } else {
-            null
         }
+    }
+
+    private fun UserWallet.resolveShibaWallet(): Int? {
+        return resolveWalletWithBackups { count ->
+            when (count) {
+                WALLET_WITH_ONE_BACKUP_COUNT -> R.drawable.ill_shiba_card2_120_106
+                WALLET_WITH_TWO_BACKUPS_COUNT -> R.drawable.ill_shiba_card3_120_106
+                else -> null
+            }
+        }
+    }
+
+    private fun UserWallet.resolveWallet1(): Int? {
+        return resolveWalletWithBackups { count ->
+            when (count) {
+                WALLET_WITHOUT_BACKUP_COUNT -> R.drawable.ill_wallet1_cards1_120_106
+                WALLET_WITH_ONE_BACKUP_COUNT -> R.drawable.ill_wallet1_cards2_120_106
+                WALLET_WITH_TWO_BACKUPS_COUNT -> R.drawable.ill_wallet1_cards3_120_106
+                else -> null
+            }
+        }
+    }
+
+    private fun UserWallet.resolveWalletWithBackups(resolve: (Int) -> Int?): Int? {
+        val count = getCardsCount()
+
+        return if (count != null) resolve(count) else null
     }
 
     private fun resolveNote(blockchain: Blockchain): Int? {
