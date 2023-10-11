@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
@@ -11,6 +12,7 @@ import com.tangem.utils.toFormattedCurrencyString
 internal class TokenDetailsTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
+    private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<TxHistoryItem, TransactionState> {
 
     override fun convert(value: TxHistoryItem): TransactionState {
@@ -18,6 +20,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     // TODO: Finalize transaction types [REDACTED_JIRA]
+    @Suppress("LongMethod")
     private fun createTransactionStateItem(item: TxHistoryItem): TransactionState {
         return when (val type = item.type) {
             TxHistoryItem.TransactionType.Transfer -> mapTransfer(item)
@@ -32,6 +35,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Deposit"),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
             TxHistoryItem.TransactionType.Submit -> TransactionState.Custom(
                 txHash = item.txHash,
@@ -42,6 +46,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Submit"),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
             TxHistoryItem.TransactionType.Supply -> TransactionState.Custom(
                 txHash = item.txHash,
@@ -52,6 +57,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Supply"),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
             TxHistoryItem.TransactionType.Unoswap -> TransactionState.Custom(
                 txHash = item.txHash,
@@ -62,6 +68,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Unoswap"),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
             TxHistoryItem.TransactionType.Withdraw -> TransactionState.Custom(
                 txHash = item.txHash,
@@ -72,6 +79,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str("Withdraw"),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
             is TxHistoryItem.TransactionType.Custom -> TransactionState.Custom(
                 txHash = item.txHash,
@@ -82,6 +90,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
                 direction = item.direction.toUiDirection(),
                 title = TextReference.Str(type.id),
                 subtitle = item.direction.extractAddress(),
+                onClick = { clickIntents.onTransactionClick(item.txHash) },
             )
         }
     }
@@ -94,6 +103,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
+            onClick = { clickIntents.onTransactionClick(item.txHash) },
         )
     }
 
@@ -105,6 +115,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
+            onClick = { clickIntents.onTransactionClick(item.txHash) },
         )
     }
     private fun mapSwap(item: TxHistoryItem): TransactionState {
@@ -115,6 +126,7 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
             direction = item.direction.toUiDirection(),
+            onClick = { clickIntents.onTransactionClick(item.txHash) },
         )
     }
 
