@@ -277,6 +277,7 @@
     </plurals>
     <string name="registration_task_alert_message">請持有卡片直至操作完成</string>
     <string name="reset_card_to_factory_button_title">重置卡片</string>
+    <string name="reset_card_to_factory_condition_1">我了解執行此操作後，我將無法再訪問當前錢包</string>
     <string name="reset_card_with_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包。您將無法恢復當前錢包或使用卡恢復訪問密碼</string>
     <string name="reset_card_without_backup_to_factory_message">恢復原廠設置將從所選卡中完全刪除錢包並將其從應用程序中刪除。您將無法恢復當前錢包</string>
     <string name="russian_bank_card_warning_title">目前不接受俄羅斯銀行卡</string>
@@ -456,6 +457,7 @@
     <string name="wallet_error_no_account">帳號尚未被創造</string>
     <string name="wallet_error_unsupported_blockchain">不支持此卡</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">您的 Tangem 卡是為與不同的應用程序一起工作而設計的。請查看卡片上的名稱和說明，並安裝正確的應用程序</string>
+    <string name="wallet_marketplace_block_title">%s市場價格</string>
     <string name="wallet_notification_address_copied">地址已復製到剪貼板</string>
     <string name="wallet_notification_no_internet">無網路</string>
     <string name="wallet_pending_tx_receiving">接收中</string>
