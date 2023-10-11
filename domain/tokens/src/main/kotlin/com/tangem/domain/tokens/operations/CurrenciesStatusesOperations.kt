@@ -217,9 +217,12 @@ internal class CurrenciesStatusesOperations(
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
         return quotesRepository.getQuotesUpdates(tokensIds)
-            .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
-            .onEmpty { emit(Error.EmptyQuotes.left()) }
+            .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
+                if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
+            }
+            .catch {
+                emit(Error.DataError(it).left())
+            }
     }
 
     private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
