@@ -4,6 +4,7 @@ import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.right
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
@@ -18,6 +19,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
@@ -1163,6 +1165,11 @@ internal class WalletViewModel @Inject constructor(
             uiState = result.fold(stateFactory::getStateByCurrencyStatusError) { uiState }
 
             singleWalletCryptoCurrencyStatus?.let {
+                val singleCurrencyState = uiState as WalletSingleCurrencyState
+                if (singleCurrencyState.txHistoryState !is TxHistoryState.Content) {
+                    // show loading indicator while refreshing in non content state
+                    uiState = stateFactory.getLoadingTxHistoryState(1.right())
+                }
                 updateTxHistory(wallet.walletId, it.currency, refresh = true)
             }
         }.saveIn(refreshContentJobHolder)
