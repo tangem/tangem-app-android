@@ -21,4 +21,6 @@ interface TxHistoryRepository {
         pageSize: Int,
         refresh: Boolean,
     ): Flow<PagingData<TxHistoryItem>>
+
+    fun getTxExploreUrl(txHash: String, networkId: Network.ID): String
 }
