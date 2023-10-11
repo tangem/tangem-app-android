@@ -139,6 +139,8 @@ internal class WalletViewModel @Inject constructor(
         clickIntents = this,
     )
 
+    private var isBalanceHidden = true
+
     private val stateFactory = WalletStateFactory(
         currentStateProvider = Provider { uiState },
         currentCardTypeResolverProvider = Provider {
@@ -150,6 +152,7 @@ internal class WalletViewModel @Inject constructor(
             wallets[requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex]
         },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
         clickIntents = this,
     )
 
@@ -199,6 +202,7 @@ internal class WalletViewModel @Inject constructor(
         isBalanceHiddenUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach { hidden ->
+                isBalanceHidden = hidden
                 WalletStateCache.updateAll { copySealed(isBalanceHidden = hidden) }
                 uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = hidden)
             }
