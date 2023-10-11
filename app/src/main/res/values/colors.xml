@@ -80,6 +80,10 @@
 
     <color name="background_splash">#000000</color>
     <color name="transparent">#00000000</color>
-
+    d
     <color name="card_background">#1B1D1C</color>
+
+    <color name="gradient_start_color">#FFFFFF</color>
+    <color name="gradient_center_color">#F0FFFF</color>
+    <color name="gradient_end_color">#19FFFFFF</color>
 </resources>
