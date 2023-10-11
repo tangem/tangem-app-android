@@ -72,4 +72,6 @@ internal interface WalletClickIntents {
     fun onReloadClick()
 
     fun onExploreClick()
+
+    fun onTransactionClick(txHash: String)
 }
