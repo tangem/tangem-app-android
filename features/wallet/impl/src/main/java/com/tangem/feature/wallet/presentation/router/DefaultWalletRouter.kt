@@ -108,7 +108,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
         )
     }
 
-    override fun openTxHistoryWebsite(url: String) {
+    override fun openUrl(url: String) {
         reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
