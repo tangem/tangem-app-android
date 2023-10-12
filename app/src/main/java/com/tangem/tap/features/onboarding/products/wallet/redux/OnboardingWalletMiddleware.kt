@@ -237,7 +237,12 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                             SeedPhraseSource.IMPORTED -> AnalyticsParam.WalletCreationType.SeedImport
                             SeedPhraseSource.GENERATED -> AnalyticsParam.WalletCreationType.NewSeed
                         }
-                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully(creationType))
+                        Analytics.send(
+                            event = Onboarding.CreateWallet.WalletCreatedSuccessfully(
+                                creationType = creationType,
+                                seedPhraseLength = action.mnemonicComponents.size,
+                            ),
+                        )
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
