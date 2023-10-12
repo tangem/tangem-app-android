@@ -4,7 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
-import com.tangem.datasource.utils.allowLogging
+import com.tangem.datasource.utils.addLoggers
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,7 +56,7 @@ class OneInchApisModule {
             .baseUrl(url)
             .client(
                 OkHttpClient.Builder()
-                    .allowLogging(context)
+                    .addLoggers(context)
                     .build(),
             )
             .build()

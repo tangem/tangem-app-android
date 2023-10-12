@@ -7,7 +7,7 @@ import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
-import com.tangem.datasource.utils.allowLogging
+import com.tangem.datasource.utils.addLoggers
 import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
@@ -41,7 +41,7 @@ class NetworkModule {
                         // TODO("refactor header init") get auth data after biometric auth to avoid race condition
                         // AuthenticationHeader(authProvider),
                     )
-                    .allowLogging(context)
+                    .addLoggers(context)
                     .build(),
             )
             .build()
@@ -58,7 +58,7 @@ class NetworkModule {
     ): PromotionApi {
         val okClient = OkHttpClient.Builder()
             .addHeaders(AuthenticationHeader(authProvider))
-            .allowLogging(context)
+            .addLoggers(context)
             .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .connectTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
