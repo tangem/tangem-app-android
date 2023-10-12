@@ -209,7 +209,9 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = ProductType.Wallet
+        val isWallet2 = card.settings.isKeysImportAllowed || card.firmwareVersion >= FirmwareVersion.KeysImportAvailable
+
+        val productType = if (isWallet2) ProductType.Wallet2 else ProductType.Wallet
         val config = CardConfig.createConfig(card)
         scope.launch {
             val scanResponse = ScanResponse(
