@@ -24,6 +24,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -109,6 +110,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
+    lateinit var manageTokensRouter: ManageTokensRouter
+
+    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -155,6 +159,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
+                manageTokensRouter = manageTokensRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
             ),
         )
