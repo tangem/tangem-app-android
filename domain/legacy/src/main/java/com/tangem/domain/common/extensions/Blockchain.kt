@@ -179,7 +179,6 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dash -> "dash"
         Blockchain.Kaspa -> "kaspa"
         Blockchain.TON, Blockchain.TONTestnet -> "the-open-network"
-        Blockchain.Unknown -> "unknown"
         Blockchain.Kava, Blockchain.KavaTestnet -> "kava"
         Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> "ravencoin"
         Blockchain.Cosmos, Blockchain.CosmosTestnet -> "cosmos"
@@ -189,10 +188,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
-        Blockchain.Chia -> "chia"
-        Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
+        Blockchain.Unknown -> "unknown"
     }
 }
 
