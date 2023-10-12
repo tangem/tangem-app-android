@@ -124,6 +124,16 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideFetchCardTokenListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): FetchCardTokenListUseCase {
+        return FetchCardTokenListUseCase(currenciesRepository, networksRepository, quotesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetCryptoCurrencyUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrencyUseCase {
         return GetCryptoCurrencyUseCase(currenciesRepository)
     }
