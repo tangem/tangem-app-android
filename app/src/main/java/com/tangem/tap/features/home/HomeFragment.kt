@@ -105,7 +105,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
             },
             onSearchTokensClick = {
                 Analytics.send(IntroductionProcess.ButtonTokensList())
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.ManageTokens))
                 store.dispatch(TokensAction.SetArgs.ReadAccess)
             },
         )
