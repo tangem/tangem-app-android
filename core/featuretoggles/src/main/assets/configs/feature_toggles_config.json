@@ -30,5 +30,9 @@
     {
         "name": "DARK_THEME_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
+        "version": "undefined"
     }
 ]

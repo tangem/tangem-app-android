@@ -154,7 +154,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
-        AppScreen.AddTokens -> TokensListFragment()
+        AppScreen.ManageTokens -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::manageTokensFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::manageTokensRouter)
+                    .getEntryFragment()
+            } else {
+                TokensListFragment()
+            }
+        }
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
             val featureToggles = store.state.daggerGraphState.get(
