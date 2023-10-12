@@ -165,6 +165,8 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
+    debugImplementation(deps.chuckerDebugImpl)
+    releaseImplementation(deps.chuckerReleaseImpl)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)

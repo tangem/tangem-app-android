@@ -41,6 +41,8 @@ dependencies {
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
     implementation(deps.reactive.network)
+    debugImplementation(deps.chuckerDebugImpl)
+    releaseImplementation(deps.chuckerReleaseImpl)
 
     /** Time */
     implementation(deps.jodatime)
