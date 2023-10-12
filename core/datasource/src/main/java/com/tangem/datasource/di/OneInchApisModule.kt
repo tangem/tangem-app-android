@@ -21,10 +21,7 @@ class OneInchApisModule {
 
     @Provides
     @Singleton
-    fun provideOneInchApiFactory(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-    ): OneInchApiFactory {
+    fun provideOneInchApiFactory(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): OneInchApiFactory {
         val networks = mapOf(
             ETH_NETWORK to ONE_INCH_ETH_PATH,
             BSC_NETWORK to ONE_INCH_BSC_PATH,
@@ -33,7 +30,7 @@ class OneInchApisModule {
             ARBITRUM_NETWORK to ONE_INCH_ARBITRUM_PATH,
             GNOSIS_NETWORK to ONE_INCH_GNOSIS_PATH,
             AVALANCHE_NETWORK to ONE_INCH_AVALANCHE_PATH,
-            FANTOM_NETWORK to ONE_INCH_FANTOM_PATH
+            FANTOM_NETWORK to ONE_INCH_FANTOM_PATH,
         )
 
         val apiFactory = OneInchApiFactory()

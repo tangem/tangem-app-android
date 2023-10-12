@@ -26,10 +26,7 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-    ): TangemTechApi {
+    fun provideTangemTechApi(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())

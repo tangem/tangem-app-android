@@ -256,7 +256,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
-                ChuckerInterceptor(this)
+                ChuckerInterceptor(this),
             )
         }
 
