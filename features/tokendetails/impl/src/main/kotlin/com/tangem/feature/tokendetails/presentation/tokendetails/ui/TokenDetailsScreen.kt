@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -42,6 +43,8 @@ import kotlinx.collections.immutable.PersistentList
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState) {
+    BackHandler(onBack = state.topAppBarConfig.onBackClick)
+
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
