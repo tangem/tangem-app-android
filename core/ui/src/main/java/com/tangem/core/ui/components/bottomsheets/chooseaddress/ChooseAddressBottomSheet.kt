@@ -1,17 +1,11 @@
 package com.tangem.core.ui.components.bottomsheets.chooseaddress
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import com.tangem.core.ui.R
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.res.TangemTheme
@@ -30,27 +24,13 @@ fun ChooseAddressBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseAddressBottomSheetContent(content: ChooseAddressBottomSheetConfig) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = TangemTheme.dimens.spacing24,
-                top = TangemTheme.dimens.spacing24,
-                end = TangemTheme.dimens.spacing24,
-                bottom = TangemTheme.dimens.spacing16,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing24),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
-        Text(
-            text = stringResource(id = R.string.token_details_choose_address),
-            color = TangemTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography.body2,
-        )
         content.addressModels.forEach { addressModel ->
-            SecondaryButton(
-                text = addressModel.type.name,
-                onClick = { content.onClick(addressModel) },
+            SimpleSettingsRow(
+                title = addressModel.type.name,
+                icon = R.drawable.ic_arrow_top_right_24,
+                onItemsClick = { content.onClick(addressModel) },
             )
         }
     }
