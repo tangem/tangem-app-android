@@ -1012,19 +1012,29 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun initAndSetupWc(tokenListFlow: SharedFlow<Either<TokenListError, TokenList>>, wallet: UserWallet) {
-        initWalletConnectForWallet(wallet)
-        tokenListFlow
-            .filter(::filterLoadedTokenList)
-            .take(1)
-            .onEach {
-                it.onRight {
-                    setupWalletConnectOnWallet(wallet)
-                }
+    private fun initAndSetupWc(tokenListFlow: MaybeTokenListFlow, wallet: UserWallet) {
+        viewModelScope
+            .launch(dispatchers.main) {
+                initWalletConnectForWallet(wallet)
+
+                tokenListFlow
+                    .filterLoadedTokenList()
+                    .take(count = 1)
+                    .collect { setupWalletConnectOnWallet(wallet) }
             }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
             .saveIn(updateWcJobHolder)
+    }
+
+    private fun initWalletConnectForWallet(userWallet: UserWallet) {
+        reduxStateHolder.dispatch(
+            action = WalletConnectActions.New.Initialize(userWallet = userWallet),
+        )
+    }
+
+    private fun setupWalletConnectOnWallet(userWallet: UserWallet) {
+        reduxStateHolder.dispatch(
+            action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
+        )
     }
 
     private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
@@ -1035,23 +1045,23 @@ internal class WalletViewModel @Inject constructor(
         return !this.any { it.value is CryptoCurrencyStatus.Loading }
     }
 
-    private fun filterLoadedTokenList(either: Either<TokenListError, TokenList>): Boolean {
-        return either.fold(
-            ifRight = { list ->
-                when (list) {
-                    is TokenList.Ungrouped -> {
-                        list.currencies.isAllCurrenciesLoaded()
+    private fun MaybeTokenListFlow.filterLoadedTokenList(): MaybeTokenListFlow {
+        return filter { either ->
+            either.fold(
+                ifRight = { list ->
+                    when (list) {
+                        is TokenList.Ungrouped -> {
+                            list.currencies.isAllCurrenciesLoaded()
+                        }
+                        is TokenList.GroupedByNetwork -> {
+                            list.groups.flatMap(NetworkGroup::currencies).isAllCurrenciesLoaded()
+                        }
+                        else -> false
                     }
-                    is TokenList.GroupedByNetwork -> {
-                        list.groups.flatMap { group -> group.currencies }.isAllCurrenciesLoaded()
-                    }
-                    else -> {
-                        false
-                    }
-                }
-            },
-            ifLeft = { false },
-        )
+                },
+                ifLeft = { false },
+            )
+        }
     }
 
     private fun List<CryptoCurrencyStatus>.hasNonZeroWallets(): Boolean {
@@ -1187,18 +1197,6 @@ internal class WalletViewModel @Inject constructor(
             )
     }
 
-    private fun initWalletConnectForWallet(userWallet: UserWallet) {
-        reduxStateHolder.dispatch(
-            WalletConnectActions.New.Initialize(userWallet = userWallet),
-        )
-    }
-
-    private fun setupWalletConnectOnWallet(userWallet: UserWallet) {
-        reduxStateHolder.dispatch(
-            WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
-        )
-    }
-
     private fun getWallet(index: Int): UserWallet {
         return requireNotNull(
             value = wallets.getOrNull(index),
@@ -1215,3 +1213,5 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
 }
+
+typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
