@@ -32,6 +32,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                     is WalletNotification.MissingAddresses -> TangemTheme.colors.icon.accent
                     is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
                     is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
+                    is WalletNotification.NoAccount -> TangemTheme.colors.icon.accent
                     is WalletNotification.Warning -> null
                 },
             )
