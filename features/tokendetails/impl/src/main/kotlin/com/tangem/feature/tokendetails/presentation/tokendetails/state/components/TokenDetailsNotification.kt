@@ -11,49 +11,52 @@ import com.tangem.features.tokendetails.impl.R
 
 // TODO: Finalize notification strings [REDACTED_JIRA]
 @Immutable
-sealed class TokenDetailsNotification(
-    open val config: NotificationConfig,
-) {
+sealed class TokenDetailsNotification {
+
+    abstract val config: NotificationConfig
+
+    sealed class Informational : TokenDetailsNotification()
+    sealed class Warning : TokenDetailsNotification()
 
     data class RentInfo(
         private val rentInfo: CryptoCurrencyWarning.Rent,
         private val onCloseClick: () -> Unit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
-            title = TextReference.Res(R.string.send_network_fee_title),
+    ) : Warning() {
+        override val config = NotificationConfig(
+            title = TextReference.Res(R.string.warning_rent_fee_title),
             subtitle = TextReference.Res(
-                id = R.string.solana_rent_warning,
+                id = R.string.warning_solana_rent_fee_message,
                 formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
             ),
             iconResId = R.drawable.img_attention_20,
             onCloseClick = onCloseClick,
-        ),
-    )
+        )
+    }
 
     data class ExistentialDeposit(
         private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
+    ) : Informational() {
+        override val config = NotificationConfig(
             title = resourceReference(R.string.warning_existential_deposit_title),
             subtitle = TextReference.Res(
                 id = R.string.warning_existential_deposit_message,
                 formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
             ),
-            iconResId = R.drawable.img_attention_20,
-        ),
-    )
+            iconResId = R.drawable.ic_alert_circle_24,
+        )
+    }
 
     data class NetworkFee(
         private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
         private val onBuyClick: () -> Unit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
+    ) : Warning() {
+        override val config = NotificationConfig(
             title = TextReference.Res(
-                id = R.string.notification_title_not_enough_funds,
+                id = R.string.warning_send_blocked_funds_for_fee_title,
                 formatArgs = wrappedList(feeInfo.blockchainFullName),
             ),
             subtitle = TextReference.Res(
-                id = R.string.token_details_send_blocked_fee_format,
+                id = R.string.warning_send_blocked_funds_for_fee_message,
                 formatArgs = wrappedList(
                     feeInfo.currency.name,
                     feeInfo.blockchainFullName,
@@ -64,17 +67,20 @@ sealed class TokenDetailsNotification(
             ),
             iconResId = feeInfo.currency.networkIconResId,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Res(R.string.common_buy),
+                text = resourceReference(
+                    id = R.string.common_buy_currency,
+                    formatArgs = wrappedList(feeInfo.blockchainSymbol),
+                ),
                 onClick = onBuyClick,
             ),
-        ),
-    )
+        )
+    }
 
-    object NetworksUnreachable : TokenDetailsNotification(
-        config = NotificationConfig(
+    object NetworksUnreachable : Warning() {
+        override val config = NotificationConfig(
             title = resourceReference(R.string.warning_network_unreachable_title),
             subtitle = resourceReference(R.string.warning_network_unreachable_message),
             iconResId = R.drawable.img_attention_20,
-        ),
-    )
+        )
+    }
 }
