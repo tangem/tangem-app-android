@@ -32,6 +32,7 @@ import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
@@ -93,7 +94,16 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     items = state.notifications,
                     key = { it.config::class.java },
                     contentType = { it.config::class.java },
-                    itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
+                    itemContent = {
+                        Notification(
+                            modifier = itemModifier.animateItemPlacement(),
+                            config = it.config,
+                            iconTint = when (it) {
+                                is TokenDetailsNotification.Warning -> null
+                                is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
+                            },
+                        )
+                    },
                 )
                 if (!state.isCustomToken) {
                     item(
