@@ -9,9 +9,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 
-// TODO: Finalize notification strings [REDACTED_JIRA]
 @Immutable
-sealed class TokenDetailsNotification {
+internal sealed class TokenDetailsNotification {
 
     abstract val config: NotificationConfig
 
@@ -81,6 +80,17 @@ sealed class TokenDetailsNotification {
             title = resourceReference(R.string.warning_network_unreachable_title),
             subtitle = resourceReference(R.string.warning_network_unreachable_message),
             iconResId = R.drawable.img_attention_20,
+        )
+    }
+
+    class NetworksNoAccount(val network: String, val symbol: String, val amount: String) : Informational() {
+        override val config = NotificationConfig(
+            title = resourceReference(R.string.warning_no_account_title),
+            subtitle = resourceReference(
+                R.string.no_account_generic,
+                wrappedList(network, amount, symbol),
+            ),
+            iconResId = R.drawable.ic_alert_circle_24,
         )
     }
 }
