@@ -27,17 +27,17 @@ sealed class WalletNotification(val config: NotificationConfig) {
     ) {
 
         object DevCard : Critical(
-            title = resourceReference(id = R.string.common_warning),
-            subtitle = resourceReference(id = R.string.alert_developer_card),
+            title = resourceReference(id = R.string.warning_developer_card_title),
+            subtitle = resourceReference(id = R.string.warning_developer_card_message),
         )
 
         object DemoCard : Critical(
-            title = resourceReference(id = R.string.common_warning),
-            subtitle = resourceReference(id = R.string.alert_demo_message),
+            title = resourceReference(id = R.string.warning_demo_mode_title),
+            subtitle = resourceReference(id = R.string.warning_demo_mode_message),
         )
 
         object TestNetCard : Critical(
-            title = resourceReference(id = R.string.common_warning),
+            title = resourceReference(id = R.string.warning_testnet_card_title),
             subtitle = resourceReference(id = R.string.warning_testnet_card_message),
         )
 
@@ -47,9 +47,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         data class LowSignatures(val count: Int) : Critical(
-            title = resourceReference(id = R.string.common_warning),
+            title = resourceReference(id = R.string.warning_low_signatures_title),
             subtitle = resourceReference(
-                id = R.string.warning_low_signatures_format,
+                id = R.string.warning_low_signatures_message,
                 formatArgs = wrappedList(count),
             ),
         )
@@ -73,8 +73,8 @@ sealed class WalletNotification(val config: NotificationConfig) {
     ) {
 
         data class MissingBackup(val onStartBackupClick: () -> Unit) : Warning(
-            title = resourceReference(id = R.string.main_no_backup_warning_title),
-            subtitle = resourceReference(id = R.string.main_no_backup_warning_subtitle),
+            title = resourceReference(id = R.string.warning_no_backup_title),
+            subtitle = resourceReference(id = R.string.warning_no_backup_message),
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(id = R.string.button_start_backup_process),
                 onClick = onStartBackupClick,
@@ -92,17 +92,17 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         data class NumberOfSignedHashesIncorrect(val onCloseClick: () -> Unit) : Warning(
-            title = resourceReference(id = R.string.common_warning),
-            subtitle = resourceReference(id = R.string.alert_card_signed_transactions),
+            title = resourceReference(id = R.string.warning_number_of_signed_hashes_incorrect_title),
+            subtitle = resourceReference(id = R.string.warning_number_of_signed_hashes_incorrect_message),
             onCloseClick = onCloseClick,
         )
     }
 
     data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(id = R.string.main_warning_missing_derivation_title),
+            title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
-                id = R.plurals.main_warning_missing_derivation_description,
+                id = R.plurals.warning_missing_derivation_message,
                 count = missingAddressesCount,
                 formatArgs = wrappedList(missingAddressesCount),
             ),
@@ -128,9 +128,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
 
     data class UnlockWallets(val onClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(id = R.string.common_unlock_needed),
+            title = resourceReference(id = R.string.common_access_denied),
             subtitle = resourceReference(
-                id = R.string.unlock_wallet_description_short,
+                id = R.string.warning_access_denied_message,
                 formatArgs = wrappedList(
                     resourceReference(R.string.common_biometrics),
                 ),
@@ -150,9 +150,9 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.warning_rate_app_message),
             iconResId = R.drawable.ic_star_24,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(id = R.string.warning_button_love_it),
+                primaryText = resourceReference(id = R.string.warning_button_like_it),
                 onPrimaryClick = onLikeClick,
-                secondaryText = resourceReference(id = R.string.warning_button_can_be_better),
+                secondaryText = resourceReference(id = R.string.warning_button_could_be_better),
                 onSecondaryClick = onDislikeClick,
             ),
             onCloseClick = onCloseClick,

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="alert_card_signed_transactions">Diese Karte wurde früher bereits aufgeladen und Transaktionen wurden damit signiert. Ziehen Sie eine sofortige Auszahlung aller Beträge in Betracht, wenn Sie diese Karte von einer nicht vertrauenswürdigen Quelle erhalten haben.</string>
-    <string name="alert_developer_card">Die von Ihnen gescannte Karte ist eine Entwicklungskarte. Akzeptieren Sie sie nicht als Zahlungsmittel.</string>
     <string name="alert_unsupported_card">Diese Karte ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
     <string name="chat_bot_name">Tangem Bot</string>
     <string name="common_accept">Akzeptieren</string>
