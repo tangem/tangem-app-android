@@ -19,11 +19,12 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// TODO: Delete with WalletFeatureToggles
+@Deprecated(message = "Used only in old wallet screen")
 class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
         when (action) {
@@ -49,7 +50,7 @@ class WarningsMiddleware {
                 if (action.remainingSignatures != null &&
                     action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
                 ) {
-                    store.state.globalState.warningManager?.removeWarnings(R.string.warning_low_signatures_format)
+                    // store.state.globalState.warningManager?.removeWarnings(R.string.warning_low_signatures_format)
                     addWarningMessage(
                         warning = WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
                         autoUpdate = true,

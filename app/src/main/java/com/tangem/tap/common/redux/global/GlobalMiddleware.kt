@@ -14,7 +14,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
@@ -84,10 +83,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
                 if (it.hideWarning(action.warning)) {
-                    if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
-                        // TODO: No appropriate warningMessage identification. Make it better later
-                        store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
-                    }
+                    // if (WarningMessagesManager.isAlreadySignedHashesWarning()) {
+                    //     // TODO: No appropriate warningMessage identification. Make it better later
+                    //     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
+                    // }
 
                     store.dispatch(WalletAction.Warnings.Update)
                     store.dispatch(SendAction.Warnings.Update)

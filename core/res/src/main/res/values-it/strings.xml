@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="alert_card_signed_transactions">Questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
-    <string name="alert_developer_card">La carta che hai scansionato è una carta di sviluppo. Non utilizzarla come strumento di pagamento</string>
     <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
     <string name="chat_bot_name">Tangem Bot</string>
     <string name="common_accept">Accetta</string>
