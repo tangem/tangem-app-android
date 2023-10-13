@@ -28,7 +28,7 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
  * @param level logging level. By default, only the request body.
  */
 internal fun OkHttpClient.Builder.addLoggers(context: Context? = null): OkHttpClient.Builder {
-    return if (BuildConfig.DEBUG) {
+    return if (BuildConfig.LOG_ENABLED) {
         context?.let {
             addInterceptor(interceptor = ChuckerInterceptor(it))
         }
