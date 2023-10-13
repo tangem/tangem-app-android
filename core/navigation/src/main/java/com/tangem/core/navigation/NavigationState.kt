@@ -26,7 +26,7 @@ enum class AppScreen(val isDialogFragment: Boolean = false) {
     AppSettings,
     ResetToFactory,
     AccessCodeRecovery,
-    AddTokens,
+    ManageTokens,
     AddCustomToken,
     WalletConnectSessions,
     QrScan,
