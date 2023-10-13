@@ -608,7 +608,6 @@
     <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
     <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
     <string name="warning_testnet_card_message">This is a Testnet card. Don\'t accept it as a payment. This card must only be used for testing and development purposes.</string>
-    <string name="warning_title_note_top_up">Note top up</string>
     <string name="welcome_interrupted_backup_alert_discard">Discard</string>
     <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
     <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
