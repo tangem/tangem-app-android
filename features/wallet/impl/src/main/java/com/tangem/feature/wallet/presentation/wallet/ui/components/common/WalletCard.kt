@@ -79,7 +79,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
             },
         )
 
-        var balanceWidth by remember { mutableStateOf(value = Int.MIN_VALUE) }
+        var balanceWidth by remember { mutableIntStateOf(value = Int.MIN_VALUE) }
         Balance(
             state = state,
             isBalanceHidden = isBalanceHidden,
@@ -153,12 +153,12 @@ private fun CardContainer(
     Surface(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size108)
+            .onSizeChanged { itemSize = it }
             .then(
                 if (isLockedState) {
                     Modifier
                 } else {
                     Modifier
-                        .onSizeChanged { itemSize = it }
                         .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
                         .indication(interactionSource = interactionSource, indication = LocalIndication.current)
                         .pointerInput(true) {
@@ -277,7 +277,6 @@ private fun TitleText(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
@@ -285,7 +284,7 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         label = "Update the balance",
         modifier = modifier,
         transitionSpec = {
-            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) with
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 90))
         },
     ) { walletCardState ->
@@ -329,7 +328,6 @@ private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
         .size(width = dimens.size102, height = dimens.size24)
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) {
     AnimatedContent(
@@ -337,7 +335,7 @@ private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) 
         label = "Update the additional text",
         modifier = modifier,
         transitionSpec = {
-            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) with
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 90))
         },
     ) { animatedText ->
