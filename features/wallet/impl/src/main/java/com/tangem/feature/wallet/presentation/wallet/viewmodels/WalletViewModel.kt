@@ -763,10 +763,14 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onUnlockWalletClick() {
+        val state = uiState as? WalletState.ContentState ?: return
+
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeWalletLocked)
 
-        viewModelScope.launch(dispatchers.io) {
-            unlockWalletsUseCase()
+        viewModelScope.launch(dispatchers.main) {
+            unlockWalletsUseCase(
+                selectedWalletId = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex].id,
+            )
         }
     }
 
