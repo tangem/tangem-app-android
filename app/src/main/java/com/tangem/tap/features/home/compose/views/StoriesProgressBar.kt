@@ -1,19 +1,26 @@
 package com.tangem.tap.features.home.compose.views
 
+import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.res.TangemTheme
+import kotlinx.coroutines.delay
+
+private const val STORIES_ANIMATION_SPEED_ZERO_DURATION = 3000L
 
 @Composable
 fun StoriesProgressBar(
@@ -25,10 +32,20 @@ fun StoriesProgressBar(
 ) {
     val progress = remember(currentStep) { Animatable(0f) }
 
+    val context = LocalContext.current
+    val animatorSpeed = Settings.Global.getFloat(
+        context.contentResolver,
+        Settings.Global.ANIMATOR_DURATION_SCALE,
+        0f,
+    )
+
     LaunchedEffect(paused, currentStep) {
         if (paused) {
             progress.stop()
         } else {
+            if (animatorSpeed == 0f) {
+                delay(STORIES_ANIMATION_SPEED_ZERO_DURATION)
+            }
             progress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(
@@ -44,18 +61,23 @@ fun StoriesProgressBar(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-//            .height()
-            .padding(start = 9.dp, end = 9.dp, top = 16.dp),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                top = TangemTheme.dimens.spacing16,
+            ),
     ) {
         for (index in 0..steps) {
             Row(
                 modifier = Modifier
-                    .height(2.dp)
+                    .height(TangemTheme.dimens.size2)
                     .weight(1f)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
                     .background(Color.White.copy(alpha = 0.4f)),
             ) {
                 Box(
                     modifier = Modifier
+                        .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
                         .background(Color.White)
                         .fillMaxHeight().let {
                             when (index) {
