@@ -79,13 +79,13 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         object NetworksUnreachable : Warning(
-            title = resourceReference(id = R.string.wallet_balance_blockchain_unreachable),
-            subtitle = resourceReference(id = R.string.warning_subtitle_network_unreachable),
+            title = resourceReference(id = R.string.warning_network_unreachable_title),
+            subtitle = resourceReference(id = R.string.warning_network_unreachable_message),
         )
 
         object SomeNetworksUnreachable : Warning(
-            title = resourceReference(id = R.string.warning_title_some_networks_unreachable),
-            subtitle = resourceReference(id = R.string.warning_subtitle_some_networks_unreachable),
+            title = resourceReference(id = R.string.warning_some_networks_unreachable_title),
+            subtitle = resourceReference(id = R.string.warning_some_networks_unreachable_message),
         )
 
         data class TopUpNote(val errorMessage: String) : Warning(
@@ -137,7 +137,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(id = R.string.warning_rate_app_title_new),
+            title = resourceReference(id = R.string.warning_rate_app_title),
             subtitle = resourceReference(id = R.string.warning_rate_app_message),
             iconResId = R.drawable.ic_star_24,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
