@@ -40,7 +40,8 @@ class GetCurrencyWarningsUseCase(
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(getNetworkUnavailableWarning(currencyStatus)),
-        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable ->
+            flowOf(getNetworkNoAccountWarning(currencyStatus)),
+        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable, maybeNetworkNoAccount ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let {
@@ -51,6 +52,7 @@ class GetCurrencyWarningsUseCase(
                 },
                 maybeFeeWarning,
                 maybeNetworkUnavailable,
+                maybeNetworkNoAccount,
             )
         }.flowOn(dispatchers.io)
     }
@@ -103,6 +105,15 @@ class GetCurrencyWarningsUseCase(
     private fun getNetworkUnavailableWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
         return (currencyStatus.value as? CryptoCurrencyStatus.Unreachable)?.let {
             CryptoCurrencyWarning.SomeNetworksUnreachable
+        }
+    }
+
+    private fun getNetworkNoAccountWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
+        return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let {
+            CryptoCurrencyWarning.SomeNetworksNoAccount(
+                amountToCreateAccount = it.amountToCreateAccount,
+                amountCurrency = currencyStatus.currency,
+            )
         }
     }
 

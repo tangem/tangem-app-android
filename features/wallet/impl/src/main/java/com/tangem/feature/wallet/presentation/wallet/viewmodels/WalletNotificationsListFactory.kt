@@ -143,10 +143,7 @@ internal class WalletNotificationsListFactory(
                 condition = cryptoCurrencyList.hasUnreachableNetworks(),
             )
 
-            val errorMessage = cryptoCurrencyList.geNoAccountStatusMessage()
-            if (errorMessage != null) {
-                add(element = WalletNotification.Warning.TopUpNote(errorMessage = errorMessage))
-            }
+            addNoAccountWarning(cryptoCurrencyList)
 
             addIf(
                 element = WalletNotification.Warning.NumberOfSignedHashesIncorrect(
@@ -169,12 +166,19 @@ internal class WalletNotificationsListFactory(
         return any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun List<CryptoCurrencyStatus>.geNoAccountStatusMessage(): String? {
-        return this
-            .map(CryptoCurrencyStatus::value)
-            .filterIsInstance<CryptoCurrencyStatus.NoAccount>()
-            .firstOrNull()
-            ?.errorMessage
+    private fun MutableList<WalletNotification>.addNoAccountWarning(cryptoCurrencyList: List<CryptoCurrencyStatus>) {
+        val noAccountNetwork = cryptoCurrencyList.firstOrNull { it.value is CryptoCurrencyStatus.NoAccount }
+        if (noAccountNetwork != null) {
+            val amountToCreateAccount = (noAccountNetwork.value as? CryptoCurrencyStatus.NoAccount)
+                ?.amountToCreateAccount.toString()
+            add(
+                element = WalletNotification.NoAccount(
+                    network = noAccountNetwork.currency.name,
+                    amount = amountToCreateAccount,
+                    symbol = noAccountNetwork.currency.symbol,
+                ),
+            )
+        }
     }
 
     /**
