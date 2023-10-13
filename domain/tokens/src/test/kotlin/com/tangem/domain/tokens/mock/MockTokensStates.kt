@@ -60,7 +60,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote7.priceChange,
             fiatRate = MockQuotes.quote7.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -69,7 +69,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote8.priceChange,
             fiatRate = MockQuotes.quote8.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -78,7 +78,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote9.priceChange,
             fiatRate = MockQuotes.quote9.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -87,7 +87,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote10.priceChange,
             fiatRate = MockQuotes.quote10.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
