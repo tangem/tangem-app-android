@@ -2,7 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
 
 /**
@@ -88,11 +91,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.warning_some_networks_unreachable_message),
         )
 
-        data class TopUpNote(val errorMessage: String) : Warning(
-            title = resourceReference(id = R.string.warning_title_note_top_up),
-            subtitle = stringReference(value = errorMessage),
-        )
-
         data class NumberOfSignedHashesIncorrect(val onCloseClick: () -> Unit) : Warning(
             title = resourceReference(id = R.string.common_warning),
             subtitle = resourceReference(id = R.string.alert_card_signed_transactions),
@@ -114,6 +112,17 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 iconResId = R.drawable.ic_tangem_24,
                 onClick = onGenerateClick,
             ),
+        ),
+    )
+
+    data class NoAccount(val network: String, val symbol: String, val amount: String) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.warning_no_account_title),
+            subtitle = resourceReference(
+                id = R.string.no_account_generic,
+                wrappedList(network, amount, symbol),
+            ),
+            iconResId = R.drawable.ic_alert_circle_24,
         ),
     )
 
