@@ -401,7 +401,7 @@
     <string name="solana_rent_warning">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
     <string name="story_awe_title">Революционный аппаратный кошелек</string>
-    <string name="story_backup_description">До **трех карт** с одним кошельком</string>
+    <string name="story_backup_description">До трех карт с одним кошельком</string>
     <string name="story_backup_description_1">До</string>
     <string name="story_backup_description_2_bold">трех карт</string>
     <string name="story_backup_description_3">с одним кошельком</string>
@@ -421,7 +421,7 @@
     <string name="story_meet_store">Храните</string>
     <string name="story_meet_title">Встречайте Tangem</string>
     <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
-    <string name="story_web3_title">Поддержка DeFi</string>
+    <string name="story_web3_title">Поддержка Web 3.0</string>
     <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
     <string name="swapping_approve_information_title">Подтвердить</string>
     <string name="swapping_error_wrapper">Ошибка: %s</string>
