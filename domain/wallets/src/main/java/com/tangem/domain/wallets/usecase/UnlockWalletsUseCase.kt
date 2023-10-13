@@ -8,6 +8,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UnlockWalletError
+import com.tangem.domain.wallets.models.UserWalletId
 
 /**
  * Unlock wallets use case
@@ -18,11 +19,11 @@ import com.tangem.domain.wallets.models.UnlockWalletError
  */
 class UnlockWalletsUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
-    suspend operator fun invoke(): Either<UnlockWalletError, Unit> {
+    suspend operator fun invoke(selectedWalletId: UserWalletId): Either<UnlockWalletError, Unit> {
         val userWalletsListManager = walletsStateHolder.userWalletsListManager?.asLockable()
             ?: return UnlockWalletError.CommonError.left()
 
-        userWalletsListManager.unlock()
+        userWalletsListManager.unlockAndSelect(selectedWalletId = selectedWalletId)
             .doOnSuccess { return Unit.right() }
             .doOnFailure { return UnlockWalletError.CommonError.left() }
 
