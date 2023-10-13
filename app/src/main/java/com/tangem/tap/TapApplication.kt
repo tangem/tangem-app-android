@@ -35,6 +35,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -174,6 +175,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
 
     @Inject
+    lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
+
+    @Inject
     lateinit var scanCardProcessor: ScanCardProcessor
 
     @Inject
@@ -291,6 +295,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
+                    manageTokensFeatureToggles = manageTokensFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
