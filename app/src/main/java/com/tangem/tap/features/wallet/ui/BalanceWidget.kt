@@ -10,6 +10,8 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.CardBalanceBinding
 
+// TODO: Delete with WalletFeatureToggles
+@Deprecated(message = "Used only in old wallet screen")
 class BalanceWidget(
     private val binding: CardBalanceBinding,
     private val fragment: WalletFragment,
@@ -46,12 +48,11 @@ class BalanceWidget(
                 val statusView = if (blockchainWalletData.status is WalletDataModel.VerifiedOnline) {
                     R.id.tv_status_verified
                 } else {
-                    tvStatusError.text =
-                        fragment.getText(R.string.wallet_balance_tx_in_progress)
+                    // tvStatusError.text = fragment.getText(R.string.wallet_balance_tx_in_progress)
                     R.id.group_error
                 }
                 showStatus(statusView)
-                tvStatusErrorMessage.hide()
+                // tvStatusErrorMessage.hide()
 
                 if (tokenWalletData != null) {
                     showBalanceWithToken(blockchainWalletData, true)
@@ -70,12 +71,12 @@ class BalanceWidget(
                 tvCurrency.text = currency
                 tvAmount.text = ""
 
-                tvStatusErrorMessage.text = blockchainWalletData.status.errorMessage
-                tvStatusError.text =
-                    fragment.getString(R.string.wallet_balance_blockchain_unreachable)
+                // tvStatusErrorMessage.text = blockchainWalletData.status.errorMessage
+                // TODO: Delete with WalletFeatureToggles
+                // tvStatusError.text = fragment.getString(R.string.wallet_balance_blockchain_unreachable)
 
                 showStatus(R.id.group_error)
-                tvStatusErrorMessage.show(!blockchainWalletData.status.errorMessage.isNullOrBlank())
+                // tvStatusErrorMessage.show(!blockchainWalletData.status.errorMessage.isNullOrBlank())
             }
             is WalletDataModel.NoAccount -> with(binding.lBalanceError) {
                 binding.lBalance.root.hide()
@@ -93,7 +94,7 @@ class BalanceWidget(
     }
 
     private fun showStatus(@IdRes viewRes: Int) = with(binding.lBalance) {
-        groupError.show(viewRes == R.id.group_error)
+        // groupError.show(viewRes == R.id.group_error)
         tvStatusLoading.show(viewRes == R.id.tv_status_loading)
         tvStatusVerified.show(viewRes == R.id.tv_status_verified)
     }
