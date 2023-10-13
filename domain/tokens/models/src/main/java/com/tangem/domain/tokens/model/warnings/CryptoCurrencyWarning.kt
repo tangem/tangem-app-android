@@ -18,6 +18,11 @@ sealed class CryptoCurrencyWarning {
 
     object SomeNetworksUnreachable : CryptoCurrencyWarning()
 
+    data class SomeNetworksNoAccount(
+        val amountToCreateAccount: BigDecimal,
+        val amountCurrency: CryptoCurrency,
+    ) : CryptoCurrencyWarning()
+
     /**
      * Represents wallet blockchain rent
      * @param rent Amount that will be charged in overtime if the blockchain does not have an amount greater than
