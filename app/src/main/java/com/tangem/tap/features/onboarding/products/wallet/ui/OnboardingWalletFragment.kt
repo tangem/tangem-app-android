@@ -191,7 +191,7 @@ class OnboardingWalletFragment :
         }
     }
 
-    internal fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
+    private fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
         view.load(uri) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
@@ -412,7 +412,7 @@ class OnboardingWalletFragment :
         animator.showWriteBackupCard(state, cardNumber)
     }
 
-    internal fun showSuccess() = with(binding) {
+    private fun showSuccess() = with(binding) {
         toolbar.title = getString(R.string.onboarding_done_header)
         tvHeader.text = getText(R.string.onboarding_done_header)
 
@@ -427,9 +427,7 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            lifecycleScope.launch {
-                store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
-            }
+            store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
         }
 
         animator.showSuccess {
