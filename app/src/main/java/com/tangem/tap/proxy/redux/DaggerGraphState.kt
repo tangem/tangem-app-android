@@ -11,6 +11,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -37,6 +39,8 @@ data class DaggerGraphState(
     val walletConnectInteractor: WalletConnectInteractor? = null,
     val tokenDetailsFeatureToggles: TokenDetailsFeatureToggles? = null,
     val tokenDetailsRouter: TokenDetailsRouter? = null,
+    val manageTokensFeatureToggles: ManageTokensFeatureToggles? = null,
+    val manageTokensRouter: ManageTokensRouter? = null,
     val scanCardProcessor: ScanCardProcessor? = null,
     val cardSdkConfigRepository: CardSdkConfigRepository? = null,
     val appCurrencyRepository: AppCurrencyRepository? = null,
