@@ -37,6 +37,11 @@ internal class TokenDetailsNotificationConverter(
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
             CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachable
+            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.NetworksNoAccount(
+                network = warning.amountCurrency.name,
+                amount = warning.amountToCreateAccount.toString(),
+                symbol = warning.amountCurrency.symbol,
+            )
         }
     }
 }
