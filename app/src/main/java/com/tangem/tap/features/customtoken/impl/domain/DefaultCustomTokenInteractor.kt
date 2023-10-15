@@ -19,7 +19,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -45,7 +45,7 @@ import timber.log.Timber
  */
 class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val reduxStateHolder: AppStateHolder,
 ) : CustomTokenInteractor {
 
@@ -168,7 +168,7 @@ class DefaultCustomTokenInteractor(
             val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
             submitNewAdd(
-                userWalletId = getSelectedWalletUseCase().fold(ifLeft = { return }, ifRight = UserWallet::walletId),
+                userWalletId = getSelectedWalletSyncUseCase().fold(ifLeft = { return }, ifRight = UserWallet::walletId),
                 updatedScanResponse = scanResponse,
                 currencyList = listOfNotNull(
                     when (currency) {

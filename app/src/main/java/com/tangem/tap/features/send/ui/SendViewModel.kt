@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.send.navigation.SendRouter
 import com.tangem.tap.di.DelayedWork
 import com.tangem.tap.features.send.redux.AmountAction
@@ -32,7 +32,7 @@ internal class SendViewModel @Inject constructor(
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
@@ -60,7 +60,7 @@ internal class SendViewModel @Inject constructor(
     fun updateCurrencyDelayed() {
         if (cryptoCurrency != null) {
             coroutineScope.launch {
-                getSelectedWalletUseCase()
+                getSelectedWalletSyncUseCase()
                     .fold(
                         ifLeft = { Timber.e(it.toString()) },
                         ifRight = { wallet ->

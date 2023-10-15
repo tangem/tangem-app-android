@@ -2,29 +2,33 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.legacy.ensureUserWalletListManagerNotNull
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.UserWallet
-import kotlinx.coroutines.flow.Flow
 
 /**
- * Use case for getting flow of selected wallet.
+ * Use case for getting selected wallet.
+ * Important! If all wallets is locked, use case returns a error.
  *
  * @property walletsStateHolder state holder for getting static initialized 'userWalletsListManager'
  *
- * @author Andrew Khokhlov on 15/10/2023
+ * @author Andrew Khokhlov on 08/08/2023
  */
-class GetSelectedWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
+class GetSelectedWalletSyncUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
-    operator fun invoke(): Either<GetUserWalletError, Flow<UserWallet>> {
+    operator fun invoke(): Either<GetUserWalletError, UserWallet> {
         return either {
             val userWalletsListManager = ensureUserWalletListManagerNotNull(
                 walletsStateHolder = walletsStateHolder,
                 raise = GetUserWalletError::DataError,
             )
 
-            userWalletsListManager.selectedUserWallet
+            ensureNotNull(
+                value = userWalletsListManager.selectedUserWalletSync,
+                raise = { GetUserWalletError.UserWalletNotFound },
+            )
         }
     }
 }

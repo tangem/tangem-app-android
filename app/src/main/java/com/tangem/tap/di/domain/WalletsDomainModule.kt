@@ -28,6 +28,12 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun providesGetSelectedWalletSyncUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletUseCase {
         return GetSelectedWalletUseCase(walletsStateHolder = walletsStateHolder)
     }

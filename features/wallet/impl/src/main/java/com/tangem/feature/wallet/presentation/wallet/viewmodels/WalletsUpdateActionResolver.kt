@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 import com.tangem.common.Provider
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -12,12 +12,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 /**
  * Resolver that determines which update action will be performed
  *
- * @property currentStateProvider     current state provider
- * @property getSelectedWalletUseCase use case that returns selected wallet
+ * @property currentStateProvider         current state provider
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
  */
 internal class WalletsUpdateActionResolver(
     private val currentStateProvider: Provider<WalletState>,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) {
 
     fun resolve(wallets: List<UserWallet>): Action {
@@ -38,7 +38,7 @@ internal class WalletsUpdateActionResolver(
     private fun List<UserWallet>.getSelectedWallet(): UserWallet {
         val hasUnlockedWallet = any { !it.isLocked }
         return if (hasUnlockedWallet) {
-            val selectedWalletId = getSelectedWalletUseCase().fold(ifLeft = ::error, ifRight = UserWallet::walletId)
+            val selectedWalletId = getSelectedWalletSyncUseCase().fold(ifLeft = ::error, ifRight = UserWallet::walletId)
 
             firstOrNull { it.walletId == selectedWalletId }
                 ?: error("Wallets don't contain a wallet with id: $selectedWalletId")
