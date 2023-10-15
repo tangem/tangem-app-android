@@ -2,10 +2,12 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.ensureUserWalletListManagerNotNull
 import com.tangem.domain.wallets.models.DeleteWalletError
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -19,13 +21,17 @@ import com.tangem.domain.wallets.models.UserWalletId
 class DeleteWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<DeleteWalletError, Unit> {
-        val userWalletsListManager = walletsStateHolder.userWalletsListManager
-            ?: return DeleteWalletError.DataError.left()
+        return either {
+            val userWalletsListManager = ensureUserWalletListManagerNotNull(
+                walletsStateHolder = walletsStateHolder,
+                raise = { DeleteWalletError.DataError },
+            )
 
-        userWalletsListManager.delete(userWalletIds = listOf(userWalletId))
-            .doOnSuccess { return Unit.right() }
-            .doOnFailure { return DeleteWalletError.DataError.left() }
+            userWalletsListManager.delete(userWalletIds = listOf(userWalletId))
+                .doOnSuccess { return Unit.right() }
+                .doOnFailure { return DeleteWalletError.UnableToDelete.left() }
 
-        return Unit.right()
+            return Unit.right()
+        }
     }
 }
