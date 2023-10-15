@@ -32,6 +32,7 @@ sealed class Basic(
         batch: String,
         signInType: SignInType,
         walletsCount: String,
+        hasBackup: Boolean,
     ) : Basic(
         event = "Signed in",
         params = mapOf(
@@ -39,6 +40,7 @@ sealed class Basic(
             AnalyticsParam.BATCH to batch,
             "Sign in type" to signInType.name,
             "Wallets Count" to walletsCount,
+            "Backuped" to if (hasBackup) "Yes" else "No",
         ),
     ) {
         enum class SignInType {
