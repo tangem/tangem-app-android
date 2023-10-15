@@ -7,7 +7,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.tokens.impl.data.converters.CoinsResponseConverter
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,15 +16,15 @@ import com.tangem.utils.coroutines.runCatching
 /**
  * Paging source that get tokens by Tangem Tech API
  *
- * @property api                        Tangem Tech API
- * @property dispatchers                coroutine dispatchers provider
- * @property getSelectedWalletUseCase   use case that returns selected wallet
- * @property searchText                 search text
+ * @property api                          Tangem Tech API
+ * @property dispatchers                  coroutine dispatchers provider
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property searchText                   search text
  */
 internal class TangemApiTokensPagingSource(
     private val api: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val searchText: String?,
 ) : PagingSource<Int, Token>() {
 
@@ -39,7 +39,7 @@ internal class TangemApiTokensPagingSource(
         val page = params.key ?: 0
 
         return runCatching(dispatchers.io) {
-            val supportedBlockchains = getSelectedWalletUseCase().fold(
+            val supportedBlockchains = getSelectedWalletSyncUseCase().fold(
                 ifLeft = { Blockchain.values().toList() },
                 ifRight = { it.scanResponse.card.supportedBlockchains(it.scanResponse.cardTypesResolver) },
             )
