@@ -24,6 +24,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.analytics.ChangeCardAnalyticsContextUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
@@ -121,6 +122,7 @@ internal class WalletViewModel @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val changeCardAnalyticsContextUseCase: ChangeCardAnalyticsContextUseCase,
     private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
@@ -466,6 +468,8 @@ internal class WalletViewModel @Inject constructor(
 
         val state = uiState as? WalletState.ContentState ?: return
         if (state.walletsListConfig.selectedWalletIndex == index) return
+
+        changeCardAnalyticsContextUseCase(scanResponse = getWallet(index).scanResponse)
 
         // Reset the job to avoid a redundant state updating
         onWalletChangeJobHolder.update(null)
