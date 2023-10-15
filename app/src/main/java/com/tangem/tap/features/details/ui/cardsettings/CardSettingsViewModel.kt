@@ -9,7 +9,7 @@ import arrow.core.Either
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -17,15 +17,15 @@ import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.rekotlin.StoreSubscriber
-import com.tangem.tap.store
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 internal class CardSettingsViewModel @Inject constructor(
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) :
     ViewModel(), DefaultLifecycleObserver, StoreSubscriber<DetailsState> {
 
@@ -33,7 +33,7 @@ internal class CardSettingsViewModel @Inject constructor(
         mutableStateOf(updateState(store.state.detailsState.cardSettingsState))
 
     override fun onStart(owner: LifecycleOwner) {
-        when (val selectedWalletEither = getSelectedWalletUseCase()) {
+        when (val selectedWalletEither = getSelectedWalletSyncUseCase()) {
             is Either.Left -> {
                 Timber.e(selectedWalletEither.value.toString())
             }
