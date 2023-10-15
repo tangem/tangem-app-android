@@ -87,7 +87,7 @@ internal class SwapViewModel @Inject constructor(
     private var isOrderReversed = false
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()
-    var currentScreen = SwapNavScreen.Main
+    val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
 
     init {
@@ -359,6 +359,11 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onTokenSelect(id: String) {
         val foundToken = swapInteractor.findTokenById(id)
+
+        analyticsEventHandler.send(
+            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.symbol),
+        )
+
         if (foundToken != null) {
             val fromToken: Currency
             val toToken: Currency
@@ -471,11 +476,6 @@ internal class SwapViewModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
             onAmountSelected = { onAmountSelected(it) },
-            onSearchFocusChange = { focused ->
-                if (focused) {
-                    analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
-                }
-            },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
             },
