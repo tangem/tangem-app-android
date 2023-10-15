@@ -38,8 +38,4 @@ interface CardTypesResolver {
     fun isAttestationFailed(): Boolean
 
     fun hasWalletSignedHashes(): Boolean
-
-    fun hasBackup(): Boolean
-
-    fun isBackupForbidden(): Boolean
 }

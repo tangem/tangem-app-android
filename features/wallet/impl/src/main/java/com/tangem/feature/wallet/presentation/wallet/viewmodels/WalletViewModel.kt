@@ -77,6 +77,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -92,6 +93,7 @@ internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
@@ -185,7 +187,7 @@ internal class WalletViewModel @Inject constructor(
     )
 
     override fun onCreate(owner: LifecycleOwner) {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.ScreenOpened)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
         viewModelScope.launch(dispatchers.main) {
             delay(timeMillis = 1_800)
@@ -222,6 +224,19 @@ internal class WalletViewModel @Inject constructor(
                 .flowWithLifecycle(owner.lifecycle)
                 .collect()
         }
+
+        // TODO: Move to wallets domain logic
+        getSelectedWalletUseCase()
+            .onRight {
+                it
+                    .flowWithLifecycle(owner.lifecycle)
+                    .distinctUntilChanged()
+                    .onEach {
+                        analyticsEventsHandler.send(event = WalletScreenAnalyticsEvent.Basic.WalletOpened)
+                    }
+                    .flowOn(dispatchers.main)
+                    .launchIn(viewModelScope)
+            }
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {
@@ -301,7 +316,8 @@ internal class WalletViewModel @Inject constructor(
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
         val state = uiState as? WalletState.ContentState ?: return
 
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeScanYourCardTapped)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main))
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeScanYourCardTapped)
 
         viewModelScope.launch(dispatchers.io) {
             val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
@@ -401,6 +417,9 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onScanToUnlockWalletClick() {
         val state = uiState as? WalletState.ContentState ?: return
+
+        analyticsEventsHandler.send(event = WalletScreenAnalyticsEvent.MainScreen.WalletUnlockTapped)
+
         val lockedWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
         viewModelScope.launch(dispatchers.io) {
@@ -419,7 +438,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onDetailsClick() = router.openDetailsScreen()
 
     override fun onBackupCardClick() {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeBackupYourWalletTapped)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeBackupYourWalletTapped)
         router.openOnboardingScreen()
     }
 
@@ -433,7 +452,9 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onLikeAppClick() {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
+        analyticsEventsHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked),
+        )
         uiState = stateFactory.getStateAndTriggerEvent(
             state = uiState,
             event = WalletEvent.RateApp(
@@ -448,7 +469,9 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onDislikeAppClick() {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
+        analyticsEventsHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked),
+        )
         viewModelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
@@ -457,7 +480,9 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onCloseRateAppNotificationClick() {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
+        analyticsEventsHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed),
+        )
         viewModelScope.launch(dispatchers.main) {
             remindToRateAppLaterUseCase()
         }
@@ -768,7 +793,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onUnlockWalletClick() {
         val state = uiState as? WalletState.ContentState ?: return
 
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.NoticeWalletLocked)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeWalletLocked)
 
         viewModelScope.launch(dispatchers.main) {
             unlockWalletsUseCase(
@@ -991,7 +1016,10 @@ internal class WalletViewModel @Inject constructor(
             .onEach { maybeTokenList ->
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
 
-                maybeTokenList.onRight { checkMultiWalletWithFunds(it) }
+                maybeTokenList.onRight {
+                    analyticsEventsHandler.sendBalanceLoadedEvent(fiatBalance = it.totalFiatBalance)
+                    checkMultiWalletWithFunds(it)
+                }
 
                 updateNotifications(
                     index = walletIndex,
@@ -1094,6 +1122,17 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
 
                 maybeCryptoCurrencyStatus.onRight { status ->
+                    val fiatAmount = status.value.fiatAmount
+                    analyticsEventsHandler.send(
+                        event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(
+                            balance = when {
+                                fiatAmount == null -> AnalyticsParam.CardBalanceState.BlockchainError
+                                fiatAmount.isZero() -> AnalyticsParam.CardBalanceState.Empty
+                                else -> AnalyticsParam.CardBalanceState.Full
+                            },
+                        ),
+                    )
+
                     singleWalletCryptoCurrencyStatus = status
 
                     if (status.value.amount?.isZero() == false) {
@@ -1122,7 +1161,10 @@ internal class WalletViewModel @Inject constructor(
             .onEach { maybeTokenList ->
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
 
-                maybeTokenList.onRight { checkMultiWalletWithFunds(it) }
+                maybeTokenList.onRight { tokenList ->
+                    analyticsEventsHandler.sendBalanceLoadedEvent(tokenList.totalFiatBalance)
+                    checkMultiWalletWithFunds(tokenList)
+                }
 
                 updateNotifications(
                     index = walletIndex,
@@ -1132,6 +1174,26 @@ internal class WalletViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(tokensJobHolder)
+    }
+
+    private fun AnalyticsEventHandler.sendBalanceLoadedEvent(fiatBalance: TokenList.FiatBalance) {
+        val cardBalanceState = when (fiatBalance) {
+            is TokenList.FiatBalance.Failed -> AnalyticsParam.CardBalanceState.BlockchainError
+            is TokenList.FiatBalance.Loaded -> {
+                if (fiatBalance.amount > BigDecimal.ZERO) {
+                    AnalyticsParam.CardBalanceState.Full
+                } else if (fiatBalance.amount.isZero()) {
+                    AnalyticsParam.CardBalanceState.Empty
+                } else {
+                    null
+                }
+            }
+            else -> null
+        }
+
+        cardBalanceState?.let {
+            send(event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(balance = it))
+        }
     }
 
     private fun updateTxHistory(userWalletId: UserWalletId, currency: CryptoCurrency, refresh: Boolean) {
