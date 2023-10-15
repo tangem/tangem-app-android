@@ -464,12 +464,11 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onWalletChange(index: Int) {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.WalletSwipe)
-
         val state = uiState as? WalletState.ContentState ?: return
         if (state.walletsListConfig.selectedWalletIndex == index) return
 
         changeCardAnalyticsContextUseCase(scanResponse = getWallet(index).scanResponse)
+        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.WalletSwipe)
 
         // Reset the job to avoid a redundant state updating
         onWalletChangeJobHolder.update(null)
