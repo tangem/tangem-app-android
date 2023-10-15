@@ -91,7 +91,7 @@ internal class WalletViewModel @Inject constructor(
     // region Parameters
     private val getWalletsUseCase: GetWalletsUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
-    getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
@@ -181,7 +181,7 @@ internal class WalletViewModel @Inject constructor(
 
     private val walletsUpdateActionResolver = WalletsUpdateActionResolver(
         currentStateProvider = Provider { uiState },
-        getSelectedWalletUseCase = getSelectedWalletUseCase,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
     )
 
     override fun onCreate(owner: LifecycleOwner) {
