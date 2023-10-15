@@ -21,7 +21,7 @@ import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
@@ -53,11 +53,11 @@ import com.tangem.blockchain.common.Token as BlockchainToken
 /**
  * ViewModel for tokens list screen
  *
- * @property interactor         feature interactor
- * @property router             feature router
- * @property dispatchers        coroutine dispatchers provider
- * @property getSelectedWalletUseCase use case that returns selected wallet
- * @param analyticsEventHandler analytics event handler
+ * @property interactor                   feature interactor
+ * @property router                       feature router
+ * @property dispatchers                  coroutine dispatchers provider
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @param analyticsEventHandler           analytics event handler
  *
 [REDACTED_AUTHOR]
  */
@@ -67,7 +67,7 @@ internal class TokensListViewModel @Inject constructor(
     private val interactor: TokensListInteractor,
     private val router: TokensListRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     walletFeatureToggles: WalletFeatureToggles,
@@ -89,7 +89,7 @@ internal class TokensListViewModel @Inject constructor(
 
     private val tokensListMigration = TokensListMigration(
         walletFeatureToggles = walletFeatureToggles,
-        getSelectedWalletUseCase = getSelectedWalletUseCase,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getCurrenciesUseCase = getCurrenciesUseCase,
     )
 
@@ -148,7 +148,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isDifferentAddressesBlockVisible(): Boolean {
-        return getSelectedWalletUseCase().fold(
+        return getSelectedWalletSyncUseCase().fold(
             ifLeft = { false },
             ifRight = { it.scanResponse.card.useOldStyleDerivation },
         )
@@ -407,7 +407,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isUnsupportedToken(blockchain: Blockchain): SupportTokensState? {
-        return getSelectedWalletUseCase().fold(
+        return getSelectedWalletSyncUseCase().fold(
             ifLeft = { null },
             ifRight = {
                 val cardTypesResolver = it.scanResponse.cardTypesResolver
@@ -431,7 +431,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
-        return getSelectedWalletUseCase().fold(
+        return getSelectedWalletSyncUseCase().fold(
             ifLeft = { false },
             ifRight = {
                 !it.scanResponse.card.canHandleBlockchain(
