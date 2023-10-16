@@ -71,6 +71,7 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -410,12 +411,20 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.io) {
             scanCardProcessor.scan()
-                .doOnSuccess {
+                .doOnSuccess { scanResponse ->
                     // If card's public key is null then user wallet will be null
-                    val unlockedWallet = UserWalletBuilder(scanResponse = it).build()
+                    val scannedWallet = UserWalletBuilder(scanResponse = scanResponse).build()
 
-                    if (lockedWallet.walletId == unlockedWallet?.walletId) {
-                        saveWalletUseCase(userWallet = unlockedWallet, canOverride = true)
+                    if (lockedWallet.walletId == scannedWallet?.walletId) {
+                        saveWalletUseCase(userWallet = scannedWallet, canOverride = true)
+                    } else {
+                        delay(timeMillis = DELAY_SDK_DIALOG_CLOSE)
+
+                        uiState = stateFactory.getStateAndTriggerEvent(
+                            state = uiState,
+                            event = WalletEvent.ShowAlert(state = WalletAlertState.WrongCardIsScanned),
+                            setUiState = { uiState = it },
+                        )
                     }
                 }
         }
