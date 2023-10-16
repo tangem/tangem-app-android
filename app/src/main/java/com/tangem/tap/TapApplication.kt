@@ -31,6 +31,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
@@ -182,6 +183,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var walletManagersFacade: WalletManagersFacade
 
     @Inject
+    lateinit var networksRepository: NetworksRepository
+
+    @Inject
     lateinit var currenciesRepository: CurrenciesRepository
 
     @Inject
@@ -290,6 +294,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
                     appStateHolder = appStateHolder,
+                    networksRepository = networksRepository,
                     currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
