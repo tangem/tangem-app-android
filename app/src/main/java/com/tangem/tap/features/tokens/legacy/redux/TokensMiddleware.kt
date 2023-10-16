@@ -28,6 +28,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
