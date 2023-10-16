@@ -134,6 +134,7 @@ internal class WalletViewModel @Inject constructor(
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isDemoCardUseCase: IsDemoCardUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
+    getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
     // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -147,6 +148,7 @@ internal class WalletViewModel @Inject constructor(
         isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         isDemoCardUseCase = isDemoCardUseCase,
         isNeedToBackupUseCase = isNeedToBackupUseCase,
+        getMissedAddressCryptoCurrenciesUseCase = getMissedAddressesCryptoCurrenciesUseCase,
         clickIntents = this,
     )
 
@@ -333,13 +335,21 @@ internal class WalletViewModel @Inject constructor(
         val config = CardConfig.createConfig(scanResponse.card)
         val derivationDataList = currencyList.mapNotNull {
             config.primaryCurve(blockchain = Blockchain.fromId(it.network.id.value))?.let { curve ->
-                getNewDerivations(curve, scanResponse, currencyList)
+                getNewDerivations(curve, scanResponse, it)
             }
         }
 
-        val derivations = derivationDataList
-            .associate(DerivationData::derivations)
-            .ifEmpty { return }
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }.ifEmpty { return }
 
         viewModelScope.launch(dispatchers.io) {
             derivePublicKeysUseCase(cardId = scanResponse.card.cardId, derivations = derivations)
@@ -364,30 +374,27 @@ internal class WalletViewModel @Inject constructor(
     private fun getNewDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<CryptoCurrency>,
+        currency: CryptoCurrency,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList
-            .map { Blockchain.fromId(it.network.id.value) }
-            .distinct()
-            .filter { it.getSupportedCurves().contains(curve) }
-            .mapNotNull { it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle()) }
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        val supportedCurves = blockchain.getSupportedCurves()
+        val path = blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList
-            .filter { Blockchain.fromId(it.network.id.value).getSupportedCurves().contains(curve) }
-            .mapNotNull { it.network.derivationPath.value }
-            .map(::DerivationPath)
+        val customPath = currency.network.derivationPath.value?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct().toMutableList()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
 
-        currencyList.find { it is CryptoCurrency.Coin && Blockchain.fromId(it.network.id.value) == Blockchain.Cardano }
-            ?.let { currency ->
-                currency.network.derivationPath.value?.let {
-                    bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
-                }
+        if (currency is CryptoCurrency.Coin && blockchain == Blockchain.Cardano) {
+            currency.network.derivationPath.value?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
             }
+        }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys: ExtendedPublicKeysMap =
