@@ -100,10 +100,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
 
             // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeChatConfig = action.chatConfig ?: config.zendesk
+            val unsafeChatConfig = action.chatConfig ?: config.sprinklr
 
             val chatConfig = unsafeChatConfig.guard {
-                store.dispatchDebugErrorNotification("ZendeskConfig not initialized")
+                store.dispatchDebugErrorNotification("The chat config is not initialized")
                 return
             }
             feedbackManager.openChat(chatConfig, action.feedbackData)
