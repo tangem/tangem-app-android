@@ -1,4 +1,4 @@
-package com.tangem.tap
+package com.tangem.utils.extensions
 
 /**
 [REDACTED_AUTHOR]
