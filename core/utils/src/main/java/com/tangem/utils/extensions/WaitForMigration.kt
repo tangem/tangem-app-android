@@ -1,4 +1,4 @@
-package com.tangem.tap
+package com.tangem.utils.extensions
 
 /**
  * Created by Anton Zhilenkov on 07/04/2022.
