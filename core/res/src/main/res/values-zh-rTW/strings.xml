@@ -315,7 +315,7 @@
     <string name="shop_total">總計</string>
     <string name="story_awe_description">安全地存儲您的加密貨幣，同時將私鑰保存在您的卡中</string>
     <string name="story_awe_title">創新式的硬體錢包</string>
-    <string name="story_backup_description">最多 **3張實體卡片** 到一個錢包</string>
+    <string name="story_backup_description">最多 3張實體卡片 到一個錢包</string>
     <string name="story_backup_description_1">最多</string>
     <string name="story_backup_description_2_bold">3張實體卡片</string>
     <string name="story_backup_description_3">到一個錢包</string>
