@@ -158,7 +158,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
             val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::tokenDetailsFeatureToggles,
+                getDependency = DaggerGraphState::walletFeatureToggles,
             )
             if (featureToggles.isRedesignedScreenEnabled) {
                 store.state.daggerGraphState
