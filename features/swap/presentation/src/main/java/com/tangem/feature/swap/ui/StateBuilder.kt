@@ -58,7 +58,6 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
             networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
-            onSearchFocusChange = actions.onSearchFocusChange,
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
