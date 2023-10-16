@@ -16,6 +16,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
 @InstallIn(ViewModelComponent::class)
+@Suppress("TooManyFunctions")
 internal object TokensDomainModule {
 
     @Provides
@@ -211,5 +212,13 @@ internal object TokensDomainModule {
         return UpdateDelayedNetworkStatusUseCase(
             networksRepository = networksRepository,
         )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideHasMissedAddressesCryptoCurrenciesUseCase(
+        currenciesRepository: CurrenciesRepository,
+    ): GetMissedAddressesCryptoCurrenciesUseCase {
+        return GetMissedAddressesCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
 }
