@@ -137,7 +137,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(id = R.string.warning_rate_app_title),
+            title = resourceReference(id = R.string.warning_rate_app_title_new),
             subtitle = resourceReference(id = R.string.warning_rate_app_message),
             iconResId = R.drawable.ic_star_24,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(

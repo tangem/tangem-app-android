@@ -21,12 +21,13 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenScreenEvent
@@ -80,6 +81,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
+    private val warningsJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
@@ -101,9 +103,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun updateContent() {
-        updateMarketPrice()
+        subscribeOnCurrencyStatusUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
-        updateWarnings()
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -131,43 +132,54 @@ internal class TokenDetailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateWarnings() {
+    private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = userWalletId,
-                currency = cryptoCurrency,
+                currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
             )
                 .distinctUntilChanged()
                 .onEach { uiState = stateFactory.getStateWithNotifications(it) }
                 .launchIn(viewModelScope)
+                .saveIn(warningsJobHolder)
         }
     }
 
-    private fun updateMarketPrice() {
-        getCurrencyStatusUpdatesUseCase(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrency.id,
-            derivationPath = cryptoCurrency.network.derivationPath,
-        )
-            .distinctUntilChanged()
-            .onEach { either ->
-                uiState = stateFactory.getCurrencyLoadedBalanceState(either)
-                either.onRight { status ->
-                    cryptoCurrencyStatus = status
-                    updateButtons(userWalletId = userWalletId, currencyStatus = status)
+    private fun subscribeOnCurrencyStatusUpdates() {
+        viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
+            getCurrencyStatusUpdatesUseCase(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                derivationPath = cryptoCurrency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
+            )
+                .distinctUntilChanged()
+                .onEach { either ->
+                    uiState = stateFactory.getCurrencyLoadedBalanceState(either)
+                    either.onRight { status ->
+                        cryptoCurrencyStatus = status
+                        updateButtons(userWalletId = userWalletId, currencyStatus = status)
+                        updateWarnings(status)
+                    }
                 }
-            }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(marketPriceJobHolder)
+                .flowOn(dispatchers.io)
+                .launchIn(viewModelScope)
+                .saveIn(marketPriceJobHolder)
+        }
+    }
+
+    private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
+        return userWallet.scanResponse.walletData?.token != null && !userWallet.isMultiCurrency
     }
 
     /**
      * @param refresh - invalidate cache and get data from remote
      * @param showItemsLoading - show loading items placeholder.
      */
-    @Suppress("UnusedPrivateMember") // will be removed after implement caching
     private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean) {
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
@@ -251,10 +263,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun sendToken(status: CryptoCurrencyStatus) {
         viewModelScope.launch(dispatchers.io) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
                 userWalletId = userWalletId,
                 networkId = status.currency.network.id,
                 derivationPath = status.currency.network.derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
             ).firstOrNull()
 
             maybeCoinStatus?.onRight { coinStatus ->
@@ -399,7 +413,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                         showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
                     )
                 },
-                async { updateWarnings() },
             ).awaitAll()
             uiState = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)

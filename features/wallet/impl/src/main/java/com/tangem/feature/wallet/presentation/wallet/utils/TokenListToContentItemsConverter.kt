@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.OrganizeTokensButtonState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
+import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -18,23 +19,25 @@ import kotlinx.collections.immutable.persistentListOf
 internal class TokenListToContentItemsConverter(
     appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: WalletClickIntents,
-) : Converter<TokenList, WalletTokensListState> {
+) : Converter<TokenListWithWallet, WalletTokensListState> {
 
     private val tokenStatusConverter = CryptoCurrencyStatusToTokenItemConverter(
         appCurrencyProvider = appCurrencyProvider,
         clickIntents = clickIntents,
     )
 
-    override fun convert(value: TokenList): WalletTokensListState {
-        return when (value) {
+    override fun convert(value: TokenListWithWallet): WalletTokensListState {
+        val isSingleCurrencyWalletWithToken = !value.wallet.isMultiCurrency &&
+            value.wallet.scanResponse.walletData?.token != null
+        return when (val tokenList = value.tokenList) {
             is TokenList.Empty -> WalletTokensListState.Empty
             is TokenList.GroupedByNetwork -> WalletTokensListState.Content(
-                items = value.mapToMultiCurrencyItems(),
-                organizeTokensButton = value.mapToOrganizeTokensButtonState(),
+                items = tokenList.mapToMultiCurrencyItems(),
+                organizeTokensButton = tokenList.mapToOrganizeTokensButtonState(isSingleCurrencyWalletWithToken),
             )
             is TokenList.Ungrouped -> WalletTokensListState.Content(
-                items = value.mapToMultiCurrencyItems(),
-                organizeTokensButton = value.mapToOrganizeTokensButtonState(),
+                items = tokenList.mapToMultiCurrencyItems(),
+                organizeTokensButton = tokenList.mapToOrganizeTokensButtonState(isSingleCurrencyWalletWithToken),
             )
         }
     }
@@ -51,17 +54,23 @@ internal class TokenListToContentItemsConverter(
         }
     }
 
-    private fun TokenList.GroupedByNetwork.mapToOrganizeTokensButtonState(): OrganizeTokensButtonState {
+    private fun TokenList.GroupedByNetwork.mapToOrganizeTokensButtonState(
+        isSingleCurrencyWithTokenWallet: Boolean,
+    ): OrganizeTokensButtonState {
         return getOrganizeTokensButtonState(
             isLoading = totalFiatBalance is TokenList.FiatBalance.Loading,
             currenciesSize = groups.flatMap(NetworkGroup::currencies).size,
+            isSingleCurrencyWithTokenWallet = isSingleCurrencyWithTokenWallet,
         )
     }
 
-    private fun TokenList.Ungrouped.mapToOrganizeTokensButtonState(): OrganizeTokensButtonState {
+    private fun TokenList.Ungrouped.mapToOrganizeTokensButtonState(
+        isSingleCurrencyWithTokenWallet: Boolean,
+    ): OrganizeTokensButtonState {
         return getOrganizeTokensButtonState(
             isLoading = totalFiatBalance is TokenList.FiatBalance.Loading,
             currenciesSize = currencies.size,
+            isSingleCurrencyWithTokenWallet = isSingleCurrencyWithTokenWallet,
         )
     }
 
@@ -88,8 +97,12 @@ internal class TokenListToContentItemsConverter(
         return this
     }
 
-    private fun getOrganizeTokensButtonState(isLoading: Boolean, currenciesSize: Int): OrganizeTokensButtonState {
-        return if (currenciesSize > 1) {
+    private fun getOrganizeTokensButtonState(
+        isLoading: Boolean,
+        currenciesSize: Int,
+        isSingleCurrencyWithTokenWallet: Boolean,
+    ): OrganizeTokensButtonState {
+        return if (currenciesSize > 1 && !isSingleCurrencyWithTokenWallet) {
             OrganizeTokensButtonState.Visible(
                 isEnabled = !isLoading,
                 onClick = clickIntents::onOrganizeTokensClick,

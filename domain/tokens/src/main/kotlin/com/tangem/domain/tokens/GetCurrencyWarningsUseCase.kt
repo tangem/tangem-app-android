@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -23,19 +24,23 @@ class GetCurrencyWarningsUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        currency: CryptoCurrency,
+        currencyStatus: CryptoCurrencyStatus,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<Set<CryptoCurrencyWarning>> {
+        val currency = currencyStatus.currency
         return combine(
             getFeeWarningFlow(
                 userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
+                isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
-        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning ->
+            flowOf(getNetworkUnavailableWarning(currencyStatus)),
+        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let {
@@ -45,6 +50,7 @@ class GetCurrencyWarningsUseCase(
                     )
                 },
                 maybeFeeWarning,
+                maybeNetworkUnavailable,
             )
         }.flowOn(dispatchers.io)
     }
@@ -54,6 +60,7 @@ class GetCurrencyWarningsUseCase(
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
+        isSingleWalletWithTokens: Boolean,
     ): Flow<CryptoCurrencyWarning?> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -62,9 +69,19 @@ class GetCurrencyWarningsUseCase(
             userWalletId = userWalletId,
         )
 
+        val currencyFlow = if (isSingleWalletWithTokens) {
+            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+        } else {
+            operations.getCurrencyStatusFlow(currencyId, derivationPath)
+        }
+        val networkFlow = if (isSingleWalletWithTokens) {
+            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+        } else {
+            operations.getNetworkCoinFlow(networkId, derivationPath)
+        }
         return combine(
-            operations.getCurrencyStatusFlow(currencyId, derivationPath).map { it.getOrNull() },
-            operations.getNetworkCoinFlow(networkId, derivationPath).map { it.getOrNull() },
+            currencyFlow.map { it.getOrNull() },
+            networkFlow.map { it.getOrNull() },
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {
@@ -80,6 +97,12 @@ class GetCurrencyWarningsUseCase(
                 }
                 else -> CryptoCurrencyWarning.SomeNetworksUnreachable
             }
+        }
+    }
+
+    private fun getNetworkUnavailableWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
+        return (currencyStatus.value as? CryptoCurrencyStatus.Unreachable)?.let {
+            CryptoCurrencyWarning.SomeNetworksUnreachable
         }
     }
 

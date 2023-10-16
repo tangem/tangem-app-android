@@ -81,6 +81,8 @@ dependencies {
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.send.api)
+    implementation(projects.features.manageTokens.api)
+    implementation(projects.features.manageTokens.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -95,7 +97,6 @@ dependencies {
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
     implementation(deps.lifecycle.compose)
-    implementation(deps.androidx.palette)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)

@@ -30,6 +30,14 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideFetchPendingTransactionsUseCase(
+        networksRepository: NetworksRepository,
+    ): FetchPendingTransactionsUseCase {
+        return FetchPendingTransactionsUseCase(networksRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -37,6 +45,17 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): GetTokenListUseCase {
         return GetTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetCardTokensListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCardTokensListUseCase {
+        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
     }
 
     @Provides
