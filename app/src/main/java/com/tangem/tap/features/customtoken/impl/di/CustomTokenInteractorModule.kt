@@ -35,7 +35,6 @@ internal object CustomTokenInteractorModule {
                 reduxStateHolder = reduxStateHolder,
             ),
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            reduxStateHolder = reduxStateHolder,
         )
     }
 }
