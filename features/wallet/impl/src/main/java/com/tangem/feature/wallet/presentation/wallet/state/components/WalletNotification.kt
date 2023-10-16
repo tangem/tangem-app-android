@@ -31,16 +31,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.warning_developer_card_message),
         )
 
-        object DemoCard : Critical(
-            title = resourceReference(id = R.string.warning_demo_mode_title),
-            subtitle = resourceReference(id = R.string.warning_demo_mode_message),
-        )
-
-        object TestNetCard : Critical(
-            title = resourceReference(id = R.string.warning_testnet_card_title),
-            subtitle = resourceReference(id = R.string.warning_testnet_card_message),
-        )
-
         object FailedCardValidation : Critical(
             title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
@@ -96,35 +86,53 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.warning_number_of_signed_hashes_incorrect_message),
             onCloseClick = onCloseClick,
         )
+
+        object TestNetCard : Warning(
+            title = resourceReference(id = R.string.warning_testnet_card_title),
+            subtitle = resourceReference(id = R.string.warning_testnet_card_message),
+        )
     }
 
-    data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : WalletNotification(
+    sealed class Informational(
+        title: TextReference,
+        subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
+    ) : WalletNotification(
         config = NotificationConfig(
+            title = title,
+            subtitle = subtitle,
+            iconResId = R.drawable.ic_alert_circle_24,
+            buttonsState = buttonsState,
+        ),
+    ) {
+
+        data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : Informational(
             title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
                 id = R.plurals.warning_missing_derivation_message,
                 count = missingAddressesCount,
                 formatArgs = wrappedList(missingAddressesCount),
             ),
-            iconResId = R.drawable.ic_alert_circle_24,
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(id = R.string.common_generate_addresses),
                 iconResId = R.drawable.ic_tangem_24,
                 onClick = onGenerateClick,
             ),
-        ),
-    )
+        )
 
-    data class NoAccount(val network: String, val symbol: String, val amount: String) : WalletNotification(
-        config = NotificationConfig(
+        data class NoAccount(val network: String, val symbol: String, val amount: String) : Informational(
             title = resourceReference(id = R.string.warning_no_account_title),
             subtitle = resourceReference(
                 id = R.string.no_account_generic,
                 wrappedList(network, amount, symbol),
             ),
-            iconResId = R.drawable.ic_alert_circle_24,
-        ),
-    )
+        )
+
+        object DemoCard : Informational(
+            title = resourceReference(id = R.string.warning_demo_mode_title),
+            subtitle = resourceReference(id = R.string.warning_demo_mode_message),
+        )
+    }
 
     data class UnlockWallets(val onClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
