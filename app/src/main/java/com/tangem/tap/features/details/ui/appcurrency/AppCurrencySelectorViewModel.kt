@@ -2,10 +2,12 @@ package com.tangem.tap.features.details.ui.appcurrency
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.appcurrency.GetAvailableCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.SelectAppCurrencyUseCase
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     private val selectAppCurrencyUseCase: SelectAppCurrencyUseCase,
     private val reduxNavController: ReduxNavController,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), AppCurrencySelectorIntents {
 
     private val stateController = AppCurrencySelectorStateHolder(
@@ -45,7 +48,12 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     override fun onCurrencyClick(currency: AppCurrencySelectorState.Currency) {
         viewModelScope.launch(dispatchers.io) {
             selectAppCurrencyUseCase(currency.id)
-                .onRight { reduxNavController.popBackStack() }
+                .onRight {
+                    analyticsEventHandler.send(
+                        event = Settings.AppSettings.MainCurrencyChanged(currencyType = currency.name),
+                    )
+                    reduxNavController.popBackStack()
+                }
         }
     }
 
