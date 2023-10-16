@@ -81,9 +81,7 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.Receive(true))
 
         // swap
-        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id) &&
-            !isCustomToken(cryptoCurrency)
-        ) {
+        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id)) {
             activeList.add(TokenActionsState.ActionState.Swap(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Swap(false))
@@ -100,9 +98,5 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.HideToken(true))
 
         return activeList + disabledList
-    }
-
-    private fun isCustomToken(currency: CryptoCurrency): Boolean {
-        return currency is CryptoCurrency.Token && currency.isCustom
     }
 }
