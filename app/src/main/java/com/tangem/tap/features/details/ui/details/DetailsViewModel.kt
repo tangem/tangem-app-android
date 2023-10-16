@@ -161,7 +161,7 @@ internal class DetailsViewModel(
     }
 
     private fun scanAndSaveUserWallet() {
-        Analytics.send(Settings.ScanNewCard())
+        Analytics.send(Settings.ScanNewCard)
         store.dispatch(DetailsAction.ScanAndSaveUserWallet)
     }
 

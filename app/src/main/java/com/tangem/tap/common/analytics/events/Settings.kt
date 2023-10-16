@@ -22,7 +22,7 @@ sealed class Settings(
     class ButtonAppSettings : Settings(event = "Button - App Settings")
     class ButtonCreateBackup : Settings(event = "Button - Create Backup")
     class ButtonWalletConnect : Settings(event = "Button - Wallet Connect")
-    class ScanNewCard : Settings(event = "Button - Scan New Card")
+    object ScanNewCard : Settings(event = "Button - Scan New Card")
 
     class ButtonSocialNetwork(network: SocialNetwork) : Settings(
         event = "Button - Social Network",
