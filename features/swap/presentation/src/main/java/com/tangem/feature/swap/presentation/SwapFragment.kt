@@ -52,7 +52,7 @@ class SwapFragment : ComposeFragment() {
     @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent(viewModel: SwapViewModel) {
-        Crossfade(targetState = viewModel.currentScreen) { screen ->
+        Crossfade(targetState = viewModel.currentScreen, label = "") { screen ->
             when (screen) {
                 SwapNavScreen.Main -> SwapScreen(stateHolder = viewModel.uiState)
                 SwapNavScreen.Success -> {
@@ -66,11 +66,7 @@ class SwapFragment : ComposeFragment() {
                 SwapNavScreen.SelectToken -> {
                     val tokenState = viewModel.uiState.selectTokenState
                     if (tokenState != null) {
-                        SwapSelectTokenScreen(
-                            state = tokenState,
-                            onSearchFocusChange = viewModel.uiState.onSearchFocusChange,
-                            onBack = viewModel.uiState.onBackClicked,
-                        )
+                        SwapSelectTokenScreen(state = tokenState, onBack = viewModel.uiState.onBackClicked)
                     } else {
                         SwapScreen(stateHolder = viewModel.uiState)
                     }
