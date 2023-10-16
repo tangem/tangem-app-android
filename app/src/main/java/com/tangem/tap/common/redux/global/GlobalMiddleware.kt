@@ -3,10 +3,12 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -182,6 +184,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             action.manager.selectedUserWallet
                 .distinctUntilChanged()
                 .onEach { userWallet ->
+                    Analytics.send(event = Basic.WalletOpened())
+
                     store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
                         infoHolder.setCardInfo(data = userWallet.scanResponse)
 
