@@ -11,7 +11,6 @@ import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.setContext
@@ -21,6 +20,7 @@ import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import org.rekotlin.Store
 
