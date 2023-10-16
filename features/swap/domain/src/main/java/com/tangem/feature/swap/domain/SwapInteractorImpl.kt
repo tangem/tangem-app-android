@@ -351,6 +351,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun isAllowedToSpend(networkId: String, fromToken: Currency, amount: SwapAmount): Boolean {
+        if (fromToken is Currency.NativeToken) return true
         return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 val allowance = repository.getAllowance(
