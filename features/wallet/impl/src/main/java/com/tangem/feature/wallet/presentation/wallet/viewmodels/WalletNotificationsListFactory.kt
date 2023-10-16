@@ -34,6 +34,8 @@ internal class WalletNotificationsListFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
+    private var readyForRateAppNotification = false
+
     fun create(
         selectedWalletId: UserWalletId,
         cardTypesResolver: CardTypesResolver,
@@ -44,6 +46,7 @@ internal class WalletNotificationsListFactory(
             flow2 = isReadyToShowRateAppUseCase(),
             flow3 = isNeedToBackupUseCase(selectedWalletId),
         ) { wasCardScanned, isReadyToShowRating, isNeedToBackup ->
+            readyForRateAppNotification = true
             buildList {
                 addCriticalNotifications(cardTypesResolver)
 
@@ -82,7 +85,7 @@ internal class WalletNotificationsListFactory(
                 onDislikeClick = clickIntents::onDislikeAppClick,
                 onCloseClick = clickIntents::onCloseRateAppNotificationClick,
             ),
-            condition = isReadyToShowRating,
+            condition = isReadyToShowRating && readyForRateAppNotification,
         )
     }
 
@@ -144,7 +147,12 @@ internal class WalletNotificationsListFactory(
     }
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) add(element = element)
+        if (condition) {
+            add(element = element)
+            if (element is WalletNotification.Critical || element is WalletNotification.Warning) {
+                readyForRateAppNotification = false
+            }
+        }
     }
 
     private fun MutableList<WalletNotification>.addMissingAddressesNotification(
