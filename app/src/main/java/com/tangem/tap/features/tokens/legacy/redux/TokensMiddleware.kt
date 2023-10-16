@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("LargeClass")
 object TokensMiddleware {
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
@@ -360,6 +361,7 @@ object TokensMiddleware {
         currencyList: List<CryptoCurrency>,
     ) {
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
 
         scope.launch {
             userWalletsListManager.update(
@@ -368,6 +370,12 @@ object TokensMiddleware {
             )
 
             currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
+            val networks = currencyList.map { it.network }.toSet()
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWalletId,
+                networks = networks,
+                refresh = true,
+            )
         }
     }
 
