@@ -93,7 +93,6 @@ internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
@@ -224,19 +223,6 @@ internal class WalletViewModel @Inject constructor(
                 .flowWithLifecycle(owner.lifecycle)
                 .collect()
         }
-
-        // TODO: Move to wallets domain logic
-        getSelectedWalletUseCase()
-            .onRight {
-                it
-                    .flowWithLifecycle(owner.lifecycle)
-                    .distinctUntilChanged()
-                    .onEach {
-                        analyticsEventsHandler.send(event = WalletScreenAnalyticsEvent.Basic.WalletOpened)
-                    }
-                    .flowOn(dispatchers.main)
-                    .launchIn(viewModelScope)
-            }
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {

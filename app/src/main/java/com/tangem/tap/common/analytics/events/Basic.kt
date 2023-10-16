@@ -32,16 +32,18 @@ sealed class Basic(
         batch: String,
         signInType: SignInType,
         walletsCount: String,
-        hasBackup: Boolean,
+        hasBackup: Boolean?,
     ) : Basic(
         event = "Signed in",
-        params = mapOf(
-            AnalyticsParam.CURRENCY to currency.value,
-            AnalyticsParam.BATCH to batch,
-            "Sign in type" to signInType.name,
-            "Wallets Count" to walletsCount,
-            "Backuped" to if (hasBackup) "Yes" else "No",
-        ),
+        params = buildMap {
+            put(AnalyticsParam.CURRENCY, currency.value)
+            put(AnalyticsParam.BATCH, batch)
+            put("Sign in type", signInType.name)
+            put("Wallets Count", walletsCount)
+            if (hasBackup != null) {
+                put("Backuped", if (hasBackup) "Yes" else "No")
+            }
+        },
     ) {
         enum class SignInType {
             Card, Biometric

@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.Basic
@@ -65,8 +64,7 @@ internal class WalletViewModel @Inject constructor(
                         batch = scanResponse.card.batchId,
                         signInType = signInType,
                         walletsCount = store.state.globalState.userWalletsListManager?.walletsCount.toString(),
-                        hasBackup = scanResponse.card.backupStatus is CardDTO.BackupStatus.CardLinked ||
-                            scanResponse.card.backupStatus is CardDTO.BackupStatus.Active,
+                        hasBackup = scanResponse.card.backupStatus?.isActive,
                     ),
                 )
             }

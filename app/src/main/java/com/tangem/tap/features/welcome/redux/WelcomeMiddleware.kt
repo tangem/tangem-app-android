@@ -10,7 +10,6 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.unlockIfLockable
@@ -151,8 +150,7 @@ internal class WelcomeMiddleware {
                     batch = scanResponse.card.batchId,
                     signInType = signInType,
                     walletsCount = store.state.globalState.userWalletsListManager?.walletsCount.toString(),
-                    hasBackup = scanResponse.card.backupStatus is CardDTO.BackupStatus.CardLinked ||
-                        scanResponse.card.backupStatus is CardDTO.BackupStatus.Active,
+                    hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
         }
