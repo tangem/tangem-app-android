@@ -24,8 +24,8 @@ internal fun SearchCurrenciesButton(onClick: () -> Unit, modifier: Modifier = Mo
 }
 
 private val SearchCurrenciesButtonColors: ButtonColors = TangemButtonColors(
-    backgroundColor = TangemColorPalette.Light2,
-    contentColor = TangemColorPalette.Dark6,
-    disabledBackgroundColor = TangemColorPalette.Light2,
-    disabledContentColor = TangemColorPalette.Dark6,
+    backgroundColor = TangemColorPalette.Dark5,
+    contentColor = TangemColorPalette.White,
+    disabledBackgroundColor = TangemColorPalette.Dark5,
+    disabledContentColor = TangemColorPalette.White,
 )
