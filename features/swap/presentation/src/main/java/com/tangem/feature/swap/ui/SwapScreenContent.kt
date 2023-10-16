@@ -454,8 +454,6 @@ private val state = SwapStateHolder(
     onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
-    onSearchFocusChange = {},
-    // alert = SwapWarning.GenericWarning("There was an error. Please try again.") {},
 )
 
 @Preview
