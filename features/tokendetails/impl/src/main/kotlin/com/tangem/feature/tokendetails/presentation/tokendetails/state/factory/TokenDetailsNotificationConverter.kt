@@ -19,25 +19,25 @@ internal class TokenDetailsNotificationConverter(
 
     fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
+        newNotifications.removeBy { it is TokenDetailsNotification.Informational.RentInfo }
         return newNotifications.toImmutableList()
     }
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.Warning.NetworkFee(
                 feeInfo = warning,
                 onBuyClick = clickIntents::onBuyClick,
             )
-            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
+            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.Informational.ExistentialDeposit(
                 existentialInfo = warning,
             )
-            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
+            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.Informational.RentInfo(
                 rentInfo = warning,
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
-            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachable
-            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.NetworksNoAccount(
+            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.Warning.NetworksUnreachable
+            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.Informational.NetworksNoAccount(
                 network = warning.amountCurrency.name,
                 amount = warning.amountToCreateAccount.toString(),
                 symbol = warning.amountCurrency.symbol,

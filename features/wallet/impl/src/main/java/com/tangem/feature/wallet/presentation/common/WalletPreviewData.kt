@@ -382,7 +382,7 @@ internal object WalletPreviewData {
             ),
             notifications = persistentListOf(
                 WalletNotification.Critical.DevCard,
-                WalletNotification.MissingAddresses(missingAddressesCount = 0, onGenerateClick = {}),
+                WalletNotification.Informational.MissingAddresses(missingAddressesCount = 0, onGenerateClick = {}),
                 WalletNotification.Warning.NetworksUnreachable,
             ),
             bottomSheetConfig = bottomSheet,
