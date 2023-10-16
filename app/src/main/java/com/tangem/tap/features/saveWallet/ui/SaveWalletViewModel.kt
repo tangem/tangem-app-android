@@ -30,12 +30,14 @@ internal class SaveWalletViewModel @Inject constructor(
     }
 
     fun saveWallet() {
-        analyticsEventHandler.send(WalletScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.On))
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
         store.dispatch(SaveWalletAction.Save)
     }
 
     fun cancelOrClose() {
-        analyticsEventHandler.send(WalletScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+        analyticsEventHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off),
+        )
         store.dispatch(SaveWalletAction.Dismiss)
     }
 
