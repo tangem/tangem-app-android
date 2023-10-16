@@ -183,7 +183,7 @@
     <string name="feedback_subject_support">Feedback</string>
     <string name="feedback_subject_support_tangem">Tangem feedback</string>
     <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
-    <string name="home_button_order">Order</string>
+    <string name="home_button_order">Order card</string>
     <string name="home_button_scan">Scan card</string>
     <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -407,7 +407,7 @@
     <string name="shop_total">Total</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
     <string name="story_awe_title">Revolutionary Hardware Wallet</string>
-    <string name="story_backup_description">Up to **3 physical cards** to one wallet</string>
+    <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
     <string name="story_backup_description_1">Up to</string>
     <string name="story_backup_description_2_bold">3 physical cards</string>
     <string name="story_backup_description_3">to one wallet</string>
@@ -427,7 +427,7 @@
     <string name="story_meet_store">Store</string>
     <string name="story_meet_title">Meet Tangem</string>
     <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
-    <string name="story_web3_title">DeFi Compatible</string>
+    <string name="story_web3_title">Web 3.0 compatible</string>
     <string name="swapping_approve_information_text">Approvals are considered an industry standard across all decentralized exchanges and protect your wallet from being accessed by a smart contract without your permission. By design, smart contracts can\'t access your tokens unless you approve access from your end. By \"unlocking\" your tokens, you are give permission to the 1inch smart contract to spend your assets. The miners of the network are compensated with a gas fee (paid by you) to record this action on the blockchain. Once permission has been granted you will be able to swap your token.</string>
     <string name="swapping_approve_information_title">Approve</string>
     <string name="swapping_error_wrapper">Error: %s</string>
