@@ -20,6 +20,7 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.models.Currency
@@ -42,6 +43,7 @@ import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val currenciesRepository: CurrenciesRepository,
+    private val networksRepository: NetworksRepository,
 ) : DerivationManager {
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
@@ -155,16 +157,20 @@ class DerivationManagerImpl(
         derivationPath: String,
         derivationStyleProvider: DerivationStyleProvider,
     ) {
+        val cryptoCurrency = convertCurrency(
+            blockchain = blockchain,
+            currency = currency,
+            derivationPath = derivationPath,
+            derivationStyleProvider = derivationStyleProvider,
+        )
         currenciesRepository.addCurrencies(
             userWalletId,
-            listOf(
-                convertCurrency(
-                    blockchain = blockchain,
-                    currency = currency,
-                    derivationPath = derivationPath,
-                    derivationStyleProvider = derivationStyleProvider,
-                ),
-            ),
+            listOf(cryptoCurrency),
+        )
+        networksRepository.getNetworkStatusesSync(
+            userWalletId = userWalletId,
+            networks = setOf(cryptoCurrency.network),
+            refresh = true,
         )
     }
 
