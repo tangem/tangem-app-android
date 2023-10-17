@@ -166,12 +166,16 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
-    debugImplementation(deps.chuckerDebugImpl)
-    releaseImplementation(deps.chuckerReleaseImpl)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+
+    /** Chucker */
+    debugImplementation(deps.chuckerDebugImpl)
+    externalImplementation(deps.chuckerReleaseImpl)
+    internalImplementation(deps.chuckerReleaseImpl)
+    releaseImplementation(deps.chuckerReleaseImpl)
 }

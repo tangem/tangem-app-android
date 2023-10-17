@@ -41,12 +41,16 @@ dependencies {
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
     implementation(deps.reactive.network)
-    debugImplementation(deps.chuckerDebugImpl)
-    releaseImplementation(deps.chuckerReleaseImpl)
 
     /** Time */
     implementation(deps.jodatime)
 
     /** Security */
     implementation(deps.spongecastle.core)
+
+    /** Chucker */
+    debugImplementation(deps.chuckerDebugImpl)
+    externalImplementation(deps.chuckerReleaseImpl)
+    internalImplementation(deps.chuckerReleaseImpl)
+    releaseImplementation(deps.chuckerReleaseImpl)
 }
