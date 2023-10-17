@@ -20,7 +20,9 @@ class UserWalletBuilder(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Start2Coin -> "Start2Coin"
-            ProductType.Wallet -> when {
+            ProductType.Wallet,
+            ProductType.Wallet2,
+            -> when {
                 card.isBackupNotAllowed -> "Tangem card"
                 cardTypesResolver.isStart2Coin() -> "Start2Coin"
                 else -> "Wallet"
