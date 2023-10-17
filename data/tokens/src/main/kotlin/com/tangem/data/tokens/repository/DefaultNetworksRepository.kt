@@ -49,7 +49,8 @@ internal class DefaultNetworksRepository(
         withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, false)
         }
-    }.cancellable()
+    }
+        .cancellable()
 
     override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
         withContext(dispatchers.io) {
