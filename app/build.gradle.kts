@@ -9,36 +9,27 @@ plugins {
     id("configuration")
 }
 
-configurations {
-    all {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        exclude(group = "com.github.komputing.kethereum")
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    exclude(group = "com.github.komputing.kethereum")
 
-        resolutionStrategy {
-            dependencySubstitution {
-                substitute(module("com.facebook.react:react-native"))
-                    .using(module("com.facebook.react:react-android:0.72.4"))
-                    .because(
-                        "The current version of SPR Client (3.6.2) is not compatible with the latest " +
-                            "React Native version"
-                    )
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("com.facebook.react:react-native"))
+                .using(module("com.facebook.react:react-android:0.72.4"))
 
-                substitute(module("com.facebook.react:hermes-engine"))
-                    .using(module("com.facebook.react:hermes-android:0.72.4"))
-                    .because(
-                        "The current version of SPR Client (3.6.2) is not compatible with the latest " +
-                            "Hermes Engine version"
-                    )
-            }
-
-            force(
-                "org.bouncycastle:bcpkix-jdk15on:1.70",
-                "com.facebook.react:react-android:0.72.4",
-                "com.facebook.react:hermes-android:0.72.4",
-            )
+            substitute(module("com.facebook.react:hermes-engine"))
+                .using(module("com.facebook.react:hermes-android:0.72.4"))
         }
+
+        force(
+            "org.bouncycastle:bcpkix-jdk15on:1.70",
+            "com.facebook.react:react-android:0.72.4",
+            "com.facebook.react:hermes-android:0.72.4",
+        )
     }
 }
+
 
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
@@ -179,6 +170,7 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
+    implementation("com.facebook.react:react-android:0.72.4")
     implementation(deps.sprClient) {
         exclude(group = "com.github.stephenc.jcip")
     }
