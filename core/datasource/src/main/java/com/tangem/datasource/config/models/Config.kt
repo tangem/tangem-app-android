@@ -16,6 +16,7 @@ data class Config(
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
     val zendesk: ZendeskConfig? = null,
+    val sprinklr: SprinklrConfig? = null,
     val swapReferrerAccount: SwapReferrerAccount? = null,
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
