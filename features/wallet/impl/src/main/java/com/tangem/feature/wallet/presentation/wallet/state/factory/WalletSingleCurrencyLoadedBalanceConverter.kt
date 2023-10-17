@@ -58,6 +58,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         return when (status) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Content(
                 currencySymbol = currencyName,
                 price = formatPrice(status, appCurrencyProvider()),
@@ -92,6 +93,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.NoAmount,
             -> {
                 WalletCardState.Content(
                     id = selectedWallet.id,
