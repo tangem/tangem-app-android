@@ -49,8 +49,9 @@ dependencies {
     implementation(deps.spongecastle.core)
 
     /** Chucker */
-    debugImplementation(deps.chuckerDebugImpl)
-    externalImplementation(deps.chuckerReleaseImpl)
-    internalImplementation(deps.chuckerReleaseImpl)
-    releaseImplementation(deps.chuckerReleaseImpl)
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }

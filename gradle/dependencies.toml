@@ -231,6 +231,6 @@ reactive-network = { module = "com.github.pwittchen:reactivenetwork-rx2", versio
 walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "walletConnectCore" }
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
 prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
-chuckerDebugImpl = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
-chuckerReleaseImpl = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 # endregion Other

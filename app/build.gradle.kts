@@ -174,8 +174,8 @@ dependencies {
     androidTestImplementation(deps.test.espresso)
 
     /** Chucker */
-    debugImplementation(deps.chuckerDebugImpl)
-    externalImplementation(deps.chuckerReleaseImpl)
-    internalImplementation(deps.chuckerReleaseImpl)
-    releaseImplementation(deps.chuckerReleaseImpl)
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }
