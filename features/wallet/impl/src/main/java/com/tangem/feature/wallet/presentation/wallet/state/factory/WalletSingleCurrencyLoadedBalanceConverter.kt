@@ -91,6 +91,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         val updatedWallet = when (status) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAccount,
             -> {
                 WalletCardState.Content(
                     id = selectedWallet.id,
@@ -116,7 +117,6 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                 )
             }
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
             -> {
