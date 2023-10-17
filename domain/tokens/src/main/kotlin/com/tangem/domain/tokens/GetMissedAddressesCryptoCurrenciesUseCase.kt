@@ -15,7 +15,7 @@ class GetMissedAddressesCryptoCurrenciesUseCase(private val currenciesRepository
 
     operator fun invoke(userWalletId: UserWalletId): Flow<Either<GetCurrenciesError, List<CryptoCurrency>>> {
         return currenciesRepository.getMissedAddressesCryptoCurrencies(userWalletId)
-            .map(List<CryptoCurrency>::right)
-            .catch { GetCurrenciesError.DataError(it).left() }
+            .map<List<CryptoCurrency>, Either<GetCurrenciesError, List<CryptoCurrency>>> { it.right() }
+            .catch { emit(GetCurrenciesError.DataError(it).left()) }
     }
 }
