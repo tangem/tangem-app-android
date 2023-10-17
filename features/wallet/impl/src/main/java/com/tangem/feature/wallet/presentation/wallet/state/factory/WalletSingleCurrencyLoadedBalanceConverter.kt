@@ -66,10 +66,17 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                     type = getPriceChangeType(status),
                 ),
             )
+            is CryptoCurrencyStatus.NoAccount -> MarketPriceBlockState.Content(
+                currencySymbol = currencyName,
+                price = formatPrice(status, appCurrencyProvider()),
+                priceChangeConfig = PriceChangeState.Content(
+                    valueInPercent = formatPriceChange(status),
+                    type = getPriceChangeType(status),
+                ),
+            )
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
             -> MarketPriceBlockState.Error(currencyName)
         }
