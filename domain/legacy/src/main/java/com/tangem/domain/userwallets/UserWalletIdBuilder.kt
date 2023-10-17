@@ -60,6 +60,7 @@ class UserWalletIdBuilder private constructor(
                     ProductType.Twins -> scanResponse.secondTwinPublicKey?.hexToBytes()
                     ProductType.Note,
                     ProductType.Wallet,
+                    ProductType.Wallet2,
                     ProductType.Start2Coin,
                     -> null
                 },
