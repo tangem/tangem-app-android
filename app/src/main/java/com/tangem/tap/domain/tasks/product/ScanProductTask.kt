@@ -216,7 +216,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = ProductType.Wallet
+        val productType = getWalletProductType(card)
         val config = CardConfig.createConfig(card)
         scope.launch {
             val scanResponse = ScanResponse(
@@ -278,6 +278,14 @@ private class ScanWalletProcessor(
         }
 
         return blockchainsToDerive.distinct()
+    }
+
+    private fun getWalletProductType(card: CardDTO): ProductType {
+        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available) {
+            ProductType.Wallet2
+        } else {
+            ProductType.Wallet
+        }
     }
 
     private fun getDefaultBlockchains(
