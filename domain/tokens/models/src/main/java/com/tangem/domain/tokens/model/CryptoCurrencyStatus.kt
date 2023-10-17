@@ -56,6 +56,12 @@ data class CryptoCurrencyStatus(
         override val fiatRate: BigDecimal?,
     ) : Status(isError = true)
 
+    /** Represents a state where the cryptocurrency's network amount not found. */
+    data class NoAmount(
+        override val priceChange: BigDecimal?,
+        override val fiatRate: BigDecimal?,
+    ) : Status(isError = true)
+
     /** Represents a state where the cryptocurrency's derivation is missed. */
     data class MissedDerivation(
         override val priceChange: BigDecimal?,
