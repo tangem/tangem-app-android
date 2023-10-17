@@ -190,7 +190,8 @@ internal class DefaultCurrenciesRepository(
             withContext(dispatchers.io) {
                 fetchTokensIfCacheExpired(userWallet, refresh = false)
             }
-        }.cancellable()
+        }
+            .cancellable()
     }
 
     override suspend fun getMultiCurrencyWalletCurrenciesSync(
