@@ -288,6 +288,9 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun refreshUserWalletsAmounts() {
+        val featureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+        if (featureToggles.isRedesignedScreenEnabled) return
+
         scope.launch {
             walletStoresManager.updateAmounts(
                 userWallets = userWalletsListManager.userWallets.firstOrNull().orEmpty(),
