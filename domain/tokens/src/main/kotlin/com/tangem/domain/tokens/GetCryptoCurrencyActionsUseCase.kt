@@ -56,6 +56,9 @@ class GetCryptoCurrencyActionsUseCase(
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
             return listOf(TokenActionsState.ActionState.HideToken(true))
         }
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
+            return getActionsForUnreachableCurrency(cryptoCurrency)
+        }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
         val disabledList = mutableListOf<TokenActionsState.ActionState>()
@@ -97,6 +100,24 @@ class GetCryptoCurrencyActionsUseCase(
         // hide
         activeList.add(TokenActionsState.ActionState.HideToken(true))
 
+        return activeList + disabledList
+    }
+
+    private fun getActionsForUnreachableCurrency(cryptoCurrency: CryptoCurrency): List<TokenActionsState.ActionState> {
+        val activeList = mutableListOf<TokenActionsState.ActionState>()
+        val disabledList = mutableListOf<TokenActionsState.ActionState>()
+
+        activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+        if (rampManager.availableForBuy(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Buy(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Buy(false))
+        }
+        disabledList.add(TokenActionsState.ActionState.Send(false))
+        disabledList.add(TokenActionsState.ActionState.Swap(false))
+        disabledList.add(TokenActionsState.ActionState.Sell(false))
+        activeList.add(TokenActionsState.ActionState.Receive(true))
+        activeList.add(TokenActionsState.ActionState.HideToken(true))
         return activeList + disabledList
     }
 }
