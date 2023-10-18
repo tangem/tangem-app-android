@@ -166,4 +166,6 @@ interface CurrenciesRepository {
      * ID provided.
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
+
+    fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 }
