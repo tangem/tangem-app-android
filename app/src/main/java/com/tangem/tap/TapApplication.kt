@@ -38,6 +38,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -216,6 +217,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var walletsRepository: WalletsRepository
+
+    @Inject
+    lateinit var sendFeatureToggles: SendFeatureToggles
     // endregion Injected
 
     override fun onCreate() {
@@ -307,6 +311,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     detailsFeatureToggles = detailsFeatureToggles,
                     walletsRepository = walletsRepository,
+                    sendFeatureToggles = sendFeatureToggles,
                 ),
             ),
         )
