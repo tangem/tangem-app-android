@@ -29,7 +29,7 @@ internal class TokenDetailsIconStateConverter : Converter<CryptoCurrency, TokenI
         val background = token.tryGetBackgroundForTokenIcon(isGrayscale)
         val tint = getTintForTokenIcon(background)
 
-        return if (token.isCustom) {
+        return if (token.isCustom && token.iconUrl == null) {
             TokenInfoBlockState.IconState.CustomTokenIcon(
                 tint = tint,
                 background = background,
