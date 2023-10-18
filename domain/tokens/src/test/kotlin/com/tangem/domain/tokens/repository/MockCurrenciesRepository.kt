@@ -102,4 +102,8 @@ internal class MockCurrenciesRepository(
     override fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean> {
         return isSortedByBalance.map { it.getOrElse { e -> throw e } }
     }
+
+    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        TODO("Not yet implemented")
+    }
 }
