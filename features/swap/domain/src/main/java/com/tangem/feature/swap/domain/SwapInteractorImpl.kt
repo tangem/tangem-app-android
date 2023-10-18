@@ -2,8 +2,9 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -30,8 +31,9 @@ internal class SwapInteractorImpl @Inject constructor(
     private val cache: SwapDataCache,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val currenciesRepository: CurrenciesRepository,
+    private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : SwapInteractor {
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
@@ -268,7 +270,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun onSuccessNewFlow(currency: Currency) {
         val network = network ?: return
-        getSelectedWalletUseCase().fold(
+        getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 getAndAddCryptoCurrency(userWallet, currency, network)
             },
@@ -279,10 +281,15 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun getAndAddCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network) {
-        repository.getCryptoCurrency(userWallet, currency, network)?.let {
+        repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
             currenciesRepository.addCurrencies(
                 userWallet.walletId,
-                listOf(it),
+                listOf(cryptoCurrency),
+            )
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWallet.walletId,
+                networks = setOf(cryptoCurrency.network),
+                refresh = true,
             )
         }
     }
@@ -344,7 +351,8 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun isAllowedToSpend(networkId: String, fromToken: Currency, amount: SwapAmount): Boolean {
-        return getSelectedWalletUseCase().fold(
+        if (fromToken is Currency.NativeToken) return true
+        return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 val allowance = repository.getAllowance(
                     userWallet.walletId,
@@ -737,7 +745,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromToken: Currency,
         swapAmount: SwapAmount? = null,
     ): String {
-        return getSelectedWalletUseCase().fold(
+        return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 repository.getApproveData(
                     userWalletId = userWallet.walletId,
