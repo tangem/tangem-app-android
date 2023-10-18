@@ -151,7 +151,7 @@ private fun DifferentAddressesWarning() {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        val text = stringResource(id = R.string.alert_manage_tokens_addresses_message)
+        val text = stringResource(id = R.string.warning_manage_tokens_legacy_derivation_message)
         Text(
             text = text,
             modifier = Modifier.padding(
