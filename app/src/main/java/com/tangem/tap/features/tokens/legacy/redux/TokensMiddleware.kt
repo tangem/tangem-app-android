@@ -222,10 +222,21 @@ object TokensMiddleware {
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
         val derivationDataList = currencyList.mapNotNull { currency ->
-            config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
-                ?.let { curve -> getNewDerivations(curve, scanResponse, currency) }
+            val curve = config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
+            curve?.let { getNewDerivations(curve, scanResponse, currency) }
         }
-        val derivations = derivationDataList.associate(DerivationData::derivations)
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
+
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -371,10 +382,10 @@ object TokensMiddleware {
             )
 
             currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
-            val networks = currencyList.map { it.network }.toSet()
+
             networksRepository.getNetworkStatusesSync(
                 userWalletId = userWalletId,
-                networks = networks,
+                networks = currencyList.map(CryptoCurrency::network).toSet(),
                 refresh = true,
             )
         }
