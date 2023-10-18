@@ -119,6 +119,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
     }
 }
 
+@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
     when (state) {
@@ -128,28 +129,28 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                     .size(TangemTheme.dimens.size40)
                     .background(
                         color = when (state.status) {
-                            is Status.Unconfirmed -> {
-                                TangemTheme.colors.icon.attention.copy(alpha = 0.1f)
-                            }
-                            is Status.Confirmed, Status.Failed -> {
-                                TangemTheme.colors.background.secondary
-                            }
+                            is Status.Unconfirmed -> TangemTheme.colors.icon.attention.copy(alpha = 0.1f)
+                            is Status.Confirmed -> TangemTheme.colors.background.secondary
+                            is Status.Failed -> TangemTheme.colors.icon.warning.copy(alpha = 0.1f)
                         },
                         shape = CircleShape,
                     ),
             ) {
                 Icon(
                     painter = painterResource(
-                        id = when (state) {
-                            is TransactionState.Transfer -> {
-                                when (state.direction) {
-                                    Direction.OUTGOING -> R.drawable.ic_arrow_up_24
-                                    Direction.INCOMING -> R.drawable.ic_arrow_down_24
+                        id = when (state.status) {
+                            is Status.Failed -> R.drawable.ic_close_24
+                            else -> when (state) {
+                                is TransactionState.Transfer -> {
+                                    when (state.direction) {
+                                        Direction.OUTGOING -> R.drawable.ic_arrow_up_24
+                                        Direction.INCOMING -> R.drawable.ic_arrow_down_24
+                                    }
                                 }
+                                is TransactionState.Approve -> R.drawable.ic_doc_24
+                                is TransactionState.Swap -> R.drawable.ic_exchange_vertical_24
+                                is TransactionState.Custom -> R.drawable.ic_exchange_vertical_24
                             }
-                            is TransactionState.Approve -> R.drawable.ic_doc_24
-                            is TransactionState.Swap -> R.drawable.ic_exchange_vertical_24
-                            is TransactionState.Custom -> R.drawable.ic_exchange_vertical_24
                         },
                     ),
                     contentDescription = null,
@@ -157,8 +158,9 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                         .size(TangemTheme.dimens.size20)
                         .align(Alignment.Center),
                     tint = when (state.status) {
-                        Status.Confirmed, Status.Failed -> TangemTheme.colors.icon.informative
+                        Status.Confirmed -> TangemTheme.colors.icon.informative
                         Status.Unconfirmed -> TangemTheme.colors.icon.attention
+                        Status.Failed -> TangemTheme.colors.icon.warning
                     },
                 )
             }
@@ -224,35 +226,37 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
     when (state) {
         is TransactionState.Content -> {
             Text(
-                text = when (state) {
-                    is TransactionState.Transfer -> {
-                        when (state.direction) {
-                            Direction.OUTGOING -> stringResource(
-                                id = R.string.transaction_history_transaction_to_address,
-                                state.address.resolveReference(),
-                            )
-                            Direction.INCOMING -> stringResource(
-                                id = R.string.transaction_history_transaction_from_address,
-                                state.address.resolveReference(),
-                            )
+                text = when (state.status) {
+                    is Status.Failed -> stringResource(id = R.string.common_transaction_failed)
+                    else -> when (state) {
+                        is TransactionState.Transfer -> {
+                            when (state.direction) {
+                                Direction.OUTGOING -> stringResource(
+                                    id = R.string.transaction_history_transaction_to_address,
+                                    state.address.resolveReference(),
+                                )
+                                Direction.INCOMING -> stringResource(
+                                    id = R.string.transaction_history_transaction_from_address,
+                                    state.address.resolveReference(),
+                                )
+                            }
                         }
+                        is TransactionState.Approve -> stringResource(
+                            id = R.string.transaction_history_transaction_from_address,
+                            state.address.resolveReference(),
+                        )
+                        is TransactionState.Swap -> stringResource(
+                            id = R.string.transaction_history_contract_address,
+                            state.address.resolveReference(),
+                        )
+                        is TransactionState.Custom -> stringResource(
+                            id = when (state.direction) {
+                                Direction.OUTGOING -> R.string.transaction_history_transaction_to_address
+                                Direction.INCOMING -> R.string.transaction_history_transaction_from_address
+                            },
+                            state.subtitle.resolveReference(),
+                        )
                     }
-                    is TransactionState.Approve,
-                    -> stringResource(
-                        id = R.string.transaction_history_transaction_from_address,
-                        state.address.resolveReference(),
-                    )
-                    is TransactionState.Swap -> stringResource(
-                        id = R.string.transaction_history_contract_address,
-                        state.address.resolveReference(),
-                    )
-                    is TransactionState.Custom -> stringResource(
-                        id = when (state.direction) {
-                            Direction.OUTGOING -> R.string.transaction_history_transaction_to_address
-                            Direction.INCOMING -> R.string.transaction_history_transaction_from_address
-                        },
-                        state.subtitle.resolveReference(),
-                    )
                 },
                 modifier = modifier,
                 textAlign = TextAlign.Start,
@@ -381,7 +385,25 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
+            status = Status.Unconfirmed,
+            direction = Direction.OUTGOING,
+            onClick = {},
+        ),
+        TransactionState.Approve(
+            txHash = UUID.randomUUID().toString(),
+            address = TextReference.Str("33BddS...ga2B"),
+            amount = "+0.500913 BTC",
+            timestamp = "8:41",
             status = Status.Failed,
+            direction = Direction.OUTGOING,
+            onClick = {},
+        ),
+        TransactionState.Approve(
+            txHash = UUID.randomUUID().toString(),
+            address = TextReference.Str("33BddS...ga2B"),
+            amount = "+0.500913 BTC",
+            timestamp = "8:41",
+            status = Status.Confirmed,
             direction = Direction.OUTGOING,
             onClick = {},
         ),
