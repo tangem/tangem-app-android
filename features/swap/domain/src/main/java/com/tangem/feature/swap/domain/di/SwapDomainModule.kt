@@ -1,8 +1,9 @@
 package com.tangem.feature.swap.domain.di
 
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.cache.SwapDataCacheImpl
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -26,8 +27,9 @@ class SwapDomainModule {
         userWalletManager: UserWalletManager,
         transactionManager: TransactionManager,
         currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
         walletFeatureToggles: WalletFeatureToggles,
-        @SwapScope getSelectedWalletUseCase: GetSelectedWalletUseCase,
+        @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -36,8 +38,9 @@ class SwapDomainModule {
             cache = SwapDataCacheImpl(),
             allowPermissionsHandler = AllowPermissionsHandlerImpl(),
             currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
             walletFeatureToggles = walletFeatureToggles,
-            getSelectedWalletUseCase = getSelectedWalletUseCase,
+            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         )
     }
 
@@ -52,8 +55,8 @@ class SwapDomainModule {
     @SwapScope
     @Provides
     @Singleton
-    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletUseCase {
-        return GetSelectedWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
     }
 }
 
