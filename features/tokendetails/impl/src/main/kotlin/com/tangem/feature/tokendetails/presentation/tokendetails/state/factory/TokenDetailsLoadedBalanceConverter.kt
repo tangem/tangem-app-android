@@ -61,19 +61,15 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.Custom,
             -> TokenDetailsBalanceBlockState.Content(
-                actionButtons = currentState.actionButtons,
-                fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
-                cryptoBalance = formatCryptoAmount(status),
-            )
-            is CryptoCurrencyStatus.NoAccount -> TokenDetailsBalanceBlockState.Content(
                 actionButtons = currentState.actionButtons,
                 fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                 cryptoBalance = formatCryptoAmount(status),
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
