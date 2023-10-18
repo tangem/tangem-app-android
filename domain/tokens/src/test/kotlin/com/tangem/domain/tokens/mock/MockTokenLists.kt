@@ -48,7 +48,7 @@ internal object MockTokenLists {
 
     val loadingUngroupedTokenList = with(failedUngroupedTokenList) {
         copy(
-            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) },
+            currencies = currencies.map { it.copy(value = CryptoCurrencyStatus.Loading) }.toNonEmptyListOrNull() ?: emptyList(),
             totalFiatBalance = TokenList.FiatBalance.Loading,
         )
     }

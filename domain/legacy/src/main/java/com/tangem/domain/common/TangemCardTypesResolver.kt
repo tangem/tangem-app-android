@@ -92,10 +92,6 @@ internal class TangemCardTypesResolver(
         }
     }
 
-    override fun hasBackup(): Boolean = card.backupStatus != CardDTO.BackupStatus.NoBackup
-
-    override fun isBackupForbidden(): Boolean = !(card.settings.isBackupAllowed || card.settings.isHDWalletAllowed)
-
     private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
         // workaround for BSC (BNB) notes cards
         return when (blockchainName) {

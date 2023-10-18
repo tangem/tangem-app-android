@@ -26,13 +26,12 @@ class ReferralFragment : ComposeFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel.onScreenOpened()
         viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
     }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        viewModel.onScreenOpened()
-
         val backgroundColor = TangemTheme.colors.background.secondary
         SystemBarsEffect { setSystemBarsColor(backgroundColor) }
 

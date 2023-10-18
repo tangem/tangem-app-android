@@ -26,4 +26,10 @@ internal sealed class WalletAlertState {
         override val confirmButtonText: TextReference = resourceReference(id = R.string.common_delete)
         override val isWarningConfirmButton: Boolean = true
     }
+
+    object WrongCardIsScanned : WalletAlertState() {
+        override val title: TextReference = resourceReference(R.string.common_warning)
+        override val message: TextReference = resourceReference(R.string.error_wrong_wallet_tapped)
+        override val onConfirmClick: (() -> Unit)? = null
+    }
 }

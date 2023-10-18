@@ -9,7 +9,6 @@ import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
-import java.math.BigDecimal
 
 internal class NetworkStatusFactory {
 
@@ -43,27 +42,27 @@ internal class NetworkStatusFactory {
     private fun formatAmounts(
         amounts: Set<CryptoCurrencyAmount>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, BigDecimal> {
-        return amounts
-            .asSequence()
-            .mapNotNull { amount ->
-                val currency = when (amount) {
-                    is CryptoCurrencyAmount.Coin -> currencies.singleOrNull { it is CryptoCurrency.Coin }
-                    is CryptoCurrencyAmount.Token -> currencies.firstOrNull {
-                        it is CryptoCurrency.Token &&
-                            it.id.rawCurrencyId == amount.tokenId &&
-                            it.contractAddress == amount.tokenContractAddress
+    ): Map<CryptoCurrency.ID, NetworkStatus.AmountStatus> {
+        return currencies.associate { currency ->
+            val amount = when (currency) {
+                is CryptoCurrency.Coin -> {
+                    amounts.singleOrNull { it is CryptoCurrencyAmount.Coin }
+                }
+                is CryptoCurrency.Token -> {
+                    amounts.firstOrNull { amount ->
+                        amount is CryptoCurrencyAmount.Token &&
+                            currency.id.rawCurrencyId == amount.tokenId &&
+                            currency.contractAddress == amount.tokenContractAddress
                     }
                 }
-
-                if (currency == null) {
-                    Timber.e("Unable to find cryptocurrency for amount: $amount")
-                    null
-                } else {
-                    currency.id to amount.value
-                }
             }
-            .toMap()
+            if (amount == null) {
+                Timber.e("Unable to find amount for cryptoCurrency: $currency")
+                currency.id to NetworkStatus.UnreachableAmount
+            } else {
+                currency.id to NetworkStatus.LoadedAmount(amount.value)
+            }
+        }
     }
 
     private fun formatTransactions(
