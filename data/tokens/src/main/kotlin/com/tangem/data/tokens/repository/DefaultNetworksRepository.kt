@@ -49,11 +49,12 @@ internal class DefaultNetworksRepository(
         withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, false)
         }
-    }.cancellable()
+    }
+        .cancellable()
 
     override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
         withContext(dispatchers.io) {
-            fetchNetworksPendingTransactionsIfCacheExpired(userWalletId, networks, false)
+            fetchNetworksPendingTransactions(userWalletId, networks)
         }
     }
 
@@ -82,16 +83,12 @@ internal class DefaultNetworksRepository(
         }
     }
 
-    private suspend fun fetchNetworksPendingTransactionsIfCacheExpired(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-        refresh: Boolean,
-    ) {
+    private suspend fun fetchNetworksPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
         coroutineScope {
             networks
                 .map { network ->
                     async {
-                        fetchNetworkPendingTransactionsIfCacheExpired(userWalletId, network, refresh)
+                        fetchNetworkPendingTransactions(userWalletId, network)
                     }
                 }
                 .awaitAll()
@@ -107,20 +104,6 @@ internal class DefaultNetworksRepository(
             key = getNetworksStatusesCacheKey(userWalletId, network),
             skipCache = refresh,
             block = { fetchNetworkStatus(userWalletId, network) },
-        )
-    }
-
-    private suspend fun fetchNetworkPendingTransactionsIfCacheExpired(
-        userWalletId: UserWalletId,
-        network: Network,
-        refresh: Boolean,
-    ) {
-        val key = getNetworksStatusesCacheKey(userWalletId, network)
-        cacheRegistry.invalidate(key)
-        cacheRegistry.invokeOnExpire(
-            key = key,
-            skipCache = refresh,
-            block = { fetchNetworkPendingTransactions(userWalletId, network) },
         )
     }
 
