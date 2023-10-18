@@ -6,12 +6,15 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -88,6 +91,11 @@ internal class WelcomeMiddleware {
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Error(error))
             }
             .doOnSuccess { selectedUserWallet ->
+                sendSignedInAnalyticsEvent(
+                    scanResponse = selectedUserWallet.scanResponse,
+                    signInType = Basic.SignedIn.SignInType.Biometric,
+                )
+
                 store.dispatchWithMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Biometric))
                 store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Success)
@@ -116,6 +124,8 @@ internal class WelcomeMiddleware {
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
+                    sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
+
                     store.dispatchWithMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
                     store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
@@ -125,6 +135,24 @@ internal class WelcomeMiddleware {
                         WalletConnectLinkIntentHandler().handleIntent(it)
                     }
                 }
+        }
+    }
+
+    private fun sendSignedInAnalyticsEvent(scanResponse: ScanResponse, signInType: Basic.SignedIn.SignInType) {
+        val currency = ParamCardCurrencyConverter().convert(
+            value = scanResponse.cardTypesResolver,
+        )
+
+        if (currency != null) {
+            Analytics.send(
+                event = Basic.SignedIn(
+                    currency = currency,
+                    batch = scanResponse.card.batchId,
+                    signInType = signInType,
+                    walletsCount = store.state.globalState.userWalletsListManager?.walletsCount.toString(),
+                    hasBackup = scanResponse.card.backupStatus?.isActive,
+                ),
+            )
         }
     }
 
