@@ -74,23 +74,25 @@ internal sealed interface WalletCardState {
     /**
      * Wallet card error state
      *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property id            wallet id
+     * @property title         wallet name
+     * @property imageResId    wallet image resource id
+     * @property onRenameClick lambda be invoked when Rename button is clicked
+     * @property onDeleteClick lambda be invoked when Delete button is clicked
      */
     data class Error(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: WalletAdditionalInfo? = defaultAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState {
-        override val additionalInfo: WalletAdditionalInfo = WalletAdditionalInfo(
-            hideable = true,
-            content = EMPTY_BALANCE_TEXT,
-        )
+
+        private companion object {
+            val defaultAdditionalInfo: WalletAdditionalInfo
+                get() = WalletAdditionalInfo(hideable = true, content = EMPTY_BALANCE_TEXT)
+        }
     }
 
     /**

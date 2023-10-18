@@ -58,7 +58,16 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         return when (status) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Content(
+                currencySymbol = currencyName,
+                price = formatPrice(status, appCurrencyProvider()),
+                priceChangeConfig = PriceChangeState.Content(
+                    valueInPercent = formatPriceChange(status),
+                    type = getPriceChangeType(status),
+                ),
+            )
+            is CryptoCurrencyStatus.NoAccount -> MarketPriceBlockState.Content(
                 currencySymbol = currencyName,
                 price = formatPrice(status, appCurrencyProvider()),
                 priceChangeConfig = PriceChangeState.Content(
@@ -69,9 +78,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
-            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Error(currencyName)
         }
     }
@@ -85,6 +92,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         val updatedWallet = when (status) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.NoAmount,
             -> {
                 WalletCardState.Content(
                     id = selectedWallet.id,
@@ -110,10 +119,8 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
                 )
             }
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
-            is CryptoCurrencyStatus.NoAmount,
             -> {
                 WalletCardState.Error(
                     id = selectedWallet.id,

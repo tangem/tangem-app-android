@@ -2,7 +2,7 @@ package com.tangem.tap.features.tokens.impl.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.testnet.TestnetTokensStorage
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.tokens.impl.data.DefaultTokensListRepository
 import com.tangem.tap.features.tokens.impl.domain.TokensListRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,13 +24,13 @@ internal object TokensListRepositoryModule {
     fun providesTokensListRepository(
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
-        getSelectedWalletUseCase: GetSelectedWalletUseCase,
+        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         testnetTokensStorage: TestnetTokensStorage,
     ): TokensListRepository {
         return DefaultTokensListRepository(
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
-            getSelectedWalletUseCase = getSelectedWalletUseCase,
+            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             testnetTokensStorage = testnetTokensStorage,
         )
     }
