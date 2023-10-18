@@ -64,6 +64,7 @@ internal class WalletViewModel @Inject constructor(
                         batch = scanResponse.card.batchId,
                         signInType = signInType,
                         walletsCount = store.state.globalState.userWalletsListManager?.walletsCount.toString(),
+                        hasBackup = scanResponse.card.backupStatus?.isActive,
                     ),
                 )
             }
