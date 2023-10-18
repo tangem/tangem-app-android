@@ -79,6 +79,7 @@ walletConnectCore = "1.18.0"
 walletConnectWeb3 = "1.11.0"
 prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
+chucker = "4.0.0"
 # endregion Other libraries
 
 # region Tangem
@@ -230,4 +231,6 @@ reactive-network = { module = "com.github.pwittchen:reactivenetwork-rx2", versio
 walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "walletConnectCore" }
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
 prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 # endregion Other

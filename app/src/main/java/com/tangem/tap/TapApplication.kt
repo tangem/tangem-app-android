@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
@@ -36,6 +37,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -171,6 +173,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
+    lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
+
+    @Inject
     lateinit var scanCardProcessor: ScanCardProcessor
 
     @Inject
@@ -255,6 +260,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
+                ChuckerInterceptor(this),
             )
         }
 
@@ -290,6 +296,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    manageTokensFeatureToggles = manageTokensFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
