@@ -1,12 +1,14 @@
 package com.tangem.datasource.di
 
+import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
-import com.tangem.datasource.utils.allowLogging
+import com.tangem.datasource.utils.addLoggers
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -19,23 +21,31 @@ class OneInchApisModule {
 
     @Provides
     @Singleton
-    fun provideOneInchApiFactory(@NetworkMoshi moshi: Moshi): OneInchApiFactory {
-        val apiFactory = OneInchApiFactory()
-        apiFactory.putApi(ETH_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_ETH_PATH, moshi))
-        apiFactory.putApi(BSC_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_BSC_PATH, moshi))
-        apiFactory.putApi(POLYGON_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_POLYGON_PATH, moshi))
-        apiFactory.putApi(OPTIMISM_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_OPTIMISM_PATH, moshi))
-        apiFactory.putApi(ARBITRUM_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_ARBITRUM_PATH, moshi))
-        apiFactory.putApi(GNOSIS_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_GNOSIS_PATH, moshi))
-        apiFactory.putApi(
-            AVALANCHE_NETWORK,
-            createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_AVALANCHE_PATH, moshi),
+    fun provideOneInchApiFactory(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): OneInchApiFactory {
+        val networks = mapOf(
+            ETH_NETWORK to ONE_INCH_ETH_PATH,
+            BSC_NETWORK to ONE_INCH_BSC_PATH,
+            POLYGON_NETWORK to ONE_INCH_POLYGON_PATH,
+            OPTIMISM_NETWORK to ONE_INCH_OPTIMISM_PATH,
+            ARBITRUM_NETWORK to ONE_INCH_ARBITRUM_PATH,
+            GNOSIS_NETWORK to ONE_INCH_GNOSIS_PATH,
+            AVALANCHE_NETWORK to ONE_INCH_AVALANCHE_PATH,
+            FANTOM_NETWORK to ONE_INCH_FANTOM_PATH,
         )
-        apiFactory.putApi(FANTOM_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_FANTOM_PATH, moshi))
+
+        val apiFactory = OneInchApiFactory()
+
+        for ((network, path) in networks) {
+            apiFactory.putApi(
+                networkId = network,
+                api = createOneInchApiWithUrl("$ONE_INCH_BASE_URL$path", moshi, context),
+            )
+        }
+
         return apiFactory
     }
 
-    private fun createOneInchApiWithUrl(url: String, moshi: Moshi): OneInchApi {
+    private fun createOneInchApiWithUrl(url: String, moshi: Moshi, context: Context): OneInchApi {
         return Retrofit.Builder()
             .addConverterFactory(
                 MoshiConverterFactory.create(moshi),
@@ -43,7 +53,7 @@ class OneInchApisModule {
             .baseUrl(url)
             .client(
                 OkHttpClient.Builder()
-                    .allowLogging()
+                    .addLoggers(context)
                     .build(),
             )
             .build()
