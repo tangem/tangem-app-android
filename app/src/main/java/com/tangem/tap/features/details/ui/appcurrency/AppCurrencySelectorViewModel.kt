@@ -68,14 +68,12 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
                 .getOrNull()
 
             getSelectedAppCurrencyUseCase().collectLatest { maybeSelectedCurrency ->
-                maybeSelectedCurrency
-                    .onRight { selectedCurrency ->
-                        val selectedCurrencyIndex = availableCurrencies?.indexOfFirst { it == selectedCurrency }
+                val selectedCurrency = maybeSelectedCurrency.getOrNull() ?: return@collectLatest
+                val selectedCurrencyIndex = availableCurrencies?.indexOfFirst { it == selectedCurrency }
 
-                        if (selectedCurrencyIndex != null && selectedCurrencyIndex != -1) {
-                            stateController.updateStateWithSelectedCurrency(selectedCurrency, selectedCurrencyIndex)
-                        }
-                    }
+                if (selectedCurrencyIndex != null && selectedCurrencyIndex != -1) {
+                    stateController.updateStateWithSelectedCurrency(selectedCurrency, selectedCurrencyIndex)
+                }
             }
         }
     }
