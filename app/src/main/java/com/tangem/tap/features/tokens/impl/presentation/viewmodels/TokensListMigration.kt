@@ -11,7 +11,7 @@ import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
@@ -22,13 +22,13 @@ import kotlin.properties.Delegates
 /**
  * Class that divide a new and legacy logic when user uses tokens list screen
  *
- * @property walletFeatureToggles     wallet feature toggles
- * @property getSelectedWalletUseCase use case that returns selected wallet
- * @property getCurrenciesUseCase     use case that returns crypto currencies of a specified wallet
+ * @property walletFeatureToggles         wallet feature toggles
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property getCurrenciesUseCase         use case that returns crypto currencies of a specified wallet
  */
 internal class TokensListMigration(
     private val walletFeatureToggles: WalletFeatureToggles,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
 ) {
 
@@ -47,7 +47,7 @@ internal class TokensListMigration(
     }
 
     private suspend fun getNewCryptoCurrencies(): TokensListCryptoCurrencies {
-        return when (val selectedWalletEither = getSelectedWalletUseCase()) {
+        return when (val selectedWalletEither = getSelectedWalletSyncUseCase()) {
             is Either.Left -> {
                 Timber.e(selectedWalletEither.value.toString())
                 TokensListCryptoCurrencies(coins = emptyList(), tokens = emptyList())
