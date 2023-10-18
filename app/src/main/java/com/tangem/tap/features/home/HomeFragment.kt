@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -16,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.IntroductionProcess
@@ -51,6 +53,12 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
                 TangemTheme {
                     BackHandler {
                         requireActivity().finish()
+                    }
+                    SystemBarsEffect {
+                        setSystemBarsColor(
+                            color = Color.Transparent,
+                            darkIcons = false,
+                        )
                     }
                     ScreenContent()
                 }

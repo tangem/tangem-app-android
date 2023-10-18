@@ -41,11 +41,7 @@ import com.tangem.feature.swap.presentation.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun SwapSelectTokenScreen(
-    state: SwapSelectTokenStateHolder,
-    onSearchFocusChange: (Boolean) -> Unit,
-    onBack: () -> Unit,
-) {
+fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier
             .systemBarsPadding()
@@ -60,7 +56,6 @@ fun SwapSelectTokenScreen(
                 placeholderSearchText = stringResource(id = R.string.common_search_tokens),
                 onSearchChange = state.onSearchEntered,
                 onSearchDisplayClose = { state.onSearchEntered("") },
-                onFocusChange = onSearchFocusChange,
                 subtitle = state.network.name,
                 icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
             )
@@ -283,7 +278,6 @@ private fun TokenScreenPreview() {
             onTokenSelected = {},
             network = Network("Ethereum", "ETH"),
         ),
-        onSearchFocusChange = {},
         onBack = {},
     )
 }

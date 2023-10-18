@@ -49,15 +49,14 @@ data class HomeState(
 }
 
 sealed class Stories(
-    val isDarkBackground: Boolean,
     val duration: Int,
     val isNewWalletAvailable: MutableState<Boolean> = mutableStateOf(HomeState.isNewWalletAvailableInit()),
 ) {
-    object OneInchPromo : Stories(true, duration = 8000)
-    object TangemIntro : Stories(true, duration = 8000)
-    object RevolutionaryWallet : Stories(true, duration = 6000)
-    object UltraSecureBackup : Stories(false, duration = 6000)
-    object Currencies : Stories(false, duration = 6000)
-    object Web3 : Stories(false, duration = 6000)
-    object WalletForEveryone : Stories(true, duration = 6000)
+    object OneInchPromo : Stories(duration = 8000)
+    object TangemIntro : Stories(duration = 6000)
+    object RevolutionaryWallet : Stories(duration = 6000)
+    object UltraSecureBackup : Stories(duration = 6000)
+    object Currencies : Stories(duration = 6000)
+    object Web3 : Stories(duration = 6000)
+    object WalletForEveryone : Stories(duration = 6000)
 }
