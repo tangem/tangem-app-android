@@ -28,11 +28,13 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("LargeClass")
 object TokensMiddleware {
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
@@ -220,10 +222,21 @@ object TokensMiddleware {
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
         val derivationDataList = currencyList.mapNotNull { currency ->
-            config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
-                ?.let { curve -> getNewDerivations(curve, scanResponse, currency) }
+            val curve = config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
+            curve?.let { getNewDerivations(curve, scanResponse, currency) }
         }
-        val derivations = derivationDataList.associate(DerivationData::derivations)
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
+
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -360,6 +373,7 @@ object TokensMiddleware {
         currencyList: List<CryptoCurrency>,
     ) {
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
 
         scope.launch {
             userWalletsListManager.update(
@@ -368,6 +382,12 @@ object TokensMiddleware {
             )
 
             currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
+
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWalletId,
+                networks = currencyList.map(CryptoCurrency::network).toSet(),
+                refresh = true,
+            )
         }
     }
 

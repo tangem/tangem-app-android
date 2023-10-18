@@ -20,7 +20,7 @@ internal class CurrencyStatusOperations(
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
             is NetworkStatus.Unreachable -> createUnreachableStatus()
-            is NetworkStatus.NoAccount -> createNoAccountStatus(status.errorMessage)
+            is NetworkStatus.NoAccount -> createNoAccountStatus(status.amountToCreateAccount)
             is NetworkStatus.Verified -> createStatus(status)
         }
     }
@@ -31,15 +31,24 @@ internal class CurrencyStatusOperations(
     private fun createUnreachableStatus(): CryptoCurrencyStatus.Unreachable =
         CryptoCurrencyStatus.Unreachable(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
 
-    private fun createNoAccountStatus(message: String): CryptoCurrencyStatus.NoAccount = CryptoCurrencyStatus.NoAccount(
-        errorMessage = message,
-        priceChange = quote?.priceChange,
-        fiatRate = quote?.fiatRate,
-    )
+    private fun createNoAccountStatus(amount: BigDecimal): CryptoCurrencyStatus.NoAccount =
+        CryptoCurrencyStatus.NoAccount(
+            amountToCreateAccount = amount,
+            priceChange = quote?.priceChange,
+            fiatRate = quote?.fiatRate,
+        )
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
-        val amount = status.amounts[currency.id]
-            ?: return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+        val amount = status.amounts[currency.id]?.let {
+            when (it) {
+                is NetworkStatus.UnreachableAmount -> {
+                    return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+                }
+                is NetworkStatus.LoadedAmount -> {
+                    it.value
+                }
+            }
+        } ?: return CryptoCurrencyStatus.Loading
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
