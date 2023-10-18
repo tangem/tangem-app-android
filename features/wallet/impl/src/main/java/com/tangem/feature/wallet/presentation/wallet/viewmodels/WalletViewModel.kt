@@ -1013,6 +1013,7 @@ internal class WalletViewModel @Inject constructor(
         initAndSetupWc(tokenListFlow, wallet)
 
         tokenListFlow
+            .conflate()
             .distinctUntilChanged()
             .onEach { maybeTokenList ->
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
@@ -1118,6 +1119,7 @@ internal class WalletViewModel @Inject constructor(
     private fun getSingleCurrencyContent(index: Int) {
         val wallet = getWallet(index)
         getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
+            .conflate()
             .distinctUntilChanged()
             .onEach { maybeCryptoCurrencyStatus ->
                 uiState = stateFactory.getSingleCurrencyLoadedBalanceState(maybeCryptoCurrencyStatus)
@@ -1158,6 +1160,7 @@ internal class WalletViewModel @Inject constructor(
         val wallet = getWallet(walletIndex)
 
         getCardTokensListUseCase(userWalletId = state.walletsListConfig.wallets[walletIndex].id)
+            .conflate()
             .distinctUntilChanged()
             .onEach { maybeTokenList ->
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
@@ -1224,6 +1227,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrencyStatus = currencyStatus)
+            .conflate()
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actionsState = it) }
             .flowOn(dispatchers.io)
@@ -1248,6 +1252,7 @@ internal class WalletViewModel @Inject constructor(
                 listOfNotNull(singleWalletCryptoCurrencyStatus)
             },
         )
+            .conflate()
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getStateByNotifications(notifications = it) }
             .flowOn(dispatchers.io)
