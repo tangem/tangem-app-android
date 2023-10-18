@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
@@ -259,6 +260,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
+                ChuckerInterceptor(this),
             )
         }
 
