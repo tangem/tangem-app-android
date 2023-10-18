@@ -3,6 +3,7 @@ package com.tangem.tap.proxy.redux
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -19,5 +20,6 @@ sealed interface DaggerGraphAction : Action {
         val tokenDetailsRouter: TokenDetailsRouter,
         val manageTokensRouter: ManageTokensRouter,
         val cardSdkConfigRepository: CardSdkConfigRepository,
+        val sendRouter: SendRouter,
     ) : DaggerGraphAction
 }

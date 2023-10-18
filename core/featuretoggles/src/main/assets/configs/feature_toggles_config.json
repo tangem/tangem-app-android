@@ -30,5 +30,9 @@
     {
         "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_SEND_SCREEN_ENABLED",
+        "version": "undefined"
     }
 ]

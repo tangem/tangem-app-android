@@ -9,7 +9,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.send.navigation.SendRouter
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.tap.di.DelayedWork
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.proxy.AppStateHolder
