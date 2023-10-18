@@ -105,7 +105,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         )
                     },
                 )
-                if (!state.isCustomToken) {
+                if (state.isMarketPriceAvailable) {
                     item(
                         key = MarketPriceBlockState::class.java,
                         contentType = MarketPriceBlockState::class.java,
