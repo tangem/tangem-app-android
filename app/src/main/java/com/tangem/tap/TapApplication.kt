@@ -32,12 +32,12 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -173,9 +173,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
-    lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
-
-    @Inject
     lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
 
     @Inject
@@ -189,6 +186,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var walletManagersFacade: WalletManagersFacade
+
+    @Inject
+    lateinit var networksRepository: NetworksRepository
 
     @Inject
     lateinit var currenciesRepository: CurrenciesRepository
@@ -296,12 +296,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
                     manageTokensFeatureToggles = manageTokensFeatureToggles,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
                     appStateHolder = appStateHolder,
+                    networksRepository = networksRepository,
                     currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,

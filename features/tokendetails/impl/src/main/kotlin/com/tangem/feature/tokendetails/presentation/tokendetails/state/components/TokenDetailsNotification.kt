@@ -9,51 +9,38 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 
-// TODO: Finalize notification strings [REDACTED_JIRA]
 @Immutable
-sealed class TokenDetailsNotification(
-    open val config: NotificationConfig,
-) {
+internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
 
-    data class RentInfo(
-        private val rentInfo: CryptoCurrencyWarning.Rent,
-        private val onCloseClick: () -> Unit,
+    sealed class Warning(
+        title: TextReference,
+        subtitle: TextReference,
+        iconResId: Int = R.drawable.img_attention_20,
+        buttonsState: NotificationConfig.ButtonsState? = null,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
-            title = TextReference.Res(R.string.send_network_fee_title),
-            subtitle = TextReference.Res(
-                id = R.string.solana_rent_warning,
-                formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
-            ),
-            iconResId = R.drawable.img_attention_20,
-            onCloseClick = onCloseClick,
+            title = title,
+            subtitle = subtitle,
+            iconResId = iconResId,
+            buttonsState = buttonsState,
         ),
-    )
+    ) {
 
-    data class ExistentialDeposit(
-        private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.warning_existential_deposit_title),
-            subtitle = TextReference.Res(
-                id = R.string.warning_existential_deposit_message,
-                formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
-            ),
-            iconResId = R.drawable.img_attention_20,
-        ),
-    )
+        object NetworksUnreachable : Warning(
+            title = resourceReference(R.string.warning_network_unreachable_title),
+            subtitle = resourceReference(R.string.warning_network_unreachable_message),
+        )
 
-    data class NetworkFee(
-        private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
-        private val onBuyClick: () -> Unit,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
+        data class NetworkFee(
+            private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
+            private val onBuyClick: () -> Unit,
+        ) : Warning(
             title = TextReference.Res(
-                id = R.string.notification_title_not_enough_funds,
+                id = R.string.warning_send_blocked_funds_for_fee_title,
                 formatArgs = wrappedList(feeInfo.blockchainFullName),
             ),
             subtitle = TextReference.Res(
-                id = R.string.token_details_send_blocked_fee_format,
+                id = R.string.warning_send_blocked_funds_for_fee_message,
                 formatArgs = wrappedList(
                     feeInfo.currency.name,
                     feeInfo.blockchainFullName,
@@ -64,17 +51,55 @@ sealed class TokenDetailsNotification(
             ),
             iconResId = feeInfo.currency.networkIconResId,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Res(R.string.common_buy),
+                text = resourceReference(
+                    id = R.string.common_buy_currency,
+                    formatArgs = wrappedList(feeInfo.blockchainSymbol),
+                ),
                 onClick = onBuyClick,
             ),
-        ),
-    )
+        )
+    }
 
-    object NetworksUnreachable : TokenDetailsNotification(
+    sealed class Informational(
+        title: TextReference,
+        subtitle: TextReference,
+        onCloseClick: (() -> Unit)? = null,
+    ) : TokenDetailsNotification(
         config = NotificationConfig(
-            title = resourceReference(R.string.warning_network_unreachable_title),
-            subtitle = resourceReference(R.string.warning_network_unreachable_message),
-            iconResId = R.drawable.img_attention_20,
+            title = title,
+            subtitle = subtitle,
+            iconResId = R.drawable.ic_alert_circle_24,
+            onCloseClick = onCloseClick,
         ),
-    )
+    ) {
+        data class RentInfo(
+            private val rentInfo: CryptoCurrencyWarning.Rent,
+            private val onCloseClick: () -> Unit,
+        ) : Informational(
+            title = TextReference.Res(R.string.warning_rent_fee_title),
+            subtitle = TextReference.Res(
+                id = R.string.warning_solana_rent_fee_message,
+                formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
+            ),
+            onCloseClick = onCloseClick,
+        )
+
+        data class ExistentialDeposit(
+            private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
+        ) : Informational(
+            title = resourceReference(R.string.warning_existential_deposit_title),
+            subtitle = TextReference.Res(
+                id = R.string.warning_existential_deposit_message,
+                formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
+            ),
+        )
+
+        class NetworksNoAccount(val network: String, val symbol: String, val amount: String) : Informational(
+            title = resourceReference(R.string.warning_no_account_title),
+            subtitle = resourceReference(
+                R.string.no_account_generic,
+                wrappedList(network, amount, symbol),
+            ),
+        )
+    }
 }
