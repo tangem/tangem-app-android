@@ -92,7 +92,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 }
                 items(
                     items = state.notifications,
-                    key = { it.config::class.java },
+                    key = { it::class.java },
                     contentType = { it.config::class.java },
                     itemContent = {
                         Notification(
