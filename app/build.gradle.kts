@@ -172,4 +172,10 @@ dependencies {
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }
