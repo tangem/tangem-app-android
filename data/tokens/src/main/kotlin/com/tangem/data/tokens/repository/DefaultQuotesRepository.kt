@@ -10,8 +10,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal class DefaultQuotesRepository(
@@ -27,21 +27,18 @@ internal class DefaultQuotesRepository(
     @Volatile
     private var quotesFetchedForAppCurrency: String? = null
 
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> = channelFlow {
-        launch(dispatchers.io) {
-            quotesStore.get(currenciesIds)
-                .map(quotesConverter::convertSet)
-                .collectLatest(::send)
-        }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
+        return selectedAppCurrencyStore.get()
+            .distinctUntilChanged()
+            .flatMapLatest { appCurrency ->
+                fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
 
-        withContext(dispatchers.io) {
-            selectedAppCurrencyStore.get()
-                .distinctUntilChanged()
-                .collectLatest { appCurrency ->
-                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
-                }
-        }
-    }.cancellable()
+                quotesStore.get(currenciesIds).map(quotesConverter::convertSet)
+            }
+            .cancellable()
+            .flowOn(dispatchers.io)
+    }
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
         return withContext(dispatchers.io) {
