@@ -22,5 +22,5 @@ internal data class TokenDetailsState(
     val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
-    val isCustomToken: Boolean,
+    val isMarketPriceAvailable: Boolean,
 )
