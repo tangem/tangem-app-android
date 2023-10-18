@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.mock
 import arrow.core.nonEmptyListOf
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
+import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal object MockTokensStates {
@@ -60,7 +61,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote7.priceChange,
             fiatRate = MockQuotes.quote7.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -69,7 +70,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote8.priceChange,
             fiatRate = MockQuotes.quote8.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -78,7 +79,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote9.priceChange,
             fiatRate = MockQuotes.quote9.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -87,7 +88,7 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.NoAccount(
             priceChange = MockQuotes.quote10.priceChange,
             fiatRate = MockQuotes.quote10.fiatRate,
-            errorMessage = "",
+            amountToCreateAccount = MockNetworks.amountToCreateAccount,
         ),
     )
 
@@ -107,7 +108,10 @@ internal object MockTokensStates {
     val loadedTokensStates = failedTokenStates.map { status ->
         val networkStatus = MockNetworks.verifiedNetworksStatuses
             .first { it.network == status.currency.network }
-        val amount = (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
+        val amount = (
+            (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
+                as? NetworkStatus.LoadedAmount
+            )?.value ?: BigDecimal.ZERO
         val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
         val fiatAmount = amount * quote.fiatRate
 
