@@ -22,6 +22,8 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
 
+// TODO: Delete with WalletFeatureToggles
+@Deprecated(message = "Used only in old wallet screen")
 class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHolder>(DiffUtilCallback) {
 
     override fun getItemId(position: Int): Long {
@@ -59,7 +61,8 @@ class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHold
                     root.getString(R.string.wallet_balance_tx_in_progress)
                 }
                 is WalletDataModel.Unreachable -> {
-                    root.getString(R.string.wallet_balance_blockchain_unreachable)
+                    // TODO: Delete with WalletFeatureToggles
+                    // root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
                 is WalletDataModel.MissedDerivation -> {
                     root.getString(R.string.wallet_balance_missing_derivation)
@@ -86,7 +89,7 @@ class WalletAdapter : ListAdapter<WalletDataModel, WalletAdapter.WalletsViewHold
             lContent.tvAmount.text = wallet.getFormattedCryptoAmount()
 
             lContent.tvStatus.isVisible = statusMessage != null
-            lContent.tvStatus.text = statusMessage
+            // lContent.tvStatus.text = statusMessage
 
             lContent.tvExchangeRate.isVisible = statusMessage == null
             lContent.tvExchangeRate.text = wallet.getFormattedFiatRate(

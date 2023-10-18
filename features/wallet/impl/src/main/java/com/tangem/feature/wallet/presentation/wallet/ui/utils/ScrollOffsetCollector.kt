@@ -24,14 +24,10 @@ internal class ScrollOffsetCollector(
     private val isAutoScroll: State<Boolean>,
 ) : FlowCollector<List<LazyListItemInfo>> {
 
-    private val LazyListItemInfo.halfItemSize get() = size.div(other = 2)
+    private val LazyListItemInfo.halfItemSize
+        get() = size.div(other = 2)
 
     private var currentIndex = walletsListConfig.selectedWalletIndex
-        set(value) {
-            if (field != value) {
-                field = value
-            }
-        }
 
     override suspend fun emit(value: List<LazyListItemInfo>) {
         // Auto scroll must not change wallet
@@ -46,11 +42,14 @@ internal class ScrollOffsetCollector(
         val lastItem = value.lastOrNull() ?: return
 
         if (abs(firstItem.offset) > firstItem.halfItemSize) {
-            val newIndex = firstItem.index + 1
-            currentIndex = newIndex
-            walletsListConfig.onWalletChange(newIndex)
+            onWalletChange(newIndex = firstItem.index + 1)
         } else if (abs(lastItem.offset) > lastItem.halfItemSize) {
-            val newIndex = lastItem.index - 1
+            onWalletChange(newIndex = lastItem.index - 1)
+        }
+    }
+
+    private fun onWalletChange(newIndex: Int) {
+        if (currentIndex != newIndex) {
             currentIndex = newIndex
             walletsListConfig.onWalletChange(newIndex)
         }
