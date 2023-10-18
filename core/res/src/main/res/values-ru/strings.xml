@@ -116,6 +116,7 @@
     <string name="common_success">Успешно</string>
     <string name="common_swap">Обмен</string>
     <string name="common_terms_and_conditions">условия участия</string>
+    <string name="common_transaction_failed">Ошибка транзакции</string>
     <string name="common_transactions">Транзакции</string>
     <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
