@@ -19,7 +19,7 @@ enum class AppScreen(val isDialogFragment: Boolean = false) {
     OnboardingOther,
     Wallet,
     WalletDetails,
-    Send,
+    Send(isDialogFragment = true),
     Details,
     DetailsSecurity,
     CardSettings,
