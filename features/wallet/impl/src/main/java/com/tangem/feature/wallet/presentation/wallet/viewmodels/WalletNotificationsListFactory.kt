@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 
 /**
  * Wallet notifications list factory
@@ -45,10 +46,10 @@ internal class WalletNotificationsListFactory(
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
         return combine(
-            flow = wasCardScannedUseCase(cardTypesResolver.getCardId()),
-            flow2 = isReadyToShowRateAppUseCase(),
-            flow3 = isNeedToBackupUseCase(selectedWalletId),
-            flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWalletId),
+            flow = wasCardScannedUseCase(cardTypesResolver.getCardId()).conflate(),
+            flow2 = isReadyToShowRateAppUseCase().conflate(),
+            flow3 = isNeedToBackupUseCase(selectedWalletId).conflate(),
+            flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWalletId).conflate(),
         ) { wasCardScanned, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies ->
             readyForRateAppNotification = true
             buildList {
