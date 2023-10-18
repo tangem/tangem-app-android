@@ -30,6 +30,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -121,6 +122,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
 
+    @Inject
+    lateinit var sendRouter: SendRouter
+
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
 
     // TODO: fixme: inject through DI
@@ -169,6 +173,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 tokenDetailsRouter = tokenDetailsRouter,
                 manageTokensRouter = manageTokensRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
+                sendRouter = sendRouter,
             ),
         )
     }
