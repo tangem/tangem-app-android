@@ -142,8 +142,7 @@ internal class CurrenciesStatusesOperations(
 
     suspend fun getNetworkCoinForSingleWalletWithTokenFlow(
         networkId: Network.ID,
-    ): Flow<Either<Error,
-            CryptoCurrencyStatus,>,> {
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getNetworkCoinForSingleWalletWithToken(networkId) },
             recover = { return flowOf(it.left()) },
