@@ -116,12 +116,13 @@ private fun lightThemeColors(): TangemColors {
         background = TangemColors.Background(
             primary = TangemColorPalette.White,
             secondary = TangemColorPalette.Light1,
+            tertiary = TangemColorPalette.Light1,
             plain = TangemColorPalette.White,
-            action = TangemColorPalette.Black,
+            action = TangemColorPalette.White,
             fade = TangemColorPalette.White,
         ),
         control = TangemColors.Control(
-            checked = TangemColorPalette.Meadow,
+            checked = TangemColorPalette.Dark6,
             unchecked = TangemColorPalette.Light2,
             key = TangemColorPalette.White,
         ),
@@ -168,14 +169,15 @@ private fun darkThemeColors(): TangemColors {
         background = TangemColors.Background(
             primary = TangemColorPalette.Dark6,
             secondary = TangemColorPalette.Black,
+            tertiary = TangemColorPalette.Dark6,
             plain = TangemColorPalette.Black,
-            action = TangemColorPalette.Light4,
+            action = TangemColorPalette.Dark5,
             fade = TangemColorPalette.Black,
         ),
         control = TangemColors.Control(
-            checked = TangemColorPalette.Meadow,
+            checked = TangemColorPalette.Azure,
             unchecked = TangemColorPalette.Dark4,
-            key = TangemColorPalette.Light1,
+            key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
             primary = TangemColorPalette.Dark5,
