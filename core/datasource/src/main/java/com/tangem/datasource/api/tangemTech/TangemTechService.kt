@@ -6,7 +6,7 @@ import com.tangem.datasource.utils.RequestHeader
 import com.tangem.datasource.utils.RequestHeader.AuthenticationHeader
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader
 import com.tangem.datasource.utils.addHeaders
-import com.tangem.datasource.utils.allowLogging
+import com.tangem.datasource.utils.addLoggers
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 
@@ -35,7 +35,7 @@ object TangemTechService {
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(*headers.toTypedArray())
-                    .allowLogging()
+                    .addLoggers()
                     .build(),
             )
             .build()
