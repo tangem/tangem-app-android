@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.common.component.token
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -19,7 +18,6 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun NonFiatContentBlock(
     state: TokenItemState,
@@ -30,6 +28,7 @@ internal fun NonFiatContentBlock(
         targetState = state,
         label = "Update non content fiat block",
         modifier = modifier,
+        contentKey = { it::class.java },
     ) { animatedState ->
         when (animatedState) {
             is TokenItemState.Draggable -> DraggableImage(reorderableTokenListState = reorderableTokenListState)
