@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,6 +32,7 @@ import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
@@ -42,6 +44,8 @@ import kotlinx.collections.immutable.PersistentList
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState) {
+    BackHandler(onBack = state.topAppBarConfig.onBackClick)
+
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
         containerColor = TangemTheme.colors.background.secondary,
@@ -88,9 +92,18 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 }
                 items(
                     items = state.notifications,
-                    key = { it.config::class.java },
+                    key = { it::class.java },
                     contentType = { it.config::class.java },
-                    itemContent = { Notification(config = it.config, modifier = itemModifier.animateItemPlacement()) },
+                    itemContent = {
+                        Notification(
+                            modifier = itemModifier.animateItemPlacement(),
+                            config = it.config,
+                            iconTint = when (it) {
+                                is TokenDetailsNotification.Warning -> null
+                                is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
+                            },
+                        )
+                    },
                 )
                 if (!state.isCustomToken) {
                     item(
