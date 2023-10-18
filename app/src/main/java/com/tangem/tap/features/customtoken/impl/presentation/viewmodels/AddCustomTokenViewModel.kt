@@ -24,7 +24,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
@@ -54,11 +54,11 @@ import javax.inject.Inject
 /**
  * ViewModel for add custom token screen
  *
- * @param analyticsEventHandler         analytics event handler
- * @param featureRouter                 feature router
- * @property featureInteractor          feature interactor
- * @property getSelectedWalletUseCase   use case that returns selected wallet
- * @property dispatchers                coroutine dispatchers provider
+ * @param analyticsEventHandler           analytics event handler
+ * @param featureRouter                   feature router
+ * @property featureInteractor            feature interactor
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property dispatchers                  coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
@@ -70,7 +70,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
@@ -90,7 +90,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     init {
         if (walletFeatureToggles.isRedesignedScreenEnabled) {
             viewModelScope.launch(dispatchers.main) {
-                currentCryptoCurrencies = getSelectedWalletUseCase().fold(
+                currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
                     ifLeft = { emptyList() },
                     ifRight = { selectedWallet ->
                         getCurrenciesUseCase(selectedWallet.walletId).fold(
@@ -231,7 +231,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
-            val scanResponse = getSelectedWalletUseCase().fold(
+            val scanResponse = getSelectedWalletSyncUseCase().fold(
                 ifLeft = { null },
                 ifRight = { it.scanResponse },
             )
@@ -288,7 +288,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathsSelectorField(): AddCustomTokenSelectorField.DerivationPath? {
-            return getSelectedWalletUseCase().fold(
+            return getSelectedWalletSyncUseCase().fold(
                 ifLeft = { null },
                 ifRight = {
                     if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
@@ -344,7 +344,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathInputField(): AddCustomTokenInputField.DerivationPath? {
-            return getSelectedWalletUseCase().fold(
+            return getSelectedWalletSyncUseCase().fold(
                 ifLeft = { null },
                 ifRight = {
                     if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
@@ -474,7 +474,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val isSupportedToken = if (!isNetworkSelected()) {
             true
         } else {
-            getSelectedWalletUseCase().fold(
+            getSelectedWalletSyncUseCase().fold(
                 ifLeft = { false },
                 ifRight = {
                     it.scanResponse.card.canHandleToken(
@@ -517,7 +517,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     blockchain = networkSelectorValue,
                 )
 
-                val isSupportedToken = getSelectedWalletUseCase().fold(
+                val isSupportedToken = getSelectedWalletSyncUseCase().fold(
                     ifLeft = { false },
                     ifRight = {
                         it.scanResponse.card.canHandleToken(
@@ -726,7 +726,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getDerivationPathForBlockchain(blockchain: Blockchain?): DerivationPath? {
         if (blockchain == null) return null
 
-        val derivationStyle = getSelectedWalletUseCase().fold(
+        val derivationStyle = getSelectedWalletSyncUseCase().fold(
             ifLeft = { null },
             ifRight = {
                 it.scanResponse.derivationStyleProvider.getDerivationStyle()
@@ -742,7 +742,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
-        return getSelectedWalletUseCase().fold(
+        return getSelectedWalletSyncUseCase().fold(
             ifLeft = { false },
             ifRight = {
                 !it.scanResponse.card.canHandleBlockchain(

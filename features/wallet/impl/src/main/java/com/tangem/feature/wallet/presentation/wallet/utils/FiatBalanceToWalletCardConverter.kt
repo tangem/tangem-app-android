@@ -32,6 +32,7 @@ internal class FiatBalanceToWalletCardConverter(
         return WalletCardState.Error(
             id = id,
             title = title,
+            additionalInfo = additionalInfo,
             imageResId = imageResId,
             onDeleteClick = onDeleteClick,
             onRenameClick = onRenameClick,

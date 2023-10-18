@@ -7,6 +7,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -70,10 +71,12 @@ class ProxyModule {
     fun provideDerivationManager(
         appStateHolder: AppStateHolder,
         currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
     ): DerivationManager {
         return DerivationManagerImpl(
             appStateHolder = appStateHolder,
             currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
         )
     }
 
