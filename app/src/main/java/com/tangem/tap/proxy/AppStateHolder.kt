@@ -9,6 +9,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
@@ -53,13 +54,13 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
     }
 
     override fun navigate(action: NavigationAction) {
-        mainStore?.dispatch(action)
+        mainStore?.dispatchOnMain(action)
     }
 
     override fun getBackStack(): List<AppScreen> = mainStore?.state?.navigationState?.backStack.orEmpty()
 
     override fun popBackStack(screen: AppScreen?) {
-        mainStore?.dispatch(NavigationAction.PopBackTo(screen))
+        mainStore?.dispatchOnMain(NavigationAction.PopBackTo(screen))
     }
 
     override fun dispatch(action: Action) {
