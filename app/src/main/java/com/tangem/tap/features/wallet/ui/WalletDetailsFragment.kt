@@ -62,7 +62,9 @@ import javax.inject.Inject
 /**
  * Wallet details fragment - use only for MultiWallet
  */
+// TODO: Delete with WalletFeatureToggles
 @Suppress("LargeClass", "MagicNumber")
+@Deprecated(message = "Used only in old wallet screen")
 @AndroidEntryPoint
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeStoreSubscriber<WalletState> {
 
@@ -436,10 +438,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
-                lBalance.tvError.setWarningStatus(
-                    R.string.wallet_balance_blockchain_unreachable,
-                    status.errorMessage,
-                )
+                // TODO: Delete with WalletFeatureToggles
+                // lBalance.tvError.setWarningStatus(
+                //     R.string.wallet_balance_blockchain_unreachable,
+                //     status.errorMessage,
+                // )
             }
             is WalletDataModel.NoAccount -> {
                 lBalance.root.hide()

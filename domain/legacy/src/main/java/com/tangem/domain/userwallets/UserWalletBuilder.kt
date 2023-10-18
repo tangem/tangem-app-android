@@ -25,6 +25,7 @@ class UserWalletBuilder(
                 cardTypesResolver.isStart2Coin() -> "Start2Coin"
                 else -> "Wallet"
             }
+            ProductType.Wallet2 -> "Wallet"
         }
 
     /**
