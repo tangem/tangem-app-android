@@ -20,13 +20,13 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.errors.UserCancelledException
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -34,6 +34,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.scope
 import com.tangem.tap.userWalletsListManager
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
@@ -42,6 +43,7 @@ import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val currenciesRepository: CurrenciesRepository,
+    private val networksRepository: NetworksRepository,
 ) : DerivationManager {
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
@@ -155,16 +157,20 @@ class DerivationManagerImpl(
         derivationPath: String,
         derivationStyleProvider: DerivationStyleProvider,
     ) {
+        val cryptoCurrency = convertCurrency(
+            blockchain = blockchain,
+            currency = currency,
+            derivationPath = derivationPath,
+            derivationStyleProvider = derivationStyleProvider,
+        )
         currenciesRepository.addCurrencies(
             userWalletId,
-            listOf(
-                convertCurrency(
-                    blockchain = blockchain,
-                    currency = currency,
-                    derivationPath = derivationPath,
-                    derivationStyleProvider = derivationStyleProvider,
-                ),
-            ),
+            listOf(cryptoCurrency),
+        )
+        networksRepository.getNetworkStatusesSync(
+            userWalletId = userWalletId,
+            networks = setOf(cryptoCurrency.network),
+            refresh = true,
         )
     }
 
