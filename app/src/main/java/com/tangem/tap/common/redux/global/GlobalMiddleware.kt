@@ -3,10 +3,12 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -14,7 +16,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
@@ -84,10 +85,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
                 if (it.hideWarning(action.warning)) {
-                    if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
-                        // TODO: No appropriate warningMessage identification. Make it better later
-                        store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
-                    }
+                    // if (WarningMessagesManager.isAlreadySignedHashesWarning()) {
+                    //     // TODO: No appropriate warningMessage identification. Make it better later
+                    //     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
+                    // }
 
                     store.dispatch(WalletAction.Warnings.Update)
                     store.dispatch(SendAction.Warnings.Update)
@@ -183,6 +184,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             action.manager.selectedUserWallet
                 .distinctUntilChanged()
                 .onEach { userWallet ->
+                    Analytics.send(event = Basic.WalletOpened())
+
                     store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
                         infoHolder.setCardInfo(data = userWallet.scanResponse)
 

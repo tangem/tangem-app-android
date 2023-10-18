@@ -40,7 +40,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return state.copy(
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
             marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencySymbol),
-            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
+            notifications = persistentListOf(TokenDetailsNotification.Warning.NetworksUnreachable),
         )
     }
 
@@ -74,8 +74,8 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Custom,
-            is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
         }
     }
@@ -91,8 +91,8 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
-            is CryptoCurrencyStatus.NoAmount,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Content(
                 currencySymbol = currencySymbol,
                 price = formatPrice(status, appCurrencyProvider()),
