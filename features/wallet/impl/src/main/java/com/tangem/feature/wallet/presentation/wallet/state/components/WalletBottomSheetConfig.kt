@@ -27,7 +27,7 @@ sealed class WalletBottomSheetConfig(
     )
 
     data class UnlockWallets(val onUnlockClick: () -> Unit, val onScanClick: () -> Unit) : WalletBottomSheetConfig(
-        title = resourceReference(id = R.string.common_unlock_needed),
+        title = resourceReference(id = R.string.common_access_denied),
         subtitle = resourceReference(
             id = R.string.unlock_wallet_description_full,
             formatArgs = wrappedList(

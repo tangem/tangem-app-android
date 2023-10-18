@@ -71,10 +71,10 @@ data class CryptoCurrencyStatus(
     /**
      * Represents a state where there is no account associated with the cryptocurrency
      *
-     * @property errorMessage error message
+     * @property amountToCreateAccount base reserve amount for account creation
      */
     data class NoAccount(
-        val errorMessage: String,
+        val amountToCreateAccount: BigDecimal,
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
     ) : Status(isError = false) {
