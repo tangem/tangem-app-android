@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.AppState
@@ -9,6 +10,8 @@ import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressVerifyAction.Error
+import com.tangem.tap.scope
+import kotlinx.coroutines.*
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 
@@ -16,6 +19,8 @@ import org.rekotlin.DispatchFunction
 [REDACTED_AUTHOR]
  */
 internal class AddressMiddleware {
+
+    val addressValidator = AddressValidator()
 
     fun handle(action: AddressActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
         when (action) {
@@ -54,13 +59,13 @@ internal class AddressMiddleware {
         dispatch: (Action) -> Unit,
     ) {
         val sendState = appState?.sendState ?: return
-        val wallet = sendState.walletManager?.wallet ?: return
+        val walletManager = sendState.walletManager ?: return
         val address = sendState.addressState.normalFieldValue ?: return
         val isUserInput = sendState.addressState.viewFieldValue.isFromUserInput
 
         verifyAddress(
             address = address,
-            wallet = wallet,
+            walletManager = walletManager,
             isUserInput = isUserInput,
             dispatch = dispatch,
             sourceType = sourceType,
@@ -68,6 +73,38 @@ internal class AddressMiddleware {
     }
 
     private fun verifyAddress(
+        address: String,
+        walletManager: WalletManager,
+        sourceType: AddressEntered.SourceType?,
+        isUserInput: Boolean,
+        dispatch: (Action) -> Unit,
+    ) {
+        val wallet = walletManager.wallet
+
+        scope.launch(Dispatchers.Main) {
+            val failReason = withContext(Dispatchers.IO) {
+                addressValidator.validateAddress(walletManager, address)
+            }
+
+            if (failReason == null) {
+                dispatchSuccessValidationActions(
+                    address = address,
+                    wallet = wallet,
+                    sourceType = sourceType,
+                    isUserInput = isUserInput,
+                    dispatch = dispatch,
+                )
+            } else {
+                dispatchFailedValidationActions(
+                    failReason = failReason,
+                    sourceType = sourceType,
+                    dispatch = dispatch,
+                )
+            }
+        }
+    }
+
+    private fun dispatchSuccessValidationActions(
         address: String,
         wallet: Wallet,
         sourceType: AddressEntered.SourceType?,
@@ -113,57 +150,49 @@ internal class AddressMiddleware {
 
         val supposedAddress = noSchemeAddress.removeShareUriQuery() // TODO: parse query?
 
-        val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
-        if (failReason == null) {
-            noSchemeAddress.getQueryParameter("amount")?.toBigDecimalOrNull()?.let {
-                dispatch(AmountAction.SetAmount(it, false))
-                dispatch(AmountActionUi.CheckAmountToSend)
-            }
-            dispatch(SetWalletAddress(supposedAddress, isUserInput))
-            dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
-            dispatch(FeeAction.RequestFee)
-            sourceType?.let {
-                Analytics.send(
-                    event = AddressEntered(
-                        sourceType = sourceType,
-                        validationResult = AddressEntered.ValidationResult.Success,
-                    ),
-                )
-            }
-        } else {
-            dispatch(SetAddressError(failReason))
-            dispatch(TransactionExtrasAction.Release)
-            sourceType?.let {
-                Analytics.send(
-                    event = AddressEntered(
-                        sourceType = sourceType,
-                        validationResult = AddressEntered.ValidationResult.Fail,
-                    ),
-                )
-            }
+        noSchemeAddress.getQueryParameter("amount")?.toBigDecimalOrNull()?.let {
+            dispatch(AmountAction.SetAmount(it, false))
+            dispatch(AmountActionUi.CheckAmountToSend)
+        }
+        dispatch(SetWalletAddress(supposedAddress, isUserInput))
+        dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
+        dispatch(FeeAction.RequestFee)
+        sourceType?.let {
+            Analytics.send(
+                event = AddressEntered(
+                    sourceType = sourceType,
+                    validationResult = AddressEntered.ValidationResult.Success,
+                ),
+            )
         }
     }
 
-    private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): Error? {
-        return if (wallet.blockchain.validateAddress(address)) {
-            if (wallet.addresses.all { it.value != address }) {
-                null
-            } else {
-                Error.ADDRESS_SAME_AS_WALLET
-            }
-        } else {
-            Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
+    private fun dispatchFailedValidationActions(
+        failReason: AddressVerifyAction.Error,
+        sourceType: AddressEntered.SourceType?,
+        dispatch: (Action) -> Unit,
+    ) {
+        dispatch(SetAddressError(failReason))
+        dispatch(TransactionExtrasAction.Release)
+        sourceType?.let {
+            Analytics.send(
+                event = AddressEntered(
+                    sourceType = sourceType,
+                    validationResult = AddressEntered.ValidationResult.Fail,
+                ),
+            )
         }
     }
 
     private fun String.removeShareUriQuery(): String = this.substringBefore("?")
+
     private fun String.getQueryParameter(name: String): String? {
         return this.substringAfter("?").splitToMap("&", "=")[name]
     }
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val address = input ?: return
-        val wallet = appState?.sendState?.walletManager?.wallet ?: return
+        val walletManager = appState?.sendState?.walletManager ?: return
 
         val internalDispatcher: (Action) -> Unit = {
             when (it) {
@@ -178,7 +207,7 @@ internal class AddressMiddleware {
 
         verifyAddress(
             address = address,
-            wallet = wallet,
+            walletManager = walletManager,
             sourceType = null,
             isUserInput = false,
             dispatch = internalDispatcher,
