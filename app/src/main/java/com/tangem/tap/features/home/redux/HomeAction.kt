@@ -1,10 +1,10 @@
 package com.tangem.tap.features.home.redux
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
@@ -17,13 +17,12 @@ sealed class HomeAction : Action {
     /**
      * Action for scanning card
      *
-     * @property analyticsEvent          analytics event
-     * @property lifecycleCoroutineScope lifecycle scope. It will be canceled when lifecycle-aware component is
-     * destroyed.
+     * @property analyticsEvent analytics event
+     * @property scope          lifecycle scope. It will be canceled when lifecycle-aware component is destroyed
      */
     data class ReadCard(
         val analyticsEvent: AnalyticsEvent? = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Introduction),
-        val scope: CoroutineScope,
+        val scope: LifecycleCoroutineScope,
     ) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
