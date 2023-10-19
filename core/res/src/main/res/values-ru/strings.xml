@@ -90,6 +90,7 @@
     <string name="common_like">Нравится</string>
     <string name="common_locked">Заблокирован</string>
     <string name="common_main_network">Основная сеть</string>
+    <string name="common_next">Далее</string>
     <string name="common_no">Нет</string>
     <string name="common_no_address">Нет адреса</string>
     <string name="common_no_data">Нет данных</string>
@@ -141,7 +142,8 @@
     <string name="custom_token_network_input_not_selected">Не выбрано</string>
     <string name="custom_token_network_input_title">Сеть</string>
     <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
-    <string name="custom_token_token_symbol_input_title">Символ токена</string>
+    <string name="custom_token_token_symbol_input_title">Символ</string>
+    <string name="custom_token_token_symbol_input_title_old">Символ токена</string>
     <string name="custom_token_validation_error_already_added">Этот токен/сеть уже находится в вашем списке</string>
     <string name="custom_token_validation_error_not_found">Токены могут быть созданы кем угодно. Остерегайтесь мошеннических токенов, они могут ничего не стоить</string>
     <string name="details_chat">Чат</string>
@@ -152,11 +154,13 @@
     <string name="details_manage_security_passcode">Пароль</string>
     <string name="details_manage_security_passcode_description">Перед выполнением любой команды, влекущей за собой изменение состояния карты, вам необходимо будет ввести пароль.</string>
     <string name="details_referral_title">Реферальная программа</string>
+    <string name="details_row_description_flip_to_hide">Переверните экран вашего устройства вниз, чтобы быстро скрыть и отобразить балансы</string>
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="details_row_subtitle_signed_hashes_format">%s хэшей</string>
     <string name="details_row_title_cid">Номер карты</string>
     <string name="details_row_title_create_backup">Добавить еще карты</string>
     <string name="details_row_title_currency">Валюта приложения</string>
+    <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
     <string name="details_row_title_issuer">Эмитент</string>
     <string name="details_row_title_send_feedback">Отправить отзыв</string>
     <string name="details_row_title_signed_hashes">Подписано</string>
@@ -300,6 +304,7 @@
     <string name="organize_tokens_ungroup">Список</string>
     <string name="receive_bottom_sheet_title">%1$s %2$s адрес в сети %3$s</string>
     <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
+    <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
     <string name="referral_button_participate">Участвовать</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
@@ -338,7 +343,7 @@
     <string name="registration_task_alert_message">Пожалуйста, удерживайте карту до завершения операции</string>
     <string name="reset_card_to_factory_button_title">Сбросить карту</string>
     <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
-    <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах, если я его забуду</string>
+    <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу этой картой восстановить пароль на остальных картах этого кошелька, если я его забуду</string>
     <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать данную карту для восстановления кода доступа.</string>
     <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек.</string>
     <string name="russian_bank_card_warning_subtitle">У вас есть карта банка другой страны, а также вид на жительство или регистрация вне РФ?</string>
@@ -396,13 +401,6 @@
     <string name="story_finish_title">Кошелек для каждого</string>
     <string name="story_learn_description">Пройдите 3 урока, получите скидку на покупку Tangem Wallet и 1INCH токены</string>
     <string name="story_learn_learn">Пройти обучение</string>
-    <string name="story_meet_borrow">Занимайте</string>
-    <string name="story_meet_buy">Покупайте</string>
-    <string name="story_meet_exchange">Обменивайте</string>
-    <string name="story_meet_lend">Вкладывайте</string>
-    <string name="story_meet_pay">Расплачивайтесь</string>
-    <string name="story_meet_send">Отправляйте</string>
-    <string name="story_meet_store">Храните</string>
     <string name="story_meet_title">Встречайте Tangem</string>
     <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
     <string name="story_web3_title">Поддержка Web 3.0</string>
@@ -582,6 +580,7 @@
     <string name="warning_send_blocked_funds_for_fee_message">%1$s - это токен в сети %2$s. Для совершения транзакции %3$s, вам необходимо внести депозит в размере %4$s (%5$s), чтобы покрыть комиссию сети.</string>
     <string name="warning_send_blocked_funds_for_fee_title">Недостаточно %1$s для оплаты комиссии сети</string>
     <string name="warning_send_blocked_pending_transactions_message">Отправка средств станет доступной после завершения транзакции %s</string>
+    <string name="warning_send_blocked_pending_transactions_title">Транзакция в обработке</string>
     <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
     <string name="warning_some_networks_unreachable_message">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
     <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
