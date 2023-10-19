@@ -89,6 +89,7 @@
     <string name="common_like">Like</string>
     <string name="common_locked">Locked</string>
     <string name="common_main_network">Main network</string>
+    <string name="common_next">Next</string>
     <string name="common_no">No</string>
     <string name="common_no_address">No address</string>
     <string name="common_no_data">No data</string>
@@ -145,7 +146,8 @@
     <string name="custom_token_network_selector_title">Token network</string>
     <string name="custom_token_subtitle">You can manually add a token that is not natively supported by Tangem</string>
     <string name="custom_token_token_symbol_input_placeholder">E.g. USDC</string>
-    <string name="custom_token_token_symbol_input_title">Token symbol</string>
+    <string name="custom_token_token_symbol_input_title">Symbol</string>
+    <string name="custom_token_token_symbol_input_title_old">Token symbol</string>
     <string name="custom_token_validation_error_already_added">This token/network has already been added to your list</string>
     <string name="custom_token_validation_error_not_found">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
     <string name="details_chat">Chat</string>
@@ -209,7 +211,6 @@
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_tokens">Tokens</string>
     <string name="manage_tokens_add">Add</string>
-    <string name="manage_tokens_custom">Custom</string>
     <string name="manage_tokens_edit">Edit</string>
     <string name="manage_tokens_network_selector_native_subtitle">Blockchain the cryptocurrency was initially created</string>
     <string name="manage_tokens_network_selector_native_title">Native network</string>
@@ -360,7 +361,7 @@
     <string name="registration_task_alert_message">Please hold the card until the operation complete</string>
     <string name="reset_card_to_factory_button_title">Reset the Card</string>
     <string name="reset_card_to_factory_condition_1">I understand that after performing this action, I will no longer have access to the current wallet</string>
-    <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards.</string>
+    <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards of the current wallet</string>
     <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
     <string name="russian_bank_card_warning_subtitle">Do you have a bank card from another country and a residence permit or registration outside the Russian Federation?</string>
@@ -418,16 +419,9 @@
     <string name="story_finish_title">The Wallet for Everyone</string>
     <string name="story_learn_description">Take three lessons, get a discount on your Tangem Wallet, and receive 1INCH tokens to your wallet</string>
     <string name="story_learn_learn">Learn</string>
-    <string name="story_meet_borrow">Borrow</string>
-    <string name="story_meet_buy">Buy</string>
-    <string name="story_meet_exchange">Exchange</string>
-    <string name="story_meet_lend">Lend</string>
-    <string name="story_meet_pay">Pay</string>
-    <string name="story_meet_send">Send</string>
-    <string name="story_meet_store">Store</string>
     <string name="story_meet_title">Meet Tangem</string>
     <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
-    <string name="story_web3_title">Web 3.0 compatible</string>
+    <string name="story_web3_title">Web 3.0 Compatible</string>
     <string name="swapping_approve_information_text">Approvals are considered an industry standard across all decentralized exchanges and protect your wallet from being accessed by a smart contract without your permission. By design, smart contracts can\'t access your tokens unless you approve access from your end. By \"unlocking\" your tokens, you are give permission to the 1inch smart contract to spend your assets. The miners of the network are compensated with a gas fee (paid by you) to record this action on the blockchain. Once permission has been granted you will be able to swap your token.</string>
     <string name="swapping_approve_information_title">Approve</string>
     <string name="swapping_error_wrapper">Error: %s</string>
@@ -462,7 +456,6 @@
         <item quantity="one">%d token</item>
         <item quantity="other">%d tokens</item>
     </plurals>
-    <string name="token_details_choose_address">Choose address</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
@@ -601,6 +594,7 @@
     <string name="warning_send_blocked_funds_for_fee_message">%1$s is a token in the %2$s network. To make a %3$s transaction, you must deposit some %4$s (%5$s) to cover the network fee.</string>
     <string name="warning_send_blocked_funds_for_fee_title">Insufficient %1$s to cover network fee</string>
     <string name="warning_send_blocked_pending_transactions_message">Sending funds will be available once the %s transaction is complete</string>
+    <string name="warning_send_blocked_pending_transactions_title">Transaction pending</string>
     <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
     <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
     <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
