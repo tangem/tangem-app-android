@@ -227,7 +227,7 @@ class WalletMiddleware {
                 showSaveWalletIfNeeded()
             }
             is WalletAction.ChangeWallet -> {
-                changeWallet(walletState, action.lifecycleScope)
+                changeWallet(walletState, action.scope)
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
