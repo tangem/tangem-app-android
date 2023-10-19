@@ -270,7 +270,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 value = "",
                 onValueChange = actionsHandler::onTokenSymbolValueChange,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                label = TextReference.Res(R.string.custom_token_token_symbol_input_title),
+                label = TextReference.Res(R.string.custom_token_token_symbol_input_title_old),
                 placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder),
                 isEnabled = false,
             )
