@@ -10,6 +10,7 @@ import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressVerifyAction.Error
+import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import kotlinx.coroutines.*
 import org.rekotlin.Action
@@ -20,7 +21,7 @@ import org.rekotlin.DispatchFunction
  */
 internal class AddressMiddleware {
 
-    val addressValidator = AddressValidator()
+    private val addressValidator = AddressValidator()
 
     fun handle(action: AddressActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
         when (action) {
@@ -81,7 +82,7 @@ internal class AddressMiddleware {
     ) {
         val wallet = walletManager.wallet
 
-        scope.launch(Dispatchers.Main) {
+        mainScope.launch {
             val failReason = withContext(Dispatchers.IO) {
                 addressValidator.validateAddress(walletManager, address)
             }
