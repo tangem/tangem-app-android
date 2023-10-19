@@ -12,6 +12,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
 
+@Suppress("TooManyFunctions")
 internal class TangemCardTypesResolver(
     private val card: CardDTO,
     private val productType: ProductType,
@@ -31,6 +32,10 @@ internal class TangemCardTypesResolver(
 
     override fun isWallet2(): Boolean {
         return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && card.settings.isKeysImportAllowed
+    }
+
+    override fun isRing(): Boolean {
+        return productType == ProductType.Ring
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
