@@ -1076,7 +1076,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
-        return userWallet.scanResponse.walletData?.token != null && !userWallet.isMultiCurrency
+        return userWallet.scanResponse.cardTypesResolver.isNodl()
     }
 
     private fun List<CryptoCurrencyStatus>.isAllCurrenciesLoaded(): Boolean {
