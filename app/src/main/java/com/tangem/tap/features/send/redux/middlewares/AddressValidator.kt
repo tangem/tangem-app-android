@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.tap.features.send.redux.AddressVerifyAction
 
-class AddressValidator {
+internal class AddressValidator {
 
     suspend fun validateAddress(walletManager: WalletManager, address: String): AddressVerifyAction.Error? {
         val blockchain = walletManager.wallet.blockchain
@@ -47,6 +47,6 @@ class AddressValidator {
     }
 
     companion object {
-        const val NEAR_IMPLICIT_ADDRESS_LENGTH = 64
+        private const val NEAR_IMPLICIT_ADDRESS_LENGTH = 64
     }
 }
