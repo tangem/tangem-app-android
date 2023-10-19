@@ -30,7 +30,7 @@ class GetCurrencyWarningsUseCase(
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
         return combine(
-            getFeeWarningFlow(
+            getCoinRelatedWarnings(
                 userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
@@ -41,7 +41,7 @@ class GetCurrencyWarningsUseCase(
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(getNetworkUnavailableWarning(currencyStatus)),
             flowOf(getNetworkNoAccountWarning(currencyStatus)),
-        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable, maybeNetworkNoAccount ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable, maybeNetworkNoAccount ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let {
@@ -50,20 +50,20 @@ class GetCurrencyWarningsUseCase(
                         edStringValueWithSymbol = "${it.toPlainString()} ${currency.symbol}",
                     )
                 },
-                maybeFeeWarning,
+                *coinRelatedWarnings.toTypedArray(),
                 maybeNetworkUnavailable,
                 maybeNetworkNoAccount,
             )
         }.flowOn(dispatchers.io)
     }
 
-    private suspend fun getFeeWarningFlow(
+    private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
-    ): Flow<CryptoCurrencyWarning?> {
+    ): Flow<List<CryptoCurrencyWarning>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -87,17 +87,22 @@ class GetCurrencyWarningsUseCase(
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {
-                    if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
-                        CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                            currency = tokenStatus.currency,
-                            blockchainFullName = coinStatus.currency.name,
-                            blockchainSymbol = coinStatus.currency.symbol,
-                        )
-                    } else {
-                        null
+                    buildList {
+                        if (tokenStatus.value.hasCurrentNetworkTransactions) {
+                            add(CryptoCurrencyWarning.HasPendingTransactions(coinStatus.currency.symbol))
+                        }
+                        if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
+                            add(
+                                CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                                    currency = tokenStatus.currency,
+                                    blockchainFullName = coinStatus.currency.name,
+                                    blockchainSymbol = coinStatus.currency.symbol,
+                                ),
+                            )
+                        }
                     }
                 }
-                else -> CryptoCurrencyWarning.SomeNetworksUnreachable
+                else -> listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
             }
         }
     }
