@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * A chart with a solid line and gradient underneath. It can accept values of any range and number.
@@ -22,7 +24,7 @@ import com.tangem.core.ui.res.TangemTheme
  * @param values a list of float values for a chart.
  **/
 @Composable
-fun PriceChangesChart(values: List<Float>, modifier: Modifier = Modifier) {
+fun PriceChangesChart(values: ImmutableList<Float>, modifier: Modifier = Modifier) {
     Row(modifier = modifier) {
         if (values.size < 2) return // escape without drawing when there are not enough points
 
@@ -39,7 +41,7 @@ fun PriceChangesChart(values: List<Float>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Chart(list: List<Float>, lineColor: Color, gradient: Brush, modifier: Modifier = Modifier) {
+private fun Chart(list: ImmutableList<Float>, lineColor: Color, gradient: Brush, modifier: Modifier = Modifier) {
     val max = list.max()
     val min = list.min()
     val zipList: List<Pair<Float, Float>> = list.zipWithNext()
@@ -105,7 +107,7 @@ private fun getValuePercentageForRange(value: Float, max: Float, min: Float): Fl
 private fun Chart_Positive_Preview() {
     TangemTheme(isDark = true) {
         PriceChangesChart(
-            listOf(1f, 2f, 4f, 1f, 5f),
+            persistentListOf(1f, 2f, 4f, 1f, 5f),
         )
     }
 }
@@ -115,7 +117,7 @@ private fun Chart_Positive_Preview() {
 private fun Chart_Negative_Preview() {
     TangemTheme(isDark = true) {
         PriceChangesChart(
-            listOf(10f, 2f, 4f, 1f, 5f),
+            persistentListOf(10f, 2f, 4f, 1f, 5f),
         )
     }
 }
