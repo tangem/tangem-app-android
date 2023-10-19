@@ -133,9 +133,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
         binding.toolbar.setNavigationOnClickListener(
             OneTouchClickListener {
-                lifecycleScope.launch {
-                    store.dispatch(WalletAction.ChangeWallet(lifecycleScope))
-                }
+                store.dispatch(WalletAction.ChangeWallet(scope = requireActivity().lifecycleScope))
             },
         )
         setupWarningsRecyclerView()
