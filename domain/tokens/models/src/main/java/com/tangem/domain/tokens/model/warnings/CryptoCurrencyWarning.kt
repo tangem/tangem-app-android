@@ -30,4 +30,6 @@ sealed class CryptoCurrencyWarning {
      * @param exemptionAmount Amount that should be on the blockchain balance not to pay rent
      */
     data class Rent(val rent: BigDecimal, val exemptionAmount: BigDecimal) : CryptoCurrencyWarning()
+
+    data class HasPendingTransactions(val blockchainSymbol: String) : CryptoCurrencyWarning()
 }
