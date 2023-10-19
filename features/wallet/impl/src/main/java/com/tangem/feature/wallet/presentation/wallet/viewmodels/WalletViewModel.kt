@@ -581,7 +581,7 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val wallet = getWallet(walletIndex)
 
-            val maybeFetchResult = if (isSingleWalletWithTokens(wallet)) {
+            val maybeFetchResult = if (wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 fetchCardTokenListUseCase(userWalletId = wallet.walletId, refresh = true)
             } else {
                 fetchTokenListUseCase(userWalletId = wallet.walletId, refresh = true)
@@ -998,7 +998,7 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getLockedState()
             }
             wallet.isMultiCurrency -> getMultiCurrencyContent(wallet, index)
-            isSingleWalletWithTokens(wallet) -> getSingleCurrencyWithTokenContent(index)
+            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> getSingleCurrencyWithTokenContent(index)
             !wallet.isMultiCurrency -> getSingleCurrencyContent(index)
         }
     }
@@ -1073,10 +1073,6 @@ internal class WalletViewModel @Inject constructor(
         reduxStateHolder.dispatch(
             action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
         )
-    }
-
-    private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
-        return userWallet.scanResponse.walletData?.token != null && !userWallet.isMultiCurrency
     }
 
     private fun List<CryptoCurrencyStatus>.isAllCurrenciesLoaded(): Boolean {
