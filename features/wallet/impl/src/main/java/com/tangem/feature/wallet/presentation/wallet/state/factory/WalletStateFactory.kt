@@ -48,7 +48,7 @@ internal class WalletStateFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
-    private val tokenActionsProvider by lazy { TokenActionsProvider(clickIntents) }
+    private val tokenActionsProvider by lazy { TokenActionsProvider(currentWalletProvider, clickIntents) }
 
     private val skeletonConverter by lazy {
         WalletSkeletonStateConverter(
