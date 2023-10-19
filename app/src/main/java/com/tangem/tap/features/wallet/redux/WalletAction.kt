@@ -19,6 +19,7 @@ import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.wallet.R
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class WalletAction : Action {
@@ -76,7 +77,7 @@ sealed class WalletAction : Action {
 
     data class Scan(
         val onScanSuccessEvent: AnalyticsEvent?,
-        val lifecycleScope: LifecycleCoroutineScope,
+        val scope: CoroutineScope,
     ) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction()
