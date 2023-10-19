@@ -162,9 +162,14 @@ internal class DefaultNetworksRepository(
 
             responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse).asSequence()
         } else {
-            val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            if (userWallet.isSingleWalletWithTokens()) {
+                cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+                    .asSequence()
+            } else {
+                val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
 
-            sequenceOf(currency)
+                sequenceOf(currency)
+            }
         }
 
         return currencies.filter { it.network == network }
