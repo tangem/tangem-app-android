@@ -11,7 +11,6 @@ import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerificatio
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressVerifyAction.Error
 import com.tangem.tap.mainScope
-import com.tangem.tap.scope
 import kotlinx.coroutines.*
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
