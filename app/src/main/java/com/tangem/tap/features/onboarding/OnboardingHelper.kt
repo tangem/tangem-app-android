@@ -54,6 +54,7 @@ object OnboardingHelper {
             ProductType.Note -> AppScreen.OnboardingNote
             ProductType.Wallet,
             ProductType.Wallet2,
+            ProductType.Ring,
             -> if (scanResponse.card.settings.isBackupAllowed) {
                 AppScreen.OnboardingWallet
             } else {
