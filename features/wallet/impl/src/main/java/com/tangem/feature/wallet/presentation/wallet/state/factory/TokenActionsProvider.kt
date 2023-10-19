@@ -39,7 +39,7 @@ internal class TokenActionsProvider(
     }
 
     private fun List<TokenActionsState.ActionState>.filterIfNodl(): List<TokenActionsState.ActionState> {
-        return if (currentWalletProvider().scanResponse.cardTypesResolver.isNodl()) {
+        return if (currentWalletProvider().scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
             filter { it !is TokenActionsState.ActionState.HideToken }
         } else {
             this

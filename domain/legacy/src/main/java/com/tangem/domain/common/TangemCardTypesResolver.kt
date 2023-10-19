@@ -43,7 +43,7 @@ internal class TangemCardTypesResolver(
 
     override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
 
-    override fun isNodl(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
+    override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {
         return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&

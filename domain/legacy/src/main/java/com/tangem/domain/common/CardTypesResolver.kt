@@ -21,7 +21,7 @@ interface CardTypesResolver {
 
     fun isDevKit(): Boolean
 
-    fun isNodl(): Boolean
+    fun isSingleWalletWithToken(): Boolean
 
     fun isMultiwalletAllowed(): Boolean
 
