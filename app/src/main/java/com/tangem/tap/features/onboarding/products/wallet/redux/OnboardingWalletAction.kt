@@ -18,7 +18,7 @@ sealed class OnboardingWalletAction : Action {
     ) : OnboardingWalletAction()
 
     object Done : OnboardingWalletAction()
-    data class FinishOnboarding(val lifecycleCoroutineScope: LifecycleCoroutineScope) : OnboardingWalletAction()
+    data class FinishOnboarding(val scope: LifecycleCoroutineScope) : OnboardingWalletAction()
 
     object ResumeBackup : OnboardingWalletAction()
 
