@@ -113,21 +113,13 @@ sealed class WalletAction : Action {
     data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
 
     object CreateWallet : WalletAction()
-    data class ChangeWallet(val lifecycleScope: LifecycleCoroutineScope) : WalletAction()
+    data class ChangeWallet(val scope: LifecycleCoroutineScope) : WalletAction()
     object ShowSaveWalletIfNeeded : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
         object Sell : TradeCryptoAction()
 
         data class Buy(val checkUserLocation: Boolean = true) : TradeCryptoAction()
-
-        data class FinishSelling(val transactionId: String) : TradeCryptoAction()
-        data class SendCrypto(
-            val currencyId: String,
-            val amount: String,
-            val destinationAddress: String,
-            val transactionId: String,
-        ) : TradeCryptoAction()
 
         object Swap : TradeCryptoAction()
     }
