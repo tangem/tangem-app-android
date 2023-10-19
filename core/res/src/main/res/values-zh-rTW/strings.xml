@@ -112,7 +112,7 @@
     <string name="custom_token_network_input_not_selected">未選擇</string>
     <string name="custom_token_network_input_title">網路</string>
     <string name="custom_token_token_symbol_input_placeholder">如 USDC</string>
-    <string name="custom_token_token_symbol_input_title">代幣符號</string>
+    <string name="custom_token_token_symbol_input_title_old">代幣符號</string>
     <string name="custom_token_validation_error_already_added">此代幣/網路已被加入</string>
     <string name="custom_token_validation_error_not_found">請注意代幣可以被任何人創造。小心詐騙</string>
     <string name="details_chat">交談</string>
@@ -148,7 +148,6 @@
     <string name="feedback_subject_support">反饋</string>
     <string name="feedback_subject_support_tangem">Tangem反饋</string>
     <string name="feedback_subject_tx_failed">無法發送交易</string>
-    <string name="home_button_order">訂購</string>
     <string name="home_button_scan">掃描卡片</string>
     <string name="initial_message_change_access_code_body">要更改訪問密碼，請完全按照上圖所示連接手機和卡片</string>
     <string name="initial_message_change_passcode_body">要更改密碼，請完全按照上圖所示連接手機和卡</string>
@@ -324,16 +323,9 @@
     <string name="story_currencies_title">千種虛擬貨幣</string>
     <string name="story_finish_description">隨時隨地使用它，不需要接線或電池，只需要你的卡片和手機</string>
     <string name="story_finish_title">適合每個人的冷錢包</string>
-    <string name="story_meet_borrow">借入</string>
-    <string name="story_meet_buy">購買</string>
-    <string name="story_meet_exchange">交易</string>
-    <string name="story_meet_lend">借出</string>
-    <string name="story_meet_pay">付款</string>
-    <string name="story_meet_send">發送</string>
-    <string name="story_meet_store">保存</string>
     <string name="story_meet_title">認識Tangem</string>
     <string name="story_web3_description">交易、購買NFT、自由穿梭於100+去中心化服務</string>
-    <string name="story_web3_title">兼容DeFi</string>
+    <string name="story_web3_title">兼容Web3.0</string>
     <string name="swapping_approve_information_text">批准被視為所有去中心化交易所的行業標準，並保護您的錢包在未經您許可的情況下不被智能合約訪問。按照設計，智能合約無法訪問您的代幣，除非您從您的終端批准訪問。通過“解鎖”您的代幣，您將獲得 1inch 智能合約使用您的資產的權限。網絡的礦工將獲得Gas Fee（由您支付）作為補償，以在區塊鏈上記錄此操作。一旦獲得許可，您就可以交易您的代幣。</string>
     <string name="swapping_approve_information_title">批准</string>
     <string name="swapping_error_wrapper">錯誤： %s</string>
