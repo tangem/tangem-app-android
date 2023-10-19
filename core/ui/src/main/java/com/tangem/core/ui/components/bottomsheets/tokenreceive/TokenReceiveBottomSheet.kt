@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.bottomsheets.tokenreceive
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -79,6 +80,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
                     content.onCopyClick.invoke()
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     clipboardManager.setText(AnnotatedString(selectedAddress.value))
+                    Toast.makeText(context, R.string.wallet_notification_address_copied, Toast.LENGTH_SHORT).show()
                 },
             )
             SecondaryButtonIconStart(
