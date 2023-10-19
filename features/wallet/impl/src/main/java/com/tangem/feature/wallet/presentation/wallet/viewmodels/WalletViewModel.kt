@@ -756,6 +756,9 @@ internal class WalletViewModel @Inject constructor(
         val wallet = getWallet(walletIndex)
 
         viewModelScope.launch(dispatchers.main) {
+            singleWalletCryptoCurrencyStatus?.let {
+                updateButtons(wallet.walletId, it)
+            }
             val result = fetchCurrencyStatusUseCase(wallet.walletId, refresh = true)
 
             uiState = stateFactory.getRefreshedState()
