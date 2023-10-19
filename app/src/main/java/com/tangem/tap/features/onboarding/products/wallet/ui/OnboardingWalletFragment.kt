@@ -427,7 +427,7 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
+            store.dispatch(OnboardingWalletAction.FinishOnboarding(scope = requireActivity().lifecycleScope))
         }
 
         animator.showSuccess {
