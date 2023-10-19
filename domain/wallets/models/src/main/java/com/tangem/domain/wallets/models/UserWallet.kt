@@ -34,8 +34,4 @@ data class UserWallet(
 
     /** Indicated if this primary card is imported */
     val isImported: Boolean get() = scanResponse.card.wallets.any(CardDTO.Wallet::isImported)
-
-    fun isSingleWalletWithTokens(): Boolean {
-        return scanResponse.walletData?.token != null && !isMultiCurrency
-    }
 }
