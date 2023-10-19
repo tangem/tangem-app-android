@@ -517,6 +517,17 @@
                     "networkId": "aleph-zero/test"
                 }
             ]
+        },
+        {
+            "id": "near",
+            "symbol": "NEAR",
+            "name": "NEAR",
+            "networks":
+            [
+                {
+                    "networkId": "near/test"
+                }
+            ]
         }
     ]
 }
