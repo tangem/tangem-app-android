@@ -116,9 +116,9 @@ class WalletMiddleware {
             }
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                action.lifecycleScope.launch {
+                action.scope.launch {
                     delay(timeMillis = 700)
-                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.lifecycleScope))
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.scope))
                 }
             }
             is WalletAction.LoadData,
@@ -391,7 +391,7 @@ class WalletMiddleware {
                 store.dispatch(
                     WalletAction.Scan(
                         onScanSuccessEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main),
-                        lifecycleScope = lifecycleScope,
+                        scope = lifecycleScope,
                     ),
                 )
             }
