@@ -19,28 +19,31 @@ internal class TokenDetailsNotificationConverter(
 
     fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.Informational.RentInfo }
+        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
         return newNotifications.toImmutableList()
     }
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.Warning.NetworkFee(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
                 feeInfo = warning,
                 onBuyClick = clickIntents::onBuyClick,
             )
-            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.Informational.ExistentialDeposit(
+            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
             )
-            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.Informational.RentInfo(
+            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
                 rentInfo = warning,
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
-            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.Warning.NetworksUnreachable
-            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.Informational.NetworksNoAccount(
+            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachable
+            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.NetworksNoAccount(
                 network = warning.amountCurrency.name,
                 amount = warning.amountToCreateAccount.toString(),
                 symbol = warning.amountCurrency.symbol,
+            )
+            is CryptoCurrencyWarning.HasPendingTransactions -> TokenDetailsNotification.HasPendingTransactions(
+                coinSymbol = warning.blockchainSymbol,
             )
         }
     }
