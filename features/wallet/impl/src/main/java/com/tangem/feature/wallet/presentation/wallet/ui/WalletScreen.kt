@@ -137,6 +137,7 @@ private fun WalletContent(
                 if (state is WalletSingleCurrencyState) {
                     controlButtons(
                         configs = state.buttons,
+                        selectedWalletIndex = state.walletsListConfig.selectedWalletIndex,
                         modifier = movableItemModifier.padding(top = betweenItemsPadding),
                     )
                 }
