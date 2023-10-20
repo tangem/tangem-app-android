@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import java.math.BigDecimal
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "arbitrum-one" -> Blockchain.Arbitrum
@@ -70,11 +70,13 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
         "chia" -> Blockchain.Chia
         "chia/test" -> Blockchain.ChiaTestnet
+        "near-protocol" -> Blockchain.Near
+        "near-protocol/test" -> Blockchain.NearTestnet
         else -> null
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
@@ -141,10 +143,12 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.Near -> "near-protocol"
+        Blockchain.NearTestnet -> "near-protocol/test"
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.toCoinId(): String {
     return when (this) {
         Blockchain.Binance, Blockchain.BinanceTestnet, Blockchain.BSC, Blockchain.BSCTestnet -> "binancecoin"
@@ -184,7 +188,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
-        Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
+        Blockchain.Chia -> "chia"
+        Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.Near -> "near"
+        Blockchain.NearTestnet -> "near/test"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -197,6 +204,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
         Blockchain.XRP -> BigDecimal.TEN
+        Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         else -> null
     }
 }
@@ -211,6 +219,4 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
-    Blockchain.Telos, // disable in 4.9
-    Blockchain.TelosTestnet, // disable in 4.9
 )
