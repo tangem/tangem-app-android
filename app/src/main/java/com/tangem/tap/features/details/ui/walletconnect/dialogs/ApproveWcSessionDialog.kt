@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -18,7 +19,7 @@ object ApproveWcSessionDialog {
             sessionBlockchain.fullName,
             session.peerMeta.url,
         )
-        return AlertDialog.Builder(context).apply {
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(context.getString(R.string.wallet_connect_title))
             setMessage(message)
             setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
