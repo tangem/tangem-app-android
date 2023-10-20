@@ -25,7 +25,6 @@ data class SwapStateHolder(
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
-    val onSearchFocusChange: (Boolean) -> Unit,
     val onSelectTokenClick: (() -> Unit)? = null,
     val onSuccess: (() -> Unit)? = null,
     val onMaxAmountSelected: (() -> Unit)? = null,
@@ -41,6 +40,7 @@ data class SwapCardData(
     val tokenIconUrl: String,
     val tokenCurrency: String,
     val balance: String,
+    val isBalanceHidden: Boolean,
     val isNotNativeToken: Boolean,
     val canSelectAnotherToken: Boolean = false,
 )
