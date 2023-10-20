@@ -5,6 +5,10 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.card.DefaultDerivePublicKeysUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,11 +45,29 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetCardWasScannedUseCase(cardRepository: CardRepository): GetCardWasScannedUseCase {
-        return GetCardWasScannedUseCase(cardRepository = cardRepository)
+    fun provideWasWalletAlreadySignedHashesConfirmedUseCase(cardRepository: CardRepository): WasCardScannedUseCase {
+        return WasCardScannedUseCase(cardRepository = cardRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideSetCardWasScannedUseCase(cardRepository: CardRepository): SetCardWasScannedUseCase {
+        return SetCardWasScannedUseCase(cardRepository = cardRepository)
     }
 
     @Provides
     @ViewModelScoped
     fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig())
+
+    @Provides
+    @ViewModelScoped
+    fun provideDerivePublicKeysUseCase(tangemSdkManager: TangemSdkManager): DerivePublicKeysUseCase {
+        return DefaultDerivePublicKeysUseCase(tangemSdkManager = tangemSdkManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsNeedToBackupUseCase(walletStateHolder: WalletsStateHolder): IsNeedToBackupUseCase {
+        return IsNeedToBackupUseCase(walletStateHolder)
+    }
 }

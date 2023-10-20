@@ -14,6 +14,8 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.walletconnect.WalletConnectActions
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -32,6 +34,7 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -59,6 +62,28 @@ class WalletConnectMiddleware {
         if (DemoHelper.tryHandle(state, action)) return
 
         when (action) {
+            is WalletConnectActions.New.Initialize -> {
+                val userWallet = action.userWallet
+                val cardId = if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
+                    userWallet.cardId
+                } else { // if wallet has backup, any card from wallet can be used to sign
+                    null
+                }
+                scope.launch {
+                    val wcInteractor = store.state.daggerGraphState.walletConnectInteractor ?: return@launch
+                    wcInteractor.startListening(
+                        userWalletId = userWallet.walletId.stringValue,
+                        cardId = cardId,
+                    )
+                }
+            }
+            is WalletConnectActions.New.SetupUserChains -> {
+                scope.launch {
+                    val userWallet = action.userWallet
+                    val wcInteractor = store.state.daggerGraphState.walletConnectInteractor ?: return@launch
+                    wcInteractor.setUserChains(getAccountsForWc(wcInteractor, userWallet))
+                }
+            }
             is WalletConnectAction.ResetState -> walletConnectManager = WalletConnectManager()
             is WalletConnectAction.RestoreSessions -> {
                 walletConnectManager.restoreSessions(action.scanResponse)
@@ -246,47 +271,50 @@ class WalletConnectMiddleware {
                     store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
                     return
                 }
-                val walletManager = getWalletManager(
-                    wallet = action.session.wallet,
-                    blockchain = blockchain,
-                    walletState = store.state.walletState,
-                ).guard {
-                    store.dispatchOnMain(
-                        GlobalAction.ShowDialog(
-                            WalletConnectDialog.AddNetwork(blockchain.fullName),
-                        ),
+                scope.launch {
+                    val walletManager = getWalletManager(
+                        wallet = action.session.wallet,
+                        blockchain = blockchain,
+                        walletState = store.state.walletState,
+                    ).guard {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.AddNetwork(blockchain.fullName),
+                            ),
+                        )
+                        return@launch
+                    }
+                    val updatedWallet = action.session.wallet.copy(
+                        walletPublicKey = walletManager.wallet.publicKey.seedKey,
+                        derivedPublicKey = walletManager.wallet.publicKey.derivedKey,
+                        derivationPath = walletManager.wallet.publicKey.derivationPath,
+                        blockchain = action.blockchain,
                     )
-                    return
+                    val updatedSession = action.session.copy(wallet = updatedWallet)
+                    store.dispatchOnMain(WalletConnectAction.UpdateBlockchain(updatedSession))
                 }
-                val updatedWallet = action.session.wallet.copy(
-                    walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                    derivedPublicKey = walletManager.wallet.publicKey.derivedKey,
-                    derivationPath = walletManager.wallet.publicKey.derivationPath,
-                    blockchain = action.blockchain,
-                )
-                val updatedSession = action.session.copy(wallet = updatedWallet)
-                store.dispatchOnMain(WalletConnectAction.UpdateBlockchain(updatedSession))
             }
             is WalletConnectAction.UpdateBlockchain -> {
                 walletConnectManager.updateBlockchain(action.updatedSession)
             }
             is WalletConnectAction.ApproveProposal -> {
-                val accounts = store.state.walletState.walletManagers
-                    .mapNotNull {
-                        val wallet = it.wallet
-                        val chainId = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
-                            wallet.blockchain.toNetworkId(),
-                        )
-                        chainId?.let {
-                            Account(
-                                chainId,
-                                wallet.address,
-                                wallet.publicKey.derivationPath?.rawPath,
+                scope.launch {
+                    val accounts = getWalletManagers()
+                        .mapNotNull {
+                            val wallet = it.wallet
+                            val chainId = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                                wallet.blockchain.toNetworkId(),
                             )
+                            chainId?.let {
+                                Account(
+                                    chainId,
+                                    wallet.address,
+                                    wallet.publicKey.derivationPath?.rawPath,
+                                )
+                            }
                         }
-                    }
-
-                walletConnectInteractor.approveSessionProposal(accounts)
+                    walletConnectInteractor.approveSessionProposal(accounts)
+                }
             }
             is WalletConnectAction.RejectProposal -> {
                 walletConnectInteractor.rejectSessionProposal()
@@ -342,6 +370,19 @@ class WalletConnectMiddleware {
             is WalletConnectAction.RejectUnsupportedRequest -> {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork()))
             }
+        }
+    }
+
+    private suspend fun getWalletManagers(): List<WalletManager> {
+        val walletManagerToggles = store.state.daggerGraphState
+            .get(DaggerGraphState::walletFeatureToggles)
+        return if (walletManagerToggles.isRedesignedScreenEnabled) {
+            val walletManagerFacade = store.state.daggerGraphState
+                .get(DaggerGraphState::walletManagersFacade)
+            val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
+            walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
+        } else {
+            store.state.walletState.walletManagers
         }
     }
 
@@ -430,7 +471,7 @@ class WalletConnectMiddleware {
         )
     }
 
-    private fun getWalletManager(
+    private suspend fun getWalletManager(
         wallet: WalletForSession,
         blockchain: Blockchain,
         walletState: WalletState,
@@ -440,18 +481,50 @@ class WalletConnectMiddleware {
         } else {
             blockchain
         }
+        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return null
         val derivation = blockchainToMake.derivationPath(
-            style = store.state.globalState.scanResponse?.derivationStyleProvider?.getDerivationStyle(),
+            style = userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )?.rawPath
-        val blockchainNetwork = BlockchainNetwork(
-            blockchain = blockchainToMake,
-            derivationPath = derivation,
-            tokens = emptyList(),
-        )
-        return walletState.getWalletManager(blockchainNetwork)
+        val walletFeatureToggles = store.state.daggerGraphState
+            .get(DaggerGraphState::walletFeatureToggles)
+
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            val walletManagerFacade = store.state.daggerGraphState
+                .get(DaggerGraphState::walletManagersFacade)
+            walletManagerFacade.getOrCreateWalletManager(
+                userWalletId = userWallet.walletId,
+                blockchain = blockchainToMake,
+                derivationPath = derivation,
+            )
+        } else {
+            val blockchainNetwork = BlockchainNetwork(
+                blockchain = blockchainToMake,
+                derivationPath = derivation,
+                tokens = emptyList(),
+            )
+            walletState.getWalletManager(blockchainNetwork)
+        }
     }
 
     private fun isWalletConnectUri(uri: String): Boolean {
         return WalletConnectManager.isCorrectWcUri(uri) || walletConnectInteractor.isWalletConnectUri(uri)
+    }
+
+    private suspend fun getAccountsForWc(wcInteractor: WalletConnectInteractor, userWallet: UserWallet): List<Account> {
+        val walletManagerFacade = store.state.daggerGraphState
+            .get(DaggerGraphState::walletManagersFacade)
+        return walletManagerFacade.getStoredWalletManagers(userWallet.walletId).mapNotNull {
+            val wallet = it.wallet
+            val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                wallet.blockchain.toNetworkId(),
+            )
+            chainId?.let {
+                Account(
+                    chainId,
+                    wallet.address,
+                    wallet.publicKey.derivationPath?.rawPath,
+                )
+            }
+        }
     }
 }

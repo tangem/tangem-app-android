@@ -1,11 +1,11 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.CompletionResult
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
@@ -18,7 +18,7 @@ sealed class OnboardingWalletAction : Action {
     ) : OnboardingWalletAction()
 
     object Done : OnboardingWalletAction()
-    data class FinishOnboarding(val lifecycleCoroutineScope: LifecycleCoroutineScope) : OnboardingWalletAction()
+    data class FinishOnboarding(val scope: CoroutineScope) : OnboardingWalletAction()
 
     object ResumeBackup : OnboardingWalletAction()
 

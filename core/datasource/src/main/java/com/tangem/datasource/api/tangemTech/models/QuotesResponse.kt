@@ -10,10 +10,8 @@ data class QuotesResponse(
 
     data class Quote(
         @Json(name = "price")
-        val price: BigDecimal,
+        val price: BigDecimal?,
         @Json(name = "priceChange24h")
-        val priceChange: BigDecimal,
-        @Json(name = "lastUpdatedAt")
-        val lastUpdated: String,
+        val priceChange: BigDecimal?,
     )
 }
