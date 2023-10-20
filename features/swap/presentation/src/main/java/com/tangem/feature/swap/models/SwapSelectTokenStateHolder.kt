@@ -26,4 +26,5 @@ data class Network(
 data class TokenBalanceData(
     val amount: String?,
     val amountEquivalent: String?,
+    val isBalanceHidden: Boolean,
 )
