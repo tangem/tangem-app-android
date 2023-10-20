@@ -8,6 +8,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
 [REDACTED_AUTHOR]
  */
+// TODO: Delete with WalletFeatureToggles
+@Deprecated(message = "Used only in old wallet screen")
 class WarningMessagesManager {
 
     private val warningsList = CopyOnWriteArrayList<WarningMessage>()
@@ -73,7 +75,7 @@ class WarningMessagesManager {
             location = listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
             titleResId = R.string.common_warning,
-            messageResId = R.string.alert_developer_card,
+            // messageResId = R.string.alert_developer_card,
             origin = WarningMessage.Origin.Local,
         )
 
@@ -85,7 +87,7 @@ class WarningMessagesManager {
             location = listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
             titleResId = R.string.common_warning,
-            messageResId = R.string.alert_card_signed_transactions,
+            // messageResId = R.string.alert_card_signed_transactions,
             origin = WarningMessage.Origin.Local,
         )
 
@@ -96,8 +98,8 @@ class WarningMessagesManager {
             priority = WarningMessage.Priority.Info,
             location = listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
-            titleResId = R.string.warning_important_security_info,
-            messageResId = R.string.warning_signed_tx_previously,
+            // titleResId = R.string.warning_important_security_info,
+            // messageResId = R.string.warning_signed_tx_previously,
             origin = WarningMessage.Origin.Local,
             buttonTextId = R.string.warning_button_learn_more,
             titleFormatArg = "\u26A0",
@@ -147,7 +149,7 @@ class WarningMessagesManager {
             location = listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
             titleResId = R.string.common_warning,
-            messageResId = R.string.alert_demo_message,
+            // messageResId = R.string.alert_demo_message,
             origin = WarningMessage.Origin.Local,
         )
 
@@ -160,14 +162,14 @@ class WarningMessagesManager {
                 location = listOf(WarningMessage.Location.MainScreen),
                 blockchains = null,
                 titleResId = R.string.common_warning,
-                messageResId = R.string.warning_low_signatures_format,
+                // messageResId = R.string.warning_low_signatures_format,
                 origin = WarningMessage.Origin.Local,
                 messageFormatArg = remainingSignatures.toString(),
             )
         }
 
-        fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
-            return warning.messageResId == R.string.alert_card_signed_transactions
-        }
+        // fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
+        //     return warning.messageResId == R.string.alert_card_signed_transactions
+        // }
     }
 }
