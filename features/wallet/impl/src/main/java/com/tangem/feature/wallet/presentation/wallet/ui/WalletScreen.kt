@@ -247,7 +247,6 @@ private fun WalletBottomSheets(state: WalletState) {
             is WalletBottomSheetConfig -> {
                 WalletBottomSheet(config = bottomSheetConfig)
             }
-
             is TokenReceiveBottomSheetConfig -> {
                 TokenReceiveBottomSheet(config = bottomSheetConfig)
             }
