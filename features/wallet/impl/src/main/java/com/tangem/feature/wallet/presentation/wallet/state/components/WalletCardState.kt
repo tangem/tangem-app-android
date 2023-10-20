@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import com.tangem.common.Strings
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -15,8 +16,8 @@ internal sealed interface WalletCardState {
     /** Title */
     val title: String
 
-    /** Additional text */
-    val additionalInfo: TextReference?
+    /** Wallet additional info */
+    val additionalInfo: WalletAdditionalInfo?
 
     /** Wallet image resource id */
     @get:DrawableRes
@@ -33,39 +34,22 @@ internal sealed interface WalletCardState {
      *
      * @property id             wallet id
      * @property title          wallet name
-     * @property additionalInfo wallet additional info
      * @property imageResId     wallet image resource id
      * @property onRenameClick  lambda be invoked when Rename button is clicked
      * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property additionalInfo wallet additional info
+     * @property cardCount      number of cards in the wallet
      * @property balance        wallet balance
      */
     data class Content(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
+        val cardCount: Int?,
         val balance: String,
-    ) : WalletCardState
-
-    /**
-     * Wallet card hidden content state
-     *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property additionalInfo wallet additional info
-     * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
-     */
-    data class HiddenContent(
-        override val id: UserWalletId,
-        override val title: String,
-        override val additionalInfo: TextReference = HIDDEN_BALANCE_TEXT,
-        override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState
 
     /**
@@ -81,7 +65,7 @@ internal sealed interface WalletCardState {
     data class LockedContent(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference? = null,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
@@ -90,36 +74,40 @@ internal sealed interface WalletCardState {
     /**
      * Wallet card error state
      *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property additionalInfo wallet additional info
-     * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property id            wallet id
+     * @property title         wallet name
+     * @property imageResId    wallet image resource id
+     * @property onRenameClick lambda be invoked when Rename button is clicked
+     * @property onDeleteClick lambda be invoked when Delete button is clicked
      */
     data class Error(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT,
+        override val additionalInfo: WalletAdditionalInfo? = defaultAdditionalInfo,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
-    ) : WalletCardState
+    ) : WalletCardState {
+
+        private companion object {
+            val defaultAdditionalInfo: WalletAdditionalInfo
+                get() = WalletAdditionalInfo(hideable = true, content = EMPTY_BALANCE_TEXT)
+        }
+    }
 
     /**
      * Wallet card loading state
      *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property additionalInfo wallet additional info
-     * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property id            wallet id
+     * @property title         wallet name
+     * @property imageResId    wallet image resource id
+     * @property onRenameClick lambda be invoked when Rename button is clicked
+     * @property onDeleteClick lambda be invoked when Delete button is clicked
      */
     data class Loading(
         override val id: UserWalletId,
         override val title: String,
-        override val additionalInfo: TextReference? = null,
+        override val additionalInfo: WalletAdditionalInfo? = null,
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId, String) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
@@ -129,14 +117,13 @@ internal sealed interface WalletCardState {
         return when (this) {
             is Content -> copy(title = title)
             is Error -> copy(title = title)
-            is HiddenContent -> copy(title = title)
             is Loading -> copy(title = title)
             is LockedContent -> copy(title = title)
         }
     }
 
     companion object {
-        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = "•••") }
+        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = Strings.STARS) }
         val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = "—") }
     }
 }
