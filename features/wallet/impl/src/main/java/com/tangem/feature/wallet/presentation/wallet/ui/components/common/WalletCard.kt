@@ -121,15 +121,16 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
             mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
         }
 
-        Image(
-            id = state.imageResId,
-            isVisible = hasSpaceForImage,
-            modifier = Modifier.constrainAs(imageRef) {
-                end.linkTo(parent.end)
-                bottom.linkTo(parent.bottom)
-                height = Dimension.fillToConstraints
-            },
-        )
+        if (hasSpaceForImage) {
+            Image(
+                id = state.imageResId,
+                modifier = Modifier.constrainAs(imageRef) {
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                },
+            )
+        }
     }
 }
 
@@ -373,8 +374,8 @@ private fun LockedContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Image(@DrawableRes id: Int?, isVisible: Boolean, modifier: Modifier = Modifier) {
-    AnimatedVisibility(visible = id != null && isVisible, modifier = modifier) {
+private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
+    AnimatedVisibility(visible = id != null, modifier = modifier) {
         val imageRes = id ?: return@AnimatedVisibility
 
         Image(
