@@ -1,5 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -20,8 +23,11 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val walletsListConfig: WalletsListConfig,
         override val pullToRefreshConfig: WalletPullToRefreshConfig,
         override val notifications: ImmutableList<WalletNotification>,
-        override val bottomSheetConfig: WalletBottomSheetConfig?,
+        override val bottomSheetConfig: TangemBottomSheetConfig?,
         override val tokensListState: WalletTokensListState,
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
+        val isManageTokensAvailable: Boolean = true,
         val tokenActionsBottomSheet: ActionsBottomSheetConfig?,
         val onManageTokensClick: () -> Unit,
     ) : WalletMultiCurrencyState()
@@ -36,16 +42,18 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val onScanClick: () -> Unit,
         override val isBottomSheetShow: Boolean = false,
         override val onBottomSheetDismiss: () -> Unit = {},
+        override val event: StateEvent<WalletEvent> = consumedEvent(),
+        override val isBalanceHidden: Boolean,
     ) : WalletMultiCurrencyState(), WalletLockedState {
 
         override val notifications = persistentListOf(
             WalletNotification.UnlockWallets(onUnlockWalletsNotificationClick),
         )
 
-        override val bottomSheetConfig = WalletBottomSheetConfig(
+        override val bottomSheetConfig = TangemBottomSheetConfig(
             isShow = isBottomSheetShow,
             onDismissRequest = onBottomSheetDismiss,
-            content = WalletBottomSheetConfig.BottomSheetContentConfig.UnlockWallets(
+            content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = onUnlockClick,
                 onScanClick = onScanClick,
             ),
