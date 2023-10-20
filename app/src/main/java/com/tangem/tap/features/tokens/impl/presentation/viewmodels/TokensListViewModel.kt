@@ -1,15 +1,11 @@
 package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.map
+import androidx.lifecycle.*
+import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
@@ -41,8 +37,7 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import timber.log.Timber
@@ -102,6 +97,8 @@ internal class TokensListViewModel @Inject constructor(
 
             changedBlockchainList = currentCoins.toMutableList()
             changedTokensList = currentTokens.toMutableList()
+
+            uiState = uiState.copySealed(tokens = getTokensListBySearchText(text = ""))
         }
     }
 
@@ -154,14 +151,13 @@ internal class TokensListViewModel @Inject constructor(
         )
     }
 
-    private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {
-        if (searchText.isNotEmpty()) analyticsSender.sendWhenTokenSearched()
-
-        return interactor.getTokensList(searchText = searchText).map {
-            it.map { token ->
-                if (isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
-            }
-        }
+    private fun getInitialTokensList(): Flow<PagingData<TokenItemState>> {
+        return flowOf(
+            value = PagingData.empty(
+                sourceLoadStates = LoadStates(LoadState.Loading, LoadState.Loading, LoadState.Loading),
+                mediatorLoadStates = LoadStates(LoadState.Loading, LoadState.Loading, LoadState.Loading),
+            ),
+        )
     }
 
     private fun createManageTokenContent(token: Token): TokenItemState.ManageContent {
@@ -181,9 +177,7 @@ internal class TokensListViewModel @Inject constructor(
         return NetworkItemState.ManageContent(
             name = network.blockchain.fullNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
-            iconResId = mutableStateOf(
-                getNetworkIconResId(network.address, network.blockchain),
-            ),
+            iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
             isAdded = mutableStateOf(
                 isAdded(address = network.address, blockchain = network.blockchain),
@@ -212,7 +206,7 @@ internal class TokensListViewModel @Inject constructor(
         return NetworkItemState.ReadContent(
             name = network.blockchain.fullNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
-            iconResId = mutableStateOf(getNetworkIconResId(network.address, network.blockchain)),
+            iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
         )
     }
@@ -244,6 +238,20 @@ internal class TokensListViewModel @Inject constructor(
             }
         } else {
             changedBlockchainList.contains(blockchain)
+        }
+    }
+
+    private fun getTokensListBySearchText(text: String): Flow<PagingData<TokenItemState>> {
+        return interactor.getTokensList(searchText = text)
+            .mapToTokenItemState()
+            .cachedIn(viewModelScope)
+    }
+
+    private fun Flow<PagingData<Token>>.mapToTokenItemState(): Flow<PagingData<TokenItemState>> {
+        return map { pagingData ->
+            pagingData.map { token ->
+                if (isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
+            }
         }
     }
 
@@ -306,8 +314,13 @@ internal class TokensListViewModel @Inject constructor(
             uiState = uiState.copySealed(toolbarState = state.copy(value = newValue))
 
             debouncer.debounce(waitMs = 800L, coroutineScope = viewModelScope + dispatchers.io) {
-                uiState = uiState.copySealed(tokens = getInitialTokensList(newValue))
+                uiState = uiState.copySealed(tokens = getSearchedTokensList(newValue))
             }
+        }
+
+        private fun getSearchedTokensList(searchText: String): Flow<PagingData<TokenItemState>> {
+            analyticsSender.sendWhenTokenSearched()
+            return getTokensListBySearchText(text = searchText)
         }
 
         private fun onCleanButtonClick() {
