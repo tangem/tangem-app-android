@@ -11,6 +11,13 @@ sealed class TokenScreenAnalyticsEvent(
     error: Throwable? = null,
 ) : AnalyticsEvent("Token", event, params, error) {
 
+    /** Legacy event. It has a unique category, but it also is sent on TokenScreen */
+    class DetailsScreenOpened(token: String) : AnalyticsEvent(
+        category = "Details Screen",
+        event = "Details Screen Opened",
+        params = mapOf("Token" to token),
+    )
+
     class Refreshed(token: String) : TokenScreenAnalyticsEvent(
         event = "Refreshed",
         params = mapOf("Token" to token),
