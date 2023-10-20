@@ -12,6 +12,16 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -39,7 +49,7 @@
         android:extractNativeLibs="true"
         android:supportsRtl="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup, android:fullBackupContent">
+        tools:replace="android:allowBackup, android:fullBackupContent, android:label">
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
@@ -134,10 +144,6 @@
         <activity
             android:name="zendesk.messaging.MessagingActivity"
             android:theme="@style/ZendeskTheme" />
-
-        <activity
-            android:name="com.tangem.tap.features.sprinklr.ui.SprinklrActivity"
-            android:theme="@style/AppTheme" />
 
         <activity
             android:name="com.tangem.feature.learn2earn.presentation.webView.Learn2earnWebViewActivity"

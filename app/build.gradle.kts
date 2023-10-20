@@ -9,16 +9,27 @@ plugins {
     id("configuration")
 }
 
-//conflict of dependencies when adding WalletConnectV2.0 library
-configurations {
-    all {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        resolutionStrategy {
-            force("org.bouncycastle:bcpkix-jdk15on:1.70")
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    exclude(group = "com.github.komputing.kethereum")
+
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("com.facebook.react:react-native"))
+                .using(module("com.facebook.react:react-android:0.72.4"))
+
+            substitute(module("com.facebook.react:hermes-engine"))
+                .using(module("com.facebook.react:hermes-android:0.72.4"))
         }
-        exclude(group = "com.github.komputing.kethereum")
+
+        force(
+            "org.bouncycastle:bcpkix-jdk15on:1.70",
+            "com.facebook.react:react-android:0.72.4",
+            "com.facebook.react:hermes-android:0.72.4",
+        )
     }
 }
+
 
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
@@ -164,6 +175,10 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
+    implementation("com.facebook.react:react-android:0.72.4")
+    implementation(deps.sprClient) {
+        exclude(group = "com.github.stephenc.jcip")
+    }
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
