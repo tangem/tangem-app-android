@@ -56,12 +56,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
             putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
         }
 
-    var shouldSaveUserWallets: Boolean
-        get() = preferences.getBoolean(SAVE_USER_WALLETS_KEY, false)
-        set(value) = preferences.edit {
-            putBoolean(SAVE_USER_WALLETS_KEY, value)
-        }
-
     var shouldSaveAccessCodes: Boolean
         get() = preferences.getBoolean(SAVE_ACCESS_CODES_KEY, false)
         set(value) = preferences.edit {
@@ -102,7 +96,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         private const val ZENDESK_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
         private const val SPRINKLR_FIRST_LAUNCH_KEY = "sprinklrFirstLaunch"
         private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
-        private const val SAVE_USER_WALLETS_KEY = "saveUserWallets"
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
         private const val APPLICATION_STOPPED_KEY = "applicationStopped"
         private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"

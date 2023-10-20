@@ -43,6 +43,7 @@ data class SendState(
     val sendButtonState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.DISABLED),
     val dialog: StateDialog? = null,
     val externalTransactionData: ExternalTransactionData? = null,
+    val isSuccessSend: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
@@ -130,6 +131,7 @@ data class AmountState(
     val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, FiatCurrency.Default.code),
     val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
     val balanceCrypto: BigDecimal = BigDecimal.ZERO,
+    val hideBalance: Boolean = false,
     val cursorAtTheSamePosition: Boolean = true,
     val maxLengthOfAmount: Int = 2,
     val decimalSeparator: String = ".",
