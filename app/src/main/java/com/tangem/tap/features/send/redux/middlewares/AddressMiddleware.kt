@@ -11,7 +11,9 @@ import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerificatio
 import com.tangem.tap.features.send.redux.AddressVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressVerifyAction.Error
 import com.tangem.tap.mainScope
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 
@@ -168,7 +170,7 @@ internal class AddressMiddleware {
     }
 
     private fun dispatchFailedValidationActions(
-        failReason: AddressVerifyAction.Error,
+        failReason: Error,
         sourceType: AddressEntered.SourceType?,
         dispatch: (Action) -> Unit,
     ) {
