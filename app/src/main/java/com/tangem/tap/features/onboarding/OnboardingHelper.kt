@@ -17,6 +17,7 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -72,40 +73,39 @@ object OnboardingHelper {
         backupCardsIds: List<String>? = null,
     ) {
         Analytics.setContext(scanResponse)
-        when {
-            // When should save user wallets, then save card without navigate to save wallet screen
-            preferencesStorage.shouldSaveUserWallets -> scope.launch {
-                proceedWithScanResponse(scanResponse, backupCardsIds)
+        scope.launch {
+            when {
+                // When should save user wallets, then save card without navigate to save wallet screen
+                store.state.daggerGraphState.get(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
+                    proceedWithScanResponse(scanResponse, backupCardsIds)
 
-                store.dispatchOnMain(
-                    SaveWalletAction.ProvideBackupInfo(
-                        scanResponse = scanResponse,
-                        accessCode = accessCode,
-                        backupCardsIds = backupCardsIds?.toSet(),
-                    ),
-                )
-                store.dispatchOnMain(SaveWalletAction.Save)
-            }
-            // When should not save user wallets but device has biometry and save wallet screen has not been shown,
-            // then open save wallet screen
-            tangemSdkManager.canUseBiometry &&
-                preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
-                proceedWithScanResponse(scanResponse, backupCardsIds)
+                    store.dispatchOnMain(
+                        SaveWalletAction.ProvideBackupInfo(
+                            scanResponse = scanResponse,
+                            accessCode = accessCode,
+                            backupCardsIds = backupCardsIds?.toSet(),
+                        ),
+                    )
+                    store.dispatchOnMain(SaveWalletAction.Save)
+                }
+                // When should not save user wallets but device has biometry and save wallet screen has not been shown,
+                // then open save wallet screen
+                tangemSdkManager.canUseBiometry && preferencesStorage.shouldShowSaveUserWalletScreen -> {
+                    proceedWithScanResponse(scanResponse, backupCardsIds)
 
-                delay(timeMillis = 1_200)
+                    delay(timeMillis = 1_200)
 
-                store.dispatchOnMain(
-                    SaveWalletAction.ProvideBackupInfo(
-                        scanResponse = scanResponse,
-                        accessCode = accessCode,
-                        backupCardsIds = backupCardsIds?.toSet(),
-                    ),
-                )
-                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
-            }
-            // If device has no biometry and save wallet screen has been shown, then go through old scenario
-            else -> scope.launch {
-                proceedWithScanResponse(scanResponse, backupCardsIds)
+                    store.dispatchOnMain(
+                        SaveWalletAction.ProvideBackupInfo(
+                            scanResponse = scanResponse,
+                            accessCode = accessCode,
+                            backupCardsIds = backupCardsIds?.toSet(),
+                        ),
+                    )
+                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
+                }
+                // If device has no biometry and save wallet screen has been shown, then go through old scenario
+                else -> proceedWithScanResponse(scanResponse, backupCardsIds)
             }
         }
 
