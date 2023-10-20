@@ -1,5 +1,6 @@
 package com.tangem.datasource.api.tangemTech
 
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import retrofit2.http.*
 
@@ -25,13 +26,13 @@ interface TangemTechApi {
     suspend fun getRates(@Query("currencyId") currencyId: String, @Query("coinIds") coinIds: String): RatesResponse
 
     @GET("currencies")
-    suspend fun getCurrencyList(): CurrenciesResponse
+    suspend fun getCurrencyList(): ApiResponse<CurrenciesResponse>
 
     @GET("geo")
     suspend fun getUserCountryCode(): GeoResponse
 
     @GET("user-tokens/{user-id}")
-    suspend fun getUserTokens(@Path(value = "user-id") userId: String): UserTokensResponse
+    suspend fun getUserTokens(@Path(value = "user-id") userId: String): ApiResponse<UserTokensResponse>
 
     @PUT("user-tokens/{user-id}")
     suspend fun saveUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
@@ -66,5 +67,5 @@ interface TangemTechApi {
         @Query("currencyId") currencyId: String,
         @Query("coinIds") coinIds: String,
         @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt",
-    ): QuotesResponse
+    ): ApiResponse<QuotesResponse>
 }
