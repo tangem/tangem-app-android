@@ -98,6 +98,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         private set
 
     override fun onCreate(owner: LifecycleOwner) {
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
+        )
         updateContent()
         handleBalanceHiding(owner)
     }
