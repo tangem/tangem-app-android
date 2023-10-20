@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
@@ -22,8 +21,10 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
@@ -62,6 +63,8 @@ class OnboardingWalletFragment :
 
     internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
 
+    private val canSkipBackup by lazy { arguments?.getBoolean(OnboardingRouter.CAN_SKIP_BACKUP) ?: true }
+
     private val seedPhraseStateHandler: OnboardingSeedPhraseStateHandler = OnboardingSeedPhraseStateHandler()
     private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
@@ -70,12 +73,6 @@ class OnboardingWalletFragment :
     private var accessCodeDialog: AccessCodeDialog? = null
 
     private lateinit var animator: BackupAnimator
-
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -158,6 +155,7 @@ class OnboardingWalletFragment :
                 oldState.onboardingWalletState == newState.onboardingWalletState
             }.select { it.onboardingWalletState }
         }
+        setStatusBarColor(R.color.background_primary)
     }
 
     override fun onStop() {
@@ -193,7 +191,7 @@ class OnboardingWalletFragment :
         }
     }
 
-    internal fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
+    private fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
         view.load(uri) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
@@ -260,7 +258,7 @@ class OnboardingWalletFragment :
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
             btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup)
+            btnWalletAlternativeAction.show(state.canSkipBackup && canSkipBackup)
         }
         animator.showBackupIntro(state)
     }
@@ -414,7 +412,7 @@ class OnboardingWalletFragment :
         animator.showWriteBackupCard(state, cardNumber)
     }
 
-    internal fun showSuccess() = with(binding) {
+    private fun showSuccess() = with(binding) {
         toolbar.title = getString(R.string.onboarding_done_header)
         tvHeader.text = getText(R.string.onboarding_done_header)
 
@@ -429,9 +427,7 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            lifecycleScope.launch {
-                store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
-            }
+            store.dispatch(OnboardingWalletAction.FinishOnboarding(scope = requireActivity().lifecycleScope))
         }
 
         animator.showSuccess {

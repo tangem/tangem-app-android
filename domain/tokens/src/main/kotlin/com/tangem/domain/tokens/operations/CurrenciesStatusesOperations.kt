@@ -3,11 +3,7 @@ package com.tangem.domain.tokens.operations
 import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
-import com.tangem.domain.tokens.models.Quote
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -58,22 +54,97 @@ internal class CurrenciesStatusesOperations(
 
             emit(maybeLoadingCurrenciesStatuses)
 
-            val (networksIds, currenciesIds) = getIds(nonEmptyCurrencies)
+            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
             val currenciesFlow = combine(
                 getQuotes(currenciesIds),
-                getNetworksStatuses(networksIds),
+                getNetworksStatuses(networks),
             ) { maybeQuotes, maybeNetworksStatuses ->
                 createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
             }
 
             emitAll(currenciesFlow)
-        }.conflate()
+        }
     }
 
-    suspend fun getCurrencyStatusFlow(currencyId: CryptoCurrency.ID): Flow<Either<Error, CryptoCurrencyStatus>> {
+    fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
+        return flow {
+            val nonEmptyCurrencies = recover(
+                block = { getCurrenciesFromCard(userWalletId) },
+                recover = {
+                    emit(it.left())
+                    return@flow
+                },
+            ).toNonEmptyListOrNull()
+
+            if (nonEmptyCurrencies == null) {
+                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
+
+                emit(emptyCurrenciesStatuses.right())
+                return@flow
+            }
+
+            val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
+                currencies = nonEmptyCurrencies,
+                maybeNetworkStatuses = null,
+                maybeQuotes = null,
+            )
+
+            emit(maybeLoadingCurrenciesStatuses)
+
+            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
+
+            val currenciesFlow = combine(
+                getQuotes(currenciesIds),
+                getNetworksStatuses(networks),
+            ) { maybeQuotes, maybeNetworksStatuses ->
+                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
+            }
+
+            emitAll(currenciesFlow)
+        }
+    }
+
+    suspend fun getCurrencyStatusFlow(
+        currencyId: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
-            block = { getMultiCurrencyWalletCurrency(currencyId) },
+            block = { getMultiCurrencyWalletCurrency(currencyId, derivationPath) },
+            recover = { return flowOf(it.left()) },
+        )
+
+        return getCurrencyStatusFlow(currency)
+    }
+
+    suspend fun getCurrencyStatusSingleWalletWithTokensFlow(
+        currencyId: CryptoCurrency.ID,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
+        val currency = recover(
+            block = { getSingleCurrencyWalletWithCardTokensCurrency(currencyId) },
+            recover = { return flowOf(it.left()) },
+        )
+
+        return getCurrencyStatusFlow(currency)
+    }
+
+    suspend fun getNetworkCoinFlow(
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
+        val currency = recover(
+            block = { getNetworkCoin(networkId, derivationPath) },
+            recover = { return flowOf(it.left()) },
+        )
+
+        return getCurrencyStatusFlow(currency)
+    }
+
+    suspend fun getNetworkCoinForSingleWalletWithTokenFlow(
+        networkId: Network.ID,
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
+        val currency = recover(
+            block = { getNetworkCoinForSingleWalletWithToken(networkId) },
             recover = { return flowOf(it.left()) },
         )
 
@@ -90,24 +161,26 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val (networksIds, currenciesIds) = getIds(nonEmptyListOf(currency))
+        val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
         val quoteFlow = getQuotes(currenciesIds)
             .map { maybeQuotes ->
-                maybeQuotes.map { quotes ->
-                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
+                maybeQuotes.flatMap { quotes ->
+                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }?.right()
+                        ?: Error.EmptyQuotes.left()
                 }
             }
 
-        val statusFlow = getNetworksStatuses(networksIds)
+        val statusFlow = getNetworksStatuses(networks)
             .map { maybeStatuses ->
-                maybeStatuses.map { statuses ->
-                    statuses.singleOrNull { it.networkId == currency.network.id }
+                maybeStatuses.flatMap { statuses ->
+                    statuses.singleOrNull { it.network == currency.network }?.right()
+                        ?: Error.EmptyNetworksStatuses.left()
                 }
             }
 
         return combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
-            createStatus(currency, maybeQuote, maybeNetworkStatus)
+            createCurrencyStatus(currency, maybeQuote, maybeNetworkStatus)
         }
     }
 
@@ -126,13 +199,13 @@ internal class CurrenciesStatusesOperations(
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
-            val networkStatus = networksStatuses?.firstOrNull { it.networkId == currency.network.id }
+            val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
 
-            createStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
+            createCurrencyStatus(currency, quote, networkStatus, ignoreQuote = quotesRetrievingFailed)
         }
     }
 
-    private fun createStatus(
+    private fun createCurrencyStatus(
         currency: CryptoCurrency,
         maybeQuote: Either<Error, Quote?>,
         maybeNetworkStatus: Either<Error, NetworkStatus?>,
@@ -145,10 +218,10 @@ internal class CurrenciesStatusesOperations(
             null
         }
 
-        createStatus(currency, quote, networkStatus, ignoreQuote = quoteRetrievingFailed)
+        createCurrencyStatus(currency, quote, networkStatus, ignoreQuote = quoteRetrievingFailed)
     }
 
-    private fun createStatus(
+    private fun createCurrencyStatus(
         currency: CryptoCurrency,
         quote: Quote?,
         networkStatus: NetworkStatus?,
@@ -171,8 +244,44 @@ internal class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyCurrencies.left()) }
     }
 
-    private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(currencyId: CryptoCurrency.ID): CryptoCurrency {
-        return Either.catch { currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, currencyId) }
+    private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(
+        currencyId: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency {
+        return Either.catch {
+            currenciesRepository.getMultiCurrencyWalletCurrency(
+                userWalletId,
+                currencyId,
+                derivationPath,
+            )
+        }
+            .mapLeft { Error.DataError(it) }
+            .bind()
+    }
+
+    private suspend fun Raise<Error>.getSingleCurrencyWalletWithCardTokensCurrency(
+        currencyId: CryptoCurrency.ID,
+    ): CryptoCurrency {
+        return Either.catch { currenciesRepository.getSingleCurrencyWalletWithCardCurrency(userWalletId, currencyId) }
+            .mapLeft { Error.DataError(it) }
+            .bind()
+    }
+
+    private suspend fun Raise<Error>.getNetworkCoin(
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency {
+        return Either.catch { currenciesRepository.getNetworkCoin(userWalletId, networkId, derivationPath) }
+            .mapLeft { Error.DataError(it) }
+            .bind()
+    }
+
+    private suspend fun Raise<Error>.getNetworkCoinForSingleWalletWithToken(networkId: Network.ID): CryptoCurrency {
+        return Either.catch {
+            currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(userWalletId)
+                .find { it.network.id == networkId && it is CryptoCurrency.Coin }
+                ?: raise(Error.DataError(IllegalStateException("Coin with network $networkId not found for this card")))
+        }
             .mapLeft { Error.DataError(it) }
             .bind()
     }
@@ -184,14 +293,23 @@ internal class CurrenciesStatusesOperations(
         )
     }
 
-    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds)
-            .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
-            .onEmpty { emit(Error.EmptyQuotes.left()) }
+    private suspend fun Raise<Error>.getCurrenciesFromCard(userWalletId: UserWalletId): List<CryptoCurrency> {
+        return catch({ currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(userWalletId) }) {
+            raise(Error.DataError(it))
+        }
     }
 
-    private fun getNetworksStatuses(networks: NonEmptySet<Network.ID>): Flow<Either<Error, Set<NetworkStatus>>> {
+    private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
+        return quotesRepository.getQuotesUpdates(tokensIds)
+            .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
+                if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
+            }
+            .catch {
+                emit(Error.DataError(it).left())
+            }
+    }
+
+    private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
         return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
@@ -200,17 +318,17 @@ internal class CurrenciesStatusesOperations(
 
     private fun getIds(
         currencies: NonEmptyList<CryptoCurrency>,
-    ): Pair<NonEmptySet<Network.ID>, NonEmptySet<CryptoCurrency.ID>> {
+    ): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {
         val currencyIdToNetworkId = currencies.associate { currency ->
-            currency.id to currency.network.id
+            currency.id to currency.network
         }
         val currenciesIds = currencyIdToNetworkId.keys.toNonEmptySetOrNull()
-        val networksIds = currencyIdToNetworkId.values.toNonEmptySetOrNull()
+        val networks = currencyIdToNetworkId.values.toNonEmptySetOrNull()
 
         requireNotNull(currenciesIds) { "Currencies IDs cannot be empty" }
-        requireNotNull(networksIds) { "Networks IDs cannot be empty" }
+        requireNotNull(networks) { "Networks IDs cannot be empty" }
 
-        return networksIds to currenciesIds
+        return networks to currenciesIds
     }
 
     sealed class Error {
