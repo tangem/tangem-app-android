@@ -18,6 +18,7 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.SendViewModel
 import com.tangem.tap.features.send.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.utils.ROUGH_SIGN
@@ -29,13 +30,23 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 @Suppress("LargeClass")
-class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
+internal class SendStateSubscriber(
+    fragment: BaseStoreFragment,
+) : FragmentStateSubscriber<SendState>(fragment) {
 
     private var dialog: Dialog? = null
+    private var sendViewModel: SendViewModel? = null
+    fun initViewModel(viewModel: SendViewModel) {
+        sendViewModel = viewModel
+    }
 
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
         fg.view ?: return
         if (fg !is SendFragment) return
+        if (state.isSuccessSend) {
+            sendViewModel?.updateCurrencyDelayed()
+            return
+        }
 
         val lastChangedStates = state.lastChangedStates.toList()
         state.lastChangedStates.clear()
@@ -260,7 +271,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
         tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
-        val textColor = if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        val textColor = if (state.inputIsEnabled) R.color.accent else R.color.text_secondary
         tvAmountCurrency.setTextColor(fg.getColor(textColor))
     }
 
