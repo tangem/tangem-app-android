@@ -1,9 +1,7 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -76,20 +74,20 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
         TokensListContent(
-            isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible,
+            isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible && !stateHolder.isLoading,
             tokens = tokens,
             scaffoldPadding = scaffoldPadding,
             bottomMarginDp = floatingButtonHeight,
         )
 
-        stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
+        Crossfade(targetState = stateHolder.isLoading, label = "Update progress bar visibility") {
+            if (it) {
+                LoadingContent()
+            }
+        }
 
-        AnimatedVisibility(
-            visible = stateHolder.isLoading,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            LoadingContent()
+        LaunchedEffect(key1 = tokens.loadState.refresh) {
+            stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
         }
     }
 }
