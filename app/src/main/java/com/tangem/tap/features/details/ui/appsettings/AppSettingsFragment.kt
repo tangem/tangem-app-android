@@ -1,51 +1,51 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import androidx.transition.TransitionInflater
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
-import com.tangem.wallet.R
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
-class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
-    private val viewModel = AppSettingsViewModel(store)
-    private var screenState: MutableState<AppSettingsScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState))
+@AndroidEntryPoint
+internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-        viewModel.checkBiometricsStatus(lifecycleScope)
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    @Inject
+    lateinit var appCurrencyRepository: AppCurrencyRepository
+
+    private val viewModel by lazy(mode = LazyThreadSafetyMode.NONE) {
+        AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                isTransitionGroup = true
-                TangemTheme {
-                    AppSettingsScreen(
-                        state = screenState.value,
-                        onBackClick = {
-                            store.dispatch(DetailsAction.ResetCardSettingsData)
-                            store.dispatch(NavigationAction.PopBackTo())
-                        },
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        AppSettingsScreen(
+            modifier = modifier,
+            state = viewModel.uiState,
+            onBackClick = {
+                store.dispatch(DetailsAction.ResetCardSettingsData)
+                store.dispatch(NavigationAction.PopBackTo())
+            },
+        )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.checkBiometricsStatus(lifecycleScope)
     }
 
     override fun onStart() {
@@ -57,11 +57,6 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshBiometricsStatus(lifecycleScope)
-    }
-
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
@@ -69,6 +64,6 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state)
+        viewModel.updateState(state)
     }
 }
