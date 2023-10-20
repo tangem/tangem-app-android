@@ -10,5 +10,7 @@ interface CacheKeysStore {
 
     suspend fun remove(key: String)
 
+    suspend fun remove(keys: Collection<String>)
+
     suspend fun clear()
 }

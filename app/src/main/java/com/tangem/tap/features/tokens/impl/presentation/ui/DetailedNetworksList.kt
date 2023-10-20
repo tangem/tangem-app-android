@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
@@ -95,7 +94,10 @@ private fun DetailedNetworkItem(token: TokenItemState, network: NetworkItemState
                 },
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing8),
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = TangemColorPalette.Meadow,
+                    checkedThumbColor = TangemTheme.colors.control.key,
+                    checkedTrackColor = TangemTheme.colors.icon.accent,
+                    uncheckedThumbColor = TangemTheme.colors.control.key,
+                    uncheckedTrackColor = TangemTheme.colors.icon.informative,
                 ),
             )
         }
@@ -112,7 +114,11 @@ private fun RowScope.NetworkTitle(model: NetworkItemState) {
             withStyle(
                 style = SpanStyle(
                     fontWeight = FontWeight.Normal,
-                    color = if (model.isMainNetwork) TangemColorPalette.Meadow else TangemColorPalette.Dark2,
+                    color = if (model.isMainNetwork) {
+                        TangemTheme.colors.icon.accent
+                    } else {
+                        TangemTheme.colors.icon.secondary
+                    },
                 ),
             ) {
                 append(text = model.protocolName)
@@ -121,16 +127,16 @@ private fun RowScope.NetworkTitle(model: NetworkItemState) {
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         color = if (model is NetworkItemState.ManageContent && model.isAdded.value) {
-            TangemColorPalette.Black
+            TangemTheme.colors.text.primary1
         } else {
-            TangemColorPalette.Dark2
+            TangemTheme.colors.text.secondary
         },
     )
 }
 
 @Preview
 @Composable
-private fun Preview_DetailedNetworksList_ManageAccess() {
+private fun Preview_DetailedNetworksList_ManageAccess_Light() {
     TangemTheme {
         DetailedNetworksList(
             isExpanded = true,
@@ -142,7 +148,31 @@ private fun Preview_DetailedNetworksList_ManageAccess() {
 
 @Preview
 @Composable
-private fun Preview_DetailedNetworksList_ReadAccess() {
+private fun Preview_DetailedNetworksList_ManageAccess_Dark() {
+    TangemTheme {
+        DetailedNetworksList(
+            isExpanded = true,
+            token = TokenListPreviewData.createManageToken(),
+            networks = TokenListPreviewData.createManageNetworksList(),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview_DetailedNetworksList_ReadAccess_Light() {
+    TangemTheme {
+        DetailedNetworksList(
+            isExpanded = true,
+            token = TokenListPreviewData.createReadToken(),
+            networks = TokenListPreviewData.createReadNetworksList(),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview_DetailedNetworksList_ReadAccess_Dark() {
     TangemTheme {
         DetailedNetworksList(
             isExpanded = true,
