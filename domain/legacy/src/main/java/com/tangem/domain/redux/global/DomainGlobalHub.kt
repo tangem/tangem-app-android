@@ -47,9 +47,6 @@ private class DomainGlobalReducer : ReStoreReducer<DomainGlobalState> {
                 )
                 state.copy(scanResponse = action.scanResponse)
             }
-            is DomainGlobalAction.ShowDialog -> {
-                state.copy(dialog = action.stateDialog)
-            }
             else -> state
         }
     }
