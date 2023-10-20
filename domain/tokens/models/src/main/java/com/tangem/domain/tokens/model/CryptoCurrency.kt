@@ -160,8 +160,15 @@ sealed class CryptoCurrency : Parcelable {
             abstract val value: String
 
             /** Represents a raw ID suffix. */
-            data class RawID(val rawId: String) : Suffix() {
-                override val value: String get() = rawId
+            data class RawID(val rawId: String, val contractAddress: String? = null) : Suffix() {
+                override val value: String
+                    get() = buildString {
+                        append(rawId)
+                        if (contractAddress != null) {
+                            append(SUFFIX_DELIMITER)
+                            append(contractAddress)
+                        }
+                    }
             }
 
             /** Represents a contract address suffix. */
