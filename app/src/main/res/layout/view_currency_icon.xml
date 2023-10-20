@@ -45,7 +45,7 @@
         android:layout_width="18dp"
         android:layout_height="18dp"
         android:background="@drawable/shape_circle"
-        android:backgroundTint="@color/backgroundWhite"
+        android:backgroundTint="@color/background_primary"
         android:contentDescription="@null"
         android:padding="2dp"
         android:visibility="gone"

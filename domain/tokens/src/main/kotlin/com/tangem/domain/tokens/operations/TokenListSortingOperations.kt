@@ -8,9 +8,9 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.models.Network
 import java.math.BigDecimal
 
 internal class TokenListSortingOperations(
@@ -27,7 +27,7 @@ internal class TokenListSortingOperations(
         currencies = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
             is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.NotInitialized -> emptyList()
+            is TokenList.Empty -> emptyList()
         },
         isAnyTokenLoading = isAnyTokenLoading,
         sortByBalance = sortByBalance,
