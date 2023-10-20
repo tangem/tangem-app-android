@@ -55,7 +55,7 @@ internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {
 internal fun getCoinIconUrl(blockchain: Blockchain): String? {
     val coinId = when (blockchain) {
         Blockchain.Unknown -> null
-        Blockchain.TerraV1, Blockchain.TerraV2 -> blockchain.toCoinId()
+        Blockchain.TerraV1, Blockchain.TerraV2, Blockchain.Near -> blockchain.toCoinId()
         else -> blockchain.toNetworkId()
     }
 
