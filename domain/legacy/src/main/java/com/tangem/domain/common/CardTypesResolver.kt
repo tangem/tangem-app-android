@@ -3,6 +3,7 @@ package com.tangem.domain.common
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 
+@Suppress("TooManyFunctions")
 interface CardTypesResolver {
 
     fun isTangemNote(): Boolean
@@ -10,6 +11,12 @@ interface CardTypesResolver {
     fun isTangemWallet(): Boolean
 
     fun isShibaWallet(): Boolean
+
+    fun isTronWallet(): Boolean
+
+    fun isKaspaWallet(): Boolean
+
+    fun isBadWallet(): Boolean
 
     fun isWhiteWallet(): Boolean
 
