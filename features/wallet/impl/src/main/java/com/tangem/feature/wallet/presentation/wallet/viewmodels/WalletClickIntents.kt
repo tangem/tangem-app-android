@@ -1,29 +1,29 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 
 @Suppress("TooManyFunctions")
-internal interface WalletClickIntents : TxHistoryClickIntents {
+internal interface WalletClickIntents {
 
     fun onBackClick()
 
-    fun onScanCardClick()
+    fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
+
+    fun onScanToUnlockWalletClick()
 
     fun onDetailsClick()
 
     fun onBackupCardClick()
 
-    fun onCriticalWarningAlreadySignedHashesClick()
+    fun onSignedHashesNotificationCloseClick()
 
-    fun onCloseWarningAlreadySignedHashesClick()
+    fun onLikeAppClick()
 
-    fun onLikeTangemAppClick()
+    fun onDislikeAppClick()
 
-    fun onRateTheAppClick()
-
-    fun onShareClick()
+    fun onCloseRateAppNotificationClick()
 
     fun onWalletChange(index: Int)
 
@@ -39,19 +39,39 @@ internal interface WalletClickIntents : TxHistoryClickIntents {
 
     fun onTokenItemClick(currency: CryptoCurrency)
 
-    fun onTokenItemLongClick(currency: CryptoCurrency)
+    fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onDismissActionsBottomSheet()
 
     fun onRenameClick(userWalletId: UserWalletId, name: String)
 
-    fun onDeleteClick(userWalletId: UserWalletId)
+    fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId)
 
-    fun onSendClick()
+    fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId)
 
-    fun onReceiveClick()
+    fun onSingleCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus? = null)
 
-    fun onSellClick()
+    fun onMultiCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onManageTokensClick()
+
+    fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onReloadClick()
+
+    fun onExploreClick()
+
+    fun onTransactionClick(txHash: String)
 }
