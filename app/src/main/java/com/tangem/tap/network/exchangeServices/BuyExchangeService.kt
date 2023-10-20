@@ -42,8 +42,16 @@ internal class BuyExchangeService(
         cryptoCurrencyName: String,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String? {
-        return currentService.getUrl(action, blockchain, cryptoCurrencyName, fiatCurrencyName, walletAddress)
+        return currentService.getUrl(
+            action,
+            blockchain,
+            cryptoCurrencyName,
+            fiatCurrencyName,
+            walletAddress,
+            isDarkTheme,
+        )
     }
 
     override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? {

@@ -2,10 +2,10 @@ package com.tangem.core.ui.components.marketprice
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,7 +51,7 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
         horizontalAlignment = Alignment.Start,
     ) {
-        Title(currencyName = state.currencyName)
+        Title(currencyName = state.currencySymbol)
 
         Content(state = state, rootWidth = rootWidth)
     }
@@ -130,27 +130,31 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun PriceChangeInPercent(config: PriceChangeConfig) {
+private fun PriceChangeInPercent(config: PriceChangeState.Content) {
     AnimatedContent(targetState = config.type, label = "Update price change") { type ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
         ) {
-            Image(
+            Icon(
                 painter = painterResource(
                     id = when (type) {
-                        PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                        PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
+                        PriceChangeType.UP -> R.drawable.ic_arrow_up_8
+                        PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
                     },
                 ),
+                tint = when (type) {
+                    PriceChangeType.UP -> TangemTheme.colors.icon.accent
+                    PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
+                },
                 contentDescription = null,
             )
 
             Text(
                 text = config.valueInPercent,
                 color = when (type) {
-                    PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
-                    PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
+                    PriceChangeType.UP -> TangemTheme.colors.text.accent
+                    PriceChangeType.DOWN -> TangemTheme.colors.text.warning
                 },
                 style = TangemTheme.typography.body2,
             )
@@ -209,22 +213,22 @@ private fun Preview_MarketPriceBlock_Dark(
 private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterProvider<MarketPriceBlockState>(
     collection = listOf(
         MarketPriceBlockState.Content(
-            currencyName = "BTC",
+            currencySymbol = "BTC",
             price = "98900 $",
-            priceChangeConfig = PriceChangeConfig(
+            priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "5.16%",
-                type = PriceChangeConfig.Type.DOWN,
+                type = PriceChangeType.DOWN,
             ),
         ),
         MarketPriceBlockState.Content(
-            currencyName = "BTC",
+            currencySymbol = "BTC",
             price = "98900 $",
-            priceChangeConfig = PriceChangeConfig(
+            priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "10.89%",
-                type = PriceChangeConfig.Type.UP,
+                type = PriceChangeType.UP,
             ),
         ),
-        MarketPriceBlockState.Loading(currencyName = "BTC"),
-        MarketPriceBlockState.Error(currencyName = "BTC"),
+        MarketPriceBlockState.Loading(currencySymbol = "BTC"),
+        MarketPriceBlockState.Error(currencySymbol = "BTC"),
     ),
 )

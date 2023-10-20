@@ -10,6 +10,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.data.common)
+
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
     implementation(projects.domain.legacy)
@@ -20,7 +22,9 @@ dependencies {
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.androidx.paging.runtime)
-    implementation(deps.arrow.core)
+    implementation(deps.timber)
+    implementation(deps.jodatime)
+    implementation(deps.tangem.blockchain)
 
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)

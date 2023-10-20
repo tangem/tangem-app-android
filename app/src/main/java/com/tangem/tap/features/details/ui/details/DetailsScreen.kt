@@ -1,156 +1,133 @@
 package com.tangem.tap.features.details.ui.details
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SystemBarsEffect
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.event.EventEffect
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
-import kotlinx.coroutines.launch
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit) {
-    SystemBarsEffect {
-        setSystemBarsColor(color = TangemColorPalette.Light1)
-    }
+internal fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+    val snackbarHostState = remember { SnackbarHostState() }
 
     SettingsScreensScaffold(
+        modifier = modifier,
+        snackbarHostState = snackbarHostState,
         content = { Content(state = state) },
         onBackClick = onBackClick,
+    )
+
+    ShowSnackbarIfNeeded(
+        snackbarHostState = snackbarHostState,
+        messageEvent = state.showSnackbar,
     )
 }
 
 @Composable
-fun Content(state: DetailsScreenState) {
-    Box {
+private fun Content(state: DetailsScreenState, modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {
-            ScreenTitle(titleRes = R.string.details_title, Modifier.padding(bottom = 52.dp))
-            state.elements.map { element ->
-                if (element == SettingsElement.WalletConnect) {
-                    WalletConnectDetailsItem(onItemsClick = state.onItemsClick)
-                } else {
-                    DetailsItem(
-                        item = element,
-                        appCurrency = state.appCurrency,
-                        onItemsClick = { state.onItemsClick(element) },
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            TangemSocialAccounts(state.tangemLinks, state.onSocialNetworkClick)
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
-                style = TangemTheme.typography.caption,
-                color = colorResource(id = R.color.text_tertiary),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
+            ScreenTitle(titleRes = R.string.details_title)
+            SpacerH(height = TangemTheme.dimens.spacing36)
+            SettingsItems(
+                items = state.elements,
             )
+            SpacerHMax()
+            TangemSocialAccounts(
+                links = state.tangemLinks,
+                onSocialNetworkClick = state.onSocialNetworkClick,
+            )
+            SpacerH(height = TangemTheme.dimens.spacing12)
+            TangemAppVersion(
+                appNameRes = state.appNameRes,
+                version = state.tangemVersion,
+            )
+            SpacerH(height = TangemTheme.dimens.spacing16)
         }
-        ShowSnackbarIfNeeded(state.showErrorSnackbar.value)
     }
 }
 
 @Composable
-fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
+private fun SettingsItems(items: List<SettingsItem>) {
+    items.forEach { item ->
+        if (item.isLarge) {
+            LargeDetailsItem(item)
+        } else {
+            DetailsItem(item)
+        }
+    }
+}
+
+@Composable
+private fun LargeDetailsItem(item: SettingsItem) {
     Row(
         modifier = Modifier
-            .defaultMinSize(minHeight = 84.dp)
-            .fillMaxWidth()
-            .clickable { onItemsClick(SettingsElement.WalletConnect) },
-        horizontalArrangement = Arrangement.Start,
+            .clickable(onClick = item.onClick)
+            .padding(horizontal = TangemTheme.dimens.spacing20)
+            .heightIn(min = TangemTheme.dimens.size84)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_walletconnect),
-            contentDescription = stringResource(id = R.string.wallet_connect_title),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-            tint = colorResource(id = R.color.all_colors_azure),
-        )
+        if (item.showProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+                color = TangemTheme.colors.icon.informative,
+            )
+        } else {
+            Icon(
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+                painter = painterResource(id = item.iconResId),
+                contentDescription = item.title.resolveReference(),
+                tint = TangemColorPalette.Azure,
+            )
+        }
         Column(
-            modifier = Modifier.defaultMinSize(minHeight = 56.dp),
+            modifier = Modifier.heightIn(min = TangemTheme.dimens.size56),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(
+                space = TangemTheme.dimens.spacing4,
+                alignment = Alignment.CenterVertically,
+            ),
         ) {
             Text(
-                text = stringResource(id = R.string.wallet_connect_title),
-                modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
+                text = item.title.resolveReference(),
                 style = TangemTheme.typography.h3,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
-            Text(
-                text = stringResource(id = R.string.wallet_connect_subtitle),
-                modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
-                style = TangemTheme.typography.body1,
-                color = colorResource(id = R.color.text_secondary),
-            )
-        }
-    }
-}
 
-@Composable
-fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .height(56.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onItemsClick),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(id = item.iconRes),
-            contentDescription = stringResource(id = item.titleRes),
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-            tint = colorResource(id = R.color.icon_secondary),
-        )
-        Column(modifier = Modifier.padding(end = 20.dp)) {
-            Text(
-                text = stringResource(id = item.titleRes),
-                modifier = Modifier,
-                style = TangemTheme.typography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
-            )
-            if (item == SettingsElement.AppCurrency) {
+            if (item.subtitle != null) {
                 Text(
-                    text = appCurrency,
-                    style = TangemTheme.typography.body2,
-                    color = colorResource(id = R.color.text_secondary),
+                    text = item.subtitle.resolveReference(),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.secondary,
                 )
             }
         }
@@ -158,66 +135,159 @@ fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> 
 }
 
 @Composable
-fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
-    LazyRow(
-        modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+private fun DetailsItem(item: SettingsItem) {
+    Row(
+        modifier = Modifier
+            .clickable(enabled = !item.showProgress, onClick = item.onClick)
+            .padding(horizontal = TangemTheme.dimens.spacing20)
+            .heightIn(min = TangemTheme.dimens.size56)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        items(links) {
+        if (item.showProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+                color = TangemTheme.colors.icon.informative,
+            )
+        } else {
             Icon(
-                painter = painterResource(id = it.network.iconRes),
-                contentDescription = "",
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable { onSocialNetworkClick(it) },
-                tint = colorResource(id = R.color.icon_informative),
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+                painter = painterResource(id = item.iconResId),
+                contentDescription = item.title.resolveReference(),
+                tint = TangemTheme.colors.icon.secondary,
             )
         }
-    }
-}
 
-@Composable
-fun BoxScope.ShowSnackbarIfNeeded(snackbarErrorState: EventError) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
-    SnackbarHost(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(vertical = TangemTheme.dimens.spacing16)
-            .fillMaxWidth(),
-        hostState = snackbarHostState,
-    )
-    val errorTitle = when (snackbarErrorState) {
-        is EventError.DemoReferralNotAvailable -> stringResource(id = R.string.alert_demo_feature_disabled)
-        EventError.Empty -> ""
-    }
-    if (snackbarErrorState != EventError.Empty) {
-        SideEffect {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(errorTitle)
-            }
-            when (snackbarErrorState) {
-                is EventError.DemoReferralNotAvailable -> snackbarErrorState.onErrorShow.invoke()
-                else -> {
-                    /*no-op*/
-                }
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceAround,
+        ) {
+            Text(
+                text = item.title.resolveReference(),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+
+            if (item.subtitle != null) {
+                Text(
+                    text = item.subtitle.resolveReference(),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.secondary,
+                )
             }
         }
     }
 }
 
 @Composable
-@Preview
-private fun Preview() {
-    DetailsScreen(
-        state = DetailsScreenState(
-            elements = SettingsElement.values().toList(),
-            tangemLinks = TangemSocialAccounts.accountsEn,
-            tangemVersion = "Tangem 2.14.12 (343)",
-            appCurrency = "Dollar",
-            onItemsClick = {},
-            onSocialNetworkClick = {},
-        ),
-        onBackClick = {},
+private fun TangemSocialAccounts(links: List<SocialNetworkLink>, onSocialNetworkClick: (SocialNetworkLink) -> Unit) {
+    LazyRow(
+        verticalAlignment = Alignment.CenterVertically,
+        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing8),
+    ) {
+        items(links) {
+            val onClick = remember(it) {
+                { onSocialNetworkClick(it) }
+            }
+
+            IconButton(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing4)
+                    .size(TangemTheme.dimens.size32),
+                onClick = onClick,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = it.network.iconRes),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShowSnackbarIfNeeded(snackbarHostState: SnackbarHostState, messageEvent: StateEvent<TextReference>) {
+    var message: TextReference? by remember { mutableStateOf(value = null) }
+    val resolvedMessage by rememberUpdatedState(newValue = message?.resolveReference())
+
+    LaunchedEffect(resolvedMessage) {
+        resolvedMessage?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+
+    EventEffect(messageEvent) {
+        message = it
+    }
+}
+
+@Composable
+private fun TangemAppVersion(appNameRes: Int, version: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        text = "${stringResource(id = appNameRes)} $version",
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.text.tertiary,
     )
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Composable
+private fun DetailsScreenPreview_Light(
+    @PreviewParameter(DetailsScreenStateProvider::class) param: DetailsScreenState,
+) {
+    TangemTheme(isDark = false) {
+        DetailsScreen(param, onBackClick = {})
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Composable
+private fun DetailsScreenPreview_Dark(@PreviewParameter(DetailsScreenStateProvider::class) param: DetailsScreenState) {
+    TangemTheme(isDark = true) {
+        DetailsScreen(param, onBackClick = {})
+    }
+}
+
+private class DetailsScreenStateProvider : CollectionPreviewParameterProvider<DetailsScreenState>(
+    collection = buildList {
+        DetailsScreenState(
+            elements = buildList {
+                SettingsItem.WalletConnect({}).let(::add)
+                SettingsItem.AddWallet(showProgress = false, {}).let(::add)
+                SettingsItem.LinkMoreCards({}).let(::add)
+                SettingsItem.CardSettings({}).let(::add)
+                SettingsItem.AppSettings({}).let(::add)
+                SettingsItem.Chat({}).let(::add)
+                SettingsItem.SendFeedback({}).let(::add)
+                SettingsItem.ReferralProgram({}).let(::add)
+                SettingsItem.TermsOfService({}).let(::add)
+            }.toImmutableList(),
+            tangemLinks = TangemSocialAccounts.accountsEn,
+            tangemVersion = "Tangem 2.14.12 (343)",
+            showSnackbar = consumedEvent(),
+            onSocialNetworkClick = {},
+        ).let(::add)
+
+        DetailsScreenState(
+            elements = buildList {
+                SettingsItem.WalletConnect({}).let(::add)
+                SettingsItem.AddWallet(showProgress = true, {}).let(::add)
+                SettingsItem.CardSettings({}).let(::add)
+                SettingsItem.AppSettings({}).let(::add)
+                SettingsItem.Chat({}).let(::add)
+                SettingsItem.SendFeedback({}).let(::add)
+                SettingsItem.TermsOfService({}).let(::add)
+            }.toImmutableList(),
+            tangemLinks = TangemSocialAccounts.accountsRu,
+            tangemVersion = "Tangem 2.14.12 (343)",
+            showSnackbar = consumedEvent(),
+            onSocialNetworkClick = {},
+        ).let(::add)
+    },
+)
+// endregion Preview

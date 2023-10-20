@@ -22,6 +22,7 @@ internal class TokenListFiatBalanceOperations(
                 }
                 is CryptoCurrencyStatus.MissedDerivation,
                 is CryptoCurrencyStatus.Unreachable,
+                is CryptoCurrencyStatus.NoAmount,
                 -> {
                     fiatBalance = TokenList.FiatBalance.Failed
                     break

@@ -3,20 +3,20 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.flow.Flow
 
 internal class TokenDetailsLoadedTxHistoryConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
-    private val clickIntents: TxHistoryClickIntents,
+    private val clickIntents: TokenDetailsClickIntents,
     symbol: String,
     decimals: Int,
-) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TokenDetailsState> {
+) : Converter<Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>, TxHistoryState> {
 
     private val txHistoryItemFlowConverter by lazy {
         TokenDetailsTxHistoryItemFlowConverter(
@@ -27,23 +27,19 @@ internal class TokenDetailsLoadedTxHistoryConverter(
         )
     }
 
-    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TokenDetailsState {
+    override fun convert(value: Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>): TxHistoryState {
         return value.fold(ifLeft = ::convertError, ifRight = ::convert)
     }
 
-    private fun convertError(error: TxHistoryListError): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = when (error) {
-                is TxHistoryListError.DataError -> {
-                    TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
-                }
-            },
-        )
+    private fun convertError(error: TxHistoryListError): TxHistoryState {
+        return when (error) {
+            is TxHistoryListError.DataError -> {
+                TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+            }
+        }
     }
 
-    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TokenDetailsState {
-        return currentStateProvider().copy(
-            txHistoryState = txHistoryItemFlowConverter.convert(value = items),
-        )
+    private fun convert(items: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
+        return txHistoryItemFlowConverter.convert(value = items)
     }
 }
