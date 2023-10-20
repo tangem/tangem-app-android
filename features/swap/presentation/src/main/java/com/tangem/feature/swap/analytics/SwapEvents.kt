@@ -14,7 +14,16 @@ sealed class SwapEvents(
 
     object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
     object ChooseTokenScreenOpened : SwapEvents(event = "Choose Token Screen Opened")
-    object SearchTokenClicked : SwapEvents(event = "Searched Token Clicked")
+
+    data class SearchTokenClicked(val currencySymbol: String?) : SwapEvents(
+        event = "Searched Token Clicked",
+        params = buildMap {
+            if (currencySymbol != null) {
+                put("Token", currencySymbol)
+            }
+        },
+    )
+
     data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
         event = "Button - Swap",
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),

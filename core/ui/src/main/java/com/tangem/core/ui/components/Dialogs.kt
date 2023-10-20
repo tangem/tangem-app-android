@@ -1,44 +1,33 @@
 package com.tangem.core.ui.components
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SelctorDialogParamsProvider.SelectorDialogParams
 import com.tangem.core.ui.res.TangemTheme
-
-/**
- * Dialog button params
- *
- * @param title Button text. If not provided default values will be used
- * @param warning If true then button text will be in theme warning color
- * @param enabled If false button will be disabled
- * @param onClick Button click callback
- */
-data class DialogButton(
-    val title: String? = null,
-    val warning: Boolean = false,
-    val enabled: Boolean = true,
-    val onClick: () -> Unit,
-)
-
-/**
- * Additional params for dialog text field
- */
-data class AdditionalTextInputDialogParams(
-    val label: String? = null,
-    val placeholder: String? = null,
-    val caption: String? = null,
-    val enabled: Boolean = true,
-    val isError: Boolean = false,
-)
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Simple alert dialog with a message and 'OK' button
@@ -129,6 +118,54 @@ fun TextInputDialog(
     )
 }
 
+@Composable
+fun SelectorDialog(
+    selectedItemIndex: Int,
+    items: ImmutableList<String>,
+    confirmButton: DialogButton,
+    onSelect: (index: Int) -> Unit,
+    onDismissDialog: () -> Unit,
+    title: String? = null,
+    isDismissable: Boolean = true,
+) {
+    TangemDialog(
+        type = DialogType.Selector(selectedItemIndex, items, onSelect),
+        confirmButton = confirmButton,
+        title = title,
+        onDismissDialog = onDismissDialog,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
+    )
+}
+
+/**
+ * Dialog button params
+ *
+ * @param title Button text. If not provided default values will be used
+ * @param warning If true then button text will be in theme warning color
+ * @param enabled If false button will be disabled
+ * @param onClick Button click callback
+ */
+data class DialogButton(
+    val title: String? = null,
+    val warning: Boolean = false,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+)
+
+/**
+ * Additional params for dialog text field
+ */
+data class AdditionalTextInputDialogParams(
+    val label: String? = null,
+    val placeholder: String? = null,
+    val caption: String? = null,
+    val enabled: Boolean = true,
+    val isError: Boolean = false,
+)
+
 // region Defaults
 @Composable
 private fun TangemDialog(
@@ -146,15 +183,18 @@ private fun TangemDialog(
                     shape = TangemTheme.shapes.roundedCornersLarge,
                     color = TangemTheme.colors.background.plain,
                 )
-                .padding(all = TangemTheme.dimens.spacing24),
+                .padding(vertical = TangemTheme.dimens.spacing24),
         ) {
             if (title != null) {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     text = title,
                     style = when (type) {
                         is DialogType.Message -> TangemTheme.typography.h2
                         is DialogType.TextInput -> TangemTheme.typography.h3
+                        is DialogType.Selector -> TangemTheme.typography.h2
                     },
                     color = TangemTheme.colors.text.primary1,
                 )
@@ -162,7 +202,13 @@ private fun TangemDialog(
             }
             DialogContent(type = type)
             SpacerH24()
-            DialogButtons(confirmButton = confirmButton, dismissButton = dismissButton)
+            DialogButtons(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing24)
+                    .fillMaxWidth(),
+                confirmButton = confirmButton,
+                dismissButton = dismissButton,
+            )
         }
     }
 }
@@ -177,7 +223,9 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
         when (type) {
             is DialogType.Message -> {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     text = type.message,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
@@ -185,7 +233,9 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
             }
             is DialogType.TextInput -> {
                 OutlineTextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     value = type.value,
                     label = type.params.label,
                     placeholder = type.params.placeholder,
@@ -197,6 +247,14 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                     },
                 )
             }
+            is DialogType.Selector -> {
+                SelectorDialogContent(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedItemIndex = type.selectedItemIndex,
+                    items = type.items,
+                    onSelect = type.onSelect,
+                )
+            }
         }
     }
 }
@@ -204,7 +262,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
 @Composable
 private fun DialogButtons(confirmButton: DialogButton, dismissButton: DialogButton?, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(
             space = TangemTheme.dimens.spacing4,
             alignment = Alignment.End,
@@ -252,14 +310,72 @@ private fun DialogButton(
     }
 }
 
-private sealed interface DialogType {
-    data class Message(val message: String) : DialogType
+@Composable
+private fun SelectorDialogContent(
+    selectedItemIndex: Int,
+    items: ImmutableList<String>,
+    onSelect: (index: Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier) {
+        itemsIndexed(items = items) { index, itemText ->
+            val onClick = remember(index) {
+                { onSelect(index) }
+            }
+
+            val interactionSource = remember { MutableInteractionSource() }
+
+            Row(
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        onClick = onClick,
+                    )
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing16,
+                        horizontal = TangemTheme.dimens.spacing18,
+                    )
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    selected = index == selectedItemIndex,
+                    onClick = onClick,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = TangemTheme.colors.icon.accent,
+                        unselectedColor = TangemTheme.colors.icon.secondary,
+                    ),
+                    interactionSource = interactionSource,
+                )
+                Text(
+                    text = itemText,
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
+        }
+    }
+}
+
+@Immutable
+private sealed class DialogType {
+
+    data class Message(val message: String) : DialogType()
 
     data class TextInput(
         val value: TextFieldValue,
         val onValueChange: (TextFieldValue) -> Unit,
         val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
-    ) : DialogType
+    ) : DialogType()
+
+    data class Selector(
+        val selectedItemIndex: Int,
+        val items: ImmutableList<String>,
+        val onSelect: (index: Int) -> Unit,
+    ) : DialogType()
 }
 // endregion Defaults
 
@@ -380,5 +496,66 @@ private fun TextInputDialogPreview_Dark() {
     TangemTheme(isDark = true) {
         TextInputDialogSample()
     }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun SelectorDialogPreview_Light(
+    @PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams,
+) {
+    TangemTheme(isDark = false) {
+        SelectorDialog(
+            title = param.title,
+            items = param.items,
+            selectedItemIndex = param.selectedItemIndex,
+            confirmButton = DialogButton(title = "Cancel", onClick = {}),
+            onSelect = {},
+            onDismissDialog = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun SelectorDialogPreview_Dark(
+    @PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams,
+) {
+    TangemTheme(isDark = true) {
+        SelectorDialog(
+            title = param.title,
+            items = param.items,
+            selectedItemIndex = param.selectedItemIndex,
+            confirmButton = DialogButton(title = "Cancel", onClick = {}),
+            onSelect = {},
+            onDismissDialog = {},
+        )
+    }
+}
+
+private class SelctorDialogParamsProvider : CollectionPreviewParameterProvider<SelectorDialogParams>(
+    collection = listOf(
+        SelectorDialogParams(
+            title = "Theme",
+            selectedItemIndex = 0,
+            persistentListOf("Light", "Dark", "Follow system"),
+        ),
+        SelectorDialogParams(
+            title = null,
+            selectedItemIndex = 2,
+            persistentListOf("Light", "Dark", "Follow system"),
+        ),
+        SelectorDialogParams(
+            title = "Count",
+            selectedItemIndex = 8,
+            List(size = 10) { it.toString() }.toImmutableList(),
+        ),
+    ),
+) {
+
+    data class SelectorDialogParams(
+        val title: String?,
+        val selectedItemIndex: Int,
+        val items: ImmutableList<String>,
+    )
 }
 // endregion Preview

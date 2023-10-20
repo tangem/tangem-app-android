@@ -14,7 +14,9 @@ internal object WelcomeReducer {
 
     private fun internalReduce(action: WelcomeAction, state: WelcomeState): WelcomeState {
         return when (action) {
-            is WelcomeAction.SetInitialIntent -> state.copy(intent = action.intent)
+            is WelcomeAction.SetCoroutineScope -> state.copy(scope = action.scope)
+            is WelcomeAction.ClearCoroutineScope -> state.copy(scope = null)
+            is WelcomeAction.ProceedWithIntent -> state.copy(intent = action.intent)
             is WelcomeAction.ProceedWithBiometrics -> state.copy(isUnlockWithBiometricsInProgress = true)
             is WelcomeAction.ProceedWithCard -> state.copy(isUnlockWithCardInProgress = true)
             is WelcomeAction.ProceedWithBiometrics.Error -> state.copy(
