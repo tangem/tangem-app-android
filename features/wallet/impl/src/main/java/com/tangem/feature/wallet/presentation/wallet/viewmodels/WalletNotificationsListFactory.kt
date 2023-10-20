@@ -77,7 +77,7 @@ internal class WalletNotificationsListFactory(
 
         cardTypesResolver.getRemainingSignatures()?.let { remainingSignatures ->
             addIf(
-                element = WalletNotification.Critical.LowSignatures(count = remainingSignatures),
+                element = WalletNotification.Warning.LowSignatures(count = remainingSignatures),
                 condition = remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT,
             )
         }
