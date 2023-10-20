@@ -25,10 +25,20 @@ internal fun AddCustomTokenScreen(stateHolder: AddCustomTokenStateHolder, modifi
 
 @Preview(showSystemUi = true)
 @Composable
-private fun Preview_AddCustomTokenScreen(
+private fun Preview_AddCustomTokenScreen_Light(
     @PreviewParameter(AddCustomTokenScreenProvider::class) stateHolder: AddCustomTokenStateHolder,
 ) {
-    TangemTheme {
+    TangemTheme(isDark = false) {
+        AddCustomTokenScreen(stateHolder)
+    }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+private fun Preview_AddCustomTokenScreen_Dark(
+    @PreviewParameter(AddCustomTokenScreenProvider::class) stateHolder: AddCustomTokenStateHolder,
+) {
+    TangemTheme(isDark = true) {
         AddCustomTokenScreen(stateHolder)
     }
 }

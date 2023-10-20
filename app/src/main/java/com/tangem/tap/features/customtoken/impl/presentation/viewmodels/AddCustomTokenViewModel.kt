@@ -22,6 +22,10 @@ import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
@@ -35,7 +39,6 @@ import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactA
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
@@ -51,22 +54,24 @@ import javax.inject.Inject
 /**
  * ViewModel for add custom token screen
  *
- * @param analyticsEventHandler analytics event handler
- * @param featureRouter         feature router
- * @property featureInteractor  feature interactor
- * @property dispatchers        coroutine dispatchers provider
- * @property reduxStateHolder   redux state holder
+ * @param analyticsEventHandler           analytics event handler
+ * @param featureRouter                   feature router
+ * @property featureInteractor            feature interactor
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property dispatchers                  coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     analyticsEventHandler: AnalyticsEventHandler,
     featureRouter: CustomTokenRouter,
+    getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val analyticsSender = AddCustomTokenAnalyticsSender(analyticsEventHandler)
@@ -74,11 +79,29 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
 
+    private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
+
     /** Screen state */
     var uiState by mutableStateOf(getInitialUiState())
         private set
 
     private var foundToken: FoundToken? = null
+
+    init {
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            viewModelScope.launch(dispatchers.main) {
+                currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { selectedWallet ->
+                        getCurrenciesUseCase(selectedWallet.walletId).fold(
+                            ifLeft = { emptyList() },
+                            ifRight = { it },
+                        )
+                    },
+                )
+            }
+        }
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsSender.sendWhenScreenOpened()
@@ -208,7 +231,10 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
-            val scanResponse = reduxStateHolder.scanResponse
+            val scanResponse = getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = { it.scanResponse },
+            )
             val derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle()
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
@@ -244,7 +270,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 value = "",
                 onValueChange = actionsHandler::onTokenSymbolValueChange,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                label = TextReference.Res(R.string.custom_token_token_symbol_input_title),
+                label = TextReference.Res(R.string.custom_token_token_symbol_input_title_old),
                 placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder),
                 isEnabled = false,
             )
@@ -262,17 +288,20 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathsSelectorField(): AddCustomTokenSelectorField.DerivationPath? {
-            val scanResponse = reduxStateHolder.scanResponse
-            if (scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
+            return getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = {
+                    if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
 
-            val selectorItems =
-                getDerivationPathsSelectorItems(scanResponse?.derivationStyleProvider)
-            return AddCustomTokenSelectorField.DerivationPath(
-                label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
-                selectedItem = requireNotNull(selectorItems.firstOrNull()),
-                items = selectorItems,
-                onMenuItemClick = actionsHandler::onDerivationPathSelectorItemClick,
-                isEnabled = true,
+                    val selectorItems = getDerivationPathsSelectorItems(it.scanResponse.derivationStyleProvider)
+                    AddCustomTokenSelectorField.DerivationPath(
+                        label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
+                        selectedItem = requireNotNull(selectorItems.firstOrNull()),
+                        items = selectorItems,
+                        onMenuItemClick = actionsHandler::onDerivationPathSelectorItemClick,
+                        isEnabled = true,
+                    )
+                },
             )
         }
 
@@ -315,14 +344,19 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathInputField(): AddCustomTokenInputField.DerivationPath? {
-            if (reduxStateHolder.scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
+            return getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = {
+                    if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
 
-            return AddCustomTokenInputField.DerivationPath(
-                value = "",
-                onValueChange = actionsHandler::onDerivationPathValueChange,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                label = TextReference.Res(R.string.custom_token_custom_derivation),
-                placeholder = TextReference.Str(value = DERIVATION_PATH_PLACEHOLDER),
+                    AddCustomTokenInputField.DerivationPath(
+                        value = "",
+                        onValueChange = actionsHandler::onDerivationPathValueChange,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        label = TextReference.Res(R.string.custom_token_custom_derivation),
+                        placeholder = TextReference.Str(value = DERIVATION_PATH_PLACEHOLDER),
+                    )
+                },
             )
         }
     }
@@ -440,11 +474,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val isSupportedToken = if (!isNetworkSelected()) {
             true
         } else {
-            val scanResponse = reduxStateHolder.scanResponse
-            scanResponse?.card?.canHandleToken(
-                blockchain = networkSelectorValue,
-                cardTypesResolver = scanResponse.cardTypesResolver,
-            ) ?: false
+            getSelectedWalletSyncUseCase().fold(
+                ifLeft = { false },
+                ifRight = {
+                    it.scanResponse.card.canHandleToken(
+                        blockchain = networkSelectorValue,
+                        cardTypesResolver = it.scanResponse.cardTypesResolver,
+                    )
+                },
+            )
         }
 
         return buildSet {
@@ -478,13 +516,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
-                val scanResponse = reduxStateHolder.scanResponse
-                val isSupportedToken = scanResponse?.card
-                    ?.canHandleToken(
-                        blockchain = networkSelectorValue,
-                        cardTypesResolver = scanResponse.cardTypesResolver,
-                    )
-                    ?: false
+
+                val isSupportedToken = getSelectedWalletSyncUseCase().fold(
+                    ifLeft = { false },
+                    ifRight = {
+                        it.scanResponse.card.canHandleToken(
+                            blockchain = networkSelectorValue,
+                            cardTypesResolver = it.scanResponse.cardTypesResolver,
+                        )
+                    },
+                )
 
                 uiState.copySealed(
                     floatingButton = uiState.floatingButton.copy(
@@ -546,6 +587,33 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isTokenAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isTokenAlreadyAddedNew()
+        } else {
+            isTokenAlreadyAddedOld()
+        }
+    }
+
+    private fun isTokenAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .any { token ->
+                val contractAddress = uiState.form.contractAddressInputField.value
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
+
+                val savedTokenId = if (token.isCustom) null else token.id.value
+
+                val sameId = foundToken?.id == savedTokenId
+                val sameAddress = contractAddress == token.contractAddress
+                val sameBlockchain = networkId == token.network.id.value
+                val isSameDerivationPath = getDerivationPath()?.rawPath == token.network.derivationPath.value
+
+                sameId && sameAddress && sameBlockchain && isSameDerivationPath
+            }
+    }
+
+    private fun isTokenAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
@@ -563,6 +631,23 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isBlockchainAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isBlockchainAlreadyAddedNew()
+        } else {
+            isBlockchainAlreadyAddedOld()
+        }
+    }
+
+    private fun isBlockchainAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .any { coin ->
+                coin.network.id.value == uiState.form.networkSelectorField.selectedItem.blockchain.id &&
+                    coin.network.derivationPath.value == getDerivationPath()?.rawPath
+            }
+    }
+
+    private fun isBlockchainAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
@@ -641,8 +726,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getDerivationPathForBlockchain(blockchain: Blockchain?): DerivationPath? {
         if (blockchain == null) return null
 
-        val derivationStyle = reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
-            ?: DerivationStyle.V1
+        val derivationStyle = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { null },
+            ifRight = {
+                it.scanResponse.derivationStyleProvider.getDerivationStyle()
+            },
+        )
 
         val derivationNetwork = if (blockchain == Blockchain.Unknown) {
             uiState.form.networkSelectorField.selectedItem.blockchain
@@ -653,12 +742,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
-        val scanResponse = reduxStateHolder.scanResponse
-        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
-            blockchain = blockchain,
-            cardTypesResolver = scanResponse.cardTypesResolver,
-        ) ?: false
-        return !canHandleToken
+        return getSelectedWalletSyncUseCase().fold(
+            ifLeft = { false },
+            ifRight = {
+                !it.scanResponse.card.canHandleBlockchain(
+                    blockchain = blockchain,
+                    cardTypesResolver = it.scanResponse.cardTypesResolver,
+                )
+            },
+        )
     }
 
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
@@ -827,7 +919,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         fun onResetButtonClick() {
-            val scanResponse = reduxStateHolder.scanResponse
             with(uiState.form) {
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(

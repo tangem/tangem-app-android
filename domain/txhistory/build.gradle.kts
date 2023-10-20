@@ -9,11 +9,15 @@ android {
 }
 
 dependencies {
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.androidx.paging.runtime)
-
-    implementation(projects.core.utils)
+    /** Project - Domain */
+    implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.wallets.models)
+
+    /** Project - Other */
+    implementation(projects.core.utils)
+
+    /** Android - Other */
+    implementation(deps.androidx.paging.runtime)
 }

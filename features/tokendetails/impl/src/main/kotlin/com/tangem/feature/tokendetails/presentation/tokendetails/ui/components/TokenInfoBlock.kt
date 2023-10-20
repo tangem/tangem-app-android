@@ -1,6 +1,5 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -10,18 +9,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import coil.compose.rememberAsyncImagePainter
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
+
+private const val GRAY_SCALE_SATURATION = 0f
+private const val GRAY_SCALE_ALPHA = 0.4f
+private const val NORMAL_ALPHA = 1f
 
 @Composable
 internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Modifier) {
@@ -31,22 +34,24 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
         ) {
             Text(
                 text = state.name,
-                style = TangemTheme.typography.h1,
+                style = TangemTheme.typography.head,
                 color = TangemTheme.colors.text.primary1,
             )
             NetworkInfoText(state.currency)
         }
 
-        val tokenIconPainter = when (LocalInspectionMode.current) {
-            // show drawable res in preview
-            true -> painterResource(id = R.drawable.img_stellar_22)
-            false -> rememberAsyncImagePainter(model = state.iconUrl)
+        val (alpha, colorFilter) = remember(state.iconState.isGrayscale) {
+            if (state.iconState.isGrayscale) {
+                GRAY_SCALE_ALPHA to GrayscaleColorFilter
+            } else {
+                NORMAL_ALPHA to null
+            }
         }
-
-        Image(
+        CurrencyIcon(
             modifier = Modifier.size(TangemTheme.dimens.size48),
-            painter = tokenIconPainter,
-            contentDescription = null,
+            icon = state.iconState,
+            alpha = alpha,
+            colorFilter = colorFilter,
         )
     }
 }
@@ -58,7 +63,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
             Text(
                 text = stringResource(id = R.string.common_main_network),
                 color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
         is TokenInfoBlockState.Currency.Token -> {
@@ -69,7 +74,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 val state = extractNetwork(tokenCurrency = currency)
                 Text(
                     text = state.normalText,
-                    style = TangemTheme.typography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
                 Icon(
@@ -80,7 +85,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 )
                 Text(
                     text = state.boldText,
-                    style = TangemTheme.typography.caption.copy(fontWeight = FontWeight.Medium),
+                    style = TangemTheme.typography.caption2.copy(fontWeight = FontWeight.Medium),
                     color = TangemTheme.colors.text.primary1,
                 )
             }
@@ -95,8 +100,8 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
     val splitString = stringResource(
         id = R.string.token_details_token_type_subtitle,
         formatArgs = arrayOf(
+            tokenCurrency.standardName,
             tokenCurrency.networkName,
-            tokenCurrency.blockchainName,
         ),
     ).split(SEPARATOR)
 
@@ -109,6 +114,9 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
 }
 
 private data class ExtractedTokenNetworkText(val normalText: String, val boldText: String)
+
+private val GrayscaleColorFilter: ColorFilter
+    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
 
 @Preview
 @Composable
